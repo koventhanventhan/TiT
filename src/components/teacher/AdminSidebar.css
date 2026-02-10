@@ -1,0 +1,163 @@
+.admin-sidebar {
+    width: 280px;
+    height: 100vh;
+    background: #1e293b;
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-header {
+    padding: 30px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-icon-box.admin {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 22px;
+    color: white;
+}
+
+.logo-text h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.logo-text span {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 15px;
+    overflow-y: auto;
+}
+
+.nav-group {
+    margin-bottom: 25px;
+}
+
+.group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 10px;
+    padding-left: 15px;
+    letter-spacing: 1.5px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #94a3b8;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+}
+
+.sidebar-link.active {
+    background: rgba(239, 44, 44, 0.1);
+    color: #ef4444;
+}
+
+.link-icon {
+    font-size: 18px;
+    display: flex;
+}
+
+.sidebar-footer {
+    padding: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    background: #334155;
+    color: #f8fafc;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.logout-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* Custom Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        width: 80px;
+    }
+
+    .logo-text,
+    .link-text,
+    .group-title,
+    .logout-btn span {
+        display: none;
+    }
+
+    .sidebar-header,
+    .sidebar-link,
+    .logout-btn {
+        padding: 15px;
+        justify-content: center;
+    }
+
+    .nav-group {
+        margin-bottom: 15px;
+    }
+}

@@ -1,0 +1,114 @@
+.admin-settings {
+    animation: fadeIn 0.5s ease;
+}
+
+.save-btn {
+    padding: 12px 24px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.save-btn:hover {
+    background: #0f172a;
+    transform: translateY(-2px);
+}
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+}
+
+.tabs-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tabs-nav button {
+    width: 100%;
+    padding: 15px 20px;
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.tabs-nav button.active {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.2);
+}
+
+.content-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.settings-group h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.input-group input,
+.input-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+    font-size: 14px;
+    color: #1e293b;
+    transition: all 0.2s;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+    border-color: #ef4444;
+    background: white;
+}
+
+@media (max-width: 1024px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+}

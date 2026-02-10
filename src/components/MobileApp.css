@@ -1,0 +1,478 @@
+.mobile-app {
+  background: var(--bg-white);
+}
+
+.mobile-app-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.mobile-title {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.mobile-subtitle {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text-dark);
+}
+
+.mobile-description {
+  font-size: 18px;
+  color: var(--text-light);
+  line-height: 1.8;
+  margin-bottom: 40px;
+}
+
+.mobile-badges {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--bg-light);
+  border-radius: 12px;
+  font-weight: 600;
+  color: var(--text-dark);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.badge:hover {
+  background: var(--gradient-1);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.badge svg {
+  font-size: 20px;
+}
+
+.mobile-app-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.mobile-gallery-container {
+  position: relative;
+  width: 300px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.phone-mockup-gallery {
+  position: relative;
+  width: 280px;
+  height: 580px;
+}
+
+.phone-frame-gallery {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 45px;
+  padding: 8px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(99, 102, 241, 0.15),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.phone-notch-gallery {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 25px;
+  background: #1a1a1a;
+  border-radius: 0 0 18px 18px;
+  z-index: 10;
+}
+
+.phone-screen-gallery {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 38px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gallery-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideGallery 12s infinite;
+}
+
+@keyframes slideGallery {
+  0%, 20% {
+    transform: translateX(0%);
+  }
+  25%, 45% {
+    transform: translateX(-100%);
+  }
+  50%, 70% {
+    transform: translateX(-200%);
+  }
+  75%, 95% {
+    transform: translateX(-300%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.gallery-screen {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.screen-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 16px 50px;
+  background: white;
+}
+
+.screen-1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.screen-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.screen-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.screen-4 {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.screen-header {
+  margin-bottom: 24px;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.status-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.status-dots span {
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+}
+
+.app-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.app-icon-screen {
+  font-size: 28px;
+}
+
+.app-header-content h4 {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Screen 1 - Gallery Grid */
+.gallery-item.featured {
+  width: 100%;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.gallery-item:nth-child(1) {
+  animation: fadeInOut 3s ease-in-out infinite 0.5s;
+}
+
+.gallery-item:nth-child(2) {
+  animation: fadeInOut 3s ease-in-out infinite 1s;
+}
+
+.gallery-item:nth-child(3) {
+  animation: fadeInOut 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Screen 2 - Class List */
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.class-item {
+  width: 100%;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  animation: slideInUp 0.6s ease-out;
+}
+
+.class-item:nth-child(2) {
+  animation-delay: 0.1s;
+  animation-fill-mode: both;
+}
+
+.class-item:nth-child(3) {
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Screen 3 - Recording List */
+.recording-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recording-item {
+  width: 100%;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+
+.recording-item::before {
+  content: '';
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+}
+
+/* Screen 4 - Progress Chart */
+.progress-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 200px;
+  gap: 12px;
+}
+
+.chart-bar {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px 8px 0 0;
+  backdrop-filter: blur(10px);
+  animation: growBar 1s ease-out;
+}
+
+.chart-bar:nth-child(1) {
+  height: 60%;
+  animation-delay: 0.1s;
+  animation-fill-mode: both;
+}
+
+.chart-bar:nth-child(2) {
+  height: 80%;
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+.chart-bar:nth-child(3) {
+  height: 45%;
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
+}
+
+.chart-bar:nth-child(4) {
+  height: 100%;
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
+}
+
+@keyframes growBar {
+  from {
+    height: 0;
+  }
+}
+
+.phone-home-indicator-gallery {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  z-index: 10;
+}
+
+.gallery-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: dotPulse 12s infinite;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 3s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 6s;
+}
+
+.dot:nth-child(4) {
+  animation-delay: 9s;
+}
+
+@keyframes dotPulse {
+  0%, 20% {
+    background: rgba(99, 102, 241, 1);
+    transform: scale(1.2);
+  }
+  25%, 100% {
+    background: rgba(99, 102, 241, 0.3);
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 968px) {
+  .mobile-app-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .mobile-title {
+    text-align: center;
+  }
+
+  .mobile-badges {
+    justify-content: center;
+  }
+
+  .mobile-gallery-container {
+    width: 250px;
+    height: 500px;
+  }
+
+  .phone-mockup-gallery {
+    width: 230px;
+    height: 480px;
+  }
+
+  .phone-frame-gallery {
+    border-radius: 38px;
+    padding: 6px;
+  }
+
+  .phone-screen-gallery {
+    border-radius: 32px;
+  }
+
+  .screen-content {
+    padding: 30px 12px 40px;
+  }
+
+  .gallery-item.featured {
+    height: 100px;
+  }
+}
+

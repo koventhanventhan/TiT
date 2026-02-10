@@ -1,0 +1,543 @@
+/* Dashboard-Level Student Registration Form - Purple/Blue Theme */
+
+.student-registration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 50%, rgba(236, 72, 153, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.student-registration-wrapper {
+  background: linear-gradient(145deg, rgba(30, 27, 75, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border-radius: 24px;
+  padding: 0;
+  max-width: 98%;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(139, 92, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.student-registration-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.student-registration-wrapper::-webkit-scrollbar-track {
+  background: rgba(30, 27, 75, 0.5);
+  border-radius: 10px;
+}
+
+.student-registration-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 10px;
+}
+
+.student-registration-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+
+.student-registration-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #c7d2fe;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.student-registration-close:hover {
+  background: rgba(236, 72, 153, 0.3);
+  border-color: rgba(236, 72, 153, 0.6);
+  color: #fce7f3;
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+}
+
+.student-registration-container {
+  background: transparent;
+  padding: 48px 40px;
+  border-radius: 24px;
+}
+
+.student-registration-container h2 {
+  background: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 50%, #fce7f3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 20px rgba(139, 92, 246, 0.3);
+}
+
+.form-subtitle {
+  color: rgba(199, 210, 254, 0.8);
+  text-align: center;
+  margin-bottom: 36px;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.error-message {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+  color: #fca5a5;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.student-registration-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Full width fields (radio groups, checkboxes, etc.) */
+.form-group:has(.radio-group),
+.form-group:has(.checkbox-group),
+.form-group:has(input[type="password"]) {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: #c7d2fe;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.required {
+  color: #f87171;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="date"],
+.form-group input[type="password"] {
+  padding: 14px 18px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(99, 102, 241, 0.1);
+  color: #e0e7ff;
+  font-family: inherit;
+  backdrop-filter: blur(10px);
+}
+
+/* Select box styling - dark theme matching form */
+.form-group select {
+  padding: 14px 18px;
+  padding-right: 45px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(99, 102, 241, 0.1) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c7d2fe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  color: #e0e7ff !important;
+  font-family: inherit;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.form-group input::placeholder {
+  color: rgba(199, 210, 254, 0.5);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.8);
+  background: rgba(99, 102, 241, 0.15);
+  box-shadow: 
+    0 0 0 4px rgba(139, 92, 246, 0.15),
+    0 4px 12px rgba(139, 92, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Style select dropdown options to match dark theme */
+.form-group select option {
+  background: rgba(30, 27, 75, 0.95);
+  color: #e0e7ff;
+  padding: 12px;
+  border: none;
+}
+
+.form-group select option:hover,
+.form-group select option:focus,
+.form-group select option:checked {
+  background: rgba(139, 92, 246, 0.3);
+  color: #fce7f3;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px 20px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(99, 102, 241, 0.1);
+  backdrop-filter: blur(10px);
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.radio-label:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.radio-label span {
+  color: #c7d2fe;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.radio-label input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+  margin: 0;
+}
+
+.radio-label input[type="radio"]:checked + span {
+  color: #e0e7ff;
+  font-weight: 600;
+}
+
+.radio-label.checked,
+.radio-label:has(input[type="radio"]:checked) {
+  border-color: rgba(139, 92, 246, 0.8);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.15),
+    0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 14px 20px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(99, 102, 241, 0.1);
+  backdrop-filter: blur(10px);
+  justify-content: center;
+}
+
+.checkbox-label:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.checkbox-label span {
+  color: #c7d2fe;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+  margin: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked + span {
+  color: #e0e7ff;
+  font-weight: 600;
+}
+
+.checkbox-label.checked,
+.checkbox-label:has(input[type="checkbox"]:checked) {
+  border-color: rgba(139, 92, 246, 0.8);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.15),
+    0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  padding-right: 50px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(199, 210, 254, 0.7);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+.password-toggle:hover {
+  color: #c7d2fe;
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  background-size: 200% 200%;
+  color: white;
+  border: none;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 16px;
+  box-shadow: 
+    0 8px 24px rgba(139, 92, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.submit-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 32px rgba(139, 92, 246, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  background-position: 100% 50%;
+}
+
+.submit-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .student-registration-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-registration-wrapper {
+    max-width: 100%;
+    margin: 10px;
+    max-height: 98vh;
+  }
+
+  .student-registration-container {
+    padding: 36px 24px;
+  }
+
+  .student-registration-container h2 {
+    font-size: 26px;
+  }
+
+  .form-subtitle {
+    font-size: 13px;
+  }
+
+  .student-registration-form {
+    grid-template-columns: 1fr;
+  }
+
+  .radio-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .radio-label {
+    width: 100%;
+  }
+
+  .checkbox-group {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+@media (max-width: 480px) {
+  .checkbox-group {
+    grid-template-columns: 1fr;
+  }
+
+  .student-registration-container {
+    padding: 28px 18px;
+  }
+
+  .student-registration-container h2 {
+    font-size: 22px;
+  }
+
+  .submit-button {
+    padding: 16px 28px;
+    font-size: 14px;
+  }
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0;
+}
+.payment-options p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+.payment-options .submit-button.secondary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+.back-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  margin-top: 16px;
+  text-decoration: underline;
+  font-size: 14px;
+}
+.back-link:hover {
+  color: #fff;
+}

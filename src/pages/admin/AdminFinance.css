@@ -1,0 +1,232 @@
+.admin-finance {
+    animation: fadeIn 0.5s ease;
+}
+
+.finance-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.finance-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #f1f5f9;
+    position: relative;
+    overflow: hidden;
+}
+
+.finance-card.primary {
+    background: #1e293b;
+    color: white;
+    border: none;
+}
+
+.finance-card.warning {
+    border-left: 5px solid #f59e0b;
+}
+
+.finance-card .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.finance-card.primary .label {
+    color: #cbd5e1;
+}
+
+.finance-card h3 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.trend {
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.trend.positive {
+    color: #10b981;
+}
+
+.sub-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    background: #f8fafc;
+    color: #1e293b;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.card-icon.blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.card-icon.orange {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.finance-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+}
+
+.revenue-chart-section,
+.recent-payments-section {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.section-header h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 30px;
+}
+
+.history-bars {
+    height: 300px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding-bottom: 20px;
+}
+
+.history-bar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.bar-container {
+    width: 40px;
+    height: 250px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.fill-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(to top, #ef4444, #f87171);
+    border-radius: 10px;
+    transition: height 0.8s ease;
+}
+
+.month-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.payment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+.payment-item:hover {
+    transform: translateX(5px);
+    background: #f1f5f9;
+}
+
+.pay-user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.pay-details .p-name {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    font-size: 14px;
+}
+
+.pay-details .p-date {
+    font-size: 11px;
+    color: #64748b;
+    margin: 0;
+}
+
+.pay-amount {
+    margin-left: auto;
+    font-weight: 800;
+    color: #16a34a;
+    font-size: 15px;
+}
+
+.export-btn {
+    padding: 12px 20px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #1e293b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.export-btn:hover {
+    background: #f8fafc;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+@media (max-width: 1100px) {
+    .finance-main-grid {
+        grid-template-columns: 1fr;
+    }
+}

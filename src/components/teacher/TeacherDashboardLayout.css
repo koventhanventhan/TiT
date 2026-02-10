@@ -1,0 +1,95 @@
+.teacher-console-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.teacher-console-main {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.teacher-console-header {
+    height: 80px;
+    background: #ffffff;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-search input {
+    width: 300px;
+    padding: 10px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.header-search input:focus {
+    border-color: #3b82f6;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #3b82f6;
+    color: #ffffff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.teacher-console-content {
+    padding: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .teacher-console-main {
+        margin-left: 70px;
+    }
+
+    .teacher-console-header {
+        padding: 0 20px;
+    }
+
+    .header-search input {
+        width: 150px;
+    }
+}

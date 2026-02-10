@@ -1,0 +1,145 @@
+# ========================
+# Node / React / Vite
+# ========================
+node_modules/
+/.pnp
+.pnp.js
+/coverage
+/build
+/dist
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# Environment Files
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.backup
+.env.production
+
+# ========================
+# Laravel Backend
+# ========================
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/storage/*.key
+backend/storage/pail
+backend/public/build
+backend/public/hot
+backend/public/storage
+backend/.phpunit.result.cache
+backend/.phpunit.cache
+backend/auth.json
+backend/bootstrap/cache/*.php
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*.log
+*.log
+
+# ========================
+# Debug / Temp PHP files
+# ========================
+backend/check-*.php
+backend/debug-*.php
+backend/debug_*.php
+backend/create-admin.php
+backend/diag.php
+backend/diag.json
+backend/diag_output.txt
+backend/extract_exception.php
+backend/fix-roles.php
+backend/generate-direct-login.php
+backend/list-users.php
+backend/login_link.txt
+backend/read_errors.php
+backend/read_raw_log.php
+backend/search_logs.php
+backend/search_today_errors.php
+backend/set-admin-role.php
+backend/setup-mysql-haja.php
+backend/show-env-database.php
+backend/test_login.php
+backend/test_user_load.php
+backend/update-admin.php
+backend/update-env-mysql.php
+backend/verify-admin-user.php
+
+# ========================
+# Debug / Test HTML & JS files (root)
+# ========================
+check-connection.js
+debug-login-flow.js
+test-admin-login.html
+test-admin-redirect-direct.html
+test-api-connection.html
+test-api.html
+test-login-api.php
+test.html
+SIMPLE_REDIRECT_TEST.html
+
+# ========================
+# Documentation / Debug MDs (root)
+# ========================
+ADMIN_CREDENTIALS.md
+ADMIN_LOGIN_FORM_REMOVED.md
+ADMIN_LOGIN_REDIRECT.md
+ADMIN_SETUP.md
+CHECK_AND_FIX.md
+DATABASE_INFO.md
+DEBUG_ADMIN_LOGIN.md
+DEBUG_BLANK_PAGE.md
+FIX_*.md
+HOW_TO_VIEW_ADMIN_IN_DATABASE.md
+LARAVEL_SETUP.md
+LOGIN_FLOW_SUMMARY.md
+QUICK_FIX_*.md
+QUICK_START.md
+QUICK_START_LARAVEL.md
+REACT_LOGIN_TO_LARAVEL_DASHBOARD.md
+REACT_TO_LARAVEL_ADMIN.md
+REGISTRATION_SUBMIT_BUTTON.md
+ROLE_BASED_ACCESS.md
+SUBMIT_BUTTON_FIX.md
+SUBMIT_BUTTON_LOCATION.md
+TROUBLESHOOTING.md
+TROUBLESHOOTING_FETCH_ERROR.md
+URGENT_FIX_*.md
+backend/DATABASE_SETUP.md
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+.fleet/
+.nova/
+.zed/
+*.swp
+*.swo
+*~
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Misc
+# ========================
+*.bat
+Homestead.json
+Homestead.yaml
+.phpactor.json

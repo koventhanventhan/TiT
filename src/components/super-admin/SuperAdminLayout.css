@@ -1,0 +1,78 @@
+.super-console-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.super-console-main {
+    flex: 1;
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.super-console-header {
+    height: 80px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.header-left h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.super-user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.super-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.super-role {
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.super-avatar {
+    width: 42px;
+    height: 42px;
+    background: #f1f5f9;
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.super-console-content {
+    padding: 40px;
+    flex: 1;
+}
+
+@media (max-width: 1024px) {
+    .super-console-main {
+        margin-left: 0;
+    }
+}

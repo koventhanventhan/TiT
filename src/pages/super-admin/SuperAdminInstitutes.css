@@ -1,0 +1,119 @@
+.super-institutes {
+    animation: fadeIn 0.5s ease;
+}
+
+.institutes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.institute-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.inst-header {
+    margin-bottom: 20px;
+}
+
+.inst-meta {
+    display: flex;
+    gap: 10px;
+}
+
+.status-pill {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.status-pill.active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-pill.suspended {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.plan-pill {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border: 1px solid #e2e8f0;
+}
+
+.institute-card h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 20px;
+}
+
+.inst-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.detail-item svg {
+    color: #94a3b8;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 20px;
+}
+
+.card-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.manage-btn {
+    background: #0f172a;
+    color: white;
+}
+
+.suspend-btn {
+    background: #f8fafc;
+    color: #ef4444;
+    border: 1px solid #f1f5f9;
+}
+
+.manage-btn:hover {
+    background: #1e293b;
+}
+
+.suspend-btn:hover {
+    background: #fef2f2;
+}

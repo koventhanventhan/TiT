@@ -1,0 +1,75 @@
+.admin-assignments {
+    animation: fadeIn 0.5s ease;
+}
+
+.assignments-table-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+}
+
+.asm-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.asm-title svg {
+    font-size: 20px;
+    color: #ef4444;
+}
+
+.asm-title .title {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.asm-title .grade {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.teacher-ref {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.teacher-ref .t-avatar {
+    width: 28px;
+    height: 28px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.submission-count .count {
+    font-weight: 800;
+    color: #10b981;
+}
+
+.submission-count .total {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-left: 4px;
+}
+
+.status-pill.expired {
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.status-pill.active {
+    background: #f0fdf4;
+    color: #16a34a;
+}

@@ -7,16 +7,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Scopes\InstituteScope;
+use App\Traits\BelongsToInstitute;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+use Lab404\Impersonate\Models\Impersonate;
+
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
-
+    use HasFactory, Notifiable, HasApiTokens, BelongsToInstitute, Impersonate;
+    
     protected static function booted()
     {
-        static::addGlobalScope(new InstituteScope);
+        static::updating(function ($user) {
+            if ($user->isDirty('password')) {
+                \Log::info('User model UPDATING password', [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'new_hash' => substr($user->password, 0, 10) . '...'
+                ]);
+            }
+        });
+    }
+
+    public function canImpersonate(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return $this->role !== 'super_admin';
     }
 
     /**
@@ -44,8 +66,17 @@ class User extends Authenticatable
         'selected_subjects',
         'admin_confirmed_at',
         'registration_status',
+        'plain_password',
+        'teacher_unique_id',
+        'teacher_class',
         'deactivated_at',
         'institute_id',
+        'username',
+        'avatar',
+        'bio',
+        'website',
+        'location',
+        'profile_settings',
     ];
 
     /**
@@ -70,6 +101,7 @@ class User extends Authenticatable
             'admin_confirmed_at' => 'datetime',
             'deactivated_at' => 'datetime',
             'password' => 'hashed',
+            'profile_settings' => 'array',
         ];
     }
 
@@ -110,5 +142,19 @@ class User extends Authenticatable
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
             ->exists();
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'super-admin') {
+            return $this->role === 'super_admin';
+        }
+
+        // Add rules for other panels if needed, e.g. 'admin'
+        if ($panel->getId() === 'admin') {
+            return in_array($this->role, ['admin', 'teacher', 'user']);
+        }
+
+        return false;
     }
 }

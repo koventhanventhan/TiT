@@ -15,52 +15,34 @@ class AdminMessageController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $messages = AdminMessage::with('targetUser')->latest()->paginate(20);
-        return view('admin.messages.index', compact('messages'));
+        // Generate a Sanctum token for API calls from JavaScript
+        $user = auth()->user();
+        $token = $user->createToken('admin-messages')->plainTextToken;
+
+        return view('admin.messages.index', compact('token'));
     }
 
-    public function create()
+    public function unreadCount()
     {
-        if (auth()->user()->role !== 'admin') {
-            return redirect()->route('admin.login')->with('error', 'Admin access required');
-        }
+        $user = auth()->user();
+        
+        // Count direct unread messages
+        $directUnread = \App\Models\Message::where('receiver_id', $user->id)
+            ->where('is_broadcast', false)
+            ->whereNull('read_at')
+            ->count();
 
-        $students = User::where('role', 'user')->whereNull('deactivated_at')->whereNotNull('full_name')->orderBy('full_name')->get();
-        return view('admin.messages.create', compact('students'));
-    }
+        // Count broadcast unread
+        $broadcastMessages = \App\Models\Message::forUser($user)
+            ->where('is_broadcast', true)
+            ->pluck('id');
 
-    public function store(Request $request)
-    {
-        if (auth()->user()->role !== 'admin') {
-            return redirect()->route('admin.login')->with('error', 'Admin access required');
-        }
+        $readBroadcastIds = \App\Models\MessageRead::where('user_id', $user->id)
+            ->whereIn('message_id', $broadcastMessages)
+            ->pluck('message_id');
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-            'target_type' => 'required|in:broadcast,individual',
-            'target_user_ids' => 'required_if:target_type,individual|array',
-            'target_user_ids.*' => 'exists:users,id',
-        ]);
+        $broadcastUnread = $broadcastMessages->diff($readBroadcastIds)->count();
 
-        if ($request->target_type === 'broadcast') {
-            AdminMessage::create([
-                'title' => $request->title,
-                'body' => $request->body,
-                'target_type' => 'broadcast',
-                'target_user_id' => null,
-            ]);
-            return redirect()->route('admin.messages.index')->with('success', 'Broadcast message created.');
-        }
-
-        foreach ($request->target_user_ids ?? [] as $userId) {
-            AdminMessage::create([
-                'title' => $request->title,
-                'body' => $request->body,
-                'target_type' => 'individual',
-                'target_user_id' => $userId,
-            ]);
-        }
-        return redirect()->route('admin.messages.index')->with('success', 'Message(s) sent.');
+        return response()->json(['unread_count' => $directUnread + $broadcastUnread]);
     }
 }

@@ -132,7 +132,7 @@
     width: 40px;
     height: 40px;
     background: #eff6ff;
-    color: #2563eb;
+    color: var(--primary-color);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -228,7 +228,7 @@
 
 .icon-btn.blue {
     background: #eff6ff;
-    color: #2563eb;
+    color: var(--primary-color);
 }
 
 .icon-btn.green {

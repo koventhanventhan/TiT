@@ -68,6 +68,13 @@ export default function AdminZoom() {
                             <button onClick={() => window.open(cls.zoom_link, '_blank')}>Join</button>
                         </div>
 
+                        {(cls.meeting_id || cls.password) && (
+                            <div className="meeting-creds">
+                                {cls.meeting_id && <span>ID: {cls.meeting_id}</span>}
+                                {cls.password && <span>Pass: {cls.password}</span>}
+                            </div>
+                        )}
+
                         <div className="card-actions">
                             <button className="edit-btn"><FiEdit /> Edit</button>
                             <button className="delete-btn"><FiTrash2 /> Remove</button>

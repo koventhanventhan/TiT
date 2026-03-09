@@ -32,7 +32,7 @@ export default function TeacherOverview() {
         { label: "Today's Classes", value: stats?.today_classes || 0, icon: <FiVideo />, color: '#3b82f6' },
         { label: "Total Students", value: stats?.total_students || 0, icon: <FiUsers />, color: '#10b981' },
         { label: "Pending Assignments", value: stats?.pending_assignments || 0, icon: <FiFileText />, color: '#f59e0b' },
-        { label: "Upcoming (7d)", value: stats?.upcoming_classes || 0, icon: <FiClock />, color: '#8b5cf6' },
+        { label: "Upcoming (7d)", value: stats?.upcoming_classes || 0, icon: <FiClock />, color: '#3b82f6' },
     ]
 
     return (

@@ -5,18 +5,18 @@
 }
 
 :root {
-  --primary-color: #6366f1;
-  --primary-dark: #4f46e5;
-  --secondary-color: #8b5cf6;
-  --accent-color: #ec4899;
+  --primary-color: #4f0bd9;
+  --primary-dark: #1a103c;
+  --secondary-color: #7c3aed;
+  --accent-color: #8b5cf6;
   --text-dark: #1f2937;
   --text-light: #6b7280;
-  --bg-light: #f9fafb;
+  --bg-light: #f5f3ff;
   --bg-white: #ffffff;
   --border-color: #e5e7eb;
-  --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-1: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
+  --gradient-2: linear-gradient(135deg, #4f0bd9 0%, #8b5cf6 100%);
+  --gradient-3: linear-gradient(135deg, #4f0bd9 0%, #4f0bd9 100%);
 }
 
 html {
@@ -115,13 +115,12 @@ code {
   .section {
     padding: 60px 0;
   }
-  
+
   .section-title {
     font-size: 32px;
   }
-  
+
   .section-subtitle {
     font-size: 16px;
   }
 }
-

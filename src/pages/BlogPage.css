@@ -370,7 +370,7 @@
 
 .btn-back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
 }
 
 @media (max-width: 968px) {

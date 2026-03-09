@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { FiPlus, FiGlobe, FiPackage, FiCalendar, FiActivity } from 'react-icons/fi'
-import { getSuperAdminInstitutes, getSuperAdminPlans } from '../../services/dashboardService'
+import {
+    getSuperAdminInstitutes,
+    getSuperAdminPlans,
+    updateSuperAdminInstitute
+} from '../../services/dashboardService'
 import './SuperAdminInstitutes.css'
 
 export default function SuperAdminInstitutes() {
@@ -25,6 +29,16 @@ export default function SuperAdminInstitutes() {
         }
         loadData()
     }, [])
+
+    const toggleStatus = async (inst) => {
+        const newStatus = inst.status === 'active' ? 'suspended' : 'active'
+        try {
+            const updated = await updateSuperAdminInstitute(inst.id, { status: newStatus })
+            setInstitutes(prev => prev.map(i => i.id === updated.id ? updated : i))
+        } catch (error) {
+            alert('Failed to update institute status')
+        }
+    }
 
     if (loading) return <div className="loading-shimmer">Scanning global tenant network...</div>
 
@@ -58,7 +72,12 @@ export default function SuperAdminInstitutes() {
                         </div>
                         <div className="card-actions">
                             <button className="manage-btn">Manage</button>
-                            <button className="suspend-btn">Suspend</button>
+                            <button
+                                className={inst.status === 'active' ? 'suspend-btn' : 'activate-btn'}
+                                onClick={() => toggleStatus(inst)}
+                            >
+                                {inst.status === 'active' ? 'Suspend' : 'Activate'}
+                            </button>
                         </div>
                     </div>
                 ))}

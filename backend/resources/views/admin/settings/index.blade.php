@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Frontend Settings - {{ config('app.name') }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
@@ -12,6 +13,7 @@
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/vendor/owl-carousel/owl.carousel.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <style>
         .content-body {
             margin-top: 0 !important;
@@ -44,7 +46,53 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
         }
+
+        /* Interactive Logo Preview */
+        .clickable-logo-preview {
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: #f8f9fa !important;
+        }
+        .clickable-logo-preview:hover {
+            border-color: #EB8153 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .logo-preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 600;
+        }
+        .clickable-logo-preview:hover .logo-preview-overlay {
+            opacity: 1;
+        }
+        .empty-logo:hover {
+            background: #fff !important;
+            color: #EB8153 !important;
+        }
     </style>
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
 
 <body>
@@ -58,14 +106,18 @@
 
     <div id="main-wrapper">
         <div class="nav-header">
-            <a href="{{ route('admin.dashboard') }}" class="brand-logo">
-                <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
-                    <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
-                </svg>
-                <svg class="brand-title" width="74" height="22" viewBox="0 0 74 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path class="svg-logo-path" d="M0.784 17.556L10.92 5.152H1.176V1.12H16.436V4.564L6.776 16.968H16.548V21H0.784V17.556ZM25.7399 21.28C24.0785 21.28 22.6599 20.9347 21.4839 20.244C20.3079 19.5533 19.4025 18.6387 18.7679 17.5C18.1519 16.3613 17.8439 15.1293 17.8439 13.804C17.8439 12.3853 18.1519 11.088 18.7679 9.912C19.3839 8.736 20.2799 7.79333 21.4559 7.084C22.6319 6.37467 24.0599 6.02 25.7399 6.02C27.4012 6.02 28.8199 6.37467 29.9959 7.084C31.1719 7.79333 32.0585 8.72667 32.6559 9.884C33.2719 11.0413 33.5799 12.2827 33.5799 13.608C33.5799 14.1493 33.5425 14.6253 33.4679 15.036H22.6039C22.6785 16.0253 23.0332 16.7813 23.6679 17.304C24.3212 17.808 25.0585 18.06 25.8799 18.06C26.5332 18.06 27.1585 17.9013 27.7559 17.584C28.3532 17.2667 28.7639 16.8373 28.9879 16.296L32.7959 17.36C32.2172 18.5173 31.3119 19.46 30.0799 20.188C28.8665 20.916 27.4199 21.28 25.7399 21.28ZM22.4919 12.292H28.8759C28.7825 11.3587 28.4372 10.6213 27.8399 10.08C27.2612 9.52 26.5425 9.24 25.6839 9.24C24.8252 9.24 24.0972 9.52 23.4999 10.08C22.9212 10.64 22.5852 11.3773 22.4919 12.292ZM49.7783 21H45.2983V12.74C45.2983 11.7693 45.1116 11.0693 44.7383 10.64C44.3836 10.192 43.9076 9.968 43.3103 9.968C42.6943 9.968 42.069 10.2107 41.4343 10.696C40.7996 11.1813 40.3516 11.8067 40.0903 12.572V21H35.6103V6.3H39.6423V8.764C40.1836 7.90533 40.949 7.23333 41.9383 6.748C42.9276 6.26267 44.0663 6.02 45.3543 6.02C46.3063 6.02 47.0716 6.19733 47.6503 6.552C48.2476 6.888 48.6956 7.336 48.9943 7.896C49.3116 8.43733 49.517 9.03467 49.6103 9.688C49.7223 10.3413 49.7783 10.976 49.7783 11.592V21ZM52.7548 4.62V0.559999H57.2348V4.62H52.7548ZM52.7548 21V6.3H57.2348V21H52.7548ZM63.4657 6.3L66.0697 10.444L66.3497 10.976L66.6297 10.444L69.2337 6.3H73.8537L68.9257 13.608L73.9657 21H69.3457L66.6017 16.884L66.3497 16.352L66.0977 16.884L63.3537 21H58.7337L63.7737 13.692L58.8457 6.3H63.4657Z" fill="black"/>
-                </svg>
+                        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
+                @if(isset($site_settings['admin_logo']))
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                @else
+                    <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
+                        <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                    </svg>
+                @endif
+                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                </span>
             </a>
             <div class="nav-control">
                 <div class="hamburger">
@@ -115,24 +167,39 @@
                                     Home
                                 </a>
                             </li>
+                            
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    <div class="header-info">
+                                    <!-- <div class="header-info">
                                         <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
                                         <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
-                                    </div>
-                                    <img src="{{ asset('admin-theme/images/profile/pic1.jpg') }}" width="20" alt="" style="border-radius: 50%;">
+                                    </div> -->
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
+                                    @else
+                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a href="#" class="dropdown-item ai-icon">
-                                        <svg id="icon-user1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <span class="ml-2">Profile </span>
+                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
+                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
+                                        <small class="text-muted">{{ Auth::user()->email }}</small>
+                                    </div>
+                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
+                                        <i class="la la-cog text-primary mr-2"></i>
+                                        <span class="ml-2">Settings</span>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.logout') }}">
+                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
+                                        <i class="la la-calendar text-primary mr-2"></i>
+                                        <span class="ml-2">Calendar</span>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
                                         @csrf
-                                        <button type="submit" class="dropdown-item ai-icon">
-                                            <svg id="icon-logout" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                            <span class="ml-2">Logout </span>
+                                        <button type="submit" class="dropdown-item ai-icon text-danger">
+                                            <i class="la la-sign-out text-danger mr-2"></i>
+                                            <span class="ml-2">Sign out</span>
                                         </button>
                                     </form>
                                 </div>
@@ -143,59 +210,7 @@
             </div>
         </div>
 
-        <div class="deznav">
-            <div class="deznav-scroll">
-                <ul class="metismenu" id="menu">
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-networking"></i>
-                            <span class="nav-text">Dashboard</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Users</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="#">All Users</a></li>
-                            <li><a href="#">Add User</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-notepad"></i>
-                            <span class="nav-text">Student Entries</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.students.index') }}">All Students</a></li>
-                            <li><a href="{{ route('admin.students.create') }}">Add Student</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Teachers</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.teachers.index') }}">All Teachers</a></li>
-                            <li><a href="{{ route('admin.teachers.create') }}">Add Teacher</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-settings-2"></i>
-                            <span class="nav-text">Settings</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.settings.index') }}">Frontend Settings</a></li>
-                            <li><a href="{{ route('admin.settings.about') }}">About Page</a></li>
-                            <li><a href="{{ route('admin.settings.contact') }}">Contact Page</a></li>
-                            <li><a href="{{ route('admin.settings.learning') }}">Learning Site Page</a></li>
-                            <li><a href="{{ route('admin.settings.classes') }}">Classes Page</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        @include('admin.partials.sidebar')
 
         <div class="content-body">
             <div class="container-fluid">
@@ -226,8 +241,9 @@
                                 <div class="profile-tab">
                                     <div class="custom-tab-1">
                                         <ul class="nav nav-tabs">
-                                            <li class="nav-item"><a href="#hero" data-toggle="tab" class="nav-link active show">Hero Section</a></li>
-                                            <li class="nav-item"><a href="#stats" data-toggle="tab" class="nav-link">Stats</a></li>
+                                             <li class="nav-item"><a href="#admin_identity" data-toggle="tab" class="nav-link">Admin Identity</a></li>
+                                             <li class="nav-item"><a href="#hero" data-toggle="tab" class="nav-link active show">Hero Section</a></li>
+                                             <li class="nav-item"><a href="#stats" data-toggle="tab" class="nav-link">Stats</a></li>
                                              <li class="nav-item"><a href="#testimonials" data-toggle="tab" class="nav-link">Testimonials Section</a></li>
                                              <li class="nav-item"><a href="#onboarding" data-toggle="tab" class="nav-link">Onboarding Section</a></li>
                                              <li class="nav-item"><a href="#mobileapp" data-toggle="tab" class="nav-link">Mobile App Section</a></li>
@@ -238,6 +254,62 @@
                                             <li class="nav-item"><a href="#footer" data-toggle="tab" class="nav-link">Footer & General</a></li>
                                         </ul>
                                         <div class="tab-content">
+                                            <!-- Admin Identity Section -->
+                                            <div id="admin_identity" class="tab-pane fade">
+                                                <div class="pt-4">
+                                                    <form action="{{ route('admin.settings.store') }}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <h5 class="mb-3 text-primary">Admin Branding</h5>
+                                                        <div class="form-group row">
+                                                            <label class="col-sm-3 col-form-label">Company Name</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" name="admin_company_name" class="form-control" value="{{ App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}">
+                                                                <small class="text-muted">This name appears next to the logo in the sidebar and header.</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <label class="col-sm-3 col-form-label">Admin Logo</label>
+                                                            <div class="col-sm-9">
+                                                                <div class="mb-3">
+                                                                    <div id="admin-logo-preview-container" class="position-relative d-inline-block">
+                                                                        @if($admin_logo = App\Models\SiteSetting::get('admin_logo'))
+                                                                            <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview" 
+                                                                                 style="max-width: 200px; cursor: pointer;"
+                                                                                 onclick="document.getElementById('adminLogoInput').click()">
+                                                                                <img src="{{ asset($admin_logo) }}" id="admin-logo-display" alt="Admin Logo" style="max-height: 60px; max-width: 100%;">
+                                                                                <div class="logo-preview-overlay">
+                                                                                    <i class="fa fa-camera"></i> Change
+                                                                                </div>
+                                                                            </div>
+                                                                            <button type="button" class="btn btn-danger btn-xs mt-2" onclick="window.removeAdminLogo()">
+                                                                                <i class="fa fa-trash"></i> Remove Logo
+                                                                            </button>
+                                                                        @else
+                                                                            <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview empty-logo" 
+                                                                                 style="max-width: 200px; cursor: pointer; height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ddd;"
+                                                                                 onclick="document.getElementById('adminLogoInput').click()">
+                                                                                <div class="text-muted">
+                                                                                    <i class="fa fa-plus fa-2x mb-2"></i><br>
+                                                                                    Click to Upload
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
+                                                                        <input type="hidden" name="remove_admin_logo" id="removeAdminLogoFlag" value="0">
+                                                                    </div>
+                                                                    <div class="custom-file d-none">
+                                                                        <input type="file" name="admin_logo" class="custom-file-input" id="adminLogoInput" onchange="window.previewAdminLogo(this)">
+                                                                        <label class="custom-file-label" for="adminLogoInput">Choose logo...</label>
+                                                                    </div>
+                                                                    <div class="mt-2">
+                                                                        <small class="text-muted">Recommended size: 50x50px or 200x50px. PNG or SVG preferred.</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary mt-3">Save Admin Identity</button>
+                                                    </form>
+                                                </div>
+                                            </div>
                                             <!-- Hero Section -->
                                             <div id="hero" class="tab-pane fade active show">
                                                 <div class="pt-4">
@@ -370,7 +442,7 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Section Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <textarea name="onboarding_subtitle" class="form-control" rows="2">{{ App\Models\SiteSetting::get('onboarding_subtitle', 'Follow our simple steps to join EduLearn Online Tuition 📚') }}</textarea>
+                                                                 <textarea name="onboarding_subtitle" class="form-control" rows="2">{{ App\Models\SiteSetting::get('onboarding_subtitle', 'Follow our simple steps to join EduLearn Online Tuition ðŸ“š') }}</textarea>
                                                              </div>
                                                          </div>
 
@@ -417,7 +489,7 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Description</label>
                                                              <div class="col-sm-9">
-                                                                 <textarea name="mobile_description" class="form-control" rows="4">{{ App\Models\SiteSetting::get('mobile_description', 'Take your learning on the go with the EduLearn Mobile App, available on both iOS and Android. Access live classes, class recordings, exams, and progress updates seamlessly from your mobile device. Stay connected, stay updated, and unlock a world of learning at your fingertips—anytime, anywhere!') }}</textarea>
+                                                                 <textarea name="mobile_description" class="form-control" rows="4">{{ App\Models\SiteSetting::get('mobile_description', 'Take your learning on the go with the EduLearn Mobile App, available on both iOS and Android. Access live classes, class recordings, exams, and progress updates seamlessly from your mobile device. Stay connected, stay updated, and unlock a world of learning at your fingertipsâ€”anytime, anywhere!') }}</textarea>
                                                              </div>
                                                          </div>
 
@@ -456,7 +528,7 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="why_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('why_subtitle', 'Quality Assured Online Learning 👨🏻‍🎓') }}">
+                                                                 <input type="text" name="why_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('why_subtitle', 'Quality Assured Online Learning ðŸ‘¨ðŸ»â€ðŸŽ“') }}">
                                                              </div>
                                                          </div>
 
@@ -669,7 +741,7 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Copyright Text</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_copyright" class="form-control" value="{{ App\Models\SiteSetting::get('footer_copyright', 'Copyrights © 2025 TiT. All rights reserved by TiT Online Education (PVT) Ltd.') }}">
+                                                                <input type="text" name="footer_copyright" class="form-control" value="{{ App\Models\SiteSetting::get('footer_copyright', 'Copyrights Â© 2025 TiT. All rights reserved by TiT Online Education (PVT) Ltd.') }}">
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-primary mt-3">Save Footer Changes</button>
@@ -688,7 +760,7 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -698,6 +770,7 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
     <style>
         .testimonial-item {
             background: #3b3363;
@@ -1052,7 +1125,69 @@
             addOnboardingBtn.addEventListener('click', () => { createOnboardingItem(); syncOnboarding(); });
             addWhyBtn.addEventListener('click', () => { createWhyItem(); syncWhy(); });
             addClassBtn.addEventListener('click', () => { createClassTypeItem(); syncClasses(); });
+
+            // --- Admin Logo Management ---
+            window.previewAdminLogo = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const display = document.getElementById('admin-logo-display');
+                        if (display) {
+                            display.src = e.target.result;
+                        } else {
+                            // If it was empty, we need to refresh or manually build the preview
+                            // For simplicity, we'll just show the filename or reload the page after save
+                            // But better UX is to show it:
+                            const container = document.getElementById('admin-logo-preview-container');
+                            container.innerHTML = `
+                                <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview" 
+                                     style="max-width: 200px; cursor: pointer;"
+                                     onclick="document.getElementById('adminLogoInput').click()">
+                                    <img src="${e.target.result}" id="admin-logo-display" alt="Admin Logo" style="max-height: 60px; max-width: 100%;">
+                                    <div class="logo-preview-overlay">
+                                        <i class="fa fa-camera"></i> Change
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-xs mt-2" onclick="window.removeAdminLogo()">
+                                    <i class="fa fa-trash"></i> Remove Logo
+                                </button>
+                                <input type="hidden" name="remove_admin_logo" id="removeAdminLogoFlag" value="0">
+                            `;
+                        }
+                        document.getElementById('removeAdminLogoFlag').value = '0';
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.removeAdminLogo = function() {
+                if (confirm('Are you sure you want to remove the logo? It will fall back to the default icon.')) {
+                    document.getElementById('removeAdminLogoFlag').value = '1';
+                    const container = document.getElementById('admin-logo-preview-container');
+                    container.innerHTML = `
+                        <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview empty-logo" 
+                             style="max-width: 200px; cursor: pointer; height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ddd;"
+                             onclick="document.getElementById('adminLogoInput').click()">
+                            <div class="text-muted">
+                                <i class="fa fa-plus fa-2x mb-2"></i><br>
+                                Click to Upload
+                            </div>
+                        </div>
+                        <input type="hidden" name="remove_admin_logo" id="removeAdminLogoFlag" value="1">
+                    `;
+                    document.getElementById('adminLogoInput').value = '';
+                }
+            };
         });
     </script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
+
+
+
+

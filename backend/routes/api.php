@@ -46,27 +46,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/register/step2', [RegistrationController::class, 'step2']);
     Route::post('/register/payment-success', [RegistrationController::class, 'paymentSuccess']);
 
-    // Student zoom classes and attendance
-    Route::get('/student/zoom-classes', [StudentZoomController::class, 'index']);
-    Route::post('/student/attend', [StudentZoomController::class, 'attend']);
-    // Student messages
-    Route::get('/student/messages', [StudentMessageController::class, 'index']);
-    Route::post('/student/messages/{id}/read', [StudentMessageController::class, 'markRead']);
-
-    // New Student Dashboard Routes
-    Route::prefix('student')->group(function () {
+    // Student Dashboard Routes (Tenant Aware + Role: student)
+    Route::middleware(['role:user', 'tenant'])->prefix('student')->group(function () {
+        Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
+        Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
+        Route::post('/attend', [StudentZoomController::class, 'attend']);
+        Route::get('/messages', [StudentMessageController::class, 'index']);
+        Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
+        
         Route::get('/stats', [\App\Http\Controllers\Api\StudentDashboardController::class, 'stats']);
         Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
         Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
         Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
     });
 
-    // Teacher zoom classes and attendance
-    Route::get('/teacher/zoom-classes', [TeacherZoomController::class, 'index']);
-    Route::post('/teacher/attend', [TeacherZoomController::class, 'attend']);
-
-    // New Teacher Dashboard Routes
-    Route::prefix('teacher')->group(function () {
+    // Teacher Dashboard Routes (Tenant Aware + Role: teacher)
+    Route::middleware(['role:teacher', 'tenant'])->prefix('teacher')->group(function () {
+        Route::get('/zoom-classes', [TeacherZoomController::class, 'index']);
+        Route::post('/attend', [TeacherZoomController::class, 'attend']);
+        
         Route::get('/stats', [\App\Http\Controllers\Api\TeacherDashboardController::class, 'stats']);
         Route::get('/upcoming-schedules', [\App\Http\Controllers\Api\TeacherDashboardController::class, 'upcomingSchedules']);
         
@@ -82,8 +80,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'store']);
     });
 
-    // Admin Master Control Routes
-    Route::prefix('admin')->group(function () {
+    // Admin Master Control Routes (Tenant Aware + Role: admin)
+    Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
         Route::get('/teachers', [\App\Http\Controllers\Api\MasterAdminController::class, 'teachers']);
@@ -93,14 +91,32 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'settings']);
         Route::get('/assignments', [\App\Http\Controllers\Api\MasterAdminController::class, 'assignments']);
         Route::get('/attendance', [\App\Http\Controllers\Api\MasterAdminController::class, 'attendanceStats']);
+        Route::post('/branding', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateBranding']);
     });
 
-    // Super Admin Routes
-    Route::prefix('super-admin')->group(function () {
+    // Super Admin Routes (Role: super_admin) - Note: Global context, no tenant middleware usually
+    Route::middleware(['role:super_admin'])->prefix('super-admin')->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\SuperAdminController::class, 'stats']);
         Route::get('/institutes', [\App\Http\Controllers\Api\SuperAdminController::class, 'institutes']);
         Route::post('/institutes', [\App\Http\Controllers\Api\SuperAdminController::class, 'storeInstitute']);
+        Route::patch('/institutes/{institute}', [\App\Http\Controllers\Api\SuperAdminController::class, 'updateInstitute']);
         Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminController::class, 'plans']);
         Route::post('/plans', [\App\Http\Controllers\Api\SuperAdminController::class, 'storePlan']);
+        Route::patch('/plans/{plan}', [\App\Http\Controllers\Api\SuperAdminController::class, 'updatePlan']);
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\SuperAdminController::class, 'activityLogs']);
+    });
+
+    // ── Messaging System (all authenticated roles) ──
+    Route::prefix('messages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'index']);
+        Route::get('/sent', [\App\Http\Controllers\Api\MessageController::class, 'sent']);
+        Route::get('/recipients', [\App\Http\Controllers\Api\MessageController::class, 'recipients']);
+        Route::get('/unread-count', [\App\Http\Controllers\Api\MessageController::class, 'unreadCount']);
+        Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\MessageController::class, 'show']);
+        Route::post('/{id}/read', [\App\Http\Controllers\Api\MessageController::class, 'markRead']);
     });
 });
+
+Route::get('/subjects/prices', [\App\Http\Controllers\Admin\SubjectController::class, 'getPrices']);
+

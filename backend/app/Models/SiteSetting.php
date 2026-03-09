@@ -5,14 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\BelongsToInstitute;
+
 class SiteSetting extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
         'key',
         'value',
         'group',
+        'institute_id',
     ];
 
     /**

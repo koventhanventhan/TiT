@@ -26,7 +26,7 @@ const formatLaravelErrors = (error) => {
   // Check if this is a Laravel validation error response
   if (error.errors && typeof error.errors === 'object') {
     const errorMessages = []
-    
+
     // Iterate through each field's errors
     for (const [field, messages] of Object.entries(error.errors)) {
       if (Array.isArray(messages) && messages.length > 0) {
@@ -35,20 +35,20 @@ const formatLaravelErrors = (error) => {
           .split('_')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ')
-        
+
         // Add each error message for this field
         messages.forEach(msg => {
           errorMessages.push(`${fieldName}: ${msg}`)
         })
       }
     }
-    
+
     // Return formatted error message
     if (errorMessages.length > 0) {
       return errorMessages.join(' ')
     }
   }
-  
+
   // Fallback to original message or error property
   return error.message || error.error || 'An error occurred'
 }
@@ -67,24 +67,24 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
     } catch (csrfError) {
       console.warn('⚠️ Could not get CSRF cookie, continuing anyway:', csrfError)
     }
-    
+
     console.log('🔐 Attempting login to:', `${API_BASE_URL}/auth/login`)
     console.log('📝 Login credentials:', { usernameOrEmail, passwordLength: password?.length || 0 })
-    
+
     let response
     try {
       response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        usernameOrEmail,
-        password,
-      }),
-    })
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          usernameOrEmail,
+          password,
+        }),
+      })
     } catch (fetchError) {
       console.error('❌ Network error during login:', {
         error: fetchError,
@@ -93,12 +93,12 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
         stack: fetchError.stack,
         apiUrl: `${API_BASE_URL}/auth/login`
       })
-      
+
       // More specific error messages - only for actual network failures
-      if (fetchError.name === 'TypeError' && 
-          (fetchError.message.includes('Failed to fetch') || 
-           fetchError.message.includes('NetworkError') ||
-           fetchError.message.includes('Network request failed'))) {
+      if (fetchError.name === 'TypeError' &&
+        (fetchError.message.includes('Failed to fetch') ||
+          fetchError.message.includes('NetworkError') ||
+          fetchError.message.includes('Network request failed'))) {
         throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
       }
       // Re-throw other errors as-is
@@ -112,7 +112,7 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
         statusText: response.statusText,
         error: error
       })
-      
+
       // Handle 500 server errors
       if (response.status === 500) {
         // Try to extract a more specific error message from the response
@@ -123,30 +123,30 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
         }
         throw new Error(errorMsg)
       }
-      
+
       // Format Laravel validation errors
       const errorMessage = formatLaravelErrors(error)
       throw new Error(errorMessage || `Login failed (${response.status})`)
     }
 
     const data = await response.json()
-    console.log('✅ Login successful!', { 
-      user: data.user, 
+    console.log('✅ Login successful!', {
+      user: data.user,
       hasToken: !!data.token,
-      role: data.user?.role 
+      role: data.user?.role
     })
-    
+
     // Store token in localStorage
     if (data.token) {
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       console.log('💾 Token and user data saved to localStorage')
-      
+
       // Check if user is admin and redirect to admin dashboard
       const userRole = data.user?.role
       // Case-insensitive role check for robustness
       const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
-      
+
       console.log('🔍 Role check:', {
         role: userRole,
         roleType: typeof userRole,
@@ -155,24 +155,24 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
         hasUser: !!data.user,
         hasToken: !!data.token
       })
-      
+
       if (data.user && data.token && isAdmin) {
         console.log('👑 ADMIN DETECTED! Redirecting to admin dashboard immediately...')
         console.log('   User:', data.user.email)
         console.log('   Role:', data.user.role)
         console.log('   Token:', data.token ? 'Present (' + data.token.substring(0, 20) + '...)' : 'Missing')
-        
+
         // Set a flag to prevent component from showing alert
         data._isAdminRedirect = true
-        
+
         // Direct redirect with token - IMMEDIATE, NO DELAY
         // The token will be validated on the server side and session will be created
         const redirectUrl = `${BASE_URL}/admin/login?token=${encodeURIComponent(data.token)}`
         console.log('🚀 REDIRECTING TO:', redirectUrl)
-        
+
         // Immediate redirect - no setTimeout delay
         window.location.href = redirectUrl
-        
+
         return data
       } else if (data.user && data.token) {
         const isStudent = userRole && String(userRole).toLowerCase() === 'user'
@@ -196,24 +196,24 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
       name: error.name,
       apiUrl: API_BASE_URL
     })
-    
+
     // Only modify error message for actual network failures
     // Preserve specific error messages (credentials, validation, etc.)
-    const isNetworkError = error.name === 'TypeError' && 
-                          (error.message.includes('Failed to fetch') || 
-                           error.message.includes('NetworkError') ||
-                           error.message.includes('Network request failed'))
-    
+    const isNetworkError = error.name === 'TypeError' &&
+      (error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('Network request failed'))
+
     const isSpecificError = error.message.includes('Cannot connect') ||
-                           error.message.includes('credentials') ||
-                           error.message.includes('incorrect') ||
-                           error.message.includes('Login failed') ||
-                           error.message.includes('validation')
-    
+      error.message.includes('credentials') ||
+      error.message.includes('incorrect') ||
+      error.message.includes('Login failed') ||
+      error.message.includes('validation')
+
     if (isNetworkError && !isSpecificError) {
       throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
     }
-    
+
     // Re-throw the error (either original or already modified)
     throw error
   }
@@ -222,10 +222,10 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
 // Student registration step 1 (creates user with pending_payment)
 export const registerStep1 = async (userData) => {
   try {
-    await fetch(`${BASE_URL}/sanctum/csrf-cookie`, { method: 'GET', credentials: 'include' }).catch(() => {})
+    await fetch(`${BASE_URL}/sanctum/csrf-cookie`, { method: 'GET', credentials: 'include' }).catch(() => { })
     const response = await fetch(`${API_BASE_URL}/register/step1`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(userData),
     })
@@ -295,14 +295,14 @@ export const registerWithEmail = async (userData) => {
     } catch (csrfError) {
       console.warn('⚠️ Could not get CSRF cookie, continuing anyway:', csrfError)
     }
-    
+
     console.log('📝 Attempting registration to:', `${API_BASE_URL}/auth/register`)
-    console.log('📋 Registration data:', { 
-      email: userData.email, 
+    console.log('📋 Registration data:', {
+      email: userData.email,
       role: userData.role,
-      hasPassword: !!userData.password 
+      hasPassword: !!userData.password
     })
-    
+
     let response
     try {
       response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -319,12 +319,12 @@ export const registerWithEmail = async (userData) => {
         stack: fetchError.stack,
         apiUrl: `${API_BASE_URL}/auth/register`
       })
-      
+
       // More specific error messages - only for actual network failures
-      if (fetchError.name === 'TypeError' && 
-          (fetchError.message.includes('Failed to fetch') || 
-           fetchError.message.includes('NetworkError') ||
-           fetchError.message.includes('Network request failed'))) {
+      if (fetchError.name === 'TypeError' &&
+        (fetchError.message.includes('Failed to fetch') ||
+          fetchError.message.includes('NetworkError') ||
+          fetchError.message.includes('Network request failed'))) {
         throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
       }
       // Re-throw other errors as-is
@@ -338,7 +338,7 @@ export const registerWithEmail = async (userData) => {
         statusText: response.statusText,
         error: error
       })
-      
+
       // Handle 500 server errors
       if (response.status === 500) {
         // Try to extract a more specific error message from the response
@@ -349,19 +349,19 @@ export const registerWithEmail = async (userData) => {
         }
         throw new Error(errorMsg)
       }
-      
+
       // Format Laravel validation errors
       const errorMessage = formatLaravelErrors(error)
       throw new Error(errorMessage || `Registration failed (${response.status})`)
     }
 
     const data = await response.json()
-    console.log('✅ Registration successful!', { 
-      user: data.user, 
+    console.log('✅ Registration successful!', {
+      user: data.user,
       hasToken: !!data.token,
-      role: data.user?.role 
+      role: data.user?.role
     })
-    
+
     // Store token in localStorage
     if (data.token) {
       localStorage.setItem('authToken', data.token)
@@ -377,24 +377,24 @@ export const registerWithEmail = async (userData) => {
       name: error.name,
       apiUrl: API_BASE_URL
     })
-    
+
     // Only modify error message for actual network failures
     // Preserve specific error messages (validation, duplicate email, etc.)
-    const isNetworkError = error.name === 'TypeError' && 
-                          (error.message.includes('Failed to fetch') || 
-                           error.message.includes('NetworkError') ||
-                           error.message.includes('Network request failed'))
-    
+    const isNetworkError = error.name === 'TypeError' &&
+      (error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('Network request failed'))
+
     const isSpecificError = error.message.includes('Cannot connect') ||
-                           error.message.includes('Registration failed') ||
-                           error.message.includes('validation') ||
-                           error.message.includes('already exists') ||
-                           error.message.includes('duplicate')
-    
+      error.message.includes('Registration failed') ||
+      error.message.includes('validation') ||
+      error.message.includes('already exists') ||
+      error.message.includes('duplicate')
+
     if (isNetworkError && !isSpecificError) {
       throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
     }
-    
+
     // Re-throw the error (either original or already modified)
     throw error
   }
@@ -404,7 +404,7 @@ export const registerWithEmail = async (userData) => {
 export const loginWithGoogle = () => {
   return new Promise((resolve, reject) => {
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID'
-    
+
     if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
       // Demo mode - simulate Google login
       setTimeout(() => {
@@ -416,7 +416,7 @@ export const loginWithGoogle = () => {
           name: 'Google User',
           picture: ''
         }
-        
+
         localStorage.setItem('authToken', 'google-token-' + Date.now())
         localStorage.setItem('user', JSON.stringify(demoUser))
         resolve({ user: demoUser, token: 'google-token' })
@@ -428,9 +428,9 @@ export const loginWithGoogle = () => {
     const redirectUri = encodeURIComponent(window.location.origin + '/auth/google/callback')
     const scope = encodeURIComponent('openid email profile')
     const responseType = 'code'
-    
+
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&access_type=offline&prompt=consent`
-    
+
     const popup = window.open(
       authUrl,
       'Google Login',
@@ -446,9 +446,9 @@ export const loginWithGoogle = () => {
     }, 1000)
 
     // Handle OAuth callback (you'll need to set up a callback route)
-    window.addEventListener('message', function(event) {
+    window.addEventListener('message', function (event) {
       if (event.origin !== window.location.origin) return
-      
+
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         clearInterval(checkPopup)
         popup.close()
@@ -465,10 +465,10 @@ export const loginWithGoogle = () => {
 export const loginWithFacebook = () => {
   return new Promise((resolve, reject) => {
     const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID || 'YOUR_FACEBOOK_APP_ID'
-    
+
     // Load Facebook SDK
     if (!window.FB) {
-      window.fbAsyncInit = function() {
+      window.fbAsyncInit = function () {
         window.FB.init({
           appId: FB_APP_ID,
           cookie: true,
@@ -503,7 +503,7 @@ const performFacebookLogin = (appId, resolve, reject) => {
         name: 'Facebook User',
         picture: ''
       }
-      
+
       localStorage.setItem('authToken', 'facebook-token-' + Date.now())
       localStorage.setItem('user', JSON.stringify(demoUser))
       resolve({ user: demoUser, token: 'facebook-token' })
@@ -520,7 +520,7 @@ const performFacebookLogin = (appId, resolve, reject) => {
           reject(new Error(userInfo.error.message || 'Failed to get user info'))
           return
         }
-        
+
         const user = {
           id: userInfo.id,
           email: userInfo.email || `${userInfo.id}@facebook.com`,
@@ -529,7 +529,7 @@ const performFacebookLogin = (appId, resolve, reject) => {
           picture: userInfo.picture?.data?.url || '',
           provider: 'facebook'
         }
-        
+
         localStorage.setItem('authToken', response.authResponse.accessToken)
         localStorage.setItem('user', JSON.stringify(user))
         resolve({ user, token: response.authResponse.accessToken })
@@ -544,14 +544,14 @@ const performFacebookLogin = (appId, resolve, reject) => {
 export const getCurrentUser = async () => {
   const token = localStorage.getItem('authToken')
   if (!token) return null
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/auth/user`, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include',
     })
-    
+
     if (response.ok) {
       const data = await response.json()
       return data.user
@@ -559,7 +559,7 @@ export const getCurrentUser = async () => {
   } catch (error) {
     console.error('Get user error:', error)
   }
-  
+
   // Fallback to localStorage
   const userStr = localStorage.getItem('user')
   return userStr ? JSON.parse(userStr) : null
@@ -573,7 +573,7 @@ export const isAuthenticated = () => {
 // Logout
 export const logout = async () => {
   const token = localStorage.getItem('authToken')
-  
+
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -585,7 +585,7 @@ export const logout = async () => {
       console.error('Logout error:', error)
     }
   }
-  
+
   localStorage.removeItem('authToken')
   localStorage.removeItem('user')
   window.location.href = '/'

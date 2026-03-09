@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FiPackage, FiPlus, FiCheck, FiX, FiEdit3 } from 'react-icons/fi'
+import { FiPackage, FiPlus, FiCheck, FiInfo, FiEdit3 } from 'react-icons/fi'
 import { getSuperAdminPlans } from '../../services/dashboardService'
 import './SuperAdminPlans.css'
 
@@ -36,24 +36,24 @@ export default function SuperAdminPlans() {
             <div className="plans-grid">
                 {plans.map((plan) => (
                     <div key={plan.id} className="plan-card">
-                        <div className="plan-icon"><FiPackage /></div>
-                        <h3>{plan.name}</h3>
-                        <div className="price-tag">
-                            <span className="currency">₹</span>
-                            <span className="amount">{plan.monthly_price}</span>
-                            <span className="period">/mo</span>
+                        <div className="plan-header">
+                            <h3>{plan.name}</h3>
+                            <div className="price-tag">
+                                <span className="currency">₹</span>
+                                <span className="amount">{plan.monthly_price}</span>
+                                <span className="period">/mo</span>
+                            </div>
                         </div>
-
-                        <ul className="plan-limits">
-                            <li><FiCheck /> <b>{plan.max_students === -1 ? 'Unlimited' : plan.max_students}</b> Students</li>
-                            <li><FiCheck /> <b>{plan.max_teachers === -1 ? 'Unlimited' : plan.max_teachers}</b> Teachers</li>
+                        <ul className="plan-features">
+                            <li><FiCheck /> {plan.max_students === -1 ? 'Unlimited' : plan.max_students} Students</li>
+                            <li><FiCheck /> {plan.max_teachers === -1 ? 'Unlimited' : plan.max_teachers} Teachers</li>
                             {plan.features?.map((f, i) => (
                                 <li key={i}><FiCheck /> {f}</li>
                             ))}
                         </ul>
-
                         <div className="plan-actions">
-                            <button className="edit-plan-btn"><FiEdit3 /> Edit Tier</button>
+                            <button className="edit-btn"><FiEdit3 /> Edit Tier</button>
+                            <button className="delete-btn">Archive</button>
                         </div>
                     </div>
                 ))}

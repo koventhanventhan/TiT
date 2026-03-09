@@ -11,7 +11,7 @@
   right: -20%;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   z-index: 0;
 }
@@ -98,29 +98,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-light);
+  background: rgba(79, 11, 217, 0.08);
   border-radius: 16px;
-  font-size: 28px;
-  color: var(--primary-color);
   transition: all 0.3s ease;
 }
 
 .contact-info-card.gradient-1 .contact-icon {
-  color: #6366f1;
+  color: var(--primary-color);
 }
 
 .contact-info-card.gradient-2 .contact-icon {
-  color: #ec4899;
+  color: #06b6d4;
 }
 
 .contact-info-card.gradient-3 .contact-icon {
-  color: #4facfe;
+  color: var(--primary-color);
 }
 
 .contact-info-card:hover .contact-icon {
-  background: var(--gradient-1);
-  color: white;
+  background: var(--primary-color);
   transform: scale(1.1) rotate(5deg);
+}
+
+.contact-info-card:hover .contact-icon lord-icon {
+  filter: brightness(0) invert(1);
 }
 
 .contact-info-card.gradient-2:hover .contact-icon {
@@ -151,7 +152,7 @@
 }
 
 .contact-hours {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   padding: 32px;
   border-radius: 20px;
   color: white;
@@ -166,6 +167,7 @@
   gap: 12px;
 }
 
+.hours-title lord-icon,
 .hours-title svg {
   font-size: 28px;
 }
@@ -221,6 +223,7 @@
   gap: 12px;
 }
 
+.form-title lord-icon,
 .form-title svg {
   color: var(--primary-color);
   font-size: 32px;
@@ -253,6 +256,7 @@
   gap: 8px;
 }
 
+.form-label lord-icon,
 .form-label svg {
   font-size: 16px;
   color: var(--primary-color);
@@ -275,7 +279,7 @@
 .form-textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .form-input::placeholder,
@@ -309,13 +313,14 @@
 
 .form-submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
 }
 
 .form-submit-btn:active {
   transform: translateY(0);
 }
 
+.form-submit-btn lord-icon,
 .form-submit-btn svg {
   font-size: 20px;
   transition: transform 0.3s ease;
@@ -367,4 +372,3 @@
     font-size: 24px;
   }
 }
-

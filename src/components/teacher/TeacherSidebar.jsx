@@ -1,12 +1,13 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { 
-  FiHome, 
-  FiCalendar, 
-  FiUsers, 
-  FiFileText, 
-  FiBookOpen, 
-  FiBarChart2, 
+import {
+  FiHome,
+  FiCalendar,
+  FiUsers,
+  FiFileText,
+  FiBookOpen,
+  FiBarChart2,
+  FiMessageSquare,
   FiSettings,
   FiLogOut
 } from 'react-icons/fi'
@@ -20,6 +21,7 @@ export default function TeacherSidebar() {
     { name: 'Assignments', icon: <FiFileText />, path: '/teacher/assignments' },
     { name: 'Materials', icon: <FiBookOpen />, path: '/teacher/materials' },
     { name: 'Reports', icon: <FiBarChart2 />, path: '/teacher/reports' },
+    { name: 'Messages', icon: <FiMessageSquare />, path: '/teacher/messages' },
     { name: 'Settings', icon: <FiSettings />, path: '/teacher/settings' },
   ]
 
@@ -31,12 +33,12 @@ export default function TeacherSidebar() {
           <span className="logo-text">Console</span>
         </div>
       </div>
-      
+
       <nav className="sidebar-nav">
         {menuItems.map((item) => (
-          <NavLink 
-            key={item.name} 
-            to={item.path} 
+          <NavLink
+            key={item.name}
+            to={item.path}
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             end={item.path === '/teacher/dashboard'}
           >

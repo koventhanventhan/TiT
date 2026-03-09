@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { FiMail, FiPhone, FiMapPin, FiSend, FiMessageCircle, FiUser, FiMessageSquare } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import './Contact.css'
 
@@ -39,21 +38,42 @@ const Contact = () => {
 
   const contactInfo = [
     {
-      icon: <FiPhone />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/tftaqpbe.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Phone',
       content: footer_phone,
       link: `tel:${footer_phone.replace(/\s/g, '')}`,
       color: 'gradient-1'
     },
     {
-      icon: <FiMail />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/ebjjbeag.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Email',
       content: footer_email,
       link: `mailto:${footer_email}`,
       color: 'gradient-2'
     },
     {
-      icon: <FiMapPin />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/surdgmqi.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Location',
       content: contact_location,
       link: '#',
@@ -89,7 +109,12 @@ const Contact = () => {
 
             <div className="contact-hours">
               <h3 className="hours-title">
-                <FiMessageCircle />
+                <lord-icon
+                  src="https://cdn.lordicon.com/fdxqxpql.json"
+                  trigger="hover"
+                  colors="primary:#4f0bd9"
+                  style={{ width: '24px', height: '24px', marginRight: '8px' }}
+                />
                 Support Hours
               </h3>
               <div className="hours-list">
@@ -112,13 +137,23 @@ const Contact = () => {
           <div className="contact-form-section">
             <div className="form-wrapper">
               <h3 className="form-title">
-                <FiMessageSquare />
+                <lord-icon
+                  src="https://cdn.lordicon.com/fdxqxpql.json"
+                  trigger="hover"
+                  colors="primary:#4f0bd9"
+                  style={{ width: '24px', height: '24px', marginRight: '8px' }}
+                />
                 Send Us a Message
               </h3>
               <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-group">
                   <label htmlFor="name" className="form-label">
-                    <FiUser />
+                    <lord-icon
+                      src="https://cdn.lordicon.com/dxjqoygy.json"
+                      trigger="focus"
+                      colors="primary:#4f0bd9"
+                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                    />
                     Your Name
                   </label>
                   <input
@@ -136,7 +171,12 @@ const Contact = () => {
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="email" className="form-label">
-                      <FiMail />
+                      <lord-icon
+                        src="https://cdn.lordicon.com/ebjjbeag.json"
+                        trigger="focus"
+                        colors="primary:#4f0bd9"
+                        style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                      />
                       Email Address
                     </label>
                     <input
@@ -153,7 +193,12 @@ const Contact = () => {
 
                   <div className="form-group">
                     <label htmlFor="phone" className="form-label">
-                      <FiPhone />
+                      <lord-icon
+                        src="https://cdn.lordicon.com/tftaqpbe.json"
+                        trigger="focus"
+                        colors="primary:#4f0bd9"
+                        style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                      />
                       Phone Number
                     </label>
                     <input
@@ -170,7 +215,12 @@ const Contact = () => {
 
                 <div className="form-group">
                   <label htmlFor="subject" className="form-label">
-                    <FiMessageSquare />
+                    <lord-icon
+                      src="https://cdn.lordicon.com/fdxqxpql.json"
+                      trigger="focus"
+                      colors="primary:#4f0bd9"
+                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                    />
                     Subject
                   </label>
                   <input
@@ -187,7 +237,12 @@ const Contact = () => {
 
                 <div className="form-group">
                   <label htmlFor="message" className="form-label">
-                    <FiMessageCircle />
+                    <lord-icon
+                      src="https://cdn.lordicon.com/fdxqxpql.json"
+                      trigger="focus"
+                      colors="primary:#4f0bd9"
+                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                    />
                     Your Message
                   </label>
                   <textarea
@@ -204,7 +259,12 @@ const Contact = () => {
 
                 <button type="submit" className="form-submit-btn">
                   <span>Send Message</span>
-                  <FiSend />
+                  <lord-icon
+                    src="https://cdn.lordicon.com/aymdfhbt.json"
+                    trigger="hover"
+                    colors="primary:#ffffff"
+                    style={{ width: '20px', height: '20px', marginLeft: '8px' }}
+                  />
                 </button>
               </form>
             </div>

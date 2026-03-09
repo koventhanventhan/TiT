@@ -4,18 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Payment;
+use App\Notifications\AdminNotification;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
+    protected WhatsAppService $whatsApp;
+
+    public function __construct(WhatsAppService $whatsApp)
+    {
+        $this->whatsApp = $whatsApp;
+    }
     /**
      * Step 1: Validate student form and create user with pending_payment.
      * Requires phone_number for WhatsApp.
      */
     public function step1(Request $request)
     {
+        // Check if user is already authenticated (via basic signup or login)
+        $user = auth('sanctum')->user();
+
         $gradeNum = null;
         if ($request->current_grade) {
             if (preg_match('/தரம்\s*(\d+)/', $request->current_grade, $m)) {
@@ -26,9 +37,14 @@ class RegistrationController extends Controller
         }
 
         $rules = [
-            'username' => 'required|string|max:255|unique:users,name',
+            'username' => [
+                $user ? 'nullable' : 'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'name')->ignore($user?->id),
+            ],
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL'),
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
@@ -43,10 +59,6 @@ class RegistrationController extends Controller
         $request->validate($rules);
 
         $userData = [
-            'name' => $request->username,
-            'email' => $request->username . '@student.local',
-            'password' => Hash::make('student123'),
-            'role' => 'user',
             'full_name' => $request->full_name,
             'phone_number' => $request->phone_number,
             'date_of_birth' => $request->date_of_birth,
@@ -61,11 +73,52 @@ class RegistrationController extends Controller
             'stream' => $request->stream ?? null,
             'selected_subjects' => $request->selected_subjects,
             'registration_status' => 'pending_payment',
-            'admin_confirmed_at' => null,
         ];
 
-        $user = User::create($userData);
+        if ($user) {
+            // Update existing user
+            if ($request->username) {
+                $userData['name'] = $request->username;
+            }
+            $user->update($userData);
+        } else {
+            // Create new user
+            $userData['name'] = $request->username;
+            $userData['email'] = $request->username . '@student.local';
+            $userData['password'] = Hash::make('student123');
+            $userData['role'] = 'user';
+            $userData['admin_confirmed_at'] = null;
+            $user = User::create($userData);
+
+            // Notify All Admins of new registration
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                \Log::info('RegistrationController@step1 - Notifying admin: ' . $admin->id);
+                try {
+                    $admin->notify(new AdminNotification(
+                        "New Student Registered: " . ($user->full_name ?? $user->name),
+                        'info',
+                        route('admin.students.show', $user->id),
+                        'admission_new'
+                    ));
+                } catch (\Exception $e) {
+                    \Log::error('RegistrationController@step1 - Notification failed for admin ' . $admin->id . ': ' . $e->getMessage());
+                }
+            }
+            if ($admins->isEmpty()) {
+                \Log::error('RegistrationController@step1 - Admin users not found for notification');
+            }
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Send Welcome WhatsApp
+        if ($user->phone_number) {
+            $message = "Welcome " . $user->full_name . " to " . config('app.name') . "! 🎓\n\n" .
+                "Your registration is almost complete. Please proceed to the payment step to activate your account.\n" .
+                "Your username: " . $user->name;
+            $this->whatsApp->send($user->phone_number, $message);
+        }
 
         return response()->json([
             'message' => 'Registration step 1 complete. Proceed to payment.',
@@ -90,6 +143,9 @@ class RegistrationController extends Controller
         }
 
         if ($request->payment_method === 'offline') {
+            // Mark registration as completed — email is now locked
+            $user->update(['registration_status' => 'payment_completed']);
+
             return response()->json([
                 'message' => 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',
                 'registration_status' => $user->registration_status,
@@ -97,7 +153,20 @@ class RegistrationController extends Controller
         }
 
         // Online: create Razorpay order if configured, else create a pending payment record and return order_id placeholder
-        $amount = $request->amount ? (float) $request->amount : (float) config('payment.monthly_amount', 500);
+        $amount = 0;
+        if ($user->selected_subjects) {
+            $selectedSubjects = array_map('trim', explode(',', $user->selected_subjects));
+            $subjectPrices = \App\Models\Subject::whereIn('name', $selectedSubjects)->pluck('price', 'name');
+            foreach ($selectedSubjects as $subjectName) {
+                $amount += (float) ($subjectPrices[$subjectName] ?? 0);
+            }
+        }
+
+        // Fallback to monthly amount if no subjects or sum is 0
+        if ($amount <= 0) {
+            $amount = $request->amount ? (float) $request->amount : (float) config('payment.monthly_amount', 500);
+        }
+
         $yearMonth = now()->format('Y-m');
 
         $payment = Payment::create([
@@ -107,6 +176,9 @@ class RegistrationController extends Controller
             'year_month' => $yearMonth,
             'gateway_ref' => 'order_' . uniqid(),
         ]);
+
+        // Mark registration as completed — email is now locked
+        $user->update(['registration_status' => 'payment_completed']);
 
         $orderId = $payment->gateway_ref;
 
@@ -159,6 +231,25 @@ class RegistrationController extends Controller
         ]);
 
         $user->update(['registration_status' => 'paid_pending_confirm']);
+
+        // Notify Admin of successful payment
+        $admin = User::where('role', 'admin')->first();
+        if ($admin) {
+            $admin->notify(new AdminNotification(
+                "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
+                'success',
+                route('admin.students.edit', $user->id),
+                'admission_payments'
+            ));
+        }
+
+        // Send Payment Success WhatsApp
+        if ($user->phone_number) {
+            $message = "Thank you " . ($user->full_name ?? $user->name) . "!\n\n" .
+                "Your payment has been received successfully. ✅\n" .
+                "Our team will verify it and activate your account shortly. You will receive another notification once confirmed.";
+            $this->whatsApp->send($user->phone_number, $message);
+        }
 
         return response()->json([
             'message' => 'Payment successful. Admin will confirm and you will receive a WhatsApp message.',

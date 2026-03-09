@@ -13,6 +13,7 @@ import {
     FiBarChart2,
     FiFileText
 } from 'react-icons/fi'
+import { useSettings } from '../../context/SettingsContext'
 import './AdminSidebar.css'
 
 export default function AdminSidebar() {
@@ -55,13 +56,23 @@ export default function AdminSidebar() {
         }
     ]
 
+    const { getSetting } = useSettings()
+    const instituteName = getSetting('site_name', 'Institute Panel')
+    const instituteLogo = getSetting('logo_url', null)
+
     return (
         <aside className="admin-sidebar">
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <div className="logo-icon-box admin">I</div>
+                    <div className="logo-icon-box admin">
+                        {instituteLogo ? (
+                            <img src={instituteLogo} alt="Logo" className="sidebar-avatar" />
+                        ) : (
+                            instituteName.charAt(0)
+                        )}
+                    </div>
                     <div className="logo-text">
-                        <h4>Institute Panel</h4>
+                        <h4>{instituteName}</h4>
                         <span>Academy Console</span>
                     </div>
                 </div>

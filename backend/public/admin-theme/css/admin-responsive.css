@@ -1,0 +1,460 @@
+/* ===== Admin Dashboard - Mobile Responsive CSS ===== */
+
+/* === Search Bar: Show and style properly === */
+.header-left .search_bar {
+    display: block !important;
+    position: relative;
+    flex: 1;
+    max-width: 380px;
+}
+
+.search_bar form {
+    position: relative;
+    width: 100%;
+}
+
+.search_bar .form-control {
+    width: 100%;
+    padding: 10px 40px 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.search_bar .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.search_bar .form-control:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
+.search_bar .search_icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    z-index: 10;
+    pointer-events: none;
+    background: none !important;
+    padding: 0 !important;
+    height: auto !important;
+    border-radius: 0 !important;
+}
+
+.header-left .search_bar .search_icon {
+    background: none !important;
+    height: auto !important;
+    padding: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* === Search Dropdown === */
+.admin-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #1e293b;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+}
+
+.search-group-label {
+    padding: 8px 14px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: #e2e8f0;
+    transition: background 0.15s;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-result-item:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: #fff;
+    text-decoration: none;
+}
+
+.search-result-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+}
+
+.search-result-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.search-result-name {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-name mark {
+    background: rgba(99, 102, 241, 0.4);
+    color: #fff;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.search-result-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-no-results {
+    padding: 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* === Base Header === */
+.header {
+    background: #1f2937;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-profile .header-info {
+    text-align: right;
+}
+
+.header-profile .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* === Content Body === */
+.content-body {
+    margin-top: 0 !important;
+    padding-top: 20px;
+}
+
+/* === Cards === */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+/* === Tables === */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================
+   TABLET BREAKPOINT (1024px)
+   ============================ */
+@media (max-width: 1024px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .header-profile .header-info span,
+    .header-profile .header-info p {
+        font-size: 12px;
+    }
+
+    .header-left .search_bar {
+        max-width: 260px;
+    }
+}
+
+/* ============================
+   MOBILE BREAKPOINT (768px)
+   ============================ */
+@media (max-width: 768px) {
+
+    /* Header */
+    .header-content {
+        padding: 0 10px;
+    }
+
+    .header-profile .header-info {
+        display: none;
+    }
+
+    .header-right .nav-item .btn {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+    }
+
+    .header-right .nav-item .btn svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Search bar on mobile - MUST override Zenix theme */
+    .header-left .search_bar,
+    .search_bar {
+        display: block !important;
+        max-width: 180px;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .search_bar .form-control {
+        display: block !important;
+        padding: 8px 32px 8px 12px;
+        font-size: 12px;
+    }
+
+    .admin-search-dropdown {
+        position: fixed;
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        max-height: 60vh;
+        border-radius: 10px;
+    }
+
+    /* Content */
+    .content-body {
+        padding-top: 10px !important;
+    }
+
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Cards */
+    .card-body {
+        padding: 15px;
+    }
+
+    .card-header {
+        padding: 12px 15px;
+    }
+
+    /* Widget Stats */
+    .widget-stat .card-body {
+        padding: 15px;
+    }
+
+    .widget-stat .media {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .widget-stat .media-body span {
+        font-size: 12px;
+    }
+
+    .widget-stat .media-body h4 {
+        font-size: 18px;
+    }
+
+    .widget-stat .media span[style*="width: 75px"] {
+        width: 55px !important;
+        height: 55px !important;
+    }
+
+    /* Tables */
+    .table thead th,
+    .table tbody td {
+        padding: 8px 6px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .table .badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+
+    /* Page Titles */
+    .page-title,
+    .page-title h4 {
+        font-size: 18px !important;
+    }
+
+    .page-title.d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+
+    /* Buttons */
+    .btn-sm {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    /* Badge */
+    .badge {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    /* Sidebar (Deznav) Mobile */
+    .deznav {
+        z-index: 999;
+    }
+}
+
+/* ============================
+   SMALL MOBILE (480px)
+   ============================ */
+@media (max-width: 480px) {
+
+    /* Search on small phone - MUST override Zenix theme */
+    .header-left .search_bar,
+    .search_bar {
+        display: block !important;
+        max-width: 110px;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .search_bar .form-control {
+        display: block !important;
+        padding: 7px 28px 7px 10px;
+        font-size: 11px;
+    }
+
+    .header-right .nav-item:first-child {
+        margin-right: 5px !important;
+    }
+
+    .header-right .nav-item .btn {
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+        gap: 4px !important;
+    }
+
+    .card-body {
+        padding: 10px;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+
+    /* Stack forms vertically */
+    .form-group .row {
+        flex-direction: column;
+    }
+
+    .form-group .row>[class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 0;
+        margin-bottom: 10px;
+    }
+
+    .modal-dialog {
+        margin: 10px;
+    }
+
+    .modal-body {
+        padding: 15px;
+    }
+
+    /* Messaging page responsive */
+    .msg-container {
+        flex-direction: column !important;
+    }
+
+    .msg-sidebar-panel {
+        width: 100% !important;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .msg-sidebar-panel .msg-compose-btn {
+        margin-bottom: 0 !important;
+        white-space: nowrap;
+        width: auto !important;
+        padding: 10px 16px !important;
+    }
+
+    .msg-nav-list {
+        display: flex !important;
+        gap: 8px;
+    }
+
+    .msg-nav-list li {
+        margin-bottom: 0 !important;
+    }
+
+    .msg-item {
+        padding: 12px 14px !important;
+    }
+
+    .msg-item-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 14px !important;
+    }
+
+    .msg-compose {
+        padding: 14px !important;
+    }
+
+    .recipient-btns {
+        gap: 6px !important;
+    }
+
+    .recipient-btns .rbtn {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+    }
+}

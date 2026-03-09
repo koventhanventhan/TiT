@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard - {{ config('app.name') }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
@@ -12,6 +13,7 @@
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/vendor/owl-carousel/owl.carousel.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <style>
         /* Dashboard Alignment Fixes */
         .content-body {
@@ -25,10 +27,10 @@
             margin-bottom: 20px;
         }
         
-        .card-header {
+        .card-header-1 {
             padding: 20px 25px;
             border-bottom: 1px solid #e5e5e5;
-            background: #fff;
+            background: #3b3363;
         }
         
         .card-title {
@@ -228,6 +230,18 @@
             }
         }
     </style>
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
 
 <body>
@@ -254,14 +268,18 @@
             Nav header start
         ***********************************-->
         <div class="nav-header">
-            <a href="{{ route('admin.dashboard') }}" class="brand-logo">
-                <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
-                    <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
-                </svg>
-                <svg class="brand-title" width="74" height="22" viewBox="0 0 74 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path class="svg-logo-path" d="M0.784 17.556L10.92 5.152H1.176V1.12H16.436V4.564L6.776 16.968H16.548V21H0.784V17.556ZM25.7399 21.28C24.0785 21.28 22.6599 20.9347 21.4839 20.244C20.3079 19.5533 19.4025 18.6387 18.7679 17.5C18.1519 16.3613 17.8439 15.1293 17.8439 13.804C17.8439 12.3853 18.1519 11.088 18.7679 9.912C19.3839 8.736 20.2799 7.79333 21.4559 7.084C22.6319 6.37467 24.0599 6.02 25.7399 6.02C27.4012 6.02 28.8199 6.37467 29.9959 7.084C31.1719 7.79333 32.0585 8.72667 32.6559 9.884C33.2719 11.0413 33.5799 12.2827 33.5799 13.608C33.5799 14.1493 33.5425 14.6253 33.4679 15.036H22.6039C22.6785 16.0253 23.0332 16.7813 23.6679 17.304C24.3212 17.808 25.0585 18.06 25.8799 18.06C26.5332 18.06 27.1585 17.9013 27.7559 17.584C28.3532 17.2667 28.7639 16.8373 28.9879 16.296L32.7959 17.36C32.2172 18.5173 31.3119 19.46 30.0799 20.188C28.8665 20.916 27.4199 21.28 25.7399 21.28ZM22.4919 12.292H28.8759C28.7825 11.3587 28.4372 10.6213 27.8399 10.08C27.2612 9.52 26.5425 9.24 25.6839 9.24C24.8252 9.24 24.0972 9.52 23.4999 10.08C22.9212 10.64 22.5852 11.3773 22.4919 12.292ZM49.7783 21H45.2983V12.74C45.2983 11.7693 45.1116 11.0693 44.7383 10.64C44.3836 10.192 43.9076 9.968 43.3103 9.968C42.6943 9.968 42.069 10.2107 41.4343 10.696C40.7996 11.1813 40.3516 11.8067 40.0903 12.572V21H35.6103V6.3H39.6423V8.764C40.1836 7.90533 40.949 7.23333 41.9383 6.748C42.9276 6.26267 44.0663 6.02 45.3543 6.02C46.3063 6.02 47.0716 6.19733 47.6503 6.552C48.2476 6.888 48.6956 7.336 48.9943 7.896C49.3116 8.43733 49.517 9.03467 49.6103 9.688C49.7223 10.3413 49.7783 10.976 49.7783 11.592V21ZM52.7548 4.62V0.559999H57.2348V4.62H52.7548ZM52.7548 21V6.3H57.2348V21H52.7548ZM63.4657 6.3L66.0697 10.444L66.3497 10.976L66.6297 10.444L69.2337 6.3H73.8537L68.9257 13.608L73.9657 21H69.3457L66.6017 16.884L66.3497 16.352L66.0977 16.884L63.3537 21H58.7337L63.7737 13.692L58.8457 6.3H63.4657Z" fill="black"/>
-                </svg>
+                        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
+                @if(isset($site_settings['admin_logo']))
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                @else
+                    <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
+                        <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                    </svg>
+                @endif
+                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                </span>
             </a>
             <div class="nav-control">
                 <div class="hamburger">
@@ -317,24 +335,62 @@
                                     Home
                                 </a>
                             </li>
-                            <li class="nav-item dropdown header-profile">
-                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    <div class="header-info">
-                                        <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
-                                        <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
-                                    </div>
-                                    <img src="{{ asset('admin-theme/images/profile/pic1.jpg') }}" width="20" alt="" style="border-radius: 50%;">
+
+                            <li class="nav-item">
+                                <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#3D4461" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="message-pulse"></div>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="javascript:void(0)" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse"></div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a href="#" class="dropdown-item ai-icon">
-                                        <svg id="icon-user1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <span class="ml-2">Profile </span>
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
+                            
+                            <li class="nav-item dropdown header-profile">
+                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
+                                  
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
+                                    @else
+                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
+                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
+                                        <small class="text-muted">{{ Auth::user()->email }}</small>
+                                    </div>
+                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
+                                        <i class="la la-cog text-primary mr-2"></i>
+                                        <span class="ml-2">Settings</span>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.logout') }}">
+                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
+                                        <i class="la la-calendar text-primary mr-2"></i>
+                                        <span class="ml-2">Calendar</span>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
                                         @csrf
-                                        <button type="submit" class="dropdown-item ai-icon">
-                                            <svg id="icon-logout" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                            <span class="ml-2">Logout </span>
+                                        <button type="submit" class="dropdown-item ai-icon text-danger">
+                                            <i class="la la-sign-out text-danger mr-2"></i>
+                                            <span class="ml-2">Sign out</span>
                                         </button>
                                     </form>
                                 </div>
@@ -351,78 +407,7 @@
         <!--**********************************
             Sidebar start
         ***********************************-->
-        <div class="deznav">
-            <div class="deznav-scroll">
-                <ul class="metismenu" id="menu">
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-networking"></i>
-                            <span class="nav-text">Dashboard</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Users</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="#">All Users</a></li>
-                            <li><a href="#">Add User</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-notepad"></i>
-                            <span class="nav-text">Student Entries</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.students.index') }}">All Students</a></li>
-                            <li><a href="{{ route('admin.students.create') }}">Add Student</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Teachers</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.teachers.index') }}">All Teachers</a></li>
-                            <li><a href="{{ route('admin.teachers.create') }}">Add Teacher</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-video-camera"></i>
-                            <span class="nav-text">Zoom Classes</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.zoom.index') }}">All Zoom Classes</a></li>
-                            <li><a href="{{ route('admin.zoom.create') }}">Create Zoom Class</a></li>
-                            <li><a href="{{ route('admin.attendance.index') }}">Attendance</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-message"></i>
-                            <span class="nav-text">Messages</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.messages.index') }}">All Messages</a></li>
-                            <li><a href="{{ route('admin.messages.create') }}">New Message</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-settings-2"></i>
-                            <span class="nav-text">Settings</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.settings.index') }}">Frontend Settings</a></li>
-                            <li><a href="{{ route('admin.settings.about') }}">About Page</a></li>
-                            <li><a href="{{ route('admin.settings.contact') }}">Contact Page</a></li>
-                            <li><a href="{{ route('admin.settings.learning') }}">Learning Site Page</a></li>
-                            <li><a href="{{ route('admin.settings.classes') }}">Classes Page</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        @include('admin.partials.sidebar')
         <!--**********************************
             Sidebar end
         ***********************************-->
@@ -432,57 +417,106 @@
         ***********************************-->
         <div class="content-body">
             <div class="container-fluid">
-                <!-- Page Title -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="page-title">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Dashboard Overview</h4>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Stats Cards Row -->
+                <!-- Notifications / Alerts Section -->
+                @if(($pendingApprovals ?? 0) > 0 || ($pendingPayments ?? 0) > 0)
                 <div class="row">
-                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="col-12">
+                        @if(($pendingApprovals ?? 0) > 0)
+                        <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center mb-2" role="alert" style="border-radius: 8px;">
+                            <i class="flaticon-381-warning mr-3" style="font-size: 20px;"></i>
+                            <strong>Attention!</strong> &nbsp; You have <strong>{{ $pendingApprovals }}</strong> students waiting for confirmation.
+                            <a href="{{ route('admin.students.index') }}" class="ml-auto text-dark font-weight-bold"><u>View All</u></a>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        @endif
+                        @if(($pendingPayments ?? 0) > 0)
+                        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center mb-3" role="alert" style="border-radius: 8px;">
+                            <i class="flaticon-381-television mr-3" style="font-size: 20px;"></i>
+                            <strong>Payment Notice:</strong> &nbsp; There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.
+                            <a href="#" class="ml-auto text-dark font-weight-bold"><u>Review Payments</u></a>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                <!-- Summary Cards Row -->
+                <div class="row">
+                    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
                         <div class="widget-stat card">
                             <div class="card-body p-4">
-                                <div class="media ai-icon d-flex align-items-center">
-                                    <span class="mr-3 bgl-primary text-primary" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(99, 102, 241, 0.1);">
-                                        <i class="flaticon-381-user-7" style="font-size: 30px; color: #6366f1;"></i>
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-primary text-primary" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(102, 126, 234, 0.1);">
+                                        <i class="flaticon-381-user-7" style="font-size: 28px;"></i>
                                     </span>
                                     <div class="media-body">
-                                        <p class="mb-1" style="font-size: 14px; color: #6b7280; margin: 0;">Total Users</p>
-                                        <h4 class="mb-0" style="font-size: 28px; font-weight: 700; color: #1f2937; margin: 5px 0 0 0;">{{ $totalUsers ?? 0 }}</h4>
+                                        <p class="mb-1" style="font-size: 13px; color: #6b7280;">Total Students</p>
+                                        <h4 class="mb-0" style="font-size: 24px; font-weight: 700;">{{ number_format($totalStudents ?? 0) }}</h4>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
                         <div class="widget-stat card">
                             <div class="card-body p-4">
-                                <div class="media ai-icon d-flex align-items-center">
-                                    <span class="mr-3 bgl-success text-success" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(34, 197, 94, 0.1);">
-                                        <i class="flaticon-381-user-7" style="font-size: 30px; color: #22c55e;"></i>
-                                    </span>
-                                    <div class="media-body">
-                                        <p class="mb-1" style="font-size: 14px; color: #6b7280; margin: 0;">Total Students</p>
-                                        <h4 class="mb-0" style="font-size: 28px; font-weight: 700; color: #1f2937; margin: 5px 0 0 0;">{{ $totalStudents ?? 0 }}</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6 col-sm-6">
-                        <div class="widget-stat card">
-                            <div class="card-body p-4">
-                                <div class="media ai-icon d-flex align-items-center">
+                                <div class="media ai-icon">
                                     <span class="mr-3 bgl-info text-info" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(6, 182, 212, 0.1);">
-                                        <i class="flaticon-381-user-7" style="font-size: 30px; color: #06b6d4;"></i>
+                                        <i class="flaticon-381-user-8" style="font-size: 28px;"></i>
                                     </span>
                                     <div class="media-body">
-                                        <p class="mb-1" style="font-size: 14px; color: #6b7280; margin: 0;">Total Teachers</p>
-                                        <h4 class="mb-0" style="font-size: 28px; font-weight: 700; color: #1f2937; margin: 5px 0 0 0;">{{ $totalTeachers ?? 0 }}</h4>
+                                        <p class="mb-1" style="font-size: 13px; color: #6b7280;">Total Teachers</p>
+                                        <h4 class="mb-0" style="font-size: 24px; font-weight: 700;">{{ number_format($totalTeachers ?? 0) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-warning text-warning" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(235, 129, 83, 0.1);">
+                                        <i class="flaticon-381-bookmark" style="font-size: 28px;"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <p class="mb-1" style="font-size: 13px; color: #6b7280;">Total Courses</p>
+                                        <h4 class="mb-0" style="font-size: 24px; font-weight: 700;">{{ number_format($totalCourses ?? 0) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-danger text-danger" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(239, 68, 68, 0.1);">
+                                        <i class="flaticon-381-video-camera-1" style="font-size: 28px;"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <p class="mb-1" style="font-size: 13px; color: #6b7280;">Active Classes (Today)</p>
+                                        <h4 class="mb-0" style="font-size: 24px; font-weight: 700;">{{ $activeClassesToday ?? 0 }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-success text-success" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(34, 197, 94, 0.1);">
+                                        <i class="flaticon-381-diamond" style="font-size: 28px;"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <p class="mb-1" style="font-size: 13px; color: #6b7280;">Total Revenue</p>
+                                        <h4 class="mb-0" style="font-size: 24px; font-weight: 700;">LKR {{ number_format($totalRevenue ?? 0, 2) }}</h4>
                                     </div>
                                 </div>
                             </div>
@@ -490,86 +524,127 @@
                     </div>
                 </div>
 
-                <!-- Student Entries Table -->
-                <div class="row mt-4">
-                    <div class="col-xl-12">
+                <!-- Charts Section -->
+                <div class="row">
+                    <div class="col-xl-8 col-lg-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Student Entries (Entry Forms)</h4>
-                                <a href="{{ route('admin.students.index') }}" class="btn btn-primary btn-sm">
-                                    <i class="flaticon-381-add-1"></i> View All Students
-                                </a>
+                            <div class="card-header-1">
+                                <h4 class="card-title text-white">Student Registration Trends (Last 7 Days)</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="registrationActivityChart" class="ct-chart ct-golden-section" style="height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-12">
+                        <div class="card">
+                            <div class="card-header-1">
+                                <h4 class="card-title text-white">Academic Breakdown</h4>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 18px 25px;">
+                                        <span><i class="flaticon-381-calendar-1 mr-3 text-primary"></i> Grade 12 Students</span>
+                                        <span class="badge badge-primary light badge-pill">{{ \App\Models\User::where('role', 'user')->where('current_grade', '12')->count() }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 18px 25px;">
+                                        <span><i class="flaticon-381-calendar-1 mr-3 text-info"></i> Grade 13 Students</span>
+                                        <span class="badge badge-info light badge-pill">{{ \App\Models\User::where('role', 'user')->where('current_grade', '13')->count() }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 18px 25px;">
+                                        <span><i class="flaticon-381-star-1 mr-3 text-warning"></i> Arts Stream</span>
+                                        <span class="badge badge-warning light badge-pill">{{ \App\Models\User::where('role', 'user')->where('stream', 'arts')->count() }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 18px 25px;">
+                                        <span><i class="flaticon-381-heart mr-3 text-danger"></i> Bio/Maths Stream</span>
+                                        <span class="badge badge-danger light badge-pill">{{ \App\Models\User::where('role', 'user')->where('stream', 'bio_maths')->count() }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Recent Activity Section -->
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <div class="card-header-1">
+                                <h4 class="card-title text-white">Recent Student Registrations</h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-responsive-md">
                                         <thead>
                                             <tr>
-                                                <th style="font-weight: 600;">ID</th>
-                                                <th style="font-weight: 600;">Full Name</th>
-                                                <th style="font-weight: 600;">School</th>
-                                                <th style="font-weight: 600;">Grade</th>
-                                                <th style="font-weight: 600;">Stream</th>
-                                                <th style="font-weight: 600;">Subjects</th>
-                                                <th style="font-weight: 600;">Gender</th>
-                                                <th style="font-weight: 600;">Medium</th>
-                                                <th style="font-weight: 600;">Created</th>
-                                                <th style="font-weight: 600;">Actions</th>
+                                                <th style="font-weight: 600;">Student</th>
+                                                <th style="font-weight: 600;">Academic</th>
+                                                <th style="font-weight: 600;">Status</th>
+                                                <th style="font-weight: 600;">Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($recentStudents ?? [] as $student)
+                                            @foreach(($recentStudents ?? []) as $student)
                                             <tr>
-                                                <td><strong>{{ $student->id }}</strong></td>
-                                                <td>{{ $student->full_name ?? $student->name }}</td>
-                                                <td>{{ $student->school_name ?? 'N/A' }}</td>
-                                                <td>{{ $student->current_grade ?? 'N/A' }}</td>
                                                 <td>
-                                                    @if($student->stream)
-                                                        <span class="badge badge-warning">
-                                                            {{ $student->stream === 'arts' ? 'A/L – ARTS' : 'A/L – BIO & MATHS' }}
-                                                        </span>
+                                                    <div style="font-weight: 500;">{{ $student->full_name ?? $student->name }}</div>
+                                                    <small class="text-muted">{{ $student->email }}</small>
+                                                </td>
+                                                <td>
+                                                    <small>Grade {{ $student->current_grade ?? 'N/A' }}</small><br>
+                                                    <small class="text-info">{{ strtoupper($student->stream ?? 'N/A') }}</small>
+                                                </td>
+                                                <td>
+                                                    @if($student->admin_confirmed_at)
+                                                        <span class="badge badge-xs badge-success">Confirmed</span>
                                                     @else
-                                                        <span class="badge badge-secondary">N/A</span>
+                                                        <span class="badge badge-xs badge-warning">Pending</span>
                                                     @endif
                                                 </td>
+                                                <td><small>{{ $student->created_at->format('M d') }}</small></td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Classes Section -->
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <div class="card-header-1">
+                                <h4 class="card-title text-white">Upcoming / Active Classes</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-responsive-md">
+                                        <thead>
+                                            <tr>
+                                                <th style="font-weight: 600;">Subject</th>
+                                                <th style="font-weight: 600;">Grade</th>
+                                                <th style="font-weight: 600;">Scheduled At</th>
+                                                <th style="font-weight: 600;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse(($upcomingClasses ?? []) as $class)
+                                            <tr>
+                                                <td style="font-weight: 500;">{{ $class->subject }}</td>
+                                                <td>Grade {{ $class->grade }}</td>
+                                                <td><small>{{ $class->scheduled_at->format('M d, h:i A') }}</small></td>
                                                 <td>
-                                                    @if($student->selected_subjects)
-                                                        @php
-                                                            $subjects = json_decode($student->selected_subjects, true);
-                                                            $subjectsArray = is_array($subjects) ? $subjects : [];
-                                                        @endphp
-                                                        @if(count($subjectsArray) > 0)
-                                                            <span title="{{ implode(', ', $subjectsArray) }}" style="cursor: help;">
-                                                                {{ count($subjectsArray) }} subject(s)
-                                                            </span>
-                                                        @else
-                                                            N/A
-                                                        @endif
+                                                    @if($class->scheduled_at->isPast() && $class->scheduled_at->addMinutes($class->duration)->isFuture())
+                                                        <span class="badge badge-xs badge-danger blink">LIVE</span>
                                                     @else
-                                                        N/A
+                                                        <a href="{{ $class->join_url }}" target="_blank" class="btn btn-primary btn-xs sharp"><i class="fa fa-video-camera"></i></a>
                                                     @endif
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-{{ $student->gender === 'male' ? 'primary' : 'danger' }}">
-                                                        {{ ucfirst($student->gender ?? 'N/A') }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-info">
-                                                        {{ ucfirst($student->medium ?? 'N/A') }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $student->created_at->format('M d, Y') }}</td>
-                                                <td>
-                                                    <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-primary btn-sm">
-                                                        <i class="flaticon-381-edit"></i> Edit
-                                                    </a>
                                                 </td>
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="10" class="text-center" style="padding: 40px; color: #6b7280;">No student entries found</td>
+                                                <td colspan="4" class="text-center py-4">No upcoming classes found</td>
                                             </tr>
                                             @endforelse
                                         </tbody>
@@ -580,52 +655,69 @@
                     </div>
                 </div>
 
-                <!-- Recent Users Table -->
-                <div class="row mt-4">
-                    <div class="col-xl-12">
+                <!-- Notifications / Alerts Area (Bottom) -->
+                <div class="row">
+                    <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Recent Users</h4>
+                            <div class="card-header-1">
+                                <h4 class="card-title text-white">Action Center</h4>
                             </div>
                             <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-responsive-md">
-                                        <thead>
-                                            <tr>
-                                                <th style="font-weight: 600;">ID</th>
-                                                <th style="font-weight: 600;">Name</th>
-                                                <th style="font-weight: 600;">Email</th>
-                                                <th style="font-weight: 600;">Role</th>
-                                                <th style="font-weight: 600;">Created</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($recentUsers ?? [] as $user)
-                                            <tr>
-                                                <td><strong>{{ $user->id }}</strong></td>
-                                                <td>{{ $user->name }}</td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>
-                                                    <span class="badge badge-{{ $user->role === 'admin' ? 'success' : 'primary' }}">
-                                                        {{ ucfirst($user->role ?? 'user') }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $user->created_at->format('M d, Y') }}</td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="5" class="text-center" style="padding: 40px; color: #6b7280;">No users found</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center border-right">
+                                            <h3 class="text-primary">{{ $pendingApprovals ?? 0 }}</h3>
+                                            <span class="text-muted">Wait Confirmation</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center border-right">
+                                            <h3 class="text-warning">{{ $pendingPayments ?? 0 }}</h3>
+                                            <span class="text-muted">Payment Issues</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 text-center">
+                                            <h3 class="text-info">{{ \App\Models\LearningMaterial::count() }}</h3>
+                                            <span class="text-muted">Study Materials</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Registration Activity Chart
+                new Chartist.Bar('#registrationActivityChart', {
+                    labels: {!! json_encode($chartLabels ?? []) !!},
+                    series: [{!! json_encode($chartData ?? []) !!}]
+                }, {
+                    low: 0,
+                    showArea: true,
+                    fullWidth: true,
+                    axisY: {
+                        onlyInteger: true,
+                        offset: 20
+                    }
+                });
+            });
+        </script>
+        <style>
+            @keyframes blink {
+                0% { opacity: 1; }
+                50% { opacity: 0.4; }
+                100% { opacity: 1; }
+            }
+            .blink {
+                animation: blink 1s linear infinite;
+            }
+        </style>
         <!--**********************************
             Content body end
         ***********************************-->
@@ -635,7 +727,7 @@
         ***********************************-->
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>
         <!--**********************************
@@ -654,7 +746,17 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
     <script src="{{ asset('admin-theme/js/dashboard/dashboard-1.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
+
+
+
+
 

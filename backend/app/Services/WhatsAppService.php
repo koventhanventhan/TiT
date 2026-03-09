@@ -23,7 +23,7 @@ class WhatsAppService
         $phone = $this->normalizePhone($phone);
 
         if ($this->driver === 'twilio') {
-            return $this->sendViaTwilio($phone, $message);
+            return $this->sendViaTwilio($phone, $message, true);
         }
 
         if ($this->driver === 'other' && config('services.whatsapp.other_url')) {
@@ -31,6 +31,21 @@ class WhatsAppService
         }
 
         Log::info('WhatsApp (no driver): would send to ' . $phone . ': ' . substr($message, 0, 50) . '...');
+        return true;
+    }
+
+    /**
+     * Send a normal SMS to the given phone number.
+     */
+    public function sendSMS(string $phone, string $message): bool
+    {
+        $phone = $this->normalizePhone($phone);
+
+        if ($this->driver === 'twilio') {
+            return $this->sendViaTwilio($phone, $message, false);
+        }
+
+        Log::info('SMS (no driver): would send to ' . $phone . ': ' . substr($message, 0, 50) . '...');
         return true;
     }
 
@@ -49,39 +64,44 @@ class WhatsAppService
         return '+' . $phone;
     }
 
-    protected function sendViaTwilio(string $to, string $body): bool
+    protected function sendViaTwilio(string $to, string $body, bool $isWhatsApp = true): bool
     {
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
-        $from = config('services.twilio.whatsapp_from'); // e.g. whatsapp:+14155238886
+        $from = $isWhatsApp 
+            ? config('services.twilio.whatsapp_from') 
+            : config('services.twilio.sms_from', env('TWILIO_SMS_FROM'));
 
         if (!$sid || !$token || !$from) {
-            Log::warning('Twilio WhatsApp not configured. Skipping send to ' . $to);
+            Log::warning('Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS') . ' not configured. Skipping send to ' . $to);
             return true;
         }
 
         try {
+            $toFormatted = $isWhatsApp ? 'whatsapp:' . ltrim($to, '+') : $to;
+            $fromFormatted = $isWhatsApp && !str_starts_with($from, 'whatsapp:') ? 'whatsapp:' . $from : $from;
+
             $response = Http::withBasicAuth($sid, $token)
                 ->asForm()
                 ->post('https://api.twilio.com/2010-04-01/Accounts/' . $sid . '/Messages.json', [
-                    'To' => 'whatsapp:' . ltrim($to, '+'),
-                    'From' => $from,
+                    'To' => $toFormatted,
+                    'From' => $fromFormatted,
                     'Body' => $body,
                 ]);
 
             if ($response->successful()) {
-                Log::info('WhatsApp sent to ' . $to . ' via Twilio');
+                Log::info(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' sent to ' . $to . ' via Twilio');
                 return true;
             }
 
-            Log::error('Twilio WhatsApp failed', [
+            Log::error('Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS') . ' failed', [
                 'to' => $to,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
             return false;
         } catch (\Throwable $e) {
-            Log::error('WhatsApp send exception: ' . $e->getMessage());
+            Log::error(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' send exception: ' . $e->getMessage());
             return false;
         }
     }

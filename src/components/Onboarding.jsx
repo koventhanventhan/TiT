@@ -1,65 +1,103 @@
 import React from 'react'
-import { FiUserPlus, FiMessageCircle, FiCreditCard } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import './Onboarding.css'
 
 const Onboarding = () => {
   const { getSetting } = useSettings();
 
-  const defaultSteps = [
+  const steps = [
     {
-      number: '01',
-      title: 'Register',
-      description: 'Ready to get started? Click "Register" to enroll and apply. Make sure to enter your details correctly!'
+      id: '01',
+      title: 'Easy Registration',
+      description: 'Fill out our simple application form to get started. It only takes a few minutes!',
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/dxjqoygy.json"
+          trigger="hover"
+          stroke="bold"
+          colors="primary:#ffffff,secondary:#ffffff"
+          style={{ width: '56px', height: '56px' }}
+        />
+      ),
+      color: '#ffffff'
     },
     {
-      number: '02',
-      title: 'Consultation',
-      description: 'A dedicated student Consultation will contact you to discuss your application and answer any questions you may have.'
+      id: '02',
+      title: 'Free Consultation',
+      description: 'Our academic advisors will reach out to understand your goals and recommend the best path.',
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/fdxqxpql.json"
+          trigger="hover"
+          stroke="bold"
+          colors="primary:#ffffff,secondary:#ffffff"
+          style={{ width: '56px', height: '56px' }}
+        />
+      ),
+      color: '#ffffff'
     },
     {
-      number: '03',
-      title: 'Pay & Learn',
-      description: 'Kick start your journey to success with EduLearn immediately following your initial subscription payment. Begin a transformative learning experience tailored to your aspirations.'
+      id: '03',
+      title: 'Start Learning',
+      description: 'Complete your enrollment and unlock instant access to your classes and resources.',
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/jtihyjyw.json"
+          trigger="hover"
+          stroke="bold"
+          colors="primary:#ffffff,secondary:#ffffff"
+          style={{ width: '56px', height: '56px' }}
+        />
+      ),
+      color: '#ffffff'
     }
-  ]
-
-  let steps = defaultSteps;
-  const stepsJson = getSetting('onboarding_steps');
-  if (stepsJson) {
-    try {
-      const parsed = JSON.parse(stepsJson);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        steps = parsed;
-      }
-    } catch (e) {
-      console.error('Failed to parse onboarding_steps JSON', e);
-    }
-  }
-
-  // Icons mapping for steps (we'll cycle through these or use a default)
-  const icons = [<FiUserPlus />, <FiMessageCircle />, <FiCreditCard />];
+  ];
 
   return (
-    <section className="onboarding section">
+    <section className="premium-onboarding section">
       <div className="container">
-        <div className="onboarding-header">
-          <h2 className="section-title">{getSetting('onboarding_title', 'Onboarding Process')}</h2>
-          <p className="section-subtitle">
-            {getSetting('onboarding_subtitle', 'Follow our simple steps to join EduLearn Online Tuition 📚')}
+        <div className="po-header">
+          <span className="po-badge">How It Works</span>
+          <h2 className="po-title">{getSetting('onboarding_title', 'Your Journey to Excellence')}</h2>
+          <p className="po-subtitle">
+            {getSetting('onboarding_subtitle', 'Joining EduLearn is simple, fast, and transparent. Follow these steps to begin.')}
           </p>
         </div>
 
-        <div className="steps-container">
-          {steps.map((step, index) => (
-            <div key={index} className="step-card">
-              <div className="step-number">{step.number}</div>
-              <div className="step-icon">{icons[index % icons.length]}</div>
-              <h3 className="step-title">{step.title}</h3>
-              <p className="step-description">{step.description}</p>
-              {index < steps.length - 1 && <div className="step-connector"></div>}
-            </div>
-          ))}
+        <div className="po-steps-wrapper">
+          <div className="po-timeline-line"></div>
+          <div className="po-steps-grid">
+            {steps.map((step, index) => (
+              <div key={index} className="po-step-card" style={{ '--step-color': step.color }}>
+                <div className="po-step-visual">
+                  <div className="po-step-number">{step.id}</div>
+                  <div className="po-step-icon-box">
+                    {step.icon}
+                  </div>
+                </div>
+
+                <div className="po-step-content">
+                  <h3 className="po-step-title">{step.title}</h3>
+                  <p className="po-step-desc">{step.description}</p>
+                </div>
+
+                {index < steps.length - 1 && (
+                  <div className="po-step-connector">
+                    <lord-icon
+                      src="https://cdn.lordicon.com/vduvxpxl.json"
+                      trigger="loop"
+                      colors="primary:#4f0bd9"
+                      style={{ width: '32px', height: '32px' }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="po-footer">
+          <a href="/register" className="po-cta-btn">Register Today</a>
         </div>
       </div>
     </section>
@@ -67,4 +105,3 @@ const Onboarding = () => {
 }
 
 export default Onboarding
-

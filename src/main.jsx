@@ -51,7 +51,7 @@ class ErrorBoundary extends React.Component {
             style={{ 
               marginTop: '20px', 
               padding: '10px 20px', 
-              background: '#667eea', 
+              background: '#1e40af', 
               color: 'white', 
               border: 'none', 
               borderRadius: '5px', 
@@ -95,7 +95,7 @@ try {
         <p>${error.message}</p>
         <pre style="text-align: left; background: #f5f5f5; padding: 20px; border-radius: 8px; overflow: auto; max-width: 800px; margin: 20px auto;">${error.stack}</pre>
         <p style="margin-top: 20px;">Check the browser console (F12) for more details.</p>
-        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Reload Page</button>
+        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #1e40af; color: white; border: none; border-radius: 5px; cursor: pointer;">Reload Page</button>
       </div>
     `
   }

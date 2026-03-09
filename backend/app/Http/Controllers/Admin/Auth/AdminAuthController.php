@@ -104,6 +104,16 @@ class AdminAuthController extends Controller
             $remember = $request->filled('remember');
 
             if (Auth::attempt($credentials, $remember)) {
+                $user = Auth::user();
+                // Ensure only admins can login to the admin panel
+                if ($user->role !== 'admin') {
+                    Auth::logout();
+                    return redirect()->route('admin.login')->with('error', 'நிர்வாகி (Admin) அனுமதி தேவை. (Admin access required.)');
+                }
+                if (!$user->isActive()) {
+                    Auth::logout();
+                    return redirect()->route('admin.login')->with('error', 'நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். (Your account has been deactivated by admin.)');
+                }
                 $request->session()->regenerate();
                 return redirect()->intended(route('admin.dashboard'));
             }

@@ -4,60 +4,31 @@ import { FiX } from 'react-icons/fi'
 import './StudentRegistrationForm.css'
 
 // Subject data structures
-const subjectsGrade1to5 = [
-  'தமிழ்',
-  'ஆங்கிலம்',
-  'சூழற்­றாடல்',
-  'சமயம்',
-  'சிங்களம்',
-  'புலமைப்பரிசில் வகுப்புகள்'
-]
-
-const subjectsGrade6to11 = [
-  'தமிழ்',
-  'ஆங்கிலம்',
-  'கணிதம்',
-  'வரலாறு',
-  'சமயம்',
-  'விஞ்ஞானம்',
-  'குடியியல் கல்வி',
-  'புவியியல்',
-  'சிங்களம்',
-  'ICT',
-  'சுகாதாரம் உள்கல்வியும்',
-  'வணிகக் கல்வி',
-  'இலக்கியம் (தமிழ்)'
-]
-
-const subjectsArtsStream = [
-  'தமிழ்',
-  'வரலாறு',
-  'புவியியல்',
-  'ICT',
-  'அரசியல் விஞ்ஞானம்',
-  'இந்து நாகரிகம்',
-  'மனைப்பொருளியல்',
-  'ஊடகக் கல்வி',
-  'நடனம்',
-  'நாடகம்',
-  'சித்திரம்',
-  'சங்கீதம்',
-  'கிறிஸ்தவ நாகரிகம்',
-  'அளவையியல்'
-]
-
-const subjectsBioMathsStream = [
-  'இணைந்த கணிதம்',
-  'உயிரியல்',
-  'பெளதிகவியல்',
-  'இரசாயனவியல்',
-  'ICT'
-]
+// (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
 
 const MONTHLY_AMOUNT = 500
 
 const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [step, setStep] = useState(1)
+  const [subjectsByCategory, setSubjectsByCategory] = useState({})
+
+  // Fetch subjects grouped by category from backend
+  React.useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+        const response = await fetch(`${API_BASE_URL}/subjects/prices`)
+        if (response.ok) {
+          const data = await response.json()
+          setSubjectsByCategory(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch subjects:', err)
+      }
+    }
+    fetchSubjects()
+  }, [])
+
   const [formData, setFormData] = useState({
     fullName: '',
     dateOfBirth: '',
@@ -75,6 +46,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [paymentChoice, setPaymentChoice] = useState(null)
+  const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
+  const [isFlipped, setIsFlipped] = useState(false)
 
   // Helper function to extract grade number from "தரம் X / Grade X" format
   const getGradeNumber = (gradeValue) => {
@@ -83,41 +56,51 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     return match ? parseInt(match[1], 10) : null
   }
 
-  // Get available subjects based on grade and stream
+  // Get available subjects based on grade and stream (from API data)
   const getAvailableSubjects = () => {
     const gradeNum = getGradeNumber(formData.currentGrade)
     if (!gradeNum) return []
 
     if (gradeNum >= 1 && gradeNum <= 5) {
-      return subjectsGrade1to5
+      return subjectsByCategory['grade_1_to_5'] || []
     } else if (gradeNum >= 6 && gradeNum <= 11) {
-      return subjectsGrade6to11
+      return subjectsByCategory['grade_6_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
       if (selectedStream === 'arts') {
-        return subjectsArtsStream
+        return subjectsByCategory['arts_stream'] || []
       } else if (selectedStream === 'bio_maths') {
-        return subjectsBioMathsStream
+        return subjectsByCategory['bio_maths_stream'] || []
       }
       return []
     }
     return []
   }
 
-  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream])
+  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream, subjectsByCategory])
+
+  // Calculate total amount based on selected subjects
+  const totalAmount = useMemo(() => {
+    if (selectedSubjects.length === 0) return 0
+    return selectedSubjects.reduce((sum, subjectName) => {
+      // Find the subject's price from the available subjects array
+      const subjectObj = availableSubjects.find(s => s.name === subjectName)
+      return sum + (subjectObj ? parseFloat(subjectObj.price) : 0)
+    }, 0)
+  }, [selectedSubjects, availableSubjects])
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    
+
     // If currentGrade changes, reset stream and subjects
     if (name === 'currentGrade') {
       setSelectedStream('')
       setSelectedSubjects([])
     }
-    
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
     setError('')
   }
 
@@ -183,13 +166,14 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       return
     }
 
-    if (!formData.phoneNumber || formData.phoneNumber.trim().length < 10) {
-      setError('Valid phone number is required (for WhatsApp confirmation)')
+    const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+    if (!formData.phoneNumber || phoneDigits.length < 10 || phoneDigits.length > 15) {
+      setError('Phone number must be 10-15 digits / தொலைபேசி எண் 10-15 இலக்கங்களாக இருக்க வேண்டும்')
       return
     }
 
     const gradeNum = getGradeNumber(formData.currentGrade)
-    
+
     // For grades 12-13, stream is required
     if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
       if (!selectedStream) {
@@ -237,11 +221,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
   }
 
-  const handlePaymentOffline = async () => {
+  const handlePaymentOffline = async (amount) => {
     setError('')
     setIsLoading(true)
     try {
-      await registerStep2('offline')
+      await registerStep2('offline', amount)
       setIsLoading(false)
       alert('Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.')
       setStep(1)
@@ -255,58 +239,46 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
   }
 
-  const handlePaymentOnline = async () => {
+  const handleCardInput = (e) => {
+    const { name, value } = e.target
+    if (name === 'number') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 16)
+      const formatted = cleaned.replace(/(.{4})/g, '$1 ').trim()
+      setCardData(prev => ({ ...prev, number: formatted }))
+    } else if (name === 'expiry') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 4)
+      const formatted = cleaned.length > 2 ? cleaned.slice(0, 2) + '/' + cleaned.slice(2) : cleaned
+      setCardData(prev => ({ ...prev, expiry: formatted }))
+    } else if (name === 'cvv') {
+      setCardData(prev => ({ ...prev, cvv: value.replace(/\D/g, '').slice(0, 3) }))
+    } else {
+      setCardData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handlePaymentOnline = (amount) => {
     setError('')
+    setStep(3)
+  }
+
+  const handleTransferConfirmed = async () => {
+    setError('')
+    if (!cardData.number || !cardData.holder || !cardData.expiry || !cardData.cvv) {
+      setError('Please fill in all card details')
+      return
+    }
     setIsLoading(true)
     try {
-      const res = await registerStep2('online', MONTHLY_AMOUNT)
+      const amount = totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT
+      await registerStep2('online', amount)
       setIsLoading(false)
-      setPaymentChoice(res)
-      if (res.key) {
-        // Razorpay: load script and open checkout (optional - if Razorpay key is set)
-        if (window.Razorpay) {
-          const options = {
-            key: res.key,
-            amount: res.amount,
-            currency: res.currency || 'INR',
-            order_id: res.order_id,
-            name: 'Education',
-            description: 'Monthly fee',
-            handler: async (response) => {
-              try {
-                await registerPaymentSuccess(res.order_id, response.razorpay_payment_id)
-                alert('Payment successful. Admin will confirm and you will receive a WhatsApp message.')
-                setStep(1)
-                setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-                setSelectedStream('')
-                setSelectedSubjects([])
-                if (onClose) onClose()
-              } catch (e) {
-                setError(e.message || 'Payment confirmation failed.')
-              }
-            }
-          }
-          const rzp = new window.Razorpay(options)
-          rzp.open()
-        } else {
-          // No Razorpay: simulate success (admin can mark paid)
-          await registerPaymentSuccess(res.order_id)
-          alert('Payment recorded. Admin will confirm and you will receive a WhatsApp message.')
-          setStep(1)
-          setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-          setSelectedStream('')
-          setSelectedSubjects([])
-          if (onClose) onClose()
-        }
-      } else {
-        await registerPaymentSuccess(res.order_id)
-        alert('Payment recorded. Admin will confirm and you will receive a WhatsApp message.')
-        setStep(1)
-        setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-        setSelectedStream('')
-        setSelectedSubjects([])
-        if (onClose) onClose()
-      }
+      alert('Payment successful! You will receive a WhatsApp confirmation.')
+      setStep(1)
+      setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
+      setCardData({ number: '', holder: '', expiry: '', cvv: '' })
+      setSelectedStream('')
+      setSelectedSubjects([])
+      if (onClose) onClose()
     } catch (err) {
       setIsLoading(false)
       setError(err.message || 'Payment failed.')
@@ -316,240 +288,325 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="student-registration-overlay" onClick={onClose}>
-      <div className="student-registration-wrapper" onClick={(e) => e.stopPropagation()}>
-        <button className="student-registration-close" onClick={onClose}>
-          <FiX />
-        </button>
+    <div className="student-registration-overlay">
+      <div className={`student-registration-wrapper ${step === 3 ? 'payment-step-active' : ''}`}>
+        {onClose && (
+          <button className="student-registration-close" onClick={onClose}>
+            <FiX />
+          </button>
+        )}
 
-      {step === 1 && (
-        <div className="student-registration-container">
-          <h2>மாணவர் விவரங்கள் / Student Details</h2>
-          <p className="form-subtitle">Please fill in all the required information / தயவுசெய்து அனைத்து தேவையான தகவல்களையும் நிரப்பவும்</p>
+        {step === 1 && (
+          <div className="student-registration-container">
+            <h2>மாணவர் விவரங்கள் / Student Details</h2>
+            <p className="form-subtitle">Please fill in all the required information / தயவுசெய்து அனைத்து தேவையான தகவல்களையும் நிரப்பவும்</p>
 
-          {error && <div className="error-message">{error}</div>}
+            {error && <div className="error-message">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="student-registration-form">
-            {/* Full Name */}
-            <div className="form-group">
-              <label htmlFor="fullName">மாணவர் முழுப் பெயர் / Full Name <span className="required">*</span></label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                placeholder="Enter your full name / உங்கள் முழுப் பெயரை உள்ளிடவும்"
-              />
-            </div>
-
-            {/* Phone (for WhatsApp) */}
-            <div className="form-group">
-              <label htmlFor="phoneNumber">தொலைபேசி எண் / Phone Number (WhatsApp) <span className="required">*</span></label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                required
-                placeholder="e.g. 07XXXXXXXX"
-              />
-            </div>
-
-            {/* Date of Birth */}
-            <div className="form-group">
-              <label htmlFor="dateOfBirth">பிறந்த திகதி / Date of Birth <span className="required">*</span></label>
-              <input
-                type="date"
-                id="dateOfBirth"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                required
-                max={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            {/* Gender */}
-            <div className="form-group">
-              <label htmlFor="gender">பாலினம் / Gender <span className="required">*</span></label>
-              <select
-                id="gender"
-                    name="gender"
-                value={formData.gender}
-                    onChange={handleChange}
-                    required
-              >
-                <option value="">Select Gender / பாலினம் தேர்ந்தெடுக்கவும்</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
-
-
-            {/* School Name */}
-            <div className="form-group">
-              <label htmlFor="schoolName">பாடசாலை பெயர் / School Name <span className="required">*</span></label>
-              <input
-                type="text"
-                id="schoolName"
-                name="schoolName"
-                value={formData.schoolName}
-                onChange={handleChange}
-                required
-                placeholder="Enter your school name / உங்கள் பாடசாலை பெயரை உள்ளிடவும்"
-              />
-            </div>
-
-            {/* Medium of Learning */}
-            <div className="form-group">
-              <label htmlFor="medium">கற்கவிருக்கும் மொழி மூலம் / Medium of Learning <span className="required">*</span></label>
-              <select
-                id="medium"
-                    name="medium"
-                value={formData.medium}
-                    onChange={handleChange}
-                    required
-              >
-                <option value="">Select Medium / மொழி தேர்ந்தெடுக்கவும்</option>
-                <option value="tamil">தமிழ் / Tamil</option>
-                <option value="english">ஆங்கிலம் / English</option>
-              </select>
-            </div>
-
-            {/* Online Class Experience */}
-            <div className="form-group">
-              <label htmlFor="onlineExperience">Online class அனுபவம் உள்ளதா? / Do you have online class experience? <span className="required">*</span></label>
-              <select
-                id="onlineExperience"
-                    name="onlineExperience"
-                value={formData.onlineExperience}
-                    onChange={handleChange}
-                    required
-              >
-                <option value="">Select Option / விருப்பத்தை தேர்ந்தெடுக்கவும்</option>
-                <option value="yes">ஆம் / Yes</option>
-                <option value="no">இல்லை / No</option>
-              </select>
-            </div>
-
-            {/* Device Used */}
-            <div className="form-group">
-              <label htmlFor="deviceUsed">Online வகுப்பிற்கு பயன்படுத்தும் சாதனம் / Device Used for Online Classes <span className="required">*</span></label>
-              <select
-                id="deviceUsed"
-                    name="deviceUsed"
-                value={formData.deviceUsed}
-                    onChange={handleChange}
-                required
-              >
-                <option value="">Select Device / சாதனம் தேர்ந்தெடுக்கவும்</option>
-                <option value="Mobile">Mobile</option>
-                <option value="Tablet">Tablet</option>
-                <option value="Laptop">Laptop</option>
-                <option value="Desktop">Desktop</option>
-              </select>
-            </div>
-
-            {/* Current Grade (2026) */}
-            <div className="form-group">
-              <label htmlFor="currentGrade">தற்போதைய தரம் (2026) / Current Grade (2026) <span className="required">*</span></label>
-              <select
-                id="currentGrade"
-                name="currentGrade"
-                value={formData.currentGrade}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Grade / தரம் தேர்ந்தெடுக்கவும்</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(grade => (
-                  <option key={grade} value={`தரம் ${grade} / Grade ${grade}`}>தரம் {grade} / Grade {grade}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Stream Selection for Grades 12-13 */}
-            {(() => {
-              const gradeNum = getGradeNumber(formData.currentGrade)
-              if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
-                return (
-                  <div className="form-group">
-                    <label htmlFor="stream">Stream / பிரிவு <span className="required">*</span></label>
-                    <select
-                      id="stream"
-                      name="stream"
-                      value={selectedStream}
-                      onChange={handleStreamChange}
-                      required
-                    >
-                      <option value="">Select Stream / பிரிவு தேர்ந்தெடுக்கவும்</option>
-                      <option value="arts">A/L – ARTS</option>
-                      <option value="bio_maths">A/L – BIO & MATHS</option>
-                    </select>
-                  </div>
-                )
-              }
-              return null
-            })()}
-
-            {/* Subject Selection */}
-            {availableSubjects.length > 0 && (
+            <form onSubmit={handleSubmit} className="student-registration-form">
+              {/* Full Name */}
               <div className="form-group">
-                <label>இணைய விரும்பும் பாடம்/பாடங்கள் / Preferred Online Subject(s) <span className="required">*</span></label>
-                <div className="checkbox-group">
-                  {availableSubjects.map((subject) => (
-                    <label
-                      key={subject}
-                      className={`checkbox-label ${selectedSubjects.includes(subject) ? 'checked' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSubjects.includes(subject)}
-                        onChange={() => handleSubjectToggle(subject)}
-                      />
-                      <span>{subject}</span>
-                    </label>
-                  ))}
-                </div>
+                <label htmlFor="fullName">மாணவர் முழுப் பெயர் / Full Name <span className="required">*</span></label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter your full name / உங்கள் முழுப் பெயரை உள்ளிடவும்"
+                />
               </div>
-            )}
 
-            <button 
-              type="submit" 
-              className="submit-button"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Submitting...' : 'Next: Payment'}
-            </button>
-          </form>
-        </div>
-      )}
+              {/* Phone (for WhatsApp) */}
+              <div className="form-group">
+                <label htmlFor="phoneNumber">தொலைபேசி எண் / Phone Number (WhatsApp) <span className="required">*</span></label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. 07XXXXXXXX"
+                />
+              </div>
 
-      {step === 2 && (
-        <div className="student-registration-container">
-          <h2>கட்டணம் / Payment</h2>
-          <p className="form-subtitle">Choose how you would like to pay / கட்டணம் செலுத்தும் முறையை தேர்ந்தெடுக்கவும்</p>
-          {error && <div className="error-message">{error}</div>}
-          <div className="payment-options">
-            <p>Amount: Rs. {MONTHLY_AMOUNT} (monthly)</p>
-            <button type="button" className="submit-button" onClick={handlePaymentOffline} disabled={isLoading}>
-              I will pay offline / நான் ஆஃப்லைனில் செலுத்துவேன்
-            </button>
-            <button type="button" className="submit-button secondary" onClick={handlePaymentOnline} disabled={isLoading}>
-              {isLoading ? 'Processing...' : 'Pay online / ஆன்லைனில் செலுத்து'}
+              {/* Date of Birth */}
+              <div className="form-group">
+                <label htmlFor="dateOfBirth">பிறந்த திகதி / Date of Birth <span className="required">*</span></label>
+                <input
+                  type="date"
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              {/* Gender */}
+              <div className="form-group">
+                <label htmlFor="gender">பாலினம் / Gender <span className="required">*</span></label>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Gender / பாலினம் தேர்ந்தெடுக்கவும்</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+
+
+              {/* School Name */}
+              <div className="form-group">
+                <label htmlFor="schoolName">பாடசாலை பெயர் / School Name <span className="required">*</span></label>
+                <input
+                  type="text"
+                  id="schoolName"
+                  name="schoolName"
+                  value={formData.schoolName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter your school name / உங்கள் பாடசாலை பெயரை உள்ளிடவும்"
+                />
+              </div>
+
+              {/* Medium of Learning */}
+              <div className="form-group">
+                <label htmlFor="medium">கற்கவிருக்கும் மொழி மூலம் / Medium of Learning <span className="required">*</span></label>
+                <select
+                  id="medium"
+                  name="medium"
+                  value={formData.medium}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Medium / மொழி தேர்ந்தெடுக்கவும்</option>
+                  <option value="tamil">தமிழ் / Tamil</option>
+                  <option value="english">ஆங்கிலம் / English</option>
+                </select>
+              </div>
+
+              {/* Online Class Experience */}
+              <div className="form-group">
+                <label htmlFor="onlineExperience">Online class அனுபவம் உள்ளதா? / Do you have online class experience? <span className="required">*</span></label>
+                <select
+                  id="onlineExperience"
+                  name="onlineExperience"
+                  value={formData.onlineExperience}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Option / விருப்பத்தை தேர்ந்தெடுக்கவும்</option>
+                  <option value="yes">ஆம் / Yes</option>
+                  <option value="no">இல்லை / No</option>
+                </select>
+              </div>
+
+              {/* Device Used */}
+              <div className="form-group">
+                <label htmlFor="deviceUsed">Online வகுப்பிற்கு பயன்படுத்தும் சாதனம் / Device Used for Online Classes <span className="required">*</span></label>
+                <select
+                  id="deviceUsed"
+                  name="deviceUsed"
+                  value={formData.deviceUsed}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Device / சாதனம் தேர்ந்தெடுக்கவும்</option>
+                  <option value="Mobile">Mobile</option>
+                  <option value="Tablet">Tablet</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Desktop">Desktop</option>
+                </select>
+              </div>
+
+              {/* Current Grade (2026) */}
+              <div className="form-group">
+                <label htmlFor="currentGrade">தற்போதைய தரம் (2026) / Current Grade (2026) <span className="required">*</span></label>
+                <select
+                  id="currentGrade"
+                  name="currentGrade"
+                  value={formData.currentGrade}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Grade / தரம் தேர்ந்தெடுக்கவும்</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(grade => (
+                    <option key={grade} value={`தரம் ${grade} / Grade ${grade}`}>தரம் {grade} / Grade {grade}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stream Selection for Grades 12-13 */}
+              {(() => {
+                const gradeNum = getGradeNumber(formData.currentGrade)
+                if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
+                  return (
+                    <div className="form-group">
+                      <label htmlFor="stream">Stream / பிரிவு <span className="required">*</span></label>
+                      <select
+                        id="stream"
+                        name="stream"
+                        value={selectedStream}
+                        onChange={handleStreamChange}
+                        required
+                      >
+                        <option value="">Select Stream / பிரிவு தேர்ந்தெடுக்கவும்</option>
+                        <option value="arts">A/L – ARTS</option>
+                        <option value="bio_maths">A/L – BIO & MATHS</option>
+                      </select>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
+              {/* Subject Selection */}
+              {availableSubjects.length > 0 && (
+                <div className="form-group">
+                  <label>இணைய விரும்பும் பாடம்/பாடங்கள் / Preferred Online Subject(s) <span className="required">*</span></label>
+                  <div className="checkbox-group">
+                    {availableSubjects.map((subjectObj) => (
+                      <label
+                        key={subjectObj.name}
+                        className={`checkbox-label ${selectedSubjects.includes(subjectObj.name) ? 'checked' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjects.includes(subjectObj.name)}
+                          onChange={() => handleSubjectToggle(subjectObj.name)}
+                        />
+                        <span>{subjectObj.name} {subjectObj.price ? `(Rs. ${parseFloat(subjectObj.price).toFixed(0)})` : ''}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="submit-button"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Submitting...' : 'Next: Payment'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="student-registration-container">
+            <h2>கட்டணம் / Payment</h2>
+            <p className="form-subtitle">Choose how you would like to pay / கட்டணம் செலுத்தும் முறையை தேர்ந்தெடுக்கவும்</p>
+            {error && <div className="error-message">{error}</div>}
+            <div className="payment-options">
+              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '20px' }}>
+                Total Amount: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
+              </p>
+              <button type="button" className="submit-button" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
+                I WILL PAY OFFLINE / நான் ஆஃப்லைனில் செலுத்துவேன்
+              </button>
+              <button type="button" className="submit-button secondary" onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
+                PAY ONLINE / ஆன்லைனில் செலுத்து
+              </button>
+            </div>
+            <button type="button" className="back-link" onClick={() => { setStep(1); setError(''); }}>
+              Back to form
             </button>
           </div>
-          <button type="button" className="back-link" onClick={() => { setStep(1); setError(''); }}>
-            Back to form
-          </button>
-        </div>
-      )}
+        )}
+
+        {step === 3 && (
+          <div className="glass-checkout">
+            <div className="glass-bg-blob glass-bg-blob-1"></div>
+            <div className="glass-bg-blob glass-bg-blob-2"></div>
+            <div className="glass-bg-blob glass-bg-blob-3"></div>
+
+            <h2 className="glass-checkout-title">Payment Details</h2>
+            <p className="glass-checkout-subtitle">Amount: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT}</p>
+
+            {error && <div className="error-message">{error}</div>}
+
+            {/* Content Wrapper for Side-by-Side Layout */}
+            <div className="glass-checkout-content">
+              {/* Live Card Preview */}
+              <div className="glass-card-flip-wrapper">
+                <div className={`glass-card-flip ${isFlipped ? 'flipped' : ''}`}>
+                  <div className="glass-card-face glass-card-front">
+                    <div className="glass-card-front-row">
+                      <svg viewBox="0 0 50 40" width="44" height="34">
+                        <rect x="2" y="2" width="46" height="36" rx="6" fill="#d4af37" opacity="0.85" />
+                        <line x1="2" y1="14" x2="48" y2="14" stroke="#b8941f" strokeWidth="1.5" />
+                        <line x1="2" y1="22" x2="48" y2="22" stroke="#b8941f" strokeWidth="1.5" />
+                        <line x1="25" y1="2" x2="25" y2="38" stroke="#b8941f" strokeWidth="1.5" />
+                      </svg>
+                      <span className="glass-visa-text">VISA</span>
+                    </div>
+                    <div className="glass-live-number">
+                      {cardData.number || '•••• •••• •••• ••••'}
+                    </div>
+                    <div className="glass-live-bottom">
+                      <div>
+                        <div className="glass-tiny-label">CARD HOLDER</div>
+                        <div className="glass-live-name">{cardData.holder.toUpperCase() || 'YOUR NAME'}</div>
+                      </div>
+                      <div>
+                        <div className="glass-tiny-label">EXPIRES</div>
+                        <div className="glass-live-name">{cardData.expiry || 'MM/YY'}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="glass-card-face glass-card-back-face">
+                    <div className="glass-mag-stripe"></div>
+                    <div className="glass-cvv-row">
+                      <span className="glass-tiny-label">CVV</span>
+                      <div className="glass-cvv-display">{cardData.cvv || '•••'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Checkout Form */}
+              <div className="glass-form-panel">
+                <div className="glass-field">
+                  <label>Card Number</label>
+                  <input type="text" name="number" value={cardData.number} onChange={handleCardInput} placeholder="1234 5678 9012 3456" maxLength={19} />
+                </div>
+                <div className="glass-field">
+                  <label>Card Holder</label>
+                  <input type="text" name="holder" value={cardData.holder} onChange={handleCardInput} placeholder="Your full name" />
+                </div>
+                <div className="glass-field-row">
+                  <div className="glass-field">
+                    <label>Expiry</label>
+                    <input type="text" name="expiry" value={cardData.expiry} onChange={handleCardInput} placeholder="MM/YY" maxLength={5} />
+                  </div>
+                  <div className="glass-field">
+                    <label>CVV</label>
+                    <input type="text" name="cvv" value={cardData.cvv} onChange={handleCardInput} placeholder="•••" maxLength={3} onFocus={() => setIsFlipped(true)} onBlur={() => setIsFlipped(false)} />
+                  </div>
+                </div>
+                <button type="button" className="glass-pay-now" onClick={handleTransferConfirmed} disabled={isLoading}>
+                  {isLoading ? 'Processing...' : `Pay Now`}
+                </button>
+              </div>
+            </div>
+
+            <button type="button" className="glass-back" onClick={() => { setStep(2); setCardData({ number: '', holder: '', expiry: '', cvv: '' }); setError(''); }}>
+              ← Back to payment options
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 export default StudentRegistrationForm
-

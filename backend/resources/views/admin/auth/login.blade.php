@@ -1,15 +1,29 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="h-100">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Login - {{ config('app.name') }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
 
 <body class="vh-100">
@@ -94,8 +108,18 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
+
+
+
+
 
 
 

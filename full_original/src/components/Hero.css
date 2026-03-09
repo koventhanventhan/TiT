@@ -66,9 +66,12 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(180deg);
   }
@@ -96,7 +99,7 @@
 }
 
 .gradient-text {
-  background: var(--gradient-1);
+  background: linear-gradient(90deg, #1a103c, #4f0bd9);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -141,7 +144,7 @@
 .stat-number {
   font-size: 36px;
   font-weight: 800;
-  background: var(--gradient-1);
+  background: linear-gradient(90deg, #180d3a, #5a10fb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -251,4 +254,3 @@
     gap: 24px;
   }
 }
-

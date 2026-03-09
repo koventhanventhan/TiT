@@ -86,13 +86,13 @@
 }
 
 .blue .stat-icon-box {
-    background: #eff6ff;
-    color: #2563eb;
+    background: rgba(79, 11, 217, 0.1);
+    color: var(--primary-color);
 }
 
 .purple .stat-icon-box {
-    background: #f5f3ff;
-    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--primary-color);
 }
 
 .green .stat-icon-box {
@@ -232,8 +232,8 @@
 }
 
 .activity-dot.user_registered {
-    background: #2563eb;
-    box-shadow: 0 0 0 1px #2563eb;
+    background: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
 }
 
 .activity-dot.payment_received {

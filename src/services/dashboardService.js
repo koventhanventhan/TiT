@@ -29,6 +29,15 @@ export const getStudentZoomClasses = async () => {
   return res.json()
 }
 
+export const getStudentUpcomingSchedules = async () => {
+  const res = await fetch(`${API_BASE_URL}/student/upcoming-schedules`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load upcoming schedules')
+  return res.json()
+}
+
 export const studentAttend = async (zoomScheduleId) => {
   const res = await fetch(`${API_BASE_URL}/student/attend`, {
     method: 'POST',
@@ -261,6 +270,20 @@ export const getAdminAttendance = async () => {
   return res.json()
 }
 
+export const updateAdminBranding = async (formData) => {
+  const res = await fetch(`${API_BASE_URL}/admin/branding`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      Accept: 'application/json',
+    },
+    credentials: 'include',
+    body: formData,
+  })
+  if (!res.ok) throw new Error('Failed to update branding')
+  return res.json()
+}
+
 // SUPER ADMIN API
 export const getSuperAdminStats = async () => {
   const res = await fetch(`${API_BASE_URL}/super-admin/stats`, {
@@ -286,5 +309,25 @@ export const getSuperAdminPlans = async () => {
     credentials: 'include',
   })
   if (!res.ok) throw new Error('Failed to load plans')
+  return res.json()
+}
+
+export const updateSuperAdminInstitute = async (id, data) => {
+  const res = await fetch(`${API_BASE_URL}/super-admin/institutes/${id}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to update institute')
+  return res.json()
+}
+
+export const getSuperAdminActivityLogs = async () => {
+  const res = await fetch(`${API_BASE_URL}/super-admin/activity-logs`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load activity logs')
   return res.json()
 }

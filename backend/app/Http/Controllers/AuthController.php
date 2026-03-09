@@ -14,106 +14,169 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // Determine registration type based on fields provided
-        $isAdminRegistration = $request->has('first_name') && $request->has('last_name') && $request->has('phone_number');
-        $isStudentRegistration = $request->has('full_name') || $request->has('date_of_birth') || $request->has('school_name');
+        // Student registration validation
+        // Email & Password are REQUIRED with strong security rules
+        // NOTE: email uniqueness is checked MANUALLY below (not via validation rule)
+        // so that incomplete registrations can be re-done
+        $validationRules = [
+            'username' => 'nullable|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[A-Z]/',      // at least 1 uppercase
+                'regex:/[a-z]/',      // at least 1 lowercase
+                'regex:/[0-9]/',      // at least 1 number
+                'regex:/[@$!%*?&^#()_+\-=\[\]{}|;:,.<>\/\\\\]/', // at least 1 special char
+            ],
+            'full_name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|digits_between:10,15|unique:users,phone_number',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female',
+            'school_name' => 'nullable|string|max:255',
+            'medium' => 'nullable|in:english,tamil',
+            'online_experience' => 'nullable|boolean',
+            'device_used' => 'nullable|string|max:255',
+            'current_grade' => 'nullable|string|max:50',
+            'stream' => 'nullable|string|max:50|in:arts,bio_maths',
+            'selected_subjects' => 'nullable|string',
+        ];
 
-        // Base validation
-        $validationRules = [];
+        $customMessages = [
+            'email.required' => 'Email address is required / மின்னஞ்சல் முகவரி தேவை',
+            'email.email' => 'Please enter a valid email address / சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்',
+            'password.required' => 'Password is required / கடவுச்சொல் தேவை',
+            'password.min' => 'Password must be at least 8 characters / கடவுச்சொல் குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்',
+            'password.regex' => 'Password must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character',
+        ];
 
-        // Admin registration validation
-        if ($isAdminRegistration) {
-            $validationRules['email'] = 'required|string|email|max:255|unique:users';
-            $validationRules['password'] = 'required|string|min:8';
-            $validationRules['first_name'] = 'required|string|max:255';
-            $validationRules['last_name'] = 'required|string|max:255';
-            $validationRules['phone_number'] = 'required|string|max:20';
-            $validationRules['username'] = 'nullable|string|max:255|unique:users,name';
-        } else {
-            // Student registration validation - no email/password required
-            $validationRules['username'] = 'required|string|max:255|unique:users,name';
-            $validationRules['full_name'] = 'required|string|max:255';
-            $validationRules['date_of_birth'] = 'required|date';
-            $validationRules['gender'] = 'required|in:male,female';
-            $validationRules['school_name'] = 'required|string|max:255';
-            $validationRules['medium'] = 'required|in:english,tamil';
-            $validationRules['online_experience'] = 'required|boolean';
-            $validationRules['device_used'] = 'required|string|max:255';
-            $validationRules['current_grade'] = 'required|string|max:50';
-            $validationRules['stream'] = 'nullable|string|max:50|in:arts,bio_maths';
-            $validationRules['selected_subjects'] = 'required|string';
+        $request->validate($validationRules, $customMessages);
+
+        // --- Manual email uniqueness check ---
+        // Allow re-registration ONLY if the user hasn't completed payment yet
+        // After completing payment (online or offline), the email is locked
+        $existingUser = User::where('email', $request->email)->first();
+
+        if ($existingUser) {
+            // If user has completed payment step → email is locked → block re-registration
+            if ($existingUser->registration_status === 'payment_completed') {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது']
+                    ]
+                ], 422);
+            }
+
+            // Account exists but NOT confirmed → allow re-registration
+            // Update the existing user's password and delete old tokens
+            $existingUser->update([
+                'password' => Hash::make($request->password),
+                'plain_password' => $request->password,
+            ]);
+            $existingUser->tokens()->delete(); // Clear old API tokens
+
+            $token = $existingUser->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'User registered successfully',
+                'user' => [
+                    'id' => $existingUser->id,
+                    'username' => $existingUser->name,
+                    'email' => $existingUser->email,
+                    'role' => $existingUser->role,
+                    'full_name' => $existingUser->full_name,
+                ],
+                'token' => $token,
+            ], 201);
         }
 
-        $request->validate($validationRules);
-
-        // Generate username if not provided (for admin)
-        $username = $request->username ?? ($isAdminRegistration ? $request->email : null);
+        // --- New user registration ---
+        $username = $request->username ?? $request->email;
         if (!$username) {
-            $username = $isAdminRegistration ? $request->email : 'student_' . time(); // Fallback
+            $username = 'student_' . time();
+        }
+
+        $fullName = $request->full_name;
+        if (!$fullName && $request->has('first_name') && $request->has('last_name')) {
+            $fullName = $request->first_name . ' ' . $request->last_name;
         }
 
         $userData = [
             'name' => $username,
-            'role' => $isAdminRegistration ? 'admin' : 'user',
+            'role' => 'user', // Always 'user' (student)
+            'email' => $request->email,
+            'password' => Hash::make($request->password), // Always hashed with Hash::make()
+            'plain_password' => $request->password, // Store readable password for admin
+            'full_name' => $fullName,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'phone_number' => $request->phone_number,
         ];
 
-        // Add email and password only for admin registration
-        if ($isAdminRegistration) {
-            $userData['email'] = $request->email;
-            $userData['password'] = Hash::make($request->password);
-        } else {
-            // For student registration, set default email and password
-            $userData['email'] = $username . '@student.local';
-            $userData['password'] = Hash::make('student123'); // Default password
-        }
-
-        // Add admin fields if provided
-        if ($isAdminRegistration) {
-            $userData['first_name'] = $request->first_name;
-            $userData['last_name'] = $request->last_name;
-            $userData['phone_number'] = $request->phone_number;
-        }
-
         // Add student fields if provided
-        if ($isStudentRegistration) {
-            if ($request->has('full_name')) {
-                $userData['full_name'] = $request->full_name;
-            }
-            if ($request->has('date_of_birth')) {
-                $userData['date_of_birth'] = $request->date_of_birth;
-            }
-            if ($request->has('gender')) {
-                $userData['gender'] = $request->gender;
-            }
-            if ($request->has('school_name')) {
-                $userData['school_name'] = $request->school_name;
-            }
-            if ($request->has('medium')) {
-                $userData['medium'] = $request->medium;
-            }
-            if ($request->has('online_experience')) {
-                $userData['online_experience'] = $request->boolean('online_experience');
-            }
-            if ($request->has('device_used')) {
-                $userData['device_used'] = is_array($request->device_used) 
-                    ? json_encode($request->device_used) 
-                    : $request->device_used;
-            }
-            if ($request->has('current_grade')) {
-                $userData['current_grade'] = $request->current_grade;
-            }
-            if ($request->has('stream')) {
-                $userData['stream'] = $request->stream;
-            }
-            if ($request->has('selected_subjects')) {
-                $userData['selected_subjects'] = $request->selected_subjects;
-            }
+        if ($request->has('date_of_birth')) {
+            $userData['date_of_birth'] = $request->date_of_birth;
+        }
+        if ($request->has('gender')) {
+            $userData['gender'] = $request->gender;
+        }
+        if ($request->has('school_name')) {
+            $userData['school_name'] = $request->school_name;
+        }
+        if ($request->has('medium')) {
+            $userData['medium'] = $request->medium;
+        }
+        if ($request->has('online_experience')) {
+            $userData['online_experience'] = $request->boolean('online_experience');
+        }
+        if ($request->has('device_used')) {
+            $userData['device_used'] = is_array($request->device_used) 
+                ? json_encode($request->device_used) 
+                : $request->device_used;
+        }
+        if ($request->has('current_grade')) {
+            $userData['current_grade'] = $request->current_grade;
+        }
+        if ($request->has('stream')) {
+            $userData['stream'] = $request->stream;
+        }
+        if ($request->has('selected_subjects')) {
+            $userData['selected_subjects'] = $request->selected_subjects;
         }
         
-        // Assign default institute for all registrations
-        $userData['institute_id'] = 1; 
+        // Identify Institute
+        $instituteId = $request->header('X-Institute-Id') ?: 1;
+        $institute = \App\Models\Institute::findOrFail($instituteId);
+
+        // Enforce Subscription Limits
+        if (!\App\Services\SubscriptionService::canAddStudent($institute)) {
+            return response()->json(['message' => 'Student limit reached for this institute.'], 403);
+        }
+        
+        $userData['institute_id'] = $institute->id;
 
         $user = User::create($userData);
+
+        // Notify All Admins of new registration
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            \Log::info('AuthController@register - Notifying admin: ' . $admin->id);
+            try {
+                $admin->notify(new \App\Notifications\AdminNotification(
+                    "New Student Registered: " . ($user->full_name ?? $user->name),
+                    'info',
+                    route('admin.students.show', $user->id),
+                    'admission_new'
+                ));
+            } catch (\Exception $e) {
+                \Log::error('AuthController@register - Notification failed for admin ' . $admin->id . ': ' . $e->getMessage());
+            }
+        }
+        if ($admins->isEmpty()) {
+            \Log::error('AuthController@register - No admin users found for notification');
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -122,28 +185,17 @@ class AuthController extends Controller
             'username' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'full_name' => $user->full_name,
+            'date_of_birth' => $user->date_of_birth,
+            'gender' => $user->gender,
+            'school_name' => $user->school_name,
+            'medium' => $user->medium,
+            'online_experience' => $user->online_experience,
+            'device_used' => $user->device_used,
+            'current_grade' => $user->current_grade,
+            'stream' => $user->stream,
+            'selected_subjects' => $user->selected_subjects,
         ];
-
-        // Add admin fields to response
-        if ($isAdminRegistration) {
-            $responseData['first_name'] = $user->first_name;
-            $responseData['last_name'] = $user->last_name;
-            $responseData['phone_number'] = $user->phone_number;
-        }
-
-        // Add student fields to response
-        if ($isStudentRegistration) {
-            $responseData['full_name'] = $user->full_name;
-            $responseData['date_of_birth'] = $user->date_of_birth;
-            $responseData['gender'] = $user->gender;
-            $responseData['school_name'] = $user->school_name;
-            $responseData['medium'] = $user->medium;
-            $responseData['online_experience'] = $user->online_experience;
-            $responseData['device_used'] = $user->device_used;
-            $responseData['current_grade'] = $user->current_grade;
-            $responseData['stream'] = $user->stream;
-            $responseData['selected_subjects'] = $user->selected_subjects;
-        }
 
         return response()->json([
             'message' => 'User registered successfully',
@@ -173,14 +225,18 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Check Institute Status
-        if ($user->institute_id) {
-            $institute = \App\Models\Institute::withoutGlobalScopes()->find($user->institute_id);
-            if ($institute && $institute->status !== 'active') {
-                return response()->json([
-                    'message' => 'Your institute access is ' . $institute->status . '. Please contact support.',
-                ], 403);
-            }
+        // Check Admin Approval for Students
+        if ($user->role === 'user' && !$user->admin_confirmed_at) {
+            return response()->json([
+                'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
+            ], 403);
+        }
+
+        // Check if account is deactivated
+        if (!$user->isActive()) {
+            return response()->json([
+                'message' => 'நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். தயவுசெய்து எங்களைத் தொடர்பு கொள்ளவும். (Your account has been deactivated by admin. Please contact support.)',
+            ], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

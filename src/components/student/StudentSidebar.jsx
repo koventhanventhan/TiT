@@ -7,6 +7,7 @@ import {
     FiFileText,
     FiBookOpen,
     FiBarChart2,
+    FiMessageSquare,
     FiSettings,
     FiLogOut
 } from 'react-icons/fi'
@@ -20,6 +21,7 @@ export default function StudentSidebar() {
         { name: 'Assignments', icon: <FiFileText />, path: '/student/assignments' },
         { name: 'Materials', icon: <FiBookOpen />, path: '/student/materials' },
         { name: 'Performance', icon: <FiBarChart2 />, path: '/student/performance' },
+        { name: 'Messages', icon: <FiMessageSquare />, path: '/student/messages' },
         { name: 'Settings', icon: <FiSettings />, path: '/student/settings' },
     ]
 

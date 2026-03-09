@@ -30,7 +30,7 @@
   z-index: 10001;
   transition: width 0.3s ease, height 0.3s ease, background 0.3s ease;
   will-change: transform;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
 }
 
 .custom-cursor-ring {

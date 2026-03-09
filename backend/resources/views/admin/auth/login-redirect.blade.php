@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Redirecting to Login...</title>
     <style>
         body {
@@ -43,6 +44,18 @@
             opacity: 0.9;
         }
     </style>
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
 <body>
     <div class="container">
@@ -57,8 +70,17 @@
             window.location.href = 'http://localhost:3002?redirect=admin';
         }, 2000);
     </script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
+
+
+
+
 
 
 

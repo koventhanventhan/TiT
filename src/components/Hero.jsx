@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { FiArrowRight } from 'react-icons/fi'
-import { FaYoutube } from 'react-icons/fa'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './Hero.css'
@@ -118,7 +116,12 @@ const Hero = () => {
             <div className="hero-actions">
               <a href="/register" className="btn btn-primary hero-btn">
                 {t('hero_cta')}
-                <FiArrowRight className="btn-icon" />
+                <lord-icon
+                  src="https://cdn.lordicon.com/vduvxpxl.json"
+                  trigger="hover"
+                  colors="primary:#ffffff"
+                  style={{ width: '20px', height: '20px', marginLeft: '8px' }}
+                />
               </a>
               <a
                 href="https://www.youtube.com/@titeducation2087"
@@ -126,24 +129,69 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 className="btn btn-youtube hero-btn"
               >
-                <FaYoutube className="btn-icon youtube-icon" />
+                <lord-icon
+                  src="https://cdn.lordicon.com/onmrecmf.json"
+                  trigger="hover"
+                  colors="primary:#ffffff"
+                  style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                />
                 TiT youtube
               </a>
             </div>
             <div className="hero-stats" ref={statsRef}>
               <div className="stat-item">
-                <div className="stat-number">{yearsCount}+</div>
-                <div className="stat-label">{t('years_experience')}</div>
+                <div className="stat-icon-wrapper">
+                  <lord-icon
+                    src="https://cdn.lordicon.com/abfverha.json"
+                    trigger="hover"
+                    colors="primary:#4f0bd9"
+                    style={{ width: '32px', height: '32px' }}
+                  />
+                </div>
+                <div>
+                  <div className="stat-number">{yearsCount}<span className="stat-plus">+</span></div>
+                  <div className="stat-label">{t('years_experience')}</div>
+                </div>
               </div>
               <div className="stat-item">
-                <div className="stat-number">{formatStudents(studentsCount)}+</div>
-                <div className="stat-label">{t('students')}</div>
+                <div className="stat-icon-wrapper">
+                  <lord-icon
+                    src="https://cdn.lordicon.com/dxjqoygy.json"
+                    trigger="hover"
+                    colors="primary:#4f0bd9"
+                    style={{ width: '32px', height: '32px' }}
+                  />
+                </div>
+                <div>
+                  <div className="stat-number">{formatStudents(studentsCount)}<span className="stat-plus">+</span></div>
+                  <div className="stat-label">{t('students')}</div>
+                </div>
               </div>
               <div className="stat-item">
-                <div className="stat-number">{tutorsCount}+</div>
-                <div className="stat-label">{t('tutors')}</div>
+                <div className="stat-icon-wrapper">
+                  <lord-icon
+                    src="https://cdn.lordicon.com/hrjifpbq.json"
+                    trigger="hover"
+                    colors="primary:#4f0bd9"
+                    style={{ width: '32px', height: '32px' }}
+                  />
+                </div>
+                <div>
+                  <div className="stat-number">{tutorsCount}<span className="stat-plus">+</span></div>
+                  <div className="stat-label">{t('tutors')}</div>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="hero-visual-side">
+            <lord-icon
+              src="https://cdn.lordicon.com/jtihyjyw.json"
+              trigger="loop"
+              delay="2000"
+              colors="primary:#4f0bd9,secondary:#1a103c"
+              style={{ width: '100%', maxWidth: '500px', height: '500px' }}
+            />
           </div>
         </div>
       </div>

@@ -6,14 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Traits\BelongsToInstitute;
+
 class Payment extends Model
 {
-    use HasFactory;
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new \App\Scopes\InstituteScope);
-    }
+    use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
         'user_id',
@@ -23,6 +20,8 @@ class Payment extends Model
         'transaction_id',
         'paid_at',
         'institute_id',
+        'year_month',
+        'gateway_ref',
     ];
 
     protected function casts(): array

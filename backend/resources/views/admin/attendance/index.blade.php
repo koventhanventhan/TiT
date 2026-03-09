@@ -1,62 +1,263 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Attendance - {{ config('app.name') }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Attendance Management - {{ config('app.name') }}</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
+    <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
-    <style>.content-body { margin-top: 0 !important; padding-top: 20px; } .card { border-radius: 8px; margin-bottom: 20px; } .att-table { margin-top: 12px; } .att-table th, .att-table td { padding: 8px; }</style>
+    <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
+    <style>
+        .content-body {
+            margin-top: 0 !important;
+            padding-top: 20px;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .att-table th {
+            background-color: #f8fafc;
+        }
+    </style>
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
+
 <body>
+    <div id="preloader">
+        <div class="sk-three-bounce">
+            <div class="sk-child sk-bounce1"></div>
+            <div class="sk-child sk-bounce2"></div>
+            <div class="sk-child sk-bounce3"></div>
+        </div>
+    </div>
+
     <div id="main-wrapper">
-        <div class="nav-header"><a href="{{ route('admin.dashboard') }}" class="brand-logo">Admin</a></div>
-        <div class="header"><div class="header-content"><nav class="navbar"><ul class="navbar-nav"><li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li><a href="{{ route('admin.zoom.index') }}">Zoom Classes</a></li></ul></nav></div></div>
+        <div class="nav-header">
+                        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
+                @if(isset($site_settings['admin_logo']))
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                @else
+                    <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
+                        <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                    </svg>
+                @endif
+                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                </span>
+            </a>
+            <div class="nav-control">
+                <div class="hamburger">
+                    <span class="line"></span><span class="line"></span><span class="line"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <div class="header-content">
+                <nav class="navbar navbar-expand">
+                    <div class="collapse navbar-collapse justify-content-between">
+                        <div class="header-left">
+                            <div class="search_bar">
+                                <form>
+                                    <input class="form-control" type="search" placeholder="Find something here..." aria-label="Search">
+                                    <span class="search_icon">
+                                        <i class="mdi mdi-magnify"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                        <ul class="navbar-nav header-right">
+                             <li class="nav-item" style="margin-right: 20px;">
+                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 8px 20px; border-radius: 6px; color: white; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); cursor: pointer;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                    </svg>
+                                    Home
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item dropdown header-profile">
+                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
+                                    <!-- <div class="header-info">
+                                        <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
+                                        <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
+                                    </div> -->
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
+                                    @else
+                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
+                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
+                                        <small class="text-muted">{{ Auth::user()->email }}</small>
+                                    </div>
+                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
+                                        <i class="la la-cog text-primary mr-2"></i>
+                                        <span class="ml-2">Settings</span>
+                                    </a>
+                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
+                                        <i class="la la-calendar text-primary mr-2"></i>
+                                        <span class="ml-2">Calendar</span>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item ai-icon text-danger">
+                                            <i class="la la-sign-out text-danger mr-2"></i>
+                                            <span class="ml-2">Sign out</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        @include('admin.partials.sidebar')
+
         <div class="content-body">
             <div class="container-fluid">
-                <div class="row mb-4"><div class="col-12"><h4 style="font-size:24px;font-weight:600;">Attendance</h4></div></div>
-                @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-                @forelse($schedules as $s)
-                <div class="card">
-                    <div class="card-header">
-                        <strong>{{ $s->title }}</strong> — {{ $s->scheduled_at->format('M d, Y H:i') }}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="page-title d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Attendance Monitoring</h4>
+                            <a href="{{ route('admin.zoom.index') }}" class="btn btn-secondary btn-sm">
+                                <i class="flaticon-381-video-camera"></i> View Classes
+                            </a>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <table class="table table-sm att-table">
-                            <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Edit</th></tr></thead>
-                            <tbody>
-                                @foreach($s->attendances as $att)
-                                <tr>
-                                    <td>{{ $att->user->full_name ?? $att->user->name ?? $att->user->email }}</td>
-                                    <td><span class="badge badge-{{ $att->role === 'teacher' ? 'info' : 'secondary' }}">{{ $att->role }}</span></td>
-                                    <td><span class="badge badge-{{ $att->status === 'present' ? 'success' : 'warning' }}">{{ $att->status }}</span></td>
-                                    <td>
-                                        <form action="{{ route('admin.attendance.update') }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="attendance_id" value="{{ $att->id }}">
-                                            <select name="status" onchange="this.form.submit()">
-                                                <option value="present" {{ $att->status === 'present' ? 'selected' : '' }}>Present</option>
-                                                <option value="absent" {{ $att->status === 'absent' ? 'selected' : '' }}>Absent</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @endforeach
-                                @if($s->attendances->isEmpty())
-                                <tr><td colspan="4" class="text-muted">No attendance recorded yet.</td></tr>
-                                @endif
-                            </tbody>
-                        </table>
+                </div>
+
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show">
+                        {{ session('success') }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+                    </div>
+                @endif
+
+                @forelse($schedules as $s)
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h4 class="card-title text-primary"><strong>{{ $s->title }}</strong></h4>
+                        <span class="badge badge-outline-dark fs-12">{{ $s->scheduled_at->format('M d, Y @ H:i') }}</span>
+                    </div>
+                    <div class="card-body px-0">
+                        <div class="table-responsive">
+                            <table class="table table-responsive-md att-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="pl-4" style="width:50px;">#</th>
+                                        <th>Attendee Name</th>
+                                        <th>Role Type</th>
+                                        <th>Current Status</th>
+                                        <th class="text-right pr-4">Manual Adjustment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($s->attendances as $index => $att)
+                                    <tr>
+                                        <td class="pl-4"><strong>{{ $index + 1 }}</strong></td>
+                                        <td>{{ $att->user->full_name ?? $att->user->name ?? $att->user->email }}</td>
+                                        <td>
+                                            <span class="badge badge-xs light badge-{{ $att->role === 'teacher' ? 'info' : 'secondary' }}">
+                                                {{ strtoupper($att->role) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($att->status === 'present')
+                                                <span class="text-success font-w600"><i class="fa fa-circle mr-1"></i> Present</span>
+                                            @else
+                                                <span class="text-danger font-w600"><i class="fa fa-circle mr-1"></i> Absent</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-right pr-4">
+                                            <form action="{{ route('admin.attendance.update') }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <input type="hidden" name="attendance_id" value="{{ $att->id }}">
+                                                <div class="d-flex justify-content-end">
+                                                    <select name="status" class="form-control form-control-xs selectpicker" onchange="this.form.submit()" style="width: 110px;">
+                                                        <option value="present" {{ $att->status === 'present' ? 'selected' : '' }} data-content="<span class='text-success'>Present</span>">Present</option>
+                                                        <option value="absent" {{ $att->status === 'absent' ? 'selected' : '' }} data-content="<span class='text-danger'>Absent</span>">Absent</option>
+                                                    </select>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                    @if($s->attendances->isEmpty())
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="flaticon-381-search-1 display-4 d-block mb-3"></i>
+                                                Nothing found for this session yet.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 @empty
-                <p class="text-muted">No zoom classes yet.</p>
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <p class="text-muted mb-0">No Zoom class schedules found in history.</p>
+                    </div>
+                </div>
                 @endforelse
-                @if($schedules->hasPages())<div class="mt-4">{{ $schedules->links() }}</div>@endif
+
+                @if($schedules->hasPages())
+                <div class="mt-4 mb-5">
+                    {{ $schedules->links() }}
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="copyright">
+                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}.</p>
             </div>
         </div>
     </div>
+
     <script src="{{ asset('admin-theme/vendor/global/global.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
+
+
+
+

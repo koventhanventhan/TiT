@@ -1,7 +1,8 @@
+/* ── Premium Blue Admin Dashboard Layout ── */
 .admin-console-layout {
     display: flex;
     min-height: 100vh;
-    background: #f1f5f9;
+    background: #f0f4ff;
 }
 
 .admin-console-main {
@@ -13,45 +14,48 @@
 }
 
 .admin-console-header {
-    height: 80px;
-    background: #ffffff;
-    padding: 0 40px;
+    height: 72px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 0 36px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(37, 99, 235, 0.06);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .header-left h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    color: #1e293b;
+    color: #0f172a;
+    font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 24px;
 }
 
 .header-search input {
-    width: 350px;
-    padding: 12px 20px;
+    width: 320px;
+    padding: 10px 18px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     outline: none;
     font-size: 14px;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
 }
 
 .header-search input:focus {
     background: #ffffff;
-    border-color: #ef4444;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .admin-user-info {
@@ -61,8 +65,8 @@
 
 .admin-name {
     font-weight: 700;
-    font-size: 15px;
-    color: #1e293b;
+    font-size: 14px;
+    color: #0f172a;
     margin: 0;
 }
 
@@ -73,21 +77,22 @@
 }
 
 .admin-avatar {
-    width: 44px;
-    height: 44px;
-    background: #ef4444;
+    width: 42px;
+    height: 42px;
+    background: var(--gradient-1);
     color: white;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 18px;
-    margin-left: 15px;
+    font-size: 16px;
+    margin-left: 14px;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
 .admin-console-content {
-    padding: 40px;
+    padding: 32px 36px;
     max-width: 1600px;
     margin: 0 auto;
     width: 100%;
@@ -103,6 +108,10 @@
     }
 
     .admin-console-header {
-        padding: 0 20px;
+        padding: 0 16px;
+    }
+
+    .admin-console-content {
+        padding: 20px 16px;
     }
 }

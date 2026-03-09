@@ -33,3 +33,5 @@ Artisan::command('reminders:month-end-payment', function () {
 })->purpose('Send month-end payment reminder to confirmed students via WhatsApp');
 
 Schedule::command('reminders:month-end-payment')->dailyAt('09:00');
+Schedule::command('zoom:sync-timetable')->dailyAt('00:00');
+Schedule::command('zoom:send-reminders')->everyMinute();

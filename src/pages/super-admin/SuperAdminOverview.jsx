@@ -51,7 +51,7 @@ export default function SuperAdminOverview() {
                 </div>
                 <div className="stat-card">
                     <div className="card-info">
-                        <span className="label">Global Users</span>
+                        <span className="label">Registered Accounts</span>
                         <h3>{stats?.total_users || 0}</h3>
                         <span className="sub-label">Across all tenants</span>
                     </div>
@@ -70,23 +70,26 @@ export default function SuperAdminOverview() {
             <div className="overview-main">
                 <div className="recent-activity-card">
                     <div className="card-header">
-                        <h4>System-Wide Events</h4>
-                        <button className="view-all">View Logs</button>
+                        <h4>Recent System-Wide Events</h4>
+                        <button className="view-all">View All Logs</button>
                     </div>
                     <div className="activity-list">
-                        {[
-                            { id: 1, text: "Jaffna Science Academy joined the platform", time: "2 hours ago", type: "new_tenant" },
-                            { id: 2, text: "Subscription renewal for Royal College (Annual Plan)", time: "5 hours ago", type: "payment" },
-                            { id: 3, text: "Server maintenance completed successfully", time: "Yesterday", type: "system" }
-                        ].map((act) => (
-                            <div key={act.id} className="activity-item">
-                                <div className={`act-dot ${act.type}`}></div>
-                                <div className="act-details">
-                                    <p>{act.text}</p>
-                                    <span>{act.time}</span>
+                        {stats?.recent_activity?.length > 0 ? (
+                            stats.recent_activity.map((act) => (
+                                <div key={act.id} className="activity-item">
+                                    <div className={`act-dot ${act.action.includes('error') ? 'system' : act.action.includes('payment') ? 'payment' : 'new_tenant'}`}></div>
+                                    <div className="act-details">
+                                        <p>
+                                            <strong>{act.user?.name || 'System'}:</strong> {act.description}
+                                            {act.institute && <span className="inst-tag"> @ {act.institute.name}</span>}
+                                        </p>
+                                        <span>{new Date(act.created_at).toLocaleString()}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <div className="no-activity">No recent activity detected.</div>
+                        )}
                     </div>
                 </div>
             </div>

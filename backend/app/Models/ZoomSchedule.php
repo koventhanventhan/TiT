@@ -8,20 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\BelongsToInstitute;
+
 class ZoomSchedule extends Model
 {
-    use HasFactory;
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new \App\Scopes\InstituteScope);
-    }
+    use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
         'title',
         'scheduled_at',
         'zoom_link',
+        'meeting_id',
+        'start_url',
+        'join_url',
+        'password',
+        'duration',
         'grade',
+        'subject',
         'created_by',
         'institute_id',
     ];

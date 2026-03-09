@@ -15,6 +15,12 @@ import RecordingsPage from './pages/RecordingsPage'
 import RegisterPage from './pages/RegisterPage'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentOverview from './pages/student/StudentOverview'
+import StudentZoom from './pages/student/StudentZoom'
+import StudentAssignments from './pages/student/StudentAssignments'
+import StudentMaterials from './pages/student/StudentMaterials'
+import StudentSchedule from './pages/student/StudentSchedule'
+import StudentPerformance from './pages/student/StudentPerformance'
+import StudentSettings from './pages/student/StudentSettings'
 import AdminDashboard from './pages/AdminDashboard'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import AdminOverview from './pages/admin/AdminOverview'
@@ -23,7 +29,7 @@ import AdminTeachers from './pages/admin/AdminTeachers'
 import AdminFinance from './pages/admin/AdminFinance'
 import AdminZoom from './pages/admin/AdminZoom'
 import AdminMaterials from './pages/admin/AdminMaterials'
-import AdminMessages from './pages/admin/AdminMessages'
+import MessagingPage from './pages/MessagingPage'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminAssignments from './pages/admin/AdminAssignments'
 import AdminAttendance from './pages/admin/AdminAttendance'
@@ -32,6 +38,9 @@ import TeacherOverview from './pages/teacher/TeacherOverview'
 import TeacherStudents from './pages/teacher/TeacherStudents'
 import TeacherAssignments from './pages/teacher/TeacherAssignments'
 import TeacherMaterials from './pages/teacher/TeacherMaterials'
+import TeacherSchedule from './pages/teacher/TeacherSchedule'
+import TeacherReports from './pages/teacher/TeacherReports'
+import TeacherSettings from './pages/teacher/TeacherSettings'
 import { SettingsProvider } from './context/SettingsContext'
 import { LanguageProvider } from './context/LanguageContext'
 import './App.css'
@@ -62,8 +71,9 @@ function PageWrapper({ children }) {
 function AppContent() {
   const location = useLocation()
   const isDashboard = location.pathname.startsWith('/teacher') ||
-    location.pathname.startsWith('/student/dashboard') ||
-    location.pathname.startsWith('/admin/dashboard')
+    location.pathname.startsWith('/student') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/super-admin')
 
   return (
     <div className="App" style={{ minHeight: '100vh', background: isDashboard ? '#f8fafc' : '#ffffff', width: '100%' }}>
@@ -82,20 +92,23 @@ function AppContent() {
         <Route path="/register" element={<PageWrapper><RegisterPage /></PageWrapper>} />
 
         {/* Student Dashboard Routes */}
-        <Route path="/student/dashboard" element={<PageWrapper><StudentDashboard /></PageWrapper>}>
+        <Route path="/student" element={<PageWrapper><StudentDashboard /></PageWrapper>}>
           <Route index element={<StudentOverview />} />
+          <Route path="dashboard" element={<StudentOverview />} />
           <Route path="overview" element={<StudentOverview />} />
-          <Route path="schedule" element={<StudentOverview />} />
-          <Route path="zoom" element={<StudentOverview />} />
-          <Route path="assignments" element={<StudentOverview />} />
-          <Route path="materials" element={<StudentOverview />} />
-          <Route path="performance" element={<StudentOverview />} />
-          <Route path="settings" element={<StudentOverview />} />
+          <Route path="schedule" element={<StudentSchedule />} />
+          <Route path="zoom" element={<StudentZoom />} />
+          <Route path="assignments" element={<StudentAssignments />} />
+          <Route path="materials" element={<StudentMaterials />} />
+          <Route path="performance" element={<StudentPerformance />} />
+          <Route path="messages" element={<MessagingPage />} />
+          <Route path="settings" element={<StudentSettings />} />
         </Route>
 
         {/* Admin Master Control Routes */}
-        <Route path="/admin/dashboard" element={<PageWrapper><AdminDashboard /></PageWrapper>}>
+        <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>}>
           <Route index element={<AdminOverview />} />
+          <Route path="dashboard" element={<AdminOverview />} />
           <Route path="analytics" element={<AdminOverview />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="teachers" element={<AdminTeachers />} />
@@ -103,7 +116,7 @@ function AppContent() {
           <Route path="attendance" element={<AdminAttendance />} />
           <Route path="materials" element={<AdminMaterials />} />
           <Route path="assignments" element={<AdminAssignments />} />
-          <Route path="messages" element={<AdminMessages />} />
+          <Route path="messages" element={<MessagingPage />} />
           <Route path="payments" element={<AdminFinance />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
@@ -112,13 +125,15 @@ function AppContent() {
 
         {/* Teacher Dashboard Routes */}
         <Route path="/teacher" element={<PageWrapper><TeacherDashboard /></PageWrapper>}>
+          <Route index element={<TeacherOverview />} />
           <Route path="dashboard" element={<TeacherOverview />} />
           <Route path="students" element={<TeacherStudents />} />
           <Route path="assignments" element={<TeacherAssignments />} />
           <Route path="materials" element={<TeacherMaterials />} />
-          <Route path="schedule" element={<TeacherOverview />} />
-          <Route path="reports" element={<TeacherOverview />} />
-          <Route path="settings" element={<TeacherOverview />} />
+          <Route path="schedule" element={<TeacherSchedule />} />
+          <Route path="reports" element={<TeacherReports />} />
+          <Route path="messages" element={<MessagingPage />} />
+          <Route path="settings" element={<TeacherSettings />} />
         </Route>
       </Routes>
       {!isDashboard && <Footer />}

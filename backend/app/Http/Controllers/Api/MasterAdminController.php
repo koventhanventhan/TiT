@@ -186,4 +186,41 @@ class MasterAdminController extends Controller
             'stats' => $stats
         ]);
     }
+
+    /**
+     * Update Institute Branding (Logo & Theme)
+     */
+    public function updateBranding(Request $request)
+    {
+        $institute = auth()->user()->institute;
+        if (!$institute) {
+            return response()->json(['message' => 'Institute not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'logo' => 'nullable|image|max:2048',
+            'primary_color' => 'nullable|string|max:20',
+            'secondary_color' => 'nullable|string|max:20',
+            'theme_mode' => 'nullable|in:light,dark',
+        ]);
+
+        $themeSettings = $institute->theme_settings ?? [];
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('logos', 'public');
+            $institute->logo_path = $path;
+        }
+
+        if (isset($validated['primary_color'])) $themeSettings['primary_color'] = $validated['primary_color'];
+        if (isset($validated['secondary_color'])) $themeSettings['secondary_color'] = $validated['secondary_color'];
+        if (isset($validated['theme_mode'])) $themeSettings['theme_mode'] = $validated['theme_mode'];
+
+        $institute->theme_settings = $themeSettings;
+        $institute->save();
+
+        return response()->json([
+            'message' => 'Branding updated successfully',
+            'institute' => $institute
+        ]);
+    }
 }

@@ -55,7 +55,7 @@
 
 .type-tag {
     background: #eff6ff;
-    color: #2563eb;
+    color: var(--primary-color);
 }
 
 .grade-tag {

@@ -69,12 +69,74 @@ class SiteSettingController extends Controller
             elseif (str_starts_with($key, 'social_')) $group = 'social';
             elseif (str_starts_with($key, 'footer_')) $group = 'footer';
             elseif (str_starts_with($key, 'hero_')) $group = 'hero';
+            elseif (str_starts_with($key, 'admin_')) $group = 'admin_identity';
             elseif (collect(['about_', 'stats_', 'why_', 'love_us_', 'mobile_'])->contains(fn($prefix) => str_starts_with($key, $prefix))) $group = 'sections';
 
             SiteSetting::set($key, $value, $group);
         }
 
-        return redirect()->back()->with('success', 'Settings updated successfully.');
+        // Handle logo removal
+        if ($request->has('remove_admin_logo') && $request->remove_admin_logo == '1') {
+            $currentLogo = SiteSetting::get('admin_logo');
+            if ($currentLogo && file_exists(public_path($currentLogo))) {
+                unlink(public_path($currentLogo));
+            }
+            // Clear the setting
+            \App\Models\SiteSetting::where('key', 'admin_logo')->delete();
+        }
+
+        // Handle file uploads (Logo)
+        if ($request->hasFile('admin_logo')) {
+            $logo = $request->file('admin_logo');
+            $name = 'admin_logo_' . time() . '.' . $logo->getClientOriginalExtension();
+            $path = 'uploads/settings';
+            $destinationPath = public_path($path);
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            
+            $logo->move($destinationPath, $name);
+            SiteSetting::set('admin_logo', $path . '/' . $name, 'admin_identity');
+        }
+
+        return redirect()->back()->with('success', 'Admin identity updated successfully');
+    }
+
+    public function updateBranding(Request $request)
+    {
+        $updated = false;
+        
+        if ($request->has('admin_company_name')) {
+            SiteSetting::set('admin_company_name', $request->admin_company_name, 'admin_identity');
+            $updated = true;
+        }
+
+        if ($request->hasFile('admin_logo')) {
+            $logo = $request->file('admin_logo');
+            $logoName = 'admin_logo_' . time() . '.' . $logo->getClientOriginalExtension();
+            
+            // Delete old logo
+            $currentLogo = SiteSetting::get('admin_logo');
+            if ($currentLogo && file_exists(public_path($currentLogo))) {
+                unlink(public_path($currentLogo));
+            }
+            
+            $logo->move(public_path('uploads/settings'), $logoName);
+            SiteSetting::set('admin_logo', 'uploads/settings/' . $logoName, 'admin_identity');
+            $updated = true;
+        }
+
+        if ($updated) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Branding updated successfully',
+                'logo_url' => SiteSetting::get('admin_logo') ? asset(SiteSetting::get('admin_logo')) : null,
+                'name' => SiteSetting::get('admin_company_name', 'Zenix')
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No changes made'], 400);
     }
 
     /**

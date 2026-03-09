@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiStar, FiUser, FiImage } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import './About.css'
 
@@ -14,22 +13,50 @@ const About = () => {
 
   const features = [
     {
-      icon: <FiBookOpen />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/jtihyjyw.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Top-notch Online Classes',
       description: 'Interactive live sessions with expert tutors'
     },
     {
-      icon: <FiUsers />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/dxjqoygy.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Professional Service & Standards',
       description: 'Dedicated support team for every student'
     },
     {
-      icon: <FiAward />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/fpisjznf.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Guaranteed Academic Success',
       description: 'Proven track record of student achievements'
     },
     {
-      icon: <FiCheckCircle />,
+      icon: (
+        <lord-icon
+          src="https://cdn.lordicon.com/yqzmiobz.json"
+          trigger="hover"
+          colors="primary:#4f0bd9,secondary:#1a103c"
+          style={{ width: '40px', height: '40px' }}
+        />
+      ),
       title: 'Qualified Professional Tutors',
       description: 'Experienced educators committed to your success'
     }
@@ -130,21 +157,36 @@ const About = () => {
               className={`about-btn ${activeTab === 'journey' ? 'active' : ''}`}
               onClick={() => setActiveTab('journey')}
             >
-              <FiStar />
+              <lord-icon
+                src="https://cdn.lordicon.com/igiiqzue.json"
+                trigger="hover"
+                colors={activeTab === 'journey' ? "primary:#ffffff" : "primary:#4f0bd9"}
+                style={{ width: '20px', height: '20px' }}
+              />
               Successful Journey
             </button>
             <button
               className={`about-btn ${activeTab === 'teachers' ? 'active' : ''}`}
               onClick={() => setActiveTab('teachers')}
             >
-              <FiUser />
+              <lord-icon
+                src="https://cdn.lordicon.com/dxjqoygy.json"
+                trigger="hover"
+                colors={activeTab === 'teachers' ? "primary:#ffffff" : "primary:#4f0bd9"}
+                style={{ width: '20px', height: '20px' }}
+              />
               Teachers Details
             </button>
             <button
               className={`about-btn ${activeTab === 'images' ? 'active' : ''}`}
               onClick={() => setActiveTab('images')}
             >
-              <FiImage />
+              <lord-icon
+                src="https://cdn.lordicon.com/fgpmetxx.json"
+                trigger="hover"
+                colors={activeTab === 'images' ? "primary:#ffffff" : "primary:#4f0bd9"}
+                style={{ width: '20px', height: '20px' }}
+              />
               Our Images
             </button>
           </div>

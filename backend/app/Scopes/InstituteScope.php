@@ -10,13 +10,13 @@ class InstituteScope implements Scope
 {
     public function apply(Builder $builder, Model $model)
     {
-        // Prevent infinite recursion when checking auth
+        // Prevent application in console (migrations, seeds, etc.)
         if (app()->runningInConsole()) {
             return;
         }
 
         // We use a static variable to track if we are already in the middle of a scope check 
-        // for the User model to prevent recursive loops when auth()->check() triggers a User load.
+        // to prevent recursive loops when auth()->user() triggers a model load that uses this scope.
         static $isChecking = false;
         
         if ($isChecking) {
@@ -26,23 +26,35 @@ class InstituteScope implements Scope
         $isChecking = true;
 
         try {
+            // derivation of institute_id
+            $instituteId = null;
+
+            // 1. Check if user is authenticated via Sanctum or Web
             if (auth()->check()) {
                 $user = auth()->user();
                 
-                // Super admins see everything
+                // Super admins see everything across all institutes
                 if ($user->role === 'super_admin') {
-                    $isChecking = false;
                     return;
                 }
 
-                // Other users are scoped to their institute
-                if ($user->institute_id) {
-                    $builder->where($model->getTable() . '.institute_id', $user->institute_id);
-                } else {
-                    // If user has no institute and isn't super admin, they see nothing by default
-                    $builder->whereRaw('1 = 0');
-                }
+                $instituteId = $user->institute_id;
+            } 
+            // 2. Fallback to header for certain API contexts if needed (legacy/public-with-header)
+            else if (request()->header('X-Institute-Id')) {
+                $instituteId = request()->header('X-Institute-Id');
             }
+
+            // Apply the scope if we have a context
+            if ($instituteId) {
+                $builder->where($model->getTable() . '.institute_id', $instituteId);
+            } else if (auth()->check()) {
+                // If user is logged in but has no institute (and isn't super admin), they see nothing
+                $builder->whereRaw('1 = 0');
+            }
+            // If not logged in and no header, we don't apply the filter here 
+            // (Public routes should handle their own logic or be globally available)
+            
         } finally {
             $isChecking = false;
         }

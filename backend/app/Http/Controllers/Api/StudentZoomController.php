@@ -43,6 +43,7 @@ class StudentZoomController extends Controller
 
         $schedules = ZoomSchedule::whereDate('scheduled_at', '>=', $startOfDay)
             ->whereDate('scheduled_at', '<=', $endOfDay)
+            ->where('grade', $user->current_grade) // Only show classes for student's grade
             ->orderBy('scheduled_at')
             ->get();
 
@@ -52,6 +53,8 @@ class StudentZoomController extends Controller
                 'id' => $s->id,
                 'title' => $s->title,
                 'zoom_link' => $s->zoom_link,
+                'join_url' => $s->join_url,
+                'password' => $s->password,
                 'scheduled_at' => $s->scheduled_at->toIso8601String(),
                 'subject' => $s->subject,
                 'grade' => $s->grade,
@@ -64,7 +67,7 @@ class StudentZoomController extends Controller
         $nextPaymentDate = Carbon::now()->addMonth()->startOfMonth()->toDateString();
 
         return response()->json([
-            'zoom_classes' => $items,
+            'data' => $items, // Changed from 'zoom_classes' to 'data' for easier frontend consumption
             'user_profile' => [
                 'full_name' => $user->full_name,
                 'school_name' => $user->school_name,
@@ -119,5 +122,23 @@ class StudentZoomController extends Controller
         }
 
         return response()->json(['message' => 'Attendance recorded and WhatsApp notification sent.']);
+    }
+
+    /**
+     * Get all upcoming zoom classes for the student's grade.
+     */
+    public function upcomingSchedules(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'user' || $user->deactivated_at) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', now())
+            ->where('grade', $user->current_grade)
+            ->orderBy('scheduled_at')
+            ->get();
+
+        return response()->json($schedules);
     }
 }

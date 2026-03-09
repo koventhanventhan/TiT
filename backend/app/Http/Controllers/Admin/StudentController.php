@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Payment;
+use App\Notifications\AdminNotification;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,8 +52,13 @@ class StudentController extends Controller
             ->where('id', $id)
             ->whereNotNull('full_name')
             ->firstOrFail();
+
+        $payments = \App\Models\Payment::where('user_id', $student->id)
+            ->orderBy('paid_at', 'desc')
+            ->get();
         
-        return view('admin.students.show', compact('student'));
+        // Use edit view as show view is not implemented separately
+        return view('admin.students.edit', compact('student', 'payments'));
     }
 
     /**
@@ -69,8 +75,12 @@ class StudentController extends Controller
             ->where('id', $id)
             ->whereNotNull('full_name')
             ->firstOrFail();
+
+        $payments = Payment::where('user_id', $student->id)
+            ->orderBy('paid_at', 'desc')
+            ->get();
         
-        return view('admin.students.edit', compact('student'));
+        return view('admin.students.edit', compact('student', 'payments'));
     }
 
     /**
@@ -91,34 +101,48 @@ class StudentController extends Controller
         // Validate the request
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number,' . $student->id,
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
             'medium' => 'required|in:english,tamil',
-            'online_experience' => 'required|boolean',
+            'online_experience' => 'nullable|boolean',
             'device_used' => 'required|string|max:255',
-            'current_grade' => 'required|string|max:50',
+            'current_grade' => 'required|string|max:100',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
-            'selected_subjects' => 'nullable|string',
+            'selected_subjects' => 'nullable|array',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)],
+            'password' => 'nullable|string|min:8',
         ]);
         
         // Update student data
-        $student->update([
+        $subjects = null;
+        if (isset($validated['selected_subjects']) && is_array($validated['selected_subjects'])) {
+            $subjects = json_encode(array_values(array_unique($validated['selected_subjects'])), JSON_UNESCAPED_UNICODE);
+        }
+
+        $updateData = [
             'full_name' => $validated['full_name'],
-            'phone_number' => $validated['phone_number'] ?? null,
+            'phone_number' => $validated['phone_number'],
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
             'school_name' => $validated['school_name'],
             'medium' => $validated['medium'],
-            'online_experience' => $validated['online_experience'],
+            'online_experience' => $request->has('online_experience') ? (bool) $validated['online_experience'] : $student->online_experience,
             'device_used' => $validated['device_used'],
             'current_grade' => $validated['current_grade'],
             'stream' => $validated['stream'] ?? null,
-            'selected_subjects' => $validated['selected_subjects'] ?? null,
+            'selected_subjects' => $subjects,
             'email' => $validated['email'],
-        ]);
+        ];
+
+        // Only update password if admin changed it (different from stored plain_password)
+        if (!empty($validated['password']) && $validated['password'] !== $student->plain_password) {
+            $updateData['password'] = Hash::make($validated['password']);
+            $updateData['plain_password'] = $validated['password'];
+        }
+
+        $student->update($updateData);
         
         return redirect()->route('admin.students.index')
             ->with('success', 'Student information updated successfully!');
@@ -145,15 +169,16 @@ class StudentController extends Controller
 
         $phone = $student->phone_number;
         if ($phone) {
-            $message = "Dear " . ($student->full_name ?? $student->name) . ",\n\n" .
-                "Your registration for " . config('app.name') . " has been confirmed by the admin!\n" .
-                "You can now log in to your dashboard to access your classes and materials.\n\n" .
-                "Welcome to our learning family! 🎓";
+            $message = "Congratulations " . ($student->full_name ?? $student->name) . "! 🎉\n\n" .
+                "Your registration for " . config('app.name') . " has been approved by the admin.\n" .
+                "You can now log in and access your classes. Happy learning!";
+            
+            // Send via WhatsApp
             $this->whatsApp->send($phone, $message);
         }
 
         return redirect()->route('admin.students.index')
-            ->with('success', 'Student confirmed and WhatsApp notification sent.');
+            ->with('success', 'Student confirmed and notification sent.');
     }
 
     public function create()
@@ -169,44 +194,97 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $request->validate([
-            'name' => 'required|string|max:255|unique:users,name',
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'full_name' => 'required|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
             'medium' => 'required|in:english,tamil',
             'online_experience' => 'required|boolean',
             'device_used' => 'required|string|max:255',
-            'current_grade' => 'required|string|max:50',
+            'current_grade' => 'required|string|max:100',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
-            'selected_subjects' => 'nullable|string',
-            'registration_status' => 'nullable|string|in:pending_payment,paid_pending_confirm,confirmed',
-            'admin_confirmed' => 'nullable|boolean',
+            'selected_subjects' => 'nullable|array',
+            'quick_payment' => 'nullable|boolean',
+            'custom_payment_month' => 'nullable|date',
         ]);
+
+        // JSON-encode selected subjects array
+        $subjects = null;
+        if (isset($validated['selected_subjects']) && is_array($validated['selected_subjects'])) {
+            $subjects = json_encode(array_values(array_unique($validated['selected_subjects'])), JSON_UNESCAPED_UNICODE);
+        }
+
+        // Auto-generate username from email prefix
+        $emailPrefix = explode('@', $validated['email'])[0];
+        $username = $emailPrefix;
+        $counter = 1;
+        while (User::where('name', $username)->exists()) {
+            $username = $emailPrefix . $counter;
+            $counter++;
+        }
+
+        // Use admin-entered password
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $username,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'plain_password' => $validated['password'],
             'role' => 'user',
-            'full_name' => $request->full_name,
-            'phone_number' => $request->phone_number,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'school_name' => $request->school_name,
-            'medium' => $request->medium,
+            'full_name' => $validated['full_name'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'],
+            'gender' => $validated['gender'],
+            'school_name' => $validated['school_name'],
+            'medium' => $validated['medium'],
             'online_experience' => $request->boolean('online_experience'),
-            'device_used' => $request->device_used,
-            'current_grade' => $request->current_grade,
-            'stream' => $request->stream,
-            'selected_subjects' => $request->selected_subjects,
-            'registration_status' => $request->registration_status ?? 'pending_payment',
-            'admin_confirmed_at' => $request->boolean('admin_confirmed') ? now() : null,
+            'device_used' => $validated['device_used'],
+            'current_grade' => $validated['current_grade'],
+            'stream' => $validated['stream'] ?? null,
+            'selected_subjects' => $subjects,
+            'registration_status' => 'pending_payment',
+            'admin_confirmed_at' => now(),
         ]);
-        return redirect()->route('admin.students.index')->with('success', 'Student added.');
+
+        // Notify Admin of manual student entry
+        $admin = User::where('role', 'admin')->first();
+        if ($admin) {
+            $admin->notify(new AdminNotification(
+                "Manual Student Entry: " . ($user->full_name ?? $user->name),
+                'info',
+                route('admin.students.show', $user->id),
+                'admission_new'
+            ));
+        }
+
+        // Handle Quick Payment (current month)
+        if ($request->boolean('quick_payment')) {
+            Payment::create([
+                'user_id' => $user->id,
+                'year_month' => now()->format('Y-m'),
+                'amount' => config('payment.monthly_amount', 500),
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+        }
+
+        // Handle Custom Payment Date
+        if (!empty($validated['custom_payment_month'])) {
+            $customDate = $validated['custom_payment_month'];
+            $yearMonth = substr($customDate, 0, 7); // Extract YYYY-MM from YYYY-MM-DD
+            Payment::create([
+                'user_id' => $user->id,
+                'year_month' => $yearMonth,
+                'amount' => config('payment.monthly_amount', 500),
+                'status' => 'paid',
+                'paid_at' => $customDate,
+            ]);
+        }
+
+        return redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
     }
 
     public function deactivate($id)
@@ -216,7 +294,46 @@ class StudentController extends Controller
         }
         $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
         $student->update(['deactivated_at' => now()]);
-        return redirect()->route('admin.students.index')->with('success', 'Student deactivated.');
+
+        // Send WhatsApp notification
+        $phone = $student->phone_number;
+        if ($phone) {
+            $message = "நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். (Admin has deactivated your account.) \n\n" .
+                "If you believe this is a mistake, please contact support.";
+            $this->whatsApp->send($phone, $message);
+        }
+
+        return redirect()->route('admin.students.index')->with('success', 'Student deactivated and notification sent.');
+    }
+
+    /**
+     * Activate a student account
+     */
+    public function activate($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
+        $student->update(['deactivated_at' => null]);
+        
+        return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully.');
+    }
+
+    /**
+     * Delete a student account
+     */
+    public function destroy($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
+        
+        // Delete the student (this will also trigger cascades if defined in migration)
+        $student->delete();
+        
+        return redirect()->route('admin.students.index')->with('success', 'Student account deleted permanently.');
     }
 
     public function markPaid(Request $request, $id)
@@ -225,15 +342,29 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
-        $request->validate(['year_month' => 'required|string|size:7']);
+
+        // Accept either a full date (YYYY-MM-DD) or year_month (YYYY-MM)
+        $request->validate(['year_month' => 'required|string']);
+
+        $inputValue = $request->year_month;
+
+        // If full date given (YYYY-MM-DD), extract YYYY-MM
+        if (strlen($inputValue) === 10) {
+            $yearMonth = substr($inputValue, 0, 7);
+            $paidAt = $inputValue;
+        } else {
+            $yearMonth = $inputValue;
+            $paidAt = $inputValue . '-01'; // default to 1st of month
+        }
+
         Payment::create([
             'user_id' => $student->id,
-            'year_month' => $request->year_month,
+            'year_month' => $yearMonth,
             'amount' => $request->amount ?? config('payment.monthly_amount', 500),
             'status' => 'paid',
-            'paid_at' => now(),
+            'paid_at' => $paidAt,
         ]);
-        return redirect()->back()->with('success', 'Payment marked for ' . $request->year_month . '.');
+        return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . '.');
     }
 }
 

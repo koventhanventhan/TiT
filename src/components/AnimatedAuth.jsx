@@ -13,10 +13,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'admin', // Admin registration only
-    firstName: '',
-    lastName: '',
-    phoneNumber: ''
+    role: 'user', // Default to student registration
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -146,35 +143,47 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     e.preventDefault()
     setError('')
 
-    // Common validation
-    if (signupData.password !== signupData.confirmPassword) {
-      setError('Passwords do not match!')
-      return
-    }
-
-    if (signupData.password.length < 8) {
-      setError('Password must be at least 8 characters long!')
-      return
-    }
-
+    // Email validation
     if (!signupData.email) {
       setError('Email is required')
       return
     }
 
-    // Admin validation
-    if (!signupData.firstName || signupData.firstName.length < 2) {
-      setError('First name must be at least 2 characters')
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(signupData.email)) {
+      setError('Please enter a valid email address')
       return
     }
 
-    if (!signupData.lastName || signupData.lastName.length < 2) {
-      setError('Last name must be at least 2 characters')
+    // Password strength validation
+    if (signupData.password.length < 8) {
+      setError('Password must be at least 8 characters long!')
       return
     }
 
-    if (!signupData.phoneNumber) {
-      setError('Phone number is required')
+    if (!/[A-Z]/.test(signupData.password)) {
+      setError('Password must contain at least 1 uppercase letter (A-Z)')
+      return
+    }
+
+    if (!/[a-z]/.test(signupData.password)) {
+      setError('Password must contain at least 1 lowercase letter (a-z)')
+      return
+    }
+
+    if (!/[0-9]/.test(signupData.password)) {
+      setError('Password must contain at least 1 number (0-9)')
+      return
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(signupData.password)) {
+      setError('Password must contain at least 1 special character (!@#$%^&*...)')
+      return
+    }
+
+    // Confirm password match
+    if (signupData.password !== signupData.confirmPassword) {
+      setError('Passwords do not match!')
       return
     }
 
@@ -185,17 +194,14 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       let userData = {
         email: signupData.email,
         password: signupData.password,
-        role: 'admin', // Admin registration only
-        first_name: signupData.firstName,
-        last_name: signupData.lastName,
-        phone_number: signupData.phoneNumber
+        role: 'user', // Registering as a student
       }
 
       const result = await registerWithEmail(userData)
       setIsLoading(false)
 
       // Show success message
-      alert(`Registration successful! Admin account created. Welcome, ${result.user?.username || result.user?.email || 'Admin'}!`)
+      alert(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
       // After successful admin registration, show student entry form
       setShowStudentForm(true)
@@ -235,7 +241,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="animated-auth-overlay" onClick={onClose}>
+    <div className="animated-auth-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="animated-auth-wrapper" onClick={(e) => e.stopPropagation()}>
         <button className="animated-auth-close" onClick={onClose}>
           <FiX />
@@ -332,106 +338,65 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
               </form>
             ) : (
               <form onSubmit={handleSignupSubmit}>
-                <h2>Register</h2>
+                <h2>Student Register</h2>
 
 
                 {/* Admin Registration Form */}
-                <>
-                  {/* First Name */}
-                  <div className="inputbox">
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={signupData.firstName}
-                      onChange={handleSignupChange}
-                      required
-                    />
-                    <span>First Name</span>
-                    <i></i>
-                  </div>
 
-                  {/* Last Name */}
-                  <div className="inputbox">
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={signupData.lastName}
-                      onChange={handleSignupChange}
-                      required
-                    />
-                    <span>Last Name</span>
-                    <i></i>
-                  </div>
+                {/* Email */}
+                <div className="inputbox">
+                  <input
+                    type="email"
+                    name="email"
+                    value={signupData.email}
+                    onChange={handleSignupChange}
+                    required
+                  />
+                  <span>Email</span>
+                  <i></i>
+                </div>
 
-                  {/* Phone Number */}
-                  <div className="inputbox">
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={signupData.phoneNumber}
-                      onChange={handleSignupChange}
-                      required
-                      placeholder="+94XXXXXXXXX"
-                    />
-                    <span>Phone Number</span>
-                    <i></i>
-                  </div>
+                {/* Password */}
+                <div className="inputbox">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={signupData.password}
+                    onChange={handleSignupChange}
+                    required
+                    minLength="8"
+                  />
+                  <span>Password</span>
+                  <i></i>
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
 
-                  {/* Email */}
-                  <div className="inputbox">
-                    <input
-                      type="email"
-                      name="email"
-                      value={signupData.email}
-                      onChange={handleSignupChange}
-                      required
-                    />
-                    <span>Email</span>
-                    <i></i>
-                  </div>
-
-                  {/* Password */}
-                  <div className="inputbox">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={signupData.password}
-                      onChange={handleSignupChange}
-                      required
-                      minLength="8"
-                    />
-                    <span>Password</span>
-                    <i></i>
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-
-                  {/* Confirm Password */}
-                  <div className="inputbox">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      value={signupData.confirmPassword}
-                      onChange={handleSignupChange}
-                      required
-                      minLength="8"
-                    />
-                    <span>Confirm Password</span>
-                    <i></i>
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                </>
+                {/* Confirm Password */}
+                <div className="inputbox">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={signupData.confirmPassword}
+                    onChange={handleSignupChange}
+                    required
+                    minLength="8"
+                  />
+                  <span>Confirm Password</span>
+                  <i></i>
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
 
                 <div className="links">
                   <span></span>
@@ -469,6 +434,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         </div>
       </div>
     </div>
+
   )
 }
 

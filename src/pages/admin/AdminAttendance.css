@@ -33,7 +33,7 @@
 }
 
 .att-stat-card svg.blue {
-    color: #2563eb;
+    color: var(--primary-color);
 }
 
 .att-stat-card h3 {

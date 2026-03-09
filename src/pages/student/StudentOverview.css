@@ -63,12 +63,12 @@
 
 .purple .stat-icon {
     background: #f5f3ff;
-    color: #7c3aed;
+    color: var(--primary-color);
 }
 
 .blue .stat-icon {
-    background: #eff6ff;
-    color: #2563eb;
+    background: #f5f3ff;
+    color: var(--primary-color);
 }
 
 .green .stat-icon {
@@ -125,7 +125,7 @@
 
 .view-all {
     font-size: 14px;
-    color: #6366f1;
+    color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
     display: flex;
@@ -154,7 +154,7 @@
 }
 
 .announcement-item.update {
-    border-left-color: #3b82f6;
+    border-left-color: var(--primary-color);
 }
 
 .ann-icon {
@@ -185,7 +185,7 @@
 .path-time {
     font-size: 13px;
     font-weight: 700;
-    color: #6366f1;
+    color: var(--primary-color);
     min-width: 70px;
 }
 
@@ -205,7 +205,7 @@
 
 .join-tiny {
     padding: 6px 12px;
-    background: #6366f1;
+    background: var(--primary-color);
     color: #ffffff;
     border: none;
     border-radius: 6px;

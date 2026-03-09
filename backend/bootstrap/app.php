@@ -22,6 +22,16 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \App\Http\Middleware\TenantMiddleware::class,
         ]);
+
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+        ]);
+        
+        // Custom session timeout middleware
+        $middleware->web(append: [
+            \App\Http\Middleware\UserSessionTimeout::class,
+        ]);
         
         // Use custom CSRF middleware that excludes API routes
         $middleware->validateCsrfTokens(except: [
@@ -38,5 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->withBroadcasting(__DIR__.'/../routes/channels.php')
+    ->create();
 

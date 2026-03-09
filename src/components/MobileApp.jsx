@@ -1,146 +1,115 @@
-import React from 'react'
-import { FiSmartphone, FiDownload } from 'react-icons/fi'
+import React, { useEffect, useState } from 'react'
+import { FiDownload, FiCheckCircle, FiPlay, FiSmartphone } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import './MobileApp.css'
 
 const MobileApp = () => {
   const { getSetting } = useSettings();
+  const [activeScreen, setActiveScreen] = useState(0);
+
+  const screens = [
+    { title: 'Interactive Classes', icon: '📚' },
+    { title: 'Smart Study Tools', icon: '📖' },
+    { title: 'Live Recordings', icon: '🎥' },
+    { title: 'Detailed Progress', icon: '📊' }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveScreen((prev) => (prev + 1) % screens.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [screens.length]);
 
   return (
-    <section className="mobile-app section">
+    <section className="premium-mobile section">
       <div className="container">
-        <div className="mobile-app-content">
-          <div className="mobile-app-text">
-            <h2 className="section-title mobile-title">
-              {getSetting('mobile_title', 'Learn Anytime, Anywhere..! ')}
-            </h2>
-            <h3 className="mobile-subtitle">{getSetting('mobile_subtitle', 'EduLearn Mobile App')}</h3>
-            <p className="mobile-description">
-              {getSetting('mobile_description', 'Take your learning on the go with the EduLearn Mobile App, available on both iOS and Android. Access live classes, class recordings, exams, and progress updates seamlessly from your mobile device. Stay connected, stay updated, and unlock a world of learning at your fingertips—anytime, anywhere!')}
-            </p>
-            <div className="mobile-badges">
-              <a href={getSetting('mobile_app_store_link', '#')} className="badge" target="_blank" rel="noopener noreferrer">
-                <FiDownload />
-                <span>Download on App Store</span>
-              </a>
-              <a href={getSetting('mobile_play_store_link', '#')} className="badge" target="_blank" rel="noopener noreferrer">
-                <FiDownload />
-                <span>Get it on Google Play</span>
-              </a>
-            </div>
-          </div>
-          <div className="mobile-app-visual">
-            <div className="mobile-gallery-container">
-              <div className="phone-mockup-gallery">
-                <div className="phone-frame-gallery">
-                  <div className="phone-notch-gallery"></div>
-                  <div className="phone-screen-gallery">
-                    <div className="gallery-slider">
-                      <div className="gallery-screen active" data-index="0">
-                        <div className="screen-content screen-1">
+        <div className="pm-wrapper">
+          {/* Visual Side */}
+          <div className="pm-visual-side">
+            <div className="pm-circle-glow"></div>
+            <div className="pm-phone-container">
+              <div className="phone-mockup">
+                <div className="phone-bezel">
+                  <div className="phone-speaker"></div>
+                  <div className="phone-screen">
+                    <div className="screen-carousel" style={{ transform: `translateX(-${activeScreen * 100}%)` }}>
+                      {screens.map((s, i) => (
+                        <div key={i} className="screen-page">
                           <div className="screen-header">
-                            <div className="status-bar">
-                              <span>9:41</span>
-                              <div className="status-dots">
-                                <span></span><span></span><span></span>
-                              </div>
-                            </div>
-                            <div className="app-header-content">
-                              <div className="app-icon-screen">📚</div>
-                              <h4>EduLearn</h4>
-                            </div>
+                            <div className="s-time">9:41</div>
+                            <div className="s-icons">📶 🔋</div>
                           </div>
                           <div className="screen-body">
-                            <div className="gallery-item featured"></div>
-                            <div className="gallery-grid">
-                              <div className="gallery-item"></div>
-                              <div className="gallery-item"></div>
-                              <div className="gallery-item"></div>
+                            <div className="s-app-icon">{s.icon}</div>
+                            <h4 className="s-title">{s.title}</h4>
+                            <div className="s-dummy-content">
+                              <div className="s-line"></div>
+                              <div className="s-line short"></div>
+                              <div className="s-rect"></div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="gallery-screen" data-index="1">
-                        <div className="screen-content screen-2">
-                          <div className="screen-header">
-                            <div className="status-bar">
-                              <span>9:41</span>
-                              <div className="status-dots">
-                                <span></span><span></span><span></span>
-                              </div>
-                            </div>
-                            <div className="app-header-content">
-                              <div className="app-icon-screen">📖</div>
-                              <h4>Classes</h4>
-                            </div>
-                          </div>
-                          <div className="screen-body">
-                            <div className="class-list">
-                              <div className="class-item"></div>
-                              <div className="class-item"></div>
-                              <div className="class-item"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="gallery-screen" data-index="2">
-                        <div className="screen-content screen-3">
-                          <div className="screen-header">
-                            <div className="status-bar">
-                              <span>9:41</span>
-                              <div className="status-dots">
-                                <span></span><span></span><span></span>
-                              </div>
-                            </div>
-                            <div className="app-header-content">
-                              <div className="app-icon-screen">🎥</div>
-                              <h4>Recordings</h4>
-                            </div>
-                          </div>
-                          <div className="screen-body">
-                            <div className="recording-list">
-                              <div className="recording-item"></div>
-                              <div className="recording-item"></div>
-                              <div className="recording-item"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="gallery-screen" data-index="3">
-                        <div className="screen-content screen-4">
-                          <div className="screen-header">
-                            <div className="status-bar">
-                              <span>9:41</span>
-                              <div className="status-dots">
-                                <span></span><span></span><span></span>
-                              </div>
-                            </div>
-                            <div className="app-header-content">
-                              <div className="app-icon-screen">📊</div>
-                              <h4>Progress</h4>
-                            </div>
-                          </div>
-                          <div className="screen-body">
-                            <div className="progress-chart">
-                              <div className="chart-bar"></div>
-                              <div className="chart-bar"></div>
-                              <div className="chart-bar"></div>
-                              <div className="chart-bar"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="phone-home-indicator-gallery"></div>
+                  <div className="phone-home-line"></div>
                 </div>
               </div>
-              <div className="gallery-dots">
-                <span className="dot active"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
+
+              {/* Floating elements */}
+              <div className="pm-floating-card top">
+                <FiCheckCircle className="f-icon" />
+                <span>99% Satisfaction</span>
               </div>
+              <div className="pm-floating-card bottom">
+                <FiPlay className="f-icon-play" />
+                <span>Live Sessions</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Text Side */}
+          <div className="pm-text-side">
+            <span className="pm-badge"><FiSmartphone /> Mobile Learning</span>
+            <h2 className="pm-title">
+              {getSetting('mobile_title', 'Learn Anytime, Anywhere')}
+            </h2>
+            <h3 className="pm-subtitle">EduLearn Mobile Application</h3>
+            <p className="pm-description">
+              {getSetting('mobile_description', 'Experience seamless education on the go. Access your courses, track progress, and join live sessions directly from your smartphone with our high-performance app.')}
+            </p>
+
+            <div className="pm-features">
+              <div className="pm-f-item">
+                <FiCheckCircle className="check-v" />
+                <span>Seamless Offline Access</span>
+              </div>
+              <div className="pm-f-item">
+                <FiCheckCircle className="check-v" />
+                <span>Instant Push Notifications</span>
+              </div>
+              <div className="pm-f-item">
+                <FiCheckCircle className="check-v" />
+                <span>Secure Data Sync</span>
+              </div>
+            </div>
+
+            <div className="pm-download-area">
+              <a href={getSetting('mobile_app_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
+                <div className="store-icon">🍎</div>
+                <div className="store-text">
+                  <small>Download on the</small>
+                  <strong>App Store</strong>
+                </div>
+              </a>
+              <a href={getSetting('mobile_play_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
+                <div className="store-icon">🤖</div>
+                <div className="store-text">
+                  <small>Get it on</small>
+                  <strong>Google Play</strong>
+                </div>
+              </a>
             </div>
           </div>
         </div>
@@ -150,4 +119,3 @@ const MobileApp = () => {
 }
 
 export default MobileApp
-

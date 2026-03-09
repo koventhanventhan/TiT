@@ -1,16 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Teachers - {{ config('app.name') }}</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/chartist/css/chartist.min.css') }}">
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/vendor/owl-carousel/owl.carousel.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <style>
         .content-body {
             margin-top: 0 !important;
@@ -22,6 +24,18 @@
             margin-bottom: 20px;
         }
     </style>
+    <!-- Pusher and Notifications -->
+    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script>
+        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
+        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
+        @auth
+            window.USER_ID = {{ auth()->id() }};
+        @else
+            window.USER_ID = null;
+        @endauth
+    </script>
 </head>
 
 <body>
@@ -35,14 +49,18 @@
 
     <div id="main-wrapper">
         <div class="nav-header">
-            <a href="{{ route('admin.dashboard') }}" class="brand-logo">
-                <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
-                    <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
-                </svg>
-                <svg class="brand-title" width="74" height="22" viewBox="0 0 74 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path class="svg-logo-path" d="M0.784 17.556L10.92 5.152H1.176V1.12H16.436V4.564L6.776 16.968H16.548V21H0.784V17.556ZM25.7399 21.28C24.0785 21.28 22.6599 20.9347 21.4839 20.244C20.3079 19.5533 19.4025 18.6387 18.7679 17.5C18.1519 16.3613 17.8439 15.1293 17.8439 13.804C17.8439 12.3853 18.1519 11.088 18.7679 9.912C19.3839 8.736 20.2799 7.79333 21.4559 7.084C22.6319 6.37467 24.0599 6.02 25.7399 6.02C27.4012 6.02 28.8199 6.37467 29.9959 7.084C31.1719 7.79333 32.0585 8.72667 32.6559 9.884C33.2719 11.0413 33.5799 12.2827 33.5799 13.608C33.5799 14.1493 33.5425 14.6253 33.4679 15.036H22.6039C22.6785 16.0253 23.0332 16.7813 23.6679 17.304C24.3212 17.808 25.0585 18.06 25.8799 18.06C26.5332 18.06 27.1585 17.9013 27.7559 17.584C28.3532 17.2667 28.7639 16.8373 28.9879 16.296L32.7959 17.36C32.2172 18.5173 31.3119 19.46 30.0799 20.188C28.8665 20.916 27.4199 21.28 25.7399 21.28ZM22.4919 12.292H28.8759C28.7825 11.3587 28.4372 10.6213 27.8399 10.08C27.2612 9.52 26.5425 9.24 25.6839 9.24C24.8252 9.24 24.0972 9.52 23.4999 10.08C22.9212 10.64 22.5852 11.3773 22.4919 12.292ZM49.7783 21H45.2983V12.74C45.2983 11.7693 45.1116 11.0693 44.7383 10.64C44.3836 10.192 43.9076 9.968 43.3103 9.968C42.6943 9.968 42.069 10.2107 41.4343 10.696C40.7996 11.1813 40.3516 11.8067 40.0903 12.572V21H35.6103V6.3H39.6423V8.764C40.1836 7.90533 40.949 7.23333 41.9383 6.748C42.9276 6.26267 44.0663 6.02 45.3543 6.02C46.3063 6.02 47.0716 6.19733 47.6503 6.552C48.2476 6.888 48.6956 7.336 48.9943 7.896C49.3116 8.43733 49.517 9.03467 49.6103 9.688C49.7223 10.3413 49.7783 10.976 49.7783 11.592V21ZM52.7548 4.62V0.559999H57.2348V4.62H52.7548ZM52.7548 21V6.3H57.2348V21H52.7548ZM63.4657 6.3L66.0697 10.444L66.3497 10.976L66.6297 10.444L69.2337 6.3H73.8537L68.9257 13.608L73.9657 21H69.3457L66.6017 16.884L66.3497 16.352L66.0977 16.884L63.3537 21H58.7337L63.7737 13.692L58.8457 6.3H63.4657Z" fill="black"/>
-                </svg>
+                        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
+                @if(isset($site_settings['admin_logo']))
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                @else
+                    <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
+                        <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                    </svg>
+                @endif
+                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                </span>
             </a>
             <div class="nav-control">
                 <div class="hamburger">
@@ -75,24 +93,39 @@
                                     Home
                                 </a>
                             </li>
+                            
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    <div class="header-info">
+                                    <!-- <div class="header-info">
                                         <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
                                         <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
-                                    </div>
-                                    <img src="{{ asset('admin-theme/images/profile/pic1.jpg') }}" width="20" alt="" style="border-radius: 50%;">
+                                    </div> -->
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
+                                    @else
+                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a href="#" class="dropdown-item ai-icon">
-                                        <svg id="icon-user1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <span class="ml-2">Profile </span>
+                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
+                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
+                                        <small class="text-muted">{{ Auth::user()->email }}</small>
+                                    </div>
+                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
+                                        <i class="la la-cog text-primary mr-2"></i>
+                                        <span class="ml-2">Settings</span>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.logout') }}">
+                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
+                                        <i class="la la-calendar text-primary mr-2"></i>
+                                        <span class="ml-2">Calendar</span>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
                                         @csrf
-                                        <button type="submit" class="dropdown-item ai-icon">
-                                            <svg id="icon-logout" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                            <span class="ml-2">Logout </span>
+                                        <button type="submit" class="dropdown-item ai-icon text-danger">
+                                            <i class="la la-sign-out text-danger mr-2"></i>
+                                            <span class="ml-2">Sign out</span>
                                         </button>
                                     </form>
                                 </div>
@@ -103,78 +136,7 @@
             </div>
         </div>
 
-        <div class="deznav">
-            <div class="deznav-scroll">
-                <ul class="metismenu" id="menu">
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-networking"></i>
-                            <span class="nav-text">Dashboard</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Users</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="#">All Users</a></li>
-                            <li><a href="#">Add User</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-notepad"></i>
-                            <span class="nav-text">Student Entries</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.students.index') }}">All Students</a></li>
-                            <li><a href="{{ route('admin.students.create') }}">Add Student</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-user-7"></i>
-                            <span class="nav-text">Teachers</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.teachers.index') }}">All Teachers</a></li>
-                            <li><a href="{{ route('admin.teachers.create') }}">Add Teacher</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-video-camera"></i>
-                            <span class="nav-text">Zoom Classes</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.zoom.index') }}">All Zoom Classes</a></li>
-                            <li><a href="{{ route('admin.zoom.create') }}">Create Zoom Class</a></li>
-                            <li><a href="{{ route('admin.attendance.index') }}">Attendance</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-message"></i>
-                            <span class="nav-text">Messages</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.messages.index') }}">All Messages</a></li>
-                            <li><a href="{{ route('admin.messages.create') }}">New Message</a></li>
-                        </ul>
-                    </li>
-                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                            <i class="flaticon-381-settings-2"></i>
-                            <span class="nav-text">Settings</span>
-                        </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.settings.index') }}">Frontend Settings</a></li>
-                            <li><a href="{{ route('admin.settings.about') }}">About Page</a></li>
-                            <li><a href="{{ route('admin.settings.contact') }}">Contact Page</a></li>
-                            <li><a href="{{ route('admin.settings.learning') }}">Learning Site Page</a></li>
-                            <li><a href="{{ route('admin.settings.classes') }}">Classes Page</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        @include('admin.partials.sidebar')
 
         <div class="content-body">
             <div class="container-fluid">
@@ -213,6 +175,7 @@
                                                 <th style="font-weight: 600;">Name</th>
                                                 <th style="font-weight: 600;">Email</th>
                                                 <th style="font-weight: 600;">Phone</th>
+                                                <th style="font-weight: 600;">subject</th>
                                                 <th style="font-weight: 600;">Status</th>
                                                 <th style="font-weight: 600;">Actions</th>
                                             </tr>
@@ -220,10 +183,11 @@
                                         <tbody>
                                             @forelse($teachers as $t)
                                             <tr>
-                                                <td><strong>{{ $t->id }}</strong></td>
+                                                <td><strong>{{ $t->teacher_unique_id ?? 'â€“' }}</strong></td>
                                                 <td>{{ $t->name }}</td>
                                                 <td>{{ $t->email }}</td>
-                                                <td>{{ $t->phone_number ?? '–' }}</td>
+                                                <td>{{ $t->phone_number ?? 'â€“' }}</td>
+                                                <td>{{ $t->teacher_class ?? 'â€“' }}</td>
                                                 <td>
                                                     @if($t->deactivated_at)
                                                         <span class="badge badge-danger">Deactivated</span>
@@ -232,23 +196,35 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$t->deactivated_at)
-                                                        <a href="{{ route('admin.teachers.edit', $t->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                                                        <form action="{{ route('admin.teachers.deactivate', $t->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this teacher?');">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
-                                                        </form>
-                                                    @endif
-                                                    <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to PERMANENTLY DELETE this teacher? This action cannot be undone.');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                                    </form>
+                                                    <div class="dropdown">
+                                                        <button type="button" class="btn btn-primary light btn-xs sharp" data-toggle="dropdown">
+                                                            <svg width="16px" height="16px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-right">
+                                                            <a class="dropdown-item" href="{{ route('admin.teachers.edit', $t->id) }}">Edit Details</a>
+                                                            @if($t->deactivated_at)
+                                                                <form action="{{ route('admin.teachers.activate', $t->id) }}" method="POST">
+                                                                    @csrf
+                                                                    <button type="submit" class="dropdown-item text-success">Activate Teacher</button>
+                                                                </form>
+                                                            @else
+                                                                <form action="{{ route('admin.teachers.deactivate', $t->id) }}" method="POST" onsubmit="return confirm('Deactivate this teacher?');">
+                                                                    @csrf
+                                                                    <button type="submit" class="dropdown-item text-warning">Deactivate Teacher</button>
+                                                                </form>
+                                                            @endif
+                                                            <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to PERMANENTLY DELETE this teacher?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger">Delete Teacher</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="6" class="text-center" style="padding: 40px; color: #6b7280;">No teachers found</td>
+                                                <td colspan="7" class="text-center" style="padding: 40px; color: #6b7280;">No teachers found</td>
                                             </tr>
                                             @endforelse
                                         </tbody>
@@ -269,7 +245,7 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -278,6 +254,16 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    
+    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 
 </html>
+
+
+
+

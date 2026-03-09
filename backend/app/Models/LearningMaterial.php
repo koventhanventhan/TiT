@@ -4,15 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToInstitute;
 
 class LearningMaterial extends Model
 {
-    use HasFactory;
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new \App\Scopes\InstituteScope);
-    }
+    use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
         'title',

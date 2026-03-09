@@ -1,0 +1,5 @@
+[data-theme-version="dark"] .bootstrap-select,
+[data-theme-version="dark"] .dropdown-toggle,
+[data-theme-version="dark"] .filter-option-inner-inner {
+    color: #160101;
+}

@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\BelongsToInstitute;
+
 class AdminMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
         'title',
         'body',
         'target_type',
         'target_user_id',
+        'institute_id',
     ];
 
     public function targetUser(): BelongsTo

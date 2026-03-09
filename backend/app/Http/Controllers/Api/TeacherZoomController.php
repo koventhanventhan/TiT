@@ -5,11 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ZoomSchedule;
 use App\Models\Attendance;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class TeacherZoomController extends Controller
 {
+    protected WhatsAppService $whatsApp;
+
+    public function __construct(WhatsAppService $whatsApp)
+    {
+        $this->whatsApp = $whatsApp;
+    }
     /**
      * Get zoom classes for teacher (assigned or all for today) within time window.
      */
@@ -38,6 +45,9 @@ class TeacherZoomController extends Controller
                 'id' => $s->id,
                 'title' => $s->title,
                 'zoom_link' => $s->zoom_link,
+                'start_url' => $s->start_url,
+                'join_url' => $s->join_url,
+                'password' => $s->password,
                 'scheduled_at' => $s->scheduled_at->toIso8601String(),
                 'subject' => $s->subject,
                 'grade' => $s->grade,
@@ -46,7 +56,7 @@ class TeacherZoomController extends Controller
         });
 
         return response()->json([
-            'zoom_classes' => $items,
+            'data' => $items,
             'user_profile' => [
                 'name' => $user->name,
                 'email' => $user->email,
@@ -80,6 +90,16 @@ class TeacherZoomController extends Controller
                 'source' => 'link_click',
             ]
         );
+        
+        // Send WhatsApp Attendance Message
+        $schedule = ZoomSchedule::find($scheduleId);
+        $phone = $user->phone_number;
+        if ($phone) {
+            $message = "Hello Teacher " . ($user->name) . ",\n\n" .
+                "You have successfully joined the class: \"" . ($schedule->title ?? 'Zoom Class') . "\".\n" .
+                "Your attendance has been recorded. ✅";
+            $this->whatsApp->send($phone, $message);
+        }
 
         return response()->json(['message' => 'Attendance recorded.']);
     }

@@ -141,22 +141,24 @@
                         <div class="page-title d-flex justify-content-between align-items-center">
                             <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Weekly Timetable</h4>
                             <div class="d-flex gap-2">
-                                <form action="{{ route('admin.dashboard') }}" method="GET" class="mr-2">
-                                    <button type="button" onclick="runSync()" class="btn btn-info btn-sm">
-                                        <i class="fa fa-sync"></i> Sync to Zoom
-                                    </button>
-                                </form>
-                                <a href="{{ route('admin.timetables.create') }}" class="btn btn-primary btn-sm">
+                                <button type="button" onclick="runSync()" class="btn btn-info btn-sm mr-2">
+                                    <i class="fa fa-sync"></i> Sync to Zoom
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addSlotModal">
                                     <i class="flaticon-381-add-1"></i> Add Slot
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -180,7 +182,7 @@
                                             <div>Teacher: {{ $slot->teacher->name ?? 'N/A' }}</div>
                                         </div>
                                         <div class="slot-actions">
-                                            <a href="{{ route('admin.timetables.edit', $slot->id) }}" class="btn btn-xs btn-primary sharp"><i class="fa fa-pencil"></i></a>
+                                            <button type="button" onclick='openEditModal({!! json_encode($slot) !!})' class="btn btn-xs btn-primary sharp"><i class="fa fa-pencil"></i></button>
                                             <form action="{{ route('admin.timetables.toggle', $slot->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <button type="submit" class="btn btn-xs btn-{{ $slot->is_active ? 'warning' : 'success' }} sharp">
@@ -203,6 +205,90 @@
             </div>
         </div>
 
+        <!-- Add Slot Modal -->
+        <div class="modal fade" id="addSlotModal">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Recurring Timetable Slot</h5>
+                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    </div>
+                    <form action="{{ route('admin.timetables.store') }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="form-group col-md-6">
+                                    <label>Slot Title (e.g. Maths Class)</label>
+                                    <input type="text" name="title" class="form-control" placeholder="Enter title" required value="{{ old('title') }}">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Day of Week</label>
+                                    <select name="day_of_week" class="form-control" required>
+                                        @foreach($days as $day)
+                                            <option value="{{ $day }}" {{ old('day_of_week') == $day ? 'selected' : '' }}>{{ $day }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Start Time</label>
+                                    <input type="time" name="start_time" class="form-control" required value="{{ old('start_time') }}">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Duration (Minutes)</label>
+                                    <input type="number" name="duration" class="form-control" value="{{ old('duration', 60) }}" required>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Grade</label>
+                                    <select name="grade" class="form-control" required>
+                                        <option value="">Select Grade</option>
+                                        @foreach($grades as $grade)
+                                            <option value="{{ $grade }}" {{ old('grade') == $grade ? 'selected' : '' }}>{{ $grade }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Subject</label>
+                                    <select name="subject_id" class="form-control" required>
+                                        @foreach($subjects as $s)
+                                            <option value="{{ $s->id }}" {{ old('subject_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Assigned Teacher</label>
+                                    <select name="teacher_id" class="form-control" required>
+                                        @foreach($teachers as $t)
+                                            <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Zoom Host Account (Optional)</label>
+                                    <select name="zoom_host_email" class="form-control">
+                                        <option value="">Default (me)</option>
+                                        @foreach($zoomUsers as $zu)
+                                            <option value="{{ $zu['email'] }}" {{ old('zoom_host_email') == $zu['email'] ? 'selected' : '' }}>{{ $zu['display_name'] ?? $zu['email'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group col-12">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" checked>
+                                        <label class="custom-control-label" for="is_active">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Slot</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <div class="footer">
             <div class="copyright">
                 <p>Copyright © {{ date('Y') }} {{ config('app.name') }}.</p>
@@ -217,11 +303,42 @@
     <script>
         function runSync() {
             if(confirm('This will generate Zoom links for the next 7 days based on this timetable. Continue?')) {
-                // For demonstration, we could call an API or just show an alert.
-                // In a real app, you'd have a route that calls the command.
-                alert('Command zoom:sync-timetable will be triggered by scheduler or manually via CLI.');
+                window.location.href = "{{ route('admin.timetables.sync') }}";
             }
         }
+
+        function openEditModal(slot) {
+            const form = $('#addSlotModal form');
+            const modal = $('#addSlotModal');
+            
+            // Change title and action
+            modal.find('.modal-title').text('Edit Recurring Timetable Slot');
+            form.attr('action', `/admin/timetables/${slot.id}`);
+            form.append('<input type="hidden" name="_method" value="PUT">');
+            
+            // Fill fields
+            form.find('input[name="title"]').val(slot.title);
+            form.find('select[name="day_of_week"]').val(slot.day_of_week);
+            form.find('input[name="start_time"]').val(slot.start_time.substring(0, 5));
+            form.find('input[name="duration"]').val(slot.duration);
+            form.find('[name="grade"]').val(slot.grade);
+            form.find('select[name="subject_id"]').val(slot.subject_id);
+            form.find('select[name="teacher_id"]').val(slot.teacher_id);
+            form.find('select[name="zoom_host_email"]').val(slot.zoom_host_email);
+            form.find('input[name="is_active"]').prop('checked', slot.is_active);
+            
+            modal.modal('show');
+        }
+
+        // Reset modal on close
+        $('#addSlotModal').on('hidden.bs.modal', function () {
+            const modal = $(this);
+            const form = modal.find('form');
+            modal.find('.modal-title').text('Add Recurring Timetable Slot');
+            form.attr('action', "{{ route('admin.timetables.store') }}");
+            form.find('input[name="_method"]').remove();
+            form[0].reset();
+        });
     </script>
 </body>
 </html>

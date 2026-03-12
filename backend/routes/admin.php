@@ -100,6 +100,7 @@ Route::prefix('admin')->group(function () {
         Route::put('/timetables/{timetable}', [TimetableController::class, 'update'])->name('admin.timetables.update');
         Route::delete('/timetables/{timetable}', [TimetableController::class, 'destroy'])->name('admin.timetables.destroy');
         Route::post('/timetables/{timetable}/toggle', [TimetableController::class, 'toggle'])->name('admin.timetables.toggle');
+        Route::get('/timetables/sync', [TimetableController::class, 'sync'])->name('admin.timetables.sync');
 
         // Attendance
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('admin.attendance.index');

@@ -328,15 +328,19 @@
                                                  $latestPayment = $student->payments()->where('year_month', now()->format('Y-m'))->where('status', 'paid')->first();
                                                  $paidThisMonth = $latestPayment !== null;
                                                  
-                                                 // Decode subjects - handle both JSON and comma-separated strings
+                                                 // Decode subjects - handle casted array, JSON, and comma-separated strings
                                                  $subjectsArray = [];
                                                  if ($student->selected_subjects) {
-                                                     $decoded = json_decode($student->selected_subjects, true);
-                                                     if (is_array($decoded)) {
-                                                         $subjectsArray = $decoded;
+                                                     if (is_array($student->selected_subjects)) {
+                                                         $subjectsArray = $student->selected_subjects;
                                                      } else {
-                                                         // Fallback for plain string
-                                                         $subjectsArray = array_map('trim', explode(',', $student->selected_subjects));
+                                                         $decoded = json_decode($student->selected_subjects, true);
+                                                         if (is_array($decoded)) {
+                                                             $subjectsArray = $decoded;
+                                                         } else {
+                                                             // Fallback for plain string
+                                                             $subjectsArray = array_map('trim', explode(',', (string)$student->selected_subjects));
+                                                         }
                                                      }
                                                  }
                                                  $subjectCount = count($subjectsArray);

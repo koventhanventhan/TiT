@@ -1,5 +1,8 @@
 <?php
 
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
 use App\Models\ZoomSchedule;
 use App\Models\User;
 use App\Services\WhatsAppService;
@@ -67,6 +70,20 @@ class SendZoomReminders extends Command
                     ->get();
 
                 foreach ($students as $student) {
+                    // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                    $selected = $student->selected_subjects;
+                    $classSubject = trim($schedule->subject);
+                    
+                    if (!empty($classSubject)) {
+                        $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                        $selectedArr = array_map('trim', (array)$selectedArr);
+                        
+                        if (!in_array($classSubject, $selectedArr)) {
+                            $this->line("Skipping student {$student->name} (Subject not selected: {$classSubject})");
+                            continue;
+                        }
+                    }
+
                     if ($student->phone_number) {
                         $msg = "🔔 *Reminder: Your Zoom class starts in 15 mins!*\n\n" .
                                "📝 *Class:* {$schedule->title}\n" .

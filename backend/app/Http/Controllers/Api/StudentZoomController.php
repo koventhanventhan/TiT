@@ -33,7 +33,7 @@ class StudentZoomController extends Controller
         $hasPaid = $user->hasPaidForMonth($yearMonth);
         if (!$hasPaid) {
             return response()->json([
-                'zoom_classes' => [],
+                'data' => [],
                 'message' => 'Complete payment to access classes.',
             ]);
         }
@@ -43,11 +43,49 @@ class StudentZoomController extends Controller
 
         $schedules = ZoomSchedule::whereDate('scheduled_at', '>=', $startOfDay)
             ->whereDate('scheduled_at', '<=', $endOfDay)
-            ->where('grade', $user->current_grade) // Only show classes for student's grade
             ->orderBy('scheduled_at')
             ->get();
 
-        $items = $schedules->map(function ($s) use ($user) {
+        // 1. Filter by Grade (Normalize strings like "Grade 10" or "தரம் 10" to "10")
+        $schedules = $schedules->filter(function($s) use ($user) {
+            $userGrade = $user->current_grade;
+            $classGrade = $s->grade;
+            
+            if (!$userGrade || !$classGrade) return false;
+
+            // Extract numeric values
+            preg_match('/(\d+)/', $userGrade, $userMatch);
+            preg_match('/(\d+)/', $classGrade, $classMatch);
+            
+            $userNum = $userMatch[1] ?? null;
+            $classNum = $classMatch[1] ?? null;
+
+            return $userNum !== null && $userNum === $classNum;
+        });
+
+        // Filter by student's selected subjects (Robust substring match)
+        $selected = $user->selected_subjects;
+        if (!empty($selected)) {
+            $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+            $selectedArr = array_map('trim', (array)$selectedArr);
+            
+            $schedules = $schedules->filter(function($s) use ($selectedArr) {
+                $classSub = trim($s->subject);
+                if (empty($classSub)) return true; // Show general classes
+                
+                foreach ($selectedArr as $studentSub) {
+                    $studentSub = trim($studentSub);
+                    if ($studentSub === $classSub || 
+                        stripos($studentSub, $classSub) !== false || 
+                        stripos($classSub, $studentSub) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
+        $items = $schedules->values()->map(function ($s) use ($user) {
             $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
             return [
                 'id' => $s->id,
@@ -67,7 +105,7 @@ class StudentZoomController extends Controller
         $nextPaymentDate = Carbon::now()->addMonth()->startOfMonth()->toDateString();
 
         return response()->json([
-            'data' => $items, // Changed from 'zoom_classes' to 'data' for easier frontend consumption
+            'data' => $items,
             'user_profile' => [
                 'full_name' => $user->full_name,
                 'school_name' => $user->school_name,
@@ -134,11 +172,49 @@ class StudentZoomController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now())
-            ->where('grade', $user->current_grade)
+        // Show classes from the start of today onwards, so past classes for the same day are still visible
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->startOfDay())
             ->orderBy('scheduled_at')
             ->get();
 
-        return response()->json($schedules);
+        // 1. Filter by Grade (Normalize strings)
+        $schedules = $schedules->filter(function($s) use ($user) {
+            $userGrade = $user->current_grade;
+            $classGrade = $s->grade;
+            
+            if (!$userGrade || !$classGrade) return false;
+
+            preg_match('/(\d+)/', $userGrade, $userMatch);
+            preg_match('/(\d+)/', $classGrade, $classMatch);
+            
+            $userNum = $userMatch[1] ?? null;
+            $classNum = $classMatch[1] ?? null;
+
+            return $userNum !== null && $userNum === $classNum;
+        });
+
+        // Filter by student's selected subjects (Robust substring match)
+        $selected = $user->selected_subjects;
+        if (!empty($selected)) {
+            $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+            $selectedArr = array_map('trim', (array)$selectedArr);
+            
+            $schedules = $schedules->filter(function($s) use ($selectedArr) {
+                $classSub = trim($s->subject);
+                if (empty($classSub)) return true;
+                
+                foreach ($selectedArr as $studentSub) {
+                    $studentSub = trim($studentSub);
+                    if ($studentSub === $classSub || 
+                        stripos($studentSub, $classSub) !== false || 
+                        stripos($classSub, $studentSub) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
+        return response()->json($schedules->values()->all());
     }
 }

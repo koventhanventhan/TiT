@@ -268,8 +268,12 @@
                                         // Pre-decode subjects for easy checking
                                         $currentSubjects = [];
                                         if ($student->selected_subjects) {
-                                            $decoded = json_decode($student->selected_subjects, true);
-                                            $currentSubjects = is_array($decoded) ? $decoded : array_map('trim', explode(',', $student->selected_subjects));
+                                            if (is_array($student->selected_subjects)) {
+                                                $currentSubjects = $student->selected_subjects;
+                                            } else {
+                                                $decoded = json_decode($student->selected_subjects, true);
+                                                $currentSubjects = is_array($decoded) ? $decoded : array_map('trim', explode(',', (string)$student->selected_subjects));
+                                            }
                                         }
                                         
                                         // Subject Master Lists

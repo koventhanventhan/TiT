@@ -102,6 +102,7 @@ class User extends Authenticatable implements FilamentUser
             'deactivated_at' => 'datetime',
             'password' => 'hashed',
             'profile_settings' => 'array',
+            'selected_subjects' => 'array',
         ];
     }
 

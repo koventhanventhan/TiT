@@ -6,15 +6,19 @@ import './StudentSections.css'
 export default function StudentSchedule() {
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
+    const [message, setMessage] = useState('')
 
     useEffect(() => {
         async function load() {
             try {
-                const data = await getStudentUpcomingSchedules()
-                const arr = Array.isArray(data) ? data : data.data || []
+                const response = await getStudentUpcomingSchedules()
+                const data = Array.isArray(response) ? response : response.data || []
                 // Sort by date ascending
-                arr.sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
-                setClasses(arr)
+                data.sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
+                setClasses(data)
+                if (response.message) {
+                    setMessage(response.message)
+                }
             } catch (e) {
                 console.error('Error loading schedule:', e)
             } finally {
@@ -59,7 +63,7 @@ export default function StudentSchedule() {
             ) : Object.keys(grouped).length === 0 ? (
                 <div className="empty-state">
                     <FiCalendar />
-                    <p>No classes scheduled.</p>
+                    <p>{message || "No classes scheduled."}</p>
                 </div>
             ) : (
                 Object.entries(grouped).map(([date, items]) => (

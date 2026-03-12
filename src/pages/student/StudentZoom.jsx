@@ -6,12 +6,17 @@ import './StudentSections.css'
 export default function StudentZoom() {
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
+    const [message, setMessage] = useState('')
 
     useEffect(() => {
         async function load() {
             try {
-                const data = await getStudentZoomClasses()
-                setClasses(Array.isArray(data) ? data : data.data || [])
+                const response = await getStudentZoomClasses()
+                const data = Array.isArray(response) ? response : response.data || []
+                setClasses(data)
+                if (response.message) {
+                    setMessage(response.message)
+                }
             } catch (e) {
                 console.error('Error loading zoom classes:', e)
             } finally {
@@ -56,7 +61,7 @@ export default function StudentZoom() {
             ) : classes.length === 0 ? (
                 <div className="empty-state">
                     <FiVideo />
-                    <p>No zoom classes scheduled for your grade today.</p>
+                    <p>{message || "No zoom classes scheduled for your grade today."}</p>
                 </div>
             ) : (
                 <div className="cards-grid">

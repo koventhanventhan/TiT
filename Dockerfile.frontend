@@ -9,12 +9,16 @@ RUN npm run build
 # Production stage
 FROM nginx:stable-alpine as production-stage
 
+# Install envsubst (it comes with gettext)
+RUN apk add --no-cache gettext
+
 # Copy built files
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Point: We use a template for Nginx to handle Railway's dynamic port
-# The official nginx image automatically processes templates in /etc/nginx/templates/
+# Copy template and entrypoint
 COPY nginx.frontend.conf.template /etc/nginx/templates/default.conf.template
+COPY frontend_entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# No explicit EXPOSE 80 - Railway handles dynamic port assignment
-# No custom CMD needed - the official entrypoint handles envsubst and starting nginx
+# Start using entrypoint
+CMD ["/usr/local/bin/entrypoint.sh"]

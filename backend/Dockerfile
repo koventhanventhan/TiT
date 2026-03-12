@@ -40,7 +40,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 RUN npm install && npm run build
 
 # Copy Nginx configuration
-COPY ./docker/nginx.conf /etc/nginx/sites-available/default
+COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache

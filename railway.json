@@ -3,11 +3,11 @@
     "services": {
         "backend": {
             "source": {
-                "directory": "backend"
+                "root": "/backend"
             },
             "build": {
                 "builder": "DOCKERFILE",
-                "dockerfilePath": "Dockerfile"
+                "dockerfilePath": "Dockerfile.backend"
             },
             "deploy": {
                 "numReplicas": 1,
@@ -15,13 +15,13 @@
                 "restartPolicy": "ALWAYS"
             }
         },
-        "frontend": {
+        "tit": {
             "source": {
-                "directory": "."
+                "root": "/"
             },
             "build": {
                 "builder": "DOCKERFILE",
-                "dockerfilePath": "Dockerfile"
+                "dockerfilePath": "Dockerfile.frontend"
             },
             "deploy": {
                 "numReplicas": 1,

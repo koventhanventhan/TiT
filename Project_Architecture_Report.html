@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TiT - Project Architecture Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #6d28d9;
+            --primary-dark: #4c1d95;
+            --secondary: #f97316;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary);
+            border-left: 4px solid var(--secondary);
+            padding-left: 15px;
+            margin-top: 0;
+        }
+
+        h3 {
+            color: var(--primary-dark);
+            margin-top: 25px;
+        }
+
+        .mermaid-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tech-item {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .btn-print {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.4);
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+
+        .btn-print:hover {
+            transform: scale(1.05);
+            background: var(--primary-dark);
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-print no-print" onclick="window.print()">Print to PDF</button>
+
+    <div class="container">
+        <header>
+            <h1>TiT - Project Architecture Report</h1>
+            <p class="subtitle">Comprehensive Analysis & System Workflow</p>
+        </header>
+
+        <section class="card">
+            <h2>Project Overview</h2>
+            <p><strong>TiT</strong> is a full-featured, multi-tenant Institute Management System. It serves as a central hub for educational institutes to manage students, teachers, classes, and administrative tasks efficiently. The system is designed with scalability and real-time interaction in mind.</p>
+        </section>
+
+        <section class="card">
+            <h2>Architecture Diagram</h2>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    graph TD
+                        subgraph "Frontend (React + Vite)"
+                            UI["User Interface (App.jsx)"]
+                            Pages["Pages (Dashboard, Zoom, etc.)"]
+                            Services["API Services (Auth, Zoom, Messages)"]
+                        end
+
+                        subgraph "Backend (Laravel API)"
+                            Routes["API Routes (api.php)"]
+                            Controllers["Controllers (Admin, Api, Auth)"]
+                            Models["Eloquent Models (User, ZoomSchedule, Institute)"]
+                            Middleware["Tenant & Role Middleware"]
+                        end
+
+                        subgraph "External Integrations"
+                            Zoom["Zoom API / Webhooks"]
+                            Gemini["Google Gemini (Translations)"]
+                            DB[(Database)]
+                        end
+
+                        UI --> Pages
+                        Pages --> Services
+                        Services -- "REST API (Sanctum)" --> Routes
+                        Routes --> Middleware
+                        Middleware --> Controllers
+                        Controllers --> Models
+                        Models --> DB
+                        Controllers --> Zoom
+                        Controllers --> Gemini
+                </div>
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section class="card">
+            <h2>Core Modules</h2>
+            
+            <h3>1. Multi-Tenant Architecture</h3>
+            <p>Built to host multiple schools/institutes under a single platform. Each tenant has isolated data and branding.</p>
+            <ul>
+                <li><strong>Super Admin:</strong> Global control, institute onboarding.</li>
+                <li><strong>Tenant Admin:</strong> Institute-wide management and reports.</li>
+            </ul>
+
+            <h3>2. Dynamic Virtual Classrooms</h3>
+            <p>Deep integration with Zoom for automated meeting creation and attendance tracking.</p>
+
+            <h3>3. Academic Management</h3>
+            <p>Includes a sophisticated Timetable system, Assignment management, and Learning Material distribution.</p>
+
+            <h3>4. Messaging System</h3>
+            <p>Internal communication layer for direct chat and system-wide announcements.</p>
+        </section>
+
+        <section class="card">
+            <h2>Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-item">ReactJS + Vite</div>
+                <div class="tech-item">Laravel 10</div>
+                <div class="tech-item">TailwindCSS</div>
+                <div class="tech-item">MySQL / Eloquent</div>
+                <div class="tech-item">Sanctum Auth</div>
+                <div class="tech-item">Zoom API</div>
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 50px; font-size: 0.9rem; color: #64748b;">
+            Generated on 2026-03-10 | TiT Learning Management System
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>

@@ -112,12 +112,25 @@ class ZoomScheduleController extends Controller
 
         // Notify Students in the same grade
         if ($schedule->grade) {
-            $students = User::where('role', 'student')
+            $students = User::where('role', 'user')
                 ->where('current_grade', $schedule->grade)
                 ->whereNull('deactivated_at')
                 ->get();
 
             foreach ($students as $student) {
+                // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                $selected = $student->selected_subjects;
+                $classSubject = trim($schedule->subject);
+                
+                if (!empty($classSubject)) {
+                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                    $selectedArr = array_map('trim', (array)$selectedArr);
+                    
+                    if (!in_array($classSubject, $selectedArr)) {
+                        continue;
+                    }
+                }
+
                 if ($student->phone_number) {
                     $link = $schedule->join_url ?: $schedule->zoom_link;
                     $msg = "Hello {$student->name},\n\nNew Zoom class scheduled: *{$schedule->title}*\nTime: {$schedule->scheduled_at}\n\nJoin Link: {$link}";
@@ -239,6 +252,19 @@ class ZoomScheduleController extends Controller
                 ->get();
 
             foreach ($students as $student) {
+                // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                $selected = $student->selected_subjects;
+                $classSubject = trim($schedule->subject);
+                
+                if (!empty($classSubject)) {
+                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                    $selectedArr = array_map('trim', (array)$selectedArr);
+                    
+                    if (!in_array($classSubject, $selectedArr)) {
+                        continue;
+                    }
+                }
+
                 if ($student->phone_number) {
                     $studentMsg = "👋 *Hello " . ($student->full_name ?? $student->name) . ",*\n\n" .
                                  "You have a new Zoom class scheduled today!\n\n" .

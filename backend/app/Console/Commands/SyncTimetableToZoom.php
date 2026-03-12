@@ -1,5 +1,8 @@
 <?php
 
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
 use App\Models\Timetable;
 use App\Models\ZoomSchedule;
 use App\Services\ZoomService;
@@ -49,10 +52,9 @@ class SyncTimetableToZoom extends Command
                     // Skip if time has passed
                     if ($scheduledAt->isPast()) continue;
 
-                    // Check if schedule already exists
+                    // Check if schedule already exists for this grade at this time (to prevent overlap)
                     $exists = ZoomSchedule::where('grade', $timetable->grade)
                         ->where('scheduled_at', $scheduledAt->format('Y-m-d H:i:s'))
-                        ->where('title', $timetable->title)
                         ->exists();
 
                     if (!$exists) {

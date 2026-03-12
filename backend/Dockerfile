@@ -49,8 +49,5 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port (Railway will use the PORT env var)
-EXPOSE 80
-
 # Start services via entrypoint
 CMD ["/usr/local/bin/entrypoint.sh"]

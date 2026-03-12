@@ -3,7 +3,7 @@
     "services": {
         "backend": {
             "source": {
-                "root": "/backend"
+                "root": "backend"
             },
             "build": {
                 "builder": "DOCKERFILE",
@@ -11,13 +11,12 @@
             },
             "deploy": {
                 "numReplicas": 1,
-                "sleep": false,
-                "restartPolicy": "ALWAYS"
+                "sleep": false
             }
         },
-        "tit": {
+        "TiT": {
             "source": {
-                "root": "/"
+                "root": "."
             },
             "build": {
                 "builder": "DOCKERFILE",
@@ -25,8 +24,7 @@
             },
             "deploy": {
                 "numReplicas": 1,
-                "sleep": false,
-                "restartPolicy": "ALWAYS"
+                "sleep": false
             }
         }
     }

@@ -45,8 +45,12 @@ COPY ./docker/nginx.conf /etc/nginx/sites-available/default
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Expose port 80
+# Copy entrypoint script
+COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Expose port (Railway will use the PORT env var)
 EXPOSE 80
 
-# Start Nginx and PHP-FPM
-CMD service nginx start && php-fpm
+# Start services via entrypoint
+CMD ["/usr/local/bin/entrypoint.sh"]

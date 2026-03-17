@@ -1,14 +1,19 @@
 import React, { useState, useMemo } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess } from '../services/authService'
 import { FiX } from 'react-icons/fi'
+import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
 
 // Subject data structures
 // (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
 
 const MONTHLY_AMOUNT = 500
+const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
+  const { getSetting } = useSettings()
+  const { t, translate, language } = useLanguage()
   const [step, setStep] = useState(1)
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
 
@@ -41,6 +46,108 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     username: '',
     phoneNumber: ''
   })
+  const [regTitle, setRegTitle] = useState('')
+  const [regSubtitle, setRegSubtitle] = useState('')
+  const [labelFullname, setLabelFullname] = useState('')
+  const [labelPhone, setLabelPhone] = useState('')
+  const [labelDob, setLabelDob] = useState('')
+  const [labelGender, setLabelGender] = useState('')
+  const [labelSchool, setLabelSchool] = useState('')
+  const [labelMedium, setLabelMedium] = useState('')
+  const [labelExperience, setLabelExperience] = useState('')
+  const [labelDevice, setLabelDevice] = useState('')
+  const [labelGrade, setLabelGrade] = useState('')
+  const [labelStream, setLabelStream] = useState('')
+  const [btnNext, setBtnNext] = useState('')
+
+  React.useEffect(() => {
+    const defaultEn = {
+      reg_title: 'Student Details',
+      reg_subtitle: 'Please fill in all the required information',
+      reg_fullname: 'Full Name',
+      reg_phone: 'Phone Number (WhatsApp)',
+      reg_dob: 'Date of Birth',
+      reg_gender: 'Gender',
+      reg_school: 'School Name',
+      reg_medium: 'Medium of Learning',
+      reg_experience: 'Do you have online class experience?',
+      reg_device: 'Device Used for Online Classes',
+      reg_grade: 'Current Grade (2026)',
+      reg_stream: 'Stream / Section',
+      reg_next_payment: 'Next: Payment'
+    }
+
+    if (language !== 'en') {
+      const translateForm = async () => {
+        const valTitle = getSetting('register_title', defaultEn.reg_title)
+        if (valTitle === defaultEn.reg_title) setRegTitle(t('reg_title'))
+        else setRegTitle(await translate(valTitle))
+
+        const valSub = getSetting('register_subtitle', defaultEn.reg_subtitle)
+        if (valSub === defaultEn.reg_subtitle) setRegSubtitle(t('reg_subtitle'))
+        else setRegSubtitle(await translate(valSub))
+
+        const valFullname = getSetting('register_fullname_label', defaultEn.reg_fullname)
+        if (valFullname === defaultEn.reg_fullname) setLabelFullname(t('reg_fullname'))
+        else setLabelFullname(await translate(valFullname))
+
+        const valPhone = getSetting('register_phone_label', defaultEn.reg_phone)
+        if (valPhone === defaultEn.reg_phone) setLabelPhone(t('reg_phone'))
+        else setLabelPhone(await translate(valPhone))
+
+        const valDob = getSetting('register_dob_label', defaultEn.reg_dob)
+        if (valDob === defaultEn.reg_dob) setLabelDob(t('reg_dob'))
+        else setLabelDob(await translate(valDob))
+
+        const valGender = getSetting('register_gender_label', defaultEn.reg_gender)
+        if (valGender === defaultEn.reg_gender) setLabelGender(t('reg_gender'))
+        else setLabelGender(await translate(valGender))
+
+        const valSchool = getSetting('register_school_label', defaultEn.reg_school)
+        if (valSchool === defaultEn.reg_school) setLabelSchool(t('reg_school'))
+        else setLabelSchool(await translate(valSchool))
+
+        const valMedium = getSetting('register_medium_label', defaultEn.reg_medium)
+        if (valMedium === defaultEn.reg_medium) setLabelMedium(t('reg_medium'))
+        else setLabelMedium(await translate(valMedium))
+
+        const valExp = getSetting('register_experience_label', defaultEn.reg_experience)
+        if (valExp === defaultEn.reg_experience) setLabelExperience(t('reg_experience'))
+        else setLabelExperience(await translate(valExp))
+
+        const valDevice = getSetting('register_device_label', defaultEn.reg_device)
+        if (valDevice === defaultEn.reg_device) setLabelDevice(t('reg_device'))
+        else setLabelDevice(await translate(valDevice))
+
+        const valGrade = getSetting('register_grade_label', defaultEn.reg_grade)
+        if (valGrade === defaultEn.reg_grade) setLabelGrade(t('reg_grade'))
+        else setLabelGrade(await translate(valGrade))
+
+        const valStream = getSetting('register_stream_label', defaultEn.reg_stream)
+        if (valStream === defaultEn.reg_stream) setLabelStream(t('reg_stream'))
+        else setLabelStream(await translate(valStream))
+
+        const valNext = getSetting('register_next_btn', defaultEn.reg_next_payment)
+        if (valNext === defaultEn.reg_next_payment) setBtnNext(t('reg_next_payment'))
+        else setBtnNext(await translate(valNext))
+      }
+      translateForm()
+    } else {
+      setRegTitle(getSetting('register_title', t('reg_title')))
+      setRegSubtitle(getSetting('register_subtitle', t('reg_subtitle')))
+      setLabelFullname(getSetting('register_fullname_label', t('reg_fullname')))
+      setLabelPhone(getSetting('register_phone_label', t('reg_phone')))
+      setLabelDob(getSetting('register_dob_label', t('reg_dob')))
+      setLabelGender(getSetting('register_gender_label', t('reg_gender')))
+      setLabelSchool(getSetting('register_school_label', t('reg_school')))
+      setLabelMedium(getSetting('register_medium_label', t('reg_medium')))
+      setLabelExperience(getSetting('register_experience_label', t('reg_experience')))
+      setLabelDevice(getSetting('register_device_label', t('reg_device')))
+      setLabelGrade(getSetting('register_grade_label', t('reg_grade')))
+      setLabelStream(getSetting('register_stream_label', t('reg_stream')))
+      setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
+    }
+  }, [language, getSetting, t, translate])
   const [selectedStream, setSelectedStream] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -49,10 +156,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
   const [isFlipped, setIsFlipped] = useState(false)
 
-  // Helper function to extract grade number from "தரம் X / Grade X" format
+  // Helper function to extract grade number from any format (தரம் X, Grade X, or just X)
   const getGradeNumber = (gradeValue) => {
     if (!gradeValue) return null
-    const match = gradeValue.match(/தரம்\s*(\d+)/)
+    if (typeof gradeValue === 'number') return gradeValue
+    const match = gradeValue.toString().match(/(\d+)/)
     return match ? parseInt(match[1], 10) : null
   }
 
@@ -66,12 +174,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     } else if (gradeNum >= 6 && gradeNum <= 11) {
       return subjectsByCategory['grade_6_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
-      if (selectedStream === 'arts') {
-        return subjectsByCategory['arts_stream'] || []
-      } else if (selectedStream === 'bio_maths') {
-        return subjectsByCategory['bio_maths_stream'] || []
-      }
-      return []
+      return subjectsByCategory[selectedStream] || []
     }
     return []
   }
@@ -227,7 +330,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     try {
       await registerStep2('offline', amount)
       setIsLoading(false)
-      alert('Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.')
+      alert(t('pay_offline_success'))
       setStep(1)
       setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
       setSelectedStream('')
@@ -272,7 +375,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       const amount = totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT
       await registerStep2('online', amount)
       setIsLoading(false)
-      alert('Payment successful! You will receive a WhatsApp confirmation.')
+      alert(t('pay_online_success'))
       setStep(1)
       setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
       setCardData({ number: '', holder: '', expiry: '', cvv: '' })
@@ -298,15 +401,15 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
         {step === 1 && (
           <div className="student-registration-container">
-            <h2>மாணவர் விவரங்கள் / Student Details</h2>
-            <p className="form-subtitle">Please fill in all the required information / தயவுசெய்து அனைத்து தேவையான தகவல்களையும் நிரப்பவும்</p>
+            <h2>{regTitle}</h2>
+            <p className="form-subtitle">{regSubtitle}</p>
 
             {error && <div className="error-message">{error}</div>}
 
             <form onSubmit={handleSubmit} className="student-registration-form">
               {/* Full Name */}
               <div className="form-group">
-                <label htmlFor="fullName">மாணவர் முழுப் பெயர் / Full Name <span className="required">*</span></label>
+                <label htmlFor="fullName">{labelFullname} <span className="required">*</span></label>
                 <input
                   type="text"
                   id="fullName"
@@ -314,13 +417,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  placeholder="Enter your full name / உங்கள் முழுப் பெயரை உள்ளிடவும்"
+                  placeholder={t('reg_fullname_placeholder')}
                 />
               </div>
 
               {/* Phone (for WhatsApp) */}
               <div className="form-group">
-                <label htmlFor="phoneNumber">தொலைபேசி எண் / Phone Number (WhatsApp) <span className="required">*</span></label>
+                <label htmlFor="phoneNumber">{labelPhone} <span className="required">*</span></label>
                 <input
                   type="tel"
                   id="phoneNumber"
@@ -334,7 +437,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Date of Birth */}
               <div className="form-group">
-                <label htmlFor="dateOfBirth">பிறந்த திகதி / Date of Birth <span className="required">*</span></label>
+                <label htmlFor="dateOfBirth">{labelDob} <span className="required">*</span></label>
                 <input
                   type="date"
                   id="dateOfBirth"
@@ -348,7 +451,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Gender */}
               <div className="form-group">
-                <label htmlFor="gender">பாலினம் / Gender <span className="required">*</span></label>
+                <label htmlFor="gender">{labelGender} <span className="required">*</span></label>
                 <select
                   id="gender"
                   name="gender"
@@ -356,16 +459,16 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Gender / பாலினம் தேர்ந்தெடுக்கவும்</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="">{t('reg_gender_select')}</option>
+                  <option value="male">{t('reg_male')}</option>
+                  <option value="female">{t('reg_female')}</option>
                 </select>
               </div>
 
 
               {/* School Name */}
               <div className="form-group">
-                <label htmlFor="schoolName">பாடசாலை பெயர் / School Name <span className="required">*</span></label>
+                <label htmlFor="schoolName">{labelSchool} <span className="required">*</span></label>
                 <input
                   type="text"
                   id="schoolName"
@@ -373,13 +476,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   value={formData.schoolName}
                   onChange={handleChange}
                   required
-                  placeholder="Enter your school name / உங்கள் பாடசாலை பெயரை உள்ளிடவும்"
+                  placeholder={t('reg_school_placeholder')}
                 />
               </div>
 
               {/* Medium of Learning */}
               <div className="form-group">
-                <label htmlFor="medium">கற்கவிருக்கும் மொழி மூலம் / Medium of Learning <span className="required">*</span></label>
+                <label htmlFor="medium">{labelMedium} <span className="required">*</span></label>
                 <select
                   id="medium"
                   name="medium"
@@ -387,15 +490,15 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Medium / மொழி தேர்ந்தெடுக்கவும்</option>
-                  <option value="tamil">தமிழ் / Tamil</option>
-                  <option value="english">ஆங்கிலம் / English</option>
+                  <option value="">{t('reg_medium_select')}</option>
+                  <option value="tamil">{t('reg_medium_tamil')}</option>
+                  <option value="english">{t('reg_medium_english')}</option>
                 </select>
               </div>
 
               {/* Online Class Experience */}
               <div className="form-group">
-                <label htmlFor="onlineExperience">Online class அனுபவம் உள்ளதா? / Do you have online class experience? <span className="required">*</span></label>
+                <label htmlFor="onlineExperience">{labelExperience} <span className="required">*</span></label>
                 <select
                   id="onlineExperience"
                   name="onlineExperience"
@@ -403,15 +506,15 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Option / விருப்பத்தை தேர்ந்தெடுக்கவும்</option>
-                  <option value="yes">ஆம் / Yes</option>
-                  <option value="no">இல்லை / No</option>
+                  <option value="">{t('reg_experience_select')}</option>
+                  <option value="yes">{t('reg_exp_yes')}</option>
+                  <option value="no">{t('reg_exp_no')}</option>
                 </select>
               </div>
 
               {/* Device Used */}
               <div className="form-group">
-                <label htmlFor="deviceUsed">Online வகுப்பிற்கு பயன்படுத்தும் சாதனம் / Device Used for Online Classes <span className="required">*</span></label>
+                <label htmlFor="deviceUsed">{labelDevice} <span className="required">*</span></label>
                 <select
                   id="deviceUsed"
                   name="deviceUsed"
@@ -419,17 +522,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Device / சாதனம் தேர்ந்தெடுக்கவும்</option>
-                  <option value="Mobile">Mobile</option>
-                  <option value="Tablet">Tablet</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="Desktop">Desktop</option>
+                  <option value="">{t('reg_device_select')}</option>
+                  <option value="Mobile">{t('reg_device_mobile')}</option>
+                  <option value="Tablet">{t('reg_device_tablet')}</option>
+                  <option value="Laptop">{t('reg_device_laptop')}</option>
+                  <option value="Desktop">{t('reg_device_desktop')}</option>
                 </select>
               </div>
 
               {/* Current Grade (2026) */}
               <div className="form-group">
-                <label htmlFor="currentGrade">தற்போதைய தரம் (2026) / Current Grade (2026) <span className="required">*</span></label>
+                <label htmlFor="currentGrade">{labelGrade} <span className="required">*</span></label>
                 <select
                   id="currentGrade"
                   name="currentGrade"
@@ -437,9 +540,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Grade / தரம் தேர்ந்தெடுக்கவும்</option>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(grade => (
-                    <option key={grade} value={`தரம் ${grade} / Grade ${grade}`}>தரம் {grade} / Grade {grade}</option>
+                  <option value="">{t('reg_grade_select')}</option>
+                  {gradeLevels.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {language === 'ta' ? `தரம் ${grade}` : (language === 'si' ? `ශ්‍රේණිය ${grade}` : `Grade ${grade}`)}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -450,7 +555,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
                   return (
                     <div className="form-group">
-                      <label htmlFor="stream">Stream / பிரிவு <span className="required">*</span></label>
+                      <label htmlFor="stream">{labelStream} <span className="required">*</span></label>
                       <select
                         id="stream"
                         name="stream"
@@ -458,9 +563,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                         onChange={handleStreamChange}
                         required
                       >
-                        <option value="">Select Stream / பிரிவு தேர்ந்தெடுக்கவும்</option>
-                        <option value="arts">A/L – ARTS</option>
-                        <option value="bio_maths">A/L – BIO & MATHS</option>
+                        <option value="">{t('reg_stream_select')}</option>
+                        <option value="commerce_stream">{t('reg_stream_commerce') || 'Commerce'}</option>
+                        <option value="arts_stream">{t('reg_stream_art') || 'Arts'}</option>
+                        <option value="bio_maths_stream">{t('reg_stream_science') || 'Bio & Maths'}</option>
+                        <option value="tech_stream">{t('reg_stream_tech') || 'Technology'}</option>
                       </select>
                     </div>
                   )
@@ -471,7 +578,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
               {/* Subject Selection */}
               {availableSubjects.length > 0 && (
                 <div className="form-group">
-                  <label>இணைய விரும்பும் பாடம்/பாடங்கள் / Preferred Online Subject(s) <span className="required">*</span></label>
+                  <label>{t('reg_subjects')} <span className="required">*</span></label>
                   <div className="checkbox-group">
                     {availableSubjects.map((subjectObj) => (
                       <label
@@ -495,7 +602,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 className="submit-button"
                 disabled={isLoading}
               >
-                {isLoading ? 'Submitting...' : 'Next: Payment'}
+                {isLoading ? t('reg_submitting') : btnNext}
               </button>
             </form>
           </div>
@@ -503,22 +610,22 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
         {step === 2 && (
           <div className="student-registration-container">
-            <h2>கட்டணம் / Payment</h2>
-            <p className="form-subtitle">Choose how you would like to pay / கட்டணம் செலுத்தும் முறையை தேர்ந்தெடுக்கவும்</p>
+            <h2>{t('pay_title')}</h2>
+            <p className="form-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="error-message">{error}</div>}
             <div className="payment-options">
               <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '20px' }}>
-                Total Amount: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
+                {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
               </p>
               <button type="button" className="submit-button" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                I WILL PAY OFFLINE / நான் ஆஃப்லைனில் செலுத்துவேன்
+                {t('pay_offline')}
               </button>
               <button type="button" className="submit-button secondary" onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                PAY ONLINE / ஆன்லைனில் செலுத்து
+                {t('pay_online')}
               </button>
             </div>
             <button type="button" className="back-link" onClick={() => { setStep(1); setError(''); }}>
-              Back to form
+              {t('pay_back')}
             </button>
           </div>
         )}
@@ -529,8 +636,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
             <div className="glass-bg-blob glass-bg-blob-2"></div>
             <div className="glass-bg-blob glass-bg-blob-3"></div>
 
-            <h2 className="glass-checkout-title">Payment Details</h2>
-            <p className="glass-checkout-subtitle">Amount: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT}</p>
+            <h2 className="glass-checkout-title">{t('pay_card_title')}</h2>
+            <p className="glass-checkout-subtitle">{t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT}</p>
 
             {error && <div className="error-message">{error}</div>}
 
@@ -576,31 +683,31 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
               {/* Checkout Form */}
               <div className="glass-form-panel">
                 <div className="glass-field">
-                  <label>Card Number</label>
+                  <label>{t('pay_card_num')}</label>
                   <input type="text" name="number" value={cardData.number} onChange={handleCardInput} placeholder="1234 5678 9012 3456" maxLength={19} />
                 </div>
                 <div className="glass-field">
-                  <label>Card Holder</label>
+                  <label>{t('pay_card_holder')}</label>
                   <input type="text" name="holder" value={cardData.holder} onChange={handleCardInput} placeholder="Your full name" />
                 </div>
                 <div className="glass-field-row">
                   <div className="glass-field">
-                    <label>Expiry</label>
+                    <label>{t('pay_card_expiry')}</label>
                     <input type="text" name="expiry" value={cardData.expiry} onChange={handleCardInput} placeholder="MM/YY" maxLength={5} />
                   </div>
                   <div className="glass-field">
-                    <label>CVV</label>
+                    <label>{t('pay_card_cvv')}</label>
                     <input type="text" name="cvv" value={cardData.cvv} onChange={handleCardInput} placeholder="•••" maxLength={3} onFocus={() => setIsFlipped(true)} onBlur={() => setIsFlipped(false)} />
                   </div>
                 </div>
                 <button type="button" className="glass-pay-now" onClick={handleTransferConfirmed} disabled={isLoading}>
-                  {isLoading ? 'Processing...' : `Pay Now`}
+                  {isLoading ? t('pay_processing') : t('pay_pay_now')}
                 </button>
               </div>
             </div>
 
             <button type="button" className="glass-back" onClick={() => { setStep(2); setCardData({ number: '', holder: '', expiry: '', cvv: '' }); setError(''); }}>
-              ← Back to payment options
+              ← {t('pay_back_options')}
             </button>
           </div>
         )}

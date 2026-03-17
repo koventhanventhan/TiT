@@ -287,7 +287,7 @@
                                         <!-- Full Name -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Full Name / à®®à¯à®´à¯à®ªà¯ à®ªà¯†à®¯à®°à¯ <span class="text-danger">*</span></label>
+                                                <label>Full Name<span class="text-danger">*</span></label>
                                                 <input type="text" name="full_name" class="form-control" value="{{ old('full_name', $student->full_name) }}" required>
                                             </div>
                                         </div>
@@ -311,7 +311,7 @@
                                         <!-- Password -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Password / à®•à®Ÿà®µà¯à®šà¯à®šà¯Šà®²à¯ <small class="text-muted">(Leave blank to keep current)</small></label>
+                                                <label>Password  <small class="text-muted">(Leave blank to keep current)</small></label>
                                                 <div style="position: relative;">
                                                     <input type="text" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 50px;">
                                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 18px; padding: 5px;">
@@ -324,7 +324,7 @@
                                         <!-- Date of Birth -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Date of Birth / à®ªà®¿à®±à®¨à¯à®¤ à®¤à®¿à®•à®¤à®¿ <span class="text-danger">*</span></label>
+                                                <label>Date of Birth  <span class="text-danger">*</span></label>
                                                 <input type="date" name="date_of_birth" class="form-control" value="{{ old('date_of_birth', is_string($student->date_of_birth) ? $student->date_of_birth : (optional($student->date_of_birth)->format('Y-m-d') ?? '')) }}" required max="{{ date('Y-m-d') }}">
                                             </div>
                                         </div>
@@ -332,11 +332,11 @@
                                         <!-- Gender -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Gender / à®ªà®¾à®²à®¿à®©à®®à¯ <span class="text-danger">*</span></label>
+                                                <label>Gender  <span class="text-danger">*</span></label>
                                                 <select name="gender" class="form-control" required>
                                                     <option value="">Select Gender</option>
-                                                    <option value="male" {{ old('gender', $student->gender) === 'male' ? 'selected' : '' }}>Male / à®†à®£à¯</option>
-                                                    <option value="female" {{ old('gender', $student->gender) === 'female' ? 'selected' : '' }}>Female / à®ªà¯†à®£à¯</option>
+                                                    <option value="male" {{ old('gender', $student->gender) === 'male' ? 'selected' : '' }}>Male </option>
+                                                    <option value="female" {{ old('gender', $student->gender) === 'female' ? 'selected' : '' }}>Female </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -344,7 +344,7 @@
                                         <!-- School Name -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>School Name / à®ªà®¾à®Ÿà®šà®¾à®²à¯ˆà®¯à®¿à®©à¯ à®ªà¯†à®¯à®°à¯ <span class="text-danger">*</span></label>
+                                                <label>School Name<span class="text-danger">*</span></label>
                                                 <input type="text" name="school_name" class="form-control" value="{{ old('school_name', $student->school_name) }}" required>
                                             </div>
                                         </div>
@@ -352,11 +352,11 @@
                                         <!-- Medium of Learning -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Medium of Learning / à®•à®±à¯à®•à¯ˆ à®®à¯Šà®´à®¿ à®®à¯‚à®²à®®à¯ <span class="text-danger">*</span></label>
+                                                <label>Medium of Learning  <span class="text-danger">*</span></label>
                                                 <select name="medium" class="form-control" required>
                                                     <option value="">Select Medium</option>
-                                                    <option value="tamil" {{ old('medium', $student->medium) === 'tamil' ? 'selected' : '' }}>Tamil / à®¤à®®à®¿à®´à¯</option>
-                                                    <option value="english" {{ old('medium', $student->medium) === 'english' ? 'selected' : '' }}>English / à®†à®™à¯à®•à®¿à®²à®®à¯</option>
+                                                    <option value="tamil" {{ old('medium', $student->medium) === 'tamil' ? 'selected' : '' }}>Tamil </option>
+                                                    <option value="english" {{ old('medium', $student->medium) === 'english' ? 'selected' : '' }}>English </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -364,11 +364,11 @@
                                         <!-- Online Experience -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Online Experience / à®†à®©à¯à®²à¯ˆà®©à¯ à®µà®•à¯à®ªà¯à®ªà¯ à®…à®©à¯à®ªà®µà®®à¯ <span class="text-danger">*</span></label>
+                                                <label>Online Experience  <span class="text-danger">*</span></label>
                                                 <select name="online_experience" class="form-control" required>
                                                     <option value="">Select Experience</option>
-                                                    <option value="1" {{ old('online_experience', $student->online_experience) == 1 ? 'selected' : '' }}>Yes / à®†à®®à¯</option>
-                                                    <option value="0" {{ old('online_experience', $student->online_experience) == 0 ? 'selected' : '' }}>No / à®‡à®²à¯à®²à¯ˆ</option>
+                                                    <option value="1" {{ old('online_experience', $student->online_experience) == 1 ? 'selected' : '' }}>Yes </option>
+                                                    <option value="0" {{ old('online_experience', $student->online_experience) == 0 ? 'selected' : '' }}>No </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -376,11 +376,11 @@
                                         <!-- Current Grade -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                 <label>Current Grade (2026) / à®¤à®±à¯à®ªà¯‹à®¤à¯ˆà®¯ à®¤à®°à®®à¯ (2026) <span class="text-danger">*</span></label>
+                                                 <label>Current Grade (2026)  <span class="text-danger">*</span></label>
                                                  <select name="current_grade" id="current_grade" class="form-control" required>
                                                      <option value="">Select Grade</option>
                                                      @foreach([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as $grade)
-                                                         <option value="à®¤à®°à®®à¯ {{ $grade }} / Grade {{ $grade }}" {{ old('current_grade', $student->current_grade) == "à®¤à®°à®®à¯ $grade / Grade $grade" ? 'selected' : '' }}>à®¤à®°à®®à¯ {{ $grade }} / Grade {{ $grade }}</option>
+                                                         <option value="à®¤à®°à®®à¯ {{ $grade }} / Grade {{ $grade }}" {{ old('current_grade', $student->current_grade) == "à®¤à®°à®®à¯ $grade / Grade $grade" ? 'selected' : '' }}> Grade {{ $grade }}</option>
                                                      @endforeach
                                                  </select>
                                             </div>
@@ -389,7 +389,7 @@
                                         <!-- Device Used -->
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label>Device Used for Online Classes / à®†à®©à¯à®²à¯ˆà®©à¯ à®µà®•à¯à®ªà¯à®ªà®¿à®±à¯à®•à¯ à®ªà®¯à®©à¯à®ªà®Ÿà¯à®¤à¯à®¤à¯à®®à¯ à®šà®¾à®¤à®©à®®à¯ <span class="text-danger">*</span></label>
+                                                <label>Device Used for Online Classes  <span class="text-danger">*</span></label>
                                                 <select name="device_used" class="form-control" required>
                                                     <option value="">Select Device</option>
                                                     @foreach(['Mobile', 'Tablet', 'Laptop', 'Desktop'] as $device)
@@ -402,18 +402,18 @@
                                         <!-- Stream (Conditional for A/L) -->
                                         <div class="col-md-6 mb-3" id="stream_container" style="display: none;">
                                             <div class="form-group">
-                                                 <label>Stream / à®ªà®¿à®°à®¿à®µà¯ (A/L) <span class="text-danger">*</span></label>
+                                                 <label>Stream / (A/L) <span class="text-danger">*</span></label>
                                                  <select name="stream" id="stream" class="form-control">
                                                      <option value="">Select Stream</option>
-                                                     <option value="arts" {{ old('stream', $student->stream) === 'arts' ? 'selected' : '' }}>A/L â€“ ARTS / à®•à®²à¯ˆ</option>
-                                                     <option value="bio_maths" {{ old('stream', $student->stream) === 'bio_maths' ? 'selected' : '' }}>A/L â€“ BIO & MATHS / à®‰à®¯à®¿à®°à®¿à®¯à®²à¯ & à®•à®£à®¿à®¤à®®à¯</option>
+                                                     <option value="arts" {{ old('stream', $student->stream) === 'arts' ? 'selected' : '' }}>A/L â€“ ARTS</option>
+                                                     <option value="bio_maths" {{ old('stream', $student->stream) === 'bio_maths' ? 'selected' : '' }}>A/L â€“ BIO & MATHS </option>
                                                  </select>
                                             </div>
                                         </div>
 
                                         <div class="col-md-12 mb-4">
                                              <div class="form-group">
-                                                 <label class="d-block mb-3" style="font-size: 16px; color: #ffab2d; font-weight: 700;">Select Subjects / à®ªà®¾à®Ÿà®™à¯à®•à®³à¯ˆà®¤à¯ à®¤à¯‡à®°à¯à®¨à¯à®¤à¯†à®Ÿà¯à®•à¯à®•à®µà¯à®®à¯ <span class="text-danger">*</span></label>
+                                                 <label class="d-block mb-3" style="font-size: 16px; color: #ffab2d; font-weight: 700;">Select Subjects <span class="text-danger">*</span></label>
                                                  
                                                  {{-- Subjects for Grade 1-5 --}}
                                                  <div class="subject-section" id="subjects_1_5" style="display: none;">

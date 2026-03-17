@@ -146,13 +146,64 @@ class MasterAdminController extends Controller
         return response()->json($materials);
     }
 
-    /**
-     * Get Site Settings
-     */
     public function settings(Request $request)
     {
         $settings = \App\Models\SiteSetting::all()->pluck('value', 'key');
         return response()->json($settings);
+    }
+
+    /**
+     * Update Site Settings
+     */
+    public function updateSettings(Request $request)
+    {
+        $settings = $request->all();
+        
+        // Handle Logo Removal
+        if ($request->remove_logo == '1') {
+            \App\Models\SiteSetting::where('key', 'logo_url')->delete();
+            \App\Models\SiteSetting::where('key', 'admin_logo')->delete();
+        }
+        
+        // Handle Logo Upload if present in this request (though UI sends it separately, good to have)
+        if ($request->hasFile('admin_logo')) {
+            $logo = $request->file('admin_logo');
+            $name = 'admin_logo_' . time() . '.' . $logo->getClientOriginalExtension();
+            $path = 'uploads/settings';
+            $destinationPath = public_path($path);
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            
+            $logo->move($destinationPath, $name);
+            $logoUrl = asset($path . '/' . $name);
+            \App\Models\SiteSetting::set('logo_url', $logoUrl, 'admin_identity');
+        }
+
+        foreach ($settings as $key => $value) {
+            if ($request->hasFile($key) || $key === 'admin_logo') continue;
+
+            // Determine group based on key prefix
+            $group = 'general';
+            if (str_starts_with($key, 'learning_')) $group = 'learning';
+            elseif (str_starts_with($key, 'classes_')) $group = 'classes';
+            elseif (str_starts_with($key, 'contact_')) $group = 'contact';
+            elseif (str_starts_with($key, 'social_')) $group = 'social';
+            elseif (str_starts_with($key, 'footer_')) $group = 'footer';
+            elseif (str_starts_with($key, 'hero_')) $group = 'hero';
+            elseif (str_starts_with($key, 'admin_')) $group = 'admin_identity';
+            elseif (str_starts_with($key, 'register_')) $group = 'register';
+            elseif (str_starts_with($key, 'topbar_')) $group = 'topbar';
+            elseif (str_starts_with($key, 'nav_')) $group = 'navigation';
+
+            \App\Models\SiteSetting::set($key, $value, $group);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Settings updated successfully'
+        ]);
     }
 
     /**
@@ -204,14 +255,35 @@ class MasterAdminController extends Controller
             'theme_mode' => 'nullable|in:light,dark',
         ]);
 
-        $themeSettings = $institute->theme_settings ?? [];
-
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('logos', 'public');
-            $institute->logo_path = $path;
+            $logo = $request->file('logo');
+            $name = 'admin_logo_' . time() . '.' . $logo->getClientOriginalExtension();
+            $path = 'uploads/settings';
+            $destinationPath = public_path($path);
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            
+            $logo->move($destinationPath, $name);
+            $logoUrl = asset($path . '/' . $name);
+            
+            // Save to SiteSetting for Frontend Header
+            \App\Models\SiteSetting::set('logo_url', $logoUrl, 'admin_identity');
+            
+            // Also keep in institute for dashboard theme if needed
+            $institute->logo_path = $path . '/' . $name;
+        } elseif ($request->remove_logo == '1') {
+            \App\Models\SiteSetting::where('key', 'logo_url')->delete();
+            \App\Models\SiteSetting::where('key', 'admin_logo')->delete();
+            $institute->logo_path = null;
         }
 
-        if (isset($validated['primary_color'])) $themeSettings['primary_color'] = $validated['primary_color'];
+        $themeSettings = $institute->theme_settings ?? [];
+        if (isset($validated['primary_color'])) {
+            $themeSettings['primary_color'] = $validated['primary_color'];
+            \App\Models\SiteSetting::set('primary_color', $validated['primary_color'], 'branding');
+        }
         if (isset($validated['secondary_color'])) $themeSettings['secondary_color'] = $validated['secondary_color'];
         if (isset($validated['theme_mode'])) $themeSettings['theme_mode'] = $validated['theme_mode'];
 
@@ -219,7 +291,9 @@ class MasterAdminController extends Controller
         $institute->save();
 
         return response()->json([
+            'success' => true,
             'message' => 'Branding updated successfully',
+            'logo_url' => \App\Models\SiteSetting::get('logo_url'),
             'institute' => $institute
         ]);
     }

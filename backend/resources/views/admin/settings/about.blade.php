@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>About Settings - {{ config('app.name') }}</title>
+    <title>About Page Settings - {{ config('app.name') }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/chartist/css/chartist.min.css') }}">
@@ -21,44 +21,167 @@
         }
 
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+            background: rgba(43, 37, 72, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .header {
-            background: #1f2937;
+        .card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent !important;
         }
 
-        .header-profile .nav-link {
+        .card-title {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .dynamic-row {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .dynamic-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(235, 129, 83, 0.3);
+        }
+
+        .remove-row {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #ff5e5e;
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+            z-index: 10;
+        }
+
+        .remove-row:hover {
+            transform: scale(1.2);
+            color: #ff4444;
+        }
+
+        .form-control, .bootstrap-select .dropdown-toggle {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+        }
+
+        .form-control:focus {
+            border-color: #EB8153 !important;
+            box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
+        }
+
+        label {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-weight: 500;
+        }
+
+        .btn-info.btn-xs {
+            background-color: #EB8153;
+            border-color: #EB8153;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 12px;
+        }
+
+        .btn-info.btn-xs:hover {
+            background-color: #d96e42;
+            border-color: #d96e42;
+        }
+
+        hr {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-muted {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+        .image-picker-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
         }
 
-        .nav-header .brand-logo {
+        .image-picker-container:hover {
+            border-color: #EB8153;
+            background: rgba(235, 129, 83, 0.05);
+        }
+
+        .image-picker-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-picker-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .image-picker-placeholder i {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .image-picker-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
-            padding-left: 20px;
+            justify-content: center;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+        .image-picker-container:hover .image-picker-overlay {
+            opacity: 1;
+        }
+
+        .upload-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .upload-loading .spinner-border {
+            width: 30px;
+            height: 30px;
+            color: #EB8153;
         }
     </style>
-    <!-- Pusher and Notifications -->
-    <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
-    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
-    <script>
-        window.PUSHER_KEY = "{{ env('PUSHER_APP_KEY', '4f9958ae0d1fc1808fb5') }}";
-        window.PUSHER_CLUSTER = "{{ env('PUSHER_APP_CLUSTER', 'ap2') }}";
-        @auth
-            window.USER_ID = {{ auth()->id() }};
-        @else
-            window.USER_ID = null;
-        @endauth
-    </script>
 </head>
 
 <body>
@@ -72,7 +195,7 @@
 
     <div id="main-wrapper">
         <div class="nav-header">
-                        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
+            <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
                     <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
                 @else
@@ -82,7 +205,7 @@
                     </svg>
                 @endif
                 <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
-                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                    {{ \App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}
                 </span>
             </a>
             <div class="nav-control">
@@ -96,79 +219,10 @@
             <div class="header-content">
                 <nav class="navbar navbar-expand">
                     <div class="collapse navbar-collapse justify-content-between">
-                        <div class="header-left">
-                            <div class="search_bar">
-                                <form>
-                                    <input class="form-control" type="search" placeholder="Find something here..." aria-label="Search">
-                                    <span class="search_icon">
-                                        <i class="mdi mdi-magnify"></i>
-                                    </span>
-                                </form>
-                            </div>
-                        </div>
-
+                        <div class="header-left"></div>
                         <ul class="navbar-nav header-right">
-                             <li class="nav-item" style="margin-right: 20px;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="btn btn-primary btn-sm"
-                                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                          border: none;
-                                          padding: 8px 12px;
-                                          border-radius: 6px;
-                                          color: white;
-                                          font-weight: 500;
-                                          text-decoration: none;
-                                          display: inline-flex;
-                                          align-items: center;
-                                          gap: 5px;
-                                          transition: all 0.3s ease;
-                                          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-                                          cursor: pointer;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                    </svg>
-                                    Home
-                                </a>
-                            </li>
-                            
-                            <li class="nav-item dropdown header-profile">
-                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    <!-- <div class="header-info">
-                                        <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
-                                        <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
-                                    </div> -->
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
-                                    @else
-                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
-                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
-                                        <small class="text-muted">{{ Auth::user()->email }}</small>
-                                    </div>
-                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
-                                        <i class="la la-cog text-primary mr-2"></i>
-                                        <span class="ml-2">Settings</span>
-                                    </a>
-                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
-                                        <i class="la la-calendar text-primary mr-2"></i>
-                                        <span class="ml-2">Calendar</span>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item ai-icon text-danger">
-                                            <i class="la la-sign-out text-danger mr-2"></i>
-                                            <span class="ml-2">Sign out</span>
-                                        </button>
-                                    </form>
-                                </div>
+                             <li class="nav-item">
+                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/about" target="_blank" class="btn btn-primary btn-sm">View About Page</a>
                             </li>
                         </ul>
                     </div>
@@ -183,10 +237,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">About Page Settings</h4>
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
-                                <i class="flaticon-381-back"></i> Back to Dashboard
-                            </a>
+                            <h4 class="mb-0">About Page Settings</h4>
                         </div>
                     </div>
                 </div>
@@ -200,148 +251,495 @@
                     </div>
                 @endif
 
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">About Page Content</h5>
+                <form action="{{ route('admin.settings.store') }}" method="POST">
+                    @csrf
+                    
+                    {{-- Hero Section --}}
+                    <div class="card">
+                        <div class="card-header"><h5 class="card-title">Hero Section</h5></div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Hero Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_title" class="form-control" value="{{ \App\Models\SiteSetting::get('about_title', 'About TiT Online Education') }}">
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <form action="{{ route('admin.settings.store') }}" method="POST">
-                                    @csrf
-                                    <h5 class="mb-3 text-primary">Hero Section</h5>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Page Title</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_title" class="form-control" value="{{ App\Models\SiteSetting::get('about_title', 'About TiT Online Education') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Subtitle</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('about_subtitle', 'Sri Lanka\'s Premier Choice for Online Tuition ðŸŽ“') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Description</label>
-                                        <div class="col-sm-9">
-                                            <textarea name="about_description" class="form-control" rows="4">{{ App\Models\SiteSetting::get('about_description', 'Sri Lanka\'s trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support. Invest in your child\'s successful learning journey with TiT Online Education.') }}</textarea>
-                                        </div>
-                                    </div>
-
-                                    <hr>
-                                    <h5 class="mb-3 text-primary">Mission Section</h5>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Mission Title</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_mission_title" class="form-control" value="{{ App\Models\SiteSetting::get('about_mission_title', 'Our Mission') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Mission Text</label>
-                                        <div class="col-sm-9">
-                                            <textarea name="about_mission_text" class="form-control" rows="5">{{ App\Models\SiteSetting::get('about_mission_text', 'To democratize quality education by making world-class online tuition accessible to every student in Sri Lanka. We believe that every child deserves the opportunity to excel academically, regardless of their location or background. Through innovative teaching methods, personalized learning paths, and dedicated support, we empower students to achieve their full potential and succeed in their academic journey.') }}</textarea>
-                                        </div>
-                                    </div>
-
-                                    <hr>
-                                    <h5 class="mb-3 text-primary">Features Section</h5>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Features Title</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_features_title" class="form-control" value="{{ App\Models\SiteSetting::get('about_features_title', 'What Makes Us Different') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Features Subtitle</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_features_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('about_features_subtitle', 'Quality Assured Online Learning with Proven Results') }}">
-                                        </div>
-                                    </div>
-
-                                    <hr>
-                                    <h5 class="mb-3 text-primary">Values Section</h5>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Values Title</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_values_title" class="form-control" value="{{ App\Models\SiteSetting::get('about_values_title', 'Our Core Values') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Values Subtitle</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_values_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('about_values_subtitle', 'The Principles That Guide Everything We Do') }}">
-                                        </div>
-                                    </div>
-
-                                    <hr>
-                                    <h5 class="mb-3 text-primary">CTA Section</h5>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">CTA Title</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" name="about_cta_title" class="form-control" value="{{ App\Models\SiteSetting::get('about_cta_title', 'Ready to Start Your Learning Journey?') }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">CTA Description</label>
-                                        <div class="col-sm-9">
-                                            <textarea name="about_cta_description" class="form-control" rows="2">{{ App\Models\SiteSetting::get('about_cta_description', 'Join thousands of students who are already achieving academic excellence with TiT Online Education.') }}</textarea>
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary mt-3">Save About Page Settings</button>
-                                </form>
-
-                                <!-- Successful Journey Repeater -->
-                                <hr class="my-4">
-                                <h5 class="mb-3 text-primary">Successful Journey Timeline</h5>
-                                <div id="journey-repeater">
-                                    <!-- Items will be added here by JS -->
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Hero Subtitle</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('about_subtitle', "Sri Lanka's Premier Choice for Online Tuition 🎓") }}">
                                 </div>
-                                <button type="button" class="btn btn-success btn-sm mt-2" id="add-journey-item">
-                                    <i class="fa fa-plus"></i> Add Journey Item
-                                </button>
-                                <textarea name="about_journey" id="journey_hidden" style="display:none;">{{ App\Models\SiteSetting::get('about_journey', '[]') }}</textarea>
-
-                                <!-- Teachers Repeater -->
-                                <hr class="my-4">
-                                <h5 class="mb-3 text-primary">Teacher Details</h5>
-                                <div id="teachers-repeater">
-                                    <!-- Items will be added here by JS -->
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Hero Description</label>
+                                <div class="col-sm-9">
+                                    <textarea name="about_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('about_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support.") }}</textarea>
                                 </div>
-                                <button type="button" class="btn btn-success btn-sm mt-2" id="add-teacher-item">
-                                    <i class="fa fa-plus"></i> Add Teacher
-                                </button>
-                                <textarea name="about_teachers" id="teachers_hidden" style="display:none;">{{ App\Models\SiteSetting::get('about_teachers', '[]') }}</textarea>
-
-                                <!-- Gallery Images Repeater -->
-                                <hr class="my-4">
-                                <h5 class="mb-3 text-primary">Gallery Images</h5>
-                                <div id="gallery-repeater">
-                                    <!-- Items will be added here by JS -->
-                                </div>
-                                <button type="button" class="btn btn-success btn-sm mt-2" id="add-gallery-item">
-                                    <i class="fa fa-plus"></i> Add Gallery Image
-                                </button>
-                                <textarea name="about_gallery" id="gallery_hidden" style="display:none;">{{ App\Models\SiteSetting::get('about_gallery', '[]') }}</textarea>
-
-                                <form action="{{ route('admin.settings.store') }}" method="POST" id="repeater-form" class="mt-4">
-                                    @csrf
-                                    <input type="hidden" name="about_journey" id="journey_submit">
-                                    <input type="hidden" name="about_teachers" id="teachers_submit">
-                                    <input type="hidden" name="about_gallery" id="gallery_submit">
-                                    <button type="submit" class="btn btn-primary">Save All Repeater Data</button>
-                                </form>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="footer">
-            <div class="copyright">
-                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                    {{-- Stats Section --}}
+                    <div class="card">
+                        <div class="card-header"><h5 class="card-title">Statistics</h5></div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Years of Experience</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="stats_years" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_years', '10+') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Happy Students</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="stats_students" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_students', '10K+') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Expert Tutors</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="stats_tutors" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_tutors', '200+') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Success Rate</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="stats_success_rate" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_success_rate', '98%') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                   
+
+                    {{-- Features Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">What Makes Us Different (Features)</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('features-container')">+ Add Feature</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Features Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_features_title" class="form-control" value="{{ \App\Models\SiteSetting::get('about_features_title', 'What Makes Us Different') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Features Subtitle</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_features_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('about_features_subtitle', 'Quality Assured Online Learning with Proven Results') }}">
+                                </div>
+                            </div>
+                            <hr>
+                            <div id="features-container">
+                                @php
+                                    $features = json_decode(\App\Models\SiteSetting::get('about_features', '[]'), true);
+                                    if(empty($features)) {
+                                        $features = [
+                                            ['icon' => 'FiBookOpen', 'title' => 'Top-notch Online Classes', 'description' => 'Interactive live sessions...', 'image' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f']
+                                        ];
+                                    }
+                                @endphp
+                                @foreach($features as $feature)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Icon Code (e.g. FiBookOpen)</label>
+                                                    <input type="text" name="feature_icon[]" class="form-control" value="{{ $feature['icon'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <label>Title</label>
+                                                    <input type="text" name="feature_title[]" class="form-control" value="{{ $feature['title'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Description</label>
+                                                    <textarea name="feature_description[]" class="form-control" rows="2">{{ $feature['description'] }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Feature Image</label>
+                                                    <div class="image-picker-container" style="height: 120px;" onclick="this.querySelector('input[type=file]').click()">
+                                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
+                                                        <div class="image-picker-placeholder" style="{{ $feature['image'] ? 'display:none' : '' }}">
+                                                            <i class="la la-image"></i> Select
+                                                        </div>
+                                                        <img src="{{ $feature['image'] }}" class="image-picker-preview" style="{{ $feature['image'] ? '' : 'display:none' }}">
+                                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                                    </div>
+                                                    <input type="hidden" name="feature_image[]" value="{{ $feature['image'] }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_features" id="about_features_json">
+                        </div>
+                    </div>
+
+                    {{-- Successful Journey Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Successful Journey Timeline</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('journey-container')">+ Add Year</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="journey-container">
+                                @php
+                                    $journey = json_decode(\App\Models\SiteSetting::get('about_journey', '[]'), true);
+                                    if(empty($journey)) {
+                                        $journey = [
+                                            ['year' => '2024', 'achievement' => '10,000+ Students', 'description' => 'Reached a milestone...']
+                                        ];
+                                    }
+                                @endphp
+                                @foreach($journey as $item)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Year</label>
+                                                    <input type="text" name="journey_year[]" class="form-control" value="{{ $item['year'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="form-group">
+                                                    <label>Achievement</label>
+                                                    <input type="text" name="journey_achievement[]" class="form-control" value="{{ $item['achievement'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Description</label>
+                                                    <input type="text" name="journey_description[]" class="form-control" value="{{ $item['description'] }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_journey" id="about_journey_json">
+                        </div>
+                    </div>
+
+                    {{-- Values Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Core Values</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('values-container')">+ Add Value</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Values Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_values_title" class="form-control" value="{{ \App\Models\SiteSetting::get('about_values_title', 'Our Core Values') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Values Subtitle</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_values_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('about_values_subtitle', 'The Principles That Guide Everything We Do') }}">
+                                </div>
+                            </div>
+                            <hr>
+                            <div id="values-container">
+                                @php
+                                    $values = json_decode(\App\Models\SiteSetting::get('about_values', '[]'), true);
+                                    if(empty($values)) {
+                                        $values = [
+                                            ['icon' => 'FiHeart', 'title' => 'Student-Centered', 'description' => 'Every decision we make...']
+                                        ];
+                                    }
+                                @endphp
+                                @foreach($values as $value)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Icon (e.g. FiHeart)</label>
+                                                    <input type="text" name="value_icon[]" class="form-control" value="{{ $value['icon'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <label>Title</label>
+                                                    <input type="text" name="value_title[]" class="form-control" value="{{ $value['title'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Description</label>
+                                                    <input type="text" name="value_description[]" class="form-control" value="{{ $value['description'] }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_values" id="about_values_json">
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+                    {{-- Mission Section --}}
+                    <div class="card">
+                        <div class="card-header"><h5 class="card-title">Mission Section</h5></div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Mission Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_mission_title" class="form-control" value="{{ \App\Models\SiteSetting::get('about_mission_title', 'Our Mission') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Mission Description</label>
+                                <div class="col-sm-9">
+                                    <textarea name="about_mission_text" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('about_mission_text', 'To democratize quality education by making world-class online tuition accessible to every student in Sri Lanka...') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Mission Image</label>
+                                <div class="col-sm-9">
+                                    <div class="image-picker-container" onclick="document.getElementById('about_mission_image_file').click()">
+                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                        @php $missionImage = \App\Models\SiteSetting::get('about_mission_image', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop'); @endphp
+                                        <div class="image-picker-placeholder" style="{{ $missionImage ? 'display:none' : '' }}">
+                                            <i class="la la-image"></i> Select Image
+                                        </div>
+                                        <img id="about_mission_image_preview" src="{{ $missionImage }}" class="image-picker-preview" style="{{ $missionImage ? '' : 'display:none' }}">
+                                        <input type="file" id="about_mission_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'about_mission_image_preview', 'about_mission_image_input')">
+                                    </div>
+                                    <input type="hidden" name="about_mission_image" id="about_mission_image_input" value="{{ $missionImage }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+                    {{-- CTA Section --}}
+                    <div class="card">
+                        <div class="card-header"><h5 class="card-title">CTA Section</h5></div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_cta_title" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_title', 'Ready to Start Your Learning Journey?') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Description</label>
+                                <div class="col-sm-9">
+                                    <textarea name="about_cta_desc" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('about_cta_desc', 'Join thousands of students who are already achieving academic excellence with TiT Online Education.') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Button 1 Text</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_cta_btn1" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_btn1', 'Register Now') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Button 1 Link</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_cta_btn1_link" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_btn1_link', '/register') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Button 2 Text</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_cta_btn2" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_btn2', 'Contact Us') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CTA Button 2 Link</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_cta_btn2_link" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_btn2_link', '/contact') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+
+
+
+ {{-- Teachers Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Teachers Details</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('teachers-container')">+ Add Teacher</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="teachers-container">
+                                @php
+                                    $teachers = json_decode(\App\Models\SiteSetting::get('about_teachers', '[]'), true);
+                                    if(empty($teachers)) {
+                                        $teachers = [
+                                            ['name' => 'Dr. Kamal Perera', 'subject' => 'Mathematics', 'qualification' => 'Ph.D. in Mathematics', 'experience' => '15+ years', 'image' => 'https://via.placeholder.com/150']
+                                        ];
+                                    }
+                                @endphp
+                                @foreach($teachers as $index => $teacher)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Name</label>
+                                                    <input type="text" name="teacher_name[]" class="form-control" value="{{ $teacher['name'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Subject</label>
+                                                    <input type="text" name="teacher_subject[]" class="form-control" value="{{ $teacher['subject'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Qualification</label>
+                                                    <input type="text" name="teacher_qualification[]" class="form-control" value="{{ $teacher['qualification'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Experience</label>
+                                                    <input type="text" name="teacher_experience[]" class="form-control" value="{{ $teacher['experience'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Teacher Image</label>
+                                                    <div class="image-picker-container" onclick="this.querySelector('input[type=file]').click()">
+                                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
+                                                        <div class="image-picker-placeholder" style="{{ $teacher['image'] ? 'display:none' : '' }}">
+                                                            <i class="la la-image"></i> Select
+                                                        </div>
+                                                        <img src="{{ $teacher['image'] }}" class="image-picker-preview" style="{{ $teacher['image'] ? '' : 'display:none' }}">
+                                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                                    </div>
+                                                    <input type="hidden" name="teacher_image[]" value="{{ $teacher['image'] }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_teachers" id="about_teachers_json">
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+                    {{-- Gallery Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Gallery Images</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('gallery-container')">+ Add Image</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Gallery Categories</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="about_gallery_categories" class="form-control" value="{{ \App\Models\SiteSetting::get('about_gallery_categories', 'Online Class Sessions, Student Success Stories, Teacher Training, Award Ceremony') }}" placeholder="Enter categories separated by commas">
+                                    <small class="text-muted">Separate categories with commas (e.g. Academy, Sports, Lab)</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div id="gallery-container">
+                                @php
+                                    $gallery = json_decode(\App\Models\SiteSetting::get('about_gallery', '[]'), true);
+                                @endphp
+                                @foreach($gallery as $item)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Category</label>
+                                                    <select name="gallery_category[]" class="form-control">
+                                                        @php
+                                                            $categories = explode(',', \App\Models\SiteSetting::get('about_gallery_categories', 'Online Class Sessions, Student Success Stories, Teacher Training, Award Ceremony'));
+                                                        @endphp
+                                                        @foreach($categories as $cat)
+                                                            @php $cat = trim($cat); @endphp
+                                                            <option value="{{ $cat }}" {{ ($item['category'] ?? '') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Title</label>
+                                                    <input type="text" name="gallery_title[]" class="form-control" value="{{ $item['title'] ?? '' }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Gallery Image</label>
+                                                    <div class="image-picker-container" style="height: 100px;" onclick="this.querySelector('input[type=file]').click()">
+                                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
+                                                        <div class="image-picker-placeholder" style="{{ ($item['image'] ?? '') ? 'display:none' : '' }}">
+                                                            <i class="la la-image"></i> Select
+                                                        </div>
+                                                        <img src="{{ $item['image'] ?? '' }}" class="image-picker-preview" style="{{ ($item['image'] ?? '') ? '' : 'display:none' }}">
+                                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                                    </div>
+                                                    <input type="hidden" name="gallery_image[]" value="{{ $item['image'] ?? '' }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_gallery" id="about_gallery_json">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <button type="submit" class="btn btn-primary" onclick="prepareJsonData()">Save About Page Settings</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -351,313 +749,275 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
-
-    <style>
-        .repeater-item {
-            background: #3b3363;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-        .repeater-item:hover {
-            border-color: #667eea;
-        }
-        .remove-item {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #dc3545;
-            cursor: pointer;
-            background: #fff;
-            border: 1px solid #dc3545;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        .remove-item:hover {
-            background: #dc3545;
-            color: #fff;
-        }
-    </style>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- Journey Repeater ---
-        const journeyHidden = document.getElementById('journey_hidden');
-        const journeyRepeater = document.getElementById('journey-repeater');
-        const addJourneyBtn = document.getElementById('add-journey-item');
-        let journeyItems = [];
-        try { journeyItems = JSON.parse(journeyHidden.value || '[]'); } catch(e) { journeyItems = []; }
-
-        function syncJourney() {
-            const items = [];
-            document.querySelectorAll('.journey-item').forEach(el => {
-                items.push({
-                    year: el.querySelector('.j-year').value,
-                    achievement: el.querySelector('.j-achievement').value,
-                    description: el.querySelector('.j-description').value
-                });
-            });
-            journeyHidden.value = JSON.stringify(items);
-            document.getElementById('journey_submit').value = JSON.stringify(items);
-        }
-
-        function createJourneyItem(data = {}) {
-            const div = document.createElement('div');
-            div.className = 'repeater-item journey-item';
-            div.innerHTML = `
-                <span class="remove-item" onclick="this.parentElement.remove(); syncJourney();">&times;</span>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Year</label>
-                        <input type="text" class="form-control j-year" value="${data.year || ''}" placeholder="2024">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Achievement</label>
-                        <input type="text" class="form-control j-achievement" value="${data.achievement || ''}" placeholder="10,000+ Students">
-                    </div>
-                    <div class="col-md-5">
-                        <label>Description</label>
-                        <input type="text" class="form-control j-description" value="${data.description || ''}" placeholder="Milestone description">
-                    </div>
-                </div>
-            `;
-            journeyRepeater.appendChild(div);
-            div.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncJourney));
-        }
-
-        journeyItems.forEach(item => createJourneyItem(item));
-        addJourneyBtn.addEventListener('click', () => { createJourneyItem(); syncJourney(); });
-        window.syncJourney = syncJourney;
-        syncJourney();
-
-        // --- Teachers Repeater ---
-        const teachersHidden = document.getElementById('teachers_hidden');
-        const teachersRepeater = document.getElementById('teachers-repeater');
-        const addTeacherBtn = document.getElementById('add-teacher-item');
-        let teacherItems = [];
-        try { teacherItems = JSON.parse(teachersHidden.value || '[]'); } catch(e) { teacherItems = []; }
-
-        function syncTeachers() {
-            const items = [];
-            document.querySelectorAll('.teacher-item').forEach(el => {
-                items.push({
-                    name: el.querySelector('.t-name').value,
-                    subject: el.querySelector('.t-subject').value,
-                    qualification: el.querySelector('.t-qualification').value,
-                    experience: el.querySelector('.t-experience').value,
-                    image: el.querySelector('.t-image').value
-                });
-            });
-            teachersHidden.value = JSON.stringify(items);
-            document.getElementById('teachers_submit').value = JSON.stringify(items);
-        }
-
-        function createTeacherItem(data = {}) {
-            const div = document.createElement('div');
-            div.className = 'repeater-item teacher-item';
-            const uniqueId = 'teacher_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            div.innerHTML = `
-                <span class="remove-item" onclick="this.parentElement.remove(); syncTeachers();">&times;</span>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Name</label>
-                        <input type="text" class="form-control t-name" value="${data.name || ''}" placeholder="Dr. John Doe">
-                    </div>
-                    <div class="col-md-2">
-                        <label>Subject</label>
-                        <input type="text" class="form-control t-subject" value="${data.subject || ''}" placeholder="Mathematics">
-                    </div>
-                    <div class="col-md-2">
-                        <label>Qualification</label>
-                        <input type="text" class="form-control t-qualification" value="${data.qualification || ''}" placeholder="Ph.D.">
-                    </div>
-                    <div class="col-md-2">
-                        <label>Experience</label>
-                        <input type="text" class="form-control t-experience" value="${data.experience || ''}" placeholder="15+ years">
-                    </div>
-                    <div class="col-md-3">
-                        <label>Image</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control t-image" value="${data.image || ''}" placeholder="Select image...">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-info btn-upload-teacher" data-target="${uniqueId}">
-                                    <i class="fa fa-folder-open"></i>
-                                </button>
+        function addRow(containerId) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            
+            if (containerId === 'teachers-container') {
+                html = `
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group"><label>Name</label><input type="text" name="teacher_name[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group"><label>Subject</label><input type="text" name="teacher_subject[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group"><label>Qualification</label><input type="text" name="teacher_qualification[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group"><label>Experience</label><input type="text" name="teacher_experience[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Teacher Image</label>
+                                    <div class="image-picker-container" onclick="this.querySelector('input[type=file]').click()">
+                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                        <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>
+                                        <img src="" class="image-picker-preview" style="display:none">
+                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                    </div>
+                                    <input type="hidden" name="teacher_image[]">
+                                </div>
                             </div>
                         </div>
-                        <input type="file" id="${uniqueId}" class="d-none" accept="image/*">
-                        ${data.image ? `<img src="${data.image}" class="mt-2 img-preview" style="max-width:60px;max-height:60px;border-radius:4px;">` : ''}
-                    </div>
-                </div>
-            `;
-            teachersRepeater.appendChild(div);
-            div.querySelectorAll('input[type="text"]').forEach(inp => inp.addEventListener('input', syncTeachers));
-            
-            // File upload handler
-            const fileInput = div.querySelector(`#${uniqueId}`);
-            const uploadBtn = div.querySelector('.btn-upload-teacher');
-            uploadBtn.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const formData = new FormData();
-                    formData.append('image', this.files[0]);
-                    formData.append('_token', '{{ csrf_token() }}');
-                    
-                    fetch('{{ route("admin.settings.upload") }}', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            const imgInput = div.querySelector('.t-image');
-                            imgInput.value = data.path;
-                            // Update or add preview
-                            let preview = div.querySelector('.img-preview');
-                            if (!preview) {
-                                preview = document.createElement('img');
-                                preview.className = 'mt-2 img-preview';
-                                preview.style = 'max-width:60px;max-height:60px;border-radius:4px;';
-                                div.querySelector('.input-group').after(preview);
-                            }
-                            preview.src = data.path;
-                            syncTeachers();
-                        } else {
-                            alert('Upload failed: ' + (data.message || 'Unknown error'));
-                        }
-                    })
-                    .catch(err => alert('Upload error: ' + err.message));
-                }
-            });
-        }
-
-        teacherItems.forEach(item => createTeacherItem(item));
-        addTeacherBtn.addEventListener('click', () => { createTeacherItem(); syncTeachers(); });
-        window.syncTeachers = syncTeachers;
-        syncTeachers();
-
-        // --- Gallery Repeater ---
-        const galleryHidden = document.getElementById('gallery_hidden');
-        const galleryRepeater = document.getElementById('gallery-repeater');
-        const addGalleryBtn = document.getElementById('add-gallery-item');
-        let galleryItems = [];
-        try { galleryItems = JSON.parse(galleryHidden.value || '[]'); } catch(e) { galleryItems = []; }
-
-        function syncGallery() {
-            const items = [];
-            document.querySelectorAll('.gallery-item').forEach(el => {
-                items.push({
-                    category: el.querySelector('.g-category').value,
-                    image: el.querySelector('.g-image').value,
-                    title: el.querySelector('.g-title').value
-                });
-            });
-            galleryHidden.value = JSON.stringify(items);
-            document.getElementById('gallery_submit').value = JSON.stringify(items);
-        }
-
-        function createGalleryItem(data = {}) {
-            const div = document.createElement('div');
-            div.className = 'repeater-item gallery-item';
-            const uniqueId = 'gallery_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            div.innerHTML = `
-                <span class="remove-item" onclick="this.parentElement.remove(); syncGallery();">&times;</span>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Category</label>
-                        <select class="form-control g-category">
-                            <option value="Online Class Sessions" ${data.category === 'Online Class Sessions' ? 'selected' : ''}>Online Class Sessions</option>
-                            <option value="Student Success Stories" ${data.category === 'Student Success Stories' ? 'selected' : ''}>Student Success Stories</option>
-                            <option value="Teacher Training" ${data.category === 'Teacher Training' ? 'selected' : ''}>Teacher Training</option>
-                            <option value="Award Ceremony" ${data.category === 'Award Ceremony' ? 'selected' : ''}>Award Ceremony</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label>Image</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control g-image" value="${data.image || ''}" placeholder="Select image...">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-info btn-upload-gallery" data-target="${uniqueId}">
-                                    <i class="fa fa-folder-open"></i>
-                                </button>
+                    </div>`;
+            } else if (containerId === 'features-container') {
+                html = `
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group"><label>Icon Code</label><input type="text" name="feature_icon[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group"><label>Title</label><input type="text" name="feature_title[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group"><label>Description</label><textarea name="feature_description[]" class="form-control" rows="2"></textarea></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Feature Image</label>
+                                    <div class="image-picker-container" style="height: 120px;" onclick="this.querySelector('input[type=file]').click()">
+                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                        <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>
+                                        <img src="" class="image-picker-preview" style="display:none">
+                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                    </div>
+                                    <input type="hidden" name="feature_image[]">
+                                </div>
                             </div>
                         </div>
-                        <input type="file" id="${uniqueId}" class="d-none" accept="image/*">
-                        ${data.image ? `<img src="${data.image}" class="mt-2 img-preview" style="max-width:80px;max-height:60px;border-radius:4px;">` : ''}
-                    </div>
-                    <div class="col-md-4">
-                        <label>Title</label>
-                        <input type="text" class="form-control g-title" value="${data.title || ''}" placeholder="Image title">
-                    </div>
-                </div>
-            `;
-            galleryRepeater.appendChild(div);
-            div.querySelectorAll('input[type="text"], select').forEach(inp => inp.addEventListener('input', syncGallery));
-            div.querySelectorAll('select').forEach(sel => sel.addEventListener('change', syncGallery));
+                    </div>`;
+            } else if (containerId === 'journey-container') {
+                html = `
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group"><label>Year</label><input type="text" name="journey_year[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="form-group"><label>Achievement</label><input type="text" name="journey_achievement[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group"><label>Description</label><input type="text" name="journey_description[]" class="form-control"></div>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (containerId === 'values-container') {
+                html = `
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group"><label>Icon</label><input type="text" name="value_icon[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group"><label>Title</label><input type="text" name="value_title[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group"><label>Description</label><input type="text" name="value_description[]" class="form-control"></div>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (containerId === 'gallery-container') {
+                const categoriesInput = document.getElementsByName('about_gallery_categories')[0];
+                const categories = categoriesInput ? categoriesInput.value.split(',').map(c => c.trim()) : ['Online Class Sessions', 'Student Success Stories', 'Teacher Training', 'Award Ceremony'];
+                let optionsHtml = '';
+                categories.forEach(cat => {
+                    optionsHtml += `<option value="${cat}">${cat}</option>`;
+                });
+
+                html = `
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select name="gallery_category[]" class="form-control">
+                                        ${optionsHtml}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group"><label>Title</label><input type="text" name="gallery_title[]" class="form-control"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Gallery Image</label>
+                                    <div class="image-picker-container" style="height: 100px;" onclick="this.querySelector('input[type=file]').click()">
+                                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                        <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>
+                                        <img src="" class="image-picker-preview" style="display:none">
+                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                    </div>
+                                    <input type="hidden" name="gallery_image[]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
             
-            // File upload handler
-            const fileInput = div.querySelector(`#${uniqueId}`);
-            const uploadBtn = div.querySelector('.btn-upload-gallery');
-            uploadBtn.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const formData = new FormData();
-                    formData.append('image', this.files[0]);
-                    formData.append('_token', '{{ csrf_token() }}');
-                    
-                    fetch('{{ route("admin.settings.upload") }}', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            const imgInput = div.querySelector('.g-image');
-                            imgInput.value = data.path;
-                            // Update or add preview
-                            let preview = div.querySelector('.img-preview');
-                            if (!preview) {
-                                preview = document.createElement('img');
-                                preview.className = 'mt-2 img-preview';
-                                preview.style = 'max-width:80px;max-height:60px;border-radius:4px;';
-                                div.querySelector('.input-group').after(preview);
-                            }
-                            preview.src = data.path;
-                            syncGallery();
-                        } else {
-                            alert('Upload failed: ' + (data.message || 'Unknown error'));
-                        }
-                    })
-                    .catch(err => alert('Upload error: ' + err.message));
-                }
-            });
+            container.insertAdjacentHTML('beforeend', html);
         }
 
-        galleryItems.forEach(item => createGalleryItem(item));
-        addGalleryBtn.addEventListener('click', () => { createGalleryItem(); syncGallery(); });
-        window.syncGallery = syncGallery;
-        syncGallery();
-    });
+        function prepareJsonData() {
+            // Process Teachers
+            const teachers = [];
+            const tNames = document.getElementsByName('teacher_name[]');
+            const tSubjects = document.getElementsByName('teacher_subject[]');
+            const tQuals = document.getElementsByName('teacher_qualification[]');
+            const tExps = document.getElementsByName('teacher_experience[]');
+            const tImages = document.getElementsByName('teacher_image[]');
+            for (let i = 0; i < tNames.length; i++) {
+                teachers.push({
+                    name: tNames[i].value,
+                    subject: tSubjects[i].value,
+                    qualification: tQuals[i].value,
+                    experience: tExps[i].value,
+                    image: tImages[i].value
+                });
+            }
+            document.getElementById('about_teachers_json').value = JSON.stringify(teachers);
+
+            // Process Features
+            const features = [];
+            const fIcons = document.getElementsByName('feature_icon[]');
+            const fTitles = document.getElementsByName('feature_title[]');
+            const fDescs = document.getElementsByName('feature_description[]');
+            const fImages = document.getElementsByName('feature_image[]');
+            for (let i = 0; i < fIcons.length; i++) {
+                features.push({
+                    icon: fIcons[i].value,
+                    title: fTitles[i].value,
+                    description: fDescs[i].value,
+                    image: fImages[i].value
+                });
+            }
+            document.getElementById('about_features_json').value = JSON.stringify(features);
+
+            // Process Journey
+            const journey = [];
+            const jYears = document.getElementsByName('journey_year[]');
+            const jAchievements = document.getElementsByName('journey_achievement[]');
+            const jDescs = document.getElementsByName('journey_description[]');
+            for (let i = 0; i < jYears.length; i++) {
+                journey.push({
+                    year: jYears[i].value,
+                    achievement: jAchievements[i].value,
+                    description: jDescs[i].value
+                });
+            }
+            document.getElementById('about_journey_json').value = JSON.stringify(journey);
+
+            // Process Values
+            const values = [];
+            const vIcons = document.getElementsByName('value_icon[]');
+            const vTitles = document.getElementsByName('value_title[]');
+            const vDescs = document.getElementsByName('value_description[]');
+            for (let i = 0; i < vIcons.length; i++) {
+                values.push({
+                    icon: vIcons[i].value,
+                    title: vTitles[i].value,
+                    description: vDescs[i].value
+                });
+            }
+            document.getElementById('about_values_json').value = JSON.stringify(values);
+
+            // Process Gallery
+            const gallery = [];
+            const gCategories = document.getElementsByName('gallery_category[]');
+            const gTitles = document.getElementsByName('gallery_title[]');
+            const gImages = document.getElementsByName('gallery_image[]');
+            for (let i = 0; i < gCategories.length; i++) {
+                gallery.push({
+                    category: gCategories[i].value,
+                    title: gTitles[i].value,
+                    image: gImages[i].value
+                });
+            }
+            document.getElementById('about_gallery_json').value = JSON.stringify(gallery);
+        }
+        async function uploadImage(input, previewId, targetInputId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const container = input.closest('.image-picker-container');
+            const loader = container.querySelector('.upload-loading');
+            const preview = document.getElementById(previewId);
+            const targetInput = document.getElementById(targetInputId);
+
+            // Show loading
+            loader.style.display = 'flex';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('{{ route("admin.settings.upload") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (preview) {
+                        preview.src = data.path;
+                        preview.style.display = 'block';
+                        container.querySelector('.image-picker-placeholder').style.display = 'none';
+                    }
+                    if (targetInput) {
+                        targetInput.value = data.path;
+                    }
+                    // If it's a dynamic row, update the sibling input
+                    const siblingInput = input.closest('.row').querySelector('input[type="hidden"][name*="image"]');
+                    if (siblingInput) {
+                        siblingInput.value = data.path;
+                    }
+                } else {
+                    alert(data.message || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('An error occurred during upload');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
     </script>
-    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
-    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    
-    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
-
 </html>
-
-</html>
-
-
-
-

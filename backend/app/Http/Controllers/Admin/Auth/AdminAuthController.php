@@ -49,8 +49,8 @@ class AdminAuthController extends Controller
                     $user = $accessToken->tokenable;
                     \Log::info('Token found, user: ' . $user->email . ', role: ' . $user->role);
                     
-                    // Only allow admin users
-                    if ($user->role === 'admin') {
+                    // Only allow admin or super_admin users
+                    if ($user->role === 'admin' || $user->role === 'super_admin') {
                         /*
                         dd('User is admin, attempting login', [
                             'user_id' => $user->id,
@@ -105,8 +105,8 @@ class AdminAuthController extends Controller
 
             if (Auth::attempt($credentials, $remember)) {
                 $user = Auth::user();
-                // Ensure only admins can login to the admin panel
-                if ($user->role !== 'admin') {
+                // Ensure only admins/super_admins can login to the admin panel
+                if ($user->role !== 'admin' && $user->role !== 'super_admin') {
                     Auth::logout();
                     return redirect()->route('admin.login')->with('error', 'நிர்வாகி (Admin) அனுமதி தேவை. (Admin access required.)');
                 }

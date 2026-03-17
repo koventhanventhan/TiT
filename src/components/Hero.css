@@ -250,7 +250,7 @@
   gap: 60px;
   align-items: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .hero-text {
@@ -258,12 +258,12 @@
 }
 
 .hero-title {
-  font-size: 84px;
+  font-size: clamp(32px, 8vw, 84px);
   font-weight: 900;
   line-height: 1.05;
   margin-bottom: 24px;
   color: #0f172a;
-  letter-spacing: -4px;
+  letter-spacing: -2px;
   font-family: 'Outfit', 'Inter', sans-serif;
 }
 
@@ -279,7 +279,7 @@
   color: #475569;
   margin-bottom: 50px;
   line-height: 1.4;
-  max-width: 700px;
+  max-width: 650px;
   font-weight: 500;
 }
 
@@ -303,7 +303,7 @@
 
 .hero-stats {
   display: flex;
-  gap: 0;
+  gap: 20px;
   padding-top: 50px;
   border-top: 1px solid rgba(226, 232, 240, 0.5);
   margin-top: 40px;
@@ -312,33 +312,25 @@
 }
 
 .stat-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 45px;
-  text-align: center;
-}
-
-.stat-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 15%;
-  height: 70%;
-  width: 1px;
-  background: #e2e8f0;
-}
-
-.stat-item::before {
-  content: '';
-  position: absolute;
-  inset: -10px -15px;
   background: #ffffff;
-  border-radius: 50px;
-  z-index: -1;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.03);
-  opacity: 1;
+  padding: 15px 25px;
+  border-radius: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
+  min-width: 220px;
+  flex: 1;
+  max-width: 280px;
+}
+
+.stat-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(79, 11, 217, 0.1);
+  border-color: rgba(79, 11, 217, 0.2);
 }
 
 .stat-icon-wrapper {
@@ -390,6 +382,10 @@
   position: relative;
 }
 
+.hero-mobile-img {
+  display: none;
+}
+
 .hero-card {
   position: relative;
   background: white;
@@ -438,75 +434,106 @@
   font-size: 16px;
 }
 
-@media (max-width: 968px) {
-  .hero-content {
-    grid-template-columns: 1fr;
-    gap: 40px;
+@media (max-width: 768px) {
+  .hero {
+    padding-top: 80px;
+    min-height: auto;
   }
 
-  .hero-title {
-    font-size: 42px;
-    letter-spacing: -2px;
+  .hero-background {
+    display: none;
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    text-align: center;
+  }
+
+  .hero-visual-side {
+    order: -1;
+    margin-bottom: 20px;
+  }
+
+  .hero-mobile-img {
+    display: block;
+    width: 100%;
+    max-width: 350px;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 20px;
+  }
+
+  .hero-visual-side lord-icon {
+    display: none;
+  }
+
+  .hero-text {
+    margin: 0 auto;
+    width: 100%;
   }
 
   .hero-description {
     font-size: 18px;
-  }
-
-  .hero-stats {
-    gap: 32px;
-  }
-
-  .hero-image {
-    order: -1;
-  }
-
-  .hero-background {
-    background-size: contain;
-    background-position: center center;
-    background-size: auto 70%;
-    opacity: 1;
-    animation: gentleFloatMobile 12s ease-in-out infinite;
-    z-index: 0;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 1;
-  }
-}
-
-@keyframes gentleFloatMobile {
-
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-
-  50% {
-    transform: translateY(-8px);
-    opacity: 0.75;
-  }
-}
-
-@media (max-width: 568px) {
-  .hero-title {
-    font-size: 32px;
+    margin-bottom: 30px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .hero-actions {
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 25px;
+    margin-top: 25px;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    overflow-x: auto;
+    width: 100%;
+    scrollbar-width: none;
+  }
+
+  .hero-stats::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stat-item {
+    min-width: 140px;
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .hero-btn {
     width: 100%;
     justify-content: center;
   }
+}
 
-  .hero-stats {
-    flex-direction: column;
-    gap: 24px;
+@media (max-width: 390px) {
+  .hero-title {
+    font-size: clamp(28px, 10vw, 36px);
   }
 }
 

@@ -1,48 +1,79 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { FiVideo, FiPlay, FiBook, FiArrowRight, FiClock } from 'react-icons/fi'
+import { FiVideo, FiPlay, FiBook, FiArrowRight, FiClock, FiLoader } from 'react-icons/fi'
+import { getLearningMaterials } from '../services/materialService'
 import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './RecordingsPage.css'
 
 const RecordingsPage = () => {
   const { getSetting } = useSettings()
+  const { t, translate, language } = useLanguage()
   const [searchParams] = useSearchParams()
   const grade = searchParams.get('grade') || 'All Grades'
   const [dynamicMaterials, setDynamicMaterials] = useState([])
   const [loadingMaterials, setLoadingMaterials] = useState(true)
+  const isAllGrades = grade === 'All Grades' || grade === 'All'
+
+  const [title, setTitle] = useState(getSetting('learning_recordings_title', t('recordings')))
+  const [desc, setDesc] = useState(getSetting('learning_recordings_description', t('learning_recordings_description')))
+  const [missionTitle, setMissionTitle] = useState(getSetting('mission_title', t('need_more_resources_title')))
+  const [missionDesc, setMissionDesc] = useState(getSetting('mission_desc', t('need_more_resources_desc')))
 
   useEffect(() => {
     const fetchMaterials = async () => {
+      setLoadingMaterials(true)
       try {
-        const response = await fetch(`http://localhost:8000/api/learning-materials?grade=${grade}&type=recording`)
-        const data = await response.json()
+        const params = { type: 'recording' }
+        if (!isAllGrades) {
+          params.grade = grade.toLowerCase().replace(' ', '-')
+        }
+        const data = await getLearningMaterials(params)
         setDynamicMaterials(data)
-      } catch (error) {
-        console.error('Failed to fetch materials:', error)
+      } catch (err) {
+        console.error('Error fetching recordings:', err)
       } finally {
         setLoadingMaterials(false)
       }
     }
     fetchMaterials()
-  }, [grade])
+  }, [grade, isAllGrades])
 
-  const recTitle = getSetting('learning_recordings_title', 'Recording Section')
-  const recDesc = getSetting('learning_recordings_description', 'Watch recorded class sessions at your own pace.')
+  useEffect(() => {
+    if (language !== 'en') {
+      const translateAll = async () => {
+        setTitle(await translate(getSetting('learning_recordings_title', t('recordings'))))
+        setDesc(await translate(getSetting('learning_recordings_description', t('learning_recordings_description'))))
+        setMissionTitle(await translate(getSetting('learning_cta_title', t('need_more_resources_title'))))
+        setMissionDesc(await translate(getSetting('learning_cta_desc', t('need_more_resources_desc'))))
+      }
+      translateAll()
+    } else {
+      setTitle(getSetting('learning_recordings_title', t('recordings')))
+      setDesc(getSetting('learning_recordings_description', t('learning_recordings_description')))
+      setMissionTitle(getSetting('learning_cta_title', t('need_more_resources_title')))
+      setMissionDesc(getSetting('learning_cta_desc', t('need_more_resources_desc')))
+    }
+  }, [language, translate, getSetting, t])
 
-  const staticRecordings = [
-    { id: 's2', title: 'Science Lesson 1', subject: 'Science', duration: '50 min', views: '980' },
-    { id: 's3', title: 'English Lesson 1', subject: 'English', duration: '40 min', views: '850' },
-  ]
+  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || 'http://localhost:8000/'
 
-  const backendUrl = 'http://localhost:8000/' // Assuming Laravel runs here
+  const formatGradeDisplay = (g) => {
+    if (!g || g.toLowerCase() === 'all grades' || g.toLowerCase() === 'all-grades') return t('all_grades')
+    const num = g.match(/\d+/)
+    if (num) {
+      return `${t('grade_prefix')} ${num[0]}`
+    }
+    return g.replace(/-/g, ' ').toUpperCase()
+  }
 
   return (
     <div className="recordings-page">
       <div className="recordings-page-hero">
         <div className="container">
-          <h1 className="recordings-page-title">{recTitle}</h1>
+          <h1 className="recordings-page-title">{title}</h1>
           <p className="recordings-page-subtitle">
-            Video recordings of classes for {grade.replace(/-/g, ' ').toUpperCase()}
+            {t('recordings_for')} {formatGradeDisplay(grade)}
           </p>
         </div>
       </div>
@@ -52,16 +83,23 @@ const RecordingsPage = () => {
           <div className="recordings-header">
             <div className="grade-badge">
               <FiBook />
-              <span>{grade.replace(/-/g, ' ').toUpperCase()}</span>
+              <span>{formatGradeDisplay(grade)}</span>
             </div>
             <p className="recordings-description">
-              {recDesc}
+              {desc}
             </p>
           </div>
 
           <div className="recordings-grid">
+            {loadingMaterials && (
+              <div className="recordings-loading">
+                <FiLoader className="spin" />
+                <p>{t('loading_recordings') || 'Loading recordings...'}</p>
+              </div>
+            )}
+
             {/* Dynamic Recordings from Admin */}
-            {!loadingMaterials && dynamicMaterials.map((recording) => {
+            {!loadingMaterials && dynamicMaterials.length > 0 ? dynamicMaterials.map((recording) => {
               const watchUrl = recording.url || (recording.file_path ? `${backendUrl}${recording.file_path}` : '#')
               return (
                 <div key={recording.id} className="recording-card highlight">
@@ -76,12 +114,14 @@ const RecordingsPage = () => {
                   <div className="recording-content">
                     <h3 className="recording-title">{recording.title}</h3>
                     <div className="recording-meta">
-                      <span className="recording-subject">Dynamic recording</span>
+                      <span className="recording-subject">
+                        {new Date(recording.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
                       <span className="recording-duration">
                         <FiClock />
                         {recording.file_size || 'Full'}
                       </span>
-                      <span className="recording-views">Latest</span>
+                      <span className="recording-views">{t('latest')}</span>
                     </div>
                     <a
                       href={watchUrl}
@@ -91,47 +131,25 @@ const RecordingsPage = () => {
                       style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                     >
                       <FiPlay />
-                      Watch Now
+                      {t('watch_now')}
                     </a>
                   </div>
                 </div>
               )
-            })}
-
-            {staticRecordings.map((recording) => (
-              <div key={recording.id} className="recording-card">
-                <div className="recording-thumbnail">
-                  <div className="recording-icon">
-                    <FiVideo />
-                  </div>
-                  <div className="play-overlay">
-                    <FiPlay />
-                  </div>
-                </div>
-                <div className="recording-content">
-                  <h3 className="recording-title">{recording.title}</h3>
-                  <div className="recording-meta">
-                    <span className="recording-subject">{recording.subject}</span>
-                    <span className="recording-duration">
-                      <FiClock />
-                      {recording.duration}
-                    </span>
-                    <span className="recording-views">{recording.views} views</span>
-                  </div>
-                  <button className="btn-watch">
-                    <FiPlay />
-                    Watch Now
-                  </button>
-                </div>
+            }) : !loadingMaterials && (
+              <div className="no-recordings">
+                <p>{t('no_recordings_found') || 'No recordings found for this grade.'}</p>
               </div>
-            ))}
+            )}
+
+
           </div>
 
           <div className="recordings-cta">
-            <h2>Need More Recordings?</h2>
-            <p>Contact us to access premium recordings or request specific topics</p>
-            <a href="/contact" className="btn-primary-large">
-              Contact Us
+            <h3>{missionTitle}</h3>
+            <p>{missionDesc}</p>
+            <a href={getSetting('learning_cta_link', '/contact')} className="btn-primary-large">
+              {getSetting('learning_cta_btn', t('btn_contact'))}
               <FiArrowRight />
             </a>
           </div>

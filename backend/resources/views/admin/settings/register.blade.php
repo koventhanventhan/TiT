@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Classes Settings - {{ config('app.name') }}</title>
+    <title>Register Form Settings - {{ config('app.name') }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/chartist/css/chartist.min.css') }}">
@@ -190,7 +190,7 @@
 
                         <ul class="navbar-nav header-right">
                              <li class="nav-item" style="margin-right: 20px;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}"
+                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/"
                                    target="_blank"
                                    rel="noopener noreferrer"
                                    class="btn btn-primary btn-sm"
@@ -240,13 +240,9 @@
                                     <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
                                 </div>
                             </li>
-                            
+
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    <!-- <div class="header-info">
-                                        <span style="color: #fff; font-weight: 600;"><strong>{{ Auth::user()->name }}</strong></span>
-                                        <p class="fs-12 mb-0" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->email }}</p>
-                                    </div> -->
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
                                     @else
@@ -275,6 +271,8 @@
                                             <span class="ml-2">Sign out</span>
                                         </button>
                                     </form>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </nav>
@@ -288,9 +286,9 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #fff;">Classes Settings</h4>
-                            <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/classes" target="_blank" class="btn btn-primary btn-sm">
-                                View Classes Page
+                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #fff;">Register Form Settings</h4>
+                            <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/" target="_blank" class="btn btn-primary btn-sm">
+                                View Home Page
                             </a>
                         </div>
                     </div>
@@ -311,102 +309,83 @@
                             <div class="card-body">
                                 <form action="{{ route('admin.settings.store') }}" method="POST">
                                     @csrf
-                                    <h5 class="text-primary mb-4">Header Content</h5>
-                                    <div class="row mb-5">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Main Title</label>
-                                                <input type="text" name="classes_title" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_title', 'Explore & Enroll') }}">
-                                            </div>
+                                    
+                                    <h5 class="mb-3 text-primary">Form Header Information</h5>
+                                    <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label">Form Title</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="register_title" class="form-control" value="{{ \App\Models\SiteSetting::get('register_title', 'மாணவர் விவரங்கள் / Student Details') }}">
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Subtitle</label>
-                                                <textarea name="classes_subtitle" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('classes_subtitle', 'Online Tuition for all subjects - Grade 1 to Advanced Level. Group or one-on-one? We got you!') }}</textarea>
-                                            </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label">Form Subtitle / Instructions</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="register_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('register_subtitle', 'Please fill in all the required information / தயவுசெய்து அனைத்து தேவையான தகவல்களையும் நிரப்பவும்') }}">
                                         </div>
                                     </div>
 
-                                    <hr class="my-4">
+                                    <hr>
 
+                                    <h5 class="mb-3 text-primary">Input Labels</h5>
                                     <div class="row">
-                                        <!-- Direct Class Column -->
-                                        <div class="col-md-6">
-                                            <div class="class-edit-section">
-                                                <h5>Direct Class Settings</h5>
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <textarea name="classes_direct_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.') }}</textarea>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Duration</label>
-                                                            <input type="text" name="classes_direct_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules') }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Pricing Label</label>
-                                                            <input type="text" name="classes_direct_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates') }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Format / Students</label>
-                                                    <input type="text" name="classes_direct_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_format', 'Small Groups') }}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Features (One per line)</label>
-                                                    <textarea name="classes_direct_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline") }}</textarea>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_direct_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art') }}</textarea>
-                                                </div>
-                                            </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Full Name Field Label</label>
+                                            <input type="text" name="register_fullname_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_fullname_label', 'மாணவர் முழுப் பெயர் / Full Name') }}">
                                         </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Phone Number Field Label</label>
+                                            <input type="text" name="register_phone_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_phone_label', 'தொலைபேசி எண் / Phone Number (WhatsApp)') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Date of Birth Field Label</label>
+                                            <input type="text" name="register_dob_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_dob_label', 'பிறந்த திகதி / Date of Birth') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Gender Field Label</label>
+                                            <input type="text" name="register_gender_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_gender_label', 'பாலினம் / Gender') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>School Name Field Label</label>
+                                            <input type="text" name="register_school_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_school_label', 'பாடசாலை பெயர் / School Name') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Medium Field Label</label>
+                                            <input type="text" name="register_medium_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_medium_label', 'கற்கவிருக்கும் மொழி மூலம் / Medium of Learning') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Online Experience Field Label</label>
+                                            <input type="text" name="register_experience_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_experience_label', 'Online class அனுபவம் உள்ளதா? / Do you have online class experience?') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Device Used Field Label</label>
+                                            <input type="text" name="register_device_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_device_label', 'Online வகுப்பிற்கு பயன்படுத்தும் சாதனம் / Device Used for Online Classes') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Current Grade Field Label</label>
+                                            <input type="text" name="register_grade_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_grade_label', 'தற்போதைய தரம் (2026) / Current Grade (2026)') }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Stream Field Label</label>
+                                            <input type="text" name="register_stream_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_stream_label', 'Stream / பிரிவு') }}">
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
 
-                                        <!-- Online Class Column -->
-                                        <div class="col-md-6">
-                                            <div class="class-edit-section">
-                                                <h5>Online Class Settings</h5>
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <textarea name="classes_online_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.') }}</textarea>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Duration</label>
-                                                            <input type="text" name="classes_online_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules') }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Pricing Label</label>
-                                                            <input type="text" name="classes_online_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing') }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Format / Students</label>
-                                                    <input type="text" name="classes_online_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One') }}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Features (One per line)</label>
-                                                    <textarea name="classes_online_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home") }}</textarea>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_online_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science') }}</textarea>
-                                                </div>
-                                            </div>
+                                    <h5 class="mb-3 text-primary">Buttons and Payment Step</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>Submit/Next Button Text</label>
+                                            <input type="text" name="register_next_btn" class="form-control" value="{{ \App\Models\SiteSetting::get('register_next_btn', 'Next: Payment') }}">
                                         </div>
                                     </div>
 
-                                    <div class="mt-4 text-center">
-                                        <button type="submit" class="btn btn-primary btn-lg px-5">Save All Classes Settings</button>
+                                    <div class="row mt-4">
+                                        <div class="col-12 mt-3">
+                                            <button type="submit" class="btn btn-primary px-5 py-2">
+                                                Save Settings
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -416,11 +395,6 @@
             </div>
         </div>
 
-        <div class="footer">
-            <div class="copyright">
-                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
-            </div>
-        </div>
     </div>
 
     <!-- Required vendors -->
@@ -428,16 +402,6 @@
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
-    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    
-    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 
 </html>
-
-
-
-

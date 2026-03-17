@@ -1,25 +1,70 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { FaCalendarAlt, FaGraduationCap, FaChalkboardTeacher, FaYoutube, FaArrowRight } from 'react-icons/fa'
 import './Hero.css'
 
 const Hero = () => {
   const { getSetting } = useSettings()
-  const { t, language } = useLanguage()
+  const { t, language, translate } = useLanguage()
 
   const [yearsCount, setYearsCount] = useState(0)
   const [studentsCount, setStudentsCount] = useState(0)
   const [tutorsCount, setTutorsCount] = useState(0)
   const [hasAnimated, setHasAnimated] = useState(false)
+
+  // Track settings in state to force re-animation or update if they change
+  useEffect(() => {
+    if (hasAnimated) {
+      setYearsCount(parseInt(getSetting('stats_years', '0').toString().replace(/[^0-9]/g, '')) || 0)
+      setStudentsCount(parseInt(getSetting('stats_students', '0').toString().replace(/[^0-9]/g, '')) || 0)
+      setTutorsCount(parseInt(getSetting('stats_tutors', '0').toString().replace(/[^0-9]/g, '')) || 0)
+    }
+  }, [getSetting('stats_years'), getSetting('stats_students'), getSetting('stats_tutors')])
+
+  const [heroTitle, setHeroTitle] = useState(getSetting('hero_title', t('hero_title')))
+  const [heroTitleGradient, setHeroTitleGradient] = useState(getSetting('hero_title_gradient', t('hero_title_gradient')))
+  const [heroDescription, setHeroDescription] = useState(getSetting('hero_description', t('hero_description')))
+
   const statsRef = useRef(null)
 
-  const hero_title = language === 'en' ? getSetting('hero_title', t('hero_title')) : t('hero_title')
-  const hero_title_gradient = language === 'en' ? getSetting('hero_title_gradient', t('hero_title_gradient')) : t('hero_title_gradient')
-  const hero_description = language === 'en' ? getSetting('hero_description', t('hero_description')) : t('hero_description')
+  useEffect(() => {
+    const defaultEn = {
+      hero_title: 'Experience the Future of',
+      hero_title_gradient: 'Quality Online Learning',
+      hero_description: 'Top-notch online tutoring from qualified tutors at the comfort of your home. Join thousands of students achieving academic excellence with personalized learning.'
+    }
 
-  const stats_years = parseInt(getSetting('stats_years', 10))
-  const stats_students = parseInt(getSetting('stats_students', 10000))
-  const stats_tutors = parseInt(getSetting('stats_tutors', 200))
+    if (language !== 'en') {
+      const translateHero = async () => {
+        const currentTitle = getSetting('hero_title', defaultEn.hero_title)
+        const currentGradient = getSetting('hero_title_gradient', defaultEn.hero_title_gradient)
+        const currentDesc = getSetting('hero_description', defaultEn.hero_description)
+
+        if (currentTitle === defaultEn.hero_title) setHeroTitle(t('hero_title'))
+        else setHeroTitle(await translate(currentTitle))
+
+        if (currentGradient === defaultEn.hero_title_gradient) setHeroTitleGradient(t('hero_title_gradient'))
+        else setHeroTitleGradient(await translate(currentGradient))
+
+        if (currentDesc === defaultEn.hero_description) setHeroDescription(t('hero_description'))
+        else setHeroDescription(await translate(currentDesc))
+      }
+      translateHero()
+    } else {
+      setHeroTitle(getSetting('hero_title', t('hero_title')))
+      setHeroTitleGradient(getSetting('hero_title_gradient', t('hero_title_gradient')))
+      setHeroDescription(getSetting('hero_description', t('hero_description')))
+    }
+  }, [language, getSetting, translate, t])
+
+  const raw_years = getSetting('stats_years', '10')
+  const raw_students = getSetting('stats_students', '10000')
+  const raw_tutors = getSetting('stats_tutors', '200')
+
+  const stats_years = parseInt(raw_years.toString().replace(/[^0-9]/g, '')) || 0
+  const stats_students = parseInt(raw_students.toString().replace(/[^0-9]/g, '')) || 0
+  const stats_tutors = parseInt(raw_tutors.toString().replace(/[^0-9]/g, '')) || 0
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -92,11 +137,19 @@ const Hero = () => {
     }, tutorsDuration / tutorsSteps)
   }
 
-  const formatStudents = (num) => {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(0) + 'K'
+  const formatStatValue = (value, count) => {
+    // If original setting is a string with non-numeric chars (like "10K+", "+200"), 
+    // we should try to preserve the formatting or just show the setting if it doesn't look like a simple number.
+    const settingString = value.toString().trim()
+    const isNumeric = !isNaN(parseFloat(settingString)) && isFinite(settingString)
+
+    if (!isNumeric) return settingString
+
+    // For numeric values, we use the animated count
+    if (count >= 1000) {
+      return (count / 1000).toFixed(0) + 'K'
     }
-    return num.toString()
+    return count.toString()
   }
 
   return (
@@ -107,21 +160,16 @@ const Hero = () => {
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              {hero_title}
-              <span className="gradient-text">{hero_title_gradient}</span>
+              {heroTitle}{' '}
+              <span className="gradient-text">{heroTitleGradient}</span>
             </h1>
             <p className="hero-description">
-              {hero_description}
+              {heroDescription}
             </p>
             <div className="hero-actions">
               <a href="/register" className="btn btn-primary hero-btn">
                 {t('hero_cta')}
-                <lord-icon
-                  src="https://cdn.lordicon.com/vduvxpxl.json"
-                  trigger="hover"
-                  colors="primary:#ffffff"
-                  style={{ width: '20px', height: '20px', marginLeft: '8px' }}
-                />
+                <FaArrowRight style={{ fontSize: '16px', marginLeft: '8px', color: '#ffffff' }} />
               </a>
               <a
                 href="https://www.youtube.com/@titeducation2087"
@@ -129,55 +177,44 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 className="btn btn-youtube hero-btn"
               >
-                <lord-icon
-                  src="https://cdn.lordicon.com/onmrecmf.json"
-                  trigger="hover"
-                  colors="primary:#ffffff"
-                  style={{ width: '20px', height: '20px', marginRight: '8px' }}
-                />
-                TiT youtube
+                <FaYoutube style={{ fontSize: '18px', marginRight: '8px', color: '#ffffff' }} />
+                {t('hero_youtube')}
               </a>
             </div>
             <div className="hero-stats" ref={statsRef}>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <lord-icon
-                    src="https://cdn.lordicon.com/abfverha.json"
-                    trigger="hover"
-                    colors="primary:#4f0bd9"
-                    style={{ width: '32px', height: '32px' }}
-                  />
+                  <FaCalendarAlt style={{ fontSize: '24px', color: '#4f0bd9' }} />
                 </div>
                 <div>
-                  <div className="stat-number">{yearsCount}<span className="stat-plus">+</span></div>
+                  <div className="stat-number">
+                    {formatStatValue(raw_years, yearsCount)}
+                    {!isNaN(parseFloat(raw_years)) && <span className="stat-plus">+</span>}
+                  </div>
                   <div className="stat-label">{t('years_experience')}</div>
                 </div>
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <lord-icon
-                    src="https://cdn.lordicon.com/dxjqoygy.json"
-                    trigger="hover"
-                    colors="primary:#4f0bd9"
-                    style={{ width: '32px', height: '32px' }}
-                  />
+                  <FaGraduationCap style={{ fontSize: '28px', color: '#4f0bd9' }} />
                 </div>
                 <div>
-                  <div className="stat-number">{formatStudents(studentsCount)}<span className="stat-plus">+</span></div>
+                  <div className="stat-number">
+                    {formatStatValue(raw_students, studentsCount)}
+                    {!isNaN(parseFloat(raw_students)) && <span className="stat-plus">+</span>}
+                  </div>
                   <div className="stat-label">{t('students')}</div>
                 </div>
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <lord-icon
-                    src="https://cdn.lordicon.com/hrjifpbq.json"
-                    trigger="hover"
-                    colors="primary:#4f0bd9"
-                    style={{ width: '32px', height: '32px' }}
-                  />
+                  <FaChalkboardTeacher style={{ fontSize: '24px', color: '#4f0bd9' }} />
                 </div>
                 <div>
-                  <div className="stat-number">{tutorsCount}<span className="stat-plus">+</span></div>
+                  <div className="stat-number">
+                    {formatStatValue(raw_tutors, tutorsCount)}
+                    {!isNaN(parseFloat(raw_tutors)) && <span className="stat-plus">+</span>}
+                  </div>
                   <div className="stat-label">{t('tutors')}</div>
                 </div>
               </div>
@@ -185,6 +222,7 @@ const Hero = () => {
           </div>
 
           <div className="hero-visual-side">
+            <img src="/Thesis.gif" alt="Hero Illustration" className="hero-mobile-img" />
             <lord-icon
               src="https://cdn.lordicon.com/jtihyjyw.json"
               trigger="loop"

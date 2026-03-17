@@ -927,4 +927,77 @@
   .cp-map-title h2 {
     font-size: 22px;
   }
+
+  .cp-hero {
+    padding: 40px 0 50px;
+  }
+
+  .cp-title {
+    font-size: 28px;
+    letter-spacing: -1.5px;
+  }
+
+  .cp-desc {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .cp-quick-item {
+    padding: 12px 14px;
+  }
+
+  .cp-quick-val {
+    font-size: 13px;
+  }
+
+  .cp-form-card {
+    padding: 0;
+  }
+
+  .cp-form-top {
+    padding: 20px 24px;
+  }
+
+  .cp-form-top h2 {
+    font-size: 18px;
+  }
+
+  .cp-form {
+    padding: 24px 20px;
+  }
+
+  .cp-input-group label {
+    font-size: 12px;
+  }
+
+  .cp-input-group input,
+  .cp-input-group textarea {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .cp-hour {
+    padding: 10px 0;
+  }
+
+  .cp-hour-val {
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+
+  .cp-side-cta {
+    padding-bottom: 20px;
+  }
+
+  .cp-side-cta h3 {
+    padding: 20px 20px 8px !important;
+  }
+
+  .cp-side-cta p {
+    padding: 0 20px;
+  }
+
+  .cp-call-btn {
+    margin-left: 20px;
+  }
 }

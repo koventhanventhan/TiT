@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);
         Route::get('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'materials']);
         Route::get('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'settings']);
+        Route::post('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateSettings']);
         Route::get('/assignments', [\App\Http\Controllers\Api\MasterAdminController::class, 'assignments']);
         Route::get('/attendance', [\App\Http\Controllers\Api\MasterAdminController::class, 'attendanceStats']);
         Route::post('/branding', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateBranding']);

@@ -90,20 +90,26 @@
                     <span class="nav-text">Settings</span>
                 </a>
                 <ul aria-expanded="{{ request()->routeIs('admin.settings.*') ? 'true' : 'false' }}">
+                     <li class="{{ request()->routeIs('admin.settings.register') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.register') }}">Register Form</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.settings.index') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.settings.index') }}">Frontend Settings</a>
+                        <a href="{{ route('admin.settings.index') }}">Frontend Page</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.settings.about') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.about') }}">About Page</a>
                     </li>
-                    <li class="{{ request()->routeIs('admin.settings.contact') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.settings.contact') }}">Contact Page</a>
+                    <li class="{{ request()->routeIs('admin.settings.classes') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.classes') }}">Classes Page</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.settings.learning') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.learning') }}">Learning Site Page</a>
                     </li>
-                    <li class="{{ request()->routeIs('admin.settings.classes') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.settings.classes') }}">Classes Page</a>
+                    <li class="{{ request()->routeIs('admin.settings.contact') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.contact') }}">Contact Page</a>
+                    </li>
+                    <li class="{{ request()->routeIs('admin.settings.footer') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.footer') }}">Footer Page</a>
                     </li>
                 </ul>
             </li>

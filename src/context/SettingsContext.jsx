@@ -15,20 +15,22 @@ export const SettingsProvider = ({ children }) => {
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const data = await settingsService.getSettings();
-                setSettings(data);
-            } catch (error) {
-                console.error('Failed to fetch settings:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchSettings = async () => {
+        try {
+            const data = await settingsService.getSettings();
+            setSettings(data);
+        } catch (error) {
+            console.error('Failed to fetch settings:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchSettings();
     }, []);
+
+    const refreshSettings = () => fetchSettings();
 
     // Helper to get a setting with a default value
     const getSetting = (key, defaultValue) => {
@@ -36,7 +38,7 @@ export const SettingsProvider = ({ children }) => {
     };
 
     return (
-        <SettingsContext.Provider value={{ settings, loading, getSetting }}>
+        <SettingsContext.Provider value={{ settings, loading, getSetting, refreshSettings }}>
             {children}
         </SettingsContext.Provider>
     );

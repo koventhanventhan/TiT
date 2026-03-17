@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   FiMail, FiPhone, FiMapPin, FiSend, FiMessageCircle,
   FiUser, FiMessageSquare, FiClock, FiGlobe,
@@ -7,10 +7,13 @@ import {
 } from 'react-icons/fi'
 import { FaWhatsapp, FaYoutube, FaTiktok } from 'react-icons/fa'
 import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './ContactPage.css'
 
 const ContactPage = () => {
   const { getSetting } = useSettings()
+  const { t, translate, language } = useLanguage()
+
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', subject: '', message: ''
   })
@@ -18,27 +21,106 @@ const ContactPage = () => {
   const [focusedField, setFocusedField] = useState(null)
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    // Mock submission
+    console.log('Form submitted:', formData)
     setIsSubmitted(true)
-    setTimeout(() => {
-      setIsSubmitted(false)
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
-    }, 3000)
+    setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
   }
+
+  const [heroTitle, setHeroTitle] = useState(getSetting('contact_hero_title', t('contact_hero_title')))
+  const [heroDesc, setHeroDesc] = useState(getSetting('contact_hero_desc', t('contact_hero_desc')))
+  const [missionTitle, setMissionTitle] = useState(getSetting('contact_urgent_title', t('urgent_help')))
+  const [missionDesc, setMissionDesc] = useState(getSetting('contact_urgent_desc', t('contact_urgent_desc')))
+  const [socialTitle, setSocialTitle] = useState(t('footer_social_title'))
+  const [mapTitle, setMapTitle] = useState(t('footer_map_title'))
+  const [mapDesc, setMapDesc] = useState(t('footer_map_desc'))
+
+  const [location, setLocation] = useState(getSetting('contact_location', t('footer_location')))
+  const [pinName, setPinName] = useState(getSetting('contact_map_pin_name', 'TiT Online Education'))
 
   const footerPhone = getSetting('footer_phone', '+94 114 477 488')
   const footerEmail = getSetting('footer_email', 'info@edulearn.lk')
-  const contactLocation = getSetting('contact_location', 'Colombo, Sri Lanka')
+  
+  // Helper to extract src if full iframe tag is provided
+  const extractMapSrc = (input) => {
+    if (!input || typeof input !== 'string') return 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126743.58272!2d79.8!3d6.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae2593cf!2sColombo!5e0!3m2!1sen!2slk!4v1620000000000!5m2!1sen!2slk'
+    if (input.includes('<iframe')) {
+      const match = input.match(/src="([^"]+)"/)
+      return match ? match[1] : input
+    }
+    return input
+  }
+  
+  const mapEmbedLink = extractMapSrc(getSetting('contact_map_embed_link'))
 
   const supportHours = [
-    { day: 'Monday - Friday', time: getSetting('contact_hours_weekdays', '9:00 AM - 6:00 PM'), open: true },
-    { day: 'Saturday', time: getSetting('contact_hours_saturday', '9:00 AM - 2:00 PM'), open: true },
-    { day: 'Sunday', time: getSetting('contact_hours_sunday', 'Closed'), open: false }
+    { day: t('mon_fri'), time: getSetting('support_hours_mon_fri', '9:00 AM - 6:00 PM'), open: true },
+    { day: t('sat'), time: getSetting('support_hours_sat', '9:00 AM - 2:00 PM'), open: true },
+    { day: t('sun'), time: getSetting('support_hours_sun', t('closed') || 'Closed'), open: false }
   ]
+
+  useEffect(() => {
+    const defaultEn = {
+      hero_title: 'Let\'s Start a Conversation',
+      hero_desc: "Have questions about our courses? Want to enroll? We're here to help.",
+      urgent_title: 'Need Urgent Help?',
+      urgent_desc: 'Call our support line directly for immediate assistance.',
+      social_title: 'Connect With Us',
+      map_title: 'Our Location',
+      map_desc: 'Find us on the map or visit our office directly.',
+      location: 'Colombo, Sri Lanka',
+      pin_name: 'TiT Online Education'
+    }
+
+    if (language !== 'en') {
+      const translateAll = async () => {
+        const valHeroT = getSetting('contact_hero_title', defaultEn.hero_title)
+        if (valHeroT === defaultEn.hero_title) setHeroTitle(t('contact_hero_title'))
+        else setHeroTitle(await translate(valHeroT))
+
+        const valHeroD = getSetting('contact_hero_desc', defaultEn.hero_desc)
+        if (valHeroD === defaultEn.hero_desc) setHeroDesc(t('contact_hero_desc'))
+        else setHeroDesc(await translate(valHeroD))
+
+        const valUrgentT = getSetting('contact_urgent_title', defaultEn.urgent_title)
+        if (valUrgentT === defaultEn.urgent_title) setMissionTitle(t('urgent_help'))
+        else setMissionTitle(await translate(valUrgentT))
+
+        const valUrgentD = getSetting('contact_urgent_desc', defaultEn.urgent_desc)
+        if (valUrgentD === defaultEn.urgent_desc) setMissionDesc(t('contact_urgent_desc'))
+        else setMissionDesc(await translate(valUrgentD))
+
+        const valLoc = getSetting('contact_location', defaultEn.location)
+        if (valLoc === defaultEn.location) setLocation(t('footer_location'))
+        else setLocation(await translate(valLoc))
+
+        const valPin = getSetting('contact_map_pin_name', defaultEn.pin_name)
+        if (valPin === defaultEn.pin_name) setPinName('TiT') // Keep TiT short or translate
+        else setPinName(await translate(valPin))
+
+        setSocialTitle(t('footer_social_title'))
+        setMapTitle(t('footer_map_title'))
+        setMapDesc(t('footer_map_desc'))
+      }
+      translateAll()
+    } else {
+      setHeroTitle(getSetting('contact_hero_title', t('contact_hero_title')))
+      setHeroDesc(getSetting('contact_hero_desc', t('contact_hero_desc')))
+      setMissionTitle(getSetting('contact_urgent_title', t('urgent_help')))
+      setMissionDesc(getSetting('contact_urgent_desc', t('contact_urgent_desc')))
+      setLocation(getSetting('contact_location', t('footer_location')))
+      setPinName(getSetting('contact_map_pin_name', 'TiT Online Education'))
+      setSocialTitle(t('footer_social_title'))
+      setMapTitle(t('footer_map_title'))
+      setMapDesc(t('footer_map_desc'))
+    }
+  }, [language, translate, getSetting, t])
 
   const socialLinks = [
     { icon: <FiFacebook />, name: 'Facebook', link: getSetting('social_facebook', '#') },
@@ -46,7 +128,7 @@ const ContactPage = () => {
     { icon: <FaWhatsapp />, name: 'WhatsApp', link: getSetting('social_whatsapp', '#') },
     { icon: <FaYoutube />, name: 'YouTube', link: getSetting('social_youtube', '#') },
     { icon: <FaTiktok />, name: 'TikTok', link: getSetting('social_tiktok', '#') }
-  ]
+  ].filter(social => social.link && social.link !== '#')
 
   return (
     <div className="cp">
@@ -60,13 +142,12 @@ const ContactPage = () => {
 
         <div className="container cp-hero-inner">
           <div className="cp-hero-left">
-            <div className="cp-badge"><FiMessageCircle /> Contact Us</div>
+            <div className="cp-badge"><FiMessageCircle /> {t('contact_hero_badge')}</div>
             <h1 className="cp-title">
-              Let's Start a <span>Conversation</span>
+              {heroTitle}
             </h1>
             <p className="cp-desc">
-              Have questions about our courses? Want to enroll? We're here to help.
-              Reach out to us through any channel below.
+              {heroDesc}
             </p>
 
             {/* Quick contact row */}
@@ -74,22 +155,22 @@ const ContactPage = () => {
               <a href={`tel:${footerPhone.replace(/\s/g, '')}`} className="cp-quick-item">
                 <div className="cp-quick-icon"><FiPhone /></div>
                 <div>
-                  <span className="cp-quick-label">Call Us</span>
+                  <span className="cp-quick-label">{t('contact_call_label')}</span>
                   <span className="cp-quick-val">{footerPhone}</span>
                 </div>
               </a>
               <a href={`mailto:${footerEmail}`} className="cp-quick-item">
                 <div className="cp-quick-icon"><FiMail /></div>
                 <div>
-                  <span className="cp-quick-label">Email Us</span>
+                  <span className="cp-quick-label">{t('contact_email_label')}</span>
                   <span className="cp-quick-val">{footerEmail}</span>
                 </div>
               </a>
               <div className="cp-quick-item">
                 <div className="cp-quick-icon"><FiMapPin /></div>
                 <div>
-                  <span className="cp-quick-label">Visit Us</span>
-                  <span className="cp-quick-val">{contactLocation}</span>
+                  <span className="cp-quick-label">{t('contact_visit_label')}</span>
+                  <span className="cp-quick-val">{location}</span>
                 </div>
               </div>
             </div>
@@ -98,25 +179,25 @@ const ContactPage = () => {
           {/* Right side: visual illustration */}
           <div className="cp-hero-right">
             <div className="cp-hero-visual">
-              <div className="cp-visual-card cp-vc-1">
+              <div className="cp-visual-card pc-vc-1">
                 <FiHeadphones />
                 <div>
-                  <strong>24/7 Support</strong>
-                  <span>Always available</span>
+                  <strong>{getSetting('contact_stat1_label', t('contact_support_24_7'))}</strong>
+                  <span>{getSetting('contact_stat1_desc', t('contact_always_available'))}</span>
                 </div>
               </div>
               <div className="cp-visual-card cp-vc-2">
                 <FiHeart />
                 <div>
-                  <strong>10K+ Students</strong>
-                  <span>Trust us</span>
+                  <strong>{getSetting('stats_students', '10,000')} {t('students')}</strong>
+                  <span>{t('happy_students')}</span>
                 </div>
               </div>
               <div className="cp-visual-card cp-vc-3">
                 <FiCheckCircle />
                 <div>
-                  <strong>98% Satisfaction</strong>
-                  <span>Rate</span>
+                  <strong>{getSetting('stats_success_rate', '98%')} {t('satisfaction')}</strong>
+                  <span>{t('success_rate')}</span>
                 </div>
               </div>
               <div className="cp-visual-ring"></div>
@@ -133,67 +214,67 @@ const ContactPage = () => {
             {/* ── FORM ── */}
             <div className="cp-form-card">
               <div className="cp-form-top">
-                <h2><FiMessageSquare /> Send Us a Message</h2>
-                <p>Fill out the form below and we'll respond within 24 hours.</p>
+                <h2><FiMessageSquare /> {t('contact_form_title')}</h2>
+                <p>{t('contact_form_desc')}</p>
               </div>
 
               {isSubmitted ? (
                 <div className="cp-done">
                   <div className="cp-done-circle"><FiCheckCircle /></div>
-                  <h3>Message Sent!</h3>
-                  <p>Thanks for reaching out. We'll get back to you soon.</p>
+                  <h3>{t('message_sent') || 'Message Sent!'}</h3>
+                  <p>{t('message_sent_desc') || "Thanks for reaching out. We'll get back to you soon."}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="cp-form">
                   <div className="cp-row">
                     <div className={`cp-input-group ${focusedField === 'name' ? 'active' : ''}`}>
-                      <label><FiUser /> Full Name</label>
+                      <label><FiUser /> {t('label_name')}</label>
                       <input type="text" name="name" value={formData.name}
                         onChange={handleChange}
                         onFocus={() => setFocusedField('name')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="Enter your name" required />
+                        placeholder={t('name_placeholder') || "Enter your name"} required />
                     </div>
                     <div className={`cp-input-group ${focusedField === 'email' ? 'active' : ''}`}>
-                      <label><FiMail /> Email</label>
+                      <label><FiMail /> {t('label_email')}</label>
                       <input type="email" name="email" value={formData.email}
                         onChange={handleChange}
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="john@example.com" required />
+                        placeholder={t('label_email_placeholder') || "john@example.com"} required />
                     </div>
                   </div>
 
                   <div className="cp-row">
                     <div className={`cp-input-group ${focusedField === 'phone' ? 'active' : ''}`}>
-                      <label><FiPhone /> Phone</label>
+                      <label><FiPhone /> {t('label_phone')}</label>
                       <input type="tel" name="phone" value={formData.phone}
                         onChange={handleChange}
                         onFocus={() => setFocusedField('phone')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="+94 XX XXX XXXX" />
+                        placeholder={t('label_phone_placeholder') || "+94 XX XXX XXXX"} />
                     </div>
                     <div className={`cp-input-group ${focusedField === 'subject' ? 'active' : ''}`}>
-                      <label><FiMessageSquare /> Subject</label>
+                      <label><FiMessageSquare /> {t('label_subject')}</label>
                       <input type="text" name="subject" value={formData.subject}
                         onChange={handleChange}
                         onFocus={() => setFocusedField('subject')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="How can we help?" required />
+                        placeholder={t('subject_placeholder') || "How can we help?"} required />
                     </div>
                   </div>
 
                   <div className={`cp-input-group ${focusedField === 'message' ? 'active' : ''}`}>
-                    <label><FiMessageCircle /> Message</label>
+                    <label><FiMessageCircle /> {t('label_message')}</label>
                     <textarea name="message" value={formData.message}
                       onChange={handleChange}
                       onFocus={() => setFocusedField('message')}
                       onBlur={() => setFocusedField(null)}
-                      rows="5" placeholder="Tell us about your inquiry..." required />
+                      rows="5" placeholder={t('message_placeholder') || "Tell us about your inquiry..."} required />
                   </div>
 
                   <button type="submit" className="cp-send-btn">
-                    <span>Send Message</span>
+                    <span>{t('btn_send')}</span>
                     <FiSend />
                   </button>
                 </form>
@@ -204,7 +285,7 @@ const ContactPage = () => {
             <aside className="cp-sidebar">
               {/* Hours */}
               <div className="cp-side-card">
-                <h3><FiClock /> Support Hours</h3>
+                <h3><FiClock /> {t('footer_support_hours') || 'Support Hours'}</h3>
                 <div className="cp-hours">
                   {supportHours.map((h, i) => (
                     <div key={i} className={`cp-hour ${!h.open ? 'closed' : ''}`}>
@@ -217,7 +298,7 @@ const ContactPage = () => {
 
               {/* Social */}
               <div className="cp-side-card">
-                <h3><FiGlobe /> Connect With Us</h3>
+                <h3><FiGlobe /> {socialTitle}</h3>
                 <div className="cp-socials">
                   {socialLinks.map((s, i) => (
                     <a key={i} href={s.link} target="_blank" rel="noopener noreferrer" className="cp-soc-link">
@@ -230,11 +311,12 @@ const ContactPage = () => {
               </div>
 
               {/* CTA */}
+              {/* CTA */}
               <div className="cp-side-card cp-side-cta">
-                <h3>Need Urgent Help?</h3>
-                <p>Call our support line directly for immediate assistance.</p>
+                <h3>{missionTitle}</h3>
+                <p>{missionDesc}</p>
                 <a href={`tel:${footerPhone.replace(/\s/g, '')}`} className="cp-call-btn">
-                  <FiPhone /> Call Now
+                  <FiPhone /> {t('call_now')}
                 </a>
               </div>
             </aside>
@@ -246,24 +328,24 @@ const ContactPage = () => {
       <section className="cp-map" id="map-section">
         <div className="container">
           <div className="cp-map-title">
-            <h2><FiMapPin /> Our Location</h2>
-            <p>Find us on the map or visit our office directly.</p>
+            <h2><FiMapPin /> {mapTitle}</h2>
+            <p>{mapDesc}</p>
           </div>
         </div>
         <div className="cp-map-frame">
           <div className="cp-map-pin">
             <FiMapPin />
             <div>
-              <strong>TiT Education</strong>
-              <span>{contactLocation}</span>
+              <strong>{pinName}</strong>
+              <span>{location}</span>
             </div>
           </div>
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126743.63219517708!2d79.7861!3d6.9271!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae253d10f7a7003%3A0x320b2e4d32d3838d!2sColombo%2C%20Sri%20Lanka!5e0!3m2!1sen!2slk!4v1708000000000!5m2!1sen!2slk"
+            src={mapEmbedLink}
             width="100%" height="480" style={{ border: 0 }}
             allowFullScreen="" loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Our Location"
+            title={mapTitle}
           ></iframe>
         </div>
       </section>

@@ -14,13 +14,22 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const fetchSettings = async () => {
         try {
+            setError(null);
             const data = await settingsService.getSettings();
+            if (!data || Object.keys(data).length === 0) {
+              // If we got an empty object but the request succeeded, it might still be a config issue
+              if (import.meta.env.PROD && import.meta.env.VITE_API_URL?.includes('localhost')) {
+                throw new Error('API URL is set to localhost in production. Please check Vercel environment variables.');
+              }
+            }
             setSettings(data);
         } catch (error) {
             console.error('Failed to fetch settings:', error);
+            setError(error.message || 'Failed to connect to the backend server.');
         } finally {
             setLoading(false);
         }
@@ -36,6 +45,52 @@ export const SettingsProvider = ({ children }) => {
     const getSetting = (key, defaultValue) => {
         return settings[key] !== undefined ? settings[key] : defaultValue;
     };
+
+    if (error && !Object.keys(settings).length) {
+      return (
+        <div style={{ 
+          padding: '40px', 
+          textAlign: 'center', 
+          fontFamily: 'Inter, sans-serif',
+          background: '#f8fafc',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ 
+            background: 'white', 
+            padding: '30px', 
+            borderRadius: '12px', 
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            maxWidth: '500px'
+          }}>
+            <h2 style={{ color: '#ef4444', marginBottom: '16px' }}>Connection Error</h2>
+            <p style={{ color: '#475569', marginBottom: '24px' }}>
+              {error}
+            </p>
+            <div style={{ textAlign: 'left', background: '#f1f5f9', padding: '15px', borderRadius: '8px', fontSize: '14px', marginBottom: '20px' }}>
+              <strong>Tip for Admin:</strong> Ensure <code>VITE_API_URL</code> is correctly set in your Vercel/Production environment variables.
+            </div>
+            <button 
+              onClick={fetchSettings}
+              style={{
+                background: '#4f46e5',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     return (
         <SettingsContext.Provider value={{ settings, loading, getSetting, refreshSettings }}>

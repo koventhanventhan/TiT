@@ -8,8 +8,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const BASE_URL = API_BASE_URL.replace('/api', '') || 'http://localhost:8000'
 
 // Debug: Log the API URL being used
+if (import.meta.env.PROD && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {
+  console.warn('⚠️ PROD WARNING: API_BASE_URL is pointing to localhost. This will fail on Vercel.');
+}
 console.log('🔧 API Base URL:', API_BASE_URL)
-console.log('🔧 Base URL:', BASE_URL)
+console.log('🔧 Context:', import.meta.env.MODE)
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {

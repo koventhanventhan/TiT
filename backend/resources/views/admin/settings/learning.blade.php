@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -21,11 +21,86 @@
         }
 
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+            background: rgba(43, 37, 72, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent !important;
+        }
+
+        .card-title {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .form-control, .bootstrap-select .dropdown-toggle {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+        }
+
+        .form-control:focus {
+            border-color: #EB8153 !important;
+            box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
+        }
+
+        label {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-weight: 500;
+        }
+
+        .btn-info.btn-xs {
+            background-color: #EB8153;
+            border-color: #EB8153;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 12px;
+        }
+
+        .btn-info.btn-xs:hover {
+            background-color: #d96e42;
+            border-color: #d96e42;
+        }
+
+        hr {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-muted {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .table {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .table thead th {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            font-weight: 600;
+        }
+        .table td, .table th {
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .custom-file-label {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+        .custom-file-label::after {
+            background: #EB8153 !important;
+            color: #fff !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .border-right {
+            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        
         .header {
             background: #1f2937;
         }
@@ -109,7 +184,7 @@
 
                         <ul class="navbar-nav header-right">
                              <li class="nav-item" style="margin-right: 20px;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}"
+                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/notes"
                                    target="_blank"
                                    rel="noopener noreferrer"
                                    class="btn btn-primary btn-sm"
@@ -133,7 +208,33 @@
                                     Home
                                 </a>
                             </li>
-                            
+
+                            <li class="nav-item">
+                                <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#3D4461" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="message-pulse"></div>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="javascript:void(0)" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse"></div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
+
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                                     <!-- <div class="header-info">
@@ -183,10 +284,8 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Learning Site Settings</h4>
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
-                                <i class="flaticon-381-back"></i> Back to Dashboard
-                            </a>
+                            <h4 class="mb-0" style="color: #fff;">Learning Site Settings</h4>
+                            <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/notes" target="_blank" class="btn btn-primary btn-sm">View Learning Site Page</a>
                         </div>
                     </div>
                 </div>
@@ -213,41 +312,65 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Notes Page Title</label>
-                                                <input type="text" name="learning_notes_title" class="form-control" value="{{ App\Models\SiteSetting::get('learning_notes_title', 'Study Notes') }}">
+                                                <input type="text" name="learning_notes_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_notes_title', 'Study Notes') }}">
                                             </div>
                                             <div class="form-group">
                                                 <label>Notes Description</label>
-                                                <textarea name="learning_notes_description" class="form-control" rows="2">{{ App\Models\SiteSetting::get('learning_notes_description', 'Access comprehensive study notes for all subjects and grades.') }}</textarea>
+                                                <textarea name="learning_notes_description" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_notes_description', 'Access comprehensive study notes for all subjects and grades.') }}</textarea>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Past Papers Page Title</label>
-                                                <input type="text" name="learning_pastpapers_title" class="form-control" value="{{ App\Models\SiteSetting::get('learning_pastpapers_title', 'Past Papers') }}">
+                                                <input type="text" name="learning_pastpapers_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_pastpapers_title', 'Past Papers') }}">
                                             </div>
                                             <div class="form-group">
                                                 <label>Past Papers Description</label>
-                                                <textarea name="learning_pastpapers_description" class="form-control" rows="2">{{ App\Models\SiteSetting::get('learning_pastpapers_description', 'Practice with previous exam papers to prepare for your exams.') }}</textarea>
+                                                <textarea name="learning_pastpapers_description" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_pastpapers_description', 'Practice with previous exam papers to prepare for your exams.') }}</textarea>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Recordings Page Title</label>
-                                                <input type="text" name="learning_recordings_title" class="form-control" value="{{ App\Models\SiteSetting::get('learning_recordings_title', 'Class Recordings') }}">
+                                                <input type="text" name="learning_recordings_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_recordings_title', 'Class Recordings') }}">
                                             </div>
                                             <div class="form-group">
                                                 <label>Recordings Description</label>
-                                                <textarea name="learning_recordings_description" class="form-control" rows="2">{{ App\Models\SiteSetting::get('learning_recordings_description', 'Watch recorded lessons anytime, anywhere.') }}</textarea>
+                                                <textarea name="learning_recordings_description" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_recordings_description', 'Watch recorded lessons anytime, anywhere.') }}</textarea>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Menu Label</label>
-                                                <input type="text" name="learning_menu_label" class="form-control" value="{{ App\Models\SiteSetting::get('learning_menu_label', 'Learning Suite') }}">
+                                                <input type="text" name="learning_menu_label" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_menu_label', 'Learning Suite') }}">
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Save General Settings</button>
+                                    <hr>
+                                    <h5 class="mb-3 text-primary mt-3">Call to Action (CTA) Section - Bottom of All Pages</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>CTA Title</label>
+                                                <input type="text" name="learning_cta_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_title', 'Need More Resources?') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>CTA Description</label>
+                                                <textarea name="learning_cta_desc" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_cta_desc', 'Contact us to request specific materials or get access to premium content.') }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>CTA Button Text</label>
+                                                <input type="text" name="learning_cta_btn" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_btn', 'Contact Us') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>CTA Button Link</label>
+                                                <input type="text" name="learning_cta_link" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_link', '/contact') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-3">Save General Settings</button>
                                 </form>
                             </div>
                         </div>
@@ -270,6 +393,11 @@
                                                 <label>Select Grade</label>
                                                 <select name="grade" class="form-control" required>
                                                     <option value="">-- Choose Grade --</option>
+                                                      <option value="grade-1">Grade 1</option>
+                                                        <option value="grade-2">Grade 2</option>
+                                                          <option value="grade-3">Grade 3</option>
+                                                            <option value="grade-4">Grade 4</option>
+                                                              <option value="grade-5">Grade 5</option>
                                                     <option value="grade-6">Grade 6</option>
                                                     <option value="grade-7">Grade 7</option>
                                                     <option value="grade-8">Grade 8</option>
@@ -288,7 +416,7 @@
                                                 <label>PDF File</label>
                                                 <div class="custom-file">
                                                     <input type="file" name="file" class="custom-file-input" accept=".pdf" required>
-                                                    <label class="custom-file-label">Choose PDF</label>
+                                                    <label class="custom-file-label">Choose PDF (500MB max)</label>
                                                 </div>
                                             </div>
                                             <button type="submit" class="btn btn-success btn-block">Add Note</button>
@@ -352,6 +480,11 @@
                                                 <label>Select Grade</label>
                                                 <select name="grade" class="form-control" required>
                                                     <option value="">-- Choose Grade --</option>
+                                                    <option value="grade-1">Grade 1</option>
+                                                    <option value="grade-2">Grade 2</option>
+                                                    <option value="grade-3">Grade 3</option>
+                                                    <option value="grade-4">Grade 4</option>
+                                                    <option value="grade-5">Grade 5</option>
                                                     <option value="grade-6">Grade 6</option>
                                                     <option value="grade-7">Grade 7</option>
                                                     <option value="grade-8">Grade 8</option>
@@ -370,7 +503,7 @@
                                                 <label>PDF File</label>
                                                 <div class="custom-file">
                                                     <input type="file" name="file" class="custom-file-input" accept=".pdf" required>
-                                                    <label class="custom-file-label">Choose PDF</label>
+                                                    <label class="custom-file-label">Choose PDF (500MB max)</label>
                                                 </div>
                                             </div>
                                             <button type="submit" class="btn btn-success btn-block">Add Past Paper</button>
@@ -434,6 +567,11 @@
                                                 <label>Select Grade</label>
                                                 <select name="grade" class="form-control" required>
                                                     <option value="">-- Choose Grade --</option>
+                                                      <option value="grade-1">Grade 1</option>
+                                                    <option value="grade-2">Grade 2</option>
+                                                    <option value="grade-3">Grade 3</option>
+                                                    <option value="grade-4">Grade 4</option>
+                                                    <option value="grade-5">Grade 5</option>
                                                     <option value="grade-6">Grade 6</option>
                                                     <option value="grade-7">Grade 7</option>
                                                     <option value="grade-8">Grade 8</option>
@@ -456,7 +594,7 @@
                                                 <label>OR Upload File</label>
                                                 <div class="custom-file">
                                                     <input type="file" name="file" class="custom-file-input">
-                                                    <label class="custom-file-label">Choose File</label>
+                                                     <label class="custom-file-label">Choose File (500MB max)</label>
                                                 </div>
                                             </div>
                                             <button type="submit" class="btn btn-success btn-block">Add Recording</button>

@@ -7,7 +7,7 @@
             },
             "build": {
                 "builder": "DOCKERFILE",
-                "dockerfilePath": "Dockerfile.backend"
+                "dockerfilePath": "Dockerfile"
             },
             "deploy": {
                 "numReplicas": 1,
@@ -20,7 +20,7 @@
             },
             "build": {
                 "builder": "DOCKERFILE",
-                "dockerfilePath": "Dockerfile.frontend"
+                "dockerfilePath": "Dockerfile"
             },
             "deploy": {
                 "numReplicas": 1,

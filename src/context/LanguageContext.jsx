@@ -3,6 +3,7 @@ import { translations, languageCodes } from '../translations'
 import { translateWithGemini } from '../services/translateService'
 
 const LANGUAGE_STORAGE_KEY = 'site_language'
+const TRANSLATION_CACHE_KEY = 'site_translation_cache'
 const DEFAULT_LANG = 'en'
 
 const LanguageContext = createContext(null)
@@ -30,6 +31,31 @@ export function LanguageProvider({ children }) {
     } catch (_) {}
   }, [])
 
+  const [translationCache, setTranslationCache] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(TRANSLATION_CACHE_KEY)
+      return stored ? JSON.parse(stored) : {}
+    } catch (_) {
+      return {}
+    }
+  })
+
+  const updateCache = useCallback((lang, text, translated) => {
+    setTranslationCache(prev => {
+      const newCache = {
+        ...prev,
+        [lang]: {
+          ...(prev[lang] || {}),
+          [text]: translated
+        }
+      }
+      try {
+        sessionStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(newCache))
+      } catch (_) {}
+      return newCache
+    })
+  }, [])
+
   const t = useCallback(
     (key, fallback = '') => {
       const dict = translations[language]
@@ -42,15 +68,26 @@ export function LanguageProvider({ children }) {
 
   const translate = useCallback(
     async (text, targetLang = language) => {
-      if (targetLang === 'en' || !text?.trim()) return text
+      if (!text || typeof text !== 'string' || !text.trim()) return text
+      if (targetLang === 'en') return text
+
+      // Check cache first
+      if (translationCache[targetLang] && translationCache[targetLang][text]) {
+        return translationCache[targetLang][text]
+      }
+
       try {
         const result = await translateWithGemini(text, targetLang)
-        return result || text
+        if (result && result !== text) {
+          updateCache(targetLang, text, result)
+          return result
+        }
+        return text
       } catch (_) {
         return text
       }
     },
-    [language]
+    [language, translationCache, updateCache]
   )
 
   useEffect(() => {

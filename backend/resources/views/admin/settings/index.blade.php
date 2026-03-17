@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -21,9 +21,114 @@
         }
 
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+            background: rgba(43, 37, 72, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent !important;
+        }
+
+        .card-title {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .class-edit-section, .profile-tab .custom-tab-1 {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            color: #fff;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .class-edit-section:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(235, 129, 83, 0.3);
+        }
+
+        .class-edit-section h5, .profile-tab .nav-tabs .nav-link.active {
+            color: #EB8153 !important;
+            font-weight: 600;
             margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            padding-bottom: 10px;
+            border-color: transparent transparent #EB8153 !important;
+        }
+        
+        .profile-tab .nav-tabs .nav-link {
+            color: rgba(255,255,255,0.7);
+            border: none;
+            border-bottom: 1px solid transparent;
+        }
+        
+        .profile-tab .nav-tabs .nav-link:hover {
+            color: #EB8153;
+            border-bottom: 1px solid rgba(235, 129, 83, 0.5);
+        }
+
+        .form-control, .bootstrap-select .dropdown-toggle, textarea {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+        }
+
+        .form-control:focus, textarea:focus {
+            border-color: #EB8153 !important;
+            box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
+        }
+
+        label {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+
+        /* Prevent overrides from bootstrap text-dark/text-muted classes */
+        form h5.text-dark {
+             color: #EB8153 !important;
+        }
+        small.text-muted {
+             color: rgba(255,255,255,0.6) !important;
+        }
+
+
+        .btn-info.btn-xs, .btn-primary {
+            background-color: #EB8153;
+            border-color: #EB8153;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 12px;
+        }
+
+        .btn-info.btn-xs:hover, .btn-primary:hover {
+            background-color: #d96e42;
+            border-color: #d96e42;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(235, 129, 83, 0.4) !important;
+        }
+        
+
+        hr {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-primary {
+            color: #EB8153 !important;
         }
 
         .header {
@@ -42,21 +147,23 @@
             padding-left: 20px;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
-        }
-
         /* Interactive Logo Preview */
         .clickable-logo-preview {
             position: relative;
             transition: all 0.3s ease;
             overflow: hidden;
-            background: #f8f9fa !important;
+            background: rgba(0,0,0,0.2) !important;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            height: 100px;
+            width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .clickable-logo-preview:hover {
             border-color: #EB8153 !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .logo-preview-overlay {
             position: absolute;
@@ -64,7 +171,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             color: #fff;
             display: flex;
             align-items: center;
@@ -77,7 +184,7 @@
             opacity: 1;
         }
         .empty-logo:hover {
-            background: #fff !important;
+            background: rgba(43, 37, 72, 0.8) !important;
             color: #EB8153 !important;
         }
     </style>
@@ -167,6 +274,32 @@
                                     Home
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#3D4461" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="message-pulse"></div>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="javascript:void(0)" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse"></div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
                             
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
@@ -217,9 +350,9 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Frontend Settings</h4>
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
-                                <i class="flaticon-381-back"></i> Back to Dashboard
+                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #fff;">Frontend Settings</h4>
+                            <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/" target="_blank" class="btn btn-primary btn-sm">
+                                View Home Page
                             </a>
                         </div>
                     </div>
@@ -241,99 +374,147 @@
                                 <div class="profile-tab">
                                     <div class="custom-tab-1">
                                         <ul class="nav nav-tabs">
-                                             <li class="nav-item"><a href="#admin_identity" data-toggle="tab" class="nav-link">Admin Identity</a></li>
+
                                              <li class="nav-item"><a href="#hero" data-toggle="tab" class="nav-link active show">Hero Section</a></li>
+                                             <li class="nav-item"><a href="#topbar_header" data-toggle="tab" class="nav-link">Topbar & Header</a></li>
                                              <li class="nav-item"><a href="#stats" data-toggle="tab" class="nav-link">Stats</a></li>
-                                             <li class="nav-item"><a href="#testimonials" data-toggle="tab" class="nav-link">Testimonials Section</a></li>
+                                           
                                              <li class="nav-item"><a href="#onboarding" data-toggle="tab" class="nav-link">Onboarding Section</a></li>
                                              <li class="nav-item"><a href="#mobileapp" data-toggle="tab" class="nav-link">Mobile App Section</a></li>
                                              <li class="nav-item"><a href="#whychooseus" data-toggle="tab" class="nav-link">Why Choose Us</a></li>
                                              <li class="nav-item"><a href="#classes_list" data-toggle="tab" class="nav-link">Classes Section</a></li>
-                                             <li class="nav-item"><a href="#contact_social" data-toggle="tab" class="nav-link">Contact & Social</a></li>
-                                             <li class="nav-item"><a href="#sections" data-toggle="tab" class="nav-link">Sections Text</a></li>
-                                            <li class="nav-item"><a href="#footer" data-toggle="tab" class="nav-link">Footer & General</a></li>
+                                          
+                                    
+                                               <li class="nav-item"><a href="#testimonials" data-toggle="tab" class="nav-link">Testimonials Section</a></li>
+                                        
                                         </ul>
                                         <div class="tab-content">
                                             <!-- Admin Identity Section -->
-                                            <div id="admin_identity" class="tab-pane fade">
-                                                <div class="pt-4">
-                                                    <form action="{{ route('admin.settings.store') }}" method="POST" enctype="multipart/form-data">
-                                                        @csrf
-                                                        <h5 class="mb-3 text-primary">Admin Branding</h5>
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-3 col-form-label">Company Name</label>
-                                                            <div class="col-sm-9">
-                                                                <input type="text" name="admin_company_name" class="form-control" value="{{ App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}">
-                                                                <small class="text-muted">This name appears next to the logo in the sidebar and header.</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-3 col-form-label">Admin Logo</label>
-                                                            <div class="col-sm-9">
-                                                                <div class="mb-3">
-                                                                    <div id="admin-logo-preview-container" class="position-relative d-inline-block">
-                                                                        @if($admin_logo = App\Models\SiteSetting::get('admin_logo'))
-                                                                            <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview" 
-                                                                                 style="max-width: 200px; cursor: pointer;"
-                                                                                 onclick="document.getElementById('adminLogoInput').click()">
-                                                                                <img src="{{ asset($admin_logo) }}" id="admin-logo-display" alt="Admin Logo" style="max-height: 60px; max-width: 100%;">
-                                                                                <div class="logo-preview-overlay">
-                                                                                    <i class="fa fa-camera"></i> Change
-                                                                                </div>
-                                                                            </div>
-                                                                            <button type="button" class="btn btn-danger btn-xs mt-2" onclick="window.removeAdminLogo()">
-                                                                                <i class="fa fa-trash"></i> Remove Logo
-                                                                            </button>
-                                                                        @else
-                                                                            <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview empty-logo" 
-                                                                                 style="max-width: 200px; cursor: pointer; height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ddd;"
-                                                                                 onclick="document.getElementById('adminLogoInput').click()">
-                                                                                <div class="text-muted">
-                                                                                    <i class="fa fa-plus fa-2x mb-2"></i><br>
-                                                                                    Click to Upload
-                                                                                </div>
-                                                                            </div>
-                                                                        @endif
-                                                                        <input type="hidden" name="remove_admin_logo" id="removeAdminLogoFlag" value="0">
-                                                                    </div>
-                                                                    <div class="custom-file d-none">
-                                                                        <input type="file" name="admin_logo" class="custom-file-input" id="adminLogoInput" onchange="window.previewAdminLogo(this)">
-                                                                        <label class="custom-file-label" for="adminLogoInput">Choose logo...</label>
-                                                                    </div>
-                                                                    <div class="mt-2">
-                                                                        <small class="text-muted">Recommended size: 50x50px or 200x50px. PNG or SVG preferred.</small>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <button type="submit" class="btn btn-primary mt-3">Save Admin Identity</button>
-                                                    </form>
-                                                </div>
-                                            </div>
+
                                             <!-- Hero Section -->
-                                            <div id="hero" class="tab-pane fade active show">
+                                             <div id="hero" class="tab-pane fade active show">
                                                 <div class="pt-4">
                                                     <form action="{{ route('admin.settings.store') }}" method="POST">
                                                         @csrf
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Hero Title</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="hero_title" class="form-control" value="{{ App\Models\SiteSetting::get('hero_title', 'Experience the Future of') }}">
+                                                                <input type="text" name="hero_title" class="form-control" value="{{ \App\Models\SiteSetting::get('hero_title', 'Experience the Future of') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Hero Title Gradient Part</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="hero_title_gradient" class="form-control" value="{{ App\Models\SiteSetting::get('hero_title_gradient', ' Quality Online Learning') }}">
+                                                                <input type="text" name="hero_title_gradient" class="form-control" value="{{ \App\Models\SiteSetting::get('hero_title_gradient', ' Quality Online Learning') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Hero Description</label>
                                                             <div class="col-sm-9">
-                                                                <textarea name="hero_description" class="form-control" rows="4">{{ App\Models\SiteSetting::get('hero_description', 'Top-notch online tutoring from qualified tutors at the comfort of your home. Join thousands of students achieving academic excellence with personalized learning.') }}</textarea>
+                                                                <textarea name="hero_description" class="form-control" rows="4">{{ \App\Models\SiteSetting::get('hero_description', 'Top-notch online tutoring from qualified tutors at the comfort of your home. Join thousands of students achieving academic excellence with personalized learning.') }}</textarea>
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-primary mt-3">Save Hero Changes</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            <!-- Topbar & Header Section -->
+                                            <div id="topbar_header" class="tab-pane fade">
+                                                <div class="pt-4">
+                                                    <form action="{{ route('admin.settings.store') }}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <h5 class="mb-3 text-primary">Topbar Visibility Toggles</h5>
+                                                        <div class="row">
+                                                            <div class="col-md-4 mb-3">
+                                                                <label>Show Facebook</label>
+                                                                <select name="topbar_show_fb" class="form-control mb-2">
+                                                                    <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_fb', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
+                                                                    <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_fb', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
+                                                                </select>
+                                                                <input type="text" name="social_facebook" class="form-control" placeholder="Facebook URL" value="{{ \App\Models\SiteSetting::get('social_facebook', '#facebook') }}">
+                                                            </div>
+                                                            <div class="col-md-4 mb-3">
+                                                                <label>Show Instagram</label>
+                                                                <select name="topbar_show_insta" class="form-control mb-2">
+                                                                    <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_insta', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
+                                                                    <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_insta', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
+                                                                </select>
+                                                                <input type="text" name="social_instagram" class="form-control" placeholder="Instagram URL" value="{{ \App\Models\SiteSetting::get('social_instagram', '#instagram') }}">
+                                                            </div>
+                                                            <div class="col-md-4 mb-3">
+                                                                <label>Show YouTube</label>
+                                                                <select name="topbar_show_youtube" class="form-control mb-2">
+                                                                    <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_youtube', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
+                                                                    <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_youtube', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
+                                                                </select>
+                                                                <input type="text" name="social_youtube" class="form-control" placeholder="YouTube URL" value="{{ \App\Models\SiteSetting::get('social_youtube', '#youtube') }}">
+                                                            </div>
+                                                            <div class="col-md-12 mb-3">
+                                                                <label>Show Support Email & Email Address</label>
+                                                                <div class="d-flex gap-2 align-items-center">
+                                                                    <select name="topbar_show_email" class="form-control" style="width: 120px; flex-shrink: 0;">
+                                                                        <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_email', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
+                                                                        <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_email', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
+                                                                    </select>
+                                                                    <input type="email" name="footer_email" class="form-control" placeholder="Support Email" value="{{ \App\Models\SiteSetting::get('footer_email', 'info@edulearn.lk') }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12 mb-3">
+                                                                <label>Language Selector Visibility</label>
+                                                                <select name="topbar_show_lang" class="form-control">
+                                                                    <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_lang', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
+                                                                    <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_lang', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <hr>
+                                                        <h5 class="mb-3 text-primary">Frontend Logo Edit</h5>
+                                                        <div class="row align-items-center">
+                                                            <div class="col-md-4 mb-3">
+                                                                <div class="clickable-logo-preview" id="logo-preview-container">
+                                                                    @if(\App\Models\SiteSetting::get('logo_url'))
+                                                                        <img src="{{ \App\Models\SiteSetting::get('logo_url') }}" alt="Logo" id="logo-preview-img" style="max-height: 80px; max-width: 100%;">
+                                                                        <div class="logo-preview-overlay" onclick="removeLogo()">Remove Logo</div>
+                                                                    @else
+                                                                        <div class="empty-logo">No Logo</div>
+                                                                    @endif
+                                                                </div>
+                                                                <input type="hidden" name="remove_admin_logo" id="remove_admin_logo" value="0">
+                                                            </div>
+                                                            <div class="col-md-8 mb-3">
+                                                                <input type="file" name="admin_logo" class="form-control-file mb-2">
+                                                                <small class="text-muted d-block">Upload a logo to replace the default text logo in the frontend header.</small>
+                                                            </div>
+                                                        </div>
+
+                                                        <hr>
+                                                        <h5 class="mb-3 text-primary">Navigation Labels</h5>
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label>Home Link</label>
+                                                                <input type="text" name="nav_home" class="form-control" value="{{ \App\Models\SiteSetting::get('nav_home', 'Home') }}">
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label>About Link</label>
+                                                                <input type="text" name="nav_about" class="form-control" value="{{ \App\Models\SiteSetting::get('nav_about', 'About Us') }}">
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label>Classes Link</label>
+                                                                <input type="text" name="nav_classes" class="form-control" value="{{ \App\Models\SiteSetting::get('nav_classes', 'Our Classes') }}">
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label>Learning Suite Link</label>
+                                                                <input type="text" name="nav_learning_suite" class="form-control" value="{{ \App\Models\SiteSetting::get('nav_learning_suite', 'Learning Suite') }}">
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label>Contact Link</label>
+                                                                <input type="text" name="nav_contact" class="form-control" value="{{ \App\Models\SiteSetting::get('nav_contact', 'Contact Us') }}">
+                                                            </div>
+                                                        </div>
+
+                                                        <button type="submit" class="btn btn-primary mt-3">Save Header Changes</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -346,19 +527,19 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Years Experience</label>
                                                             <div class="col-sm-9">
-                                                                <input type="number" name="stats_years" class="form-control" value="{{ App\Models\SiteSetting::get('stats_years', 10) }}">
+                                                                <input type="text" name="stats_years" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_years', 10) }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Total Students</label>
                                                             <div class="col-sm-9">
-                                                                <input type="number" name="stats_students" class="form-control" value="{{ App\Models\SiteSetting::get('stats_students', 10000) }}">
+                                                                <input type="text" name="stats_students" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_students', 10000) }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Expert Tutors</label>
                                                             <div class="col-sm-9">
-                                                                <input type="number" name="stats_tutors" class="form-control" value="{{ App\Models\SiteSetting::get('stats_tutors', 200) }}">
+                                                                <input type="text" name="stats_tutors" class="form-control" value="{{ \App\Models\SiteSetting::get('stats_tutors', 200) }}">
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-primary mt-3">Save Stats Changes</button>
@@ -375,13 +556,13 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Section Title</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="love_us_title" class="form-control" value="{{ App\Models\SiteSetting::get('love_us_title', 'Students & Parents Love Us') }}">
+                                                                <input type="text" name="love_us_title" class="form-control" value="{{ \App\Models\SiteSetting::get('love_us_title', 'Students & Parents Love Us') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Section Subtitle</label>
                                                             <div class="col-sm-9">
-                                                                <textarea name="love_us_subtitle" class="form-control" rows="2">{{ App\Models\SiteSetting::get('love_us_subtitle', 'Join thousands of satisfied students and parents who trust TiT Online Education') }}</textarea>
+                                                                <textarea name="love_us_subtitle" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('love_us_subtitle', 'Join thousands of satisfied students and parents who trust TiT Online Education') }}</textarea>
                                                             </div>
                                                         </div>
 
@@ -390,15 +571,15 @@
                                                         <div class="row">
                                                             @for($i = 1; $i <= 4; $i++)
                                                             <div class="col-md-6 mb-3">
-                                                                <div class="card p-3" style="border: 1px solid #eee;">
-                                                                    <h6>Stat {{ $i }}</h6>
+                                                                <div class="card p-3">
+                                                                    <h6 style="color: #fff;">Stat {{ $i }}</h6>
                                                                     <div class="form-group">
                                                                         <label>Number</label>
-                                                                        <input type="text" name="love_us_stat{{ $i }}_number" class="form-control" value="{{ App\Models\SiteSetting::get('love_us_stat'.$i.'_number', '') }}">
+                                                                        <input type="text" name="love_us_stat{{ $i }}_number" class="form-control" value="{{ \App\Models\SiteSetting::get('love_us_stat'.$i.'_number', '') }}">
                                                                     </div>
                                                                     <div class="form-group">
                                                                         <label>Label</label>
-                                                                        <input type="text" name="love_us_stat{{ $i }}_label" class="form-control" value="{{ App\Models\SiteSetting::get('love_us_stat'.$i.'_label', '') }}">
+                                                                        <input type="text" name="love_us_stat{{ $i }}_label" class="form-control" value="{{ \App\Models\SiteSetting::get('love_us_stat'.$i.'_label', '') }}">
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -416,7 +597,7 @@
                                                         </div>
 
                                                         <!-- Hidden textarea to store JSON for submission -->
-                                                        <textarea name="love_us_testimonials" id="love_us_testimonials_hidden" class="d-none">{{ App\Models\SiteSetting::get('love_us_testimonials', '[]') }}</textarea>
+                                                        <textarea name="love_us_testimonials" id="love_us_testimonials_hidden" class="d-none">{{ \App\Models\SiteSetting::get('love_us_testimonials', '[]') }}</textarea>
 
                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
                                                             <b>Tip:</b> Click "Add New" to add a testimonial. Changes are synced automatically to the hidden field.
@@ -436,13 +617,13 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Section Title</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="onboarding_title" class="form-control" value="{{ App\Models\SiteSetting::get('onboarding_title', 'Onboarding Process') }}">
+                                                                 <input type="text" name="onboarding_title" class="form-control" value="{{ \App\Models\SiteSetting::get('onboarding_title', 'Onboarding Process') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Section Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <textarea name="onboarding_subtitle" class="form-control" rows="2">{{ App\Models\SiteSetting::get('onboarding_subtitle', 'Follow our simple steps to join EduLearn Online Tuition ðŸ“š') }}</textarea>
+                                                                 <textarea name="onboarding_subtitle" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('onboarding_subtitle', 'Follow our simple steps to join EduLearn Online Tuition ðŸ“š') }}</textarea>
                                                              </div>
                                                          </div>
 
@@ -457,7 +638,7 @@
                                                          </div>
 
                                                          <!-- Hidden textarea to store JSON for submission -->
-                                                         <textarea name="onboarding_steps" id="onboarding_steps_hidden" class="d-none">{{ App\Models\SiteSetting::get('onboarding_steps', '[]') }}</textarea>
+                                                         <textarea name="onboarding_steps" id="onboarding_steps_hidden" class="d-none">{{ \App\Models\SiteSetting::get('onboarding_steps', '[]') }}</textarea>
 
                                                          <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
                                                              <b>Tip:</b> Add the steps in the order you want them to appear.
@@ -477,19 +658,19 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Main Title</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="mobile_title" class="form-control" value="{{ App\Models\SiteSetting::get('mobile_title', 'Learn Anytime, Anywhere..!') }}">
+                                                                 <input type="text" name="mobile_title" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_title', 'Learn Anytime, Anywhere..!') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="mobile_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('mobile_subtitle', 'EduLearn Mobile App') }}">
+                                                                 <input type="text" name="mobile_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_subtitle', 'EduLearn Mobile App') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Description</label>
                                                              <div class="col-sm-9">
-                                                                 <textarea name="mobile_description" class="form-control" rows="4">{{ App\Models\SiteSetting::get('mobile_description', 'Take your learning on the go with the EduLearn Mobile App, available on both iOS and Android. Access live classes, class recordings, exams, and progress updates seamlessly from your mobile device. Stay connected, stay updated, and unlock a world of learning at your fingertipsâ€”anytime, anywhere!') }}</textarea>
+                                                                 <textarea name="mobile_description" class="form-control" rows="4">{{ \App\Models\SiteSetting::get('mobile_description', 'Take your learning on the go with the EduLearn Mobile App, available on both iOS and Android. Access live classes, class recordings, exams, and progress updates seamlessly from your mobile device. Stay connected, stay updated, and unlock a world of learning at your fingertipsâ€”anytime, anywhere!') }}</textarea>
                                                              </div>
                                                          </div>
 
@@ -498,17 +679,24 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">App Store Link</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="mobile_app_store_link" class="form-control" value="{{ App\Models\SiteSetting::get('mobile_app_store_link', '#') }}">
+                                                                 <input type="text" name="mobile_app_store_link" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_app_store_link', '#') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Google Play Link</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="mobile_play_store_link" class="form-control" value="{{ App\Models\SiteSetting::get('mobile_play_store_link', '#') }}">
+                                                                 <input type="text" name="mobile_play_store_link" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_play_store_link', '#') }}">
                                                              </div>
                                                          </div>
-
-                                                         <button type="submit" class="btn btn-primary mt-3">Save Mobile App Changes</button>
+                                                         <hr>
+                                                         <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                                                             Mobile App Features
+                                                             <button type="button" id="add-mobile-feature" class="btn btn-info btn-xs">+ Add Feature</button>
+                                                         </h5>
+                                                         <div id="mobile-features-repeater">
+                                                             <!-- Features will be injected here by JS -->
+                                                         </div>
+                                                         <textarea name="mobile_features" id="mobile_features_hidden" class="d-none">{{ \App\Models\SiteSetting::get('mobile_features', '[]') }}</textarea>
                                                      </form>
                                                  </div>
                                              </div>
@@ -522,13 +710,13 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Title</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="why_title" class="form-control" value="{{ App\Models\SiteSetting::get('why_title', 'Why EduLearn?') }}">
+                                                                 <input type="text" name="why_title" class="form-control" value="{{ \App\Models\SiteSetting::get('why_title', 'Why EduLearn?') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="why_subtitle" class="form-control" value="{{ App\Models\SiteSetting::get('why_subtitle', 'Quality Assured Online Learning ðŸ‘¨ðŸ»â€ðŸŽ“') }}">
+                                                                 <input type="text" name="why_subtitle" class="form-control" value="{{ \App\Models\SiteSetting::get('why_subtitle', 'Quality Assured Online Learning ðŸ‘¨ðŸ»â€ðŸŽ“') }}">
                                                              </div>
                                                          </div>
 
@@ -543,7 +731,7 @@
                                                          </div>
 
                                                          <!-- Hidden textarea to store JSON for submission -->
-                                                         <textarea name="why_reasons" id="why_reasons_hidden" class="d-none">{{ App\Models\SiteSetting::get('why_reasons', '[]') }}</textarea>
+                                                         <textarea name="why_reasons" id="why_reasons_hidden" class="d-none">{{ \App\Models\SiteSetting::get('why_reasons', '[]') }}</textarea>
 
                                                          <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
                                                              <b>Note:</b> These are the 3 cards shown in the "Why EduLearn?" section.
@@ -563,13 +751,13 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Title</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="classes_title" class="form-control" value="{{ App\Models\SiteSetting::get('classes_title', 'Explore & Enroll') }}">
+                                                                 <input type="text" name="classes_title" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_title', 'Explore & Enroll') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Subtitle</label>
                                                              <div class="col-sm-9">
-                                                                 <textarea name="classes_subtitle" class="form-control" rows="3">{{ App\Models\SiteSetting::get('classes_subtitle', 'Online Tuition for all subjects - Grade 1 to Advanced Level. Group or one-on-one? We got you!') }}</textarea>
+                                                                 <textarea name="classes_subtitle" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_subtitle', 'Online Tuition for all subjects - Grade 1 to Advanced Level. Group or one-on-one? We got you!') }}</textarea>
                                                              </div>
                                                          </div>
 
@@ -584,7 +772,7 @@
                                                          </div>
 
                                                          <!-- Hidden textarea to store JSON for submission -->
-                                                         <textarea name="classes_types" id="classes_types_hidden" class="d-none">{{ App\Models\SiteSetting::get('classes_types', '[]') }}</textarea>
+                                                         <textarea name="classes_types" id="classes_types_hidden" class="d-none">{{ \App\Models\SiteSetting::get('classes_types', '[]') }}</textarea>
 
                                                          <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
                                                              <b>Note:</b> These are the cards shown in the "Explore & Enroll" section.
@@ -614,20 +802,20 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Contact Email</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="email" name="footer_email" class="form-control" value="{{ App\Models\SiteSetting::get('footer_email', 'info@edulearn.lk') }}">
+                                                                 <input type="email" name="footer_email" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_email', 'info@edulearn.lk') }}">
                                                                  <small class="text-muted">Used in Topbar, Footer, and Contact Page</small>
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Contact Phone</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="footer_phone" class="form-control" value="{{ App\Models\SiteSetting::get('footer_phone', '+94 114 477 488') }}">
+                                                                 <input type="text" name="footer_phone" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_phone', '+94 114 477 488') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Location Address</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="contact_location" class="form-control" value="{{ App\Models\SiteSetting::get('contact_location', 'Colombo, Sri Lanka') }}">
+                                                                 <input type="text" name="contact_location" class="form-control" value="{{ \App\Models\SiteSetting::get('contact_location', 'Colombo, Sri Lanka') }}">
                                                              </div>
                                                          </div>
 
@@ -636,31 +824,31 @@
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Facebook</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="social_facebook" class="form-control" value="{{ App\Models\SiteSetting::get('social_facebook', '#facebook') }}">
+                                                                 <input type="text" name="social_facebook" class="form-control" value="{{ \App\Models\SiteSetting::get('social_facebook', '#facebook') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Instagram</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="social_instagram" class="form-control" value="{{ App\Models\SiteSetting::get('social_instagram', '#instagram') }}">
+                                                                 <input type="text" name="social_instagram" class="form-control" value="{{ \App\Models\SiteSetting::get('social_instagram', '#instagram') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">YouTube</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="social_youtube" class="form-control" value="{{ App\Models\SiteSetting::get('social_youtube', '#youtube') }}">
+                                                                 <input type="text" name="social_youtube" class="form-control" value="{{ \App\Models\SiteSetting::get('social_youtube', '#youtube') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Twitter/X</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="social_twitter" class="form-control" value="{{ App\Models\SiteSetting::get('social_twitter', '#twitter') }}">
+                                                                 <input type="text" name="social_twitter" class="form-control" value="{{ \App\Models\SiteSetting::get('social_twitter', '#twitter') }}">
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">LinkedIn</label>
                                                              <div class="col-sm-9">
-                                                                 <input type="text" name="social_linkedin" class="form-control" value="{{ App\Models\SiteSetting::get('social_linkedin', '#linkedin') }}">
+                                                                 <input type="text" name="social_linkedin" class="form-control" value="{{ \App\Models\SiteSetting::get('social_linkedin', '#linkedin') }}">
                                                              </div>
                                                          </div>
 
@@ -678,19 +866,19 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Footer Logo Text</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_logo_text" class="form-control" value="{{ App\Models\SiteSetting::get('footer_logo_text', 'TiT') }}">
+                                                                <input type="text" name="footer_logo_text" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_logo_text', 'TiT') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Footer Tagline</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_tagline" class="form-control" value="{{ App\Models\SiteSetting::get('footer_tagline', 'Your Education..! Our Priority..!') }}">
+                                                                <input type="text" name="footer_tagline" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tagline', 'Your Education..! Our Priority..!') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Footer Description</label>
                                                             <div class="col-sm-9">
-                                                                <textarea name="footer_description" class="form-control" rows="3">{{ App\Models\SiteSetting::get('footer_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive support.") }}</textarea>
+                                                                <textarea name="footer_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('footer_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive support.") }}</textarea>
                                                             </div>
                                                         </div>
 
@@ -699,19 +887,19 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Privacy Policy Link</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_privacy_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_privacy_link', '#privacy') }}">
+                                                                <input type="text" name="footer_privacy_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_privacy_link', '#privacy') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Terms & Conditions Link</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_terms_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_terms_link', '#terms') }}">
+                                                                <input type="text" name="footer_terms_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_terms_link', '#terms') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Refund Policy Link</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_refund_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_refund_link', '#refund') }}">
+                                                                <input type="text" name="footer_refund_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_refund_link', '#refund') }}">
                                                             </div>
                                                         </div>
 
@@ -720,28 +908,50 @@
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Gallery Link</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_gallery_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_gallery_link', '#gallery') }}">
+                                                                <input type="text" name="footer_gallery_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_gallery_link', '#gallery') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Apply as Tutor Link</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_tutor_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_tutor_link', '#tutor') }}">
+                                                                <input type="text" name="footer_tutor_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tutor_link', '#tutor') }}">
                                                             </div>
                                                         </div>
                                                         <div class="form-group row">
-                                                            <label class="col-sm-3 col-form-label">Register Student Link</label>
+                                                             <label class="col-sm-3 col-form-label">Register Student Link</label>
+                                                             <div class="col-sm-9">
+                                                                 <input type="text" name="footer_register_link" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_register_link', '#register') }}">
+                                                             </div>
+                                                         </div>
+
+                                                         <hr>
+                                                         <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                                                            Student Toolkit Items
+                                                            <button type="button" id="add-toolkit-item" class="btn btn-info btn-xs">+ Add Item</button>
+                                                         </h5>
+                                                         <div class="form-group row">
+                                                            <label class="col-sm-3 col-form-label">Toolkit Title</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_register_link" class="form-control" value="{{ App\Models\SiteSetting::get('footer_register_link', '#register') }}">
+                                                                <input type="text" name="footer_toolkit_title" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_toolkit_title', 'Student Toolkit') }}">
                                                             </div>
-                                                        </div>
+                                                         </div>
+                                                         <div class="form-group row">
+                                                            <label class="col-sm-3 col-form-label">Toolkit Subtitle</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" name="footer_toolkit_desc" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_toolkit_desc', 'Essential resources for your learning journey') }}">
+                                                            </div>
+                                                         </div>
+                                                         <div id="toolkit-repeater">
+                                                            <!-- Toolkit items will be injected here by JS -->
+                                                         </div>
+                                                         <textarea name="footer_toolkit_items" id="footer_toolkit_items_hidden" class="d-none">{{ \App\Models\SiteSetting::get('footer_toolkit_items', '[]') }}</textarea>
 
                                                         <hr>
                                                         <h5 class="mb-3 text-primary">Copyright</h5>
                                                         <div class="form-group row">
                                                             <label class="col-sm-3 col-form-label">Copyright Text</label>
                                                             <div class="col-sm-9">
-                                                                <input type="text" name="footer_copyright" class="form-control" value="{{ App\Models\SiteSetting::get('footer_copyright', 'Copyrights Â© 2025 TiT. All rights reserved by TiT Online Education (PVT) Ltd.') }}">
+                                                                <input type="text" name="footer_copyright" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_copyright', 'Copyrights Â© 2025 TiT. All rights reserved by TiT Online Education (PVT) Ltd.') }}">
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-primary mt-3">Save Footer Changes</button>
@@ -772,7 +982,7 @@
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
     <style>
-        .testimonial-item {
+        .testimonial-item, .love-us-testimonial-item {
             background: #3b3363;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
@@ -782,7 +992,7 @@
             transition: all 0.3s;
             color: #fff;
         }
-        .testimonial-item:hover {
+        .testimonial-item:hover, .love-us-testimonial-item:hover {
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
             border-color: #EB8153;
         }
@@ -805,7 +1015,7 @@
             background: #ff5e5e;
             color: #fff;
         }
-        .testimonial-item label {
+        .testimonial-item label, .love-us-testimonial-item label {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -869,7 +1079,7 @@
 
             function syncTestimonials() {
                 const items = [];
-                document.querySelectorAll('.testimonial-item').forEach(el => {
+                document.querySelectorAll('.love-us-testimonial-item').forEach(el => {
                     items.push({
                         name: el.querySelector('.t-name').value,
                         role: el.querySelector('.t-role').value,
@@ -885,7 +1095,7 @@
             function createTestimonialItem(data = {}) {
                 const id = Date.now() + Math.random().toString(36).substr(2, 9);
                 const html = `
-                    <div class="testimonial-item" id="item-${id}">
+                    <div class="love-us-testimonial-item" id="item-${id}">
                         <span class="remove-testimonial" onclick="document.getElementById('item-${id}').remove(); window.syncTestimonials();">
                             <i class="flaticon-381-close"></i>
                         </span>
@@ -1126,6 +1336,105 @@
             addWhyBtn.addEventListener('click', () => { createWhyItem(); syncWhy(); });
             addClassBtn.addEventListener('click', () => { createClassTypeItem(); syncClasses(); });
 
+            // --- Mobile Features Repeater Logic ---
+            const mobileHidden = document.getElementById('mobile_features_hidden');
+            const addMobileBtn = document.getElementById('add-mobile-feature');
+            const mobileRepeater = document.getElementById('mobile-features-repeater');
+            let mobileFeatures = [];
+            try { mobileFeatures = JSON.parse(mobileHidden.value || '[]'); } catch (e) { mobileFeatures = []; }
+
+            function syncMobileFeatures() {
+                const items = [];
+                document.querySelectorAll('.mobile-feature-item').forEach(el => {
+                    items.push({
+                        text: el.querySelector('.mf-text').value
+                    });
+                });
+                mobileHidden.value = JSON.stringify(items);
+            }
+
+            function createMobileFeatureItem(data = {}) {
+                const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                const html = `
+                    <div class="testimonial-item mobile-feature-item" id="mf-${id}">
+                        <span class="remove-testimonial" onclick="document.getElementById('mf-${id}').remove(); window.syncMobileFeatures();">
+                            <i class="flaticon-381-close"></i>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Feature Text</label>
+                                <input type="text" class="form-control form-control-sm mf-text" value="${data.text || ''}" placeholder="e.g. Free Learning Materials" oninput="window.syncMobileFeatures()">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                mobileRepeater.insertAdjacentHTML('beforeend', html);
+            }
+
+            // --- Student Toolkit Repeater Logic ---
+            const toolkitHidden = document.getElementById('footer_toolkit_items_hidden');
+            const addToolkitBtn = document.getElementById('add-toolkit-item');
+            const toolkitRepeater = document.getElementById('toolkit-repeater');
+            let toolkitItems = [];
+            try { toolkitItems = JSON.parse(toolkitHidden.value || '[]'); } catch (e) { toolkitItems = []; }
+
+            function syncToolkit() {
+                const items = [];
+                document.querySelectorAll('.toolkit-item').forEach(el => {
+                    items.push({
+                        title: el.querySelector('.tk-title').value,
+                        tag: el.querySelector('.tk-tag').value,
+                        description: el.querySelector('.tk-description').value,
+                        color: el.querySelector('.tk-color').value,
+                        icon: el.querySelector('.tk-icon').value
+                    });
+                });
+                toolkitHidden.value = JSON.stringify(items);
+            }
+
+            function createToolkitItem(data = {}) {
+                const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                const html = `
+                    <div class="testimonial-item toolkit-item" id="tk-${id}">
+                        <span class="remove-testimonial" onclick="document.getElementById('tk-${id}').remove(); window.syncToolkit();">
+                            <i class="flaticon-381-close"></i>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Title</label>
+                                <input type="text" class="form-control form-control-sm tk-title" value="${data.title || ''}" placeholder="e.g. Past Papers" oninput="window.syncToolkit()">
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Tag</label>
+                                <input type="text" class="form-control form-control-sm tk-tag" value="${data.tag || ''}" placeholder="e.g. Academic" oninput="window.syncToolkit()">
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <label>Description</label>
+                                <textarea class="form-control form-control-sm tk-description" rows="2" placeholder="Describe this tool..." oninput="window.syncToolkit()">${data.description || ''}</textarea>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Icon Color (Hex)</label>
+                                <input type="text" class="form-control form-control-sm tk-color" value="${data.color || '#4f0bd9'}" oninput="window.syncToolkit()">
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>LordIcon URL (Optional)</label>
+                                <input type="text" class="form-control form-control-sm tk-icon" value="${data.icon || ''}" placeholder="e.g. https://cdn.lordicon.com/fkdkvhlp.json" oninput="window.syncToolkit()">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                toolkitRepeater.insertAdjacentHTML('beforeend', html);
+            }
+
+            window.syncMobileFeatures = syncMobileFeatures;
+            window.syncToolkit = syncToolkit;
+
+            if (mobileFeatures.length > 0) mobileFeatures.forEach(f => createMobileFeatureItem(f));
+            if (toolkitItems.length > 0) toolkitItems.forEach(i => createToolkitItem(i));
+
+            addMobileBtn.addEventListener('click', () => { createMobileFeatureItem(); syncMobileFeatures(); });
+            addToolkitBtn.addEventListener('click', () => { createToolkitItem(); syncToolkit(); });
+
             // --- Admin Logo Management ---
             window.previewAdminLogo = function(input) {
                 if (input.files && input.files[0]) {
@@ -1176,6 +1485,16 @@
                         <input type="hidden" name="remove_admin_logo" id="removeAdminLogoFlag" value="1">
                     `;
                     document.getElementById('adminLogoInput').value = '';
+                }
+            };
+
+            window.removeLogo = function() {
+                if (confirm('Are you sure you want to remove the frontend logo?')) {
+                    document.getElementById('remove_admin_logo').value = '1';
+                    document.getElementById('logo-preview-container').innerHTML = '<div class="empty-logo">No Logo</div>';
+                    // Clear file input if any
+                    const fileInput = document.querySelector('input[name="admin_logo"]');
+                    if (fileInput) fileInput.value = '';
                 }
             };
         });

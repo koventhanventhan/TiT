@@ -10,9 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <form id="adminBrandingForm" enctype="multipart/form-data">
                     <div class="modal-body p-4">
-                        <div class="form-group mb-4">
-                            <label class="font-weight-bold">Company Name</label>
-                            <input type="text" name="admin_company_name" id="modal_admin_company_name" class="form-control form-control-lg" placeholder="Enter company name">
+                        <div class="form-group mb-4 d-none">
+                            <input type="hidden" name="admin_company_name" id="modal_admin_company_name" value="">
                         </div>
                         <div class="form-group">
                             <label class="font-weight-bold">Company Logo</label>
@@ -35,51 +34,12 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
     </div>
     <style>
-        .branding-editable { 
-            cursor: pointer; 
-            position: relative; 
-            transition: all 0.2s ease; 
-        }
-        .branding-editable:hover { 
-            outline: 2px dashed #EB8153; 
-            outline-offset: 4px;
-            background: rgba(235, 129, 83, 0.1);
-        }
-        .branding-edit-indicator {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #EB8153;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 10;
-        }
-        .branding-editable:hover .branding-edit-indicator {
-            opacity: 1;
-        }
+        /* CSS for branding modal remains if needed, but logo specific hover styles removed */
     </style>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // 2. Identify Brand Elements and Add Triggers
-    const brandLogoLink = document.querySelector('.brand-logo');
-    if (brandLogoLink) {
-        brandLogoLink.classList.add('branding-editable');
-        brandLogoLink.insertAdjacentHTML('afterbegin', '<div class="branding-edit-indicator"><i class="fa fa-pencil"></i></div>');
-
-        brandLogoLink.addEventListener('click', function (e) {
-            e.preventDefault();
-            openBrandingModal();
-        });
-    }
+    // 2. Identify Brand Elements and Add Triggers (REMOVED: User requested to stop direct logo touch edit)
 
     // 3. Monitor Profile Dropdown for "Branding" items
     const profileDropdown = document.querySelector('.header-profile .dropdown-item i.la-calendar');
@@ -111,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const currentName = document.querySelector('.brand-title').innerText.trim();
         const currentLogo = document.querySelector('.brand-logo img') ? document.querySelector('.brand-logo img').src : '';
 
-        document.getElementById('modal_admin_company_name').value = currentName === 'Zenix' ? '' : currentName;
+        document.getElementById('modal_admin_company_name').value = document.querySelector('.brand-title') ? document.querySelector('.brand-title').innerText.trim() : '';
 
         if (currentLogo) {
             document.getElementById('modalLogoImg').src = currentLogo;

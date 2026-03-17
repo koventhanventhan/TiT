@@ -19,5 +19,7 @@ class LearningMaterial extends Model
         'grade',
         'institute_id',
         'group',
+        'file_size',
+        'url',
     ];
 }

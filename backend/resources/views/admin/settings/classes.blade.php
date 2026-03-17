@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -21,9 +21,90 @@
         }
 
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+            background: rgba(43, 37, 72, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent !important;
+        }
+
+        .card-title {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .class-edit-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            color: #fff;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .class-edit-section:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(235, 129, 83, 0.3);
+        }
+
+        .class-edit-section h5 {
+            color: #EB8153 !important;
+            font-weight: 600;
             margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .form-control, .bootstrap-select .dropdown-toggle {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+        }
+
+        .form-control:focus {
+            border-color: #EB8153 !important;
+            box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
+        }
+
+        label {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+
+        .btn-info.btn-xs {
+            background-color: #EB8153;
+            border-color: #EB8153;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 12px;
+        }
+
+        .btn-info.btn-xs:hover {
+            background-color: #d96e42;
+            border-color: #d96e42;
+        }
+
+        hr {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-primary {
+            color: #EB8153 !important;
         }
 
         .header {
@@ -45,45 +126,6 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
-        }
-
-        .class-edit-section {
-            background: #3b3363;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            color: #fff;
-        }
-
-        .class-edit-section h5 {
-            color: #EB8153;
-            font-weight: 600;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-        }
-
-        .form-control {
-            background: rgba(255,255,255,0.05) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-        }
-
-        .form-control:focus {
-            border-color: #EB8153 !important;
-        }
-
-        label {
-            color: rgba(255,255,255,0.8);
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .help-text {
-            font-size: 12px;
-            color: rgba(255,255,255,0.5);
-            margin-top: 4px;
         }
     </style>
     <!-- Pusher and Notifications -->
@@ -172,6 +214,32 @@
                                     Home
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#3D4461" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="message-pulse"></div>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="javascript:void(0)" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse"></div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
                             
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
@@ -220,9 +288,9 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Classes Settings</h4>
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
-                                <i class="flaticon-381-back"></i> Back to Dashboard
+                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #fff;">Classes Settings</h4>
+                            <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/classes" target="_blank" class="btn btn-primary btn-sm">
+                                View Classes Page
                             </a>
                         </div>
                     </div>
@@ -248,13 +316,13 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Main Title</label>
-                                                <input type="text" name="classes_title" class="form-control" value="{{ App\Models\SiteSetting::get('classes_title', 'Explore & Enroll') }}">
+                                                <input type="text" name="classes_title" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_title', 'Explore & Enroll') }}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Subtitle</label>
-                                                <textarea name="classes_subtitle" class="form-control" rows="2">{{ App\Models\SiteSetting::get('classes_subtitle', 'Online Tuition for all subjects - Grade 1 to Advanced Level. Group or one-on-one? We got you!') }}</textarea>
+                                                <textarea name="classes_subtitle" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('classes_subtitle', 'Online Tuition for all subjects - Grade 1 to Advanced Level. Group or one-on-one? We got you!') }}</textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -268,33 +336,33 @@
                                                 <h5>Direct Class Settings</h5>
                                                 <div class="form-group">
                                                     <label>Description</label>
-                                                    <textarea name="classes_direct_description" class="form-control" rows="3">{{ App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.') }}</textarea>
+                                                    <textarea name="classes_direct_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.') }}</textarea>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Duration</label>
-                                                            <input type="text" name="classes_direct_duration" class="form-control" value="{{ App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules') }}">
+                                                            <input type="text" name="classes_direct_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules') }}">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Pricing Label</label>
-                                                            <input type="text" name="classes_direct_price" class="form-control" value="{{ App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates') }}">
+                                                            <input type="text" name="classes_direct_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates') }}">
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Format / Students</label>
-                                                    <input type="text" name="classes_direct_format" class="form-control" value="{{ App\Models\SiteSetting::get('classes_direct_format', 'Small Groups') }}">
+                                                    <input type="text" name="classes_direct_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_format', 'Small Groups') }}">
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Features (One per line)</label>
-                                                    <textarea name="classes_direct_features" class="form-control" rows="5">{{ App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline") }}</textarea>
+                                                    <textarea name="classes_direct_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline") }}</textarea>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_direct_subjects" class="form-control" rows="3">{{ App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art') }}</textarea>
+                                                    <textarea name="classes_direct_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art') }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -305,33 +373,33 @@
                                                 <h5>Online Class Settings</h5>
                                                 <div class="form-group">
                                                     <label>Description</label>
-                                                    <textarea name="classes_online_description" class="form-control" rows="3">{{ App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.') }}</textarea>
+                                                    <textarea name="classes_online_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.') }}</textarea>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Duration</label>
-                                                            <input type="text" name="classes_online_duration" class="form-control" value="{{ App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules') }}">
+                                                            <input type="text" name="classes_online_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules') }}">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Pricing Label</label>
-                                                            <input type="text" name="classes_online_price" class="form-control" value="{{ App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing') }}">
+                                                            <input type="text" name="classes_online_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing') }}">
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Format / Students</label>
-                                                    <input type="text" name="classes_online_format" class="form-control" value="{{ App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One') }}">
+                                                    <input type="text" name="classes_online_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One') }}">
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Features (One per line)</label>
-                                                    <textarea name="classes_online_features" class="form-control" rows="5">{{ App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home") }}</textarea>
+                                                    <textarea name="classes_online_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home") }}</textarea>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_online_subjects" class="form-control" rows="3">{{ App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science') }}</textarea>
+                                                    <textarea name="classes_online_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science') }}</textarea>
                                                 </div>
                                             </div>
                                         </div>

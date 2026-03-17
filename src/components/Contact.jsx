@@ -1,17 +1,44 @@
 import React, { useState } from 'react'
 import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './Contact.css'
 
 const Contact = () => {
   const { getSetting } = useSettings()
+  const { t, language, translate } = useLanguage() // Assuming 'translate' function and 'language' are available from useLanguage
 
   const footer_email = getSetting('footer_email', 'info@edulearn.lk')
   const footer_phone = getSetting('footer_phone', '+94 114 477 488')
   const contact_location = getSetting('contact_location', 'Colombo, Sri Lanka')
 
   // Contact Hero settings
-  const contact_hero_title = getSetting('contact_hero_title', 'Get In Touch')
-  const contact_hero_subtitle = getSetting('contact_hero_subtitle', "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.")
+  const [contactTitle, setContactTitle] = useState('')
+  const [contactHeroDesc, setContactHeroDesc] = useState('')
+
+  useEffect(() => {
+    const defaultEn = {
+      contact_hero_title: "Let's Start a Conversation",
+      contact_hero_subtitle: "Have questions about our courses? Want to enroll? We're here to help."
+    }
+
+    if (language !== 'en') {
+      const translateContact = async () => {
+        const valTitle = getSetting('contact_hero_title', defaultEn.contact_hero_title)
+        const valDesc = getSetting('contact_hero_subtitle', defaultEn.contact_hero_subtitle)
+
+        if (valTitle === defaultEn.contact_hero_title) setContactTitle(t('contact_hero_title'))
+        else setContactTitle(await translate(valTitle))
+
+        if (valDesc === defaultEn.contact_hero_subtitle) setContactHeroDesc(t('contact_hero_desc'))
+        else setContactHeroDesc(await translate(valDesc))
+      }
+      translateContact()
+    } else {
+      setContactTitle(getSetting('contact_hero_title', t('contact_hero_title')))
+      setContactHeroDesc(getSetting('contact_hero_subtitle', t('contact_hero_desc')))
+    }
+  }, [language, getSetting, t, translate])
+
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +59,7 @@ const Contact = () => {
     e.preventDefault()
     // Handle form submission here
     console.log('Form submitted:', formData)
-    alert('Thank you for your message! We will get back to you soon.')
+    alert(t('contact_success'))
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
   }
 
@@ -85,9 +112,9 @@ const Contact = () => {
     <section id="contact" className="contact section">
       <div className="container">
         <div className="contact-header">
-          <h2 className="section-title">{contact_hero_title}</h2>
+          <h2 className="section-title">{contactTitle}</h2>
           <p className="section-subtitle">
-            {contact_hero_subtitle}
+            {contactHeroDesc}
           </p>
         </div>
 
@@ -115,7 +142,7 @@ const Contact = () => {
                   colors="primary:#4f0bd9"
                   style={{ width: '24px', height: '24px', marginRight: '8px' }}
                 />
-                Support Hours
+                {t('footer_support_hours') || 'Support Hours'}
               </h3>
               <div className="hours-list">
                 <div className="hours-item">
@@ -143,7 +170,7 @@ const Contact = () => {
                   colors="primary:#4f0bd9"
                   style={{ width: '24px', height: '24px', marginRight: '8px' }}
                 />
-                Send Us a Message
+                {t('contact_form_title')}
               </h3>
               <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-group">
@@ -154,7 +181,7 @@ const Contact = () => {
                       colors="primary:#4f0bd9"
                       style={{ width: '20px', height: '20px', marginRight: '8px' }}
                     />
-                    Your Name
+                    {t('contact_field_name')}
                   </label>
                   <input
                     type="text"
@@ -163,7 +190,7 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="Enter your name"
+                    placeholder={t('contact_placeholder_name')}
                     required
                   />
                 </div>
@@ -177,7 +204,7 @@ const Contact = () => {
                         colors="primary:#4f0bd9"
                         style={{ width: '20px', height: '20px', marginRight: '8px' }}
                       />
-                      Email Address
+                      {t('contact_field_email')}
                     </label>
                     <input
                       type="email"
@@ -186,7 +213,7 @@ const Contact = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="your.email@example.com"
+                      placeholder={t('contact_placeholder_email')}
                       required
                     />
                   </div>
@@ -199,7 +226,7 @@ const Contact = () => {
                         colors="primary:#4f0bd9"
                         style={{ width: '20px', height: '20px', marginRight: '8px' }}
                       />
-                      Phone Number
+                      {t('contact_field_phone')}
                     </label>
                     <input
                       type="tel"
@@ -208,7 +235,7 @@ const Contact = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="+94 XX XXX XXXX"
+                      placeholder={t('contact_placeholder_phone')}
                     />
                   </div>
                 </div>
@@ -221,7 +248,7 @@ const Contact = () => {
                       colors="primary:#4f0bd9"
                       style={{ width: '20px', height: '20px', marginRight: '8px' }}
                     />
-                    Subject
+                    {t('contact_field_subject')}
                   </label>
                   <input
                     type="text"
@@ -230,7 +257,7 @@ const Contact = () => {
                     value={formData.subject}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="What's this about?"
+                    placeholder={t('contact_placeholder_subject')}
                     required
                   />
                 </div>
@@ -243,7 +270,7 @@ const Contact = () => {
                       colors="primary:#4f0bd9"
                       style={{ width: '20px', height: '20px', marginRight: '8px' }}
                     />
-                    Your Message
+                    {t('contact_field_message')}
                   </label>
                   <textarea
                     id="message"
@@ -252,13 +279,13 @@ const Contact = () => {
                     onChange={handleChange}
                     className="form-textarea"
                     rows="5"
-                    placeholder="Tell us more about your inquiry..."
+                    placeholder={t('contact_placeholder_message')}
                     required
                   ></textarea>
                 </div>
 
                 <button type="submit" className="form-submit-btn">
-                  <span>Send Message</span>
+                  <span>{t('btn_send')}</span>
                   <lord-icon
                     src="https://cdn.lordicon.com/aymdfhbt.json"
                     trigger="hover"

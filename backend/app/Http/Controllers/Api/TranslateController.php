@@ -40,7 +40,7 @@ class TranslateController extends Controller
         $prompt = "Translate the following text to {$langName}. Output only the translation, nothing else. No explanations.\n\n" . $text;
 
         try {
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey;
+            $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' . $apiKey;
             $response = Http::timeout(15)->post($url, [
                 'contents' => [
                     [

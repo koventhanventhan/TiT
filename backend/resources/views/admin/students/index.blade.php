@@ -353,11 +353,11 @@
                                                    
                                                  </td>
 
-  <td>
-                                                     @if($student->current_grade)
-                                                         <small class="d-block mt-1" style="color: #8b5cf6; font-weight: 600;"> {{ $student->current_grade }}</small>
-                                                     @endif
-                                                 </td>
+                                                <td>
+<small class="d-block mt-1" style="color:#8b5cf6; font-weight:600;">
+{{ $student->current_grade ? 'Grade '.$student->current_grade : 'N/A' }}
+</small>
+</td>
 
 
                                                  <td class="nowrap-column">

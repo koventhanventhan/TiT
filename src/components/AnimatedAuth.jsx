@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
 import { loginWithEmail, registerWithEmail, loginWithGoogle } from '../services/authService'
 import StudentRegistrationForm from './StudentRegistrationForm'
+import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
 
 const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
+  const { t } = useLanguage()
   const [isLogin, setIsLogin] = useState(defaultTab === 'login')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -255,7 +257,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
               setError('')
             }}
           >
-            Sign in
+            {t('auth_signin')}
           </button>
           <button
             className={`auth-tab-btn ${!isLogin ? 'active' : ''}`}
@@ -264,7 +266,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
               setError('')
             }}
           >
-            Register
+            {t('auth_register')}
           </button>
         </div>
 
@@ -278,7 +280,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
           <div className="animated-form">
             {isLogin ? (
               <form onSubmit={handleLoginSubmit}>
-                <h2>Sign in</h2>
+                <h2>{t('auth_signin')}</h2>
                 <div className="inputbox">
                   <input
                     type="text"
@@ -288,7 +290,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     placeholder=" "
                     required
                   />
-                  <span>Username</span>
+                  <span>{t('auth_username')}</span>
                   <i></i>
                 </div>
 
@@ -301,7 +303,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     placeholder=" "
                     required
                   />
-                  <span>Password</span>
+                  <span>{t('auth_password')}</span>
                   <i></i>
                   <button
                     type="button"
@@ -313,12 +315,12 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 </div>
 
                 <div className="links">
-                  <a href="#forgot">Forgot Password</a>
+                  <a href="#forgot">{t('auth_forgot')}</a>
                   <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(false) }}>
-                    Signup
+                    {t('auth_signup_link')}
                   </a>
                 </div>
-                <input type="submit" value={isLoading ? 'Logging in...' : 'Login'} disabled={isLoading} />
+                <input type="submit" value={isLoading ? t('loading') : t('nav_login')} disabled={isLoading} />
 
                 <div className="divider-auth">
                   <span>or</span>
@@ -338,7 +340,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
               </form>
             ) : (
               <form onSubmit={handleSignupSubmit}>
-                <h2>Student Register</h2>
+                <h2>{t('auth_student_reg')}</h2>
 
 
                 {/* Admin Registration Form */}
@@ -352,7 +354,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     onChange={handleSignupChange}
                     required
                   />
-                  <span>Email</span>
+                  <span>{t('auth_email')}</span>
                   <i></i>
                 </div>
 
@@ -366,7 +368,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     required
                     minLength="8"
                   />
-                  <span>Password</span>
+                  <span>{t('auth_password')}</span>
                   <i></i>
                   <button
                     type="button"
@@ -387,7 +389,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     required
                     minLength="8"
                   />
-                  <span>Confirm Password</span>
+                  <span>{t('auth_confirm_password')}</span>
                   <i></i>
                   <button
                     type="button"
@@ -401,20 +403,20 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 <div className="links">
                   <span></span>
                   <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true) }}>
-                    Already have account?
+                    {t('auth_already_account')}
                   </a>
                 </div>
 
                 {/* Submit Button */}
                 <input
                   type="submit"
-                  value={isLoading ? 'Registering...' : 'Create Account'}
+                  value={isLoading ? t('loading') : t('auth_create_account')}
                   disabled={isLoading}
                   className="register-submit-input"
                 />
 
                 <div className="divider-auth">
-                  <span>or</span>
+                  <span>{t('auth_or')}</span>
                 </div>
 
                 <div className="social-auth-buttons">
@@ -425,7 +427,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
-                    Google
+                    {t('auth_google')}
                   </button>
                 </div>
               </form>

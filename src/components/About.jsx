@@ -1,13 +1,45 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './About.css'
 
 const About = () => {
   const { getSetting } = useSettings()
+  const { t, language, translate } = useLanguage()
 
-  const about_title = getSetting('about_title', 'About TiT Online Education')
-  const about_subtitle = getSetting('about_subtitle', "Sri Lanka's Premier Choice for Online Tuition 🎓")
-  const about_description = getSetting('about_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support. Invest in your child's successful learning journey with TiT Online Education.")
+  const [aboutTitle, setAboutTitle] = useState('')
+  const [aboutSubtitle, setAboutSubtitle] = useState('')
+  const [aboutHeroDesc, setAboutHeroDesc] = useState('')
+
+  useEffect(() => {
+    const defaultEn = {
+      about_title: 'About TiT Online Education',
+      about_subtitle: "Sri Lanka's Premier Choice for Online Tuition 🎓",
+      about_hero_desc: "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support."
+    }
+
+    if (language !== 'en') {
+      const translateAbout = async () => {
+        const currentTitle = getSetting('about_title', defaultEn.about_title)
+        const currentSubtitle = getSetting('about_subtitle', defaultEn.about_subtitle)
+        const currentDesc = getSetting('about_hero_desc', defaultEn.about_hero_desc)
+
+        if (currentTitle === defaultEn.about_title) setAboutTitle(t('about_title'))
+        else setAboutTitle(await translate(currentTitle))
+
+        if (currentSubtitle === defaultEn.about_subtitle) setAboutSubtitle(t('about_subtitle'))
+        else setAboutSubtitle(await translate(currentSubtitle))
+
+        if (currentDesc === defaultEn.about_hero_desc) setAboutHeroDesc(t('about_hero_desc'))
+        else setAboutHeroDesc(await translate(currentDesc))
+      }
+      translateAbout()
+    } else {
+      setAboutTitle(getSetting('about_title', t('about_title')))
+      setAboutSubtitle(getSetting('about_subtitle', t('about_subtitle')))
+      setAboutHeroDesc(getSetting('about_hero_desc', t('about_hero_desc')))
+    }
+  }, [language, getSetting, t, translate])
 
   const [activeTab, setActiveTab] = useState('journey')
 
@@ -141,115 +173,120 @@ const About = () => {
 
   return (
     <section id="about" className="about section">
-      <div className="container">
+      <div className="container" data-aos="fade-up">
         <div className="about-header">
-          <h2 className="section-title">{about_title}</h2>
+          <h2 className="section-title">{aboutTitle}</h2>
           <p className="section-subtitle">
-            {about_subtitle}
+            {aboutSubtitle}
           </p>
-          <p className="about-description">
-            {about_description}
-          </p>
+        </div>
 
-          {/* Three Buttons */}
-          <div className="about-buttons">
-            <button
-              className={`about-btn ${activeTab === 'journey' ? 'active' : ''}`}
-              onClick={() => setActiveTab('journey')}
-            >
-              <lord-icon
-                src="https://cdn.lordicon.com/igiiqzue.json"
-                trigger="hover"
-                colors={activeTab === 'journey' ? "primary:#ffffff" : "primary:#4f0bd9"}
-                style={{ width: '20px', height: '20px' }}
-              />
-              Successful Journey
-            </button>
-            <button
-              className={`about-btn ${activeTab === 'teachers' ? 'active' : ''}`}
-              onClick={() => setActiveTab('teachers')}
-            >
-              <lord-icon
-                src="https://cdn.lordicon.com/dxjqoygy.json"
-                trigger="hover"
-                colors={activeTab === 'teachers' ? "primary:#ffffff" : "primary:#4f0bd9"}
-                style={{ width: '20px', height: '20px' }}
-              />
-              Teachers Details
-            </button>
-            <button
-              className={`about-btn ${activeTab === 'images' ? 'active' : ''}`}
-              onClick={() => setActiveTab('images')}
-            >
-              <lord-icon
-                src="https://cdn.lordicon.com/fgpmetxx.json"
-                trigger="hover"
-                colors={activeTab === 'images' ? "primary:#ffffff" : "primary:#4f0bd9"}
-                style={{ width: '20px', height: '20px' }}
-              />
-              Our Images
-            </button>
+        <div className="about-hero">
+          <div className="about-hero-content">
+            <p className="hero-desc">
+              {aboutHeroDesc}
+            </p>
           </div>
+        </div>
 
-          {/* Content Sections */}
-          <div className="about-content-section">
-            {activeTab === 'journey' && (
-              <div className="journey-content">
-                <h3 className="content-title">Our Successful Journey</h3>
-                <div className="journey-timeline">
-                  {successfulJourney.map((item, index) => (
-                    <div key={index} className="journey-item">
-                      <div className="journey-year">{item.year}</div>
-                      <div className="journey-details">
-                        <h4 className="journey-achievement">{item.achievement}</h4>
-                        <p className="journey-description">{item.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Three Buttons */}
+        <div className="about-buttons">
+          <button
+            className={`about-btn ${activeTab === 'journey' ? 'active' : ''}`}
+            onClick={() => setActiveTab('journey')}
+          >
+            <lord-icon
+              src="https://cdn.lordicon.com/igiiqzue.json"
+              trigger="hover"
+              colors={activeTab === 'journey' ? "primary:#ffffff" : "primary:#4f0bd9"}
+              style={{ width: '20px', height: '20px' }}
+            />
+            {t('about_tab_journey')}
+          </button>
+          <button
+            className={`about-btn ${activeTab === 'teachers' ? 'active' : ''}`}
+            onClick={() => setActiveTab('teachers')}
+          >
+            <lord-icon
+              src="https://cdn.lordicon.com/dxjqoygy.json"
+              trigger="hover"
+              colors={activeTab === 'teachers' ? "primary:#ffffff" : "primary:#4f0bd9"}
+              style={{ width: '20px', height: '20px' }}
+            />
+            {t('about_tab_teachers')}
+          </button>
+          <button
+            className={`about-btn ${activeTab === 'images' ? 'active' : ''}`}
+            onClick={() => setActiveTab('images')}
+          >
+            <lord-icon
+              src="https://cdn.lordicon.com/fgpmetxx.json"
+              trigger="hover"
+              colors={activeTab === 'images' ? "primary:#ffffff" : "primary:#4f0bd9"}
+              style={{ width: '20px', height: '20px' }}
+            />
+            {t('about_tab_images')}
+          </button>
+        </div>
 
-            {activeTab === 'teachers' && (
-              <div className="teachers-content">
-                <h3 className="content-title">Our Expert Teachers</h3>
-                <div className="teachers-grid">
-                  {teachers.map((teacher, index) => (
-                    <div key={index} className="teacher-card">
-                      <div className="teacher-image">
-                        <img src={teacher.image} alt={teacher.name} />
-                      </div>
-                      <div className="teacher-info">
-                        <h4 className="teacher-name">{teacher.name}</h4>
-                        <p className="teacher-subject">{teacher.subject}</p>
-                        <p className="teacher-qualification">{teacher.qualification}</p>
-                        <p className="teacher-experience">Experience: {teacher.experience}</p>
-                      </div>
+        {/* Content Sections */}
+        <div className="about-content-section">
+          {activeTab === 'journey' && (
+            <div className="journey-content">
+              <h3 className="content-title">{t('about_journey_title')}</h3>
+              <div className="journey-timeline">
+                {successfulJourney.map((item, index) => (
+                  <div key={index} className="journey-item">
+                    <div className="journey-year">{item.year}</div>
+                    <div className="journey-details">
+                      <h4 className="journey-achievement">{item.achievement}</h4>
+                      <p className="journey-description">{item.description}</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'images' && (
-              <div className="images-content">
-                <h3 className="content-title">Our Gallery</h3>
-                <div className="images-grid">
-                  {images.map((item, index) => (
-                    <div key={index} className="image-card">
-                      <div className="image-wrapper">
-                        <img src={item.image} alt={item.title} />
-                      </div>
-                      <div className="image-info">
-                        <h4 className="image-title">{item.title}</h4>
-                        <p className="image-description">{item.description}</p>
-                      </div>
+          {activeTab === 'teachers' && (
+            <div className="teachers-content">
+              <h3 className="content-title">{t('about_teachers_title')}</h3>
+              <div className="teachers-grid">
+                {teachers.map((teacher, index) => (
+                  <div key={index} className="teacher-card">
+                    <div className="teacher-image">
+                      <img src={teacher.image} alt={teacher.name} />
                     </div>
-                  ))}
-                </div>
+                    <div className="teacher-info">
+                      <h4 className="teacher-name">{teacher.name}</h4>
+                      <p className="teacher-subject">{teacher.subject}</p>
+                      <p className="teacher-qualification">{teacher.qualification}</p>
+                      <p className="teacher-experience">{t('label_experience') || 'Experience'}: {teacher.experience}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {activeTab === 'images' && (
+            <div className="images-content">
+              <h3 className="content-title">{t('about_gallery_title')}</h3>
+              <div className="images-grid">
+                {images.map((item, index) => (
+                  <div key={index} className="image-card">
+                    <div className="image-wrapper">
+                      <img src={item.image} alt={item.title} />
+                    </div>
+                    <div className="image-info">
+                      <h4 className="image-title">{item.title}</h4>
+                      <p className="image-description">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="features-grid">
@@ -264,7 +301,7 @@ const About = () => {
 
         <div className="about-cta">
           <a href="/register" className="btn btn-primary">
-            Register Now
+            {t('btn_register_now')}
           </a>
         </div>
       </div>
@@ -273,4 +310,3 @@ const About = () => {
 }
 
 export default About
-

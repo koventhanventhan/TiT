@@ -54,6 +54,22 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Display the Footer settings page.
+     */
+    public function footer()
+    {
+        return view('admin.settings.footer');
+    }
+
+    /**
+     * Display the Register Form settings page.
+     */
+    public function register()
+    {
+        return view('admin.settings.register');
+    }
+
+    /**
      * Store site settings.
      */
     public function store(Request $request)
@@ -70,8 +86,12 @@ class SiteSettingController extends Controller
             elseif (str_starts_with($key, 'footer_')) $group = 'footer';
             elseif (str_starts_with($key, 'hero_')) $group = 'hero';
             elseif (str_starts_with($key, 'admin_')) $group = 'admin_identity';
+            elseif (str_starts_with($key, 'register_')) $group = 'register';
+            elseif (str_starts_with($key, 'topbar_')) $group = 'topbar';
+            elseif (str_starts_with($key, 'nav_')) $group = 'navigation';
             elseif (collect(['about_', 'stats_', 'why_', 'love_us_', 'mobile_'])->contains(fn($prefix) => str_starts_with($key, $prefix))) $group = 'sections';
 
+            if (is_array($value)) continue;
             SiteSetting::set($key, $value, $group);
         }
 
@@ -83,6 +103,7 @@ class SiteSettingController extends Controller
             }
             // Clear the setting
             \App\Models\SiteSetting::where('key', 'admin_logo')->delete();
+            \App\Models\SiteSetting::where('key', 'logo_url')->delete();
         }
 
         // Handle file uploads (Logo)
@@ -97,7 +118,9 @@ class SiteSettingController extends Controller
             }
             
             $logo->move($destinationPath, $name);
-            SiteSetting::set('admin_logo', $path . '/' . $name, 'admin_identity');
+            $logoPath = $path . '/' . $name;
+            SiteSetting::set('admin_logo', $logoPath, 'admin_identity');
+            SiteSetting::set('logo_url', asset($logoPath), 'admin_identity');
         }
 
         return redirect()->back()->with('success', 'Admin identity updated successfully');
@@ -148,7 +171,7 @@ class SiteSettingController extends Controller
             'type' => 'required|in:note,past_paper,recording',
             'grade' => 'required|string',
             'title' => 'required|string|max:255',
-            'file' => 'nullable|file|max:51200', // 50MB max
+            'file' => 'nullable|file|max:512000', // 500MB max
             'url' => 'nullable|string',
         ]);
 

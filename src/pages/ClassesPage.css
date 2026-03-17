@@ -646,3 +646,71 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 480px) {
+  .clp-hero {
+    padding: 40px 0 50px;
+  }
+
+  .clp-hero-title {
+    font-size: 32px;
+    letter-spacing: -1.5px;
+  }
+
+  .clp-hero-sub {
+    font-size: 14px;
+    padding: 0 10px;
+  }
+
+  .clp-card-head {
+    padding: 24px 20px 20px;
+    text-align: center;
+  }
+
+  .clp-card-head-inner {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .clp-card-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+    margin: 0 auto;
+  }
+
+  .clp-card-title {
+    font-size: 22px;
+  }
+
+  .clp-card-desc {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .clp-highlight {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .clp-card-body {
+    padding: 20px 16px;
+  }
+
+  .clp-sec {
+    padding: 16px;
+  }
+
+  .clp-features li,
+  .clp-badge,
+  .clp-detail span {
+    font-size: 12px;
+  }
+
+  .clp-btn-enroll,
+  .clp-btn-outline {
+    font-size: 14px;
+    padding: 12px 20px;
+    min-width: 100%;
+  }
+}

@@ -81,6 +81,12 @@ class WhatsAppService
             $toFormatted = $isWhatsApp ? 'whatsapp:' . ltrim($to, '+') : $to;
             $fromFormatted = $isWhatsApp && !str_starts_with($from, 'whatsapp:') ? 'whatsapp:' . $from : $from;
 
+            Log::debug('Attempting to send Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS'), [
+                'to' => $toFormatted,
+                'from' => $fromFormatted,
+                'body_snippet' => substr($body, 0, 50)
+            ]);
+
             $response = Http::withBasicAuth($sid, $token)
                 ->asForm()
                 ->post('https://api.twilio.com/2010-04-01/Accounts/' . $sid . '/Messages.json', [
@@ -90,18 +96,20 @@ class WhatsAppService
                 ]);
 
             if ($response->successful()) {
-                Log::info(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' sent to ' . $to . ' via Twilio');
+                Log::info(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' sent successfully to ' . $to . ' via Twilio. SID: ' . ($response->json()['sid'] ?? 'N/A'));
                 return true;
             }
 
-            Log::error('Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS') . ' failed', [
+            Log::error('Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS') . ' failed to send', [
                 'to' => $to,
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'response_body' => $response->json() ?? $response->body(),
             ]);
             return false;
         } catch (\Throwable $e) {
-            Log::error(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' send exception: ' . $e->getMessage());
+            Log::error(($isWhatsApp ? 'WhatsApp' : 'SMS') . ' send exception: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
         }
     }

@@ -48,51 +48,51 @@ const StudentToolkit = () => {
     }
   ]
 
-  return (
-    <section id="learning-suite" className="premium-toolkit section">
-      <div className="container">
-        <div className="st-header">
-          <span className="st-tag">Smart Ecosystem</span>
-          <h2 className="st-title">All-in-One Student Toolkit</h2>
-          <p className="st-subtitle">
-            Supercharge your learning with integrated tools designed to streamline your studies,
-            provide instant support, and engage your mind.
-          </p>
-        </div>
+  // return (
+  //   <section id="learning-suite" className="premium-toolkit section">
+  //     <div className="container">
+  //       <div className="st-header">
+  //         <span className="st-tag">Smart Ecosystem</span>
+  //         <h2 className="st-title">All-in-One Student Toolkit</h2>
+  //         <p className="st-subtitle">
+  //           Supercharge your learning with integrated tools designed to streamline your studies,
+  //           provide instant support, and engage your mind.
+  //         </p>
+  //       </div>
 
-        <div className="st-grid">
-          {tools.map((tool, index) => (
-            <div key={index} className="st-card" style={{ '--tool-color': tool.color }}>
-              <div className="st-card-glow"></div>
-              <div className="st-card-content">
-                <div className="st-card-top">
-                  <div className="st-icon-box">
-                    {tool.icon}
-                  </div>
-                  <span className="st-category-tag">{tool.tag}</span>
-                </div>
+  //       <div className="st-grid">
+  //         {tools.map((tool, index) => (
+  //           <div key={index} className="st-card" style={{ '--tool-color': tool.color }}>
+  //             <div className="st-card-glow"></div>
+  //             <div className="st-card-content">
+  //               <div className="st-card-top">
+  //                 <div className="st-icon-box">
+  //                   {tool.icon}
+  //                 </div>
+  //                 <span className="st-category-tag">{tool.tag}</span>
+  //               </div>
 
-                <h3 className="st-card-title">{tool.title}</h3>
-                <p className="st-card-desc">{tool.description}</p>
+  //               <h3 className="st-card-title">{tool.title}</h3>
+  //               <p className="st-card-desc">{tool.description}</p>
 
-                <div className="st-card-footer">
-                  <a href="#explore" className="st-link">
-                    Explore Tool{' '}
-                    <lord-icon
-                      src="https://cdn.lordicon.com/vduvxpxl.json"
-                      trigger="hover"
-                      colors="primary:#4f0bd9"
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
+  //               <div className="st-card-footer">
+  //                 <a href="#explore" className="st-link">
+  //                   Explore Tool{' '}
+  //                   <lord-icon
+  //                     src="https://cdn.lordicon.com/vduvxpxl.json"
+  //                     trigger="hover"
+  //                     colors="primary:#4f0bd9"
+  //                     style={{ width: '18px', height: '18px' }}
+  //                   />
+  //                 </a>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </section>
+  // )
 }
 
 export default StudentToolkit

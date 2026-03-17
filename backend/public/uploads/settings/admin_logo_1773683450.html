@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<title>TiT Project - Architecture Diagram</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #09090f;
+    --surface: #111120;
+    --card: #161628;
+    --border: #2a2a4a;
+    --accent1: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --accent4: #10b981;
+    --accent5: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 14px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-left: 4px;
+    border-left: 2px solid var(--accent1);
+    padding-left: 10px;
+  }
+
+  /* ── TIER CONTAINER ── */
+  .tier {
+    margin-bottom: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .tier:hover { border-color: rgba(124,58,237,0.4); }
+
+  .tier-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tier-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .tier-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .tier-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .tier-lang {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .tier-body {
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* ── FILE CARDS ── */
+  .file-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: default;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    min-width: 140px;
+  }
+  .file-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .file-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .file-card .fname {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .file-card .fdesc {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Color variants */
+  .c-purple .file-card::before { background: var(--accent1); }
+  .c-purple .file-card:hover { border-color: var(--accent1); }
+  .c-cyan .file-card::before { background: var(--accent2); }
+  .c-cyan .file-card:hover { border-color: var(--accent2); }
+  .c-amber .file-card::before { background: var(--accent3); }
+  .c-amber .file-card:hover { border-color: var(--accent3); }
+  .c-green .file-card::before { background: var(--accent4); }
+  .c-green .file-card:hover { border-color: var(--accent4); }
+  .c-red .file-card::before { background: var(--accent5); }
+  .c-red .file-card:hover { border-color: var(--accent5); }
+
+  /* tier header accent */
+  .t-purple .tier-header { background: rgba(124,58,237,0.07); }
+  .t-purple .tier-icon { background: rgba(124,58,237,0.2); }
+  .t-purple .tier-lang { background: rgba(124,58,237,0.2); color: #a78bfa; }
+
+  .t-cyan .tier-header { background: rgba(6,182,212,0.07); }
+  .t-cyan .tier-icon { background: rgba(6,182,212,0.2); }
+  .t-cyan .tier-lang { background: rgba(6,182,212,0.2); color: #67e8f9; }
+
+  .t-amber .tier-header { background: rgba(245,158,11,0.07); }
+  .t-amber .tier-icon { background: rgba(245,158,11,0.2); }
+  .t-amber .tier-lang { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+  .t-green .tier-header { background: rgba(16,185,129,0.07); }
+  .t-green .tier-icon { background: rgba(16,185,129,0.2); }
+  .t-green .tier-lang { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+
+  .t-red .tier-header { background: rgba(239,68,68,0.07); }
+  .t-red .tier-icon { background: rgba(239,68,68,0.2); }
+  .t-red .tier-lang { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+  /* ── ARROWS ── */
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 0;
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--accent1), var(--accent2));
+    margin: 0 auto;
+    position: relative;
+    border-radius: 2px;
+  }
+  .arrow-line::after {
+    content: '▼';
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--accent2);
+    font-size: 10px;
+  }
+
+  /* ── DATA FLOW SECTION ── */
+  .flow-section { margin-top: 40px; }
+
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .flow-step {
+    padding: 20px 14px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.25s;
+  }
+  .flow-step:last-child { border-right: none; }
+  .flow-step:hover { background: rgba(124,58,237,0.06); }
+  .flow-step::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent1);
+    font-size: 14px;
+    z-index: 2;
+  }
+  .flow-step:last-child::after { display: none; }
+  .flow-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .flow-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .flow-desc {
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.4;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── TECH LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .flow-grid { grid-template-columns: 1fr 1fr; }
+    .flow-step::after { display: none; }
+    .flow-step { border-right: none; border-bottom: 1px solid var(--border); }
+    .flow-step:nth-child(odd) { border-right: 1px solid var(--border); }
+  }
+  @media (max-width: 500px) {
+    .flow-grid { grid-template-columns: 1fr; }
+    .flow-step:nth-child(odd) { border-right: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">koventhanventhan / TiT</div>
+    <h1>Project Architecture</h1>
+    <p>// Tuition Management System · Full Stack Diagram</p>
+  </div>
+
+  <!-- ── LAYER 1: FRONTEND ── -->
+  <div class="section-label">Layer 01 · Frontend · User Interface</div>
+  <div class="tier t-purple c-purple">
+    <div class="tier-header">
+      <div class="tier-icon">🖥️</div>
+      <div>
+        <div class="tier-title">Frontend Layer</div>
+        <div class="tier-subtitle">src/ · full/src/ · public/ · Admin Theme/</div>
+      </div>
+      <div class="tier-lang">React + Vite</div>
+    </div>
+    <div class="tier-body">
+      <div class="file-card">
+        <div class="fname">src/</div>
+        <div class="fdesc">Main React components & pages</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">full/src/</div>
+        <div class="fdesc">Full version source code</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">full_original/</div>
+        <div class="fdesc">Original backup version</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">Admin Theme/</div>
+        <div class="fdesc">Admin dashboard UI theme</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">public/</div>
+        <div class="fdesc">Static assets & icons</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">index.html</div>
+        <div class="fdesc">App entry point</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">vite.config.js</div>
+        <div class="fdesc">Build tool config</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">package.json</div>
+        <div class="fdesc">Dependencies & scripts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+    <div class="arrow-line"></div>
+    <div style="height:14px"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">HTTP Requests / API Calls</div>
+  </div>
+
+  <!-- ── LAYER 2: BACKEND AUTH ── -->
+  <div class="section-label">Layer 02 · Backend · Authentication & Admin</div>
+  <div class="tier t-cyan c-cyan">
+    <div class="tier-header">
+      <div class="tier-icon">🔐</div>
+      <div>
+        <div class="tier-title">Authentication Layer</div>
+        <div class="tier-subtitle">Admin access control & session management</div>
+      </div>
+      <div class="tier-lang">PHP</div>
+    </div>
+    <div class="tier-body">
+      <div class="file-card">
+        <div class="fname">check_admin.php</div>
+        <div class="fdesc">Admin login verification & session check</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">backend/</div>
+        <div class="fdesc">Core backend logic, DB connection, API endpoints</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+    <div class="arrow-line"></div>
+    <div style="height:14px"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">Validated Request → Business Logic</div>
+  </div>
+
+  <!-- ── LAYER 3: DATA OPERATIONS ── -->
+  <div class="section-label">Layer 03 · Backend · Data Operations</div>
+  <div class="tier t-amber c-amber">
+    <div class="tier-header">
+      <div class="tier-icon">⚙️</div>
+      <div>
+        <div class="tier-title">Data Operations Layer</div>
+        <div class="tier-subtitle">Student & Subject management scripts</div>
+      </div>
+      <div class="tier-lang">PHP Scripts</div>
+    </div>
+    <div class="tier-body">
+      <div class="file-card">
+        <div class="fname">check_duplicates.php</div>
+        <div class="fdesc">Detect duplicate student/subject records</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">merge_student_data.php</div>
+        <div class="fdesc">Combine student records from multiple sources</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">merge_76_77.php</div>
+        <div class="fdesc">Merge specific ID-range records</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">check_76_77.php</div>
+        <div class="fdesc">Validate records with ID 76–77</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">fix_subjects.php</div>
+        <div class="fdesc">Repair corrupted subject data</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+    <div class="arrow-line"></div>
+    <div style="height:14px"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">SQL Queries → Database</div>
+  </div>
+
+  <!-- ── LAYER 4: DATABASE ── -->
+  <div class="section-label">Layer 04 · Data Layer · Storage</div>
+  <div class="tier t-green c-green">
+    <div class="tier-header">
+      <div class="tier-icon">🗄️</div>
+      <div>
+        <div class="tier-title">Database Layer</div>
+        <div class="tier-subtitle">MySQL · Student, Subject & Registration tables</div>
+      </div>
+      <div class="tier-lang">MySQL</div>
+    </div>
+    <div class="tier-body">
+      <div class="file-card">
+        <div class="fname">students table</div>
+        <div class="fdesc">Student names, IDs, contact info</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">subjects table</div>
+        <div class="fdesc">Subject list, codes, details</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">registrations table</div>
+        <div class="fdesc">Which student is in which subject</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">admin table</div>
+        <div class="fdesc">Admin credentials & roles</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+    <div class="arrow-line"></div>
+    <div style="height:14px"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">Error Logs → Debug Output</div>
+  </div>
+
+  <!-- ── LAYER 5: DEBUG ── -->
+  <div class="section-label">Layer 05 · Debug · Logging & Diagnostics</div>
+  <div class="tier t-red c-red">
+    <div class="tier-header">
+      <div class="tier-icon">🔍</div>
+      <div>
+        <div class="tier-title">Debug & Diagnostics Layer</div>
+        <div class="tier-subtitle">Logging scripts + output files for troubleshooting</div>
+      </div>
+      <div class="tier-lang">PHP + TXT</div>
+    </div>
+    <div class="tier-body">
+      <div class="file-card">
+        <div class="fname">debug_registrations.php</div>
+        <div class="fdesc">Trace registration errors</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">debug_student.php</div>
+        <div class="fdesc">Inspect student data issues</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">debug_subjects.php</div>
+        <div class="fdesc">Subject data diagnostics</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">debug_full_json.txt</div>
+        <div class="fdesc">Full API JSON response log</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">debug_output.txt</div>
+        <div class="fdesc">General error/warning log</div>
+      </div>
+      <div class="file-card">
+        <div class="fname">debug_registrations_utf8.txt</div>
+        <div class="fdesc">UTF-8 encoded registration log</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DATA FLOW ── -->
+  <div class="flow-section">
+    <div class="section-label" style="margin-top:40px;">User Flow · How the system works step by step</div>
+    <div class="flow-grid">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-title">Admin Login</div>
+        <div class="flow-desc">check_admin.php verifies credentials</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-title">Dashboard</div>
+        <div class="flow-desc">React UI loads student & subject data</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-title">Manage Students</div>
+        <div class="flow-desc">Add, edit, check duplicates via PHP scripts</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-title">Register Subjects</div>
+        <div class="flow-desc">Assign subjects to students, fix errors</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-title">Debug & Fix</div>
+        <div class="flow-desc">Run debug scripts, check .txt logs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;width:100%;margin-bottom:4px;">// Tech Stack Legend</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div> React + Vite (Frontend)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div> PHP (Backend Auth)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> PHP Scripts (Data Ops)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> MySQL (Database)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> PHP + TXT (Debug)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div> HTML 45.8%</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#818cf8"></div> CSS/SCSS 43.3%</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div> JS 5.6%</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> Blade 3.5%</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> PHP 1.8%</div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;font-family:'Space Mono',monospace;font-size:10px;color:#334155;">
+    github.com/koventhanventhan/TiT · Generated by Claude
+  </div>
+
+</div>
+</body>
+</html>

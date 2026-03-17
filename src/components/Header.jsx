@@ -141,11 +141,11 @@ const Header = () => {
   }
 
   const menuItems = [
-    { nameKey: 'nav_home', name: 'Home', href: '/', isRoute: true },
-    { nameKey: 'nav_about', name: 'About', href: '/about', isRoute: true },
-    { nameKey: 'nav_classes', name: 'Classes', href: '/classes', isRoute: true, hasDropdown: true },
-    { nameKey: 'nav_learning_suite', name: 'Learning Suite', href: '#learning-suite', isRoute: false, hasDropdown: true },
-    { nameKey: 'nav_contact', name: 'Contact', href: '/contact', isRoute: true },
+    { nameKey: 'nav_home', name: getSetting('nav_home', t('nav_home')), href: '/', isRoute: true },
+    { nameKey: 'nav_about', name: getSetting('nav_about', t('nav_about')), href: '/about', isRoute: true },
+    { nameKey: 'nav_classes', name: getSetting('nav_classes', t('nav_classes')), href: '/classes', isRoute: true, hasDropdown: true },
+    { nameKey: 'nav_learning_suite', name: getSetting('nav_learning_suite', t('nav_learning_suite')), href: '#learning-suite', isRoute: false, hasDropdown: true },
+    { nameKey: 'nav_contact', name: getSetting('nav_contact', t('nav_contact')), href: '/contact', isRoute: true },
   ]
 
   const classesCategories = [
@@ -154,8 +154,8 @@ const Header = () => {
   ]
 
   const learningSuiteGrades = [
-    'Grade-1', 'Grade-2', 'Grade-3', 'Grade-4', 'Grade-5',
-    'Grade-6', 'Grade-7', 'Grade-8', 'Grade-9', 'O/L', 'A/L'
+    `${t('grade')}-1`, `${t('grade')}-2`, `${t('grade')}-3`, `${t('grade')}-4`, `${t('grade')}-5`,
+    `${t('grade')}-6`, `${t('grade')}-7`, `${t('grade')}-8`, `${t('grade')}-9`, `${t('grade')}-10`, 'O/L', 'A/L'
   ]
 
   const gradeSubmenuItems = [
@@ -171,38 +171,46 @@ const Header = () => {
         <div className="container">
           <div className="top-bar-content">
             <div className="top-bar-left">
-              {getSetting('topbar_show_social', 'yes') === 'yes' && (
-                <>
-                  <a
-                    href={getSetting('social_facebook', 'https://facebook.com')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="top-social-icon"
-                    aria-label="Facebook"
-                  >
-                    <FaFacebook />
-                  </a>
-                  <a
-                    href={getSetting('social_instagram', 'https://instagram.com')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="top-social-icon"
-                    aria-label="Instagram"
-                  >
-                    <FaInstagram />
-                  </a>
-                  <a
-                    href={getSetting('social_youtube', 'https://youtube.com')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="top-social-icon"
-                    aria-label="YouTube"
-                  >
-                    <FaYoutube />
-                  </a>
-                  <span className="top-bar-separator"></span>
-                </>
-              )}
+              {(getSetting('topbar_show_fb', 'yes') === 'yes' ||
+                getSetting('topbar_show_insta', 'yes') === 'yes' ||
+                getSetting('topbar_show_youtube', 'yes') === 'yes') && (
+                  <>
+                    {getSetting('topbar_show_fb', 'yes') === 'yes' && (
+                      <a
+                        href={getSetting('social_facebook', 'https://facebook.com')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="top-social-icon"
+                        aria-label="Facebook"
+                      >
+                        <FaFacebook />
+                      </a>
+                    )}
+                    {getSetting('topbar_show_insta', 'yes') === 'yes' && (
+                      <a
+                        href={getSetting('social_instagram', 'https://instagram.com')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="top-social-icon"
+                        aria-label="Instagram"
+                      >
+                        <FaInstagram />
+                      </a>
+                    )}
+                    {getSetting('topbar_show_youtube', 'yes') === 'yes' && (
+                      <a
+                        href={getSetting('social_youtube', 'https://youtube.com')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="top-social-icon"
+                        aria-label="YouTube"
+                      >
+                        <FaYoutube />
+                      </a>
+                    )}
+                    <span className="top-bar-separator"></span>
+                  </>
+                )}
               {getSetting('topbar_show_email', 'yes') === 'yes' && (
                 <a href={`mailto:${getSetting('footer_email', 'info@titonline.lk')}`} className="top-bar-email">
                   {getSetting('footer_email', 'info@titonline.lk')}
@@ -210,26 +218,28 @@ const Header = () => {
               )}
             </div>
             <div className="top-bar-right">
-              {/* Language selector */}
-              <div
-                className="top-bar-language"
-                ref={langDropdownRef}
-                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              >
-                <span className="top-bar-language-label">{t('language')}: </span>
-                <span className="top-bar-language-current">
-                  {language === 'en' ? t('lang_english') : language === 'ta' ? t('lang_tamil') : t('lang_sinhala')}
-                </span>
-                <FiChevronDownIcon className={`language-dropdown-icon ${isLangDropdownOpen ? 'open' : ''}`} />
-                {isLangDropdownOpen && (
-                  <div className="language-dropdown-menu">
-                    <button type="button" className={`language-dropdown-item ${language === 'en' ? 'active' : ''}`} onClick={() => { setLanguage('en'); setIsLangDropdownOpen(false); }}>English</button>
-                    <button type="button" className={`language-dropdown-item ${language === 'ta' ? 'active' : ''}`} onClick={() => { setLanguage('ta'); setIsLangDropdownOpen(false); }}>தமிழ்</button>
-                    <button type="button" className={`language-dropdown-item ${language === 'si' ? 'active' : ''}`} onClick={() => { setLanguage('si'); setIsLangDropdownOpen(false); }}>සිංහල</button>
+              {getSetting('topbar_show_lang', 'yes') === 'yes' && (
+                <>
+                  <div
+                    className="top-bar-language"
+                    ref={langDropdownRef}
+                    onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                  >
+                    <span className="top-bar-language-current">
+                      {language === 'en' ? t('lang_english') : language === 'ta' ? t('lang_tamil') : t('lang_sinhala')}
+                    </span>
+                    <FiChevronDownIcon className={`language-dropdown-icon ${isLangDropdownOpen ? 'open' : ''}`} />
+                    {isLangDropdownOpen && (
+                      <div className="language-dropdown-menu">
+                        <button type="button" className={`language-dropdown-item ${language === 'en' ? 'active' : ''}`} onClick={() => { setLanguage('en'); setIsLangDropdownOpen(false); }}>English</button>
+                        <button type="button" className={`language-dropdown-item ${language === 'ta' ? 'active' : ''}`} onClick={() => { setLanguage('ta'); setIsLangDropdownOpen(false); }}>தமிழ்</button>
+                        <button type="button" className={`language-dropdown-item ${language === 'si' ? 'active' : ''}`} onClick={() => { setLanguage('si'); setIsLangDropdownOpen(false); }}>සිංහල</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className="top-bar-separator top-bar-separator-lang"></span>
+                  <span className="top-bar-separator top-bar-separator-lang"></span>
+                </>
+              )}
               {currentUser ? (
                 <div
                   className="top-bar-user"
@@ -289,12 +299,12 @@ const Header = () => {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo" style={{ textDecoration: 'none' }}>
-              <div className="logo-square">
-                <div className="logo-square-inner">
-                  <span className="logo-text">TiT</span>
-                </div>
-              </div>
-              <span className="logo-tagline">{t('logo_tagline')}</span>
+              {getSetting('logo_url') ? (
+                <img src={getSetting('logo_url')} alt="Logo" className="site-logo" />
+              ) : (
+                <span className="logo-text">{getSetting('site_name', 'TiT')}</span>
+              )}
+              <span className="logo-tagline">{getSetting('site_tagline', t('logo_tagline'))}</span>
             </Link>
 
             <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
@@ -340,7 +350,7 @@ const Header = () => {
                         e.stopPropagation()
                       }}
                     >
-                      {t(item.nameKey)}
+                      {item.name}
                       <FiChevronDown className={`dropdown-icon ${isClassesDropdownOpen ? 'open' : ''}`} />
                     </Link>
                     {isClassesDropdownOpen && (
@@ -546,7 +556,7 @@ const Header = () => {
                       handleNavClick(e, item.href, true)
                     }}
                   >
-                    {t(item.nameKey)}
+                    {item.name}
                   </Link>
                 ) : (
                   <a
@@ -570,7 +580,7 @@ const Header = () => {
                       handleNavClick(e, item.href, false)
                     }}
                   >
-                    {t(item.nameKey)}
+                    {item.name}
                   </a>
                 )
               ))}

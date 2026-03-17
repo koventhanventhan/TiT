@@ -35,8 +35,8 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth:web'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/', function () {
-            // Check if user is admin
-            if (auth()->check() && auth()->user()->role === 'admin') {
+            // Check if user is admin or super_admin
+            if (auth()->check() && (auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')) {
                 return redirect()->route('admin.dashboard');
             }
             return redirect()->route('admin.login')->with('error', 'Admin access required');
@@ -78,6 +78,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/settings/contact', [SiteSettingController::class, 'contact'])->name('admin.settings.contact');
         Route::get('/settings/learning', [SiteSettingController::class, 'learning'])->name('admin.settings.learning');
         Route::get('/settings/classes', [SiteSettingController::class, 'classes'])->name('admin.settings.classes');
+        Route::get('/settings/footer', [SiteSettingController::class, 'footer'])->name('admin.settings.footer');
+        Route::get('/settings/register', [SiteSettingController::class, 'register'])->name('admin.settings.register');
         Route::post('/settings', [SiteSettingController::class, 'store'])->name('admin.settings.store');
         Route::post('/settings/learning/store', [SiteSettingController::class, 'storeMaterial'])->name('admin.settings.learning.material.store');
         Route::delete('/settings/learning/{id}', [SiteSettingController::class, 'deleteMaterial'])->name('admin.settings.learning.material.delete');

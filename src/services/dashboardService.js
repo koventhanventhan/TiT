@@ -284,6 +284,17 @@ export const updateAdminBranding = async (formData) => {
   return res.json()
 }
 
+export const updateAdminSettings = async (data) => {
+  const res = await fetch(`${API_BASE_URL}/admin/settings`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to update settings')
+  return res.json()
+}
+
 // SUPER ADMIN API
 export const getSuperAdminStats = async () => {
   const res = await fetch(`${API_BASE_URL}/super-admin/stats`, {

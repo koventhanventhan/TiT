@@ -107,6 +107,28 @@
     background: white;
 }
 
+.toggle-grid, .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.toggle-item select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.settings-section h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
 @media (max-width: 1024px) {
     .settings-layout {
         grid-template-columns: 1fr;

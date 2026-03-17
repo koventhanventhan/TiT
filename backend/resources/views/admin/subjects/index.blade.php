@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -14,6 +14,17 @@
     <style>
         .content-body { margin-top: 0 !important; padding-top: 20px; }
         .card { border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        
+        /* Fix Category dropdown visibility */
+        select.form-control option {
+            color: #ffffff !important;
+            background-color: #3b3363 !important;
+        }
+        /* Ensure select text is visible even if theme defaults are dark */
+      select.form-control option {
+            color: #ffffff !important;
+            background-color: #3b3363 !important;
+        }
     </style>
     <!-- Pusher and Notifications -->
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
@@ -176,8 +187,8 @@
                                                 <td>
                                                     @php
                                                         $categoryLabels = [
-                                                            'grade_1_to_5' => 'Grade 1â€“5',
-                                                            'grade_6_to_11' => 'Grade 6â€“11',
+                                                            'grade_1_to_5' => 'Grade 1-5',
+                                                            'grade_6_to_11' => 'Grade 6-11',
                                                             'arts_stream' => 'A/L Arts',
                                                             'bio_maths_stream' => 'A/L Bio & Maths',
                                                         ];
@@ -211,8 +222,8 @@
                                                                         <div class="form-group">
                                                                             <label>Category</label>
                                                                             <select name="category" class="form-control" required>
-                                                                                <option value="grade_1_to_5" {{ $s->category == 'grade_1_to_5' ? 'selected' : '' }}>Grade 1â€“5</option>
-                                                                                <option value="grade_6_to_11" {{ $s->category == 'grade_6_to_11' ? 'selected' : '' }}>Grade 6â€“11</option>
+                                                                                <option value="grade_1_to_5" {{ $s->category == 'grade_1_to_5' ? 'selected' : '' }}>Grade 1-5</option>
+                                                                                <option value="grade_6_to_11" {{ $s->category == 'grade_6_to_11' ? 'selected' : '' }}>Grade 6-11</option>
                                                                                 <option value="arts_stream" {{ $s->category == 'arts_stream' ? 'selected' : '' }}>A/L Arts</option>
                                                                                 <option value="bio_maths_stream" {{ $s->category == 'bio_maths_stream' ? 'selected' : '' }}>A/L Bio & Maths</option>
                                                                             </select>
@@ -252,8 +263,8 @@
                                 <label>Category</label>
                                 <select name="category" class="form-control" required>
                                     <option value="">Select Category</option>
-                                    <option value="grade_1_to_5">Grade 1â€“5</option>
-                                    <option value="grade_6_to_11">Grade 6â€“11</option>
+                                    <option value="grade_1_to_5">Grade 1-5</option>
+                                    <option value="grade_6_to_11">Grade 6-11</option>
                                     <option value="arts_stream">A/L Arts</option>
                                     <option value="bio_maths_stream">A/L Bio & Maths</option>
                                 </select>

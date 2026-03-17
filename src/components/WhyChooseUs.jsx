@@ -1,63 +1,94 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { FiAward, FiCheckCircle, FiStar, FiZap, FiTarget } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
 import './WhyChooseUs.css'
 
 const WhyChooseUs = () => {
   const { getSetting } = useSettings()
+  const { t, translate, language } = useLanguage()
 
-  const why_title = getSetting('why_title', 'Why Choose EduLearn?')
-  const why_subtitle = getSetting('why_subtitle', 'Empowering students with quality education and modern tools.')
+  const [whyTitle, setWhyTitle] = useState(getSetting('why_title', t('why_title')))
+  const [whySubtitle, setWhySubtitle] = useState(getSetting('why_subtitle', t('why_subtitle')))
+  const [reasons, setReasons] = useState([])
 
-  const reasons = [
-    {
-      icon: (
-        <lord-icon
-          src="https://cdn.lordicon.com/osuxyevn.json"
-          trigger="hover"
-          colors="primary:#ffffff,secondary:#ffffff"
-          style={{ width: '48px', height: '48px' }}
-        />
-      ),
-      title: 'Expert Instruction',
-      description: 'Learn from highly qualified educators who are passionate about teaching and student success.',
-      color: '#4f0bd9'
-    },
-    {
-      icon: (
-        <lord-icon
-          src="https://cdn.lordicon.com/qhviklyi.json"
-          trigger="hover"
-          colors="primary:#ffffff,secondary:#ffffff"
-          style={{ width: '48px', height: '48px' }}
-        />
-      ),
-      title: 'Affordable Pricing',
-      description: 'Get premium quality education at prices that make sense, ensuring value for every student.',
-      color: '#10b981'
-    },
-    {
-      icon: (
-        <lord-icon
-          src="https://cdn.lordicon.com/srsrzquw.json"
-          trigger="hover"
-          colors="primary:#ffffff,secondary:#ffffff"
-          style={{ width: '48px', height: '48px' }}
-        />
-      ),
-      title: 'Lifetime Support',
-      description: 'Our dedicated team is always here to guide you through your academic journey.',
-      color: '#8b5cf6'
+  useEffect(() => {
+    const defaultEn = {
+      title: 'Why Choose EduLearn?',
+      subtitle: 'Empowering students with quality education and modern tools.',
+      reasons_raw: '[]'
     }
-  ]
+
+    const why_reasons_raw = getSetting('why_reasons', defaultEn.reasons_raw)
+    let baseReasons = []
+    try {
+      baseReasons = JSON.parse(why_reasons_raw)
+      if (!Array.isArray(baseReasons) || baseReasons.length === 0) {
+        baseReasons = [
+          {
+            icon: "https://cdn.lordicon.com/osuxyevn.json",
+            title: 'Expert Instruction',
+            description: 'Learn from highly qualified educators with years of experience.',
+            localTitle: 'benefit_instruction',
+            localDesc: 'benefit_instruction_desc',
+            color: '#4f0bd9'
+          },
+          {
+            icon: "https://cdn.lordicon.com/qhviklyi.json",
+            title: 'Affordable Pricing',
+            description: 'Premium education that fits your budget without compromising quality.',
+            localTitle: 'benefit_pricing',
+            localDesc: 'benefit_pricing_desc',
+            color: '#10b981'
+          },
+          {
+            icon: "https://cdn.lordicon.com/hrjifpbq.json",
+            title: 'Lifetime Support',
+            description: 'Access our support team and learning resources whenever you need them.',
+            localTitle: 'benefit_support',
+            localDesc: 'benefit_support_desc',
+            color: '#8b5cf6'
+          }
+        ]
+      }
+    } catch (e) {
+      console.error('Error parsing why_reasons', e)
+    }
+
+    if (language !== 'en') {
+      const translateAll = async () => {
+        const valTitle = getSetting('why_title', defaultEn.title)
+        if (valTitle === defaultEn.title) setWhyTitle(t('why_title'))
+        else setWhyTitle(await translate(valTitle))
+
+        const valSub = getSetting('why_subtitle', defaultEn.subtitle)
+        if (valSub === defaultEn.subtitle) setWhySubtitle(t('why_subtitle'))
+        else setWhySubtitle(await translate(valSub))
+        
+        const translatedReasons = await Promise.all(baseReasons.map(async (r) => ({
+          ...r,
+          title: r.localTitle ? t(r.localTitle) : await translate(r.title),
+          description: r.localDesc ? t(r.localDesc) : await translate(r.description)
+        })))
+
+        setReasons(translatedReasons)
+      }
+      translateAll()
+    } else {
+      setWhyTitle(getSetting('why_title', t('why_title')))
+      setWhySubtitle(getSetting('why_subtitle', t('why_subtitle')))
+      setReasons(baseReasons)
+    }
+  }, [language, translate, getSetting, t])
 
   return (
     <section className="premium-why section">
       <div className="container">
         <div className="pw-content-wrapper">
           <div className="pw-text-side">
-            <span className="pw-badge">Our Benefits</span>
-            <h2 className="pw-title">{why_title}</h2>
-            <p className="pw-description">{why_subtitle}</p>
+            <span className="pw-badge">{t('why_badge')}</span>
+            <h2 className="pw-title">{whyTitle}</h2>
+            <p className="pw-description">{whySubtitle}</p>
 
             <ul className="pw-benefit-list">
               <li>
@@ -66,7 +97,7 @@ const WhyChooseUs = () => {
                   trigger="loop"
                   colors="primary:#4f0bd9"
                   style={{ width: '20px', height: '20px' }}
-                /> Personalized Learning Paths
+                /> {t('benefit_personalized')}
               </li>
               <li>
                 <lord-icon
@@ -74,7 +105,7 @@ const WhyChooseUs = () => {
                   trigger="loop"
                   colors="primary:#4f0bd9"
                   style={{ width: '20px', height: '20px' }}
-                /> 24/7 Access to Course Materials
+                /> {t('benefit_access')}
               </li>
               <li>
                 <lord-icon
@@ -82,7 +113,7 @@ const WhyChooseUs = () => {
                   trigger="loop"
                   colors="primary:#4f0bd9"
                   style={{ width: '20px', height: '20px' }}
-                /> Interactive Live Q&A Sessions
+                /> {t('benefit_qa')}
               </li>
             </ul>
           </div>
@@ -92,7 +123,16 @@ const WhyChooseUs = () => {
               {reasons.map((reason, index) => (
                 <div key={index} className="pw-reason-card" style={{ '--accent-color': reason.color }}>
                   <div className="pw-reason-icon-box">
-                    {reason.icon}
+                    {reason.icon && typeof reason.icon === 'string' ? (
+                      <lord-icon
+                        src={reason.icon}
+                        trigger="loop"
+                        colors="primary:#ffffff,secondary:#ffffff"
+                        style={{ width: '48px', height: '48px' }}
+                      />
+                    ) : (
+                      reason.icon
+                    )}
                   </div>
                   <h3 className="pw-reason-title">{reason.title}</h3>
                   <p className="pw-reason-desc">{reason.description}</p>

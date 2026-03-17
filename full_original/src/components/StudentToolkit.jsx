@@ -24,35 +24,35 @@ const StudentToolkit = () => {
     }
   ]
 
-  return (
-    <section id="learning-suite" className="student-toolkit section">
-      <div className="container">
-        <div className="toolkit-header">
-          <h2 className="section-title">All-in-One Student Toolkit</h2>
-          <p className="section-subtitle">
-            Supercharge Your Studies - The Future of Learning is Here: Streamlined Resources, 
-            AI-Powered Support & Engaging Brain Games
-          </p>
-        </div>
+  // return (
+  //   <section id="learning-suite" className="student-toolkit section">
+  //     <div className="container">
+  //       <div className="toolkit-header">
+  //         <h2 className="section-title">All-in-One Student Toolkit</h2>
+  //         <p className="section-subtitle">
+  //           Supercharge Your Studies - The Future of Learning is Here: Streamlined Resources, 
+  //           AI-Powered Support & Engaging Brain Games
+  //         </p>
+  //       </div>
 
-        <div className="tools-grid">
-          {tools.map((tool, index) => (
-            <div key={index} className={`tool-card ${tool.gradient}`}>
-              <div className="tool-icon-wrapper">
-                <div className="tool-icon">{tool.icon}</div>
-              </div>
-              <h3 className="tool-title">{tool.title}</h3>
-              <p className="tool-description">{tool.description}</p>
-              <a href="#explore" className="tool-link">
-                Explore
-                <FiArrowRight />
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
+  //       <div className="tools-grid">
+  //         {tools.map((tool, index) => (
+  //           <div key={index} className={`tool-card ${tool.gradient}`}>
+  //             <div className="tool-icon-wrapper">
+  //               <div className="tool-icon">{tool.icon}</div>
+  //             </div>
+  //             <h3 className="tool-title">{tool.title}</h3>
+  //             <p className="tool-description">{tool.description}</p>
+  //             <a href="#explore" className="tool-link">
+  //               Explore
+  //               <FiArrowRight />
+  //             </a>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </section>
+  // )
 }
 
 export default StudentToolkit

@@ -21,7 +21,16 @@ class AppServiceProvider extends ServiceProvider
     {
         // Share site settings with all views
         if (!app()->runningInConsole()) {
-            \Illuminate\Support\Facades\View::share('site_settings', \App\Models\SiteSetting::all()->pluck('value', 'key'));
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+                    \Illuminate\Support\Facades\View::share('site_settings', \App\Models\SiteSetting::all()->pluck('value', 'key'));
+                } else {
+                    \Illuminate\Support\Facades\View::share('site_settings', collect());
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Database connection failed in AppServiceProvider: ' . $e->getMessage());
+                \Illuminate\Support\Facades\View::share('site_settings', collect());
+            }
         }
 
         // Register login alert listener

@@ -10,11 +10,16 @@ import {
     FiEdit
 } from 'react-icons/fi'
 import { getAdminZoom } from '../../services/dashboardService'
+import { BASE_URL } from '../../services/authService'
 import './AdminZoom.css'
 
 export default function AdminZoom() {
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
+
+    const handleNewSession = () => {
+        window.location.href = `${BASE_URL}/admin/timetables`
+    }
 
     useEffect(() => {
         async function loadZoom() {
@@ -39,7 +44,7 @@ export default function AdminZoom() {
                     <h1>Zoom Class Control</h1>
                     <p>Schedule live sessions, manage meeting links, and assign instructors.</p>
                 </div>
-                <button className="add-btn"><FiPlus /> Schedule New Session</button>
+                <button className="add-btn" onClick={handleNewSession}><FiPlus /> Schedule New Session</button>
             </div>
 
             <div className="zoom-schedules-grid">

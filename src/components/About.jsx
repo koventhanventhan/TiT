@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuthModal } from '../context/AuthModalContext'
 import './About.css'
 
 const About = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage()
+  const { openRegister } = useAuthModal()
 
   const [aboutTitle, setAboutTitle] = useState('')
   const [aboutSubtitle, setAboutSubtitle] = useState('')
@@ -300,9 +302,9 @@ const About = () => {
         </div>
 
         <div className="about-cta">
-          <a href="/register" className="btn btn-primary">
+          <button onClick={openRegister} className="btn btn-primary">
             {t('btn_register_now')}
-          </a>
+          </button>
         </div>
       </div>
     </section>

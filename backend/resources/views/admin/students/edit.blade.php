@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -174,6 +174,24 @@
                                 </a>
                             </li>
                             
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="#" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
+                                        <span id="notification-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    </div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                                     <!-- <div class="header-info">
@@ -275,12 +293,6 @@
                                                 $currentSubjects = is_array($decoded) ? $decoded : array_map('trim', explode(',', (string)$student->selected_subjects));
                                             }
                                         }
-                                        
-                                        // Subject Master Lists
-                                        $subjectsGrade1to5 = ['à®¤à®®à®¿à®´à¯', 'à®†à®™à¯à®•à®¿à®²à®®à¯', 'à®šà¯‚à®´à®±à¯Â­à®±à®¾à®Ÿà®²à¯', 'à®šà®®à®¯à®®à¯', 'à®šà®¿à®™à¯à®•à®³à®®à¯', 'à®ªà¯à®²à®®à¯ˆà®ªà¯à®ªà®°à®¿à®šà®¿à®²à¯ à®µà®•à¯à®ªà¯à®ªà¯à®•à®³à¯'];
-                                        $subjectsGrade6to11 = ['à®¤à®®à®¿à®´à¯', 'à®†à®™à¯à®•à®¿à®²à®®à¯', 'à®•à®£à®¿à®¤à®®à¯', 'à®µà®°à®²à®¾à®±à¯', 'à®šà®®à®¯à®®à¯', 'à®µà®¿à®žà¯à®žà®¾à®©à®®à¯', 'à®•à¯à®Ÿà®¿à®¯à®¿à®¯à®²à¯ à®•à®²à¯à®µà®¿', 'à®ªà¯à®µà®¿à®¯à®¿à®¯à®²à¯', 'à®šà®¿à®™à¯à®•à®³à®®à¯', 'ICT', 'à®šà¯à®•à®¾à®¤à®¾à®°à®®à¯ à®‰à®³à¯à®•à®²à¯à®µà®¿à®¯à¯à®®à¯', 'à®µà®£à®¿à®•à®•à¯ à®•à®²à¯à®µà®¿', 'à®‡à®²à®•à¯à®•à®¿à®¯à®®à¯ (à®¤à®®à®¿à®´à¯)'];
-                                        $subjectsArtsStream = ['à®¤à®®à®¿à®´à¯', 'à®µà®°à®²à®¾à®±à¯', 'à®ªà¯à®µà®¿à®¯à®¿à®¯à®²à¯', 'ICT', 'à®…à®°à®šà®¿à®¯à®²à¯ à®µà®¿à®žà¯à®žà®¾à®©à®®à¯', 'à®‡à®¨à¯à®¤à¯ à®¨à®¾à®•à®°à®¿à®•à®®à¯', 'à®®à®©à¯ˆà®ªà¯à®ªà¯Šà®°à¯à®³à®¿à®¯à®²à¯', 'à®Šà®Ÿà®•à®•à¯ à®•à®²à¯à®µà®¿', 'à®¨à®Ÿà®©à®®à¯', 'à®¨à®¾à®Ÿà®•à®®à¯', 'à®šà®¿à®¤à¯à®¤à®¿à®°à®®à¯', 'à®šà®™à¯à®•à¯€à®¤à®®à¯', 'à®•à®¿à®±à®¿à®¸à¯à®¤à®µ à®¨à®¾à®•à®°à®¿à®•à®®à¯', 'à®…à®³à®µà¯ˆà®¯à®¿à®¯à®²à¯'];
-                                        $subjectsBioMathsStream = ['à®‡à®£à¯ˆà®¨à¯à®¤ à®•à®£à®¿à®¤à®®à¯', 'à®‰à®¯à®¿à®°à®¿à®¯à®²à¯', 'à®ªà¯†à®³à®¤à®¿à®•à®µà®¿à®¯à®²à¯', 'à®‡à®°à®šà®¾à®¯à®©à®µà®¿à®¯à®²à¯', 'ICT'];
                                     @endphp
 
                                     <div class="row">
@@ -313,10 +325,10 @@
                                             <div class="form-group">
                                                 <label>Password  <small class="text-muted">(Leave blank to keep current)</small></label>
                                                 <div style="position: relative;">
-                                                    <input type="text" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 50px;">
-                                                    <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 18px; padding: 5px;">
-                                                        <span id="editEyeIcon">ðŸ™ˆ</span>
-                                                    </button>
+                                                    <input type="password" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 50px;">
+                                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 18px; padding: 5px;">
+                                                         <i id="editEyeIcon" class="la la-eye"></i>
+                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -373,18 +385,23 @@
                                             </div>
                                         </div>
 
-                                        <!-- Current Grade -->
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-group">
-                                                 <label>Current Grade (2026)  <span class="text-danger">*</span></label>
-                                                 <select name="current_grade" id="current_grade" class="form-control" required>
-                                                     <option value="">Select Grade</option>
-                                                     @foreach([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as $grade)
-                                                         <option value="à®¤à®°à®®à¯ {{ $grade }} / Grade {{ $grade }}" {{ old('current_grade', $student->current_grade) == "à®¤à®°à®®à¯ $grade / Grade $grade" ? 'selected' : '' }}> Grade {{ $grade }}</option>
-                                                     @endforeach
-                                                 </select>
-                                            </div>
-                                        </div>
+                                         <!-- Current Grade -->
+                                         <div class="col-md-6 mb-3">
+                                             <div class="form-group">
+                                                  <label>Current Grade <span class="text-danger">*</span></label>
+                                                  <select name="current_grade" id="current_grade" class="form-control" required>
+                                                      <option value="">Select Grade</option>
+                                                      @foreach([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as $grade)
+                                                          @php
+                                                              $gradeString = "தரம் $grade / Grade $grade";
+                                                              $currentGradeValue = old('current_grade', $student->current_grade);
+                                                              $isSelected = ($currentGradeValue == $gradeString || $currentGradeValue == $grade);
+                                                          @endphp
+                                                          <option value="{{ $grade }}" {{ $isSelected ? 'selected' : '' }}> Grade {{ $grade }}</option>
+                                                      @endforeach
+                                                  </select>
+                                             </div>
+                                         </div>
 
                                         <!-- Device Used -->
                                         <div class="col-md-6 mb-3">
@@ -405,8 +422,8 @@
                                                  <label>Stream / (A/L) <span class="text-danger">*</span></label>
                                                  <select name="stream" id="stream" class="form-control">
                                                      <option value="">Select Stream</option>
-                                                     <option value="arts" {{ old('stream', $student->stream) === 'arts' ? 'selected' : '' }}>A/L â€“ ARTS</option>
-                                                     <option value="bio_maths" {{ old('stream', $student->stream) === 'bio_maths' ? 'selected' : '' }}>A/L â€“ BIO & MATHS </option>
+                                                     <option value="arts" {{ old('stream', $student->stream) === 'arts' ? 'selected' : '' }}>A/L – ARTS</option>
+                                                     <option value="bio_maths" {{ old('stream', $student->stream) === 'bio_maths' ? 'selected' : '' }}>A/L – BIO & MATHS </option>
                                                  </select>
                                             </div>
                                         </div>
@@ -418,56 +435,64 @@
                                                  {{-- Subjects for Grade 1-5 --}}
                                                  <div class="subject-section" id="subjects_1_5" style="display: none;">
                                                      <div class="row">
-                                                         @foreach($subjectsGrade1to5 as $subject)
-                                                         <div class="col-md-4 col-6 mb-2">
-                                                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                 <input type="checkbox" name="selected_subjects[]" value="{{ $subject }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject, $currentSubjects) ? 'checked' : '' }}>
-                                                                 <span>{{ $subject }}</span>
-                                                             </label>
-                                                         </div>
-                                                         @endforeach
+                                                         @if(isset($subjects['grade_1_to_5']))
+                                                             @foreach($subjects['grade_1_to_5'] as $subject)
+                                                             <div class="col-md-4 col-6 mb-2">
+                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                     <span>{{ $subject->name }}</span>
+                                                                 </label>
+                                                             </div>
+                                                             @endforeach
+                                                         @endif
                                                      </div>
                                                  </div>
 
                                                  {{-- Subjects for Grade 6-11 --}}
                                                  <div class="subject-section" id="subjects_6_11" style="display: none;">
                                                      <div class="row">
-                                                         @foreach($subjectsGrade6to11 as $subject)
-                                                         <div class="col-md-4 col-6 mb-2">
-                                                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                 <input type="checkbox" name="selected_subjects[]" value="{{ $subject }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject, $currentSubjects) ? 'checked' : '' }}>
-                                                                 <span>{{ $subject }}</span>
-                                                             </label>
-                                                         </div>
-                                                         @endforeach
+                                                         @if(isset($subjects['grade_6_to_11']))
+                                                             @foreach($subjects['grade_6_to_11'] as $subject)
+                                                             <div class="col-md-4 col-6 mb-2">
+                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                     <span>{{ $subject->name }}</span>
+                                                                 </label>
+                                                             </div>
+                                                             @endforeach
+                                                         @endif
                                                      </div>
                                                  </div>
 
                                                  {{-- Subjects for Arts --}}
                                                  <div class="subject-section" id="subjects_arts" style="display: none;">
                                                      <div class="row">
-                                                         @foreach($subjectsArtsStream as $subject)
-                                                         <div class="col-md-4 col-6 mb-2">
-                                                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                 <input type="checkbox" name="selected_subjects[]" value="{{ $subject }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject, $currentSubjects) ? 'checked' : '' }}>
-                                                                 <span>{{ $subject }}</span>
-                                                             </label>
-                                                         </div>
-                                                         @endforeach
+                                                         @if(isset($subjects['arts_stream']))
+                                                             @foreach($subjects['arts_stream'] as $subject)
+                                                             <div class="col-md-4 col-6 mb-2">
+                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                     <span>{{ $subject->name }}</span>
+                                                                 </label>
+                                                             </div>
+                                                             @endforeach
+                                                         @endif
                                                      </div>
                                                  </div>
 
                                                  {{-- Subjects for Bio/Maths --}}
                                                  <div class="subject-section" id="subjects_bio_maths" style="display: none;">
                                                      <div class="row">
-                                                         @foreach($subjectsBioMathsStream as $subject)
-                                                         <div class="col-md-4 col-6 mb-2">
-                                                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                 <input type="checkbox" name="selected_subjects[]" value="{{ $subject }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject, $currentSubjects) ? 'checked' : '' }}>
-                                                                 <span>{{ $subject }}</span>
-                                                             </label>
-                                                         </div>
-                                                         @endforeach
+                                                         @if(isset($subjects['bio_maths_stream']))
+                                                             @foreach($subjects['bio_maths_stream'] as $subject)
+                                                             <div class="col-md-4 col-6 mb-2">
+                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                     <span>{{ $subject->name }}</span>
+                                                                 </label>
+                                                             </div>
+                                                             @endforeach
+                                                         @endif
                                                      </div>
                                                  </div>
                                              </div>
@@ -592,9 +617,14 @@
                 const gradeValue = gradeSelect.val() || "";
                 const streamValue = streamSelect.val() || "";
                 
-                // Extract number from "à®¤à®°à®®à¯ X / Grade X"
-                const match = gradeValue.match(/Grade\s*(\d+)/i);
-                const gradeNum = match ? parseInt(match[1]) : null;
+                // Extract number from value (could be "1", "Grade 1", or "à®¤à®°à®®à¯  1 / Grade 1")
+                let gradeNum = null;
+                if (!isNaN(gradeValue) && gradeValue !== "") {
+                    gradeNum = parseInt(gradeValue);
+                } else {
+                    const match = gradeValue.match(/Grade\s*(\d+)/i);
+                    gradeNum = match ? parseInt(match[1]) : null;
+                }
                 
                 // Hide all sections first and DISABLE their checkboxes
                 $('.subject-section').hide().find('input[type="checkbox"]').prop('disabled', true);
@@ -640,10 +670,12 @@
             const icon = document.getElementById(iconId);
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.textContent = 'ðŸ™ˆ';
+                icon.classList.remove('la-eye');
+                icon.classList.add('la-eye-slash');
             } else {
                 input.type = 'password';
-                icon.textContent = 'ðŸ‘ï¸';
+                icon.classList.remove('la-eye-slash');
+                icon.classList.add('la-eye');
             }
         }
     </script>

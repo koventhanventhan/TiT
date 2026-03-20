@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -127,63 +127,7 @@
             </div>
         </div>
 
-        <div class="header">
-            <div class="header-content">
-                <nav class="navbar navbar-expand">
-                    <div class="collapse navbar-collapse justify-content-between">
-                        <div class="header-left">
-                            <div class="search_bar">
-                                <form>
-                                    <input class="form-control" type="search" placeholder="Find something here..." aria-label="Search">
-                                    <span class="search_icon"><i class="mdi mdi-magnify"></i></span>
-                                </form>
-                            </div>
-                        </div>
-
-                        <ul class="navbar-nav header-right">
-                            <li class="nav-item" style="margin-right: 20px;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 8px 20px; border-radius: 6px; color: white; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                    Home
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown header-profile">
-                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
-                                    @else
-                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                                            {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <div class="dropdown-header text-left border-bottom pb-3 mb-2">
-                                        <h6 class="mb-0 text-black">{{ Auth::user()->name }}</h6>
-                                        <small class="text-muted">{{ Auth::user()->email }}</small>
-                                    </div>
-                                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item ai-icon">
-                                        <i class="la la-cog text-primary mr-2"></i>
-                                        <span class="ml-2">Settings</span>
-                                    </a>
-                                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item ai-icon">
-                                        <i class="la la-calendar text-primary mr-2"></i>
-                                        <span class="ml-2">Calendar</span>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.logout') }}" class="mt-2 border-top pt-2">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item ai-icon text-danger">
-                                            <i class="la la-sign-out text-danger mr-2"></i>
-                                            <span class="ml-2">Sign out</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
-            </div>
-        </div>
+        @include('admin.partials.header')
 
         @include('admin.partials.sidebar')
 
@@ -304,9 +248,6 @@
         }
     </script>
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    
-    <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
-    <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
 </body>
 </html>
 

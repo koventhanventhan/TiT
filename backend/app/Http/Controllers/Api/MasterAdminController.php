@@ -297,4 +297,84 @@ class MasterAdminController extends Controller
             'institute' => $institute
         ]);
     }
+
+    /**
+     * Get All Calendar Events (Zoom, Custom, etc.)
+     */
+    public function calendarEvents(Request $request)
+    {
+        $start = $request->start ? \Carbon\Carbon::parse($request->start) : now()->startOfMonth()->subMonth();
+        $end = $request->end ? \Carbon\Carbon::parse($request->end) : now()->endOfMonth()->addMonth();
+
+        $events = [];
+
+        // 1. Zoom Schedules
+        $zoomSchedules = ZoomSchedule::with('teachers')
+            ->whereBetween('scheduled_at', [$start, $end])
+            ->get();
+
+        foreach ($zoomSchedules as $zs) {
+            $events[] = [
+                'id' => 'zoom-' . $zs->id,
+                'title' => $zs->title,
+                'start' => $zs->scheduled_at->toIso8601String(),
+                'type' => 'zoom',
+                'color' => '#3b82f6', // blue
+                'extendedProps' => [
+                    'subject' => $zs->subject,
+                    'grade' => $zs->grade,
+                    'link' => $zs->zoom_link,
+                    'teacher' => $zs->teachers->first()?->name ?? 'N/A'
+                ]
+            ];
+        }
+
+        // 2. Custom Calendar Events (if any)
+        $customEvents = \App\Models\CalendarEvent::whereBetween('event_date', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($customEvents as $ce) {
+            $events[] = [
+                'id' => 'custom-' . $ce->id,
+                'title' => $ce->title,
+                'start' => $ce->event_date->format('Y-m-d') . ($ce->start_time ? 'T' . $ce->start_time : ''),
+                'type' => $ce->type ?? 'event',
+                'color' => $this->getColorForType($ce->type),
+                'extendedProps' => [
+                    'location' => $ce->location,
+                    'description' => $ce->description,
+                    'priority' => $ce->priority
+                ]
+            ];
+        }
+
+        // 3. Assignment Deadlines
+        $assignments = Assignment::whereBetween('due_date', [$start, $end])->get();
+        foreach ($assignments as $a) {
+            $events[] = [
+                'id' => 'assignment-' . $a->id,
+                'title' => 'Due: ' . $a->title,
+                'start' => $a->due_date->toIso8601String(),
+                'type' => 'assignment',
+                'color' => '#f59e0b', // amber
+                'extendedProps' => [
+                    'subject' => $a->subject,
+                    'grade' => $a->grade
+                ]
+            ];
+        }
+
+        return response()->json($events);
+    }
+
+    private function getColorForType($type)
+    {
+        return match($type) {
+            'meeting' => '#8b5cf6',
+            'holiday' => '#ef4444',
+            'exam' => '#ec4899',
+            'event' => '#10b981',
+            default => '#64748b'
+        };
+    }
 }

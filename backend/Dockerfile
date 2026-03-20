@@ -1,49 +1,46 @@
-FROM php:8.2-apache
+# Use PHP 8.2 CLI for a lightweight production image
+FROM php:8.2-cli-alpine
 
-# Apache mod_rewrite enable
-RUN a2enmod rewrite
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and PHP extensions
+RUN apk add --no-cache \
     libpng-dev \
-    libonig-dev \
+    libzip-dev \
+    oniguruma-dev \
     libxml2-dev \
+    icu-dev \
     zip \
     unzip \
-    curl \
     git \
-    gettext \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+    curl
 
-# Install Composer
+# Install PHP extensions required by Laravel
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+
+# Install Composer from the official image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /app
 
-# Copy existing application directory contents
-COPY . /var/www/html
+# Copy composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
 
-# Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install dependencies without dev tools and optimize autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Copy the rest of the application
+COPY . .
 
-# Apache config for Laravel (handling dynamic $PORT)
-RUN echo '<VirtualHost *:${PORT}>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+# Set permissions for Laravel storage and cache
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache && \
+    chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Start script
-COPY docker-start.sh /docker-start.sh
-RUN chmod +x /docker-start.sh
+# Generate optimized configuration and route cache
+# Note: Key generation should ideally happen via environment variables in production
+# RUN php artisan key:generate --force
 
-# Expose port (metadata)
-EXPOSE 8000
+# Expose the port Render expects (10000)
+EXPOSE 10000
 
-CMD ["/docker-start.sh"]
+# Start Laravel using artisan serve as requested
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]

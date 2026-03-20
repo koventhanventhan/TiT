@@ -34,6 +34,11 @@ class TimetableController extends Controller
 
         // Predefined grades list
         $grades = [
+            'Grade 1 / தரம் 1',
+            'Grade 2 / தரம் 2',
+            'Grade 3 / தரம் 3',
+            'Grade 4 / தரம் 4',
+            'Grade 5 / தரம் 5',
             'Grade 6 / தரம் 6',
             'Grade 7 / தரம் 7',
             'Grade 8 / தரம் 8',
@@ -96,7 +101,14 @@ class TimetableController extends Controller
 
         Timetable::create($data);
 
-        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
+        // Immediate sync to Zoom
+        try {
+            \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully and synced to Zoom.');
     }
 
     public function edit(Timetable $timetable)
@@ -148,7 +160,14 @@ class TimetableController extends Controller
 
         $timetable->update($data);
 
-        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully.');
+        // Immediate sync to Zoom
+        try {
+            \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully and synced to Zoom.');
     }
 
     public function destroy(Timetable $timetable)

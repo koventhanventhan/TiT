@@ -11,7 +11,8 @@ import {
     FiSettings,
     FiLogOut,
     FiBarChart2,
-    FiFileText
+    FiFileText,
+    FiVideo
 } from 'react-icons/fi'
 import { useSettings } from '../../context/SettingsContext'
 import './AdminSidebar.css'
@@ -30,7 +31,8 @@ export default function AdminSidebar() {
             items: [
                 { name: 'Students', icon: <FiUsers />, path: '/admin/students' },
                 { name: 'Teachers', icon: <FiUserCheck />, path: '/admin/teachers' },
-                { name: 'Zoom Classes', icon: <FiCalendar />, path: '/admin/zoom' },
+                { name: 'Calendar', icon: <FiCalendar />, path: '/admin/calendar' },
+                { name: 'Zoom Classes', icon: <FiVideo />, path: '/admin/zoom' },
                 { name: 'Attendance', icon: <FiBarChart2 />, path: '/admin/attendance' },
             ]
         },

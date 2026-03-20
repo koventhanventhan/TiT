@@ -43,8 +43,8 @@ class SyncTimetableToZoom extends Command
             }
             
             // Actually, Carbon 'next Monday' works well. 
-            // We want to check for the next 7 days.
-            for ($i = 0; $i < 7; $i++) {
+            // We want to check for the next 90 days (approx 3 months).
+            for ($i = 0; $i < 90; $i++) {
                 $checkDate = Carbon::today()->addDays($i);
                 if ($checkDate->format('l') === $timetable->day_of_week) {
                     $scheduledAt = $checkDate->setTimeFromTimeString($timetable->start_time);

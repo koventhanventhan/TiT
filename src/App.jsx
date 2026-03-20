@@ -33,6 +33,7 @@ import MessagingPage from './pages/MessagingPage'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminAssignments from './pages/admin/AdminAssignments'
 import AdminAttendance from './pages/admin/AdminAttendance'
+import AdminCalendar from './pages/admin/AdminCalendar'
 import TeacherDashboard from './pages/TeacherDashboard'
 import TeacherOverview from './pages/teacher/TeacherOverview'
 import TeacherStudents from './pages/teacher/TeacherStudents'
@@ -43,6 +44,7 @@ import TeacherReports from './pages/teacher/TeacherReports'
 import TeacherSettings from './pages/teacher/TeacherSettings'
 import { SettingsProvider } from './context/SettingsContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { AuthModalProvider } from './context/AuthModalContext'
 import './App.css'
 
 // Wrapper component that includes logout handler
@@ -112,6 +114,7 @@ function AppContent() {
           <Route path="analytics" element={<AdminOverview />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="calendar" element={<AdminCalendar />} />
           <Route path="zoom" element={<AdminZoom />} />
           <Route path="attendance" element={<AdminAttendance />} />
           <Route path="materials" element={<AdminMaterials />} />
@@ -145,14 +148,16 @@ function App() {
   return (
     <SettingsProvider>
       <LanguageProvider>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <AppContent />
-        </Router>
+        <AuthModalProvider>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <AppContent />
+          </Router>
+        </AuthModalProvider>
       </LanguageProvider>
     </SettingsProvider>
   )

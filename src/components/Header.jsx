@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { FiMenu, FiX, FiChevronDown, FiChevronDown as FiChevronDownIcon } from 'react-icons/fi'
+import { FiMenu, FiX, FiChevronDown, FiChevronLeft, FiChevronDown as FiChevronDownIcon } from 'react-icons/fi'
 import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa'
-import { getCurrentUser, isAuthenticated } from '../services/authService'
+import { getCurrentUser, isAuthenticated, logout, BASE_URL } from '../services/authService'
 import AnimatedAuth from './AnimatedAuth'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuthModal } from '../context/AuthModalContext'
 import './Header.css'
 
 const Header = () => {
@@ -15,8 +16,8 @@ const Header = () => {
   const langDropdownRef = useRef(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [authTab, setAuthTab] = useState('login')
+  const [isMobileLangOpen, setIsMobileLangOpen] = useState(false)
+  const { isAuthOpen, openLogin, openRegister, closeAuth, authTab, setAuthTab } = useAuthModal()
   const [isClassesDropdownOpen, setIsClassesDropdownOpen] = useState(false)
   const [classesTimeout, setClassesTimeout] = useState(null)
   const [isLearningSuiteDropdownOpen, setIsLearningSuiteDropdownOpen] = useState(false)
@@ -30,6 +31,15 @@ const Header = () => {
   const classesDropdownRef = useRef(null)
   const learningSuiteDropdownRef = useRef(null)
   const userDropdownRef = useRef(null)
+
+  const getDashboardLink = () => {
+    if (!currentUser) return null;
+    const role = (currentUser.role || '').toLowerCase();
+    if (role === 'admin') return `${BASE_URL}/admin/dashboard`;
+    if (role === 'teacher') return '/teacher/dashboard';
+    if (role === 'user' || role === 'student') return '/student/dashboard';
+    return null;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,33 +67,53 @@ const Header = () => {
   useEffect(() => {
     // Check if user is logged in
     if (isAuthenticated()) {
-      setCurrentUser(getCurrentUser())
+      // First, check localStorage for immediate display
+      const savedUser = localStorage.getItem('user')
+      if (savedUser) {
+        try {
+          setCurrentUser(JSON.parse(savedUser))
+        } catch (e) {
+          console.error("Error parsing saved user:", e)
+        }
+      }
+
+      // Then, fetch fresh user data from API
+      const fetchUser = async () => {
+        const user = await getCurrentUser()
+        if (user) {
+          setCurrentUser(user)
+        }
+      }
+      fetchUser()
     }
   }, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (classesDropdownRef.current && !classesDropdownRef.current.contains(event.target)) {
-        if (classesTimeout) {
-          clearTimeout(classesTimeout)
-          setClassesTimeout(null)
+      // Only close desktop dropdowns if we are in desktop view
+      if (window.innerWidth > 968) {
+        if (classesDropdownRef.current && !classesDropdownRef.current.contains(event.target)) {
+          if (classesTimeout) {
+            clearTimeout(classesTimeout)
+            setClassesTimeout(null)
+          }
+          setIsClassesDropdownOpen(false)
         }
-        setIsClassesDropdownOpen(false)
-      }
-      if (learningSuiteDropdownRef.current && !learningSuiteDropdownRef.current.contains(event.target)) {
-        if (learningSuiteTimeout) {
-          clearTimeout(learningSuiteTimeout)
-          setLearningSuiteTimeout(null)
+        if (learningSuiteDropdownRef.current && !learningSuiteDropdownRef.current.contains(event.target)) {
+          if (learningSuiteTimeout) {
+            clearTimeout(learningSuiteTimeout)
+            setLearningSuiteTimeout(null)
+          }
+          setIsLearningSuiteDropdownOpen(false)
+          setSelectedGrade(null)
         }
-        setIsLearningSuiteDropdownOpen(false)
-        setSelectedGrade(null)
-      }
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
-        setIsUserDropdownOpen(false)
-      }
-      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
-        setIsLangDropdownOpen(false)
+        if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+          setIsUserDropdownOpen(false)
+        }
+        if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
+          setIsLangDropdownOpen(false)
+        }
       }
     }
 
@@ -246,20 +276,38 @@ const Header = () => {
                   ref={userDropdownRef}
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                 >
-                  <span className="user-greeting">{t('hi_user')}, {currentUser.username || currentUser.name || 'User'}</span>
+                  <span className="user-greeting">{t('hi_user')}, {currentUser.name || currentUser.username || 'User'}</span>
                   <FiChevronDownIcon className={`user-dropdown-icon ${isUserDropdownOpen ? 'open' : ''}`} />
                   {isUserDropdownOpen && (
                     <div className="user-dropdown-menu">
-                      <Link to="/profile" className="user-dropdown-item">{t('nav_profile')}</Link>
-                      <Link to="/settings" className="user-dropdown-item">{t('nav_settings')}</Link>
+                      {getDashboardLink() && (
+                        currentUser?.role?.toLowerCase() === 'admin' ? (
+                          <a href={getDashboardLink()} className="user-dropdown-item" onClick={() => setIsUserDropdownOpen(false)}>
+                            {t('nav_dashboard')}
+                          </a>
+                        ) : (
+                          <Link to={getDashboardLink()} className="user-dropdown-item" onClick={() => setIsUserDropdownOpen(false)}>
+                            {t('nav_dashboard')}
+                          </Link>
+                        )
+                      )}
+
                       <button
                         className="user-dropdown-item"
-                        onClick={() => {
-                          localStorage.removeItem('authToken')
-                          localStorage.removeItem('user')
-                          setCurrentUser(null)
-                          setIsUserDropdownOpen(false)
-                          window.location.href = '/'
+                        onClick={async () => {
+                          try {
+                            await logout()
+                            setCurrentUser(null)
+                            setIsUserDropdownOpen(false)
+                          } catch (error) {
+                            console.error('Logout failed:', error)
+                            // Fallback in case API logout fails
+                            localStorage.removeItem('authToken')
+                            localStorage.removeItem('user')
+                            setCurrentUser(null)
+                            setIsUserDropdownOpen(false)
+                            window.location.href = '/'
+                          }
                         }}
                       >
                         {t('nav_logout')}
@@ -271,19 +319,13 @@ const Header = () => {
                 <div className="top-bar-auth">
                   <button
                     className="top-bar-btn"
-                    onClick={() => {
-                      setAuthTab('register')
-                      setIsAuthOpen(true)
-                    }}
+                    onClick={openRegister}
                   >
                     {t('nav_register')}
                   </button>
                   <button
                     className="top-bar-btn"
-                    onClick={() => {
-                      setAuthTab('login')
-                      setIsAuthOpen(true)
-                    }}
+                    onClick={openLogin}
                   >
                     {t('nav_login')}
                   </button>
@@ -308,285 +350,289 @@ const Header = () => {
             </Link>
 
             <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
-              {menuItems.map((item, index) => (
-                item.nameKey === 'nav_classes' && item.hasDropdown ? (
-                  <div
-                    key={index}
-                    className="nav-item-dropdown"
-                    ref={classesDropdownRef}
-                    onMouseEnter={() => {
-                      if (classesTimeout) {
-                        clearTimeout(classesTimeout)
-                        setClassesTimeout(null)
-                      }
-                      setIsClassesDropdownOpen(true)
-                    }}
-                    onMouseLeave={() => {
-                      // Add delay before closing on desktop
-                      const timeout = setTimeout(() => {
-                        setIsClassesDropdownOpen(false)
-                      }, 300)
-                      setClassesTimeout(timeout)
-                    }}
-                    onTouchStart={(e) => {
-                      // Prevent closing on touch
-                      e.stopPropagation()
-                    }}
-                  >
-                    <Link
-                      to={item.href}
-                      className={`nav-link nav-link-with-dropdown ${location.pathname === item.href ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
+              {/* Desktop Navigation (Original Structure) */}
+              <div className="desktop-nav-content">
+                {menuItems.map((item, index) => (
+                  item.nameKey === 'nav_classes' && item.hasDropdown ? (
+                    <div
+                      key={index}
+                      className="nav-item-dropdown"
+                      ref={classesDropdownRef}
+                      onMouseEnter={() => {
                         if (classesTimeout) {
                           clearTimeout(classesTimeout)
                           setClassesTimeout(null)
                         }
-                        setIsClassesDropdownOpen(!isClassesDropdownOpen)
-                        setIsMobileMenuOpen(false)
+                        setIsClassesDropdownOpen(true)
                       }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation()
+                      onMouseLeave={() => {
+                        const timeout = setTimeout(() => {
+                          setIsClassesDropdownOpen(false)
+                        }, 300)
+                        setClassesTimeout(timeout)
                       }}
                     >
-                      {item.name}
-                      <FiChevronDown className={`dropdown-icon ${isClassesDropdownOpen ? 'open' : ''}`} />
-                    </Link>
-                    {isClassesDropdownOpen && (
-                      <div
-                        className="dropdown-menu classes-dropdown-menu"
-                        onMouseEnter={() => {
-                          if (classesTimeout) {
-                            clearTimeout(classesTimeout)
-                            setClassesTimeout(null)
+                      <Link
+                        to={item.href}
+                        className={`nav-link nav-link-with-dropdown ${location.pathname === item.href ? 'active' : ''}`}
+                        onClick={(e) => {
+                          if (window.innerWidth <= 968) {
+                            e.preventDefault();
+                            setIsClassesDropdownOpen(!isClassesDropdownOpen);
+                          } else {
+                            handleNavClick(e, item.href, true);
                           }
                         }}
-                        onMouseLeave={() => {
-                          const timeout = setTimeout(() => {
-                            setIsClassesDropdownOpen(false)
-                          }, 300)
-                          setClassesTimeout(timeout)
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation()
-                        }}
                       >
-                        {classesCategories && classesCategories.length > 0 ? (
-                          classesCategories.map((category, catIndex) => (
-                            <Link
-                              key={catIndex}
-                              to={category.href}
-                              className="dropdown-item"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setIsClassesDropdownOpen(false)
-                                setIsMobileMenuOpen(false)
-                              }}
-                              onTouchStart={(e) => {
-                                e.stopPropagation()
-                              }}
-                            >
+                        {item.name}
+                        <FiChevronDown className={`dropdown-icon ${isClassesDropdownOpen ? 'open' : ''}`} />
+                      </Link>
+                      {isClassesDropdownOpen && (
+                        <div className="dropdown-menu">
+                          {classesCategories.map((category, catIndex) => (
+                            <Link key={catIndex} to={category.href} className="dropdown-item" onClick={() => { setIsClassesDropdownOpen(false); setIsMobileMenuOpen(false); }}>
                               {t(category.nameKey)}
                             </Link>
-                          ))
-                        ) : (
-                          <>
-                            <Link
-                              to="/classes?type=direct"
-                              className="dropdown-item"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setIsClassesDropdownOpen(false)
-                                setIsMobileMenuOpen(false)
-                              }}
-                            >
-                              {t('nav_direct_classes')}
-                            </Link>
-                            <Link
-                              to="/classes?type=online"
-                              className="dropdown-item"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setIsClassesDropdownOpen(false)
-                                setIsMobileMenuOpen(false)
-                              }}
-                            >
-                              {t('nav_online_classes')}
-                            </Link>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : item.nameKey === 'nav_learning_suite' && item.hasDropdown ? (
-                  <div
-                    key={index}
-                    className="nav-item-dropdown learning-suite-dropdown"
-                    ref={learningSuiteDropdownRef}
-                    onMouseEnter={() => {
-                      if (learningSuiteTimeout) {
-                        clearTimeout(learningSuiteTimeout)
-                        setLearningSuiteTimeout(null)
-                      }
-                      setIsLearningSuiteDropdownOpen(true)
-                    }}
-                    onMouseLeave={() => {
-                      // Add delay before closing on desktop
-                      const timeout = setTimeout(() => {
-                        setIsLearningSuiteDropdownOpen(false)
-                        setSelectedGrade(null)
-                      }, 300)
-                      setLearningSuiteTimeout(timeout)
-                    }}
-                    onTouchStart={(e) => {
-                      // Prevent closing on touch
-                      e.stopPropagation()
-                    }}
-                  >
-                    <a
-                      href={item.href}
-                      className="nav-link nav-link-with-dropdown"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : item.nameKey === 'nav_learning_suite' && item.hasDropdown ? (
+                    <div
+                      key={index}
+                      className="nav-item-dropdown learning-suite-dropdown"
+                      ref={learningSuiteDropdownRef}
+                      onMouseEnter={() => {
                         if (learningSuiteTimeout) {
                           clearTimeout(learningSuiteTimeout)
                           setLearningSuiteTimeout(null)
                         }
-                        setIsLearningSuiteDropdownOpen(!isLearningSuiteDropdownOpen)
-                        // Don't close mobile menu on mobile - let user interact with dropdown
-                        // Only close when user selects a submenu item
+                        setIsLearningSuiteDropdownOpen(true)
                       }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation()
+                      onMouseLeave={() => {
+                        const timeout = setTimeout(() => {
+                          setIsLearningSuiteDropdownOpen(false)
+                          setSelectedGrade(null)
+                        }, 300)
+                        setLearningSuiteTimeout(timeout)
                       }}
                     >
-                      {getSetting('learning_menu_label', t('nav_learning_suite'))}
-                      <FiChevronDown className={`dropdown-icon ${isLearningSuiteDropdownOpen ? 'open' : ''}`} />
-                    </a>
-                    {isLearningSuiteDropdownOpen && (
-                      <div
-                        className="dropdown-menu learning-suite-menu"
-                        onMouseEnter={() => {
-                          if (learningSuiteTimeout) {
-                            clearTimeout(learningSuiteTimeout)
-                            setLearningSuiteTimeout(null)
+                      <a
+                        href={item.href}
+                        className="nav-link nav-link-with-dropdown"
+                        onClick={(e) => {
+                          if (window.innerWidth <= 968) {
+                            e.preventDefault();
+                            setIsLearningSuiteDropdownOpen(!isLearningSuiteDropdownOpen);
+                          } else {
+                            handleNavClick(e, item.href, false);
                           }
                         }}
-                        onMouseLeave={() => {
-                          const timeout = setTimeout(() => {
-                            setIsLearningSuiteDropdownOpen(false)
-                            setSelectedGrade(null)
-                          }, 300)
-                          setLearningSuiteTimeout(timeout)
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation()
-                        }}
                       >
-                        {/* Submenu buttons at the top */}
-                        {selectedGrade && (
-                          <div className="grade-submenu-top">
-                            <div className="selected-grade-title">{t('nav_selected')}: {selectedGrade}</div>
-                            <div className="grade-submenu-buttons">
-                              {gradeSubmenuItems.map((subItem, subIndex) => (
-                                <Link
-                                  key={subIndex}
-                                  to={`${subItem.href}?grade=${encodeURIComponent(selectedGrade.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-'))}`}
-                                  className="grade-submenu-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setIsLearningSuiteDropdownOpen(false)
-                                    setSelectedGrade(null)
-                                    setIsMobileMenuOpen(false)
-                                  }}
-                                  onTouchStart={(e) => {
-                                    e.stopPropagation()
+                        {getSetting('learning_menu_label', t('nav_learning_suite'))}
+                        <FiChevronDown className={`dropdown-icon ${isLearningSuiteDropdownOpen ? 'open' : ''}`} />
+                      </a>
+                      {isLearningSuiteDropdownOpen && (
+                        <div className="dropdown-menu learning-suite-menu">
+                          {selectedGrade ? (
+                            <div className="grade-submenu-top">
+                              <div className="selected-grade-title">{t('nav_selected')}: {selectedGrade}</div>
+                              <div className="grade-submenu-buttons">
+                                {gradeSubmenuItems.map((subItem, subIndex) => (
+                                  <Link
+                                    key={subIndex}
+                                    to={`${subItem.href}?grade=${encodeURIComponent(selectedGrade.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-'))}`}
+                                    className="grade-submenu-button"
+                                    onClick={() => { setIsLearningSuiteDropdownOpen(false); setSelectedGrade(null); setIsMobileMenuOpen(false); }}
+                                  >
+                                    {t(subItem.nameKey)}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="grades-grid">
+                              {learningSuiteGrades.map((grade, gradeIndex) => (
+                                <div key={gradeIndex} className={`dropdown-item grade-item ${selectedGrade === grade ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setSelectedGrade(grade); }}>
+                                  {grade}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Link
+                      key={index}
+                      to={item.href}
+                      className={`nav-link ${location.pathname === item.href ? 'active' : ''}`}
+                      onClick={(e) => handleNavClick(e, item.href, item.isRoute)}
+                    >
+                      {item.name}
+                    </Link>
+                  )
+                ))}
+              </div>
+
+              {/* Mobile Menu Enhancement Content (Isolated) */}
+              <div className="mobile-only-menu-content">
+                <div className="mobile-top-bar">
+                  <button className="mobile-top-bar-close" onClick={() => setIsMobileMenuOpen(false)}>
+                    <FiX />
+                  </button>
+                </div>
+
+                <div className="mobile-nav-scroll">
+                  {/* 1. User Info / Auth Section */}
+                  {currentUser ? (
+                    <div className="mobile-section-group">
+                      <div className="mobile-section-header">{t('hi_user')}, {currentUser.name || currentUser.username}</div>
+                      <div className="mobile-nav-list">
+                        {getDashboardLink() && (
+                          currentUser?.role?.toLowerCase() === 'admin' ? (
+                            <a 
+                              href={getDashboardLink()} 
+                              className="mobile-nav-link-item secondary" 
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {t('nav_dashboard')}
+                            </a>
+                          ) : (
+                            <Link 
+                              to={getDashboardLink()} 
+                              className="mobile-nav-link-item secondary" 
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {t('nav_dashboard')}
+                            </Link>
+                          )
+                        )}
+                        <button className="mobile-nav-link-item logout-btn" onClick={async () => { await logout(); setCurrentUser(null); setIsMobileMenuOpen(false); }}>
+                          {t('nav_logout')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mobile-section-group auth-group">
+                      <button className="mobile-auth-btn-list register" onClick={() => { openRegister(); setIsMobileMenuOpen(false); }}>{t('nav_register')}</button>
+                      <button className="mobile-auth-btn-list login" onClick={() => { openLogin(); setIsMobileMenuOpen(false); }}>{t('nav_login')}</button>
+                    </div>
+                  )}
+
+                  {/* 2. Language Selection Toggle */}
+                  {getSetting('topbar_show_lang', 'yes') === 'yes' && (
+                    <div className="mobile-section-group">
+                      <button 
+                        className="mobile-nav-link-wrapper" 
+                        onClick={(e) => { e.stopPropagation(); setIsMobileLangOpen(!isMobileLangOpen); }}
+                      >
+                        <span className="mobile-nav-link">
+                          {t('language')}: {language === 'en' ? 'English' : language === 'ta' ? 'தமிழ்' : 'සිංහල'}
+                        </span>
+                        <FiChevronDown className={`mobile-dropdown-icon ${isMobileLangOpen ? 'open' : ''}`} />
+                      </button>
+                      {isMobileLangOpen && (
+                        <div className="mobile-dropdown-menu">
+                          <button className={`mobile-lang-link ${language === 'en' ? 'active' : ''}`} onClick={() => { setLanguage('en'); setIsMobileLangOpen(false); setIsMobileMenuOpen(false); }}>English</button>
+                          <button className={`mobile-lang-link ${language === 'ta' ? 'active' : ''}`} onClick={() => { setLanguage('ta'); setIsMobileLangOpen(false); setIsMobileMenuOpen(false); }}>தமிழ்</button>
+                          <button className={`mobile-lang-link ${language === 'si' ? 'active' : ''}`} onClick={() => { setLanguage('si'); setIsMobileLangOpen(false); setIsMobileMenuOpen(false); }}>සිංහල</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. Main Navigation */}
+                  <div className="mobile-nav-list">
+                    {menuItems.map((item, index) => (
+                      item.nameKey === 'nav_classes' && item.hasDropdown ? (
+                        <div key={`m-${index}`} className="mobile-nav-item-dropdown">
+                          <div className="mobile-nav-link-wrapper" onClick={(e) => { e.stopPropagation(); setIsClassesDropdownOpen(!isClassesDropdownOpen); }}>
+                            <span className="mobile-nav-link">{item.name}</span>
+                            <FiChevronDown className={`mobile-dropdown-icon ${isClassesDropdownOpen ? 'open' : ''}`} />
+                          </div>
+                          {isClassesDropdownOpen && (
+                            <div className="mobile-dropdown-menu">
+                              {classesCategories.map((category, catIndex) => (
+                                <Link 
+                                  key={catIndex} 
+                                  to={category.href} 
+                                  className="mobile-dropdown-item" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation();
+                                    setIsClassesDropdownOpen(false); 
+                                    setIsMobileMenuOpen(false); 
                                   }}
                                 >
-                                  {t(subItem.nameKey)}
+                                  {t(category.nameKey)}
                                 </Link>
                               ))}
                             </div>
-                          </div>
-                        )}
-
-                        {/* Grade items */}
-                        <div className="grades-grid">
-                          {learningSuiteGrades.map((grade, gradeIndex) => (
-                            <div
-                              key={gradeIndex}
-                              className={`dropdown-item grade-item ${selectedGrade === grade ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                setSelectedGrade(selectedGrade === grade ? null : grade)
-                              }}
-                              onTouchStart={(e) => {
-                                e.stopPropagation()
-                              }}
-                            >
-                              {grade}
-                            </div>
-                          ))}
+                          )}
                         </div>
-                      </div>
-                    )}
+                      ) : item.nameKey === 'nav_learning_suite' && item.hasDropdown ? (
+                        <div key={`m-${index}`} className="mobile-nav-item-dropdown">
+                          <div className="mobile-nav-link-wrapper" onClick={(e) => { e.stopPropagation(); setIsLearningSuiteDropdownOpen(!isLearningSuiteDropdownOpen); }}>
+                            <span className="mobile-nav-link">{getSetting('learning_menu_label', t('nav_learning_suite'))}</span>
+                            <FiChevronDown className={`mobile-dropdown-icon ${isLearningSuiteDropdownOpen ? 'open' : ''}`} />
+                          </div>
+                          {isLearningSuiteDropdownOpen && (
+                            <div className="mobile-dropdown-menu learning-suite-mobile">
+                              {selectedGrade ? (
+                                <div className="mobile-grade-submenu">
+                                  <button className="mobile-back-btn" onClick={(e) => { e.stopPropagation(); setSelectedGrade(null); }}>
+                                    <FiChevronLeft /> {t('nav_back_to_grades')}
+                                  </button>
+                                  <div className="mobile-selected-grade">{selectedGrade}</div>
+                                  {gradeSubmenuItems.map((subItem, subIndex) => (
+                                    <Link 
+                                      key={subIndex} 
+                                      to={`${subItem.href}?grade=${encodeURIComponent(selectedGrade.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-'))}`} 
+                                      className="mobile-dropdown-item" 
+                                      onClick={(e) => { 
+                                        e.stopPropagation();
+                                        setIsLearningSuiteDropdownOpen(false); 
+                                        setSelectedGrade(null); 
+                                        setIsMobileMenuOpen(false); 
+                                      }}
+                                    >
+                                      {t(subItem.nameKey)}
+                                    </Link>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="mobile-grades-list">
+                                  {learningSuiteGrades.map((grade, gradeIndex) => (
+                                    <div key={gradeIndex} className="mobile-dropdown-item grade-picker" onClick={(e) => { e.stopPropagation(); setSelectedGrade(grade); }}>
+                                      {grade} <span className="arrow">→</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Link key={`m-${index}`} to={item.href} className="mobile-nav-link-item" onClick={(e) => handleNavClick(e, item.href, item.isRoute)}>
+                          {item.name}
+                        </Link>
+                      )
+                    ))}
                   </div>
-                ) : item.isRoute ? (
-                  <Link
-                    key={index}
-                    to={item.href}
-                    className={`nav-link ${location.pathname === item.href ? 'active' : ''}`}
-                    onClick={(e) => {
-                      // Close Learning Suite dropdown when clicking other menu items
-                      setIsLearningSuiteDropdownOpen(false)
-                      setSelectedGrade(null)
-                      if (learningSuiteTimeout) {
-                        clearTimeout(learningSuiteTimeout)
-                        setLearningSuiteTimeout(null)
-                      }
-                      // Close Classes dropdown too
-                      setIsClassesDropdownOpen(false)
-                      if (classesTimeout) {
-                        clearTimeout(classesTimeout)
-                        setClassesTimeout(null)
-                      }
-                      handleNavClick(e, item.href, true)
-                    }}
-                  >
-                    {item.name}
-                  </Link>
-                ) : (
-                  <a
-                    key={index}
-                    href={item.href}
-                    className="nav-link"
-                    onClick={(e) => {
-                      // Close Learning Suite dropdown when clicking other menu items
-                      setIsLearningSuiteDropdownOpen(false)
-                      setSelectedGrade(null)
-                      if (learningSuiteTimeout) {
-                        clearTimeout(learningSuiteTimeout)
-                        setLearningSuiteTimeout(null)
-                      }
-                      // Close Classes dropdown too
-                      setIsClassesDropdownOpen(false)
-                      if (classesTimeout) {
-                        clearTimeout(classesTimeout)
-                        setClassesTimeout(null)
-                      }
-                      handleNavClick(e, item.href, false)
-                    }}
-                  >
-                    {item.name}
-                  </a>
-                )
-              ))}
+
+                  {/* 4. Social Links */}
+                  <div className="mobile-section-group contact-group">
+                    <div className="mobile-social-row">
+                      <a href={getSetting('social_facebook', '#')} className="mobile-social-link fb"><FaFacebook /></a>
+                      <a href={getSetting('social_instagram', '#')} className="mobile-social-link insta"><FaInstagram /></a>
+                      <a href={getSetting('social_youtube', '#')} className="mobile-social-link yt"><FaYoutube /></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </nav>
 
-            <div className="header-actions">
+            <div className={`header-actions ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
               <button
                 className="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -600,7 +646,7 @@ const Header = () => {
 
       <AnimatedAuth
         isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
+        onClose={closeAuth}
         defaultTab={authTab}
       />
     </>

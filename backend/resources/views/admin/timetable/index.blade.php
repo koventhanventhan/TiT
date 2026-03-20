@@ -66,6 +66,219 @@
             display: flex;
             gap: 5px;
         }
+
+        /* Dark Mode Specific Styles for Dropdowns */
+        [data-theme-version="dark"] .modal-content {
+            background-color: #1a152e;
+            color: #fff;
+        }
+        [data-theme-version="dark"] .modal-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        [data-theme-version="dark"] .modal-footer {
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        [data-theme-version="dark"] .form-control {
+            background-color: rgba(255,255,255,0.05) !important;
+            border-color: #eb8153 !important;
+            color: #fff !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .dropdown-toggle {
+            background-color: rgba(255,255,255,0.05) !important;
+            border: 1px solid #eb8153 !important;
+            color: #fff !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu {
+            background-color: #1a152e !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a {
+            color: #fff !important;
+            background-color: transparent !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover {
+            background-color: #eb8153 !important;
+            color: #fff !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .bs-searchbox input {
+            background-color: rgba(255,255,255,0.1) !important;
+            border-color: #eb8153 !important;
+            color: #fff !important;
+        }
+        [data-theme-version="dark"] .dropdown-menu .inner {
+            background-color: #1a152e !important;
+        }
+        [data-theme-version="dark"] .dropdown-menu {
+            background-color: #1a152e !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+        /* Fix for search results white background in dark mode */
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
+            background-color: #1a152e !important;
+        }
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.selected a {
+            background-color: #eb8153 !important;
+            color: #fff !important;
+        }
+        /* Global dropdown menu fix for dark mode - VERY AGGRESSIVE */
+        [data-theme-version="dark"] .dropdown-menu,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu .dropdown-item,
+        [data-theme-version="dark"] .dropdown-item {
+            background-color: #1a152e !important;
+            color: #fff !important;
+        }
+
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li span {
+            color: #fff !important;
+            background-color: #1a152e !important;
+        }
+
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.active a,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.selected a {
+            background-color: #eb8153 !important;
+            color: #fff !important;
+        }
+
+        [data-theme-version="dark"] .bootstrap-select .dropdown-toggle:after {
+            color: #fff !important;
+        }
+
+        [data-theme-version="dark"] .bootstrap-select .bs-searchbox {
+            background-color: #1a152e !important;
+            padding: 10px !important;
+        }
+
+        [data-theme-version="dark"] .bootstrap-select .bs-searchbox input {
+            background-color: rgba(255,255,255,0.1) !important;
+            border-color: #eb8153 !important;
+            color: #fff !important;
+        }
+
+        /* NUCLEAR FIX FOR WHITE DROPDOWNS */
+        [data-theme-version="dark"] .dropdown-menu,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu.inner,
+        [data-theme-version="dark"] .dropdown-menu.show,
+        [data-theme-version="dark"] .dropdown-menu .inner,
+        [data-theme-version="dark"] .dropdown-menu .inner.show,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu.show,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
+            background-color: #1a152e !important;
+            background: #1a152e !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: #fff !important;
+        }
+
+        [data-theme-version="dark"] .dropdown-menu li,
+        [data-theme-version="dark"] .dropdown-menu li a,
+        [data-theme-version="dark"] .dropdown-menu li a span,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a span {
+            color: #fff !important;
+            background-color: #1a152e !important;
+        }
+
+        [data-theme-version="dark"] .dropdown-menu li a:hover,
+        [data-theme-version="dark"] .dropdown-menu li.active a,
+        [data-theme-version="dark"] .dropdown-menu li.selected a,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover,
+        [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.active a,
+        [data-theme-version="dark"] .bootstrap-select .bootstrap-select .dropdown-menu li.selected a {
+            background-color: #eb8153 !important;
+            color: #fff !important;
+        }
+
+        /* Fix for the white gap often seen in bootstrap-select */
+        [data-theme-version="dark"] .bootstrap-select .inner {
+            background-color: #1a152e !important;
+        }
+        
+        /* Fix search box specifically */
+        [data-theme-version="dark"] .bs-searchbox {
+            background-color: #1a152e !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        
+        [data-theme-version="dark"] .bs-searchbox input {
+            color: #fff !important;
+            background-color: rgba(255,255,255,0.1) !important;
+        }
+
+        /* 
+           NUCLEAR FORCE FIX FOR ALL DROPDOWNS 
+           This targets EVERY potential dropdown element to force the dark #1a152e theme.
+        */
+        
+        /* 1. Target native select if it's used */
+        select.form-control, 
+        select.form-control option {
+            background-color: #1a152e !important;
+            color: #ffffff !important;
+        }
+
+        /* 2. Target Bootstrap Select custom UI */
+        .bootstrap-select .dropdown-menu,
+        .bootstrap-select .dropdown-menu.inner,
+        .bootstrap-select .dropdown-menu.inner.show,
+        .dropdown-menu,
+        .dropdown-menu.show,
+        .dropdown-menu.inner,
+        .dropdown-menu.inner.show,
+        .dropdown-menu[x-placement] {
+            background-color: #1a152e !important;
+            background: #1a152e !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        /* 3. Target the items inside the dropdown */
+        .bootstrap-select .dropdown-menu li,
+        .bootstrap-select .dropdown-menu li a,
+        .bootstrap-select .dropdown-menu li a span,
+        .dropdown-menu li,
+        .dropdown-menu li a,
+        .dropdown-menu li a span,
+        .dropdown-item,
+        .dropdown-item span {
+            color: #ffffff !important;
+            background-color: #1a152e !important;
+            background: #1a152e !important;
+        }
+
+        /* 4. Target Hover and Selection states */
+        .dropdown-menu li a:hover,
+        .dropdown-item:hover,
+        .dropdown-item:active,
+        .dropdown-item.active,
+        .dropdown-item.selected,
+        .bootstrap-select .dropdown-menu li.selected a,
+        .bootstrap-select .dropdown-menu li.active a {
+            background-color: #eb8153 !important;
+            color: #ffffff !important;
+        }
+
+        /* 5. Fix the search box inside dropdowns */
+        .bs-searchbox,
+        .bs-searchbox input {
+            background-color: #1a152e !important;
+            color: #ffffff !important;
+            border-color: rgba(255,255,255,0.2) !important;
+        }
+
+        /* 6. Fix for specific container if bootstrap-select uses it */
+        .bs-container.dropdown.bootstrap-select.open .dropdown-menu {
+            background-color: #1a152e !important;
+            color: #ffffff !important;
+        }
+        
+        /* Fix the Grade/Subject/Teacher words appearing white on white */
+        [data-theme-version="dark"] .form-group label {
+            color: #ffffff !important;
+        }
     </style>
 </head>
 
@@ -106,7 +319,37 @@
                     <div class="collapse navbar-collapse justify-content-between">
                         <div class="header-left"></div>
                         <ul class="navbar-nav header-right">
-                             <li class="nav-item dropdown header-profile">
+                            <li class="nav-item">
+                                <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages" style="position: relative;">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M3.5 8.16665L14 15.1666L24.5 8.16665" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="message-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
+                                        <span id="message-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    </div>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown notification_dropdown">
+                                <a class="nav-link ai-icon" href="#" role="button" data-toggle="dropdown">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
+                                    </svg>
+                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
+                                        <span id="notification-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    </div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                                        <ul class="timeline" id="notification-list">
+                                            <li class="text-center py-3">No new notifications</li>
+                                        </ul>
+                                    </div>
+                                    <a class="all-notification" href="{{ route('admin.notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
@@ -141,13 +384,16 @@
                         <div class="page-title d-flex justify-content-between align-items-center">
                             <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Weekly Timetable</h4>
                             <div class="d-flex gap-2">
-                                <button type="button" onclick="runSync()" class="btn btn-info btn-sm mr-2">
-                                    <i class="fa fa-sync"></i> Sync to Zoom
+                                <button type="button" onclick="runSync()" class="btn btn-info btn-sm mr-2" title="Manual sync for the next 90 days">
+                                    <i class="fa fa-sync"></i> Sync to Zoom (90 Days)
                                 </button>
                                 <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addSlotModal">
                                     <i class="flaticon-381-add-1"></i> Add Slot
                                 </button>
                             </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-info"><i class="fa fa-info-circle"></i> Timetable slots are automatically synced to Zoom for the next <strong>90 days</strong> whenever you save or update.</small>
                         </div>
                     </div>
                 </div>
@@ -302,7 +548,7 @@
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
     <script>
         function runSync() {
-            if(confirm('This will generate Zoom links for the next 7 days based on this timetable. Continue?')) {
+            if(confirm('This will generate Zoom links for the next 90 days based on this timetable. Continue?')) {
                 window.location.href = "{{ route('admin.timetables.sync') }}";
             }
         }

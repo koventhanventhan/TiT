@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { FiArrowRight, FiCheckCircle } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuthModal } from '../context/AuthModalContext'
 import './Onboarding.css'
 
 const Onboarding = () => {
   const { getSetting } = useSettings();
   const { t, translate, language } = useLanguage()
+  const { openRegister } = useAuthModal()
 
   const [onboardingTitle, setOnboardingTitle] = useState(getSetting('onboarding_title', t('onboarding_title')))
   const [onboardingSubtitle, setOnboardingSubtitle] = useState(getSetting('onboarding_subtitle', t('onboarding_subtitle')))
@@ -137,7 +139,7 @@ const Onboarding = () => {
         </div>
 
         <div className="po-footer">
-          <a href="/register" className="po-cta-btn">{t('btn_register_now')}</a>
+          <button onClick={openRegister} className="po-cta-btn">{t('btn_register_now')}</button>
         </div>
       </div>
     </section>

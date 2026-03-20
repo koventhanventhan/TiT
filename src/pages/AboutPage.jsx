@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuthModal } from '../context/AuthModalContext'
 import './AboutPage.css'
 
 const AboutPage = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
+  const { openRegister } = useAuthModal()
 
   const [aboutTitle, setAboutTitle] = useState(getSetting('about_title', t('about_title')))
   const [aboutSubtitle, setAboutSubtitle] = useState(getSetting('about_subtitle', t('about_subtitle')))
@@ -537,9 +539,9 @@ const AboutPage = () => {
                   {ctaDesc}
                 </p>
                 <div className="cta-buttons">
-                  <a href={getSetting('about_cta_btn1_link', '/register')} className="btn btn-primary btn-large">
+                  <button onClick={openRegister} className="btn btn-primary btn-large">
                     {ctaBtn1}
-                  </a>
+                  </button>
                   <a href={getSetting('about_cta_btn2_link', '/contact')} className="btn btn-secondary btn-large">
                     {ctaBtn2}
                   </a>

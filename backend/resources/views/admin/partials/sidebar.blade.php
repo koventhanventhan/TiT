@@ -72,8 +72,8 @@
                     <li class="{{ request()->routeIs('admin.timetables.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.timetables.index') }}">Weekly Timetable</a>
                     </li>
-                    <li class="{{ request()->routeIs('admin.zoom.create') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.zoom.create') }}">Create Zoom Class</a>
+                    <li class="{{ request()->routeIs('admin.timetables.index') && !request()->routeIs('admin.zoom.*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.timetables.index') }}">New Class</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.attendance.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.attendance.index') }}">Attendance</a>

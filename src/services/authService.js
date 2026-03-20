@@ -5,7 +5,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 // Extract base URL (without /api) for non-API endpoints like CSRF cookie and admin redirects
-const BASE_URL = API_BASE_URL.replace('/api', '') || 'http://localhost:8000'
+export const BASE_URL = API_BASE_URL.replace('/api', '') || 'http://localhost:8000'
 
 // Debug: Log the API URL being used
 if (import.meta.env.PROD && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {

@@ -93,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/assignments', [\App\Http\Controllers\Api\MasterAdminController::class, 'assignments']);
         Route::get('/attendance', [\App\Http\Controllers\Api\MasterAdminController::class, 'attendanceStats']);
         Route::post('/branding', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateBranding']);
+        Route::get('/calendar', [\App\Http\Controllers\Api\MasterAdminController::class, 'calendarEvents']);
     });
 
     // Super Admin Routes (Role: super_admin) - Note: Global context, no tenant middleware usually

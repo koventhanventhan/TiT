@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Payment;
+use App\Models\Subject;
 use App\Notifications\AdminNotification;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
@@ -80,7 +81,9 @@ class StudentController extends Controller
             ->orderBy('paid_at', 'desc')
             ->get();
         
-        return view('admin.students.edit', compact('student', 'payments'));
+        $subjects = Subject::orderBy('name')->get()->groupBy('category');
+        
+        return view('admin.students.edit', compact('student', 'payments', 'subjects'));
     }
 
     /**
@@ -186,7 +189,8 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        return view('admin.students.create');
+        $subjects = Subject::orderBy('name')->get()->groupBy('category');
+        return view('admin.students.create', compact('subjects'));
     }
 
     public function store(Request $request)

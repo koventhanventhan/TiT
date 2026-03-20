@@ -83,7 +83,7 @@ class AdminController extends Controller
     {
         try {
             $q = $request->get('q', '');
-            if (strlen($q) < 2) {
+            if (strlen($q) < 1) {
                 return response()->json(['results' => []]);
             }
 
@@ -91,10 +91,12 @@ class AdminController extends Controller
 
             // Search Students
             $students = User::where('role', 'user')
-                ->whereNotNull('full_name')
                 ->where(function($query) use ($q) {
                     $query->where('full_name', 'LIKE', "%{$q}%")
-                          ->orWhere('email', 'LIKE', "%{$q}%");
+                          ->orWhere('name', 'LIKE', "%{$q}%")
+                          ->orWhere('username', 'LIKE', "%{$q}%")
+                          ->orWhere('email', 'LIKE', "%{$q}%")
+                          ->orWhere('phone_number', 'LIKE', "%{$q}%");
                 })
                 ->limit(5)
                 ->get();
@@ -103,8 +105,8 @@ class AdminController extends Controller
                 $results[] = [
                     'type' => 'student',
                     'icon' => '🎓',
-                    'name' => $s->full_name,
-                    'desc' => $s->email . ($s->grade ? " • Grade {$s->grade}" : ''),
+                    'name' => $s->full_name ?: $s->name ?: $s->username,
+                    'desc' => "Grade: " . ($s->current_grade ?: 'N/A') . " • " . ($s->phone_number ?: $s->email),
                     'url'  => route('admin.students.edit', $s->id),
                 ];
             }
@@ -113,7 +115,9 @@ class AdminController extends Controller
             $teachers = User::where('role', 'teacher')
                 ->where(function($query) use ($q) {
                     $query->where('name', 'LIKE', "%{$q}%")
-                          ->orWhere('email', 'LIKE', "%{$q}%");
+                          ->orWhere('username', 'LIKE', "%{$q}%")
+                          ->orWhere('email', 'LIKE', "%{$q}%")
+                          ->orWhere('phone_number', 'LIKE', "%{$q}%");
                 })
                 ->limit(5)
                 ->get();
@@ -122,11 +126,34 @@ class AdminController extends Controller
                 $results[] = [
                     'type' => 'teacher',
                     'icon' => '👨‍🏫',
-                    'name' => $t->name,
-                    'desc' => $t->email,
+                    'name' => $t->name ?: $t->username,
+                    'desc' => $t->phone_number ?: $t->email,
                     'url'  => route('admin.teachers.edit', $t->id),
                 ];
             }
+
+            // Search Payments
+            try {
+                $payments = \App\Models\Payment::with('user')
+                    ->where('transaction_id', 'LIKE', "%{$q}%")
+                    ->orWhere('gateway_ref', 'LIKE', "%{$q}%")
+                    ->orWhereHas('user', function($query) use ($q) {
+                        $query->where('full_name', 'LIKE', "%{$q}%")
+                              ->orWhere('name', 'LIKE', "%{$q}%");
+                    })
+                    ->limit(5)
+                    ->get();
+
+                foreach ($payments as $p) {
+                    $results[] = [
+                        'type' => 'payment',
+                        'icon' => '💳',
+                        'name' => "Payment of LKR " . number_format($p->amount, 2),
+                        'desc' => ($p->user ? $p->user->full_name : 'Unknown') . " • " . ($p->transaction_id ?: $p->gateway_ref),
+                        'url'  => route('admin.students.index'), // Link to students for now as there is no specific payment detail page
+                    ];
+                }
+            } catch (\Exception $e) { }
 
             // Search Subjects
             try {
@@ -149,7 +176,7 @@ class AdminController extends Controller
                         'url'  => route('admin.subjects.index'),
                     ];
                 }
-            } catch (\Exception $e) { /* skip if model/table missing */ }
+            } catch (\Exception $e) { }
 
             // Search Zoom Classes
             try {
@@ -166,7 +193,24 @@ class AdminController extends Controller
                         'url'  => route('admin.zoom.edit', $z->id),
                     ];
                 }
-            } catch (\Exception $e) { /* skip if model/table missing */ }
+            } catch (\Exception $e) { }
+
+            // Search Admin Messages
+            try {
+                $messages = \App\Models\AdminMessage::where('title', 'LIKE', "%{$q}%")
+                    ->limit(5)
+                    ->get();
+
+                foreach ($messages as $m) {
+                    $results[] = [
+                        'type' => 'message',
+                        'icon' => '✉️',
+                        'name' => $m->title,
+                        'desc' => \Illuminate\Support\Str::limit($m->body, 50),
+                        'url'  => route('admin.messages.index'),
+                    ];
+                }
+            } catch (\Exception $e) { }
 
             return response()->json(['results' => $results, 'query' => $q]);
         } catch (\Exception $e) {

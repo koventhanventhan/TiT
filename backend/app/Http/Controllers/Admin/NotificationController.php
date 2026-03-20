@@ -14,9 +14,18 @@ class NotificationController extends Controller
         
         if ($request->ajax() || $request->wantsJson()) {
             $unreadCount = Auth::user()->unreadNotifications()->count();
+            
+            // System Alerts
+            $pendingApprovals = \App\Models\User::where('role', 'user')->whereNull('admin_confirmed_at')->count();
+            $pendingPayments = \App\Models\Payment::where('status', 'pending')->count();
+
             return response()->json([
                 'notifications' => $notifications->take(10)->get(),
-                'unreadCount' => $unreadCount
+                'unreadCount' => $unreadCount,
+                'systemAlerts' => [
+                    'pendingApprovals' => $pendingApprovals,
+                    'pendingPayments' => $pendingPayments
+                ]
             ]);
         }
 

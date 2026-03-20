@@ -261,6 +261,16 @@ export const getAdminAssignments = async () => {
   return res.json()
 }
 
+export const getAdminCalendar = async (start, end) => {
+  const query = new URLSearchParams({ start, end }).toString()
+  const res = await fetch(`${API_BASE_URL}/admin/calendar?${query}`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load calendar events')
+  return res.json()
+}
+
 export const getAdminAttendance = async () => {
   const res = await fetch(`${API_BASE_URL}/admin/attendance`, {
     headers: getAuthHeaders(),

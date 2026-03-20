@@ -13,6 +13,7 @@ export const translations = {
     nav_register: 'Register',
     nav_login: 'Login',
     nav_logout: 'Logout',
+    nav_dashboard: 'Dashboard',
     nav_profile: 'Profile',
     nav_settings: 'Settings',
     nav_direct_classes: 'Direct classes',
@@ -21,6 +22,7 @@ export const translations = {
     nav_past_papers: 'Past papers',
     nav_recordings: 'Recording section',
     nav_selected: 'Selected',
+    nav_back_to_grades: 'Back to Grades',
     logo_tagline: 'online education',
     hi_user: 'Hi',
 
@@ -423,6 +425,7 @@ export const translations = {
     nav_register: 'பதிவு',
     nav_login: 'உள்நுழை',
     nav_logout: 'வெளியேறு',
+    nav_dashboard: 'டாஷ்போர்டு',
     nav_profile: 'சுயவிவரம்',
     nav_settings: 'அமைப்புகள்',
     nav_direct_classes: 'நேரடி வகுப்புகள்',
@@ -431,6 +434,7 @@ export const translations = {
     nav_past_papers: 'முந்தைய வினாத்தாள்கள்',
     nav_recordings: 'பதிவு பிரிவு',
     nav_selected: 'தேர்ந்தெடுக்கப்பட்டது',
+    nav_back_to_grades: 'மீண்டும் தரம் வாரியாக',
     logo_tagline: 'ஆன்லைன் கல்வி',
     hi_user: 'வணக்கம்',
 
@@ -811,6 +815,7 @@ export const translations = {
     nav_register: 'ලියාපදිංචි වන්න',
     nav_login: 'පිවිසෙන්න',
     nav_logout: 'ඉවත් වන්න',
+    nav_dashboard: 'දර්ශක පුවරුව',
     nav_profile: 'පැතිකඩ',
     nav_settings: 'සැකසුම්',
     nav_direct_classes: 'සෘජු පන්ති',
@@ -836,6 +841,7 @@ export const translations = {
     footer_copyright: 'ප්‍රකාශන හිමිකම © 2025 TiT. සියලුම හිමිකම් TiT ඔන්ලයින් අධ්‍යාපන (PVT) ලිමිටඩ් සතුය.',
     footer_location: 'කොළඹ, ශ්‍රී ලංකාව',
     footer_always_available: 'ඕනෑම වේලාවක ලබා ගත හැකිය',
+    nav_back_to_grades: 'නැවතත් ශ්‍රේණි වලට',
 
     language: 'භාෂාව',
     lang_english: 'English',

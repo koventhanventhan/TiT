@@ -291,10 +291,12 @@
 }
 
 .hero-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 16px !important;
+  flex: 0 1 auto !important;
+  width: fit-content !important;
 }
 
 .btn-icon {

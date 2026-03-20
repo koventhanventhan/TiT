@@ -19,11 +19,14 @@ const NOTIFICATION_ICON_HTML = `
 
 const MESSAGE_ICON_HTML = `
 <li class="nav-item">
-    <a class="nav-link ai-icon" href="/admin/messages" title="Messages">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#3D4461" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <a class="nav-link ai-icon" href="/admin/messages" title="Messages" style="position: relative;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3.5 8.16665L14 15.1666L24.5 8.16665" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <div class="pulse-css d-none" id="message-pulse"></div>
+        <div class="pulse-css d-none" id="message-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
+            <span id="message-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+        </div>
     </a>
 </li>
 `;
@@ -70,56 +73,107 @@ function fetchNotifications() {
         .then(res => res.json())
         .then(data => {
             if (data.notifications) {
-                renderNotifications(data.notifications);
-                updateNotificationBadge(data.unreadCount || 0);
+                renderNotifications(data.notifications, data.systemAlerts);
+                updateNotificationBadge(data.unreadCount || 0, data.systemAlerts);
             }
         })
         .catch(err => console.error("Error fetching notifications:", err));
 }
 
-function renderNotifications(notifications) {
+function renderNotifications(notifications, systemAlerts) {
     const list = document.getElementById('notification-list');
     if (!list) return;
 
-    if (!notifications || notifications.length === 0) {
-        list.innerHTML = '<li class="text-center py-3">No new notifications</li>';
-        return;
+    let html = '';
+    let count = 1;
+
+    // 1. Prioritized System Alerts
+    if (systemAlerts) {
+        if (systemAlerts.pendingApprovals > 0) {
+            html += `
+                <li class="p-2 mb-2" style="background: rgba(235, 129, 83, 0.1); border-radius: 6px; border-left: 4px solid #EB8153;">
+                    <a href="/admin/students" class="d-flex align-items-center" style="text-decoration: none; color: inherit;">
+                        <div class="mr-3 text-warning"><i class="fa fa-user-clock"></i></div>
+                        <div>
+                            <h6 class="mb-0" style="font-size: 13px; font-weight: 700;">${count++}. Pending Approvals: ${systemAlerts.pendingApprovals}</h6>
+                            <small class="text-muted">Students waiting for confirmation</small>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }
+        if (systemAlerts.pendingPayments > 0) {
+            html += `
+                <li class="p-2 mb-2" style="background: rgba(235, 129, 83, 0.1); border-radius: 6px; border-left: 4px solid #EB8153;">
+                    <a href="/admin/payments" class="d-flex align-items-center" style="text-decoration: none; color: inherit;">
+                        <div class="mr-3 text-danger"><i class="fa fa-money-bill-wave"></i></div>
+                        <div>
+                            <h6 class="mb-0" style="font-size: 13px; font-weight: 700;">${count++}. Pending Payments: ${systemAlerts.pendingPayments}</h6>
+                            <small class="text-muted">New payments to verify</small>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }
     }
 
-    list.innerHTML = notifications.map(n => {
-        let nData = n.data;
-        if (typeof nData === 'string') {
-            try {
-                nData = JSON.parse(nData);
-            } catch (e) {
-                console.error("Failed to parse notification data", e);
-            }
+    // 2. Regular Notifications
+    if (!notifications || notifications.length === 0) {
+        if (html === '') {
+            html = '<li class="text-center py-3">No new notifications</li>';
         }
+    } else {
+        html += notifications.map(n => {
+            let nData = n.data;
+            if (typeof nData === 'string') {
+                try {
+                    nData = JSON.parse(nData);
+                } catch (e) {
+                    console.error("Failed to parse notification data", e);
+                }
+            }
 
-        const message = nData.message || 'New notification';
-        const link = nData.link || 'javascript:void(0)';
-        const time = n.created_at ? new Date(n.created_at).toLocaleString() : '';
+            const message = nData.message || 'New notification';
+            const link = nData.link || 'javascript:void(0)';
+            const time = n.created_at ? new Date(n.created_at).toLocaleString() : '';
 
-        return `
-            <li>
-                <a href="${link}" class="timeline-panel" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="media-body">
-                        <h6 class="mb-1" style="font-size: 13px;">${message}</h6>
-                        <small class="d-block" style="color: rgba(0,0,0,0.5);">${time}</small>
-                    </div>
-                </a>
-            </li>
-        `;
-    }).join('');
+            return `
+                <li>
+                    <a href="${link}" class="timeline-panel" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="media-body">
+                            <h6 class="mb-1" style="font-size: 13px;">${count++}. ${message}</h6>
+                            <small class="d-block" style="color: rgba(0,0,0,0.5);">${time}</small>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    list.innerHTML = html;
 }
 
-function updateNotificationBadge(count) {
+function updateNotificationBadge(unreadCount, systemAlerts) {
     const pulse = document.getElementById('notification-pulse');
+    const badge = document.getElementById('notification-count');
+    
+    // Total count including system alerts for the badge
+    let totalCount = parseInt(unreadCount);
+    if (systemAlerts) {
+        if (systemAlerts.pendingApprovals > 0) totalCount++;
+        if (systemAlerts.pendingPayments > 0) totalCount++;
+    }
+
     if (pulse) {
-        if (parseInt(count) > 0) {
+        if (totalCount > 0) {
             pulse.classList.remove('d-none');
+            if (badge) {
+                badge.innerText = totalCount > 9 ? '9+' : totalCount;
+                badge.classList.remove('d-none');
+            }
         } else {
             pulse.classList.add('d-none');
+            if (badge) badge.classList.add('d-none');
         }
     }
 }
@@ -127,7 +181,6 @@ function updateNotificationBadge(count) {
 function handleNewNotification(data) {
     // Refresh data
     fetchNotifications();
-    fetchMessageCount();
 
     // Show toast if library is available
     if (typeof toastr !== 'undefined') {
@@ -146,11 +199,19 @@ function fetchMessageCount() {
         .then(res => res.json())
         .then(data => {
             const pulse = document.getElementById('message-pulse');
+            const badge = document.getElementById('message-count');
+            const msgCount = parseInt(data.unread_count) || 0;
+
             if (pulse) {
-                if (parseInt(data.unread_count) > 0) {
+                if (msgCount > 0) {
                     pulse.classList.remove('d-none');
+                    if (badge) {
+                        badge.innerText = msgCount > 9 ? '9+' : msgCount;
+                        badge.classList.remove('d-none');
+                    }
                 } else {
                     pulse.classList.add('d-none');
+                    if (badge) badge.classList.add('d-none');
                 }
             }
         })

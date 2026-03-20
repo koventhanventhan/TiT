@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { FaCalendarAlt, FaGraduationCap, FaChalkboardTeacher, FaYoutube, FaArrowRight } from 'react-icons/fa'
+import { useAuthModal } from '../context/AuthModalContext'
 import './Hero.css'
 
 const Hero = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage()
+  const { openRegister } = useAuthModal()
 
   const [yearsCount, setYearsCount] = useState(0)
   const [studentsCount, setStudentsCount] = useState(0)
@@ -167,10 +169,10 @@ const Hero = () => {
               {heroDescription}
             </p>
             <div className="hero-actions">
-              <a href="/register" className="btn btn-primary hero-btn">
+              <button onClick={openRegister} className="btn btn-primary hero-btn">
                 {t('hero_cta')}
                 <FaArrowRight style={{ fontSize: '16px', marginLeft: '8px', color: '#ffffff' }} />
-              </a>
+              </button>
               <a
                 href="https://www.youtube.com/@titeducation2087"
                 target="_blank"

@@ -75,18 +75,18 @@ export default function TeacherSchedule() {
                                 return (
                                     <div key={cls.id} style={{
                                         display: 'flex', alignItems: 'center', gap: 16,
-                                        background: '#fff', borderRadius: 12, padding: '16px 20px',
-                                        border: '1px solid #e2e8f0'
+                                        background: '#fff', borderRadius: 12, padding: '1rem 1.25rem',
+                                        border: '1.0px solid #e2e8f0'
                                     }}>
                                         <div style={{
-                                            minWidth: 80, textAlign: 'center', padding: '8px 12px',
+                                            minWidth: 80, textAlign: 'center', padding: '0.5rem 0.75rem',
                                             background: '#ede9fe', color: '#2563eb', borderRadius: 8,
                                             fontWeight: 700, fontSize: '0.85rem'
                                         }}>
                                             {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: '#1e293b' }}>
+                                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: '#1e293b' }}>
                                                 {cls.title || cls.subject || 'Class'}
                                             </h4>
                                             <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
@@ -98,7 +98,7 @@ export default function TeacherSchedule() {
                                             <button
                                                 className="btn-primary"
                                                 onClick={() => handleJoin(cls)}
-                                                style={{ padding: '8px 16px' }}
+                                                style={{ padding: '0.5rem 1rem' }}
                                             >
                                                 <FiVideo /> Start
                                             </button>

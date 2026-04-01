@@ -6,26 +6,26 @@
 
 .super-console-main {
     flex: 1;
-    margin-left: 280px;
+    margin-left: 17.5rem;
     display: flex;
     flex-direction: column;
 }
 
 .super-console-header {
-    height: 80px;
+    height: 5rem;
     background: white;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1.0px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 40px;
+    padding: 0 2.5rem;
     position: sticky;
     top: 0;
     z-index: 900;
 }
 
 .header-left h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #0f172a;
     margin: 0;
@@ -35,18 +35,18 @@
 .super-user-info {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .super-name {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: #1e293b;
     margin: 0;
 }
 
 .super-role {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #10b981;
     font-weight: 800;
     text-transform: uppercase;
@@ -54,11 +54,11 @@
 }
 
 .super-avatar {
-    width: 42px;
-    height: 42px;
+    width: 2.625rem;
+    height: 2.625rem;
     background: #f1f5f9;
-    border: 2px solid #10b981;
-    border-radius: 12px;
+    border: 0.125rem solid #10b981;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,11 +67,11 @@
 }
 
 .super-console-content {
-    padding: 40px;
+    padding: 2.5rem;
     flex: 1;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 64rem) {
     .super-console-main {
         margin-left: 0;
     }

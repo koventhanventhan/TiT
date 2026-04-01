@@ -337,7 +337,7 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <header className={`header ${isScrolled ? 'scrolled' : ''}`} style={{ top: isTopBarVisible ? '40px' : '0' }}>
+      <header className={`header ${isScrolled ? 'scrolled' : ''}`} style={{ top: isTopBarVisible ? '2.5rem' : '0' }}>
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo" style={{ textDecoration: 'none' }}>

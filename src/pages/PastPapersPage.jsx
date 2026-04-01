@@ -56,7 +56,7 @@ const PastPapersPage = () => {
     }
   }, [language, translate, getSetting, t])
 
-  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || 'http://localhost:8000/'
+  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || (window.location.origin + '/')
 
   const formatGradeDisplay = (g) => {
     if (!g || g.toLowerCase() === 'all grades' || g.toLowerCase() === 'all-grades') return t('all_grades')
@@ -123,7 +123,7 @@ const PastPapersPage = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-download"
-                      style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+                      style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3125rem' }}
                     >
                       <FiDownload />
                       {t('download')}

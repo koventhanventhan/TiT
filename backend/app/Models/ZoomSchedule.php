@@ -25,6 +25,7 @@ class ZoomSchedule extends Model
         'duration',
         'grade',
         'subject',
+        'zoom_account_id',
         'created_by',
         'institute_id',
     ];
@@ -50,5 +51,10 @@ class ZoomSchedule extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function zoomAccount(): BelongsTo
+    {
+        return $this->belongsTo(ZoomAccount::class);
     }
 }

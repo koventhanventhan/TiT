@@ -70,7 +70,7 @@ const Contact = () => {
           src="https://cdn.lordicon.com/tftaqpbe.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Phone',
@@ -84,7 +84,7 @@ const Contact = () => {
           src="https://cdn.lordicon.com/ebjjbeag.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Email',
@@ -98,7 +98,7 @@ const Contact = () => {
           src="https://cdn.lordicon.com/surdgmqi.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Location',
@@ -140,7 +140,7 @@ const Contact = () => {
                   src="https://cdn.lordicon.com/fdxqxpql.json"
                   trigger="hover"
                   colors="primary:#4f0bd9"
-                  style={{ width: '24px', height: '24px', marginRight: '8px' }}
+                  style={{ width: '1.5rem', height: '1.5rem', marginRight: '0.5rem' }}
                 />
                 {t('footer_support_hours') || 'Support Hours'}
               </h3>
@@ -168,7 +168,7 @@ const Contact = () => {
                   src="https://cdn.lordicon.com/fdxqxpql.json"
                   trigger="hover"
                   colors="primary:#4f0bd9"
-                  style={{ width: '24px', height: '24px', marginRight: '8px' }}
+                  style={{ width: '1.5rem', height: '1.5rem', marginRight: '0.5rem' }}
                 />
                 {t('contact_form_title')}
               </h3>
@@ -179,7 +179,7 @@ const Contact = () => {
                       src="https://cdn.lordicon.com/dxjqoygy.json"
                       trigger="focus"
                       colors="primary:#4f0bd9"
-                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                      style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
                     />
                     {t('contact_field_name')}
                   </label>
@@ -202,7 +202,7 @@ const Contact = () => {
                         src="https://cdn.lordicon.com/ebjjbeag.json"
                         trigger="focus"
                         colors="primary:#4f0bd9"
-                        style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                        style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
                       />
                       {t('contact_field_email')}
                     </label>
@@ -224,7 +224,7 @@ const Contact = () => {
                         src="https://cdn.lordicon.com/tftaqpbe.json"
                         trigger="focus"
                         colors="primary:#4f0bd9"
-                        style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                        style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
                       />
                       {t('contact_field_phone')}
                     </label>
@@ -246,7 +246,7 @@ const Contact = () => {
                       src="https://cdn.lordicon.com/fdxqxpql.json"
                       trigger="focus"
                       colors="primary:#4f0bd9"
-                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                      style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
                     />
                     {t('contact_field_subject')}
                   </label>
@@ -268,7 +268,7 @@ const Contact = () => {
                       src="https://cdn.lordicon.com/fdxqxpql.json"
                       trigger="focus"
                       colors="primary:#4f0bd9"
-                      style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                      style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
                     />
                     {t('contact_field_message')}
                   </label>
@@ -290,7 +290,7 @@ const Contact = () => {
                     src="https://cdn.lordicon.com/aymdfhbt.json"
                     trigger="hover"
                     colors="primary:#ffffff"
-                    style={{ width: '20px', height: '20px', marginLeft: '8px' }}
+                    style={{ width: '1.25rem', height: '1.25rem', marginLeft: '0.5rem' }}
                   />
                 </button>
               </form>

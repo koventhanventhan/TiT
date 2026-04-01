@@ -77,7 +77,7 @@ const StudentToolkit = () => {
                   src={tool.icon || 'https://cdn.lordicon.com/fkdkvhlp.json'}
                   trigger="hover"
                   colors={`primary:${tool.color || '#4f0bd9'},secondary:#1a103c`}
-                  style={{ width: '40px', height: '40px' }}
+                  style={{ width: '2.5rem', height: '2.5rem' }}
                 />
               </div>
               <h3 className="item-title">{tool.title}</h3>

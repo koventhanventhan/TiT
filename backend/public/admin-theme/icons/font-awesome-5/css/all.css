@@ -189,7 +189,7 @@
 
 /* Font Awesome uses the Unicode Private Use Area (PUA) to ensure screen
 readers do not read off random characters that represent icons */
-.fa-500px:before {
+.fa-31.25rem:before {
   content: "\f26e"; }
 
 .fa-accessible-icon:before {
@@ -4374,12 +4374,12 @@ readers do not read off random characters that represent icons */
 .sr-only {
   border: 0;
   clip: rect(0, 0, 0, 0);
-  height: 1px;
-  margin: -1px;
+  height: 1.0px;
+  margin: -1.0px;
   overflow: hidden;
   padding: 0;
   position: absolute;
-  width: 1px; }
+  width: 1.0px; }
 
 .sr-only-focusable:active, .sr-only-focusable:focus {
   clip: auto;

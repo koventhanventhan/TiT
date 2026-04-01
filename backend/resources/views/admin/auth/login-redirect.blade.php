@@ -18,29 +18,29 @@
         }
         .container {
             text-align: center;
-            padding: 40px;
+            padding: 2.5rem;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
+            border-radius: 0.625rem;
+            backdrop-filter: blur(0.625rem);
         }
         .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
+            border: 0.25rem solid rgba(255, 255, 255, 0.3);
+            border-top: 0.25rem solid white;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 2.5rem;
+            height: 2.5rem;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 1.25rem auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         h1 {
-            margin: 0 0 10px 0;
+            margin: 0 0 0.625rem 0;
         }
         p {
-            margin: 10px 0;
+            margin: 0.625rem 0;
             opacity: 0.9;
         }
     </style>

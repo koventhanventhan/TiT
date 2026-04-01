@@ -52,7 +52,7 @@ const About = () => {
           src="https://cdn.lordicon.com/jtihyjyw.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Top-notch Online Classes',
@@ -64,7 +64,7 @@ const About = () => {
           src="https://cdn.lordicon.com/dxjqoygy.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Professional Service & Standards',
@@ -76,7 +76,7 @@ const About = () => {
           src="https://cdn.lordicon.com/fpisjznf.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Guaranteed Academic Success',
@@ -88,7 +88,7 @@ const About = () => {
           src="https://cdn.lordicon.com/yqzmiobz.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Qualified Professional Tutors',
@@ -201,7 +201,7 @@ const About = () => {
               src="https://cdn.lordicon.com/igiiqzue.json"
               trigger="hover"
               colors={activeTab === 'journey' ? "primary:#ffffff" : "primary:#4f0bd9"}
-              style={{ width: '20px', height: '20px' }}
+              style={{ width: '1.25rem', height: '1.25rem' }}
             />
             {t('about_tab_journey')}
           </button>
@@ -213,7 +213,7 @@ const About = () => {
               src="https://cdn.lordicon.com/dxjqoygy.json"
               trigger="hover"
               colors={activeTab === 'teachers' ? "primary:#ffffff" : "primary:#4f0bd9"}
-              style={{ width: '20px', height: '20px' }}
+              style={{ width: '1.25rem', height: '1.25rem' }}
             />
             {t('about_tab_teachers')}
           </button>
@@ -225,7 +225,7 @@ const About = () => {
               src="https://cdn.lordicon.com/fgpmetxx.json"
               trigger="hover"
               colors={activeTab === 'images' ? "primary:#ffffff" : "primary:#4f0bd9"}
-              style={{ width: '20px', height: '20px' }}
+              style={{ width: '1.25rem', height: '1.25rem' }}
             />
             {t('about_tab_images')}
           </button>

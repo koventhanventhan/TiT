@@ -30,7 +30,7 @@
 
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
             background: #2c254a !important;
         }
         
@@ -38,25 +38,25 @@
         
         .settings-container {
             display: flex;
-            gap: 20px;
-            min-height: 700px;
+            gap: 1.25rem;
+            min-height: 43.75rem;
         }
 
         .settings-sidebar {
-            width: 280px;
+            width: 17.5rem;
             background: #3b3363;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
             height: fit-content;
         }
 
         .settings-nav-item {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
+            padding: 0.75rem 1rem;
             color: var(--text-muted);
-            border-radius: 8px;
-            margin-bottom: 8px;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
             transition: all 0.2s;
             cursor: pointer;
             text-decoration: none;
@@ -67,8 +67,8 @@
         }
 
         .settings-nav-item i {
-            font-size: 20px;
-            margin-right: 12px;
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
         }
 
         .settings-nav-item:hover {
@@ -87,35 +87,35 @@
 
         .settings-card {
             background: #3b3363 !important;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 24px;
+            border-radius: 0.75rem;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
             overflow: hidden;
         }
 
         .settings-card-header {
-            padding: 24px 24px 0 24px;
+            padding: 1.5rem 1.5rem 0 1.5rem;
             border: none;
             background: transparent;
         }
 
         .settings-card-title {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 4px;
+            margin-bottom: 0.25rem;
         }
 
         .settings-card-body {
-            padding: 24px;
+            padding: 1.5rem;
         }
 
         .settings-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 0;
+            border-bottom: 1.0px solid rgba(255, 255, 255, 0.05);
         }
 
         .settings-row:last-child {
@@ -124,13 +124,13 @@
 
         .settings-info h6 {
             color: #fff;
-            margin-bottom: 4px;
-            font-size: 15px;
+            margin-bottom: 0.25rem;
+            font-size: 0.9375rem;
         }
 
         .settings-info p {
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 0.8125rem;
             margin-bottom: 0;
         }
 
@@ -144,14 +144,14 @@
         .theme-selection {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-top: 16px;
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
         .theme-option {
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 12px;
+            border: 0.125rem solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.625rem;
+            padding: 0.75rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
@@ -164,43 +164,43 @@
         }
 
         .theme-preview {
-            height: 60px;
-            border-radius: 6px;
-            margin-bottom: 12px;
+            height: 3.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .theme-preview.light { background: #fff; color: #333; }
-        .theme-preview.dark { background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+        .theme-preview.dark { background: #1e293b; color: #fff; border: 1.0px solid rgba(255,255,255,0.1); }
         .theme-preview.system { background: linear-gradient(135deg, #fff 50%, #1e293b 50%); }
 
         .theme-label {
             color: #fff;
-            font-size: 14px;
+            font-size: 0.875rem;
             font-weight: 500;
         }
 
         /* Profile Details Styles */
         .profile-photo-preview {
-            width: 100px;
-            height: 100px;
+            width: 6.25rem;
+            height: 6.25rem;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #EB8153;
+            border: 0.1875rem solid #EB8153;
         }
         
         .profile-photo-placeholder {
-            width: 100px;
-            height: 100px;
+            width: 6.25rem;
+            height: 6.25rem;
             border-radius: 50%;
             background: #EB8153;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: bold;
         }
         
@@ -209,23 +209,23 @@
         /* Calendar Specific Styles */
         .calendar-layout {
             display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 24px;
-            height: calc(100vh - 200px);
-            min-height: 800px;
+            grid-template-columns: 20rem 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 12.5rem);
+            min-height: 50rem;
         }
 
         .calendar-sidebar {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 1.5rem;
         }
 
         .calendar-main {
             background: #3b3363;
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
         }
@@ -237,7 +237,7 @@
 
         /* Customizing FullCalendar */
         .fc-theme-standard td, .fc-theme-standard th { border-color: rgba(255, 255, 255, 0.05); }
-        .fc-col-header-cell { background: rgba(255, 255, 255, 0.02); padding: 12px 0 !important; }
+        .fc-col-header-cell { background: rgba(255, 255, 255, 0.02); padding: 0.75rem 0 !important; }
         .fc-daygrid-day:hover { background: rgba(255, 255, 255, 0.02); }
         .fc-day-today { background: rgba(235, 129, 83, 0.05) !important; }
         .fc-button-primary { background: #4d44b5 !important; border: none !important; }
@@ -246,45 +246,45 @@
         
         .mini-calendar {
             background: #3b3363;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .event-categories {
             background: #3b3363;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .category-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 0.625rem 0;
             color: var(--text-muted);
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .category-dot {
-            width: 10px;
-            height: 10px;
+            width: 0.625rem;
+            height: 0.625rem;
             border-radius: 50%;
-            margin-right: 12px;
+            margin-right: 0.75rem;
         }
 
         /* Modal Styles */
         .modal-content.calendar-modal {
             background: #3b3363;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
             color: #fff;
         }
 
         .calendar-modal .form-control {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
             color: #fff;
         }
 
@@ -305,42 +305,42 @@
 
         /* Button Group */
         .settings-footer {
-            margin-top: 24px;
+            margin-top: 1.5rem;
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 0.75rem;
         }
 
         .btn-blue {
             background: var(--accent-blue);
             color: #fff;
             border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
+            padding: 0.625rem 1.5rem;
+            border-radius: 0.5rem;
             font-weight: 600;
         }
 
         .btn-cancel {
             background: transparent;
             color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 24px;
-            border-radius: 8px;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
+            padding: 0.625rem 1.5rem;
+            border-radius: 0.5rem;
         }
 
         /* Privacy Buttons */
         .privacy-btn {
             width: 100%;
             text-align: left;
-            padding: 14px 16px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            border: 1.0px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.5rem;
             background: rgba(59, 130, 246, 0.05);
             color: var(--accent-blue);
-            margin-bottom: 12px;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.75rem;
             transition: all 0.2s;
         }
 
@@ -362,7 +362,7 @@
             background: rgba(255, 255, 255, 1);
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 0.5rem;
         }
 
         /* Password Toggle Styles */
@@ -372,12 +372,12 @@
         
         .password-toggle-wrapper .toggle-password {
             position: absolute;
-            right: 15px;
+            right: 0.9375rem;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
             color: var(--text-muted);
-            font-size: 18px;
+            font-size: 1.125rem;
             z-index: 10;
             transition: color 0.2s;
         }
@@ -387,7 +387,7 @@
         }
         
         .password-toggle-wrapper .form-control {
-            padding-right: 45px !important;
+            padding-right: 2.8125rem !important;
         }
     </style>
     <!-- Pusher and Notifications -->
@@ -418,14 +418,14 @@
         <div class="nav-header">
             <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
                 </span>
             </a>
@@ -458,7 +458,7 @@
                             <i class="la la-angle-down submenu-arrow" style="margin-right: 0; transition: transform 0.3s;"></i>
                         </div>
                         <!-- Profile Submenu -->
-                        <div id="profile_submenu" style="padding-left: 20px; display: block;">
+                        <div id="profile_submenu" style="padding-left: 1.25rem; display: block;">
                             <button type="button" class="settings-nav-item active" data-target="details_tab" onclick="switchTab(this)">
                                 <i class="la la-user"></i> <span>Profile Details</span>
                             </button>
@@ -746,7 +746,7 @@
                                                                 @if($admin->avatar)
                                                                     <img src="{{ asset($admin->avatar) }}" class="rounded-lg mr-2" width="35" height="35" style="object-fit: cover;">
                                                                 @else
-                                                                    <div class="rounded-lg mr-2 bg-primary d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; font-weight: bold; font-size: 14px;">
+                                                                    <div class="rounded-lg mr-2 bg-primary d-flex align-items-center justify-content-center" style="width: 2.1875rem; height: 2.1875rem; font-weight: bold; font-size: 0.875rem;">
                                                                         {{ strtoupper(substr($admin->first_name ?: $admin->name, 0, 1)) }}
                                                                     </div>
                                                                 @endif
@@ -755,7 +755,7 @@
                                                         </td>
                                                         <td>{{ $admin->email }}</td>
                                                         <td>
-                                                            <span class="badge badge-outline-light font-w500" style="font-family: monospace; letter-spacing: 1px;">
+                                                            <span class="badge badge-outline-light font-w500" style="font-family: monospace; letter-spacing: 1.0px;">
                                                                 {{ $admin->plain_password ?: '********' }}
                                                             </span>
                                                         </td>
@@ -799,7 +799,7 @@
                                         <p class="text-muted small">Schedule and manage your events</p>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <button class="btn btn-outline-light btn-sm" style="border: 1px solid rgba(255,255,255,0.2);"><i class="la la-download"></i> Export</button>
+                                        <button class="btn btn-outline-light btn-sm" style="border: 1.0px solid rgba(255,255,255,0.2);"><i class="la la-download"></i> Export</button>
                                         <button class="btn btn-orange btn-sm" data-toggle="modal" data-target="#addEventModal"><i class="la la-plus"></i> Add Event</button>
                                     </div>
                                 </div>
@@ -924,7 +924,7 @@
                         </div>
                         <div class="form-group mt-3">
                             <label class="text-white small uppercase font-w500">Reminders</label>
-                            <select name="reminders[]" class="form-control bg-transparent border-dark text-white" multiple style="height: 100px;">
+                            <select name="reminders[]" class="form-control bg-transparent border-dark text-white" multiple style="height: 6.25rem;">
                                 <option value="at_time">At time of event</option>
                                 <option value="5m">5 minutes before</option>
                                 <option value="15m">15 minutes before</option>

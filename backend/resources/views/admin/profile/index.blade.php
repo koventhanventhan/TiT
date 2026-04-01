@@ -15,7 +15,7 @@
     <style>
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
             background: #2c254a !important;
         }
         
@@ -30,27 +30,27 @@
         .header-profile .nav-link {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.625rem;
         }
 
         .profile-photo-preview {
-            width: 100px;
-            height: 100px;
+            width: 6.25rem;
+            height: 6.25rem;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #EB8153;
+            border: 0.1875rem solid #EB8153;
         }
         
         .profile-photo-placeholder {
-            width: 100px;
-            height: 100px;
+            width: 6.25rem;
+            height: 6.25rem;
             border-radius: 50%;
             background: #EB8153;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: bold;
         }
         
@@ -58,10 +58,10 @@
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 0.5rem;
         }
 
-        @media (min-width: 1200px) {
+        @media (min-width: 75rem) {
             .col-xl-9 {
                 flex: 0 0 100%;
                 max-width: 100%;
@@ -70,7 +70,7 @@
 
         .card {
             background: #3b3363 !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .card-title {
@@ -109,14 +109,14 @@
         <div class="nav-header">
             <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
                 </span>
             </a>

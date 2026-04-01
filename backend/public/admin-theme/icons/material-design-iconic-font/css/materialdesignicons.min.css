@@ -9,7 +9,7 @@
 .mdi:before,
 .mdi-set {
   display: inline-block;
-  font: normal normal normal 24px/1 "Material Design Icons";
+  font: normal normal normal 1.5rem/1 "Material Design Icons";
   font-size: inherit;
   text-rendering: auto;
   line-height: inherit;
@@ -9962,20 +9962,20 @@
   visibility: hidden;
 }
 
-.mdi-18px.mdi-set, .mdi-18px.mdi:before {
-  font-size: 18px;
+.mdi-1.125rem.mdi-set, .mdi-1.125rem.mdi:before {
+  font-size: 1.125rem;
 }
 
-.mdi-24px.mdi-set, .mdi-24px.mdi:before {
-  font-size: 24px;
+.mdi-1.5rem.mdi-set, .mdi-1.5rem.mdi:before {
+  font-size: 1.5rem;
 }
 
-.mdi-36px.mdi-set, .mdi-36px.mdi:before {
-  font-size: 36px;
+.mdi-2.25rem.mdi-set, .mdi-2.25rem.mdi:before {
+  font-size: 2.25rem;
 }
 
-.mdi-48px.mdi-set, .mdi-48px.mdi:before {
-  font-size: 48px;
+.mdi-3rem.mdi-set, .mdi-3rem.mdi:before {
+  font-size: 3rem;
 }
 
 .mdi-dark:before {

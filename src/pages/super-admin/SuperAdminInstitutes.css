@@ -4,31 +4,31 @@
 
 .institutes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.5625rem;
 }
 
 .institute-card {
     background: white;
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    border-radius: 1.25rem;
+    padding: 1.5625rem;
+    box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.05);
+    border: 1.0px solid #f1f5f9;
 }
 
 .inst-header {
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 .inst-meta {
     display: flex;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .status-pill {
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 11px;
+    padding: 0.3125rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.6875rem;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -46,33 +46,33 @@
 .plan-pill {
     background: #f1f5f9;
     color: #475569;
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 11px;
+    padding: 0.3125rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.6875rem;
     font-weight: 800;
     text-transform: uppercase;
-    border: 1px solid #e2e8f0;
+    border: 1.0px solid #e2e8f0;
 }
 
 .institute-card h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 800;
     color: #0f172a;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 .inst-details {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 25px;
+    gap: 0.75rem;
+    margin-bottom: 1.5625rem;
 }
 
 .detail-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
+    gap: 0.625rem;
+    font-size: 0.8125rem;
     color: #64748b;
     font-weight: 600;
 }
@@ -83,16 +83,16 @@
 
 .card-actions {
     display: flex;
-    gap: 10px;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 20px;
+    gap: 0.625rem;
+    border-top: 1.0px solid #f1f5f9;
+    padding-top: 1.25rem;
 }
 
 .card-actions button {
     flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     cursor: pointer;
     border: none;
@@ -107,7 +107,7 @@
 .suspend-btn {
     background: #f8fafc;
     color: #ef4444;
-    border: 1px solid #f1f5f9;
+    border: 1.0px solid #f1f5f9;
 }
 
 .manage-btn:hover {

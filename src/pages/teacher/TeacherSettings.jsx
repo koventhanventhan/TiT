@@ -13,13 +13,13 @@ export default function TeacherSettings() {
 
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(25rem, 1fr))',
                 gap: 24
             }}>
                 {/* Profile Section */}
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 28,
-                    border: '1px solid #e2e8f0'
+                    border: '1.0px solid #e2e8f0'
                 }}>
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
                         <FiUser style={{ color: '#2563eb' }} /> Profile Information
@@ -31,7 +31,7 @@ export default function TeacherSettings() {
                                 type="text"
                                 defaultValue={user.name || ''}
                                 style={{
-                                    width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0',
+                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
                                     borderRadius: 10, fontSize: '0.9rem', color: '#334155', outline: 'none',
                                     boxSizing: 'border-box'
                                 }}
@@ -44,7 +44,7 @@ export default function TeacherSettings() {
                                 defaultValue={user.email || ''}
                                 disabled
                                 style={{
-                                    width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0',
+                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
                                     borderRadius: 10, fontSize: '0.9rem', color: '#94a3b8', background: '#f8fafc',
                                     boxSizing: 'border-box'
                                 }}
@@ -56,7 +56,7 @@ export default function TeacherSettings() {
                                 type="tel"
                                 defaultValue={user.phone_number || ''}
                                 style={{
-                                    width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0',
+                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
                                     borderRadius: 10, fontSize: '0.9rem', color: '#334155', outline: 'none',
                                     boxSizing: 'border-box'
                                 }}
@@ -65,7 +65,7 @@ export default function TeacherSettings() {
                     </div>
                     <button style={{
                         marginTop: 20, display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '10px 20px', background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                        padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
                         color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600,
                         fontSize: '0.9rem', cursor: 'pointer'
                     }}>
@@ -77,7 +77,7 @@ export default function TeacherSettings() {
                 <div style={{ display: 'grid', gap: 24 }}>
                     <div style={{
                         background: '#fff', borderRadius: 14, padding: 28,
-                        border: '1px solid #e2e8f0'
+                        border: '1.0px solid #e2e8f0'
                     }}>
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
                             <FiBell style={{ color: '#f59e0b' }} /> Notifications
@@ -89,7 +89,7 @@ export default function TeacherSettings() {
                         ].map((item, i) => (
                             <div key={i} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '12px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'
+                                padding: '0.75rem 0', borderBottom: i < 2 ? '1.0px solid #f1f5f9' : 'none'
                             }}>
                                 <span style={{ color: '#334155', fontSize: '0.9rem' }}>{item.label}</span>
                                 <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24 }}>
@@ -111,15 +111,15 @@ export default function TeacherSettings() {
 
                     <div style={{
                         background: '#fff', borderRadius: 14, padding: 28,
-                        border: '1px solid #e2e8f0'
+                        border: '1.0px solid #e2e8f0'
                     }}>
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
                             <FiLock style={{ color: '#ef4444' }} /> Security
                         </h3>
                         <button style={{
                             display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '10px 20px', background: '#fff',
-                            color: '#334155', border: '1px solid #e2e8f0', borderRadius: 10, fontWeight: 500,
+                            padding: '0.625rem 1.25rem', background: '#fff',
+                            color: '#334155', border: '1.0px solid #e2e8f0', borderRadius: 10, fontWeight: 500,
                             fontSize: '0.9rem', cursor: 'pointer'
                         }}>
                             <FiLock /> Change Password

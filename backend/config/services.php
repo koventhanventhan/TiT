@@ -42,11 +42,17 @@ return [
     ],
 
     'whatsapp' => [
-        'driver' => env('WHATSAPP_DRIVER', 'twilio'),
+        'driver' => env('WHATSAPP_DRIVER', 'meta'),
         'other_url' => env('WHATSAPP_OTHER_URL'),
         'other_method' => env('WHATSAPP_OTHER_METHOD', 'POST'),
         'other_headers' => [],
         'other_payload' => [],
+    ],
+
+    'meta_whatsapp' => [
+        'token' => env('META_WHATSAPP_TOKEN'),
+        'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('META_WHATSAPP_API_VERSION', 'v21.0'),
     ],
 
     'gemini' => [
@@ -60,4 +66,9 @@ return [
         'base_url' => 'https://api.zoom.us/v2',
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/api/auth/google/callback'),
+    ],
 ];

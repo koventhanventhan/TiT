@@ -9,7 +9,7 @@ import StudentsParentsLoveUs from '../components/StudentsParentsLoveUs'
 
 const HomePage = () => {
   return (
-    <div style={{ paddingTop: '120px' }}>
+    <div style={{ paddingTop: '7.5rem' }}>
       <Hero />
       <Classes />
       <WhyChooseUs />

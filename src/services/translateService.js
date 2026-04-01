@@ -2,7 +2,7 @@
  * Translation service: uses static translations first;
  * optional Gemini API for on-demand translation of dynamic content.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken')

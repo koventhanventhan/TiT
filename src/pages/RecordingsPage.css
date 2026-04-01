@@ -1,89 +1,89 @@
 .recordings-page {
-  padding-top: 120px;
+  padding-top: 7.5rem;
   min-height: 100vh;
   background: var(--bg-light);
 }
 
 .recordings-page-hero {
   background: var(--gradient-3);
-  padding: 60px 0;
+  padding: 3.75rem 0;
   color: white;
   text-align: center;
 }
 
 .recordings-page-title {
-  font-size: 42px;
+  font-size: 2.625rem;
   font-weight: 800;
-  margin-bottom: 15px;
+  margin-bottom: 0.9375rem;
   color: white;
 }
 
 .recordings-page-subtitle {
-  font-size: 18px;
+  font-size: 1.125rem;
   opacity: 0.95;
-  max-width: 600px;
+  max-width: 37.5rem;
   margin: 0 auto;
 }
 
 .recordings-content {
-  padding: 40px 0;
+  padding: 2.5rem 0;
 }
 
 .recordings-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 2.5rem;
 }
 
 .grade-badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   background: var(--gradient-3);
   color: white;
-  padding: 12px 24px;
-  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1.875rem;
   font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 20px;
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .recordings-description {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--text-light);
-  max-width: 700px;
+  max-width: 43.75rem;
   margin: 0 auto;
   line-height: 1.8;
 }
 
 .recordings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 25px;
-  margin-bottom: 50px;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1.5625rem;
+  margin-bottom: 3.125rem;
 }
 
 .recording-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .recording-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
 }
 
 .recording-card.highlight {
-  border: 2px solid var(--primary-color);
+  border: 0.125rem solid var(--primary-color);
   background: linear-gradient(to bottom right, #ffffff, #f5f7ff);
 }
 
 .recording-thumbnail {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 12.5rem;
   background: var(--gradient-3);
   display: flex;
   align-items: center;
@@ -92,7 +92,7 @@
 }
 
 .recording-icon {
-  font-size: 64px;
+  font-size: 4rem;
   color: white;
   opacity: 0.8;
 }
@@ -102,14 +102,14 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
+  width: 3.75rem;
+  height: 3.75rem;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   color: var(--primary-color);
   transition: all 0.3s ease;
 }
@@ -120,22 +120,22 @@
 }
 
 .recording-content {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .recording-title {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-dark);
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .recording-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 14px;
+  gap: 0.9375rem;
+  margin-bottom: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .recording-subject {
@@ -146,7 +146,7 @@
 .recording-duration {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   color: var(--text-light);
 }
 
@@ -159,69 +159,69 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--gradient-3);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btn-watch:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(79, 172, 254, 0.3);
 }
 
 .recordings-cta {
   text-align: center;
-  padding: 50px 20px;
+  padding: 3.125rem 1.25rem;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .recordings-cta h2 {
-  font-size: 32px;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 15px;
+  margin-bottom: 0.9375rem;
 }
 
 .recordings-cta p {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--text-light);
-  margin-bottom: 30px;
+  margin-bottom: 1.875rem;
 }
 
 .btn-primary-large {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   background: var(--gradient-3);
   color: white;
-  padding: 14px 32px;
-  border-radius: 8px;
+  padding: 0.875rem 2rem;
+  border-radius: 0.5rem;
   text-decoration: none;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
 .btn-primary-large:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.375rem 1.25rem rgba(79, 172, 254, 0.3);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .recordings-grid {
     grid-template-columns: 1fr;
   }
 
   .recordings-page-title {
-    font-size: 32px;
+    font-size: 2rem;
   }
 }

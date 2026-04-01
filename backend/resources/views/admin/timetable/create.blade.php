@@ -10,7 +10,7 @@
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
     <style>
-        .content-body { margin-top: 0 !important; padding-top: 20px; }
+        .content-body { margin-top: 0 !important; padding-top: 1.25rem; }
     </style>
 </head>
 
@@ -21,7 +21,7 @@
             <div class="container-fluid">
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h4 style="font-size: 24px; font-weight: 600; color: #1f2937;">Add Recurring Timetable Slot</h4>
+                        <h4 style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Add Recurring Timetable Slot</h4>
                     </div>
                 </div>
 

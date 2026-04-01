@@ -17,19 +17,19 @@
     <style>
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
         }
 
         .card {
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            margin-bottom: 25px;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5625rem;
             background: rgba(43, 37, 72, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .card-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1.0px solid rgba(255, 255, 255, 0.1);
             background: transparent !important;
         }
 
@@ -40,10 +40,10 @@
 
         .class-edit-section, .profile-tab .custom-tab-1 {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
+            border: 1.0px solid rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1.5625rem;
+            margin-bottom: 1.875rem;
             color: #fff;
             position: relative;
             transition: all 0.3s ease;
@@ -57,28 +57,28 @@
         .class-edit-section h5, .profile-tab .nav-tabs .nav-link.active {
             color: #EB8153 !important;
             font-weight: 600;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-            padding-bottom: 10px;
+            margin-bottom: 1.25rem;
+            border-bottom: 1.0px solid rgba(255,255,255,0.1) !important;
+            padding-bottom: 0.625rem;
             border-color: transparent transparent #EB8153 !important;
         }
         
         .profile-tab .nav-tabs .nav-link {
             color: rgba(255,255,255,0.7);
             border: none;
-            border-bottom: 1px solid transparent;
+            border-bottom: 1.0px solid transparent;
         }
         
         .profile-tab .nav-tabs .nav-link:hover {
             color: #EB8153;
-            border-bottom: 1px solid rgba(235, 129, 83, 0.5);
+            border-bottom: 1.0px solid rgba(235, 129, 83, 0.5);
         }
 
         .form-control, .bootstrap-select .dropdown-toggle, textarea {
             background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
             color: #fff !important;
-            border-radius: 8px !important;
+            border-radius: 0.5rem !important;
         }
 
         .form-control:focus, textarea:focus {
@@ -89,13 +89,13 @@
         label {
             color: rgba(255, 255, 255, 0.7) !important;
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
 
         .help-text {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: rgba(255,255,255,0.5);
-            margin-top: 4px;
+            margin-top: 0.25rem;
         }
 
         /* Prevent overrides from bootstrap text-dark/text-muted classes */
@@ -111,20 +111,20 @@
             background-color: #EB8153;
             border-color: #EB8153;
             color: #fff;
-            border-radius: 6px;
-            padding: 5px 12px;
+            border-radius: 0.375rem;
+            padding: 0.3125rem 0.75rem;
         }
 
         .btn-info.btn-xs:hover, .btn-primary:hover {
             background-color: #d96e42;
             border-color: #d96e42;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(235, 129, 83, 0.4) !important;
+            transform: translateY(-0.125rem);
+            box-shadow: 0 0.25rem 0.75rem rgba(235, 129, 83, 0.4) !important;
         }
         
 
         hr {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .text-primary {
@@ -138,13 +138,13 @@
         .header-profile .nav-link {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.625rem;
         }
 
         .nav-header .brand-logo {
             display: flex;
             align-items: center;
-            padding-left: 20px;
+            padding-left: 1.25rem;
         }
 
         /* Interactive Logo Preview */
@@ -153,17 +153,17 @@
             transition: all 0.3s ease;
             overflow: hidden;
             background: rgba(0,0,0,0.2) !important;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            height: 100px;
-            width: 100px;
+            border: 1.0px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            height: 6.25rem;
+            width: 6.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .clickable-logo-preview:hover {
             border-color: #EB8153 !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.3);
         }
         .logo-preview-overlay {
             position: absolute;
@@ -215,14 +215,14 @@
         <div class="nav-header">
                         <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
                 </span>
             </a>
@@ -249,23 +249,23 @@
                         </div>
 
                         <ul class="navbar-nav header-right">
-                             <li class="nav-item" style="margin-right: 20px;">
+                             <li class="nav-item" style="margin-right: 1.25rem;">
                                 <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}"
                                    target="_blank"
                                    rel="noopener noreferrer"
                                    class="btn btn-primary btn-sm"
                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                           border: none;
-                                          padding: 8px 12px;
-                                          border-radius: 6px;
+                                          padding: 0.5rem 0.75rem;
+                                          border-radius: 0.375rem;
                                           color: white;
                                           font-weight: 500;
                                           text-decoration: none;
                                           display: inline-flex;
                                           align-items: center;
-                                          gap: 5px;
+                                          gap: 0.3125rem;
                                           transition: all 0.3s ease;
-                                          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                                          box-shadow: 0 0.125rem 0.5rem rgba(102, 126, 234, 0.3);
                                           cursor: pointer;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -281,8 +281,8 @@
                                         <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M3.5 8.16665L14 15.1666L24.5 8.16665" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
-                                    <div class="pulse-css d-none" id="message-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
-                                        <span id="message-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    <div class="pulse-css d-none" id="message-pulse" style="width: 1.125rem; height: 1.125rem; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0.0px; right: -0.3125rem; box-shadow: 0 0 0 0.125rem #fff;">
+                                        <span id="message-count" class="text-white d-none" style="font-size: 0.625rem; font-weight: bold; line-height: 1;">0</span>
                                     </div>
                                 </a>
                             </li>
@@ -292,8 +292,8 @@
                                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
                                     </svg>
-                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
-                                        <span id="notification-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 1.125rem; height: 1.125rem; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0.0px; right: -0.3125rem; box-shadow: 0 0 0 0.125rem #fff;">
+                                        <span id="notification-count" class="text-white d-none" style="font-size: 0.625rem; font-weight: bold; line-height: 1;">0</span>
                                     </div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
@@ -315,7 +315,7 @@
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
                                     @else
-                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        <div class="header-profile-initials" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
                                             {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -355,7 +355,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #fff;">Frontend Settings</h4>
+                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #fff;">Frontend Settings</h4>
                             <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/" target="_blank" class="btn btn-primary btn-sm">
                                 View Home Page
                             </a>
@@ -458,7 +458,7 @@
                                                             <div class="col-md-12 mb-3">
                                                                 <label>Show Support Email & Email Address</label>
                                                                 <div class="d-flex gap-2 align-items-center">
-                                                                    <select name="topbar_show_email" class="form-control" style="width: 120px; flex-shrink: 0;">
+                                                                    <select name="topbar_show_email" class="form-control" style="width: 7.5rem; flex-shrink: 0;">
                                                                         <option value="yes" {{ \App\Models\SiteSetting::get('topbar_show_email', 'yes') == 'yes' ? 'selected' : '' }}>On</option>
                                                                         <option value="no" {{ \App\Models\SiteSetting::get('topbar_show_email', 'yes') == 'no' ? 'selected' : '' }}>Off</option>
                                                                     </select>
@@ -480,7 +480,7 @@
                                                             <div class="col-md-4 mb-3">
                                                                 <div class="clickable-logo-preview" id="logo-preview-container">
                                                                     @if(\App\Models\SiteSetting::get('logo_url'))
-                                                                        <img src="{{ \App\Models\SiteSetting::get('logo_url') }}" alt="Logo" id="logo-preview-img" style="max-height: 80px; max-width: 100%;">
+                                                                        <img src="{{ \App\Models\SiteSetting::get('logo_url') }}" alt="Logo" id="logo-preview-img" style="max-height: 5rem; max-width: 100%;">
                                                                         <div class="logo-preview-overlay" onclick="removeLogo()">Remove Logo</div>
                                                                     @else
                                                                         <div class="empty-logo">No Logo</div>
@@ -604,7 +604,7 @@
                                                         <!-- Hidden textarea to store JSON for submission -->
                                                         <textarea name="love_us_testimonials" id="love_us_testimonials_hidden" class="d-none">{{ \App\Models\SiteSetting::get('love_us_testimonials', '[]') }}</textarea>
 
-                                                        <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
+                                                        <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                             <b>Tip:</b> Click "Add New" to add a testimonial. Changes are synced automatically to the hidden field.
                                                         </div>
 
@@ -645,7 +645,7 @@
                                                          <!-- Hidden textarea to store JSON for submission -->
                                                          <textarea name="onboarding_steps" id="onboarding_steps_hidden" class="d-none">{{ \App\Models\SiteSetting::get('onboarding_steps', '[]') }}</textarea>
 
-                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
+                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                              <b>Tip:</b> Add the steps in the order you want them to appear.
                                                          </div>
 
@@ -738,7 +738,7 @@
                                                          <!-- Hidden textarea to store JSON for submission -->
                                                          <textarea name="why_reasons" id="why_reasons_hidden" class="d-none">{{ \App\Models\SiteSetting::get('why_reasons', '[]') }}</textarea>
 
-                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
+                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                              <b>Note:</b> These are the 3 cards shown in the "Why EduLearn?" section.
                                                          </div>
 
@@ -779,7 +779,7 @@
                                                          <!-- Hidden textarea to store JSON for submission -->
                                                          <textarea name="classes_types" id="classes_types_hidden" class="d-none">{{ \App\Models\SiteSetting::get('classes_types', '[]') }}</textarea>
 
-                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 13px;">
+                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                              <b>Note:</b> These are the cards shown in the "Explore & Enroll" section.
                                                          </div>
 
@@ -989,28 +989,28 @@
     <style>
         .testimonial-item, .love-us-testimonial-item {
             background: #3b3363;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border: 1.0px solid rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
             position: relative;
             transition: all 0.3s;
             color: #fff;
         }
         .testimonial-item:hover, .love-us-testimonial-item:hover {
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 0.5rem 0.9375rem rgba(0,0,0,0.2);
             border-color: #EB8153;
         }
         .remove-testimonial {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 0.9375rem;
+            right: 0.9375rem;
             color: #ff5e5e;
             cursor: pointer;
             z-index: 10;
             background: rgba(255,255,255,0.1);
-            width: 25px;
-            height: 25px;
+            width: 1.5625rem;
+            height: 1.5625rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1021,20 +1021,20 @@
             color: #fff;
         }
         .testimonial-item label, .love-us-testimonial-item label {
-            font-size: 11px;
+            font-size: 0.6875rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: rgba(255,255,255,0.6);
-            margin-bottom: 5px;
+            margin-bottom: 0.3125rem;
             display: block;
         }
         .t-image-preview-wrapper {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
+            width: 5rem;
+            height: 5rem;
+            border-radius: 0.625rem;
             overflow: hidden;
             background: rgba(255,255,255,0.05);
-            border: 2px dashed rgba(255,255,255,0.2);
+            border: 0.125rem dashed rgba(255,255,255,0.2);
             cursor: pointer;
             position: relative;
             transition: all 0.2s;
@@ -1059,14 +1059,14 @@
             justify-content: center;
             opacity: 0;
             transition: opacity 0.2s;
-            font-size: 20px;
+            font-size: 1.25rem;
         }
         .t-image-preview-wrapper:hover .t-image-overlay {
             opacity: 1;
         }
         .form-control-sm {
             background: rgba(255,255,255,0.05) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
+            border: 1.0px solid rgba(255,255,255,0.1) !important;
             color: #fff !important;
         }
         .form-control-sm:focus {
@@ -1115,7 +1115,7 @@
                                 </div>
                                 <input type="file" id="file-${id}" class="d-none" accept="image/*" onchange="window.uploadTestimonialImage(this, '${id}')">
                                 <input type="hidden" class="t-image" value="${data.image || ''}">
-                                <div class="upload-status mt-1" id="status-${id}" style="font-size: 10px;"></div>
+                                <div class="upload-status mt-1" id="status-${id}" style="font-size: 0.625rem;"></div>
                             </div>
                             <div class="col-md-10">
                                 <div class="row">
@@ -1455,9 +1455,9 @@
                             const container = document.getElementById('admin-logo-preview-container');
                             container.innerHTML = `
                                 <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview" 
-                                     style="max-width: 200px; cursor: pointer;"
+                                     style="max-width: 12.5rem; cursor: pointer;"
                                      onclick="document.getElementById('adminLogoInput').click()">
-                                    <img src="${e.target.result}" id="admin-logo-display" alt="Admin Logo" style="max-height: 60px; max-width: 100%;">
+                                    <img src="${e.target.result}" id="admin-logo-display" alt="Admin Logo" style="max-height: 3.75rem; max-width: 100%;">
                                     <div class="logo-preview-overlay">
                                         <i class="fa fa-camera"></i> Change
                                     </div>
@@ -1480,7 +1480,7 @@
                     const container = document.getElementById('admin-logo-preview-container');
                     container.innerHTML = `
                         <div class="p-3 mb-2 bg-light border rounded text-center clickable-logo-preview empty-logo" 
-                             style="max-width: 200px; cursor: pointer; height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ddd;"
+                             style="max-width: 12.5rem; cursor: pointer; height: 6.25rem; display: flex; align-items: center; justify-content: center; border: 0.125rem dashed #ddd;"
                              onclick="document.getElementById('adminLogoInput').click()">
                             <div class="text-muted">
                                 <i class="fa fa-plus fa-2x mb-2"></i><br>

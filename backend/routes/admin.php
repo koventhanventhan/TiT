@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\TimetableController;
+use App\Http\Controllers\Admin\ZoomAccountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,6 +136,17 @@ Route::prefix('admin')->group(function () {
         Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-as-read');
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-as-read');
         
+
+        // Zoom accounts management
+        Route::resource('zoom-accounts', ZoomAccountController::class)->names([
+            'index' => 'admin.zoom-accounts.index',
+            'create' => 'admin.zoom-accounts.create',
+            'store' => 'admin.zoom-accounts.store',
+            'edit' => 'admin.zoom-accounts.edit',
+            'update' => 'admin.zoom-accounts.update',
+            'destroy' => 'admin.zoom-accounts.destroy',
+        ])->except(['show']);
+        Route::post('/zoom-accounts/{zoomAccount}/test', [ZoomAccountController::class, 'testConnection'])->name('admin.zoom-accounts.test');
 
         // Global Search API
         Route::get('/search', [AdminController::class, 'search'])->name('admin.search');

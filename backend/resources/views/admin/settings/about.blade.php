@@ -17,19 +17,19 @@
     <style>
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
         }
 
         .card {
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            margin-bottom: 25px;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5625rem;
             background: rgba(43, 37, 72, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .card-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1.0px solid rgba(255, 255, 255, 0.1);
             background: transparent !important;
         }
 
@@ -40,10 +40,10 @@
 
         .dynamic-row {
             background: rgba(255, 255, 255, 0.03);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.9375rem;
+            border: 1.0px solid rgba(255, 255, 255, 0.1);
             position: relative;
             transition: all 0.3s ease;
         }
@@ -55,11 +55,11 @@
 
         .remove-row {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 0.9375rem;
+            right: 0.9375rem;
             color: #ff5e5e;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 1.125rem;
             transition: transform 0.2s ease;
             z-index: 10;
         }
@@ -71,9 +71,9 @@
 
         .form-control, .bootstrap-select .dropdown-toggle {
             background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
             color: #fff !important;
-            border-radius: 8px !important;
+            border-radius: 0.5rem !important;
         }
 
         .form-control:focus {
@@ -90,8 +90,8 @@
             background-color: #EB8153;
             border-color: #EB8153;
             color: #fff;
-            border-radius: 6px;
-            padding: 5px 12px;
+            border-radius: 0.375rem;
+            padding: 0.3125rem 0.75rem;
         }
 
         .btn-info.btn-xs:hover {
@@ -100,7 +100,7 @@
         }
 
         hr {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1.0px solid rgba(255, 255, 255, 0.1);
         }
 
         .text-muted {
@@ -109,10 +109,10 @@
         .image-picker-container {
             position: relative;
             width: 100%;
-            height: 150px;
+            height: 9.375rem;
             background: rgba(0, 0, 0, 0.2);
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border: 0.125rem dashed rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -139,8 +139,8 @@
         }
 
         .image-picker-placeholder i {
-            font-size: 32px;
-            margin-bottom: 8px;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
             display: block;
         }
 
@@ -177,8 +177,8 @@
         }
 
         .upload-loading .spinner-border {
-            width: 30px;
-            height: 30px;
+            width: 1.875rem;
+            height: 1.875rem;
             color: #EB8153;
         }
     </style>
@@ -197,14 +197,14 @@
         <div class="nav-header">
             <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ \App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}
                 </span>
             </a>
@@ -367,7 +367,7 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>Feature Image</label>
-                                                    <div class="image-picker-container" style="height: 120px;" onclick="this.querySelector('input[type=file]').click()">
+                                                    <div class="image-picker-container" style="height: 7.5rem;" onclick="this.querySelector('input[type=file]').click()">
                                                         <div class="upload-loading"><div class="spinner-border"></div></div>
                                                         <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
                                                         <div class="image-picker-placeholder" style="{{ $feature['image'] ? 'display:none' : '' }}">
@@ -714,7 +714,7 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label>Gallery Image</label>
-                                                    <div class="image-picker-container" style="height: 100px;" onclick="this.querySelector('input[type=file]').click()">
+                                                    <div class="image-picker-container" style="height: 6.25rem;" onclick="this.querySelector('input[type=file]').click()">
                                                         <div class="upload-loading"><div class="spinner-border"></div></div>
                                                         <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
                                                         <div class="image-picker-placeholder" style="{{ ($item['image'] ?? '') ? 'display:none' : '' }}">
@@ -804,7 +804,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Feature Image</label>
-                                    <div class="image-picker-container" style="height: 120px;" onclick="this.querySelector('input[type=file]').click()">
+                                    <div class="image-picker-container" style="height: 7.5rem;" onclick="this.querySelector('input[type=file]').click()">
                                         <div class="upload-loading"><div class="spinner-border"></div></div>
                                         <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
                                         <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>
@@ -874,7 +874,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Gallery Image</label>
-                                    <div class="image-picker-container" style="height: 100px;" onclick="this.querySelector('input[type=file]').click()">
+                                    <div class="image-picker-container" style="height: 6.25rem;" onclick="this.querySelector('input[type=file]').click()">
                                         <div class="upload-loading"><div class="spinner-border"></div></div>
                                         <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
                                         <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>

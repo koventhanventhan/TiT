@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subjects', function (Blueprint $table) {
-            $table->string('category')->default('grade_6_to_11')->after('price');
+            $table->string('category', 100)->default('grade_6_to_11')->after('price');
         });
     }
 

@@ -16,22 +16,22 @@
     <style>
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
         }
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.25rem;
         }
         .form-group label {
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
         .form-control {
-            border-radius: 6px;
-            border: 1px solid #d1d5db;
-            padding: 10px 15px;
+            border-radius: 0.375rem;
+            border: 1.0px solid #d1d5db;
+            padding: 0.625rem 0.9375rem;
         }
         [data-theme-version="dark"] .form-control {
             background-color: transparent !important;
@@ -50,43 +50,43 @@
         }
         .form-control:focus {
             border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
         }
         .radio-group {
             display: flex;
-            gap: 14px;
-            margin-top: 8px;
+            gap: 0.875rem;
+            margin-top: 0.5rem;
         }
         .radio-label {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.625rem;
             cursor: pointer;
-            padding: 12px 20px;
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            border: 0.125rem solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.75rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(99, 102, 241, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(0.625rem);
             flex: 1;
-            min-width: 120px;
+            min-width: 7.5rem;
             justify-content: center;
         }
         .radio-label:hover {
             border-color: rgba(139, 92, 246, 0.6);
             background: rgba(99, 102, 241, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            transform: translateY(-0.125rem);
+            box-shadow: 0 0.25rem 0.75rem rgba(139, 92, 246, 0.3);
         }
         .radio-label span {
             color: #6366f1;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 0.875rem;
             transition: color 0.3s ease;
         }
         .radio-label input[type="radio"] {
-            width: 20px;
-            height: 20px;
+            width: 1.25rem;
+            height: 1.25rem;
             cursor: pointer;
             accent-color: #8b5cf6;
             margin: 0;
@@ -100,8 +100,8 @@
             border-color: rgba(139, 92, 246, 0.8);
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);
             box-shadow: 
-                0 0 0 3px rgba(139, 92, 246, 0.15),
-                0 4px 12px rgba(139, 92, 246, 0.3);
+                0 0 0 0.1875rem rgba(139, 92, 246, 0.15),
+                0 0.25rem 0.75rem rgba(139, 92, 246, 0.3);
         }
     </style>
     <!-- Pusher and Notifications -->
@@ -131,14 +131,14 @@
         <div class="nav-header">
                         <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
                 </span>
             </a>
@@ -164,8 +164,8 @@
                             </div>
                         </div>
                         <ul class="navbar-nav header-right">
-                            <li class="nav-item" style="margin-right: 20px;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 8px 20px; border-radius: 6px; color: white; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); cursor: pointer;">
+                            <li class="nav-item" style="margin-right: 1.25rem;">
+                                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; color: white; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; box-shadow: 0 0.125rem 0.5rem rgba(102, 126, 234, 0.3); cursor: pointer;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -179,8 +179,8 @@
                                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
                                     </svg>
-                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
-                                        <span id="notification-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 1.125rem; height: 1.125rem; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0.0px; right: -0.3125rem; box-shadow: 0 0 0 0.125rem #fff;">
+                                        <span id="notification-count" class="text-white d-none" style="font-size: 0.625rem; font-weight: bold; line-height: 1;">0</span>
                                     </div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
@@ -201,7 +201,7 @@
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
                                     @else
-                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        <div class="header-profile-initials" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
                                             {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -241,7 +241,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Edit Student Entry</h4>
+                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Edit Student Entry</h4>
                             <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="flaticon-381-back"></i> Back to List
                             </a>
@@ -325,8 +325,8 @@
                                             <div class="form-group">
                                                 <label>Password  <small class="text-muted">(Leave blank to keep current)</small></label>
                                                 <div style="position: relative;">
-                                                    <input type="password" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 50px;">
-                                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 18px; padding: 5px;">
+                                                    <input type="password" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 3.125rem;">
+                                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
                                                          <i id="editEyeIcon" class="la la-eye"></i>
                                                      </button>
                                                 </div>
@@ -428,9 +428,26 @@
                                             </div>
                                         </div>
 
+                                        <!-- Custom Fields -->
+                                        @if($student->custom_fields && count($student->custom_fields) > 0)
+                                            <div class="col-md-12 mb-3">
+                                                <h5 class="text-primary mb-3">Custom Registration Information</h5>
+                                                <div class="row">
+                                                    @foreach($student->custom_fields as $key => $value)
+                                                        <div class="col-md-6 mb-3">
+                                                            <div class="form-group">
+                                                                <label>{{ ucwords(str_replace('_', ' ', $key)) }}</label>
+                                                                <input type="text" name="custom_fields[{{ $key }}]" class="form-control" value="{{ $value }}">
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         <div class="col-md-12 mb-4">
                                              <div class="form-group">
-                                                 <label class="d-block mb-3" style="font-size: 16px; color: #ffab2d; font-weight: 700;">Select Subjects <span class="text-danger">*</span></label>
+                                                 <label class="d-block mb-3" style="font-size: 1rem; color: #ffab2d; font-weight: 700;">Select Subjects <span class="text-danger">*</span></label>
                                                  
                                                  {{-- Subjects for Grade 1-5 --}}
                                                  <div class="subject-section" id="subjects_1_5" style="display: none;">
@@ -438,8 +455,8 @@
                                                          @if(isset($subjects['grade_1_to_5']))
                                                              @foreach($subjects['grade_1_to_5'] as $subject)
                                                              <div class="col-md-4 col-6 mb-2">
-                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
                                                                      <span>{{ $subject->name }}</span>
                                                                  </label>
                                                              </div>
@@ -454,8 +471,8 @@
                                                          @if(isset($subjects['grade_6_to_11']))
                                                              @foreach($subjects['grade_6_to_11'] as $subject)
                                                              <div class="col-md-4 col-6 mb-2">
-                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
                                                                      <span>{{ $subject->name }}</span>
                                                                  </label>
                                                              </div>
@@ -470,8 +487,8 @@
                                                          @if(isset($subjects['arts_stream']))
                                                              @foreach($subjects['arts_stream'] as $subject)
                                                              <div class="col-md-4 col-6 mb-2">
-                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
                                                                      <span>{{ $subject->name }}</span>
                                                                  </label>
                                                              </div>
@@ -486,8 +503,8 @@
                                                          @if(isset($subjects['bio_maths_stream']))
                                                              @foreach($subjects['bio_maths_stream'] as $subject)
                                                              <div class="col-md-4 col-6 mb-2">
-                                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
-                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 18px; height: 18px; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
+                                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ in_array($subject->name, $currentSubjects) ? 'checked' : '' }}>
                                                                      <span>{{ $subject->name }}</span>
                                                                  </label>
                                                              </div>
@@ -514,13 +531,13 @@
                                     
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <div class="p-4 rounded" style="background: rgba(255, 171, 45, 0.1); border-left: 5px solid #ffab2d; height: 100%;">
+                                            <div class="p-4 rounded" style="background: rgba(255, 171, 45, 0.1); border-left: 0.3125rem solid #ffab2d; height: 100%;">
                                                 <h5 class="mb-3" style="color: #fff;">Quick Payment (Current Month)</h5>
                                                 <p class="mb-3">Mark student as paid for <strong>{{ now()->format('F Y') }}</strong></p>
                                                 <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST">
                                                     @csrf
                                                     <input type="hidden" name="year_month" value="{{ now()->format('Y-m-d') }}">
-                                                    <button type="submit" class="btn btn-success font-weight-bold btn-block" style="border-radius: 8px;">
+                                                    <button type="submit" class="btn btn-success font-weight-bold btn-block" style="border-radius: 0.5rem;">
                                                         MARK PAID: {{ strtoupper(now()->format('F Y')) }}
                                                     </button>
                                                 </form>
@@ -528,7 +545,7 @@
                                         </div>
                                         
                                         <div class="col-md-6 mb-3">
-                                            <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1px dashed rgba(255, 255, 255, 0.2); height: 100%;">
+                                            <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1.0px dashed rgba(255, 255, 255, 0.2); height: 100%;">
                                                 <h5 class="mb-3" style="color: #fff;">Custom Payment Month</h5>
                                                 <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST">
                                                     @csrf
@@ -537,7 +554,7 @@
                                                         <div class="input-group">
                                                             <input type="date" name="year_month" class="form-control" value="{{ now()->format('Y-m-d') }}" required>
                                                             <div class="input-group-append">
-                                                                <button type="submit" class="btn btn-info" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">UPDATE</button>
+                                                                <button type="submit" class="btn btn-info" style="border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem;">UPDATE</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -564,16 +581,16 @@
                                                 </thead>
                                                 <tbody>
                                                     @foreach($payments as $index => $payment)
-                                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                    <tr style="border-bottom: 1.0px solid rgba(255,255,255,0.1);">
                                                         <td>{{ $index + 1 }}</td>
                                                         <td><strong>{{ $payment->year_month }}</strong></td>
                                                         <td>{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-' }}</td>
                                                         <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                                                         <td>
                                                             @if($payment->status === 'paid')
-                                                                <span class="badge" style="background: #4caf50; color: #fff; padding: 5px 12px; border-radius: 20px;">PAID âœ…</span>
+                                                                <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID âœ…</span>
                                                             @else
-                                                                <span class="badge" style="background: #f44336; color: #fff; padding: 5px 12px; border-radius: 20px;">{{ strtoupper($payment->status) }}</span>
+                                                                <span class="badge" style="background: #f44336; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">{{ strtoupper($payment->status) }}</span>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -583,7 +600,7 @@
                                         </div>
                                     </div>
                                     @else
-                                    <div class="mt-4 text-center p-4" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <div class="mt-4 text-center p-4" style="background: rgba(255,255,255,0.05); border-radius: 0.5rem;">
                                         <p class="mb-0" style="color: #938787;">No payment records yet / à®‡à®¤à¯à®µà®°à¯ˆ à®•à®Ÿà¯à®Ÿà®£ à®ªà®¤à®¿à®µà¯à®•à®³à¯ à®‡à®²à¯à®²à¯ˆ</p>
                                     </div>
                                     @endif

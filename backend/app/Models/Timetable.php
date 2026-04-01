@@ -19,6 +19,7 @@ class Timetable extends Model
         'grade',
         'subject_id',
         'teacher_id',
+        'zoom_account_id',
         'zoom_host_email',
         'is_active',
         'institute_id',
@@ -37,5 +38,10 @@ class Timetable extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function zoomAccount(): BelongsTo
+    {
+        return $this->belongsTo(ZoomAccount::class);
     }
 }

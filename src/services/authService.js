@@ -2,10 +2,10 @@
 // This service handles email/password and Google authentication
 
 // Laravel API endpoints
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 // Extract base URL (without /api) for non-API endpoints like CSRF cookie and admin redirects
-export const BASE_URL = API_BASE_URL.replace('/api', '') || 'http://localhost:8000'
+export const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin
 
 // Debug: Log the API URL being used
 if (import.meta.env.PROD && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {
@@ -16,7 +16,7 @@ console.log('🔧 Context:', import.meta.env.MODE)
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken')
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
   return {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -57,7 +57,7 @@ const formatLaravelErrors = (error) => {
 }
 
 // Email/Password Login
-export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin = true) => {
+export const loginWithEmail = async (usernameOrEmail, password, remember = false) => {
   try {
     // First, get CSRF cookie from Sanctum (required for stateful requests)
     try {
@@ -86,6 +86,7 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
         body: JSON.stringify({
           usernameOrEmail,
           password,
+          remember,
         }),
       })
     } catch (fetchError) {
@@ -139,11 +140,12 @@ export const loginWithEmail = async (usernameOrEmail, password, redirectToAdmin 
       role: data.user?.role
     })
 
-    // Store token in localStorage
+    // Store token in localStorage or sessionStorage
     if (data.token) {
-      localStorage.setItem('authToken', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      console.log('💾 Token and user data saved to localStorage')
+      const storage = remember ? localStorage : sessionStorage
+      storage.setItem('authToken', data.token)
+      storage.setItem('user', JSON.stringify(data.user))
+      console.log(`💾 Token and user data saved to ${remember ? 'localStorage' : 'sessionStorage'}`)
 
       // Check if user is admin and redirect to admin dashboard
       const userRole = data.user?.role
@@ -406,33 +408,8 @@ export const registerWithEmail = async (userData) => {
 // Google Login using OAuth Popup
 export const loginWithGoogle = () => {
   return new Promise((resolve, reject) => {
-    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID'
-
-    if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-      // Demo mode - simulate Google login
-      setTimeout(() => {
-        const demoUser = {
-          id: 'google-' + Date.now(),
-          username: 'Google User',
-          email: 'user@gmail.com',
-          provider: 'google',
-          name: 'Google User',
-          picture: ''
-        }
-
-        localStorage.setItem('authToken', 'google-token-' + Date.now())
-        localStorage.setItem('user', JSON.stringify(demoUser))
-        resolve({ user: demoUser, token: 'google-token' })
-      }, 1000)
-      return
-    }
-
-    // Real Google OAuth flow
-    const redirectUri = encodeURIComponent(window.location.origin + '/auth/google/callback')
-    const scope = encodeURIComponent('openid email profile')
-    const responseType = 'code'
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&access_type=offline&prompt=consent`
+    // Real Google OAuth flow - through backend
+    const authUrl = `${API_BASE_URL}/auth/google/redirect`
 
     const popup = window.open(
       authUrl,
@@ -440,27 +417,68 @@ export const loginWithGoogle = () => {
       'width=500,height=600,scrollbars=yes,resizable=yes'
     )
 
+    if (!popup) {
+      reject(new Error('Popup blocked! Please allow popups for this site.'))
+      return
+    }
+
     // Listen for OAuth callback
     const checkPopup = setInterval(() => {
       if (popup.closed) {
         clearInterval(checkPopup)
-        reject(new Error('Google login cancelled'))
+        // Wait a bit to see if 'message' event arrives before rejecting
+        setTimeout(() => {
+          if (!localStorage.getItem('authToken')) {
+            reject(new Error('Google login cancelled'))
+          }
+        }, 500)
       }
     }, 1000)
 
-    // Handle OAuth callback (you'll need to set up a callback route)
-    window.addEventListener('message', function (event) {
-      if (event.origin !== window.location.origin) return
+    // Handle OAuth callback from the backend popup
+    const handleMessage = (event) => {
+      // Security: Validate origin if possible, but '*' is used in backend for simplicity in local dev
+      // if (event.origin !== BASE_URL) return; 
 
-      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+      if (event.data && (event.data.token || event.data.error)) {
         clearInterval(checkPopup)
-        popup.close()
-        const { user, token } = event.data
-        localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify(user))
-        resolve({ user, token })
+        
+        if (event.data.error) {
+          reject(new Error(event.data.message || 'Google Auth failed'))
+        } else {
+          const { user, token } = event.data
+          localStorage.setItem('authToken', token)
+          localStorage.setItem('user', JSON.stringify(user))
+          
+          // Role-based redirect logic (same as loginWithEmail)
+          const userRole = user?.role
+          const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
+          const isStudent = userRole && String(userRole).toLowerCase() === 'user'
+          const isTeacher = userRole && String(userRole).toLowerCase() === 'teacher'
+          
+          // If student is pending, DON'T redirect here, let component handle common registration form
+          if (isStudent && user.registration_status === 'pending') {
+             console.log('📝 New Google student detected, staying on page for details...')
+             resolve({ user, token })
+             return
+          }
+
+          if (isAdmin) {
+             window.location.href = `${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`
+          } else if (isStudent) {
+            window.location.href = '/student/dashboard'
+          } else if (isTeacher) {
+            window.location.href = '/teacher/dashboard'
+          }
+          
+          resolve({ user, token })
+        }
+        
+        window.removeEventListener('message', handleMessage)
       }
-    }, { once: true })
+    }
+
+    window.addEventListener('message', handleMessage)
   })
 }
 
@@ -545,7 +563,7 @@ const performFacebookLogin = (appId, resolve, reject) => {
 
 // Get current user from API
 export const getCurrentUser = async () => {
-  const token = localStorage.getItem('authToken')
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
   if (!token) return null
 
   try {
@@ -563,19 +581,19 @@ export const getCurrentUser = async () => {
     console.error('Get user error:', error)
   }
 
-  // Fallback to localStorage
-  const userStr = localStorage.getItem('user')
+  // Fallback to storage
+  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
   return userStr ? JSON.parse(userStr) : null
 }
 
 // Check if user is authenticated
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('authToken')
+  return !!(localStorage.getItem('authToken') || sessionStorage.getItem('authToken'))
 }
 
 // Logout
 export const logout = async () => {
-  const token = localStorage.getItem('authToken')
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
 
   if (token) {
     try {
@@ -591,5 +609,31 @@ export const logout = async () => {
 
   localStorage.removeItem('authToken')
   localStorage.removeItem('user')
+  sessionStorage.removeItem('authToken')
+  sessionStorage.removeItem('user')
   window.location.href = '/'
+}
+
+// Forgot Password
+export const forgotPassword = async (email) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to send reset link' }))
+      throw new Error(error.message || 'Failed to send reset link')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Forgot password error:', error)
+    throw error
+  }
 }

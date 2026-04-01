@@ -123,7 +123,7 @@ export default function AdminCalendar() {
                 </div>
                 
                 {loading ? (
-                    <div className="loading-shimmer" style={{ height: '500px' }}>Syncing calendar data...</div>
+                    <div className="loading-shimmer" style={{ height: '31.25rem' }}>Syncing calendar data...</div>
                 ) : (
                     <div className="calendar-grid">
                         {days.map((d, i) => {
@@ -142,8 +142,8 @@ export default function AdminCalendar() {
                                                 style={{ backgroundColor: event.color }}
                                                 onClick={() => setSelectedEvent(event)}
                                             >
-                                                {event.type === 'zoom' && <FiVideo style={{fontSize: '10px'}} />}
-                                                {event.type === 'assignment' && <FiFileText style={{fontSize: '10px'}} />}
+                                                {event.type === 'zoom' && <FiVideo style={{fontSize: '0.625rem'}} />}
+                                                {event.type === 'assignment' && <FiFileText style={{fontSize: '0.625rem'}} />}
                                                 {event.title}
                                             </div>
                                         ))}
@@ -193,7 +193,7 @@ export default function AdminCalendar() {
                             )}
 
                             {selectedEvent.extendedProps?.description && (
-                                <p style={{marginTop: '16px', color: '#64748b', fontSize: '0.875rem', lineHeight: '1.5'}}>
+                                <p style={{marginTop: '1rem', color: '#64748b', fontSize: '0.875rem', lineHeight: '1.5'}}>
                                     {selectedEvent.extendedProps.description}
                                 </p>
                             )}

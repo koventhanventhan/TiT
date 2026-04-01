@@ -49,7 +49,7 @@ export const SettingsProvider = ({ children }) => {
     if (error && !Object.keys(settings).length) {
       return (
         <div style={{ 
-          padding: '40px', 
+          padding: '2.5rem', 
           textAlign: 'center', 
           fontFamily: 'Inter, sans-serif',
           background: '#f8fafc',
@@ -61,16 +61,16 @@ export const SettingsProvider = ({ children }) => {
         }}>
           <div style={{ 
             background: 'white', 
-            padding: '30px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-            maxWidth: '500px'
+            padding: '1.875rem', 
+            borderRadius: '0.75rem', 
+            boxShadow: '0 0.25rem 0.375rem -1.0px rgb(0 0 0 / 0.1)',
+            maxWidth: '31.25rem'
           }}>
-            <h2 style={{ color: '#ef4444', marginBottom: '16px' }}>Connection Error</h2>
-            <p style={{ color: '#475569', marginBottom: '24px' }}>
+            <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>Connection Error</h2>
+            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>
               {error}
             </p>
-            <div style={{ textAlign: 'left', background: '#f1f5f9', padding: '15px', borderRadius: '8px', fontSize: '14px', marginBottom: '20px' }}>
+            <div style={{ textAlign: 'left', background: '#f1f5f9', padding: '0.9375rem', borderRadius: '0.5rem', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
               <strong>Tip for Admin:</strong> Ensure <code>VITE_API_URL</code> is correctly set in your Vercel/Production environment variables.
             </div>
             <button 
@@ -78,8 +78,8 @@ export const SettingsProvider = ({ children }) => {
               style={{
                 background: '#4f46e5',
                 color: 'white',
-                padding: '10px 20px',
-                borderRadius: '6px',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '0.375rem',
                 border: 'none',
                 cursor: 'pointer',
                 fontWeight: '600'

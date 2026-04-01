@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
-import { loginWithEmail, registerWithEmail, loginWithGoogle } from '../services/authService'
+import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword } from '../services/authService'
 import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
@@ -20,6 +20,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [showStudentForm, setShowStudentForm] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
 
   useEffect(() => {
     if (isOpen) {
@@ -60,7 +64,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     setIsLoading(true)
 
     try {
-      const result = await loginWithEmail(loginData.username, loginData.password, true)
+      const result = await loginWithEmail(loginData.username, loginData.password, rememberMe)
 
       // Log the result for debugging
       console.log('Login result:', result)
@@ -80,8 +84,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
           setIsLoading(false)
           onClose()
           // Redirect immediately - NO ALERT, NO DELAY
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-          const BASE_URL = API_BASE_URL.replace('/api', '') || 'http://localhost:8000'
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+          const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin
           const redirectUrl = `${BASE_URL}/admin/login?token=${encodeURIComponent(result.token)}`
           console.log('🚀 ADMIN REDIRECT TO:', redirectUrl)
           // Immediate redirect - no setTimeout delay
@@ -220,12 +224,37 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     try {
       const result = await loginWithGoogle()
       setIsLoading(false)
+      
+      // If it's a new student with pending registration, show the details form
+      if (result.user?.role === 'user' && result.user?.registration_status === 'pending') {
+        console.log('✨ New Google student! Showing registration form for details...')
+        setShowStudentForm(true)
+        return
+      }
+
       alert(`Welcome, ${result.user?.name || result.user?.username || 'User'}!`)
       onClose()
       window.location.reload()
     } catch (err) {
+      setError(err.message || 'Login failed')
+    } finally {
       setIsLoading(false)
-      setError(err.message || 'Google login failed. Please try again.')
+    }
+  }
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccessMessage('')
+    setIsLoading(true)
+
+    try {
+      const response = await forgotPassword(forgotEmail)
+      setSuccessMessage(response.message || 'Reset link sent!')
+    } catch (err) {
+      setError(err.message || 'Failed to send reset link')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -278,7 +307,46 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
         <div className={`animated-box ${isLogin ? '' : 'register-mode'}`}>
           <div className="animated-form">
-            {isLogin ? (
+            {isForgotPassword ? (
+              <form onSubmit={handleForgotSubmit}>
+                <h2>{t('auth_forgot')}</h2>
+
+                {successMessage ? (
+                  <div className="auth-success-message" style={{ 
+                    background: 'rgba(34, 197, 94, 0.1)', 
+                    border: '1.0px solid rgba(34, 197, 94, 0.3)', 
+                    color: '#86efac', 
+                    padding: '0.75rem 1rem', 
+                    borderRadius: '0.5rem', 
+                    marginBottom: '1.25rem', 
+                    fontSize: '0.875rem', 
+                    textAlign: 'center' 
+                  }}>
+                    {successMessage}
+                  </div>
+                ) : null}
+
+                <div className="inputbox">
+                  <input
+                    type="email"
+                    name="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder=" "
+                    required
+                  />
+                  <span>{t('auth_email')}</span>
+                  <i></i>
+                </div>
+
+                <div className="links">
+                  <span></span>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setIsForgotPassword(false); setError(''); setSuccessMessage(''); }}>{t('nav_login')}</a>
+                </div>
+
+                <input type="submit" value={isLoading ? t('loading') : t('auth_send_reset')} disabled={isLoading} />
+              </form>
+            ) : isLogin ? (
               <form onSubmit={handleLoginSubmit}>
                 <h2>{t('auth_signin')}</h2>
                 <div className="inputbox">
@@ -315,11 +383,23 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 </div>
 
                 <div className="links">
-                  <a href="#forgot">{t('auth_forgot')}</a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setIsForgotPassword(true); setError(''); setSuccessMessage(''); }}>{t('auth_forgot')}</a>
                   <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(false) }}>
                     {t('auth_signup_link')}
                   </a>
                 </div>
+
+                <div className="remember-me-container">
+                  <label className="remember-me-label">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <span>{t('auth_remember_me')}</span>
+                  </label>
+                </div>
+
                 <input type="submit" value={isLoading ? t('loading') : t('nav_login')} disabled={isLoading} />
 
                 <div className="divider-auth">
@@ -352,6 +432,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     name="email"
                     value={signupData.email}
                     onChange={handleSignupChange}
+                    placeholder=" "
                     required
                   />
                   <span>{t('auth_email')}</span>
@@ -365,6 +446,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     name="password"
                     value={signupData.password}
                     onChange={handleSignupChange}
+                    placeholder=" "
                     required
                     minLength="8"
                   />
@@ -386,6 +468,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     name="confirmPassword"
                     value={signupData.confirmPassword}
                     onChange={handleSignupChange}
+                    placeholder=" "
                     required
                     minLength="8"
                   />

@@ -21,7 +21,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   React.useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
         const response = await fetch(`${API_BASE_URL}/subjects/prices`)
         if (response.ok) {
           const data = await response.json()
@@ -58,6 +58,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [labelDevice, setLabelDevice] = useState('')
   const [labelGrade, setLabelGrade] = useState('')
   const [labelStream, setLabelStream] = useState('')
+  const [customFieldLabels, setCustomFieldLabels] = useState([])
   const [btnNext, setBtnNext] = useState('')
 
   React.useEffect(() => {
@@ -145,6 +146,14 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       setLabelDevice(getSetting('register_device_label', t('reg_device')))
       setLabelGrade(getSetting('register_grade_label', t('reg_grade')))
       setLabelStream(getSetting('register_stream_label', t('reg_stream')))
+      
+      const customVal = getSetting('register_custom_fields', '[]')
+      try {
+        setCustomFieldLabels(typeof customVal === 'string' ? JSON.parse(customVal) : (Array.isArray(customVal) ? customVal : []))
+      } catch (e) {
+        setCustomFieldLabels([])
+      }
+      
       setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
     }
   }, [language, getSetting, t, translate])
@@ -310,7 +319,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         device_used: formData.deviceUsed,
         current_grade: formData.currentGrade,
         stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
-        selected_subjects: JSON.stringify(selectedSubjects)
+        selected_subjects: JSON.stringify(selectedSubjects),
+        ...Object.fromEntries(
+          customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
+        )
       }
 
       await registerStep1(userData)
@@ -359,32 +371,49 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
   }
 
-  const handlePaymentOnline = (amount) => {
+  const handlePaymentOnline = async (amount) => {
     setError('')
-    setStep(3)
-  }
-
-  const handleTransferConfirmed = async () => {
-    setError('')
-    if (!cardData.number || !cardData.holder || !cardData.expiry || !cardData.cvv) {
-      setError('Please fill in all card details')
-      return
-    }
     setIsLoading(true)
     try {
-      const amount = totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT
-      await registerStep2('online', amount)
+      const resp = await registerStep2('online', amount)
       setIsLoading(false)
-      alert(t('pay_online_success'))
-      setStep(1)
-      setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-      setCardData({ number: '', holder: '', expiry: '', cvv: '' })
-      setSelectedStream('')
-      setSelectedSubjects([])
-      if (onClose) onClose()
+      
+      if (!window.payhere) {
+        throw new Error('PayHere SDK not loaded. Please check your internet connection.')
+      }
+
+      const payment = {
+        sandbox: resp.payhere_url.includes('sandbox'),
+        ...resp.params
+      }
+
+      window.payhere.onCompleted = function onCompleted(orderId) {
+        console.log("Payment completed. OrderID:" + orderId)
+        alert(t('pay_online_success'))
+        setStep(1)
+        setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
+        setCardData({ number: '', holder: '', expiry: '', cvv: '' })
+        setSelectedStream('')
+        setSelectedSubjects([])
+        if (onClose) onClose()
+        // Optional: redirect to student dashboard
+        window.location.href = '/student/dashboard'
+      }
+
+      window.payhere.onDismissed = function onDismissed() {
+        console.log("Payment dismissed")
+      }
+
+      window.payhere.onError = function onError(error) {
+        console.log("PayHere Error:" + error)
+        setError("Payment Error: " + error)
+      }
+
+      window.payhere.startPayment(payment)
     } catch (err) {
       setIsLoading(false)
-      setError(err.message || 'Payment failed.')
+      setError(err.message || 'Failed to initialize payment.')
+      console.error('PayHere Init Error:', err)
     }
   }
 
@@ -408,151 +437,169 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
             <form onSubmit={handleSubmit} className="student-registration-form">
               {/* Full Name */}
-              <div className="form-group">
-                <label htmlFor="fullName">{labelFullname} <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                  placeholder={t('reg_fullname_placeholder')}
-                />
-              </div>
+              {labelFullname && (
+                <div className="form-group">
+                  <label htmlFor="fullName">{labelFullname} <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    placeholder={t('reg_fullname_placeholder')}
+                  />
+                </div>
+              )}
 
               {/* Phone (for WhatsApp) */}
-              <div className="form-group">
-                <label htmlFor="phoneNumber">{labelPhone} <span className="required">*</span></label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. 07XXXXXXXX"
-                />
-              </div>
+              {labelPhone && (
+                <div className="form-group">
+                  <label htmlFor="phoneNumber">{labelPhone} <span className="required">*</span></label>
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g. 07XXXXXXXX"
+                  />
+                </div>
+              )}
 
               {/* Date of Birth */}
-              <div className="form-group">
-                <label htmlFor="dateOfBirth">{labelDob} <span className="required">*</span></label>
-                <input
-                  type="date"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  required
-                  max={new Date().toISOString().split('T')[0]}
-                />
-              </div>
+              {labelDob && (
+                <div className="form-group">
+                  <label htmlFor="dateOfBirth">{labelDob} <span className="required">*</span></label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    required
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              )}
 
               {/* Gender */}
-              <div className="form-group">
-                <label htmlFor="gender">{labelGender} <span className="required">*</span></label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">{t('reg_gender_select')}</option>
-                  <option value="male">{t('reg_male')}</option>
-                  <option value="female">{t('reg_female')}</option>
-                </select>
-              </div>
+              {labelGender && (
+                <div className="form-group">
+                  <label htmlFor="gender">{labelGender} <span className="required">*</span></label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_gender_select')}</option>
+                    <option value="male">{t('reg_male')}</option>
+                    <option value="female">{t('reg_female')}</option>
+                  </select>
+                </div>
+              )}
 
 
               {/* School Name */}
-              <div className="form-group">
-                <label htmlFor="schoolName">{labelSchool} <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="schoolName"
-                  name="schoolName"
-                  value={formData.schoolName}
-                  onChange={handleChange}
-                  required
-                  placeholder={t('reg_school_placeholder')}
-                />
-              </div>
+              {labelSchool && (
+                <div className="form-group">
+                  <label htmlFor="schoolName">{labelSchool} <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    id="schoolName"
+                    name="schoolName"
+                    value={formData.schoolName}
+                    onChange={handleChange}
+                    required
+                    placeholder={t('reg_school_placeholder')}
+                  />
+                </div>
+              )}
 
               {/* Medium of Learning */}
-              <div className="form-group">
-                <label htmlFor="medium">{labelMedium} <span className="required">*</span></label>
-                <select
-                  id="medium"
-                  name="medium"
-                  value={formData.medium}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">{t('reg_medium_select')}</option>
-                  <option value="tamil">{t('reg_medium_tamil')}</option>
-                  <option value="english">{t('reg_medium_english')}</option>
-                </select>
-              </div>
+              {labelMedium && (
+                <div className="form-group">
+                  <label htmlFor="medium">{labelMedium} <span className="required">*</span></label>
+                  <select
+                    id="medium"
+                    name="medium"
+                    value={formData.medium}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_medium_select')}</option>
+                    <option value="tamil">{t('reg_medium_tamil')}</option>
+                    <option value="english">{t('reg_medium_english')}</option>
+                  </select>
+                </div>
+              )}
 
               {/* Online Class Experience */}
-              <div className="form-group">
-                <label htmlFor="onlineExperience">{labelExperience} <span className="required">*</span></label>
-                <select
-                  id="onlineExperience"
-                  name="onlineExperience"
-                  value={formData.onlineExperience}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">{t('reg_experience_select')}</option>
-                  <option value="yes">{t('reg_exp_yes')}</option>
-                  <option value="no">{t('reg_exp_no')}</option>
-                </select>
-              </div>
+              {labelExperience && (
+                <div className="form-group">
+                  <label htmlFor="onlineExperience">{labelExperience} <span className="required">*</span></label>
+                  <select
+                    id="onlineExperience"
+                    name="onlineExperience"
+                    value={formData.onlineExperience}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_experience_select')}</option>
+                    <option value="yes">{t('reg_exp_yes')}</option>
+                    <option value="no">{t('reg_exp_no')}</option>
+                  </select>
+                </div>
+              )}
 
               {/* Device Used */}
-              <div className="form-group">
-                <label htmlFor="deviceUsed">{labelDevice} <span className="required">*</span></label>
-                <select
-                  id="deviceUsed"
-                  name="deviceUsed"
-                  value={formData.deviceUsed}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">{t('reg_device_select')}</option>
-                  <option value="Mobile">{t('reg_device_mobile')}</option>
-                  <option value="Tablet">{t('reg_device_tablet')}</option>
-                  <option value="Laptop">{t('reg_device_laptop')}</option>
-                  <option value="Desktop">{t('reg_device_desktop')}</option>
-                </select>
-              </div>
+              {labelDevice && (
+                <div className="form-group">
+                  <label htmlFor="deviceUsed">{labelDevice} <span className="required">*</span></label>
+                  <select
+                    id="deviceUsed"
+                    name="deviceUsed"
+                    value={formData.deviceUsed}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_device_select')}</option>
+                    <option value="Mobile">{t('reg_device_mobile')}</option>
+                    <option value="Tablet">{t('reg_device_tablet')}</option>
+                    <option value="Laptop">{t('reg_device_laptop')}</option>
+                    <option value="Desktop">{t('reg_device_desktop')}</option>
+                  </select>
+                </div>
+              )}
 
               {/* Current Grade (2026) */}
-              <div className="form-group">
-                <label htmlFor="currentGrade">{labelGrade} <span className="required">*</span></label>
-                <select
-                  id="currentGrade"
-                  name="currentGrade"
-                  value={formData.currentGrade}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">{t('reg_grade_select')}</option>
-                  {gradeLevels.map((grade) => (
-                    <option key={grade} value={grade}>
-                      {language === 'ta' ? `தரம் ${grade}` : (language === 'si' ? `ශ්‍රේණිය ${grade}` : `Grade ${grade}`)}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {labelGrade && (
+                <div className="form-group">
+                  <label htmlFor="currentGrade">{labelGrade} <span className="required">*</span></label>
+                  <select
+                    id="currentGrade"
+                    name="currentGrade"
+                    value={formData.currentGrade}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_grade_select')}</option>
+                    {gradeLevels.map((grade) => (
+                      <option key={grade} value={grade}>
+                        {language === 'ta' ? `தரம் ${grade}` : (language === 'si' ? `ශ්‍රේණිය ${grade}` : `Grade ${grade}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Stream Selection for Grades 12-13 */}
               {(() => {
                 const gradeNum = getGradeNumber(formData.currentGrade)
-                if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
+                if (gradeNum && gradeNum >= 12 && gradeNum <= 13 && labelStream) {
                   return (
                     <div className="form-group">
                       <label htmlFor="stream">{labelStream} <span className="required">*</span></label>
@@ -574,6 +621,25 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 }
                 return null
               })()}
+
+              {/* Custom Dynamic Fields */}
+              {customFieldLabels.map((customLabel, idx) => {
+                const fieldName = customLabel.toLowerCase().replace(/\s+/g, '_')
+                return (
+                  <div className="form-group" key={idx}>
+                    <label htmlFor={fieldName}>{customLabel} <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      id={fieldName}
+                      name={fieldName}
+                      value={formData[fieldName] || ''}
+                      onChange={handleChange}
+                      required
+                      placeholder={`Enter ${customLabel}`}
+                    />
+                  </div>
+                )
+              })}
 
               {/* Subject Selection */}
               {availableSubjects.length > 0 && (
@@ -614,100 +680,20 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
             <p className="form-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="error-message">{error}</div>}
             <div className="payment-options">
-              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '20px' }}>
+              <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
                 {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
               </p>
               <button type="button" className="submit-button" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
                 {t('pay_offline')}
               </button>
-              <button type="button" className="submit-button secondary" onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                {t('pay_online')}
+              <button type="button" className="submit-button secondary" 
+                onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} 
+                disabled={isLoading}>
+                {isLoading ? t('pay_processing') : t('pay_online')}
               </button>
             </div>
             <button type="button" className="back-link" onClick={() => { setStep(1); setError(''); }}>
               {t('pay_back')}
-            </button>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="glass-checkout">
-            <div className="glass-bg-blob glass-bg-blob-1"></div>
-            <div className="glass-bg-blob glass-bg-blob-2"></div>
-            <div className="glass-bg-blob glass-bg-blob-3"></div>
-
-            <h2 className="glass-checkout-title">{t('pay_card_title')}</h2>
-            <p className="glass-checkout-subtitle">{t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT}</p>
-
-            {error && <div className="error-message">{error}</div>}
-
-            {/* Content Wrapper for Side-by-Side Layout */}
-            <div className="glass-checkout-content">
-              {/* Live Card Preview */}
-              <div className="glass-card-flip-wrapper">
-                <div className={`glass-card-flip ${isFlipped ? 'flipped' : ''}`}>
-                  <div className="glass-card-face glass-card-front">
-                    <div className="glass-card-front-row">
-                      <svg viewBox="0 0 50 40" width="44" height="34">
-                        <rect x="2" y="2" width="46" height="36" rx="6" fill="#d4af37" opacity="0.85" />
-                        <line x1="2" y1="14" x2="48" y2="14" stroke="#b8941f" strokeWidth="1.5" />
-                        <line x1="2" y1="22" x2="48" y2="22" stroke="#b8941f" strokeWidth="1.5" />
-                        <line x1="25" y1="2" x2="25" y2="38" stroke="#b8941f" strokeWidth="1.5" />
-                      </svg>
-                      <span className="glass-visa-text">VISA</span>
-                    </div>
-                    <div className="glass-live-number">
-                      {cardData.number || '•••• •••• •••• ••••'}
-                    </div>
-                    <div className="glass-live-bottom">
-                      <div>
-                        <div className="glass-tiny-label">CARD HOLDER</div>
-                        <div className="glass-live-name">{cardData.holder.toUpperCase() || 'YOUR NAME'}</div>
-                      </div>
-                      <div>
-                        <div className="glass-tiny-label">EXPIRES</div>
-                        <div className="glass-live-name">{cardData.expiry || 'MM/YY'}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="glass-card-face glass-card-back-face">
-                    <div className="glass-mag-stripe"></div>
-                    <div className="glass-cvv-row">
-                      <span className="glass-tiny-label">CVV</span>
-                      <div className="glass-cvv-display">{cardData.cvv || '•••'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Checkout Form */}
-              <div className="glass-form-panel">
-                <div className="glass-field">
-                  <label>{t('pay_card_num')}</label>
-                  <input type="text" name="number" value={cardData.number} onChange={handleCardInput} placeholder="1234 5678 9012 3456" maxLength={19} />
-                </div>
-                <div className="glass-field">
-                  <label>{t('pay_card_holder')}</label>
-                  <input type="text" name="holder" value={cardData.holder} onChange={handleCardInput} placeholder="Your full name" />
-                </div>
-                <div className="glass-field-row">
-                  <div className="glass-field">
-                    <label>{t('pay_card_expiry')}</label>
-                    <input type="text" name="expiry" value={cardData.expiry} onChange={handleCardInput} placeholder="MM/YY" maxLength={5} />
-                  </div>
-                  <div className="glass-field">
-                    <label>{t('pay_card_cvv')}</label>
-                    <input type="text" name="cvv" value={cardData.cvv} onChange={handleCardInput} placeholder="•••" maxLength={3} onFocus={() => setIsFlipped(true)} onBlur={() => setIsFlipped(false)} />
-                  </div>
-                </div>
-                <button type="button" className="glass-pay-now" onClick={handleTransferConfirmed} disabled={isLoading}>
-                  {isLoading ? t('pay_processing') : t('pay_pay_now')}
-                </button>
-              </div>
-            </div>
-
-            <button type="button" className="glass-back" onClick={() => { setStep(2); setCardData({ number: '', holder: '', expiry: '', cvv: '' }); setError(''); }}>
-              ← {t('pay_back_options')}
             </button>
           </div>
         )}

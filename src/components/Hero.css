@@ -593,14 +593,16 @@
   }
 
   .hero-title {
-    font-size: 1.75rem !important;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
+    font-size: 1.875rem !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.03125rem;
+    margin-bottom: 1.25rem;
   }
 
   .hero-description {
-    font-size: 0.9375rem;
-    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
   }
 
   .hero-actions {

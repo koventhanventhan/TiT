@@ -144,3 +144,7 @@ Homestead.json
 Homestead.yaml
 .phpactor.json
 tmp/
+*.zip
+*.rar
+*.7z
+*.tar.gz

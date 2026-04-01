@@ -96,7 +96,7 @@ const WhyChooseUs = () => {
                   src="https://cdn.lordicon.com/yqzmiobz.json"
                   trigger="loop"
                   colors="primary:#4f0bd9"
-                  style={{ width: '20px', height: '20px' }}
+                  style={{ width: '1.25rem', height: '1.25rem' }}
                 /> {t('benefit_personalized')}
               </li>
               <li>
@@ -104,7 +104,7 @@ const WhyChooseUs = () => {
                   src="https://cdn.lordicon.com/yqzmiobz.json"
                   trigger="loop"
                   colors="primary:#4f0bd9"
-                  style={{ width: '20px', height: '20px' }}
+                  style={{ width: '1.25rem', height: '1.25rem' }}
                 /> {t('benefit_access')}
               </li>
               <li>
@@ -112,7 +112,7 @@ const WhyChooseUs = () => {
                   src="https://cdn.lordicon.com/yqzmiobz.json"
                   trigger="loop"
                   colors="primary:#4f0bd9"
-                  style={{ width: '20px', height: '20px' }}
+                  style={{ width: '1.25rem', height: '1.25rem' }}
                 /> {t('benefit_qa')}
               </li>
             </ul>
@@ -128,7 +128,7 @@ const WhyChooseUs = () => {
                         src={reason.icon}
                         trigger="loop"
                         colors="primary:#ffffff,secondary:#ffffff"
-                        style={{ width: '48px', height: '48px' }}
+                        style={{ width: '3rem', height: '3rem' }}
                       />
                     ) : (
                       reason.icon

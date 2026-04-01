@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -212,6 +214,7 @@ class AuthController extends Controller
         $request->validate([
             'usernameOrEmail' => 'required|string',
             'password' => 'required|string',
+            'remember' => 'nullable|boolean',
         ]);
 
         // Check if input is email or username
@@ -234,12 +237,22 @@ class AuthController extends Controller
 
         // Check if account is deactivated
         if (!$user->isActive()) {
-            return response()->json([
-                'message' => 'நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். தயவுசெய்து எங்களைத் தொடர்பு கொள்ளவும். (Your account has been deactivated by admin. Please contact support.)',
-            ], 403);
+            // ONLY block admin/teacher if deactivated. 
+            // Allow students ('user') to login so they can see the "Pending Payment" screen.
+            if ($user->role !== 'user') {
+                return response()->json([
+                    'message' => 'நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். தயவுசெய்து எங்களைத் தொடர்பு கொள்ளவும். (Your account has been deactivated by admin. Please contact support.)',
+                ], 403);
+            }
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // For web session (if using first-party domains), we can login via Auth guard
+        // This sets the laravel_session cookie correctly with the remember flag
+        if (filter_var($request->usernameOrEmail, FILTER_VALIDATE_EMAIL) || $user->name) {
+            \Illuminate\Support\Facades\Auth::guard('web')->login($user, $request->boolean('remember'));
+        }
 
         return response()->json([
             'message' => 'Login successful',
@@ -248,7 +261,11 @@ class AuthController extends Controller
                 'username' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
-                'institute_id' => $user->institute_id, // Added institute_id to login response
+                'full_name' => $user->full_name,
+                'selected_subjects' => $user->selected_subjects,
+                'institute_id' => $user->institute_id,
+                'is_deactivated' => !$user->isActive(),
+                'deactivated_at' => $user->deactivated_at,
             ],
             'token' => $token,
         ]);
@@ -273,7 +290,15 @@ class AuthController extends Controller
         if ($u->phone_number) {
             $data['phone_number'] = $u->phone_number;
         }
-        return response()->json(['user' => $data]);
+        if ($u->selected_subjects) {
+            $data['selected_subjects'] = $u->selected_subjects;
+        }
+        return response()->json([
+            'user' => array_merge($data, [
+                'is_deactivated' => !$u->isActive(),
+                'deactivated_at' => $u->deactivated_at,
+            ])
+        ]);
     }
 
     /**
@@ -352,6 +377,101 @@ class AuthController extends Controller
                 'message' => 'Failed to create web session',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Redirect the user to the Google authentication page.
+     */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    /**
+     * Obtain the user information from Google.
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            
+            // Find or create user
+            $user = User::where('email', $googleUser->getEmail())->first();
+            
+            if (!$user) {
+                // Determine institute
+                $instituteId = 1; // Default or based on logic
+                
+                $fullName = $googleUser->getName() ?? $googleUser->getNickname() ?? explode('@', $googleUser->getEmail())[0];
+                $nameParts = explode(' ', $fullName, 2);
+                $firstName = $nameParts[0];
+                $lastName = $nameParts[1] ?? '';
+                
+                $user = User::create([
+                    'name' => $fullName,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'full_name' => $fullName,
+                    'email' => $googleUser->getEmail(),
+                    'password' => Hash::make(Str::random(16)),
+                    'role' => 'user',
+                    'institute_id' => $instituteId,
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'registration_status' => 'pending', // Requires admin approval normally
+                ]);
+            } else {
+                // Update google_id if not set
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleUser->getId()]);
+                }
+            }
+
+            // Create token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            // Prepare user data for frontend
+            $userData = [
+                'id' => $user->id,
+                'username' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'full_name' => $user->full_name,
+                'selected_subjects' => $user->selected_subjects,
+                'institute_id' => $user->institute_id,
+                'registration_status' => $user->registration_status,
+                'is_deactivated' => !$user->isActive(),
+            ];
+
+            // Return a script that sends the token back to the main window and closes the popup
+            $data = json_encode([
+                'token' => $token,
+                'user' => $userData,
+                'message' => 'Login successful',
+            ]);
+
+            return response("
+                <script>
+                    window.opener.postMessage($data, '*');
+                    window.close();
+                </script>
+            ");
+
+        } catch (\Exception $e) {
+            \Log::error('Google Auth Error: ' . $e->getMessage());
+            
+            $error = json_encode([
+                'error' => 'Authentication failed',
+                'message' => $e->getMessage()
+            ]);
+
+            return response("
+                <script>
+                    window.opener.postMessage($error, '*');
+                    window.close();
+                </script>
+            ");
         }
     }
 }

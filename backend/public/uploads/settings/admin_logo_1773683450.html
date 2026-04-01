@@ -27,7 +27,7 @@
     color: var(--text);
     font-family: 'Sora', sans-serif;
     min-height: 100vh;
-    padding: 32px 24px;
+    padding: 2rem 1.5rem;
     overflow-x: hidden;
   }
 
@@ -36,65 +36,65 @@
     content: '';
     position: fixed; inset: 0;
     background-image:
-      linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(rgba(124,58,237,0.04) 1.0px, transparent 1.0px),
+      linear-gradient(90deg, rgba(124,58,237,0.04) 1.0px, transparent 1.0px);
+    background-size: 2.5rem 2.5rem;
     pointer-events: none;
     z-index: 0;
   }
 
-  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+  .wrapper { position: relative; z-index: 1; max-width: 68.75rem; margin: 0 auto; }
 
   /* ── HEADER ── */
   .header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 3rem;
   }
   .header .badge {
     display: inline-block;
     background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: white;
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    padding: 4px 14px;
-    border-radius: 20px;
-    margin-bottom: 16px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.125rem;
+    padding: 0.25rem 0.875rem;
+    border-radius: 1.25rem;
+    margin-bottom: 1rem;
     text-transform: uppercase;
   }
   .header h1 {
-    font-size: clamp(32px, 5vw, 52px);
+    font-size: clamp(2rem, 5vw, 3.25rem);
     font-weight: 800;
     background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #34d399 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     line-height: 1.1;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
   }
   .header p {
     color: var(--muted);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-family: 'Space Mono', monospace;
   }
 
   /* ── SECTION LABEL ── */
   .section-label {
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 3px;
+    font-size: 0.625rem;
+    letter-spacing: 0.1875rem;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 12px;
-    padding-left: 4px;
-    border-left: 2px solid var(--accent1);
-    padding-left: 10px;
+    margin-bottom: 0.75rem;
+    padding-left: 0.25rem;
+    border-left: 0.125rem solid var(--accent1);
+    padding-left: 0.625rem;
   }
 
   /* ── TIER CONTAINER ── */
   .tier {
-    margin-bottom: 16px;
-    border-radius: 16px;
-    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+    border: 1.0px solid var(--border);
     background: var(--surface);
     overflow: hidden;
     transition: border-color 0.3s;
@@ -104,75 +104,75 @@
   .tier-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 20px 14px;
-    border-bottom: 1px solid var(--border);
+    gap: 0.75rem;
+    padding: 1rem 1.25rem 0.875rem;
+    border-bottom: 1.0px solid var(--border);
   }
   .tier-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
+    width: 2.25rem; height: 2.25rem;
+    border-radius: 0.625rem;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    font-size: 1.125rem;
     flex-shrink: 0;
   }
   .tier-title {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text);
   }
   .tier-subtitle {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--muted);
     font-family: 'Space Mono', monospace;
   }
   .tier-lang {
     margin-left: auto;
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    padding: 3px 10px;
-    border-radius: 20px;
+    font-size: 0.625rem;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 1.25rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 1.0px;
   }
 
   .tier-body {
-    padding: 16px 20px;
+    padding: 1rem 1.25rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 0.625rem;
   }
 
   /* ── FILE CARDS ── */
   .file-card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
+    border: 1.0px solid var(--border);
+    border-radius: 0.625rem;
+    padding: 0.625rem 0.875rem;
     cursor: default;
     transition: all 0.25s;
     position: relative;
     overflow: hidden;
-    min-width: 140px;
+    min-width: 8.75rem;
   }
   .file-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
+    height: 0.125rem;
   }
   .file-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.4);
   }
   .file-card .fname {
     font-family: 'Space Mono', monospace;
-    font-size: 10.5px;
+    font-size: 0.65625rem;
     color: var(--text);
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
   }
   .file-card .fdesc {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--muted);
     line-height: 1.4;
   }
@@ -215,46 +215,46 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 4px 0;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-family: 'Space Mono', monospace;
   }
   .arrow-line {
-    width: 2px;
-    height: 28px;
+    width: 0.125rem;
+    height: 1.75rem;
     background: linear-gradient(to bottom, var(--accent1), var(--accent2));
     margin: 0 auto;
     position: relative;
-    border-radius: 2px;
+    border-radius: 0.125rem;
   }
   .arrow-line::after {
     content: '▼';
     position: absolute;
-    bottom: -14px;
+    bottom: -0.875rem;
     left: 50%;
     transform: translateX(-50%);
     color: var(--accent2);
-    font-size: 10px;
+    font-size: 0.625rem;
   }
 
   /* ── DATA FLOW SECTION ── */
-  .flow-section { margin-top: 40px; }
+  .flow-section { margin-top: 2.5rem; }
 
   .flow-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    border: 1.0px solid var(--border);
+    border-radius: 1rem;
     overflow: hidden;
   }
   .flow-step {
-    padding: 20px 14px;
+    padding: 1.25rem 0.875rem;
     text-align: center;
-    border-right: 1px solid var(--border);
+    border-right: 1.0px solid var(--border);
     position: relative;
     transition: background 0.25s;
   }
@@ -263,32 +263,32 @@
   .flow-step::after {
     content: '→';
     position: absolute;
-    right: -8px;
+    right: -0.5rem;
     top: 50%;
     transform: translateY(-50%);
     color: var(--accent1);
-    font-size: 14px;
+    font-size: 0.875rem;
     z-index: 2;
   }
   .flow-step:last-child::after { display: none; }
   .flow-num {
-    width: 28px; height: 28px;
+    width: 1.75rem; height: 1.75rem;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: white;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 800;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 10px;
+    margin: 0 auto 0.625rem;
   }
   .flow-title {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: var(--text);
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
   }
   .flow-desc {
-    font-size: 9.5px;
+    font-size: 0.59375rem;
     color: var(--muted);
     line-height: 1.4;
     font-family: 'Space Mono', monospace;
@@ -298,34 +298,34 @@
   .legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 28px;
-    padding: 16px 20px;
+    gap: 0.625rem;
+    margin-top: 1.75rem;
+    padding: 1rem 1.25rem;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 1.0px solid var(--border);
+    border-radius: 0.75rem;
   }
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-size: 11px;
+    gap: 0.4375rem;
+    font-size: 0.6875rem;
     color: var(--muted);
     font-family: 'Space Mono', monospace;
   }
   .legend-dot {
-    width: 10px; height: 10px;
-    border-radius: 3px;
+    width: 0.625rem; height: 0.625rem;
+    border-radius: 0.1875rem;
   }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 700px) {
+  @media (max-width: 43.75rem) {
     .flow-grid { grid-template-columns: 1fr 1fr; }
     .flow-step::after { display: none; }
-    .flow-step { border-right: none; border-bottom: 1px solid var(--border); }
-    .flow-step:nth-child(odd) { border-right: 1px solid var(--border); }
+    .flow-step { border-right: none; border-bottom: 1.0px solid var(--border); }
+    .flow-step:nth-child(odd) { border-right: 1.0px solid var(--border); }
   }
-  @media (max-width: 500px) {
+  @media (max-width: 31.25rem) {
     .flow-grid { grid-template-columns: 1fr; }
     .flow-step:nth-child(odd) { border-right: none; }
   }
@@ -389,10 +389,10 @@
   </div>
 
   <!-- ARROW -->
-  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.25rem 0;">
     <div class="arrow-line"></div>
-    <div style="height:14px"></div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">HTTP Requests / API Calls</div>
+    <div style="height:0.875rem"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.625rem;color:#64748b;margin-top:0.5rem;">HTTP Requests / API Calls</div>
   </div>
 
   <!-- ── LAYER 2: BACKEND AUTH ── -->
@@ -418,10 +418,10 @@
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.25rem 0;">
     <div class="arrow-line"></div>
-    <div style="height:14px"></div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">Validated Request → Business Logic</div>
+    <div style="height:0.875rem"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.625rem;color:#64748b;margin-top:0.5rem;">Validated Request → Business Logic</div>
   </div>
 
   <!-- ── LAYER 3: DATA OPERATIONS ── -->
@@ -459,10 +459,10 @@
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.25rem 0;">
     <div class="arrow-line"></div>
-    <div style="height:14px"></div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">SQL Queries → Database</div>
+    <div style="height:0.875rem"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.625rem;color:#64748b;margin-top:0.5rem;">SQL Queries → Database</div>
   </div>
 
   <!-- ── LAYER 4: DATABASE ── -->
@@ -496,10 +496,10 @@
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:4px 0;">
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.25rem 0;">
     <div class="arrow-line"></div>
-    <div style="height:14px"></div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:8px;">Error Logs → Debug Output</div>
+    <div style="height:0.875rem"></div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.625rem;color:#64748b;margin-top:0.5rem;">Error Logs → Debug Output</div>
   </div>
 
   <!-- ── LAYER 5: DEBUG ── -->
@@ -543,7 +543,7 @@
 
   <!-- ── DATA FLOW ── -->
   <div class="flow-section">
-    <div class="section-label" style="margin-top:40px;">User Flow · How the system works step by step</div>
+    <div class="section-label" style="margin-top:2.5rem;">User Flow · How the system works step by step</div>
     <div class="flow-grid">
       <div class="flow-step">
         <div class="flow-num">1</div>
@@ -575,7 +575,7 @@
 
   <!-- LEGEND -->
   <div class="legend">
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;width:100%;margin-bottom:4px;">// Tech Stack Legend</div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.625rem;color:#64748b;width:100%;margin-bottom:0.25rem;">// Tech Stack Legend</div>
     <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div> React + Vite (Frontend)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div> PHP (Backend Auth)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> PHP Scripts (Data Ops)</div>
@@ -588,7 +588,7 @@
     <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> PHP 1.8%</div>
   </div>
 
-  <div style="text-align:center;margin-top:24px;font-family:'Space Mono',monospace;font-size:10px;color:#334155;">
+  <div style="text-align:center;margin-top:1.5rem;font-family:'Space Mono',monospace;font-size:0.625rem;color:#334155;">
     github.com/koventhanventhan/TiT · Generated by Claude
   </div>
 

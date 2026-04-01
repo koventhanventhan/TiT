@@ -9,8 +9,8 @@
   position: absolute;
   top: -50%;
   right: -20%;
-  width: 600px;
-  height: 600px;
+  width: 37.5rem;
+  height: 37.5rem;
   background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   z-index: 0;
@@ -18,7 +18,7 @@
 
 .contact-header {
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 4rem;
   position: relative;
   z-index: 1;
 }
@@ -26,7 +26,7 @@
 .contact-content {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  gap: 48px;
+  gap: 3rem;
   position: relative;
   z-index: 1;
 }
@@ -35,20 +35,20 @@
 .contact-info-section {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 2rem;
 }
 
 .contact-info-cards {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
 .contact-info-card {
   background: white;
-  padding: 32px;
-  border-radius: 20px;
-  border: 2px solid var(--border-color);
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border: 0.125rem solid var(--border-color);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -60,7 +60,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 0.25rem;
   background: var(--gradient-1);
   transform: scaleX(0);
   transition: transform 0.3s ease;
@@ -79,8 +79,8 @@
 }
 
 .contact-info-card:hover {
-  transform: translateX(8px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  transform: translateX(0.5rem);
+  box-shadow: 0 0.9375rem 2.5rem rgba(0, 0, 0, 0.1);
   border-color: var(--primary-color);
 }
 
@@ -89,17 +89,17 @@
 }
 
 .contact-icon-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .contact-icon {
-  width: 60px;
-  height: 60px;
+  width: 3.75rem;
+  height: 3.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(79, 11, 217, 0.08);
-  border-radius: 16px;
+  border-radius: 1rem;
   transition: all 0.3s ease;
 }
 
@@ -133,16 +133,16 @@
 }
 
 .contact-info-title {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .contact-info-link {
   color: var(--text-light);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 1rem;
   transition: color 0.3s ease;
   display: block;
 }
@@ -153,37 +153,37 @@
 
 .contact-hours {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  padding: 32px;
-  border-radius: 20px;
+  padding: 2rem;
+  border-radius: 1.25rem;
   color: white;
 }
 
 .hours-title {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .hours-title lord-icon,
 .hours-title svg {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 .hours-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .hours-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem 0;
+  border-bottom: 1.0px solid rgba(255, 255, 255, 0.2);
 }
 
 .hours-item:last-child {
@@ -192,11 +192,11 @@
 
 .hours-day {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .hours-time {
-  font-size: 15px;
+  font-size: 0.9375rem;
   opacity: 0.9;
 }
 
@@ -207,67 +207,67 @@
 
 .form-wrapper {
   background: white;
-  padding: 48px;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  border: 2px solid var(--border-color);
+  padding: 3rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.1);
+  border: 0.125rem solid var(--border-color);
 }
 
 .form-title {
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .form-title lord-icon,
 .form-title svg {
   color: var(--primary-color);
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .contact-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .form-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-dark);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .form-label lord-icon,
 .form-label svg {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--primary-color);
 }
 
 .form-input,
 .form-textarea {
-  padding: 14px 18px;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  font-size: 15px;
+  padding: 0.875rem 1.125rem;
+  border: 0.125rem solid var(--border-color);
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
   font-family: inherit;
   color: var(--text-dark);
   background: var(--bg-white);
@@ -279,7 +279,7 @@
 .form-textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.1);
 }
 
 .form-input::placeholder,
@@ -290,30 +290,30 @@
 
 .form-textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 7.5rem;
 }
 
 .form-submit-btn {
-  padding: 16px 32px;
+  padding: 1rem 2rem;
   background: var(--gradient-1);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
   font-family: inherit;
 }
 
 .form-submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.625rem 1.875rem rgba(37, 99, 235, 0.4);
 }
 
 .form-submit-btn:active {
@@ -322,18 +322,18 @@
 
 .form-submit-btn lord-icon,
 .form-submit-btn svg {
-  font-size: 20px;
+  font-size: 1.25rem;
   transition: transform 0.3s ease;
 }
 
 .form-submit-btn:hover svg {
-  transform: translateX(4px);
+  transform: translateX(0.25rem);
 }
 
-@media (max-width: 968px) {
+@media (max-width: 60.5rem) {
   .contact-content {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 2.5rem;
   }
 
   .form-row {
@@ -341,7 +341,7 @@
   }
 
   .form-wrapper {
-    padding: 32px 24px;
+    padding: 2rem 1.5rem;
   }
 
   .contact-info-cards {
@@ -351,11 +351,11 @@
 
   .contact-info-card {
     flex: 1;
-    min-width: 200px;
+    min-width: 12.5rem;
   }
 }
 
-@media (max-width: 568px) {
+@media (max-width: 35.5rem) {
   .contact-info-cards {
     flex-direction: column;
   }
@@ -365,10 +365,10 @@
   }
 
   .form-wrapper {
-    padding: 24px 20px;
+    padding: 1.5rem 1.25rem;
   }
 
   .form-title {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 }

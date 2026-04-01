@@ -9,13 +9,15 @@ import {
     FiBarChart2,
     FiMessageSquare,
     FiSettings,
-    FiLogOut
+    FiLogOut,
+    FiCreditCard
 } from 'react-icons/fi'
 import './StudentSidebar.css'
 
 export default function StudentSidebar() {
     const menuItems = [
         { name: 'Dashboard', icon: <FiHome />, path: '/student/dashboard' },
+        { name: 'Payments', icon: <FiCreditCard />, path: '/student/overview' }, // Redirect to overview where module is
         { name: 'Schedule', icon: <FiCalendar />, path: '/student/schedule' },
         { name: 'Zoom Classes', icon: <FiVideo />, path: '/student/zoom' },
         { name: 'Assignments', icon: <FiFileText />, path: '/student/assignments' },

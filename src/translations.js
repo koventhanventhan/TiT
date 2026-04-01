@@ -386,6 +386,11 @@ export const translations = {
     pay_back_options: 'Back to payment options',
     pay_offline_success: 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',
     pay_online_success: 'Payment successful! You will receive a WhatsApp confirmation.',
+    payment_status_paid: 'Payment Completed',
+    payment_status_pending: 'Monthly Fee Due',
+    pay_now: 'Pay Now',
+    processing: 'Processing...',
+    your_payments: 'Your Payments',
 
     // Blogs Section
     blog_title: 'Blogs',
@@ -415,6 +420,7 @@ export const translations = {
     auth_create_account: 'Create Account',
     auth_or: 'or',
     auth_google: 'Google',
+    auth_remember_me: 'Remember Me',
   },
   ta: {
     nav_home: 'முகப்பு',
@@ -778,6 +784,11 @@ export const translations = {
     pay_back_options: 'கட்டண விருப்பங்களுக்குத் திரும்பவும்',
     pay_offline_success: 'பதிவு சமர்ப்பிக்கப்பட்டது. தயவுசெய்து ஆஃப்லைனில் கட்டணத்தை முடிக்கவும். நிர்வாகி உறுதிப்படுத்தியதும் உங்களுக்கு வாட்ஸ்அப் செய்தி வரும்.',
     pay_online_success: 'கட்டணம் வெற்றி பெற்றது! உங்களுக்கு வாட்ஸ்அப் உறுதிப்படுத்தல் வரும்.',
+    payment_status_paid: 'கட்டணம் செலுத்தப்பட்டது',
+    payment_status_pending: 'மாதாந்திர கட்டணம் செலுத்தப்பட வேண்டும்',
+    pay_now: 'இப்போதே செலுத்து',
+    processing: 'செயலாக்குகிறது...',
+    your_payments: 'உங்கள் கொடுப்பனவுகள்',
 
     blog_title: 'வலைப்பதிவுகள்',
     blog_subtitle: 'ஒன்லைன் கல்வி உலகின் சமீபத்திய தகவல்கள், குறிப்புகள் மற்றும் கதைகளுடன் புதுப்பித்த நிலையில் இருங்கள்',
@@ -804,7 +815,8 @@ export const translations = {
     auth_already_account: 'ஏற்கனவே கணக்கு உள்ளதா?',
     auth_create_account: 'கணக்கை உருவாக்கு',
     auth_or: 'அல்லது',
-    auth_google: 'கூகிள்',
+    auth_google: 'Google',
+    auth_remember_me: 'என்னை நினைவில் கொள்க',
   },
   si: {
     nav_home: 'මුල් පිටුව',
@@ -1146,6 +1158,11 @@ export const translations = {
     pay_back_options: 'ගෙවීම් විකල්ප වෙත',
     pay_offline_success: 'ලියාපදිංචිය ඉදිරිපත් කරන ලදී. කරුණාකර ගෙවීම් සම්පූර්ණ කරන්න. පසුව ඔබට වට්ස්ඇප් පණිවිඩයක් ලැබෙනු ඇත.',
     pay_online_success: 'ගෙවීම සාර්ථකයි! ඔබට වට්ස්ඇප් පණිවිඩයක් ලැබෙනු ඇත.',
+    payment_status_paid: 'ගෙවීම් අවසන්',
+    payment_status_pending: 'මාසික ගාස්තුව ගෙවිය යුතුය',
+    pay_now: 'දැන් ගෙවන්න',
+    processing: 'සැකසෙමින් පවතී...',
+    your_payments: 'ඔබේ ගෙවීම්',
 
     blog_title: 'බ්ලොග් සටහන්',
     blog_subtitle: 'මාර්ගගත අධ්‍යාපන ලෝකයේ නවතම තොරතුරු සහ ඉඟි සමඟ යාවත්කාලීන වන්න',
@@ -1226,6 +1243,22 @@ export const translations = {
     recordings_for: 'පටිගත කළ පන්ති -',
     learning_recordings_description: 'ඔබේ පහසුව පරිදි පටිගත කළ පන්ති සැසි නරඹන්න.',
     watch_now: 'දැන් නරඹන්න',
+
+    // Auth
+    auth_signin: 'ඇතුල් වන්න',
+    auth_register: 'ලියාපදිංචි වන්න',
+    auth_username: 'පරිශීලක නාමය',
+    auth_email: 'විද්‍යුත් තැපෑල',
+    auth_password: 'මුරපදය',
+    auth_confirm_password: 'මුරපදය තහවුරු කරන්න',
+    auth_forgot: 'මුරපදය අමතකද?',
+    auth_signup_link: 'ලියාපදිංචි වන්න',
+    auth_student_reg: 'ශිෂ්‍ය ලියාපදිංචිය',
+    auth_already_account: 'දැනටමත් ගිණුමක් තිබේද?',
+    auth_create_account: 'ගිණුමක් සාදන්න',
+    auth_or: 'හෝ',
+    auth_google: 'Google',
+    auth_remember_me: 'මාව මතක තබා ගන්න',
   },
 }
 

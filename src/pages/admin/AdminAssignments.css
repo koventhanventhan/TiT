@@ -4,20 +4,20 @@
 
 .assignments-table-container {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 1.25rem;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    border: 1px solid #f1f5f9;
+    border: 1.0px solid #f1f5f9;
 }
 
 .asm-title {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
 }
 
 .asm-title svg {
-    font-size: 20px;
+    font-size: 1.25rem;
     color: #ef4444;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .asm-title .grade {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #94a3b8;
     font-weight: 600;
     text-transform: uppercase;
@@ -37,18 +37,18 @@
 .teacher-ref {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .teacher-ref .t-avatar {
-    width: 28px;
-    height: 28px;
+    width: 1.75rem;
+    height: 1.75rem;
     background: #f1f5f9;
-    border-radius: 6px;
+    border-radius: 0.375rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #64748b;
 }
@@ -59,9 +59,9 @@
 }
 
 .submission-count .total {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #94a3b8;
-    margin-left: 4px;
+    margin-left: 0.25rem;
 }
 
 .status-pill.expired {

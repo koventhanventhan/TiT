@@ -11,6 +11,7 @@ import {
     FiFileText
 } from 'react-icons/fi'
 import { getStudentStats } from '../../services/dashboardService'
+import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import './StudentOverview.css'
 
 export default function StudentOverview() {
@@ -39,6 +40,8 @@ export default function StudentOverview() {
                 <h1>Welcome Back, {stats?.user_name || 'Student'}!</h1>
                 <p>Here's what's happening with your learning today.</p>
             </header>
+
+            <StudentPaymentModule />
 
             <div className="stats-grid">
                 <div className="overview-stat-card purple">

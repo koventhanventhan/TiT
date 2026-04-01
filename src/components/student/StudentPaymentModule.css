@@ -1,0 +1,167 @@
+.dashboard-payment-section {
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-payment-section .section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.payment-module-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 0.25rem 0.375rem -1.0px rgb(0 0 0 / 0.1), 0 0.125rem 0.25rem -0.125rem rgb(0 0 0 / 0.1);
+    transition: all 0.3s ease;
+    border-left: 0.3125rem solid transparent;
+}
+
+.payment-module-card.error {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+    color: #b91c1c;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.payment-module-card.error button {
+    background: #ef4444;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+}
+
+.payment-module-card.pending {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.payment-module-card.paid {
+    border-left-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.payment-card-icon {
+    font-size: 2rem;
+    margin-right: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.pending .payment-card-icon {
+    color: #ef4444;
+}
+
+.paid .payment-card-icon {
+    color: #22c55e;
+}
+
+.payment-card-content {
+    flex-grow: 1;
+}
+
+.payment-status-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 0.25rem;
+}
+
+.pending .payment-status-label {
+    color: #b91c1c;
+}
+
+.paid .payment-status-label {
+    color: #15803d;
+}
+
+.payment-period {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.payment-amount {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 0.25rem;
+}
+
+.pay-now-btn {
+    background: #4f46e5;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pay-now-btn:hover:not(:disabled) {
+    background: #4338ca;
+    transform: translateY(-1.0px);
+    box-shadow: 0 0.25rem 0.75rem -0.125rem rgba(79, 70, 229, 0.4);
+}
+
+.pay-now-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.payment-module-card.loading {
+    justify-content: center;
+    gap: 1rem;
+    color: #64748b;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.payment-error-toast {
+    position: absolute;
+    bottom: -2.5rem;
+    left: 0;
+    right: 0;
+    background: #ef4444;
+    color: white;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-align: center;
+    z-index: 10;
+}
+
+@media (max-width: 40rem) {
+    .payment-module-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .payment-card-icon {
+        margin-right: 0;
+    }
+    
+    .pay-now-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

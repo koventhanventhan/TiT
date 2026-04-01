@@ -171,7 +171,7 @@ const Hero = () => {
             <div className="hero-actions">
               <button onClick={openRegister} className="btn btn-primary hero-btn">
                 {t('hero_cta')}
-                <FaArrowRight style={{ fontSize: '16px', marginLeft: '8px', color: '#ffffff' }} />
+                <FaArrowRight style={{ fontSize: '1rem', marginLeft: '0.5rem', color: '#ffffff' }} />
               </button>
               <a
                 href="https://www.youtube.com/@titeducation2087"
@@ -179,14 +179,14 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 className="btn btn-youtube hero-btn"
               >
-                <FaYoutube style={{ fontSize: '18px', marginRight: '8px', color: '#ffffff' }} />
+                <FaYoutube style={{ fontSize: '1.125rem', marginRight: '0.5rem', color: '#ffffff' }} />
                 {t('hero_youtube')}
               </a>
             </div>
             <div className="hero-stats" ref={statsRef}>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaCalendarAlt style={{ fontSize: '24px', color: '#4f0bd9' }} />
+                  <FaCalendarAlt style={{ fontSize: '1.5rem', color: '#4f0bd9' }} />
                 </div>
                 <div>
                   <div className="stat-number">
@@ -198,7 +198,7 @@ const Hero = () => {
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaGraduationCap style={{ fontSize: '28px', color: '#4f0bd9' }} />
+                  <FaGraduationCap style={{ fontSize: '1.75rem', color: '#4f0bd9' }} />
                 </div>
                 <div>
                   <div className="stat-number">
@@ -210,7 +210,7 @@ const Hero = () => {
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaChalkboardTeacher style={{ fontSize: '24px', color: '#4f0bd9' }} />
+                  <FaChalkboardTeacher style={{ fontSize: '1.5rem', color: '#4f0bd9' }} />
                 </div>
                 <div>
                   <div className="stat-number">
@@ -230,7 +230,7 @@ const Hero = () => {
               trigger="loop"
               delay="2000"
               colors="primary:#4f0bd9,secondary:#1a103c"
-              style={{ width: '100%', maxWidth: '500px', height: '500px' }}
+              style={{ width: '100%', maxWidth: '31.25rem', height: '31.25rem' }}
             />
           </div>
         </div>

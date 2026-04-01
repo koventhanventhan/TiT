@@ -25,6 +25,12 @@ use App\Http\Controllers\Api\TranslateController;
 // Public routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+
+// Google Auth Routes
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
 Route::get('/settings', [SiteSettingController::class, 'getSettings']);
 Route::get('/learning-materials', [SiteSettingController::class, 'getMaterials']);
 
@@ -33,6 +39,9 @@ Route::post('/translate', [TranslateController::class, 'translate']);
 
 // Student registration step 1 (public - creates user with pending_payment)
 Route::post('/register/step1', [RegistrationController::class, 'step1']);
+
+// PayHere notification (public - called by PayHere servers)
+Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])->name('payhere.notify');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -58,6 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
         Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
         Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
+        
+        // Monthly Payment Routes
+        Route::get('/payment-status', [RegistrationController::class, 'checkMonthlyPaymentStatus']);
+        Route::post('/pay-monthly', [RegistrationController::class, 'initializeMonthlyPayment']);
+        Route::get('/payment-details', [RegistrationController::class, 'getPaymentDetails']);
     });
 
     // Teacher Dashboard Routes (Tenant Aware + Role: teacher)

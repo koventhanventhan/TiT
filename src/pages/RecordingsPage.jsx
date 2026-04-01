@@ -56,7 +56,7 @@ const RecordingsPage = () => {
     }
   }, [language, translate, getSetting, t])
 
-  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || 'http://localhost:8000/'
+  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || (window.location.origin + '/')
 
   const formatGradeDisplay = (g) => {
     if (!g || g.toLowerCase() === 'all grades' || g.toLowerCase() === 'all-grades') return t('all_grades')
@@ -128,7 +128,7 @@ const RecordingsPage = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-watch"
-                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                     >
                       <FiPlay />
                       {t('watch_now')}

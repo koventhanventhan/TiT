@@ -9,7 +9,7 @@ const StudentToolkit = () => {
           src="https://cdn.lordicon.com/fkdkvhlp.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'Resource Vault',
@@ -23,7 +23,7 @@ const StudentToolkit = () => {
           src="https://cdn.lordicon.com/vhyenuev.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'AI Study Buddy',
@@ -38,7 +38,7 @@ const StudentToolkit = () => {
           src="https://cdn.lordicon.com/mrdfeebn.json"
           trigger="hover"
           colors="primary:#4f0bd9,secondary:#1a103c"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       ),
       title: 'ThinkTank Hub',
@@ -82,7 +82,7 @@ const StudentToolkit = () => {
   //                     src="https://cdn.lordicon.com/vduvxpxl.json"
   //                     trigger="hover"
   //                     colors="primary:#4f0bd9"
-  //                     style={{ width: '18px', height: '18px' }}
+  //                     style={{ width: '1.125rem', height: '1.125rem' }}
   //                   />
   //                 </a>
   //               </div>

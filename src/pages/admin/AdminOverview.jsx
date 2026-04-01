@@ -35,7 +35,7 @@ export default function AdminOverview() {
         { label: 'Total Students', value: data?.stats?.total_students, icon: <FiUsers />, color: 'blue', growth: '+12%' },
         { label: 'Total Teachers', value: data?.stats?.total_teachers, icon: <FiUserCheck />, color: 'purple', growth: '+2' },
         { label: 'Classes Today', value: data?.stats?.active_classes, icon: <FiCalendar />, color: 'green', growth: '4 Live' },
-        { label: 'Monthly Revenue', value: `₹${data?.stats?.monthly_revenue}`, icon: <FiDollarSign />, color: 'orange', growth: '+8.4%' },
+        { label: 'Monthly Revenue', value: `LKR ${data?.stats?.monthly_revenue || 0}`, icon: <FiDollarSign />, color: 'orange', growth: '+8.4%' },
     ]
 
     return (

@@ -91,7 +91,9 @@ class SiteSettingController extends Controller
             elseif (str_starts_with($key, 'nav_')) $group = 'navigation';
             elseif (collect(['about_', 'stats_', 'why_', 'love_us_', 'mobile_'])->contains(fn($prefix) => str_starts_with($key, $prefix))) $group = 'sections';
 
-            if (is_array($value)) continue;
+            if (is_array($value)) {
+                $value = json_encode(array_values(array_filter($value)));
+            }
             SiteSetting::set($key, $value, $group);
         }
 

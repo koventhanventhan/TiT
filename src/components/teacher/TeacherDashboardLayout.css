@@ -7,48 +7,48 @@
 
 .teacher-console-main {
     flex: 1;
-    margin-left: 260px;
+    margin-left: 16.25rem;
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
 }
 
 .teacher-console-header {
-    height: 72px;
+    height: 4.5rem;
     background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 0 36px;
+    backdrop-filter: blur(1.25rem);
+    -webkit-backdrop-filter: blur(1.25rem);
+    padding: 0 2.25rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(37, 99, 235, 0.06);
+    border-bottom: 1.0px solid rgba(37, 99, 235, 0.06);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .header-search input {
-    width: 280px;
-    padding: 10px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    width: 17.5rem;
+    padding: 0.625rem 1rem;
+    border: 1.0px solid #e2e8f0;
+    border-radius: 0.625rem;
     outline: none;
     transition: all 0.25s ease;
     background: #f8fafc;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .header-search input:focus {
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 0.1875rem rgba(59, 130, 246, 0.1);
     background: #fff;
 }
 
 .header-user {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 0.875rem;
 }
 
 .user-info {
@@ -60,49 +60,49 @@
 .user-name {
     font-weight: 700;
     color: #0f172a;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .user-role {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #64748b;
 }
 
 .user-avatar {
-    width: 38px;
-    height: 38px;
+    width: 2.375rem;
+    height: 2.375rem;
     background: var(--gradient-1);
     color: #ffffff;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    font-size: 0.875rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(37, 99, 235, 0.3);
 }
 
 .teacher-console-content {
-    padding: 32px 36px;
-    max-width: 1400px;
+    padding: 2rem 2.25rem;
+    max-width: 87.5rem;
     margin: 0 auto;
     width: 100%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
     .teacher-console-main {
-        margin-left: 70px;
+        margin-left: 4.375rem;
     }
 
     .teacher-console-header {
-        padding: 0 16px;
+        padding: 0 1rem;
     }
 
     .header-search input {
-        width: 150px;
+        width: 9.375rem;
     }
 
     .teacher-console-content {
-        padding: 20px 16px;
+        padding: 1.25rem 1rem;
     }
 }

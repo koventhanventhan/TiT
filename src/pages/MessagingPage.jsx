@@ -7,7 +7,7 @@ import {
 import echo from '../services/echo'
 import './MessagingPage.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 function getAuth() {
     const token = localStorage.getItem('authToken')

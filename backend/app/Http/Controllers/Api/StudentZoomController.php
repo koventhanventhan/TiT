@@ -172,6 +172,12 @@ class StudentZoomController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $yearMonth = now()->format('Y-m');
+        $hasPaid = $user->hasPaidForMonth($yearMonth);
+        if (!$hasPaid) {
+            return response()->json([]);
+        }
+
         // Show classes from the start of today onwards, so past classes for the same day are still visible
         $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->startOfDay())
             ->orderBy('scheduled_at')

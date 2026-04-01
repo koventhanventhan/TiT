@@ -18,6 +18,60 @@ class RegistrationController extends Controller
     {
         $this->whatsApp = $whatsApp;
     }
+
+    /**
+     * Get payment details for the current user (used by DeactivatedDashboard)
+     */
+    public function getPaymentDetails(Request $request)
+    {
+        $user = $request->user();
+        if (!$user->selected_subjects) {
+            return response()->json([
+                'total' => 500,
+                'subjects' => []
+            ]);
+        }
+
+        $subjects = $user->selected_subjects;
+        \Illuminate\Support\Facades\Log::info("Payment details request for User ID: {$user->id}, Email: {$user->email}, Raw Subjects: '{$subjects}'");
+
+        if (empty($subjects)) {
+            return response()->json([
+                'total' => 500,
+                'subjects' => [],
+                'debug' => 'Empty subjects string'
+            ]);
+        }
+
+        $selectedSubjects = [];
+        try {
+            $trimmedSubjects = trim($subjects);
+            if (str_starts_with($trimmedSubjects, '[')) {
+                $selectedSubjects = json_decode($trimmedSubjects, true);
+            } else {
+                $selectedSubjects = array_filter(array_map('trim', explode(',', $trimmedSubjects)));
+            }
+        } catch (\Exception $e) {
+            $selectedSubjects = array_filter(array_map('trim', explode(',', $subjects)));
+        }
+
+        if (empty($selectedSubjects)) {
+            \Illuminate\Support\Facades\Log::warning("No subjects parsed for User ID: {$user->id}");
+            return response()->json([
+                'total' => 500.0,
+                'subjects' => [],
+                'debug' => 'No subjects parsed from string: ' . $subjects
+            ]);
+        }
+
+        $subjectData = \App\Models\Subject::whereIn('name', $selectedSubjects)->get(['name', 'price']);
+        $total = $subjectData->sum('price');
+
+        return response()->json([
+            'total' => $total > 0 ? (float)$total : 500.0,
+            'subjects' => $subjectData
+        ]);
+    }
     /**
      * Step 1: Validate student form and create user with pending_payment.
      * Requires phone_number for WhatsApp.
@@ -25,7 +79,11 @@ class RegistrationController extends Controller
     public function step1(Request $request)
     {
         // Check if user is already authenticated (via basic signup or login)
+        // We ONLY update if the authenticated user is a 'user' (student)
         $user = auth('sanctum')->user();
+        if ($user && $user->role !== 'user') {
+            $user = null; // Ignore admin/teacher sessions for registration
+        }
 
         $gradeNum = null;
         if ($request->current_grade) {
@@ -43,20 +101,60 @@ class RegistrationController extends Controller
                 'max:255',
                 Rule::unique('users', 'name')->ignore($user?->id),
             ],
-            'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL'),
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:male,female',
-            'school_name' => 'required|string|max:255',
-            'medium' => 'required|in:english,tamil',
-            'online_experience' => 'required|boolean',
-            'device_used' => 'required|string|max:255',
-            'current_grade' => 'required|string|max:50',
-            'stream' => 'nullable|string|max:50|in:arts,bio_maths',
             'selected_subjects' => 'required|string',
         ];
 
+        // Dynamic validation for fixed fields based on setting labels
+        $fixedFields = [
+            'full_name' => 'register_fullname_label',
+            'phone_number' => 'register_phone_label',
+            'date_of_birth' => 'register_dob_label',
+            'gender' => 'register_gender_label',
+            'school_name' => 'register_school_label',
+            'medium' => 'register_medium_label',
+            'online_experience' => 'register_experience_label',
+            'device_used' => 'register_device_label',
+            'current_grade' => 'register_grade_label',
+        ];
+
+        foreach ($fixedFields as $field => $settingKey) {
+            $label = \App\Models\SiteSetting::get($settingKey);
+            if (!empty($label)) {
+                if ($field === 'phone_number') {
+                    $rules[$field] = 'required|digits_between:10,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL');
+                } elseif ($field === 'date_of_birth') {
+                    $rules[$field] = 'required|date';
+                } elseif ($field === 'gender') {
+                    $rules[$field] = 'required|in:male,female';
+                } elseif ($field === 'medium') {
+                    $rules[$field] = 'required|in:english,tamil';
+                } elseif ($field === 'online_experience') {
+                    $rules[$field] = 'required|boolean';
+                } else {
+                    $rules[$field] = 'required|string|max:255';
+                }
+            } else {
+                $rules[$field] = 'nullable';
+            }
+        }
+
+        // Stream is special
+        $streamLabel = \App\Models\SiteSetting::get('register_stream_label');
+        if (!empty($streamLabel)) {
+            $rules['stream'] = 'nullable|string|max:50';
+        }
+
         $request->validate($rules);
+
+        // Identify custom fields (everything else in request except fixed keys and internal ones)
+        $internalKeys = [
+            'username', 'full_name', 'phone_number', 'date_of_birth', 
+            'gender', 'school_name', 'medium', 'online_experience', 
+            'device_used', 'current_grade', 'stream', 'selected_subjects', 
+            '_token'
+        ];
+        
+        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
 
         $userData = [
             'full_name' => $request->full_name,
@@ -65,14 +163,16 @@ class RegistrationController extends Controller
             'gender' => $request->gender,
             'school_name' => $request->school_name,
             'medium' => $request->medium,
-            'online_experience' => $request->boolean('online_experience'),
+            'online_experience' => $request->has('online_experience') ? $request->boolean('online_experience') : null,
             'device_used' => is_array($request->device_used)
                 ? json_encode($request->device_used)
                 : $request->device_used,
             'current_grade' => $request->current_grade,
             'stream' => $request->stream ?? null,
             'selected_subjects' => $request->selected_subjects,
+            'custom_fields' => !empty($customFieldsData) ? $customFieldsData : null,
             'registration_status' => 'pending_payment',
+            'institute_id' => $request->header('X-Institute-Id') ?: 1,
         ];
 
         if ($user) {
@@ -88,6 +188,9 @@ class RegistrationController extends Controller
             $userData['password'] = Hash::make('student123');
             $userData['role'] = 'user';
             $userData['admin_confirmed_at'] = null;
+            
+            \Log::info('RegistrationController@step1 - Creating new student with institute_id: ' . ($userData['institute_id'] ?? 'null'));
+            
             $user = User::create($userData);
 
             // Notify All Admins of new registration
@@ -138,6 +241,14 @@ class RegistrationController extends Controller
         ]);
 
         $user = $request->user();
+        
+        \Log::info('RegistrationController@step2 - Checking user:', [
+            'id' => $user->id,
+            'role' => $user->role,
+            'full_name' => $user->full_name,
+            'has_full_name' => !empty($user->full_name)
+        ]);
+        
         if ($user->role !== 'user' || !$user->full_name) {
             return response()->json(['message' => 'Invalid user.'], 403);
         }

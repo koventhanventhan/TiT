@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ 
-          padding: '50px', 
+          padding: '3.125rem', 
           textAlign: 'center', 
           color: 'red', 
           fontFamily: 'Arial',
@@ -37,24 +37,24 @@ class ErrorBoundary extends React.Component {
           <pre style={{ 
             textAlign: 'left', 
             background: '#f5f5f5', 
-            padding: '20px', 
-            borderRadius: '8px', 
+            padding: '1.25rem', 
+            borderRadius: '0.5rem', 
             overflow: 'auto',
-            maxWidth: '800px',
-            margin: '20px auto'
+            maxWidth: '50rem',
+            margin: '1.25rem auto'
           }}>
             {this.state.error?.stack}
           </pre>
-          <p style={{ marginTop: '20px' }}>Check the browser console (F12) for more details.</p>
+          <p style={{ marginTop: '1.25rem' }}>Check the browser console (F12) for more details.</p>
           <button 
             onClick={() => window.location.reload()} 
             style={{ 
-              marginTop: '20px', 
-              padding: '10px 20px', 
+              marginTop: '1.25rem', 
+              padding: '0.625rem 1.25rem', 
               background: '#1e40af', 
               color: 'white', 
               border: 'none', 
-              borderRadius: '5px', 
+              borderRadius: '0.3125rem', 
               cursor: 'pointer' 
             }}
           >
@@ -90,12 +90,12 @@ try {
   const rootElement = document.getElementById('root')
   if (rootElement) {
     rootElement.innerHTML = `
-      <div style="padding: 50px; text-align: center; color: red; font-family: Arial;">
+      <div style="padding: 3.125rem; text-align: center; color: red; font-family: Arial;">
         <h1>Error Loading App</h1>
         <p>${error.message}</p>
-        <pre style="text-align: left; background: #f5f5f5; padding: 20px; border-radius: 8px; overflow: auto; max-width: 800px; margin: 20px auto;">${error.stack}</pre>
-        <p style="margin-top: 20px;">Check the browser console (F12) for more details.</p>
-        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #1e40af; color: white; border: none; border-radius: 5px; cursor: pointer;">Reload Page</button>
+        <pre style="text-align: left; background: #f5f5f5; padding: 1.25rem; border-radius: 0.5rem; overflow: auto; max-width: 50rem; margin: 1.25rem auto;">${error.stack}</pre>
+        <p style="margin-top: 1.25rem;">Check the browser console (F12) for more details.</p>
+        <button onclick="window.location.reload()" style="margin-top: 1.25rem; padding: 0.625rem 1.25rem; background: #1e40af; color: white; border: none; border-radius: 0.3125rem; cursor: pointer;">Reload Page</button>
       </div>
     `
   }

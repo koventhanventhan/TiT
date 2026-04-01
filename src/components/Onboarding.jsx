@@ -110,7 +110,7 @@ const Onboarding = () => {
                         src={step.icon}
                         trigger="loop"
                         colors="primary:#ffffff,secondary:#ffffff"
-                        style={{ width: '56px', height: '56px' }}
+                        style={{ width: '3.5rem', height: '3.5rem' }}
                       />
                     ) : (
                       step.icon
@@ -129,7 +129,7 @@ const Onboarding = () => {
                       src="https://cdn.lordicon.com/vduvxpxl.json"
                       trigger="loop"
                       colors="primary:#4f0bd9"
-                      style={{ width: '32px', height: '32px' }}
+                      style={{ width: '2rem', height: '2rem' }}
                     />
                   </div>
                 )}

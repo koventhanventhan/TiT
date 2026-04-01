@@ -31,13 +31,13 @@ export default function TeacherReports() {
 
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(12.5rem, 1fr))',
                 gap: 20,
                 marginBottom: 28
             }}>
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0', textAlign: 'center'
+                    border: '1.0px solid #e2e8f0', textAlign: 'center'
                 }}>
                     <FiUsers style={{ fontSize: '1.5rem', color: '#2563eb', marginBottom: 8 }} />
                     <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb' }}>
@@ -47,7 +47,7 @@ export default function TeacherReports() {
                 </div>
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0', textAlign: 'center'
+                    border: '1.0px solid #e2e8f0', textAlign: 'center'
                 }}>
                     <FiFileText style={{ fontSize: '1.5rem', color: '#10b981', marginBottom: 8 }} />
                     <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10b981' }}>
@@ -57,7 +57,7 @@ export default function TeacherReports() {
                 </div>
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0', textAlign: 'center'
+                    border: '1.0px solid #e2e8f0', textAlign: 'center'
                 }}>
                     <FiCheckCircle style={{ fontSize: '1.5rem', color: '#3b82f6', marginBottom: 8 }} />
                     <div style={{ fontSize: '2rem', fontWeight: 800, color: '#3b82f6' }}>
@@ -67,7 +67,7 @@ export default function TeacherReports() {
                 </div>
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0', textAlign: 'center'
+                    border: '1.0px solid #e2e8f0', textAlign: 'center'
                 }}>
                     <FiTrendingUp style={{ fontSize: '1.5rem', color: '#f59e0b', marginBottom: 8 }} />
                     <div style={{ fontSize: '2rem', fontWeight: 800, color: '#f59e0b' }}>
@@ -79,12 +79,12 @@ export default function TeacherReports() {
 
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(20rem, 1fr))',
                 gap: 20
             }}>
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0'
+                    border: '1.0px solid #e2e8f0'
                 }}>
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, color: '#1e293b' }}>
                         <FiBarChart2 style={{ color: '#2563eb' }} /> Class Performance
@@ -110,7 +110,7 @@ export default function TeacherReports() {
 
                 <div style={{
                     background: '#fff', borderRadius: 14, padding: 24,
-                    border: '1px solid #e2e8f0'
+                    border: '1.0px solid #e2e8f0'
                 }}>
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, color: '#1e293b' }}>
                         <FiFileText style={{ color: '#f59e0b' }} /> Assignment Completion

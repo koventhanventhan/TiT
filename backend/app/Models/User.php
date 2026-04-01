@@ -73,10 +73,12 @@ class User extends Authenticatable implements FilamentUser
         'institute_id',
         'username',
         'avatar',
+        'google_id',
         'bio',
         'website',
         'location',
         'profile_settings',
+        'custom_fields',
     ];
 
     /**
@@ -103,6 +105,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'profile_settings' => 'array',
             'selected_subjects' => 'array',
+            'custom_fields' => 'array',
         ];
     }
 

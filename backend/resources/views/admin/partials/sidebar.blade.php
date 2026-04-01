@@ -69,6 +69,9 @@
                     <li class="{{ request()->routeIs('admin.zoom.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.zoom.index') }}">All Zoom Classes</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.zoom-accounts.*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.zoom-accounts.index') }}">Zoom Accounts</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.timetables.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.timetables.index') }}">Weekly Timetable</a>
                     </li>

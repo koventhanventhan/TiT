@@ -14,36 +14,36 @@
     <style>
         .content-body {
             margin-top: 0 !important;
-            padding-top: 20px;
+            padding-top: 1.25rem;
         }
         .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.25rem;
         }
         .timetable-header {
             background: #f8fafc;
             font-weight: bold;
             text-align: center;
-            padding: 10px;
-            border-bottom: 2px solid #e2e8f0;
+            padding: 0.625rem;
+            border-bottom: 0.125rem solid #e2e8f0;
         }
         .timetable-day {
-            min-height: 200px;
-            border-right: 1px solid #e2e8f0;
-            padding: 10px;
+            min-height: 12.5rem;
+            border-right: 1.0px solid #e2e8f0;
+            padding: 0.625rem;
         }
         .timetable-day:last-child {
             border-right: none;
         }
         .timetable-slot {
             background: #fff;
-            border-left: 4px solid #EB8153;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            font-size: 13px;
+            border-left: 0.25rem solid #EB8153;
+            padding: 0.625rem;
+            margin-bottom: 0.625rem;
+            border-radius: 0.25rem;
+            box-shadow: 0 1.0px 0.1875rem rgba(0,0,0,0.1);
+            font-size: 0.8125rem;
         }
         .timetable-slot.inactive {
             border-left-color: #cbd5e0;
@@ -55,16 +55,16 @@
         }
         .slot-title {
             color: #2d3748;
-            margin: 2px 0;
+            margin: 0.125rem 0;
         }
         .slot-details {
-            font-size: 11px;
+            font-size: 0.6875rem;
             color: #718096;
         }
         .slot-actions {
-            margin-top: 5px;
+            margin-top: 0.3125rem;
             display: flex;
-            gap: 5px;
+            gap: 0.3125rem;
         }
 
         /* Dark Mode Specific Styles for Dropdowns */
@@ -73,10 +73,10 @@
             color: #fff;
         }
         [data-theme-version="dark"] .modal-header {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1.0px solid rgba(255,255,255,0.1);
         }
         [data-theme-version="dark"] .modal-footer {
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1.0px solid rgba(255,255,255,0.1);
         }
         [data-theme-version="dark"] .form-control {
             background-color: rgba(255,255,255,0.05) !important;
@@ -85,12 +85,12 @@
         }
         [data-theme-version="dark"] .bootstrap-select .dropdown-toggle {
             background-color: rgba(255,255,255,0.05) !important;
-            border: 1px solid #eb8153 !important;
+            border: 1.0px solid #eb8153 !important;
             color: #fff !important;
         }
         [data-theme-version="dark"] .bootstrap-select .dropdown-menu {
             background-color: #1a152e !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
+            border: 1.0px solid rgba(255,255,255,0.2) !important;
         }
         [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a {
             color: #fff !important;
@@ -110,7 +110,7 @@
         }
         [data-theme-version="dark"] .dropdown-menu {
             background-color: #1a152e !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
+            border: 1.0px solid rgba(255,255,255,0.2) !important;
         }
         /* Fix for search results white background in dark mode */
         [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
@@ -149,7 +149,7 @@
 
         [data-theme-version="dark"] .bootstrap-select .bs-searchbox {
             background-color: #1a152e !important;
-            padding: 10px !important;
+            padding: 0.625rem !important;
         }
 
         [data-theme-version="dark"] .bootstrap-select .bs-searchbox input {
@@ -169,7 +169,7 @@
         [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
             background-color: #1a152e !important;
             background: #1a152e !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
+            border: 1.0px solid rgba(255,255,255,0.2) !important;
             color: #fff !important;
         }
 
@@ -200,7 +200,7 @@
         /* Fix search box specifically */
         [data-theme-version="dark"] .bs-searchbox {
             background-color: #1a152e !important;
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            border-bottom: 1.0px solid rgba(255,255,255,0.1) !important;
         }
         
         [data-theme-version="dark"] .bs-searchbox input {
@@ -231,8 +231,8 @@
         .dropdown-menu[x-placement] {
             background-color: #1a152e !important;
             background: #1a152e !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            border: 1.0px solid rgba(255,255,255,0.2) !important;
+            box-shadow: 0 0.625rem 1.875rem rgba(0,0,0,0.5) !important;
         }
 
         /* 3. Target the items inside the dropdown */
@@ -295,14 +295,14 @@
         <div class="nav-header">
             <a href="{{ route('admin.dashboard') }}" class="brand-logo">
                 @if(isset($site_settings['admin_logo']))
-                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 45px; max-width: 45px; object-fit: contain;">
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 24px; font-weight: 700; margin-left:12px; color: #fff;">
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
                     {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
                 </span>
             </a>
@@ -325,8 +325,8 @@
                                         <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M3.5 8.16665L14 15.1666L24.5 8.16665" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
-                                    <div class="pulse-css d-none" id="message-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
-                                        <span id="message-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    <div class="pulse-css d-none" id="message-pulse" style="width: 1.125rem; height: 1.125rem; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0.0px; right: -0.3125rem; box-shadow: 0 0 0 0.125rem #fff;">
+                                        <span id="message-count" class="text-white d-none" style="font-size: 0.625rem; font-weight: bold; line-height: 1;">0</span>
                                     </div>
                                 </a>
                             </li>
@@ -336,8 +336,8 @@
                                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75ZM7.11667 20.125H26.3417C26.0465 18.2808 25.1017 16.6067 23.6654 15.405C23.2798 15.0842 23.0567 14.6067 23.0567 14.1033V9.33333C23.0567 7.65363 22.3894 6.04272 21.2017 4.855C20.014 3.66728 18.403 3 16.7233 3C15.0436 3 13.4327 3.66728 12.245 4.855C11.0573 6.04272 10.39 7.65363 10.39 9.33333V14.1033C10.39 14.6067 10.1669 15.0842 9.78125 15.405C8.34493 16.6067 7.40013 18.2808 7.105 20.125H7.11667ZM16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z" fill="#3D4461"/>
                                     </svg>
-                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 18px; height: 18px; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0px; right: -5px; box-shadow: 0 0 0 2px #fff;">
-                                        <span id="notification-count" class="text-white d-none" style="font-size: 10px; font-weight: bold; line-height: 1;">0</span>
+                                    <div class="pulse-css d-none" id="notification-pulse" style="width: 1.125rem; height: 1.125rem; background: #EB8153; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 0.0px; right: -0.3125rem; box-shadow: 0 0 0 0.125rem #fff;">
+                                        <span id="notification-count" class="text-white d-none" style="font-size: 0.625rem; font-weight: bold; line-height: 1;">0</span>
                                     </div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
@@ -354,7 +354,7 @@
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset(Auth::user()->avatar) }}" width="40" height="40" alt="" style="border-radius: 50%; object-fit: cover;">
                                     @else
-                                        <div class="header-profile-initials" style="width: 40px; height: 40px; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        <div class="header-profile-initials" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #EB8153; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
                                             {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -382,7 +382,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="page-title d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0" style="font-size: 24px; font-weight: 600; color: #1f2937;">Weekly Timetable</h4>
+                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Weekly Timetable</h4>
                             <div class="d-flex gap-2">
                                 <button type="button" onclick="runSync()" class="btn btn-info btn-sm mr-2" title="Manual sync for the next 90 days">
                                     <i class="fa fa-sync"></i> Sync to Zoom (90 Days)

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { getCurrentUser } from '../services/authService'
 import StudentDashboardLayout from '../components/student/StudentDashboardLayout'
+import DeactivatedDashboard from '../components/student/DeactivatedDashboard'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
@@ -31,6 +32,10 @@ export default function StudentDashboard() {
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
   )
+
+  if (user.is_deactivated) {
+    return <DeactivatedDashboard user={user} />
+  }
 
   return (
     <StudentDashboardLayout user={user}>

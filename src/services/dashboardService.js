@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken')
@@ -101,12 +101,31 @@ export const submitStudentAssignment = async (assignmentId, formData) => {
 }
 
 export const getStudentMaterials = async () => {
-  const res = await fetch(`${API_BASE_URL}/student/materials`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Failed to load materials')
-  return res.json()
+    const res = await fetch(`${API_BASE_URL}/student/materials`, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+    })
+    if (!res.ok) throw new Error('Failed to load materials')
+    return res.json()
+}
+
+export const getStudentPaymentStatus = async () => {
+    const res = await fetch(`${API_BASE_URL}/student/payment-status`, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+    })
+    if (!res.ok) throw new Error('Failed to load payment status')
+    return res.json()
+}
+
+export const initializeMonthlyPayment = async () => {
+    const res = await fetch(`${API_BASE_URL}/student/pay-monthly`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+    })
+    if (!res.ok) throw new Error('Failed to initialize monthly payment')
+    return res.json()
 }
 
 export const getTeacherZoomClasses = async () => {

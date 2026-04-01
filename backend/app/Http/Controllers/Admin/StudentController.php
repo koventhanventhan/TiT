@@ -116,6 +116,7 @@ class StudentController extends Controller
             'selected_subjects' => 'nullable|array',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)],
             'password' => 'nullable|string|min:8',
+            'custom_fields' => 'nullable|array',
         ]);
         
         // Update student data
@@ -137,6 +138,7 @@ class StudentController extends Controller
             'stream' => $validated['stream'] ?? null,
             'selected_subjects' => $subjects,
             'email' => $validated['email'],
+            'custom_fields' => $request->custom_fields,
         ];
 
         // Only update password if admin changed it (different from stored plain_password)

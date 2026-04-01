@@ -2,25 +2,30 @@ import React, { useState } from 'react'
 import AdminSidebar from './AdminSidebar'
 import { useSettings } from '../../context/SettingsContext'
 import './AdminDashboardLayout.css'
-import { FiBell, FiMessageSquare, FiSearch, FiChevronDown, FiUser, FiSettings, FiLogOut, FiCalendar } from 'react-icons/fi'
+import { FiBell, FiMessageSquare, FiSearch, FiChevronDown, FiUser, FiSettings, FiLogOut, FiCalendar, FiMenu, FiX } from 'react-icons/fi'
 
 export default function AdminDashboardLayout({ children, user }) {
     const { getSetting } = useSettings()
     const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const instituteName = getSetting('site_name', 'Campus Governance')
 
     const host = window.location.origin
     const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:4000'
 
     return (
-        <div className="admin-console-layout">
-            <AdminSidebar />
+        <div className={`admin-console-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+             <div className="mobile-sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
+            <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
             <main className="admin-console-main">
                 <header className="admin-console-header">
                     <div className="header-left">
+                        <button className="mobile-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                            {isSidebarOpen ? <FiX /> : <FiMenu />}
+                        </button>
                         <div className="academy-badge">
                             <span className="badge-dot"></span>
-                            {instituteName}
+                            <span className="badge-text">{instituteName}</span>
                         </div>
                     </div>
 

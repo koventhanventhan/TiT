@@ -4,20 +4,20 @@
 
 .finance-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.5625rem;
+    margin-bottom: 2.5rem;
 }
 
 .finance-card {
     background: white;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 1.875rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #f1f5f9;
+    border: 1.0px solid #f1f5f9;
     position: relative;
     overflow: hidden;
 }
@@ -29,15 +29,15 @@
 }
 
 .finance-card.warning {
-    border-left: 5px solid #f59e0b;
+    border-left: 0.3125rem solid #f59e0b;
 }
 
 .finance-card .label {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #94a3b8;
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
 }
 
 .finance-card.primary .label {
@@ -45,17 +45,17 @@
 }
 
 .finance-card h3 {
-    font-size: 32px;
+    font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
 }
 
 .trend {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 0.3125rem;
 }
 
 .trend.positive {
@@ -63,21 +63,21 @@
 }
 
 .sub-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #64748b;
     font-weight: 600;
 }
 
 .card-icon {
-    width: 60px;
-    height: 60px;
+    width: 3.75rem;
+    height: 3.75rem;
     background: #f8fafc;
     color: #1e293b;
-    border-radius: 15px;
+    border-radius: 0.9375rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 1.75rem;
 }
 
 .card-icon.blue {
@@ -92,32 +92,32 @@
 
 .finance-main-grid {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 30px;
+    grid-template-columns: 1fr 25rem;
+    gap: 1.875rem;
 }
 
 .revenue-chart-section,
 .recent-payments-section {
     background: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    border-radius: 1.25rem;
+    padding: 1.875rem;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
+    border: 1.0px solid #f1f5f9;
 }
 
 .section-header h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 800;
     color: #0f172a;
-    margin-bottom: 30px;
+    margin-bottom: 1.875rem;
 }
 
 .history-bars {
-    height: 300px;
+    height: 18.75rem;
     display: flex;
     align-items: flex-end;
     justify-content: space-around;
-    padding-bottom: 20px;
+    padding-bottom: 1.25rem;
 }
 
 .history-bar-item {
@@ -125,14 +125,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .bar-container {
-    width: 40px;
-    height: 250px;
+    width: 2.5rem;
+    height: 15.625rem;
     background: #f1f5f9;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     position: relative;
     overflow: hidden;
 }
@@ -142,12 +142,12 @@
     bottom: 0;
     width: 100%;
     background: linear-gradient(to top, #ef4444, #f87171);
-    border-radius: 10px;
+    border-radius: 0.625rem;
     transition: height 0.8s ease;
 }
 
 .month-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #64748b;
 }
@@ -155,30 +155,30 @@
 .payment-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .payment-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 12px;
-    border-radius: 12px;
+    gap: 0.9375rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
     background: #f8fafc;
     transition: all 0.2s;
 }
 
 .payment-item:hover {
-    transform: translateX(5px);
+    transform: translateX(0.3125rem);
     background: #f1f5f9;
 }
 
 .pay-user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
     background: #dcfce7;
     color: #166534;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -189,11 +189,11 @@
     font-weight: 700;
     color: #1e293b;
     margin: 0;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .pay-details .p-date {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #64748b;
     margin: 0;
 }
@@ -202,19 +202,19 @@
     margin-left: auto;
     font-weight: 800;
     color: #16a34a;
-    font-size: 15px;
+    font-size: 0.9375rem;
 }
 
 .export-btn {
-    padding: 12px 20px;
+    padding: 0.75rem 1.25rem;
     background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1.0px solid #e2e8f0;
+    border-radius: 0.75rem;
     color: #1e293b;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -225,7 +225,7 @@
     color: #ef4444;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 68.75rem) {
     .finance-main-grid {
         grid-template-columns: 1fr;
     }

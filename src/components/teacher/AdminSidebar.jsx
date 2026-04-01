@@ -17,7 +17,7 @@ import {
 import { useSettings } from '../../context/SettingsContext'
 import './AdminSidebar.css'
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isOpen, setIsOpen }) {
     const menuGroups = [
         {
             title: 'Main',
@@ -63,7 +63,7 @@ export default function AdminSidebar() {
     const instituteLogo = getSetting('logo_url', null)
 
     return (
-        <aside className="admin-sidebar">
+        <aside className={`admin-sidebar ${isOpen ? 'mobile-open' : ''}`}>
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <div className="logo-icon-box admin">

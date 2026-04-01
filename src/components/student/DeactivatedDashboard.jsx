@@ -82,7 +82,8 @@ const DeactivatedDashboard = () => {
                   <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem', border: '1.0px solid rgba(139, 92, 246, 0.2)' }}>
                     <h3 style={{ color: '#c7d2fe', marginBottom: '1rem', fontSize: '1.125rem' }}>Selected Subjects:</h3>
                     {paymentData.subjects && paymentData.subjects.length > 0 ? (
-                      paymentData.subjects.map(s => (
+                      // Only show unique subjects (safety check for UI)
+                      Array.from(new Map(paymentData.subjects.map(s => [s.name.toLowerCase(), s])).values()).map(s => (
                         <div key={s.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'rgba(199,210,254,0.8)' }}>
                           <span>{s.name}</span>
                           <span>Rs. {parseFloat(s.price).toFixed(0)}</span>

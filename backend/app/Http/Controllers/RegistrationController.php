@@ -20,6 +20,43 @@ class RegistrationController extends Controller
     }
 
     /**
+     * Helper to get subject category based on user's grade and stream
+     */
+    private function getSubjectCategoryForUser(User $user)
+    {
+        $grade = $user->current_grade;
+        $stream = strtolower($user->stream ?? '');
+        $gradeNum = 0;
+
+        if (preg_match('/Grade\s*(\d+)/i', $grade, $m)) {
+            $gradeNum = (int)$m[1];
+        } elseif (preg_match('/(\d+)/', $grade, $m)) {
+            $gradeNum = (int)$m[1];
+        }
+
+        if ($gradeNum >= 1 && $gradeNum <= 5) {
+            return 'grade_1_to_5';
+        }
+
+        if ($gradeNum >= 6 && $gradeNum <= 11) {
+            return 'grade_6_to_11';
+        }
+
+        if ($gradeNum >= 12 && $gradeNum <= 13) {
+            if (str_contains($stream, 'art')) {
+                return 'arts_stream';
+            }
+            if (str_contains($stream, 'bio') || str_contains($stream, 'math')) {
+                return 'bio_maths_stream';
+            }
+            // Add other streams as needed
+            return 'grade_6_to_11'; // Fallback
+        }
+
+        return null;
+    }
+
+    /**
      * Get payment details for the current user (used by DeactivatedDashboard)
      */
     public function getPaymentDetails(Request $request)
@@ -64,12 +101,19 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $subjectData = \App\Models\Subject::whereIn('name', $selectedSubjects)->get(['name', 'price']);
+        $category = $this->getSubjectCategoryForUser($user);
+
+        $subjectData = \App\Models\Subject::when($category, function($query) use ($category) {
+            return $query->where('category', $category);
+        })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
+
         $total = $subjectData->sum('price');
 
         return response()->json([
             'total' => $total > 0 ? (float)$total : 500.0,
-            'subjects' => $subjectData
+            'subjects' => $subjectData,
+            'category' => $category,
+            'user_grade' => $user->current_grade
         ]);
     }
     /**
@@ -266,11 +310,14 @@ class RegistrationController extends Controller
         // Online: create Razorpay order if configured, else create a pending payment record and return order_id placeholder
         $amount = 0;
         if ($user->selected_subjects) {
-            $selectedSubjects = array_map('trim', explode(',', $user->selected_subjects));
-            $subjectPrices = \App\Models\Subject::whereIn('name', $selectedSubjects)->pluck('price', 'name');
-            foreach ($selectedSubjects as $subjectName) {
-                $amount += (float) ($subjectPrices[$subjectName] ?? 0);
-            }
+            $category = $this->getSubjectCategoryForUser($user);
+            $selectedSubjects = array_filter(array_map('trim', explode(',', $user->selected_subjects)));
+            
+            $subjectData = \App\Models\Subject::when($category, function($query) use ($category) {
+                return $query->where('category', $category);
+            })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
+            
+            $amount = (float) $subjectData->sum('price');
         }
 
         // Fallback to monthly amount if no subjects or sum is 0

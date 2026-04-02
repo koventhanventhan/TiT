@@ -15,7 +15,7 @@ $possibleAutoloadPaths = [
 foreach ($possibleAutoloadPaths as $path) {
     if (file_exists($path)) {
         require_once $path;
-        $baseUrl = dirname($path);
+        $baseUrl = dirname(dirname($path)); // Go up from vendor/autoload.php to the root
         break;
     }
 }

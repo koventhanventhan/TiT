@@ -5,9 +5,26 @@ use Database\Seeders\SyncSettingsSeeder;
 
 define('LARAVEL_START', microtime(true));
 
-// 1. Bootstrap Laravel
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
+// 1. Try to find vendor/autoload.php in parent or current directory
+$possibleAutoloadPaths = [
+    __DIR__ . '/vendor/autoload.php',
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../vendor/autoload.php'
+];
+
+foreach ($possibleAutoloadPaths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $baseUrl = dirname($path);
+        break;
+    }
+}
+
+if (!isset($baseUrl)) {
+    die("ERROR: Could not find vendor/autoload.php. Please check your folder structure.");
+}
+
+$app = require_once $baseUrl . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 

@@ -64,7 +64,7 @@
 .pc-card:hover {
   transform: translateY(-0.75rem);
   box-shadow: 0 1.5625rem 3.75rem rgba(12, 22, 49, 0.12);
-  border-color: rgba(37, 99, 235, 0.2);
+  border-color: var(--accent-color, rgba(37, 99, 235, 0.2));
 }
 
 /* Media Area */
@@ -172,7 +172,7 @@
 }
 
 .pc-card:hover .pc-card-title {
-  color: var(--primary-color);
+  color: var(--accent-color, var(--primary-color));
 }
 
 .pc-card-desc {

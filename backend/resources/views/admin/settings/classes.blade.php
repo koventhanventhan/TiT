@@ -334,80 +334,145 @@
 
                                     <hr class="my-4">
 
-                                    <div class="row">
-                                        <!-- Direct Class Column -->
-                                        <div class="col-md-6">
-                                            <div class="class-edit-section">
-                                                <h5>Direct Class Settings</h5>
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <textarea name="classes_direct_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.') }}</textarea>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Duration</label>
-                                                            <input type="text" name="classes_direct_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules') }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Pricing Label</label>
-                                                            <input type="text" name="classes_direct_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates') }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Format / Students</label>
-                                                    <input type="text" name="classes_direct_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_direct_format', 'Small Groups') }}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Features (One per line)</label>
-                                                    <textarea name="classes_direct_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline") }}</textarea>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_direct_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art') }}</textarea>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h5 class="text-primary mb-0">Class Types & Categories</h5>
+                                        <button type="button" class="btn btn-info btn-sm" id="add-class-type">
+                                            <i class="fa fa-plus mr-2"></i> Add New Class Type
+                                        </button>
+                                    </div>
 
-                                        <!-- Online Class Column -->
-                                        <div class="col-md-6">
-                                            <div class="class-edit-section">
-                                                <h5>Online Class Settings</h5>
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <textarea name="classes_online_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.') }}</textarea>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Duration</label>
-                                                            <input type="text" name="classes_online_duration" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules') }}">
+                                    <div id="class-types-container">
+                                        @php
+                                            $types = json_decode(\App\Models\SiteSetting::get('classes_types', '[]'), true);
+                                            
+                                            // Migration logic if empty
+                                            if (empty($types)) {
+                                                $types = [
+                                                    [
+                                                        'id' => uniqid(),
+                                                        'title' => 'Direct Physical Class',
+                                                        'description' => \App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.'),
+                                                        'duration' => \App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules'),
+                                                        'price' => \App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates'),
+                                                        'format' => \App\Models\SiteSetting::get('classes_direct_format', 'Small Groups'),
+                                                        'features' => \App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline"),
+                                                        'subjects' => \App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art'),
+                                                        'color' => '#EB8153',
+                                                        'image' => '',
+                                                        'stars' => 5
+                                                    ],
+                                                    [
+                                                        'id' => uniqid(),
+                                                        'title' => 'Online Live Class',
+                                                        'description' => \App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.'),
+                                                        'duration' => \App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules'),
+                                                        'price' => \App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing'),
+                                                        'format' => \App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One'),
+                                                        'features' => \App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home"),
+                                                        'subjects' => \App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science'),
+                                                        'color' => '#667eea',
+                                                        'image' => '',
+                                                        'stars' => 5
+                                                    ]
+                                                ];
+                                            }
+                                        @endphp
+
+                                        @foreach($types as $index => $type)
+                                            <div class="class-type-item mb-4" data-index="{{ $index }}">
+                                                <div class="class-edit-section">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <input type="text" name="classes_types[{{ $index }}][title]" class="form-control font-weight-bold" value="{{ $type['title'] ?? 'New Class Type' }}" style="font-size: 1.1rem; border: none !important; background: transparent !important; padding-left: 0;">
+                                                        <button type="button" class="btn btn-danger btn-xs remove-class-type">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-8">
+                                                            <div class="form-group">
+                                                                <label>Description</label>
+                                                                <textarea name="classes_types[{{ $index }}][description]" class="form-control" rows="3">{{ $type['description'] ?? '' }}</textarea>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Duration</label>
+                                                                        <input type="text" name="classes_types[{{ $index }}][duration]" class="form-control" value="{{ $type['duration'] ?? '' }}">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Pricing Label</label>
+                                                                        <input type="text" name="classes_types[{{ $index }}][price]" class="form-control" value="{{ $type['price'] ?? '' }}">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Format / Students</label>
+                                                                        <input type="text" name="classes_types[{{ $index }}][format]" class="form-control" value="{{ $type['format'] ?? '' }}">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Color Theme</label>
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <input type="color" name="classes_types[{{ $index }}][color]" class="form-control p-1" value="{{ $type['color'] ?? '#EB8153' }}" style="width: 3.125rem; height: 2.1875rem;">
+                                                                            <span class="ml-2 text-muted small">{{ $type['color'] ?? '#EB8153' }}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Star Rating</label>
+                                                                <select name="classes_types[{{ $index }}][stars]" class="form-control">
+                                                                    @for($i = 1; $i <= 5; $i++)
+                                                                        <option value="{{ $i }}" {{ ($type['stars'] ?? 5) == $i ? 'selected' : '' }}>{{ $i }} Stars</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group text-center">
+                                                                <label>Card Image</label>
+                                                                <div class="image-preview-container mb-2" style="background: rgba(0,0,0,0.3); border: 2.0px dashed rgba(255,255,255,0.1); border-radius: 0.5rem; min-height: 15.625rem; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                                                    <img src="{{ !empty($type['image']) ? asset($type['image']) : '' }}" class="img-fluid" style="{{ !empty($type['image']) ? 'display: block;' : 'display: none;' }} max-height: 15.625rem;">
+                                                                    <div class="no-image-placeholder" style="{{ !empty($type['image']) ? 'display: none;' : 'display: block;' }}">
+                                                                        <i class="fa fa-image fa-3x mb-2 text-muted"></i>
+                                                                        <p class="small text-muted">No image uploaded</p>
+                                                                    </div>
+                                                                    <button type="button" class="btn btn-danger btn-xs position-absolute remove-image" style="top: 0.625rem; right: 0.625rem; {{ !empty($type['image']) ? '' : 'display: none;' }}">
+                                                                        <i class="fa fa-times"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <input type="hidden" name="classes_types[{{ $index }}][image]" value="{{ $type['image'] ?? '' }}" class="image-path-input">
+                                                                <button type="button" class="btn btn-info btn-xs btn-block upload-image-btn">
+                                                                    <i class="fa fa-upload mr-1"></i> Upload Image
+                                                                </button>
+                                                                <input type="file" class="d-none dynamic-image-input" accept="image/*">
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Pricing Label</label>
-                                                            <input type="text" name="classes_online_price" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing') }}">
-                                                        </div>
+
+                                                    <div class="row">
+                                                        <!-- <div class="col-md-6">
+                                                            <div class="form-group text-left">
+                                                                <label>Features (One per line)</label>
+                                                                <textarea name="classes_types[{{ $index }}][features]" class="form-control" rows="5">{{ $type['features'] ?? '' }}</textarea>
+                                                            </div>
+                                                        </div> -->
+                                                        <!-- <div class="col-md-6">
+                                                            <div class="form-group text-left">
+                                                                <label>Available Subjects (Comma separated)</label>
+                                                                <textarea name="classes_types[{{ $index }}][subjects]" class="form-control" rows="5">{{ $type['subjects'] ?? '' }}</textarea>
+                                                            </div>
+                                                        </div> -->
                                                     </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Format / Students</label>
-                                                    <input type="text" name="classes_online_format" class="form-control" value="{{ \App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One') }}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Features (One per line)</label>
-                                                    <textarea name="classes_online_features" class="form-control" rows="5">{{ \App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home") }}</textarea>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Available Subjects (Comma separated)</label>
-                                                    <textarea name="classes_online_subjects" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science') }}</textarea>
                                                 </div>
                                             </div>
-                                        </div>
+                                        @endforeach
                                     </div>
 
                                     <div class="mt-4 text-center">
@@ -423,7 +488,7 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright @ {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -437,6 +502,197 @@
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Function to re-index items after removal
+            function reIndexItems() {
+                $('#class-types-container .class-type-item').each(function(index) {
+                    $(this).attr('data-index', index);
+                    $(this).find('[name^="classes_types"]').each(function() {
+                        let name = $(this).attr('name');
+                        $(this).attr('name', name.replace(/classes_types\[\d+\]/, 'classes_types[' + index + ']'));
+                    });
+                });
+            }
+
+            // Add new class type
+            $('#add-class-type').click(function() {
+                let index = $('#class-types-container .class-type-item').length;
+                let template = `
+                    <div class="class-type-item mb-4" data-index="${index}">
+                        <div class="class-edit-section">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <input type="text" name="classes_types[${index}][title]" class="form-control font-weight-bold" value="New Class Type" style="font-size: 1.1rem; border: none !important; background: transparent !important; padding-left: 0;">
+                                <button type="button" class="btn btn-danger btn-xs remove-class-type">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea name="classes_types[${index}][description]" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Duration</label>
+                                                <input type="text" name="classes_types[${index}][duration]" class="form-control" value="Flexible schedules">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Pricing Label</label>
+                                                <input type="text" name="classes_types[${index}][price]" class="form-control" value="Affordable rates">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Format / Students</label>
+                                                <input type="text" name="classes_types[${index}][format]" class="form-control" value="Small Groups">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Color Theme</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="color" name="classes_types[${index}][color]" class="form-control p-1" value="#EB8153" style="width: 3.125rem; height: 2.1875rem;">
+                                                    <span class="ml-2 text-muted small">#EB8153</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Star Rating</label>
+                                        <select name="classes_types[${index}][stars]" class="form-control">
+                                            <option value="1">1 Stars</option>
+                                            <option value="2">2 Stars</option>
+                                            <option value="3">3 Stars</option>
+                                            <option value="4">4 Stars</option>
+                                            <option value="5" selected>5 Stars</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group text-center">
+                                        <label>Card Image</label>
+                                        <div class="image-preview-container mb-2" style="background: rgba(0,0,0,0.3); border: 2.0px dashed rgba(255,255,255,0.1); border-radius: 0.5rem; min-height: 15.625rem; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                            <img src="" class="img-fluid" style="display: none; max-height: 15.625rem;">
+                                            <div class="no-image-placeholder">
+                                                <i class="fa fa-image fa-3x mb-2 text-muted"></i>
+                                                <p class="small text-muted">No image uploaded</p>
+                                            </div>
+                                            <button type="button" class="btn btn-danger btn-xs position-absolute remove-image" style="top: 0.625rem; right: 0.625rem; display: none;">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="classes_types[${index}][image]" value="" class="image-path-input">
+                                        <button type="button" class="btn btn-info btn-xs btn-block upload-image-btn">
+                                            <i class="fa fa-upload mr-1"></i> Upload Image
+                                        </button>
+                                        <input type="file" class="d-none dynamic-image-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group text-left">
+                                        <label>Features (One per line)</label>
+                                        <textarea name="classes_types[${index}][features]" class="form-control" rows="5"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group text-left">
+                                        <label>Available Subjects (Comma separated)</label>
+                                        <textarea name="classes_types[${index}][subjects]" class="form-control" rows="5"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#class-types-container').append(template);
+            });
+
+            // Remove class type
+            $(document).on('click', '.remove-class-type', function() {
+                if ($('#class-types-container .class-type-item').length > 1) {
+                    if (confirm('Are you sure you want to remove this class type?')) {
+                        $(this).closest('.class-type-item').remove();
+                        reIndexItems();
+                    }
+                } else {
+                    alert('You must have at least one class type.');
+                }
+            });
+
+            // Image Upload Trigger
+            $(document).on('click', '.upload-image-btn', function() {
+                $(this).closest('.form-group').find('.dynamic-image-input').click();
+            });
+
+            // AJAX Image Upload
+            $(document).on('change', '.dynamic-image-input', function() {
+                let input = this;
+                let container = $(this).closest('.form-group');
+                let file = input.files[0];
+                
+                if (file) {
+                    let formData = new FormData();
+                    formData.append('image', file);
+                    formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                    // Show loading state on button
+                    let uploadBtn = container.find('.upload-image-btn');
+                    let originalText = uploadBtn.html();
+                    uploadBtn.html('<i class="fa fa-spinner fa-spin mr-1"></i> Uploading...').prop('disabled', true);
+
+                    $.ajax({
+                        url: "{{ route('admin.settings.upload') }}",
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                container.find('.image-path-input').val(response.relative_path);
+                                container.find('.image-preview-container img').attr('src', response.path).show();
+                                container.find('.no-image-placeholder').hide();
+                                container.find('.remove-image').show();
+                                toastr.success('Image uploaded successfully');
+                            } else {
+                                toastr.error(response.message || 'Upload failed');
+                            }
+                        },
+                        error: function() {
+                            toastr.error('Connection error occurred');
+                        },
+                        complete: function() {
+                            uploadBtn.html(originalText).prop('disabled', false);
+                        }
+                    });
+                }
+            });
+
+            // Remove Image
+            $(document).on('click', '.remove-image', function() {
+                let container = $(this).closest('.form-group');
+                container.find('.image-path-input').val('');
+                container.find('.image-preview-container img').attr('src', '').hide();
+                container.find('.no-image-placeholder').show();
+                $(this).hide();
+            });
+
+            // Update color hex display
+            $(document).on('input', 'input[type="color"]', function() {
+                $(this).next('span').text($(this).val());
+            });
+        });
+    </script>
 </body>
 
 </html>

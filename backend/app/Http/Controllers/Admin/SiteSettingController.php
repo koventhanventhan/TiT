@@ -287,7 +287,8 @@ class SiteSettingController extends Controller
             
             return response()->json([
                 'success' => true,
-                'path' => asset('uploads/settings/' . $name)
+                'path' => asset('uploads/settings/' . $name),
+                'relative_path' => 'uploads/settings/' . $name
             ]);
         }
 

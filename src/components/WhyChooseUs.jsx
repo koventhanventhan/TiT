@@ -11,73 +11,72 @@ const WhyChooseUs = () => {
   const [whyTitle, setWhyTitle] = useState(getSetting('why_title', t('why_title')))
   const [whySubtitle, setWhySubtitle] = useState(getSetting('why_subtitle', t('why_subtitle')))
   const [reasons, setReasons] = useState([])
+  const [benefits, setBenefits] = useState([])
 
   useEffect(() => {
-    const defaultEn = {
-      title: 'Why Choose EduLearn?',
-      subtitle: 'Empowering students with quality education and modern tools.',
-      reasons_raw: '[]'
+    const parseJSON = (key, fallback) => {
+      try {
+        const val = getSetting(key, '[]');
+        const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+        return parsed.length > 0 ? parsed : fallback;
+      } catch (e) { return fallback; }
     }
 
-    const why_reasons_raw = getSetting('why_reasons', defaultEn.reasons_raw)
-    let baseReasons = []
-    try {
-      baseReasons = JSON.parse(why_reasons_raw)
-      if (!Array.isArray(baseReasons) || baseReasons.length === 0) {
-        baseReasons = [
-          {
-            icon: "https://cdn.lordicon.com/osuxyevn.json",
-            title: 'Expert Instruction',
-            description: 'Learn from highly qualified educators with years of experience.',
-            localTitle: 'benefit_instruction',
-            localDesc: 'benefit_instruction_desc',
-            color: '#4f0bd9'
-          },
-          {
-            icon: "https://cdn.lordicon.com/qhviklyi.json",
-            title: 'Affordable Pricing',
-            description: 'Premium education that fits your budget without compromising quality.',
-            localTitle: 'benefit_pricing',
-            localDesc: 'benefit_pricing_desc',
-            color: '#10b981'
-          },
-          {
-            icon: "https://cdn.lordicon.com/hrjifpbq.json",
-            title: 'Lifetime Support',
-            description: 'Access our support team and learning resources whenever you need them.',
-            localTitle: 'benefit_support',
-            localDesc: 'benefit_support_desc',
-            color: '#8b5cf6'
-          }
-        ]
+    const defaultReasons = [
+      {
+        icon: "https://cdn.lordicon.com/osuxyevn.json",
+        title: t('benefit_instruction'),
+        description: t('benefit_instruction_desc'),
+        color: '#4f0bd9'
+      },
+      {
+        icon: "https://cdn.lordicon.com/qhviklyi.json",
+        title: t('benefit_pricing'),
+        description: t('benefit_pricing_desc'),
+        color: '#10b981'
+      },
+      {
+        icon: "https://cdn.lordicon.com/hrjifpbq.json",
+        title: t('benefit_support'),
+        description: t('benefit_support_desc'),
+        color: '#8b5cf6'
       }
-    } catch (e) {
-      console.error('Error parsing why_reasons', e)
-    }
+    ];
+
+    const defaultBenefits = [
+      { text: t('benefit_personalized') },
+      { text: t('benefit_access') },
+      { text: t('benefit_qa') }
+    ];
+
+    const rawReasons = parseJSON('why_reasons', defaultReasons);
+    const rawBenefits = parseJSON('why_benefits', defaultBenefits);
 
     if (language !== 'en') {
       const translateAll = async () => {
-        const valTitle = getSetting('why_title', defaultEn.title)
-        if (valTitle === defaultEn.title) setWhyTitle(t('why_title'))
-        else setWhyTitle(await translate(valTitle))
-
-        const valSub = getSetting('why_subtitle', defaultEn.subtitle)
-        if (valSub === defaultEn.subtitle) setWhySubtitle(t('why_subtitle'))
-        else setWhySubtitle(await translate(valSub))
+        setWhyTitle(await translate(getSetting('why_title', t('why_title'))))
+        setWhySubtitle(await translate(getSetting('why_subtitle', t('why_subtitle'))))
         
-        const translatedReasons = await Promise.all(baseReasons.map(async (r) => ({
+        const translatedReasons = await Promise.all(rawReasons.map(async (r) => ({
           ...r,
-          title: r.localTitle ? t(r.localTitle) : await translate(r.title),
-          description: r.localDesc ? t(r.localDesc) : await translate(r.description)
+          title: await translate(r.title),
+          description: await translate(r.description)
+        })))
+
+        const translatedBenefits = await Promise.all(rawBenefits.map(async (b) => ({
+          ...b,
+          text: await translate(b.text)
         })))
 
         setReasons(translatedReasons)
+        setBenefits(translatedBenefits)
       }
       translateAll()
     } else {
       setWhyTitle(getSetting('why_title', t('why_title')))
       setWhySubtitle(getSetting('why_subtitle', t('why_subtitle')))
-      setReasons(baseReasons)
+      setReasons(rawReasons)
+      setBenefits(rawBenefits)
     }
   }, [language, translate, getSetting, t])
 
@@ -91,30 +90,16 @@ const WhyChooseUs = () => {
             <p className="pw-description">{whySubtitle}</p>
 
             <ul className="pw-benefit-list">
-              <li>
-                <lord-icon
-                  src="https://cdn.lordicon.com/yqzmiobz.json"
-                  trigger="loop"
-                  colors="primary:#4f0bd9"
-                  style={{ width: '1.25rem', height: '1.25rem' }}
-                /> {t('benefit_personalized')}
-              </li>
-              <li>
-                <lord-icon
-                  src="https://cdn.lordicon.com/yqzmiobz.json"
-                  trigger="loop"
-                  colors="primary:#4f0bd9"
-                  style={{ width: '1.25rem', height: '1.25rem' }}
-                /> {t('benefit_access')}
-              </li>
-              <li>
-                <lord-icon
-                  src="https://cdn.lordicon.com/yqzmiobz.json"
-                  trigger="loop"
-                  colors="primary:#4f0bd9"
-                  style={{ width: '1.25rem', height: '1.25rem' }}
-                /> {t('benefit_qa')}
-              </li>
+              {benefits.map((benefit, idx) => (
+                <li key={idx}>
+                  <lord-icon
+                    src="https://cdn.lordicon.com/yqzmiobz.json"
+                    trigger="loop"
+                    colors="primary:#4f0bd9"
+                    style={{ width: '1.25rem', height: '1.25rem' }}
+                  /> {benefit.text}
+                </li>
+              ))}
             </ul>
           </div>
 

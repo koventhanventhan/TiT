@@ -22,62 +22,93 @@ const ClassesPage = () => {
   const [subjectsObj, setSubjectsObj] = useState({})
 
   useEffect(() => {
-    const allClassTypes = [
-      {
-        id: 1,
-        icon: <FiBook />,
-        title: t('direct_class'),
-        tagline: t('face_to_face'),
-        description: getSetting('classes_direct_description', t('classes_direct_description')),
-        accent: 'direct',
-        features: getSetting('classes_direct_features', t('classes_direct_features')).split('\n').filter(f => f.trim()),
-        duration: getSetting('classes_direct_duration', t('detail_flexible_schedules')),
-        students: getSetting('classes_direct_format', t('detail_small_groups')),
-        price: getSetting('classes_direct_price', t('detail_affordable_rates')),
-        highlights: [
-          { icon: <FiMapPin />, label: t('in_person') },
-          { icon: <FiUsers />, label: t('small_groups') },
-          { icon: <FiStar />, label: t('expert_academic_tutors') }
-        ]
-      },
-      {
-        id: 2,
-        icon: <FiGlobe />,
-        title: t('online_class'),
-        tagline: t('learn_from_anywhere'),
-        description: getSetting('classes_online_description', t('classes_online_description')),
-        accent: 'online',
-        features: getSetting('classes_online_features', t('classes_online_features')).split('\n').filter(f => f.trim()),
-        duration: getSetting('classes_online_duration', t('detail_flexible_schedules')),
-        students: getSetting('classes_online_format', t('detail_group_one_on_one')),
-        price: getSetting('classes_online_price', t('detail_competitive_pricing')),
-        highlights: [
-          { icon: <FiMonitor />, label: t('live_sessions') },
-          { icon: <FiPlay />, label: t('lesson_recordings') },
-          { icon: <FiFileText />, label: t('digital_resources') }
-        ]
-      }
-    ]
-
-    const subjectsRaw = {
-      [t('direct_class')]: getSetting('classes_direct_subjects', `${t('subject_mathematics')}, ${t('subject_science')}, ${t('subject_english')}, ${t('subject_sinhala')}, ${t('subject_tamil')}, ${t('subject_history')}, ${t('subject_geography')}, ${t('subject_commerce')}, ${t('subject_ict')}, ${t('subject_art')}`).split(',').map(s => s.trim()),
-      [t('online_class')]: getSetting('classes_online_subjects', `${t('subject_mathematics')}, ${t('subject_physics')}, ${t('subject_chemistry')}, ${t('subject_biology')}, ${t('subject_english')}, ${t('subject_business_studies')}, ${t('subject_economics')}, ${t('subject_accounting')}, ${t('subject_ict')}, ${t('subject_computer_science')}`).split(',').map(s => s.trim())
+    const rawTypes = getSetting('classes_types', '[]');
+    let parsedTypes = [];
+    try {
+      parsedTypes = typeof rawTypes === 'string' ? JSON.parse(rawTypes) : rawTypes;
+    } catch (e) {
+      console.error("Failed to parse classes_types", e);
+      parsedTypes = [];
     }
 
-    // Set initial state for immediate rendering (will be updated by translation)
-    const initialFiltered = type 
-      ? allClassTypes.filter(ct => ct.accent === type)
-      : allClassTypes;
-    setClassTypes(initialFiltered)
-    setSubjectsObj(subjectsRaw)
+    const mapTypes = (typesData) => {
+      let data = typesData;
+      if (!data || data.length === 0) {
+        // Fallback to defaults if empty
+        data = [
+          {
+            title: t('direct_class'),
+            description: getSetting('classes_direct_description', 'Comprehensive face-to-face learning experience.'),
+            duration: getSetting('classes_direct_duration', 'Flexible'),
+            price: getSetting('classes_direct_price', 'Affordable'),
+            format: getSetting('classes_direct_format', 'Small Groups'),
+            features: getSetting('classes_direct_features', "Small groups\nExpert tutors"),
+            subjects: getSetting('classes_direct_subjects', 'Math, Science'),
+            color: '#EB8153',
+            stars: 5
+          },
+          {
+            title: t('online_class'),
+            description: getSetting('classes_online_description', 'Convenient live interactive sessions.'),
+            duration: getSetting('classes_online_duration', 'Flexible'),
+            price: getSetting('classes_online_price', 'Competitive'),
+            format: getSetting('classes_online_format', 'One-on-One'),
+            features: getSetting('classes_online_features', "Live classes\nRecordings"),
+            subjects: getSetting('classes_online_subjects', 'Physics, Chemistry'),
+            color: '#667eea',
+            stars: 5
+          }
+        ];
+      }
+      return data.map((item, index) => {
+        const title = item.title || 'Class Type';
+        const description = item.description || '';
+        const features = (item.features || '').split('\n').filter(f => f.trim());
+        const subjects = (item.subjects || '').split(',').map(s => s.trim()).filter(s => s);
+        
+        return {
+          id: item.id || `type-${index}`,
+          title: title,
+          tagline: item.format || 'Training Program',
+          description: description,
+          accent: item.color || '#EB8153',
+          color: item.color || '#EB8153',
+          image: item.image || '',
+          stars: parseInt(item.stars) || 5,
+          features: features,
+          duration: item.duration || 'Flexible',
+          students: item.format || 'Group Sessions',
+          price: item.price || 'Contact for Pricing',
+          subjects: subjects,
+          highlights: [
+            { icon: item.title?.toLowerCase().includes('online') ? <FiMonitor /> : <FiMapPin />, label: item.format || 'Flexible' },
+            { icon: <FiUsers />, label: item.title?.toLowerCase().includes('one-on-one') ? 'Personalized' : 'Group Learning' },
+            { icon: <FiStar />, label: `${item.stars || 5} Star Rating` }
+          ]
+        };
+      });
+    };
 
-    if (language !== 'en') {
+    const initialTypes = mapTypes(parsedTypes);
+    const initialSubjects = {};
+    initialTypes.forEach(t => {
+      initialSubjects[t.title] = t.subjects;
+    });
+
+    const initialFiltered = type 
+      ? initialTypes.filter(ct => ct.title.toLowerCase().includes(type.toLowerCase()))
+      : initialTypes;
+    
+    setClassTypes(initialFiltered);
+    setSubjectsObj(initialSubjects);
+
+    if (language !== 'en' && parsedTypes.length > 0) {
       const translateAll = async () => {
         setClpTitle(await translate(getSetting('classes_title', t('classes_title'))))
         setClpSubtitle(await translate(getSetting('classes_subtitle', t('classes_subtitle'))))
         setClpBadge(await translate(getSetting('classes_badge', t('our_classes'))))
 
-        const translatedTypes = await Promise.all(allClassTypes.map(async (ct) => ({
+        const translatedTypes = await Promise.all(initialTypes.map(async (ct) => ({
           ...ct,
           title: await translate(ct.title),
           tagline: await translate(ct.tagline),
@@ -90,13 +121,13 @@ const ClassesPage = () => {
         })))
 
         const translatedSubjects = {}
-        for (const [key, list] of Object.entries(subjectsRaw)) {
+        for (const [key, list] of Object.entries(initialSubjects)) {
           const translatedKey = await translate(key)
           translatedSubjects[translatedKey] = await Promise.all(list.map(s => translate(s)))
         }
 
         const filtered = type 
-          ? translatedTypes.filter(ct => ct.accent === type)
+          ? translatedTypes.filter(ct => ct.title.toLowerCase().includes(type.toLowerCase()))
           : translatedTypes;
 
         setClassTypes(filtered)
@@ -107,13 +138,6 @@ const ClassesPage = () => {
       setClpTitle(getSetting('classes_title', t('classes_title')))
       setClpSubtitle(getSetting('classes_subtitle', t('classes_subtitle')))
       setClpBadge(getSetting('classes_badge', t('our_classes')))
-      
-      const filtered = type 
-        ? allClassTypes.filter(ct => ct.accent === type)
-        : allClassTypes;
-
-      setClassTypes(filtered)
-      setSubjectsObj(subjectsRaw)
     }
   }, [language, translate, getSetting, t, type])
 
@@ -144,14 +168,25 @@ const ClassesPage = () => {
         <div className="container">
           <div className="clp-cards">
             {classTypes.map((ct) => (
-              <div key={ct.id} className={`clp-card clp-card-${ct.accent}`}>
+              <div key={ct.id} className="clp-card" style={{ '--accent-color': ct.color }}>
                 {/* Card Header */}
                 <div className="clp-card-head">
-                  <div className="clp-card-head-bg"></div>
+                  <div 
+                    className="clp-card-head-bg" 
+                    style={{ 
+                      background: ct.image 
+                        ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url(${ct.image.startsWith('http') ? ct.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + ct.image})`
+                        : `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  ></div>
                   <div className="clp-card-head-inner">
-                    <div className="clp-card-icon">{ct.icon}</div>
+                    <div className="clp-card-icon" style={{ borderColor: `${ct.color}44`, color: ct.color }}>
+                      {ct.image ? <img src={ct.image.startsWith('http') ? ct.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + ct.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /> : <FiStar />}
+                    </div>
                     <div>
-                      <span className="clp-card-tag">{ct.tagline}</span>
+                      <span className="clp-card-tag" style={{ color: `${ct.color}aa` }}>{ct.tagline}</span>
                       <h2 className="clp-card-title">{ct.title}</h2>
                     </div>
                   </div>
@@ -159,7 +194,7 @@ const ClassesPage = () => {
                   {/* Highlight pills */}
                   <div className="clp-highlights">
                     {ct.highlights.map((h, i) => (
-                      <span key={i} className="clp-highlight">
+                      <span key={i} className="clp-highlight" style={{ borderColor: `${ct.color}33`, color: `${ct.color}cc` }}>
                         {h.icon} {h.label}
                       </span>
                     ))}
@@ -171,44 +206,44 @@ const ClassesPage = () => {
                   <div className="clp-sections">
                     {/* Features */}
                     <div className="clp-sec">
-                      <h3><FiCheck /> {t('whats_included')}</h3>
+                      <h3><FiCheck style={{ color: ct.color }} /> {t('whats_included')}</h3>
                       <ul className="clp-features">
                         {ct.features.map((f, i) => (
-                          <li key={i}><FiCheck /> {f}</li>
+                          <li key={i}><FiCheck style={{ background: `${ct.color}11`, color: ct.color }} /> {f}</li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Subjects */}
                     <div className="clp-sec">
-                      <h3><FiBook /> {t('available_subjects')}</h3>
+                      <h3><FiBook style={{ color: ct.color }} /> {t('available_subjects')}</h3>
                       <div className="clp-badges">
                         {subjectsObj[ct.title]?.map((s, i) => (
-                          <span key={i} className="clp-badge">{s}</span>
+                          <span key={i} className="clp-badge" style={{ '--hover-bg': ct.color }}>{s}</span>
                         ))}
                       </div>
                     </div>
 
                     {/* Details */}
                     <div className="clp-sec">
-                      <h3><FiUsers /> {t('class_details')}</h3>
+                      <h3><FiUsers style={{ color: ct.color }} /> {t('class_details')}</h3>
                       <div className="clp-details">
                         <div className="clp-detail">
-                          <FiClock />
+                          <FiClock style={{ color: ct.color }} />
                           <div>
                             <strong>{t('duration')}</strong>
                             <span>{ct.duration}</span>
                           </div>
                         </div>
                         <div className="clp-detail">
-                          <FiUsers />
+                          <FiUsers style={{ color: ct.color }} />
                           <div>
                             <strong>{t('format')}</strong>
                             <span>{ct.students}</span>
                           </div>
                         </div>
                         <div className="clp-detail">
-                          <FiAward />
+                          <FiAward style={{ color: ct.color }} />
                           <div>
                             <strong>{t('pricing')}</strong>
                             <span>{ct.price}</span>
@@ -220,10 +255,10 @@ const ClassesPage = () => {
 
                   {/* CTA */}
                   <div className="clp-card-cta">
-                    <a href="#register" className="clp-btn-enroll">
+                    <a href="#register" className="clp-btn-enroll" style={{ background: `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`, boxShadow: `0 12px 36px ${ct.color}44` }}>
                       {t('btn_enroll_now')} <FiArrowRight />
                     </a>
-                    <a href="#register" className="clp-btn-outline">
+                    <a href="#register" className="clp-btn-outline" style={{ borderColor: ct.color, color: ct.color }}>
                       {t('learn_more')}
                     </a>
                   </div>

@@ -11,46 +11,58 @@ const MobileApp = () => {
   const [mobileTitle, setMobileTitle] = useState(getSetting('mobile_title', t('mobile_title')))
   const [mobileSubtitle, setMobileSubtitle] = useState(getSetting('mobile_subtitle', t('mobile_subtitle')))
   const [mobileDescription, setMobileDescription] = useState(getSetting('mobile_description', t('mobile_description')))
-  const [screens, setScreens] = useState([
-    { title: t('app_screen1'), icon: '📚' },
-    { title: t('app_screen2'), icon: '📖' },
-    { title: t('app_screen3'), icon: '🎥' },
-    { title: t('app_screen4'), icon: '📊' }
-  ])
+  const [screens, setScreens] = useState([])
   const [features, setFeatures] = useState([])
+  const [cardSatisfaction, setCardSatisfaction] = useState(getSetting('mobile_card_satisfaction', t('mobile_satisfaction')))
+  const [cardSessions, setCardSessions] = useState(getSetting('mobile_card_sessions', t('mobile_live_sessions')))
+  const [appStoreShow, setAppStoreShow] = useState(getSetting('mobile_app_store_show', 'on'))
+  const [playStoreShow, setPlayStoreShow] = useState(getSetting('mobile_play_store_show', 'on'))
 
   useEffect(() => {
+    const parseJSON = (key, fallback) => {
+      try {
+        const val = getSetting(key, '[]');
+        const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+        return parsed.length > 0 ? parsed : fallback;
+      } catch (e) { return fallback; }
+    }
+
+    const defaultScreens = [
+      { title: t('app_screen1'), icon: '📚' },
+      { title: t('app_screen2'), icon: '📖' },
+      { title: t('app_screen3'), icon: '🎥' },
+      { title: t('app_screen4'), icon: '📊' }
+    ];
+
+    const defaultFeatures = [
+      { text: t('app_feature1') },
+      { text: t('app_feature2') },
+      { text: t('app_feature3') }
+    ];
+
+    const rawScreens = parseJSON('mobile_screens', defaultScreens);
+    const rawFeatures = parseJSON('mobile_features', defaultFeatures);
+
     if (language !== 'en') {
       const translateAll = async () => {
-        const title = await translate(getSetting('mobile_title', t('mobile_title')))
-        const sub = await translate(getSetting('mobile_subtitle', t('mobile_subtitle')))
-        const desc = await translate(getSetting('mobile_description', t('mobile_description')))
+        setMobileTitle(await translate(getSetting('mobile_title', t('mobile_title'))))
+        setMobileSubtitle(await translate(getSetting('mobile_subtitle', t('mobile_subtitle'))))
+        setMobileDescription(await translate(getSetting('mobile_description', t('mobile_description'))))
+        setCardSatisfaction(await translate(getSetting('mobile_card_satisfaction', t('mobile_satisfaction'))))
+        setCardSessions(await translate(getSetting('mobile_card_sessions', t('mobile_live_sessions'))))
+        setAppStoreShow(getSetting('mobile_app_store_show', 'on'))
+        setPlayStoreShow(getSetting('mobile_play_store_show', 'on'))
         
-        const translatedScreens = await Promise.all(screens.map(async (s) => ({
+        const translatedScreens = await Promise.all(rawScreens.map(async (s) => ({
           ...s,
           title: await translate(s.title)
         })))
 
-        let fRaw = []
-        try {
-          fRaw = JSON.parse(getSetting('mobile_features', '[]'))
-          if (fRaw.length === 0) {
-            fRaw = [
-              { text: t('app_feature1') },
-              { text: t('app_feature2') },
-              { text: t('app_feature3') }
-            ]
-          }
-        } catch (e) { fRaw = [] }
-
-        const translatedFeatures = await Promise.all(fRaw.map(async (f) => ({
+        const translatedFeatures = await Promise.all(rawFeatures.map(async (f) => ({
           ...f,
           text: await translate(f.text)
         })))
 
-        setMobileTitle(title)
-        setMobileSubtitle(sub)
-        setMobileDescription(desc)
         setScreens(translatedScreens)
         setFeatures(translatedFeatures)
       }
@@ -59,25 +71,12 @@ const MobileApp = () => {
       setMobileTitle(getSetting('mobile_title', t('mobile_title')))
       setMobileSubtitle(getSetting('mobile_subtitle', t('mobile_subtitle')))
       setMobileDescription(getSetting('mobile_description', t('mobile_description')))
-      setScreens([
-        { title: t('app_screen1'), icon: '📚' },
-        { title: t('app_screen2'), icon: '📖' },
-        { title: t('app_screen3'), icon: '🎥' },
-        { title: t('app_screen4'), icon: '📊' }
-      ])
-      
-      let fRaw = []
-      try {
-        fRaw = JSON.parse(getSetting('mobile_features', '[]'))
-        if (fRaw.length === 0) {
-          fRaw = [
-            { text: t('app_feature1') },
-            { text: t('app_feature2') },
-            { text: t('app_feature3') }
-          ]
-        }
-      } catch (e) { fRaw = [] }
-      setFeatures(fRaw)
+      setCardSatisfaction(getSetting('mobile_card_satisfaction', t('mobile_satisfaction')))
+      setCardSessions(getSetting('mobile_card_sessions', t('mobile_live_sessions')))
+      setAppStoreShow(getSetting('mobile_app_store_show', 'on'))
+      setPlayStoreShow(getSetting('mobile_play_store_show', 'on'))
+      setScreens(rawScreens)
+      setFeatures(rawFeatures)
     }
   }, [language, translate, getSetting, t])
 
@@ -129,11 +128,11 @@ const MobileApp = () => {
               {/* Floating elements */}
               <div className="pm-floating-card top">
                 <FiCheckCircle className="f-icon" />
-                <span>{t('mobile_satisfaction')}</span>
+                <span>{cardSatisfaction}</span>
               </div>
               <div className="pm-floating-card bottom">
                 <FiPlay className="f-icon-play" />
-                <span>{t('mobile_live_sessions')}</span>
+                <span>{cardSessions}</span>
               </div>
             </div>
           </div>
@@ -159,20 +158,24 @@ const MobileApp = () => {
             </div>
 
             <div className="pm-download-area">
-              <a href={getSetting('mobile_app_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
-                <div className="store-icon">🍎</div>
-                <div className="store-text">
-                  <small>{t('app_store_small')}</small>
-                  <strong>App Store</strong>
-                </div>
-              </a>
-              <a href={getSetting('mobile_play_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
-                <div className="store-icon">🤖</div>
-                <div className="store-text">
-                  <small>{t('play_store_small')}</small>
-                  <strong>Google Play</strong>
-                </div>
-              </a>
+              {appStoreShow === 'on' && (
+                <a href={getSetting('mobile_app_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
+                  <div className="store-icon">🍎</div>
+                  <div className="store-text">
+                    <small>{t('app_store_small')}</small>
+                    <strong>App Store</strong>
+                  </div>
+                </a>
+              )}
+              {playStoreShow === 'on' && (
+                <a href={getSetting('mobile_play_store_link', '#')} className="pm-store-btn" target="_blank" rel="noopener noreferrer">
+                  <div className="store-icon">🤖</div>
+                  <div className="store-text">
+                    <small>{t('play_store_small')}</small>
+                    <strong>Google Play</strong>
+                  </div>
+                </a>
+              )}
             </div>
           </div>
         </div>

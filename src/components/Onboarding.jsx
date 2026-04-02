@@ -15,13 +15,7 @@ const Onboarding = () => {
   const [steps, setSteps] = useState([])
 
   useEffect(() => {
-    const defaultEn = {
-      title: 'How It Works',
-      subtitle: 'Simple steps to start your education.',
-      steps_raw: '[]'
-    }
-
-    const onboarding_steps_raw = getSetting('onboarding_steps', defaultEn.steps_raw)
+    const onboarding_steps_raw = getSetting('onboarding_steps', '[]')
     let baseSteps = []
     try {
       baseSteps = JSON.parse(onboarding_steps_raw)
@@ -31,8 +25,6 @@ const Onboarding = () => {
             id: '01',
             title: 'Easy Registration',
             description: 'Fill out our simple application form to get started. It only takes a few minutes!',
-            localTitle: 'onboarding_step1_title',
-            localDesc: 'onboarding_step1_desc',
             icon: "https://cdn.lordicon.com/wjyqkiew.json",
             color: '#ffffff'
           },
@@ -40,8 +32,6 @@ const Onboarding = () => {
             id: '02',
             title: 'Free Consultation',
             description: 'Our academic advisors will reach out to understand your goals and recommend the best path.',
-            localTitle: 'onboarding_step2_title',
-            localDesc: 'onboarding_step2_desc',
             icon: "https://cdn.lordicon.com/zpxybbhl.json",
             color: '#ffffff'
           },
@@ -49,8 +39,6 @@ const Onboarding = () => {
             id: '03',
             title: 'Start Learning',
             description: 'Complete your enrollment and unlock instant access to your classes and resources.',
-            localTitle: 'onboarding_step3_title',
-            localDesc: 'onboarding_step3_desc',
             icon: "https://cdn.lordicon.com/dxjqoygy.json",
             color: '#ffffff'
           }
@@ -60,31 +48,28 @@ const Onboarding = () => {
       console.error('Error parsing onboarding_steps', e)
     }
 
-    if (language !== 'en') {
-      const translateAll = async () => {
-        const valTitle = getSetting('onboarding_title', defaultEn.title)
-        if (valTitle === defaultEn.title) setOnboardingTitle(t('onboarding_title'))
-        else setOnboardingTitle(await translate(valTitle))
-
-        const valSub = getSetting('onboarding_subtitle', defaultEn.subtitle)
-        if (valSub === defaultEn.subtitle) setOnboardingSubtitle(t('onboarding_subtitle'))
-        else setOnboardingSubtitle(await translate(valSub))
-        
+    const updateContent = async () => {
+      const rawTitle = getSetting('onboarding_title', 'How It Works')
+      const rawSubtitle = getSetting('onboarding_subtitle', 'Simple steps to start your education.')
+      
+      if (language !== 'en') {
+        setOnboardingTitle(await translate(rawTitle))
+        setOnboardingSubtitle(await translate(rawSubtitle))
         const translatedSteps = await Promise.all(baseSteps.map(async (s) => ({
           ...s,
-          title: s.localTitle ? t(s.localTitle) : await translate(s.title),
-          description: s.localDesc ? t(s.localDesc) : await translate(s.description)
+          title: await translate(s.title),
+          description: await translate(s.description)
         })))
-
         setSteps(translatedSteps)
+      } else {
+        setOnboardingTitle(rawTitle)
+        setOnboardingSubtitle(rawSubtitle)
+        setSteps(baseSteps)
       }
-      translateAll()
-    } else {
-      setOnboardingTitle(getSetting('onboarding_title', t('onboarding_title')))
-      setOnboardingSubtitle(getSetting('onboarding_subtitle', t('onboarding_subtitle')))
-      setSteps(baseSteps)
     }
-  }, [language, translate, getSetting, t])
+
+    updateContent()
+  }, [language, translate, getSetting])
 
   return (
     <section className="premium-onboarding section">

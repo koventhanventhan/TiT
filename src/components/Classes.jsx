@@ -14,69 +14,79 @@ const Classes = () => {
   const [classData, setClassData] = useState([])
 
   useEffect(() => {
-    const baseData = [
-      {
-        title: 'Direct Physical Class',
-        category: 'Physical',
-        description: getSetting('classes_direct_description', 'High-impact face-to-face sessions in a dedicated learning environment.'),
-        accent: 'direct',
-        duration: 'Weekly',
-        students: 'Group',
-        rating: '4.9',
-        price: 'Affordable',
-        image: '/venthan1.jpg',
-        icon: <FiBook />
-      },
-      {
-        title: 'Online Live Class',
-        category: 'Online',
-        description: getSetting('classes_online_description', 'Interactive digital classrooms with full access to recordings and resources.'),
-        accent: 'online',
-        duration: 'Flexible',
-        students: 'Group/1-on-1',
-        rating: '5.0',
-        price: 'Premium',
-        image: '/venthan2.jpg',
-        icon: <FiGlobe />
-      }
-    ]
-
-    const defaultEn = {
-      classes_title: 'Our Classes',
-      classes_subtitle: 'Find the perfect class for your academic goals.'
+    const rawTypes = getSetting('classes_types', '[]');
+    let parsedTypes = [];
+    try {
+      parsedTypes = typeof rawTypes === 'string' ? JSON.parse(rawTypes) : rawTypes;
+    } catch (e) {
+      console.error("Failed to parse classes_types", e);
+      parsedTypes = [];
     }
 
-    if (language !== 'en') {
-      const translateAll = async () => {
-        const currentTitle = getSetting('classes_title', defaultEn.classes_title)
-        const currentSub = getSetting('classes_subtitle', defaultEn.classes_subtitle)
-        
-        if (currentTitle === defaultEn.classes_title) setClassesTitle(t('classes_title'))
-        else setClassesTitle(await translate(currentTitle))
-
-        if (currentSub === defaultEn.classes_subtitle) setClassesSubtitle(t('classes_subtitle'))
-        else setClassesSubtitle(await translate(currentSub))
-        
-        const translatedData = baseData.map((c, idx) => {
-          const directKey = idx === 0 ? 'classes_direct_title' : 'classes_online_title'
-          const descKey = idx === 0 ? 'classes_direct_description' : 'classes_online_description'
-          return {
-            ...c,
-            title: t(directKey),
-            description: t(descKey),
-            category: t(c.accent === 'direct' ? 'filter_direct' : 'filter_online'),
-            duration: language === 'ta' ? 'வாராந்திர' : (language === 'si' ? 'සතිපතා' : 'Weekly'),
-            students: language === 'ta' ? 'குழு' : (language === 'si' ? 'කණ්ඩායම' : 'Group')
+    const mapCards = (typesData) => {
+      let data = typesData;
+      if (!data || data.length === 0) {
+        data = [
+          {
+            title: t('direct_class'),
+            description: getSetting('classes_direct_description', 'High-impact face-to-face sessions in a dedicated learning environment.'),
+            color: '#EB8153',
+            stars: 5,
+            image: '/venthan1.jpg',
+            format: 'Physical',
+            duration: 'Weekly',
+            students: 'Group'
+          },
+          {
+            title: t('online_class'),
+            description: getSetting('classes_online_description', 'Interactive digital classrooms with full access to recordings and resources.'),
+            color: '#667eea',
+            stars: 5,
+            image: '/venthan2.jpg',
+            format: 'Online',
+            duration: 'Flexible',
+            students: 'Group/1-on-1'
           }
-        })
+        ];
+      }
 
-        setClassData(translatedData)
+      return data.map((item, index) => ({
+        id: item.id || index,
+        title: item.title,
+        category: item.format || 'Course',
+        description: item.description,
+        accent: item.color || '#EB8153',
+        duration: item.duration || 'Flexible',
+        students: item.format?.toLowerCase().includes('online') ? 'Group/1-on-1' : 'Group',
+        rating: (parseFloat(item.stars) || 5.0).toFixed(1),
+        image: item.image,
+        icon: item.title?.toLowerCase().includes('online') ? <FiGlobe /> : <FiBook />
+      }));
+    };
+
+    const initialCards = mapCards(parsedTypes);
+    setClassData(initialCards);
+
+    if (language !== 'en' && (parsedTypes.length > 0 || initialCards.length > 0)) {
+      const translateAll = async () => {
+        setClassesTitle(await translate(getSetting('classes_title', t('classes_title'))))
+        setClassesSubtitle(await translate(getSetting('classes_subtitle', t('classes_subtitle'))))
+        
+        const translatedCards = await Promise.all(initialCards.map(async (c) => ({
+          ...c,
+          title: await translate(c.title),
+          category: await translate(c.category),
+          description: await translate(c.description),
+          duration: await translate(c.duration),
+          students: await translate(c.students)
+        })));
+
+        setClassData(translatedCards)
       }
       translateAll()
     } else {
       setClassesTitle(getSetting('classes_title', t('classes_title')))
       setClassesSubtitle(getSetting('classes_subtitle', t('classes_subtitle')))
-      setClassData(baseData)
     }
   }, [language, translate, getSetting, t])
 
@@ -91,22 +101,32 @@ const Classes = () => {
 
         <div className="pc-grid">
           {classData.map((course, index) => (
-            <div key={index} className={`pc-card pc-card-${course.accent}`}>
+            <div 
+              key={index} 
+              className="pc-card"
+              style={{ '--accent-color': course.accent }}
+            >
               <div className="pc-card-media">
-                <img src={course.image} alt={course.title} className="pc-card-img" />
-                <div className="pc-card-category">{course.category}</div>
+                <img 
+                  src={course.image?.startsWith('http') ? course.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + course.image} 
+                  alt={course.title} 
+                  className="pc-card-img" 
+                />
+                <div className="pc-card-category" style={{ background: course.accent, boxShadow: `0 4px 12px ${course.accent}4d` }}>
+                  {course.category}
+                </div>
                 <div className="pc-card-overlay">
-                  <div className="pc-card-icon-overlay">{course.icon}</div>
+                  <div className="pc-card-icon-overlay" style={{ color: course.accent }}>{course.icon}</div>
                 </div>
               </div>
 
               <div className="pc-card-body">
                 <div className="pc-card-meta">
                   <span className="pc-meta-item">
-                    <FiClock /> {course.duration}
+                    <FiClock style={{ color: course.accent }} /> {course.duration}
                   </span>
                   <span className="pc-meta-item">
-                    <FiUsers /> {course.students}
+                    <FiUsers style={{ color: course.accent }} /> {course.students}
                   </span>
                 </div>
 
@@ -118,7 +138,7 @@ const Classes = () => {
                     <FiStar className="star-fill" />
                     <span>{course.rating}</span>
                   </div>
-                   <Link to={`/classes?type=${course.accent}`} className="pc-enroll-btn">
+                   <Link to={`/classes`} className="pc-enroll-btn" style={{ color: course.accent }}>
                     {t('details') || 'Details'} <FiArrowRight />
                   </Link>
                 </div>

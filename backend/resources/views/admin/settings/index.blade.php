@@ -383,11 +383,13 @@
                                              <li class="nav-item"><a href="#hero" data-toggle="tab" class="nav-link active show">Hero Section</a></li>
                                              <li class="nav-item"><a href="#topbar_header" data-toggle="tab" class="nav-link">Topbar & Header</a></li>
                                              <li class="nav-item"><a href="#stats" data-toggle="tab" class="nav-link">Stats</a></li>
-                                           
-                                             <li class="nav-item"><a href="#onboarding" data-toggle="tab" class="nav-link">Onboarding Section</a></li>
-                                             <li class="nav-item"><a href="#mobileapp" data-toggle="tab" class="nav-link">Mobile App Section</a></li>
+                                            <li class="nav-item"><a href="#classes_list" data-toggle="tab" class="nav-link">Classes Section</a></li>
                                              <li class="nav-item"><a href="#whychooseus" data-toggle="tab" class="nav-link">Why Choose Us</a></li>
-                                             <li class="nav-item"><a href="#classes_list" data-toggle="tab" class="nav-link">Classes Section</a></li>
+                                               <li class="nav-item"><a href="#mobileapp" data-toggle="tab" class="nav-link">Mobile App Section</a></li>
+                                             <li class="nav-item"><a href="#onboarding" data-toggle="tab" class="nav-link">Onboarding Section</a></li>
+                                           
+                                            
+                                            
                                           
                                     
                                                <li class="nav-item"><a href="#testimonials" data-toggle="tab" class="nav-link">Testimonials Section</a></li>
@@ -680,19 +682,52 @@
                                                          </div>
 
                                                          <hr>
-                                                         <h5 class="mb-3 text-primary">Download Links</h5>
+                                                         <h5 class="mb-3 text-primary">Download Links & Floating Labels</h5>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">App Store Link</label>
-                                                             <div class="col-sm-9">
+                                                             <div class="col-sm-6">
                                                                  <input type="text" name="mobile_app_store_link" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_app_store_link', '#') }}">
+                                                             </div>
+                                                             <div class="col-sm-3">
+                                                                 <select name="mobile_app_store_show" class="form-control">
+                                                                     <option value="on" {{ \App\Models\SiteSetting::get('mobile_app_store_show', 'on') === 'on' ? 'selected' : '' }}>Show (On)</option>
+                                                                     <option value="off" {{ \App\Models\SiteSetting::get('mobile_app_store_show', 'on') === 'off' ? 'selected' : '' }}>Hide (Off)</option>
+                                                                 </select>
                                                              </div>
                                                          </div>
                                                          <div class="form-group row">
                                                              <label class="col-sm-3 col-form-label">Google Play Link</label>
-                                                             <div class="col-sm-9">
+                                                             <div class="col-sm-6">
                                                                  <input type="text" name="mobile_play_store_link" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_play_store_link', '#') }}">
                                                              </div>
+                                                             <div class="col-sm-3">
+                                                                 <select name="mobile_play_store_show" class="form-control">
+                                                                     <option value="on" {{ \App\Models\SiteSetting::get('mobile_play_store_show', 'on') === 'on' ? 'selected' : '' }}>Show (On)</option>
+                                                                     <option value="off" {{ \App\Models\SiteSetting::get('mobile_play_store_show', 'on') === 'off' ? 'selected' : '' }}>Hide (Off)</option>
+                                                                 </select>
+                                                             </div>
                                                          </div>
+                                                         <div class="form-group row">
+                                                             <label class="col-sm-3 col-form-label">Satisfaction Card Label</label>
+                                                             <div class="col-sm-9">
+                                                                 <input type="text" name="mobile_card_satisfaction" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_card_satisfaction', '99% Student Satisfaction') }}">
+                                                             </div>
+                                                         </div>
+                                                         <div class="form-group row">
+                                                             <label class="col-sm-3 col-form-label">Live Sessions Card Label</label>
+                                                             <div class="col-sm-9">
+                                                                 <input type="text" name="mobile_card_sessions" class="form-control" value="{{ \App\Models\SiteSetting::get('mobile_card_sessions', '24/7 Live Sessions') }}">
+                                                             </div>
+                                                         </div>
+                                                         <hr>
+                                                         <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                                                             App Screens Manager (Phone Mockup)
+                                                             <button type="button" id="add-mobile-screen" class="btn btn-info btn-xs">+ Add Screen</button>
+                                                         </h5>
+                                                         <div id="mobile-screens-repeater">
+                                                             <!-- Screens will be injected here by JS -->
+                                                         </div>
+                                                         <textarea name="mobile_screens" id="mobile_screens_hidden" class="d-none">{{ \App\Models\SiteSetting::get('mobile_screens', '[]') }}</textarea>
                                                          <hr>
                                                          <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
                                                              Mobile App Features
@@ -702,11 +737,52 @@
                                                              <!-- Features will be injected here by JS -->
                                                          </div>
                                                          <textarea name="mobile_features" id="mobile_features_hidden" class="d-none">{{ \App\Models\SiteSetting::get('mobile_features', '[]') }}</textarea>
+                                                          <button type="submit" class="btn btn-primary mt-3">Save Mobile App Changes</button>
                                                      </form>
                                                  </div>
                                              </div>
 
                                                                                          <!-- Why Choose Us Section -->
+                                                                                          <!-- Onboarding Section -->
+                                             <div id="onboarding" class="tab-pane fade">
+                                                 <div class="pt-4">
+                                                     <form action="{{ route('admin.settings.store') }}" method="POST">
+                                                         @csrf
+                                                         <h5 class="mb-3 text-primary">Header Settings</h5>
+                                                         <div class="form-group row">
+                                                             <label class="col-sm-3 col-form-label">Onboarding Title</label>
+                                                             <div class="col-sm-9">
+                                                                 <input type="text" name="onboarding_title" class="form-control" value="{{ \App\Models\SiteSetting::get('onboarding_title', 'How It Works') }}">
+                                                             </div>
+                                                         </div>
+                                                         <div class="form-group row">
+                                                             <label class="col-sm-3 col-form-label">Onboarding Subtitle</label>
+                                                             <div class="col-sm-9">
+                                                                 <textarea name="onboarding_subtitle" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('onboarding_subtitle', 'Simple steps to start your education.') }}</textarea>
+                                                             </div>
+                                                         </div>
+
+                                                         <hr>
+                                                         <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                                                             Steps Manager
+                                                             <button type="button" id="add-onboarding-step" class="btn btn-info btn-xs">+ Add Step</button>
+                                                         </h5>
+
+                                                         <div id="onboarding-repeater">
+                                                             <!-- Steps will be injected here by JS -->
+                                                         </div>
+
+                                                         <textarea name="onboarding_steps" id="onboarding_steps_hidden" class="d-none">{{ \App\Models\SiteSetting::get('onboarding_steps', '[]') }}</textarea>
+
+                                                         <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
+                                                             <b>Note:</b> These are the steps shown in the "How It Works" section.
+                                                         </div>
+
+                                                         <button type="submit" class="btn btn-primary mt-3">Save Onboarding Changes</button>
+                                                     </form>
+                                                 </div>
+                                             </div>
+
                                              <div id="whychooseus" class="tab-pane fade">
                                                  <div class="pt-4">
                                                      <form action="{{ route('admin.settings.store') }}" method="POST">
@@ -727,16 +803,23 @@
 
                                                          <hr>
                                                          <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
-                                                             Reasons/Features Manager
+                                                             Reasons/Features Manager (Right Cards)
                                                              <button type="button" id="add-why-item" class="btn btn-info btn-xs">+ Add Reason</button>
                                                          </h5>
-
                                                          <div id="why-repeater">
                                                              <!-- Items will be injected here by JS -->
                                                          </div>
-
-                                                         <!-- Hidden textarea to store JSON for submission -->
                                                          <textarea name="why_reasons" id="why_reasons_hidden" class="d-none">{{ \App\Models\SiteSetting::get('why_reasons', '[]') }}</textarea>
+
+                                                         <hr>
+                                                         <h5 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                                                             Benefits Manager (Left Bullet Points)
+                                                             <button type="button" id="add-why-benefit" class="btn btn-info btn-xs">+ Add Benefit</button>
+                                                         </h5>
+                                                         <div id="why-benefits-repeater">
+                                                             <!-- Benefits will be injected here by JS -->
+                                                         </div>
+                                                         <textarea name="why_benefits" id="why_benefits_hidden" class="d-none">{{ \App\Models\SiteSetting::get('why_benefits', '[]') }}</textarea>
 
                                                          <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                              <b>Note:</b> These are the 3 cards shown in the "Why EduLearn?" section.
@@ -776,8 +859,38 @@
                                                              <!-- Items will be injected here by JS -->
                                                          </div>
 
+                                                         @php
+                                                             $typesJson = \App\Models\SiteSetting::get('classes_types', '[]');
+                                                             $typesArr = json_decode($typesJson, true);
+                                                             if (empty($typesArr)) {
+                                                                 // Migrate from old separate keys or provide defaults
+                                                                 $typesArr = [
+                                                                     [
+                                                                         'title' => 'Direct Class',
+                                                                         'description' => \App\Models\SiteSetting::get('classes_direct_description', 'Face-to-face academic support.'),
+                                                                         'color' => '#EB8153',
+                                                                         'stars' => 5,
+                                                                         'features' => \App\Models\SiteSetting::get('classes_direct_features', "Expert Tutors\nSmall Groups"),
+                                                                         'subjects' => \App\Models\SiteSetting::get('classes_direct_subjects', 'Maths, Science'),
+                                                                         'image' => '',
+                                                                         'format' => 'Face-to-Face'
+                                                                     ],
+                                                                     [
+                                                                         'title' => 'Online Class',
+                                                                         'description' => \App\Models\SiteSetting::get('classes_online_description', 'Live interactive sessions.'),
+                                                                         'color' => '#667eea',
+                                                                         'stars' => 5,
+                                                                         'features' => \App\Models\SiteSetting::get('classes_online_features', "Live Records\nDigital Resources"),
+                                                                         'subjects' => \App\Models\SiteSetting::get('classes_online_subjects', 'Physics, Chemistry'),
+                                                                         'image' => '',
+                                                                         'format' => 'Live Online'
+                                                                     ]
+                                                                 ];
+                                                                 $typesJson = json_encode($typesArr);
+                                                             }
+                                                         @endphp
                                                          <!-- Hidden textarea to store JSON for submission -->
-                                                         <textarea name="classes_types" id="classes_types_hidden" class="d-none">{{ \App\Models\SiteSetting::get('classes_types', '[]') }}</textarea>
+                                                         <textarea name="classes_types" id="classes_types_hidden" class="d-none">{{ $typesJson }}</textarea>
 
                                                          <div class="alert alert-info py-2 mt-3" style="font-size: 0.8125rem;">
                                                              <b>Note:</b> These are the cards shown in the "Explore & Enroll" section.
@@ -1158,9 +1271,10 @@
                 const items = [];
                 document.querySelectorAll('.onboarding-item').forEach(el => {
                     items.push({
-                        number: el.querySelector('.o-number').value,
+                        id: el.querySelector('.o-number').value,
                         title: el.querySelector('.o-title').value,
-                        description: el.querySelector('.o-description').value
+                        description: el.querySelector('.o-description').value,
+                        icon: el.querySelector('.o-icon').value
                     });
                 });
                 onboardingHidden.value = JSON.stringify(items);
@@ -1168,6 +1282,20 @@
 
             function createOnboardingItem(data = {}) {
                 const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                const commonIcons = [
+                    {val: 'https://cdn.lordicon.com/wjyqkiew.json', label: 'Registration (Pencil)'},
+                    {val: 'https://cdn.lordicon.com/zpxybbhl.json', label: 'Consultation (User)'},
+                    {val: 'https://cdn.lordicon.com/dxjqoygy.json', label: 'Learning (Books)'},
+                    {val: 'https://cdn.lordicon.com/yqzmiobz.json', label: 'Checkmark'},
+                    {val: 'https://cdn.lordicon.com/osuxyevn.json', label: 'Instruction'}
+                ];
+                let iconOptions = '<option value="">-- Select Icon --</option>';
+                let isCustomIcon = data.icon && !commonIcons.some(i => i.val === data.icon);
+                commonIcons.forEach(i => {
+                    iconOptions += `<option value="${i.val}" ${data.icon === i.val ? 'selected' : ''}>${i.label}</option>`;
+                });
+                iconOptions += `<option value="custom" ${isCustomIcon ? 'selected' : ''}>Custom URL...</option>`;
+
                 const html = `
                     <div class="testimonial-item onboarding-item" id="onb-${id}">
                         <span class="remove-testimonial" onclick="document.getElementById('onb-${id}').remove(); window.syncOnboarding();">
@@ -1175,12 +1303,19 @@
                         </span>
                         <div class="row">
                             <div class="col-md-2 mb-2">
-                                <label>Step Number</label>
-                                <input type="text" class="form-control form-control-sm o-number" value="${data.number || ''}" placeholder="e.g. 01" oninput="window.syncOnboarding()">
+                                <label>Step # (e.g. 01)</label>
+                                <input type="text" class="form-control form-control-sm o-number" value="${data.id || ''}" placeholder="01" oninput="window.syncOnboarding()">
                             </div>
-                            <div class="col-md-10 mb-2">
+                            <div class="col-md-5 mb-2">
                                 <label>Step Title</label>
                                 <input type="text" class="form-control form-control-sm o-title" value="${data.title || ''}" placeholder="e.g. Register" oninput="window.syncOnboarding()">
+                            </div>
+                            <div class="col-md-5 mb-2">
+                                <label>LordIcon Selection</label>
+                                <select class="form-control form-control-sm o-icon-select" onchange="const inp = document.getElementById('o-icon-custom-${id}'); if(this.value === 'custom'){ inp.classList.remove('d-none'); } else { inp.classList.add('d-none'); inp.value = this.value; window.syncOnboarding(); }">
+                                    ${iconOptions}
+                                </select>
+                                <input type="text" id="o-icon-custom-${id}" class="form-control form-control-sm o-icon mt-1 ${isCustomIcon ? '' : 'd-none'}" value="${data.icon || 'https://cdn.lordicon.com/wjyqkiew.json'}" placeholder="Paste LordIcon JSON URL here" oninput="window.syncOnboarding()">
                             </div>
                             <div class="col-md-12">
                                 <label>Description</label>
@@ -1206,7 +1341,8 @@
                         title: el.querySelector('.w-title').value,
                         subtitle: el.querySelector('.w-subtitle').value,
                         description: el.querySelector('.w-description').value,
-                        gradient: el.querySelector('.w-gradient').value
+                        gradient: el.querySelector('.w-gradient').value,
+                        icon: el.querySelector('.w-icon').value
                     });
                 });
                 whyHidden.value = JSON.stringify(items);
@@ -1220,25 +1356,47 @@
                     gradientOptions += `<option value="${g}" ${data.gradient === g ? 'selected' : ''}>${g.replace('-', ' ')}</option>`;
                 });
 
+                const commonIcons = [
+                    {val: 'https://cdn.lordicon.com/wxnxiano.json', label: 'படிப்பிற்கு (Books)'},
+                    {val: 'https://cdn.lordicon.com/nocovwne.json', label: 'பரிசிற்கு (Award)'},
+                    {val: 'https://cdn.lordicon.com/yqzmiobz.json', label: 'சரியான குறி (Checkmark)'},
+                    {val: 'https://cdn.lordicon.com/osuxyevn.json', label: 'ஆசிரியருக்கு (Instruction)'},
+                    {val: 'https://cdn.lordicon.com/qhviklyi.json', label: 'பணத்திற்கு (Pricing)'},
+                    {val: 'https://cdn.lordicon.com/hrjifpbq.json', label: 'உதவிக்கு (Support)'}
+                ];
+                let iconOptions = '<option value="">-- Select Icon --</option>';
+                let isCustomIcon = data.icon && !commonIcons.some(i => i.val === data.icon);
+                commonIcons.forEach(i => {
+                    iconOptions += `<option value="${i.val}" ${data.icon === i.val ? 'selected' : ''}>${i.label}</option>`;
+                });
+                iconOptions += `<option value="custom" ${isCustomIcon ? 'selected' : ''}>Custom URL...</option>`;
+
                 const html = `
                     <div class="testimonial-item why-item" id="why-${id}">
                         <span class="remove-testimonial" onclick="document.getElementById('why-${id}').remove(); window.syncWhy();">
                             <i class="flaticon-381-close"></i>
                         </span>
                         <div class="row">
-                            <div class="col-md-5 mb-2">
+                            <div class="col-md-4 mb-2">
                                 <label>Title</label>
                                 <input type="text" class="form-control form-control-sm w-title" value="${data.title || ''}" placeholder="e.g. Quality Learning" oninput="window.syncWhy()">
                             </div>
-                            <div class="col-md-4 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label>Subtitle</label>
                                 <input type="text" class="form-control form-control-sm w-subtitle" value="${data.subtitle || ''}" placeholder="e.g. Proven Results" oninput="window.syncWhy()">
                             </div>
-                            <div class="col-md-3 mb-2">
-                                <label>Gradient Color</label>
+                            <div class="col-md-2 mb-2">
+                                <label>Gradient</label>
                                 <select class="form-control form-control-sm w-gradient" onchange="window.syncWhy()">
                                     ${gradientOptions}
                                 </select>
+                            </div>
+                             <div class="col-md-3 mb-2">
+                                <label>LordIcon Selection</label>
+                                <select class="form-control form-control-sm w-icon-select" onchange="const inp = document.getElementById('w-icon-custom-${id}'); if(this.value === 'custom'){ inp.classList.remove('d-none'); } else { inp.classList.add('d-none'); inp.value = this.value; window.syncWhy(); }">
+                                    ${iconOptions}
+                                </select>
+                                <input type="text" id="w-icon-custom-${id}" class="form-control form-control-sm w-icon mt-1 ${isCustomIcon ? '' : 'd-none'}" value="${data.icon || ''}" placeholder="Paste LordIcon JSON URL here" oninput="window.syncWhy()">
                             </div>
                             <div class="col-md-12">
                                 <label>Description</label>
@@ -1250,6 +1408,45 @@
                 whyRepeater.insertAdjacentHTML('beforeend', html);
             }
 
+            // --- Why Benefits Repeater logic ---
+            const whyBenefitsHidden = document.getElementById('why_benefits_hidden');
+            const addWhyBenefitBtn = document.getElementById('add-why-benefit');
+            const whyBenefitsRepeater = document.getElementById('why-benefits-repeater');
+            let whyBenefitsArr = [];
+            try { whyBenefitsArr = JSON.parse(whyBenefitsHidden.value || '[]'); } catch (e) { whyBenefitsArr = []; }
+
+            function createWhyBenefitItem(data = {}) {
+                const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                const html = `
+                    <div class="testimonial-item why-benefit-item" id="wb-${id}">
+                        <span class="remove-testimonial" onclick="document.getElementById('wb-${id}').remove(); window.syncWhyBenefits();">
+                            <i class="flaticon-381-close"></i>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Benefit Text</label>
+                                <input type="text" class="form-control form-control-sm wb-text" value="${data.text || ''}" placeholder="e.g. Personalized Learning" oninput="window.syncWhyBenefits()">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                whyBenefitsRepeater.insertAdjacentHTML('beforeend', html);
+            }
+
+            function syncWhyBenefits() {
+                const items = [];
+                document.querySelectorAll('.why-benefit-item').forEach(el => {
+                    items.push({
+                        text: el.querySelector('.wb-text').value
+                    });
+                });
+                whyBenefitsHidden.value = JSON.stringify(items);
+            }
+
+            window.syncWhyBenefits = syncWhyBenefits;
+            if (whyBenefitsArr.length > 0) whyBenefitsArr.forEach(b => createWhyBenefitItem(b));
+            addWhyBenefitBtn.addEventListener('click', () => { createWhyBenefitItem(); syncWhyBenefits(); });
+
             // --- Classes Repeater Logic ---
             const classesHidden = document.getElementById('classes_types_hidden');
             const addClassBtn = document.getElementById('add-class-type');
@@ -1260,48 +1457,114 @@
             function syncClasses() {
                 const items = [];
                 document.querySelectorAll('.class-type-item').forEach(el => {
+                    const featEl = el.querySelector('.c-features');
+                    const subjEl = el.querySelector('.c-subjects');
                     items.push({
                         title: el.querySelector('.c-title').value,
                         description: el.querySelector('.c-description').value,
-                        color: el.querySelector('.c-color').value
+                        color: el.querySelector('.c-color').value,
+                        image: el.querySelector('.c-image').value,
+                        stars: el.querySelector('.c-stars').value,
+                        features: featEl ? featEl.value : '',
+                        subjects: subjEl ? subjEl.value : ''
                     });
                 });
                 classesHidden.value = JSON.stringify(items);
+                console.log("Classes synced:", classesHidden.value);
             }
 
             function createClassTypeItem(data = {}) {
                 const id = Date.now() + Math.random().toString(36).substr(2, 9);
-                const colors = ['gradient-1', 'gradient-2', 'gradient-3'];
+                const colors = [
+                    {val: '#EB8153', label: 'Orange (Direct)'},
+                    {val: '#667eea', label: 'Blue (Online)'},
+                    {val: '#764ba2', label: 'Purple'},
+                    {val: '#2ecc71', label: 'Green'},
+                    {val: '#e74c3c', label: 'Red'}
+                ];
                 let colorOptions = '';
                 colors.forEach(c => {
-                    colorOptions += `<option value="${c}" ${data.color === c ? 'selected' : ''}>${c.replace('-', ' ')}</option>`;
+                    colorOptions += `<option value="${c.val}" ${data.color === c.val ? 'selected' : ''}>${c.label}</option>`;
                 });
 
                 const html = `
-                    <div class="testimonial-item class-type-item" id="cls-${id}">
-                        <span class="remove-testimonial" onclick="document.getElementById('cls-${id}').remove(); window.syncClasses();">
-                            <i class="flaticon-381-close"></i>
-                        </span>
+                    <div class="testimonial-item class-type-item mb-4" id="cls-${id}" style="border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; position: relative; background: rgba(255,255,255,0.02);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-white mb-0">Class Configuration</h6>
+                            <button type="button" class="btn btn-danger btn-xs" onclick="if(confirm('Delete this class type?')){document.getElementById('cls-${id}').remove(); window.syncClasses();}">
+                                <i class="fa fa-trash mr-1"></i> 
+                            </button>
+                        </div>
                         <div class="row">
-                            <div class="col-md-8 mb-2">
-                                <label>Course Title</label>
-                                <input type="text" class="form-control form-control-sm c-title" value="${data.title || ''}" placeholder="e.g. Sri Lankan Syllabus" oninput="window.syncClasses()">
+                            <div class="col-md-3 mb-3">
+                                <label>Course Image</label>
+                                <div class="clickable-logo-preview mb-2" onclick="document.getElementById('img-input-${id}').click()" style="width: 100%; height: 6.25rem;">
+                                    <img src="${data.image || ''}" id="preview-cls-${id}" style="max-height: 100%; max-width: 100%; ${data.image ? '' : 'display:none;'}">
+                                    <div class="logo-preview-overlay" style="${data.image ? 'opacity:0;' : 'opacity:1;'}">
+                                        <i class="fa fa-camera"></i> ${data.image ? 'Change' : 'Upload'}
+                                    </div>
+                                </div>
+                                <input type="file" id="img-input-${id}" class="d-none" onchange="window.uploadClassImage(this, '${id}')" accept="image/*">
+                                <input type="hidden" class="c-image" value="${data.image || ''}">
+                                <div id="status-cls-${id}" class="help-text text-center"></div>
                             </div>
-                            <div class="col-md-4 mb-2">
-                                <label>Color Theme</label>
-                                <select class="form-control form-control-sm c-color" onchange="window.syncClasses()">
-                                    ${colorOptions}
-                                </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label>Description</label>
-                                <textarea class="form-control form-control-sm c-description" rows="2" placeholder="Describe this course type..." oninput="window.syncClasses()">${data.description || ''}</textarea>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label>Course Title</label>
+                                        <input type="text" class="form-control form-control-sm c-title" value="${data.title || ''}" placeholder="e.g. Sri Lankan Syllabus" oninput="window.syncClasses()">
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label>Color Theme</label>
+                                        <select class="form-control form-control-sm c-color" onchange="window.syncClasses()">
+                                            ${colorOptions}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label>Star Rating</label>
+                                        <select class="form-control form-control-sm c-stars" onchange="window.syncClasses()">
+                                            <option value="5" ${data.stars == 5 ? 'selected' : ''}>5 Stars</option>
+                                            <option value="4" ${data.stars == 4 ? 'selected' : ''}>4 Stars</option>
+                                            <option value="3" ${data.stars == 3 ? 'selected' : ''}>3 Stars</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12 mb-2">
+                                        <label>Description</label>
+                                        <textarea class="form-control form-control-sm c-description" rows="2" placeholder="Describe this course type..." oninput="window.syncClasses()">${data.description || ''}</textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
                 classesRepeater.insertAdjacentHTML('beforeend', html);
             }
+
+            window.uploadClassImage = function(input, id) {
+                if (!input.files || !input.files[0]) return;
+                const statusEl = document.getElementById(`status-cls-${id}`);
+                const previewEl = document.getElementById(`preview-cls-${id}`);
+                const hiddenInput = document.querySelector(`#cls-${id} .c-image`);
+                const overlay = document.querySelector(`#cls-${id} .logo-preview-overlay`);
+                const formData = new FormData();
+                formData.append('image', input.files[0]);
+                formData.append('_token', '{{ csrf_token() }}');
+                statusEl.innerHTML = '<span class="text-info">Uploading...</span>';
+                fetch('{{ route("admin.settings.upload") }}', {
+                    method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        previewEl.src = data.path; 
+                        previewEl.style.display = 'block';
+                        hiddenInput.value = data.path;
+                        overlay.style.opacity = '0';
+                        statusEl.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Uploaded</span>';
+                        window.syncClasses();
+                    } else { alert(data.message || 'Upload failed'); statusEl.innerHTML = ''; }
+                }).catch(e => { console.error(e); statusEl.innerHTML = ''; });
+            };
 
             window.syncTestimonials = syncTestimonials;
             window.syncOnboarding = syncOnboarding;
@@ -1375,6 +1638,50 @@
                 `;
                 mobileRepeater.insertAdjacentHTML('beforeend', html);
             }
+
+            // --- Mobile Screens Repeater Logic ---
+            const mobileScreensHidden = document.getElementById('mobile_screens_hidden');
+            const addMobileScreenBtn = document.getElementById('add-mobile-screen');
+            const mobileScreensRepeater = document.getElementById('mobile-screens-repeater');
+            let mobileScreens = [];
+            try { mobileScreens = JSON.parse(mobileScreensHidden.value || '[]'); } catch (e) { mobileScreens = []; }
+
+            function syncMobileScreens() {
+                const items = [];
+                document.querySelectorAll('.mobile-screen-item').forEach(el => {
+                    items.push({
+                        title: el.querySelector('.ms-title').value,
+                        icon: el.querySelector('.ms-icon').value
+                    });
+                });
+                mobileScreensHidden.value = JSON.stringify(items);
+            }
+
+            function createMobileScreenItem(data = {}) {
+                const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                const html = `
+                    <div class="testimonial-item mobile-screen-item" id="ms-${id}">
+                        <span class="remove-testimonial" onclick="document.getElementById('ms-${id}').remove(); window.syncMobileScreens();">
+                            <i class="flaticon-381-close"></i>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label>Screen Title</label>
+                                <input type="text" class="form-control form-control-sm ms-title" value="${data.title || ''}" placeholder="e.g. Live Classes" oninput="window.syncMobileScreens()">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Icon/Emoji</label>
+                                <input type="text" class="form-control form-control-sm ms-icon" value="${data.icon || '📚'}" placeholder="Emoji or Icon" oninput="window.syncMobileScreens()">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                mobileScreensRepeater.insertAdjacentHTML('beforeend', html);
+            }
+
+            window.syncMobileScreens = syncMobileScreens;
+            if (mobileScreens.length > 0) mobileScreens.forEach(s => createMobileScreenItem(s));
+            addMobileScreenBtn.addEventListener('click', () => { createMobileScreenItem(); syncMobileScreens(); });
 
             // --- Student Toolkit Repeater Logic ---
             const toolkitHidden = document.getElementById('footer_toolkit_items_hidden');

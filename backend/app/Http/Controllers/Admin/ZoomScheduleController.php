@@ -27,7 +27,10 @@ class ZoomScheduleController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $schedules = ZoomSchedule::with(['creator', 'teachers'])->latest('scheduled_at')->paginate(15);
+        $schedules = ZoomSchedule::with(['creator', 'teachers'])
+            ->where('scheduled_at', '>=', now()->subDay()) // Only show classes from today onwards by default
+            ->orderBy('scheduled_at', 'asc')
+            ->paginate(15);
         return view('admin.zoom.index', compact('schedules'));
     }
 

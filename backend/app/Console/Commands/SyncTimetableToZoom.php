@@ -34,21 +34,21 @@ class SyncTimetableToZoom extends Command
         $timetables = Timetable::where('is_active', true)->get();
 
         foreach ($timetables as $timetable) {
-            // Find the next occurrence of the day_of_week in local timezone
-            $nextDate = Carbon::parse("next {$timetable->day_of_week}", 'Asia/Colombo')->setTimeFromTimeString($timetable->start_time);
+            // Find the next occurrence of the day_of_week in application timezone (Asia/Colombo)
+            $nextDate = Carbon::parse("next {$timetable->day_of_week}")->setTimeFromTimeString($timetable->start_time);
             
             // If today is the day and time hasn't passed, use today
-            if (Carbon::now('Asia/Colombo')->isDayOfWeek(Carbon::parse($timetable->day_of_week)->dayOfWeek) && Carbon::now('Asia/Colombo')->lt($nextDate->copy()->subWeek())) {
+            if (Carbon::now()->isDayOfWeek(Carbon::parse($timetable->day_of_week)->dayOfWeek) && Carbon::now()->lt($nextDate->copy()->subWeek())) {
                  // skip
             }
             
             // Actually, Carbon 'next Monday' works well. 
             // We want to check for the next 90 days (approx 3 months).
             for ($i = 0; $i < 90; $i++) {
-                $checkDate = Carbon::today('Asia/Colombo')->addDays($i);
+                $checkDate = Carbon::today()->addDays($i);
                 if ($checkDate->format('l') === $timetable->day_of_week) {
-                    // Force UTC conversion immediately
-                    $scheduledAt = Carbon::createFromFormat('Y-m-d H:i:s', $checkDate->format('Y-m-d') . ' ' . $timetable->start_time, 'Asia/Colombo')->setTimezone('UTC');
+                    // Use Application Timezone (Asia/Colombo)
+                    $scheduledAt = Carbon::createFromFormat('Y-m-d H:i:s', $checkDate->format('Y-m-d') . ' ' . $timetable->start_time);
                     
                     // Skip if time has passed
                     if ($scheduledAt->isPast()) continue;

@@ -80,17 +80,19 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $selectedSubjects = [];
+        $trimmedSubjects = trim($subjects);
+        $selectedSubjectsRaw = [];
         try {
-            $trimmedSubjects = trim($subjects);
             if (str_starts_with($trimmedSubjects, '[')) {
-                $selectedSubjects = json_decode($trimmedSubjects, true);
+                $selectedSubjectsRaw = json_decode($trimmedSubjects, true);
             } else {
-                $selectedSubjects = array_filter(array_map('trim', explode(',', $trimmedSubjects)));
+                $selectedSubjectsRaw = array_map('trim', explode(',', $trimmedSubjects));
             }
         } catch (\Exception $e) {
-            $selectedSubjects = array_filter(array_map('trim', explode(',', $subjects)));
+            $selectedSubjectsRaw = array_map('trim', explode(',', $subjects));
         }
+
+        $selectedSubjects = array_unique(array_filter($selectedSubjectsRaw));
 
         if (empty($selectedSubjects)) {
             \Illuminate\Support\Facades\Log::warning("No subjects parsed for User ID: {$user->id}");

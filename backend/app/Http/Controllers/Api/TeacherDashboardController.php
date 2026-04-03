@@ -30,7 +30,7 @@ class TeacherDashboardController extends Controller
             })->count();
 
         // Upcoming classes (next 7 days)
-        $upcomingClasses = ZoomSchedule::where('scheduled_at', '>', now())
+        $upcomingClasses = ZoomSchedule::where('scheduled_at', '>=', now()->startOfDay())
             ->where('scheduled_at', '<=', now()->addDays(7))
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
@@ -66,7 +66,7 @@ class TeacherDashboardController extends Controller
     {
         $user = $request->user();
         
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now())
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->startOfDay())
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
                     ->orWhereDoesntHave('teachers');

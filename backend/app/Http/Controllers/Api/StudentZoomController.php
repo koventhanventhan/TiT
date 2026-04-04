@@ -38,11 +38,12 @@ class StudentZoomController extends Controller
             ]);
         }
 
-        $startOfDay = Carbon::now()->startOfDay();
+        // Only show classes that started in the last 2 hours or are starting later today
+        $startBuffer = Carbon::now()->subHours(2);
         $endOfDay = Carbon::now()->endOfDay();
 
-        $schedules = ZoomSchedule::whereDate('scheduled_at', '>=', $startOfDay)
-            ->whereDate('scheduled_at', '<=', $endOfDay)
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
+            ->where('scheduled_at', '<=', $endOfDay)
             ->orderBy('scheduled_at')
             ->get();
 
@@ -178,8 +179,9 @@ class StudentZoomController extends Controller
             return response()->json([]);
         }
 
-        // Show classes from the start of today onwards, so past classes for the same day are still visible
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->startOfDay())
+        // Only show today's remaining schedules
+        $schedules = ZoomSchedule::whereDate('scheduled_at', now())
+            ->where('scheduled_at', '>=', now())
             ->orderBy('scheduled_at')
             ->get();
 

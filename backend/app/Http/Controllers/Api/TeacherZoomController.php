@@ -27,11 +27,11 @@ class TeacherZoomController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $startOfDay = Carbon::now()->startOfDay();
+        $startBuffer = Carbon::now()->subHours(2);
         $endOfDay = Carbon::now()->endOfDay();
 
-        $schedules = ZoomSchedule::whereDate('scheduled_at', '>=', $startOfDay)
-            ->whereDate('scheduled_at', '<=', $endOfDay)
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
+            ->where('scheduled_at', '<=', $endOfDay)
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
                     ->orWhereDoesntHave('teachers');

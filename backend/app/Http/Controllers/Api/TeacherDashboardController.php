@@ -29,9 +29,9 @@ class TeacherDashboardController extends Controller
                     ->orWhereDoesntHave('teachers');
             })->count();
 
-        // Today's upcoming classes (remaining today)
+        // Today's classes that are either upcoming or started in the last 2 hours
         $upcomingClasses = ZoomSchedule::whereDate('scheduled_at', $today)
-            ->where('scheduled_at', '>=', now())
+            ->where('scheduled_at', '>=', now()->subHours(2))
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
                     ->orWhereDoesntHave('teachers');
@@ -66,9 +66,9 @@ class TeacherDashboardController extends Controller
     {
         $user = $request->user();
         
-        // Only show today's upcoming schedules
+        // Only show today's schedules (upcoming or started in the last 2 hours)
         $schedules = ZoomSchedule::whereDate('scheduled_at', now())
-            ->where('scheduled_at', '>=', now())
+            ->where('scheduled_at', '>=', now()->subHours(2))
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
                     ->orWhereDoesntHave('teachers');

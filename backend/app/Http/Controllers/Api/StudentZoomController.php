@@ -179,9 +179,9 @@ class StudentZoomController extends Controller
             return response()->json([]);
         }
 
-        // Only show today's remaining schedules
+        // Only show today's schedules (upcoming or started in the last 2 hours)
         $schedules = ZoomSchedule::whereDate('scheduled_at', now())
-            ->where('scheduled_at', '>=', now())
+            ->where('scheduled_at', '>=', now()->subHours(2))
             ->orderBy('scheduled_at')
             ->get();
 

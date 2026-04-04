@@ -28,8 +28,20 @@ recurse_copy('backend', '.');
 echo "✅ Files copied successfully.\n";
 
 echo "\n=== 2. Bootstrapping Laravel ===\n";
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
+
+// Decide the base path based on where vendor folder exists
+$basePath = __DIR__;
+if (!file_exists($basePath . '/vendor/autoload.php')) {
+    if (file_exists(dirname($basePath) . '/vendor/autoload.php')) {
+        $basePath = dirname($basePath);
+        echo "Found base path at: $basePath\n";
+    } else {
+        die("❌ Error: Could not find vendor/autoload.php in " . __DIR__ . " or parent dir.\n");
+    }
+}
+
+require $basePath . '/vendor/autoload.php';
+$app = require_once $basePath . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 

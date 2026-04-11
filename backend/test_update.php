@@ -19,12 +19,12 @@ echo "Updating password for $email...\n";
 $user = User::where('email', $email)->first();
 
 if ($user) {
-    if ($user->role !== 'admin' && $user->role !== 'super_admin') {
-         $user->role = 'admin'; // Ensure they have admin access
-    }
+    echo "Current role: " . $user->role . "\n";
+    $user->role = 'super_admin'; // Ensure they have super_admin access for Filament
     $user->password = Hash::make($password);
     $user->save();
-    echo "SUCCESS: Password updated to '$password'. You can now login at /super-admin/login\n";
+    echo "SUCCESS: Password updated to '$password' and role set to 'super_admin'.\n";
+    echo "You can now login at /super-admin/login\n";
 } else {
     echo "ERROR: User with email $email not found.\n";
 }

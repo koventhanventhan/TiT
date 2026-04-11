@@ -310,7 +310,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       const userData = {
         username: username,
         full_name: formData.fullName,
-        phone_number: formData.phoneNumber.trim(),
+        phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender,
         school_name: formData.schoolName,

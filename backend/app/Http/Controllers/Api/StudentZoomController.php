@@ -149,15 +149,16 @@ class StudentZoomController extends Controller
             ]
         );
 
-        // Send WhatsApp Attendance Message
+        // Send WhatsApp Attendance Message via Template
         $schedule = ZoomSchedule::find($scheduleId);
         $phone = $user->phone_number;
         if ($phone) {
-            $message = "Hello " . ($user->full_name ?? $user->name) . ",\n\n" .
-                "You have successfully joined today's class: \"" . ($schedule->title ?? 'Zoom Class') . "\".\n" .
-                "Your attendance has been marked as PRESENT. ✅\n\n" .
-                "Happy learning!";
-            $this->whatsApp->send($phone, $message);
+            $this->whatsApp->sendTemplate(
+                $phone,
+                'tit_zoom_reminder',
+                'en',
+                [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at->format('H:i')]
+            );
         }
 
         return response()->json(['message' => 'Attendance recorded and WhatsApp notification sent.']);

@@ -53,44 +53,79 @@ class SendZoomReminders extends Command
             // 1. Notify Teachers
             foreach ($schedule->teachers as $teacher) {
                 if ($teacher->phone_number) {
-                    $msg = "🔔 *Reminder: Zoom class starting in 15 mins!*\n\n" .
-                           "📝 *Class:* {$schedule->title}\n" .
-                           "⏰ *Time:* {$time}\n\n" .
-                           "🚀 *Start Class:* {$baseUrl}/teacher/schedule\n" .
-                           "🔗 *Link:* {$schedule->zoom_link}";
-                    $whatsApp->send($teacher->phone_number, $msg);
+                    $whatsApp->sendTemplate(
+                        $teacher->phone_number,
+                        'tit_zoom_reminder',
+                        'en',
+                        [$schedule->title, $time]
+                    );
                 }
             }
 
             // 2. Notify Students in the same grade
             if ($schedule->grade) {
                 $students = User::where('role', 'user')
-                    ->where('current_grade', $schedule->grade)
                     ->whereNull('deactivated_at')
                     ->get();
 
+                preg_match('/(\d+)/', $schedule->grade, $classMatch);
+                $classNum = $classMatch[1] ?? null;
+
                 foreach ($students as $student) {
-                    // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                    // 1. Grade Match
+                    $userGrade = $student->current_grade;
+                    if (!$userGrade) {
+                        $this->line("Skipping student {$student->name} (No grade set)");
+                        continue;
+                    }
+
+                    preg_match('/(\d+)/', $userGrade, $userMatch);
+                    $userNum = $userMatch[1] ?? null;
+
+                    if ($userNum === null || $classNum === null || $userNum !== $classNum) {
+                        // Silent skip for grade mismatch is fine as there are many students
+                        continue;
+                    }
+
+                    // 2. Filter by selected subjects (Robust substring match)
                     $selected = $student->selected_subjects;
                     $classSubject = trim($schedule->subject);
                     
                     if (!empty($classSubject)) {
                         $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-                        $selectedArr = array_map('trim', (array)$selectedArr);
+                        $selectedArr = array_filter(array_map('trim', (array)$selectedArr));
                         
-                        if (!in_array($classSubject, $selectedArr)) {
-                            $this->line("Skipping student {$student->name} (Subject not selected: {$classSubject})");
+                        if (empty($selectedArr)) {
+                            $this->line("Skipping student {$student->name} (No subjects selected)");
+                            continue;
+                        }
+
+                        $subjectMatch = false;
+                        foreach ($selectedArr as $studentSub) {
+                            $studentSub = trim($studentSub);
+                            if ($studentSub === $classSubject || 
+                                stripos($studentSub, $classSubject) !== false || 
+                                stripos($classSubject, $studentSub) !== false) {
+                                $subjectMatch = true;
+                                break;
+                            }
+                        }
+                        if (!$subjectMatch) {
+                            $this->line("Skipping student {$student->name} (Subject mismatch: expected '{$classSubject}')");
                             continue;
                         }
                     }
 
                     if ($student->phone_number) {
-                        $msg = "🔔 *Reminder: Your Zoom class starts in 15 mins!*\n\n" .
-                               "📝 *Class:* {$schedule->title}\n" .
-                               "⏰ *Time:* {$time}\n\n" .
-                               "🎓 *Join Class:* {$baseUrl}/student/zoom\n" .
-                               "🔗 *Link:* {$schedule->zoom_link}";
-                        $whatsApp->send($student->phone_number, $msg);
+                        $this->info("Sending message to {$student->name} ({$student->phone_number})");
+                        $whatsApp->sendTemplate(
+                            $student->phone_number,
+                            'tit_zoom_reminder',
+                            'en',
+                            [$schedule->title, $time]
+                        );
+                    } else {
+                        $this->warn("Skipping student {$student->name} (No phone number)");
                     }
                 }
             }

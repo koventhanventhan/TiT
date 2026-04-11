@@ -55,14 +55,13 @@ class CheckPayments extends Command
             if (!$phone) continue;
 
             if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
-                // Reminder Logic
-                $message = "Dear " . ($student->full_name ?? $student->name) . ",\n\n" .
-                    "This is a reminder from " . config('app.name') . ".\n" .
-                    "Your payment for " . now()->format('F Y') . " is due.\n" .
-                    "Please pay by the 5th to avoid automatic deactivation of your account.\n\n" .
-                    "If you have already paid, please ignore this message.";
-                
-                $whatsApp->send($phone, $message);
+                // Reminder via Template
+                $whatsApp->sendTemplate(
+                    $phone,
+                    'tit_payment_reminder',
+                    'en',
+                    [$student->full_name ?? $student->name, now()->format('F Y')]
+                );
                 $this->line("Sent reminder to: " . $student->email);
             } 
             
@@ -71,11 +70,12 @@ class CheckPayments extends Command
                 $student->update(['deactivated_at' => now()]);
                 $deactivatedList[] = ($student->full_name ?? $student->name) . " (" . $student->email . ")";
 
-                $message = "Dear " . ($student->full_name ?? $student->name) . ",\n\n" .
-                    "Your account at " . config('app.name') . " has been deactivated due to non-payment for " . now()->format('F Y') . ".\n" .
-                    "To reactivate your account, please complete your payment and contact Admin.";
-                
-                $whatsApp->send($phone, $message);
+                $whatsApp->sendTemplate(
+                    $phone,
+                    'tit_account_suspended',
+                    'en',
+                    [$student->full_name ?? $student->name, now()->format('F Y')]
+                );
                 $this->line("Deactivated and notified: " . $student->email);
             }
         }
@@ -87,11 +87,11 @@ class CheckPayments extends Command
                 ->first();
 
             if ($admin) {
-                $adminMessage = "Admin Notice: Payment Deactivations for " . now()->format('F Y') . "\n\n" .
-                    "The following " . count($deactivatedList) . " students have been deactivated:\n" .
-                    implode("\n", $deactivatedList);
-                
-                $whatsApp->send($admin->phone_number, $adminMessage);
+                $whatsApp->sendTemplate(
+                    $admin->phone_number,
+                    'titeducation',
+                    'en'
+                );
                 $this->info("Notified admin: " . $admin->name);
             }
         }

@@ -279,6 +279,60 @@
                         </div>
                     </div>
 
+
+
+
+ {{-- Successful Journey Section --}}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">Successful Journey Timeline</h5>
+                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('journey-container')">+ Add Year</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="journey-container">
+                                @php
+                                    $journey = json_decode(\App\Models\SiteSetting::get('about_journey', '[]'), true);
+                                    if(empty($journey)) {
+                                        $journey = [
+                                            ['year' => '2024', 'achievement' => '10,000+ Students', 'description' => 'Reached a milestone...']
+                                        ];
+                                    }
+                                @endphp
+                                @foreach($journey as $item)
+                                    <div class="dynamic-row">
+                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Year</label>
+                                                    <input type="text" name="journey_year[]" class="form-control" value="{{ $item['year'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="form-group">
+                                                    <label>Achievement</label>
+                                                    <input type="text" name="journey_achievement[]" class="form-control" value="{{ $item['achievement'] }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Description</label>
+                                                    <input type="text" name="journey_description[]" class="form-control" value="{{ $item['description'] }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="about_journey" id="about_journey_json">
+                        </div>
+                    </div>
+
+
+
+
+
+
                     {{-- Stats Section --}}
                     <div class="card">
                         <div class="card-header"><h5 class="card-title">Statistics</h5></div>
@@ -387,51 +441,7 @@
                         </div>
                     </div>
 
-                    {{-- Successful Journey Section --}}
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Successful Journey Timeline</h5>
-                            <button type="button" class="btn btn-info btn-xs" onclick="addRow('journey-container')">+ Add Year</button>
-                        </div>
-                        <div class="card-body">
-                            <div id="journey-container">
-                                @php
-                                    $journey = json_decode(\App\Models\SiteSetting::get('about_journey', '[]'), true);
-                                    if(empty($journey)) {
-                                        $journey = [
-                                            ['year' => '2024', 'achievement' => '10,000+ Students', 'description' => 'Reached a milestone...']
-                                        ];
-                                    }
-                                @endphp
-                                @foreach($journey as $item)
-                                    <div class="dynamic-row">
-                                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label>Year</label>
-                                                    <input type="text" name="journey_year[]" class="form-control" value="{{ $item['year'] }}">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <div class="form-group">
-                                                    <label>Achievement</label>
-                                                    <input type="text" name="journey_achievement[]" class="form-control" value="{{ $item['achievement'] }}">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <input type="text" name="journey_description[]" class="form-control" value="{{ $item['description'] }}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <input type="hidden" name="about_journey" id="about_journey_json">
-                        </div>
-                    </div>
+                   
 
                     {{-- Values Section --}}
                     <div class="card">

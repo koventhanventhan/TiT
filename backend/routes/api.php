@@ -136,3 +136,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/subjects/prices', [\App\Http\Controllers\Admin\SubjectController::class, 'getPrices']);
 
+// Contact form (public)
+Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'send']);
+

@@ -261,12 +261,14 @@ class RegistrationController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Send Welcome WhatsApp
+        // Send Welcome WhatsApp via Template
         if ($user->phone_number) {
-            $message = "Welcome " . $user->full_name . " to " . config('app.name') . "! 🎓\n\n" .
-                "Your registration is almost complete. Please proceed to the payment step to activate your account.\n" .
-                "Your username: " . $user->name;
-            $this->whatsApp->send($user->phone_number, $message);
+            $this->whatsApp->sendTemplate(
+                $user->phone_number,
+                'tit_welcome',
+                'en',
+                [$user->full_name ?? $user->name, $user->name]
+            );
         }
 
         return response()->json([
@@ -403,12 +405,14 @@ class RegistrationController extends Controller
             ));
         }
 
-        // Send Payment Success WhatsApp
+        // Send Payment Success WhatsApp via Template
         if ($user->phone_number) {
-            $message = "Thank you " . ($user->full_name ?? $user->name) . "!\n\n" .
-                "Your payment has been received successfully. ✅\n" .
-                "Our team will verify it and activate your account shortly. You will receive another notification once confirmed.";
-            $this->whatsApp->send($user->phone_number, $message);
+            $this->whatsApp->sendTemplate(
+                $user->phone_number,
+                'tit_payment_success',
+                'en',
+                [$user->full_name ?? $user->name]
+            );
         }
 
         return response()->json([

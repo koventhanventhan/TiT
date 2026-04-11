@@ -22,10 +22,14 @@ Artisan::command('reminders:month-end-payment', function () {
         ->whereNotNull('admin_confirmed_at')
         ->whereNotNull('phone_number')
         ->get();
-    $message = 'Please complete your payment for next month.';
     $sent = 0;
     foreach ($students as $student) {
-        if ($whatsApp->send($student->phone_number, $message)) {
+        if ($whatsApp->sendTemplate(
+            $student->phone_number,
+            'tit_payment_reminder',
+            'en',
+            [$student->full_name ?? $student->name, now()->addMonth()->format('F Y')]
+        )) {
             $sent++;
         }
     }

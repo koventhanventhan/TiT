@@ -12,7 +12,7 @@ class TestWhatsApp extends Command
      *
      * @var string
      */
-    protected $signature = 'app:test-whatsapp {phone} {message}';
+    protected $signature = 'app:test-whatsapp {phone} {template} {vars?*}';
 
     /**
      * The description of the console command.
@@ -27,11 +27,12 @@ class TestWhatsApp extends Command
     public function handle(WhatsAppService $whatsapp)
     {
         $phone = $this->argument('phone');
-        $message = $this->argument('message');
+        $template = $this->argument('template');
+        $vars = $this->argument('vars') ?? [];
 
-        $this->info("Sending message to $phone...");
+        $this->info("Sending template '$template' to $phone...");
 
-        if ($whatsapp->send($phone, $message)) {
+        if ($whatsapp->sendTemplate($phone, $template, 'en', $vars)) {
             $this->info('Message sent successfully!');
         } else {
             $this->error('Failed to send message. Check storage/logs/laravel.log for details.');

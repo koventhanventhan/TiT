@@ -200,21 +200,9 @@ const AboutPage = () => {
     galleryImages = []
   }
 
-  // Helper function to generate gallery images (minimum 10 images)
-  const generateGalleryImages = (baseImages, containerName) => {
-    let galleryImages = [...baseImages]
-
-    // If we have less than 10 images, duplicate and modify to reach minimum 10
-    while (galleryImages.length < 10 && baseImages.length > 0) {
-      const additionalImages = baseImages.map((img, index) => ({
-        image: typeof img.image === 'string' ? img.image.replace('w=400&h=300', 'w=800&h=600') : img.image,
-        title: `${containerName} ${galleryImages.length + index + 1}`
-      }))
-      galleryImages = [...galleryImages, ...additionalImages]
-    }
-
-    // Return exactly 10 images (or more if base had more)
-    return galleryImages.slice(0, Math.max(10, galleryImages.length))
+  // Helper function to generate gallery images (removed auto-duplication)
+  const generateGalleryImages = (baseImages) => {
+    return [...baseImages]
   }
 
   // Build image containers from dynamic gallery or use defaults
@@ -277,7 +265,7 @@ const AboutPage = () => {
 
   const imageContainers = imageContainersData.map(container => ({
     ...container,
-    galleryImages: generateGalleryImages(container.images, container.name)
+    galleryImages: generateGalleryImages(container.images)
   }))
 
   const handleImageClick = (containerIndex, imageIndex) => {

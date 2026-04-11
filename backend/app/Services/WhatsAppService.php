@@ -11,15 +11,23 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->driver = config('services.whatsapp.driver', 'twilio');
+        $this->driver = config('services.whatsapp.driver', 'meta');
     }
 
     /**
      * Send a WhatsApp message to the given phone number.
+     * For Meta driver: uses template messages (required by Meta for business-initiated messages).
      * Phone should be in E.164 format (e.g. +94771234567).
      */
     public function send(string $phone, string $message): bool
     {
+        if ($this->driver === 'meta') {
+            // Meta requires templates for business-initiated messages.
+            // Use titeducation template for all automated notifications.
+            $phone = $this->normalizePhone($phone, false);
+            return $this->sendMetaTemplate($phone, 'titeducation', 'en');
+        }
+
         $phone = $this->normalizePhone($phone);
 
         if ($this->driver === 'twilio') {
@@ -32,6 +40,37 @@ class WhatsAppService
 
         Log::info('WhatsApp (no driver): would send to ' . $phone . ': ' . substr($message, 0, 50) . '...');
         return true;
+    }
+
+    /**
+     * Send a WhatsApp Template message via Meta Cloud API.
+     * This is the ONLY way to send business-initiated messages via Meta.
+     *
+     * @param string $phone         Phone number (with country code e.g. 94767206279)
+     * @param string $templateName  The approved template name (e.g. 'tit_welcome')
+     * @param string $languageCode  Template language code (e.g. 'en', 'en_US')
+     * @param array  $variables     Simple array of variable values e.g. ['Kavin', 'kavin123']
+     */
+    public function sendTemplate(string $phone, string $templateName, string $languageCode = 'en', array $variables = []): bool
+    {
+        $phone = $this->normalizePhone($phone, false);
+
+        // Build Meta components from simple variables
+        $components = [];
+        if (!empty($variables)) {
+            $parameters = [];
+            foreach ($variables as $value) {
+                $parameters[] = ['type' => 'text', 'text' => (string) $value];
+            }
+            $components = [
+                [
+                    'type' => 'body',
+                    'parameters' => $parameters
+                ]
+            ];
+        }
+
+        return $this->sendMetaTemplate($phone, $templateName, $languageCode, $components);
     }
 
     /**
@@ -49,7 +88,7 @@ class WhatsAppService
         return true;
     }
 
-    protected function normalizePhone(string $phone): string
+    protected function normalizePhone(string $phone, bool $withPlus = true): string
     {
         $phone = preg_replace('/\D/', '', $phone);
         if (substr($phone, 0, 1) === '0') {
@@ -61,7 +100,74 @@ class WhatsAppService
         if (strlen($phone) === 10 && substr($phone, 0, 1) === '7') {
             $phone = '94' . $phone;
         }
-        return '+' . $phone;
+        
+        return ($withPlus ? '+' : '') . $phone;
+    }
+
+    /**
+     * Send a template message via Meta WhatsApp Cloud API.
+     */
+    protected function sendMetaTemplate(string $to, string $templateName, string $languageCode = 'en_US', array $components = []): bool
+    {
+        $token = config('services.meta_whatsapp.token');
+        $phoneNumberId = config('services.meta_whatsapp.phone_number_id');
+        $apiVersion = config('services.meta_whatsapp.api_version', 'v21.0');
+
+        if (!$token || !$phoneNumberId) {
+            Log::warning('Meta WhatsApp not configured (missing token or ID). Skipping send to ' . $to);
+            return true;
+        }
+
+        try {
+            $url = "https://graph.facebook.com/{$apiVersion}/{$phoneNumberId}/messages";
+            $recipientPhone = preg_replace('/\D/', '', $to);
+
+            $template = [
+                'name' => $templateName,
+                'language' => [
+                    'code' => $languageCode
+                ]
+            ];
+
+            // Add components if provided (for templates with variables)
+            if (!empty($components)) {
+                $template['components'] = $components;
+            }
+
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $recipientPhone,
+                'type' => 'template',
+                'template' => $template
+            ];
+
+            Log::debug('Meta WhatsApp Template Payload:', $payload);
+
+            $response = Http::withToken($token)
+                ->timeout(30)
+                ->withoutVerifying()
+                ->post($url, $payload);
+
+            if ($response->successful()) {
+                Log::info('WhatsApp template "' . $templateName . '" sent successfully to ' . $to . ' via Meta. ID: ' . ($response->json()['messages'][0]['id'] ?? 'N/A'));
+                return true;
+            }
+
+            Log::error('Meta WhatsApp template failed to send', [
+                'to' => $to,
+                'template' => $templateName,
+                'status' => $response->status(),
+                'response_body' => $response->json() ?? $response->body(),
+            ]);
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('Meta WhatsApp template send exception: ' . $e->getMessage(), [
+                'template' => $templateName,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
     }
 
     protected function sendViaTwilio(string $to, string $body, bool $isWhatsApp = true): bool

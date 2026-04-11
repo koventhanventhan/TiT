@@ -174,12 +174,12 @@ class StudentController extends Controller
 
         $phone = $student->phone_number;
         if ($phone) {
-            $message = "Congratulations " . ($student->full_name ?? $student->name) . "! 🎉\n\n" .
-                "Your registration for " . config('app.name') . " has been approved by the admin.\n" .
-                "You can now log in and access your classes. Happy learning!";
-            
-            // Send via WhatsApp
-            $this->whatsApp->send($phone, $message);
+            $this->whatsApp->sendTemplate(
+                $phone,
+                'tit_admin_approved',
+                'en',
+                [$student->full_name ?? $student->name, 'admin']
+            );
         }
 
         return redirect()->route('admin.students.index')
@@ -304,9 +304,12 @@ class StudentController extends Controller
         // Send WhatsApp notification
         $phone = $student->phone_number;
         if ($phone) {
-            $message = "நிர்வாகி உங்கள் கணக்கை முடக்கியுள்ளார். (Admin has deactivated your account.) \n\n" .
-                "If you believe this is a mistake, please contact support.";
-            $this->whatsApp->send($phone, $message);
+            $this->whatsApp->sendTemplate(
+                $phone,
+                'tit_account_deactivated',
+                'en',
+                [$student->full_name ?? $student->name, 'admin']
+            );
         }
 
         return redirect()->route('admin.students.index')->with('success', 'Student deactivated and notification sent.');

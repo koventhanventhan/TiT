@@ -104,24 +104,37 @@ class ZoomScheduleController extends Controller
         // Notify Teachers
         foreach ($schedule->teachers as $teacher) {
             if ($teacher->phone_number) {
-                $link = $schedule->start_url ?: $schedule->zoom_link;
-                $msg = "Hello {$teacher->name},\n\nYou have a new Zoom class: *{$schedule->title}*\nTime: {$schedule->scheduled_at}\n\nStart Link: {$link}";
-                if ($schedule->password) {
-                    $msg .= "\nPassword: {$schedule->password}";
-                }
-                $this->whatsApp->send($teacher->phone_number, $msg);
+                $this->whatsApp->sendTemplate(
+                    $teacher->phone_number,
+                    'tit_zoom_reminder',
+                    'en',
+                    [$schedule->title, $schedule->scheduled_at->format('H:i')]
+                );
             }
         }
 
         // Notify Students in the same grade
         if ($schedule->grade) {
             $students = User::where('role', 'user')
-                ->where('current_grade', $schedule->grade)
                 ->whereNull('deactivated_at')
                 ->get();
 
+            preg_match('/(\d+)/', $schedule->grade, $classMatch);
+            $classNum = $classMatch[1] ?? null;
+
             foreach ($students as $student) {
-                // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                // 1. Grade Match
+                $userGrade = $student->current_grade;
+                if (!$userGrade) continue;
+
+                preg_match('/(\d+)/', $userGrade, $userMatch);
+                $userNum = $userMatch[1] ?? null;
+
+                if ($userNum === null || $classNum === null || $userNum !== $classNum) {
+                    continue;
+                }
+
+                // 2. Filter by selected subjects (Robust substring match)
                 $selected = $student->selected_subjects;
                 $classSubject = trim($schedule->subject);
                 
@@ -129,18 +142,28 @@ class ZoomScheduleController extends Controller
                     $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
                     $selectedArr = array_map('trim', (array)$selectedArr);
                     
-                    if (!in_array($classSubject, $selectedArr)) {
+                    $subjectMatch = false;
+                    foreach ($selectedArr as $studentSub) {
+                        $studentSub = trim($studentSub);
+                        if ($studentSub === $classSubject || 
+                            stripos($studentSub, $classSubject) !== false || 
+                            stripos($classSubject, $studentSub) !== false) {
+                            $subjectMatch = true;
+                            break;
+                        }
+                    }
+                    if (!$subjectMatch) {
                         continue;
                     }
                 }
 
                 if ($student->phone_number) {
-                    $link = $schedule->join_url ?: $schedule->zoom_link;
-                    $msg = "Hello {$student->name},\n\nNew Zoom class scheduled: *{$schedule->title}*\nTime: {$schedule->scheduled_at}\n\nJoin Link: {$link}";
-                    if ($schedule->password) {
-                        $msg .= "\nPassword: {$schedule->password}";
-                    }
-                    $this->whatsApp->send($student->phone_number, $msg);
+                    $this->whatsApp->sendTemplate(
+                        $student->phone_number,
+                        'tit_zoom_reminder',
+                        'en',
+                        [$schedule->title, $schedule->scheduled_at->format('H:i')]
+                    );
                 }
             }
         }
@@ -234,15 +257,12 @@ class ZoomScheduleController extends Controller
         // 1. Notify Assigned Teachers
         foreach ($schedule->teachers as $teacher) {
             if ($teacher->phone_number) {
-                $teacherMsg = "👨‍🏫 *Hi Teacher {$teacher->name},*\n\n" .
-                             "You have a new Zoom class scheduled.\n\n" .
-                             "📚 *Subject:* " . ($schedule->subject ?? 'General') . "\n" .
-                             "📝 *Title:* {$schedule->title}\n" .
-                             "⏰ *Time:* {$time}\n\n" .
-                             "🚀 *Start Class (via Dashboard):* {$baseUrl}/teacher/schedule\n" .
-                             "🔗 *Direct Zoom Link:* {$schedule->zoom_link}\n\n" .
-                             "Please be ready 5 minutes before the start.";
-                $this->whatsApp->send($teacher->phone_number, $teacherMsg);
+                $this->whatsApp->sendTemplate(
+                    $teacher->phone_number,
+                    'tit_zoom_reminder',
+                    'en',
+                    [$schedule->title, $time]
+                );
                 $sentCount++;
             }
         }
@@ -250,12 +270,25 @@ class ZoomScheduleController extends Controller
         // 2. Notify Students of the relevant grade
         if ($schedule->grade) {
             $students = User::where('role', 'user')
-                ->where('current_grade', $schedule->grade)
                 ->whereNull('deactivated_at')
                 ->get();
 
+            preg_match('/(\d+)/', $schedule->grade, $classMatch);
+            $classNum = $classMatch[1] ?? null;
+
             foreach ($students as $student) {
-                // Filter by selected subjects: Only send if the student has selected this schedule's subject
+                // 1. Grade Match
+                $userGrade = $student->current_grade;
+                if (!$userGrade) continue;
+
+                preg_match('/(\d+)/', $userGrade, $userMatch);
+                $userNum = $userMatch[1] ?? null;
+
+                if ($userNum === null || $classNum === null || $userNum !== $classNum) {
+                    continue;
+                }
+
+                // 2. Filter by selected subjects (Robust substring match)
                 $selected = $student->selected_subjects;
                 $classSubject = trim($schedule->subject);
                 
@@ -263,21 +296,28 @@ class ZoomScheduleController extends Controller
                     $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
                     $selectedArr = array_map('trim', (array)$selectedArr);
                     
-                    if (!in_array($classSubject, $selectedArr)) {
+                    $subjectMatch = false;
+                    foreach ($selectedArr as $studentSub) {
+                        $studentSub = trim($studentSub);
+                        if ($studentSub === $classSubject || 
+                            stripos($studentSub, $classSubject) !== false || 
+                            stripos($classSubject, $studentSub) !== false) {
+                            $subjectMatch = true;
+                            break;
+                        }
+                    }
+                    if (!$subjectMatch) {
                         continue;
                     }
                 }
 
                 if ($student->phone_number) {
-                    $studentMsg = "👋 *Hello " . ($student->full_name ?? $student->name) . ",*\n\n" .
-                                 "You have a new Zoom class scheduled today!\n\n" .
-                                 "📚 *Subject:* " . ($schedule->subject ?? 'General') . "\n" .
-                                 "📝 *Title:* {$schedule->title}\n" .
-                                 "⏰ *Time:* {$time}\n\n" .
-                                 "🎓 *Join via Dashboard (To mark Attendance):* {$baseUrl}/student/zoom\n" .
-                                 "🔗 *Direct Zoom Link:* {$schedule->zoom_link}\n\n" .
-                                 "Happy learning!";
-                    $this->whatsApp->send($student->phone_number, $studentMsg);
+                    $this->whatsApp->sendTemplate(
+                        $student->phone_number,
+                        'tit_zoom_reminder',
+                        'en',
+                        [$schedule->title, $time]
+                    );
                     $sentCount++;
                 }
             }

@@ -17,6 +17,7 @@ class ZoomSchedule extends Model
     protected $fillable = [
         'title',
         'scheduled_at',
+        'reminded_at',
         'zoom_link',
         'meeting_id',
         'start_url',
@@ -34,6 +35,7 @@ class ZoomSchedule extends Model
     {
         return [
             'scheduled_at' => 'datetime',
+            'reminded_at' => 'datetime',
         ];
     }
 

@@ -18,19 +18,43 @@ const ContactPage = () => {
     name: '', email: '', phone: '', subject: '', message: ''
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [focusedField, setFocusedField] = useState(null)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    setSubmitError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Mock submission
-    console.log('Form submitted:', formData)
-    setIsSubmitted(true)
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+    setIsLoading(true)
+    setSubmitError('')
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        setIsSubmitted(true)
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+      } else {
+        setSubmitError(result.message || 'Failed to send message. Please try again.')
+      }
+    } catch (err) {
+      console.error('Contact form error:', err)
+      setSubmitError('Network error. Please check your connection and try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const [heroTitle, setHeroTitle] = useState(getSetting('contact_hero_title', t('contact_hero_title')))
@@ -46,7 +70,7 @@ const ContactPage = () => {
 
   const footerPhone = getSetting('footer_phone', '+94 114 477 488')
   const footerEmail = getSetting('footer_email', 'info@edulearn.lk')
-  
+
   // Helper to extract src if full iframe tag is provided
   const extractMapSrc = (input) => {
     if (!input || typeof input !== 'string') return 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126743.58272!2d79.8!3d6.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae2593cf!2sColombo!5e0!3m2!1sen!2slk!4v1620000000000!5m2!1sen!2slk'
@@ -56,7 +80,7 @@ const ContactPage = () => {
     }
     return input
   }
-  
+
   const mapEmbedLink = extractMapSrc(getSetting('contact_map_embed_link'))
 
   const supportHours = [
@@ -226,6 +250,7 @@ const ContactPage = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="cp-form">
+                  {submitError && <div className="error-message" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{submitError}</div>}
                   <div className="cp-row">
                     <div className={`cp-input-group ${focusedField === 'name' ? 'active' : ''}`}>
                       <label><FiUser /> {t('label_name')}</label>
@@ -273,8 +298,8 @@ const ContactPage = () => {
                       rows="5" placeholder={t('message_placeholder') || "Tell us about your inquiry..."} required />
                   </div>
 
-                  <button type="submit" className="cp-send-btn">
-                    <span>{t('btn_send')}</span>
+                  <button type="submit" className="cp-send-btn" disabled={isLoading}>
+                    <span>{isLoading ? (t('sending') || 'Sending...') : t('btn_send')}</span>
                     <FiSend />
                   </button>
                 </form>

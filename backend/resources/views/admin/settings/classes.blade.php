@@ -379,12 +379,15 @@
                                         @endphp
 
                                         @foreach($types as $index => $type)
-                                            <div class="class-type-item mb-4" data-index="{{ $index }}">
+                                            <div class="class-type-item mb-5 p-4" data-index="{{ $index }}" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem;">
                                                 <div class="class-edit-section">
-                                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <input type="text" name="classes_types[{{ $index }}][title]" class="form-control font-weight-bold" value="{{ $type['title'] ?? 'New Class Type' }}" style="font-size: 1.1rem; border: none !important; background: transparent !important; padding-left: 0;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                                        <div class="d-flex align-items-center flex-grow-1">
+                                                            <input type="text" name="classes_types[{{ $index }}][title]" class="form-control font-weight-bold mr-3" value="{{ $type['title'] ?? 'New Class Type' }}" style="font-size: 1.25rem; border: none !important; background: transparent !important; padding-left: 0; width: auto; min-width: 200px;">
+                                                            <span class="badge badge-outline-primary ml-2">Class #{{ $index + 1 }}</span>
+                                                        </div>
                                                         <button type="button" class="btn btn-danger btn-xs remove-class-type">
-                                                            <i class="fa fa-trash"></i>
+                                                            <i class="fa fa-trash"></i> Remove
                                                         </button>
                                                     </div>
                                                     
@@ -425,13 +428,19 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label>Star Rating</label>
-                                                                <select name="classes_types[{{ $index }}][stars]" class="form-control">
-                                                                    @for($i = 1; $i <= 5; $i++)
-                                                                        <option value="{{ $i }}" {{ ($type['stars'] ?? 5) == $i ? 'selected' : '' }}>{{ $i }} Stars</option>
-                                                                    @endfor
-                                                                </select>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Features (One per line)</label>
+                                                                        <textarea name="classes_types[{{ $index }}][features]" class="form-control" rows="5" placeholder="Small group sessions\nDirect teacher interaction">{{ $type['features'] ?? '' }}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label>Available Subjects (Comma separated)</label>
+                                                                        <textarea name="classes_types[{{ $index }}][subjects]" class="form-control" rows="5" placeholder="Mathematics, Science, English">{{ $type['subjects'] ?? '' }}</textarea>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-4">
@@ -452,23 +461,17 @@
                                                                     <i class="fa fa-upload mr-1"></i> Upload Image
                                                                 </button>
                                                                 <input type="file" class="d-none dynamic-image-input" accept="image/*">
+                                                                
+                                                                <div class="form-group mt-3 text-left">
+                                                                    <label>Star Rating</label>
+                                                                    <select name="classes_types[{{ $index }}][stars]" class="form-control">
+                                                                        @for($i = 1; $i <= 5; $i++)
+                                                                            <option value="{{ $i }}" {{ ($type['stars'] ?? 5) == $i ? 'selected' : '' }}>{{ $i }} Stars</option>
+                                                                        @endfor
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-
-                                                    <div class="row">
-                                                        <!-- <div class="col-md-6">
-                                                            <div class="form-group text-left">
-                                                                <label>Features (One per line)</label>
-                                                                <textarea name="classes_types[{{ $index }}][features]" class="form-control" rows="5">{{ $type['features'] ?? '' }}</textarea>
-                                                            </div>
-                                                        </div> -->
-                                                        <!-- <div class="col-md-6">
-                                                            <div class="form-group text-left">
-                                                                <label>Available Subjects (Comma separated)</label>
-                                                                <textarea name="classes_types[{{ $index }}][subjects]" class="form-control" rows="5">{{ $type['subjects'] ?? '' }}</textarea>
-                                                            </div>
-                                                        </div> -->
                                                     </div>
                                                 </div>
                                             </div>
@@ -520,12 +523,15 @@
             $('#add-class-type').click(function() {
                 let index = $('#class-types-container .class-type-item').length;
                 let template = `
-                    <div class="class-type-item mb-4" data-index="${index}">
+                    <div class="class-type-item mb-5 p-4" data-index="${index}" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem;">
                         <div class="class-edit-section">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <input type="text" name="classes_types[${index}][title]" class="form-control font-weight-bold" value="New Class Type" style="font-size: 1.1rem; border: none !important; background: transparent !important; padding-left: 0;">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="d-flex align-items-center flex-grow-1">
+                                    <input type="text" name="classes_types[${index}][title]" class="form-control font-weight-bold mr-3" value="New Class Type" style="font-size: 1.25rem; border: none !important; background: transparent !important; padding-left: 0; width: auto; min-width: 200px;">
+                                    <span class="badge badge-outline-primary ml-2">Class #${index + 1}</span>
+                                </div>
                                 <button type="button" class="btn btn-danger btn-xs remove-class-type">
-                                    <i class="fa fa-trash"></i>
+                                    <i class="fa fa-trash"></i> Remove
                                 </button>
                             </div>
                             
@@ -566,15 +572,19 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Star Rating</label>
-                                        <select name="classes_types[${index}][stars]" class="form-control">
-                                            <option value="1">1 Stars</option>
-                                            <option value="2">2 Stars</option>
-                                            <option value="3">3 Stars</option>
-                                            <option value="4">4 Stars</option>
-                                            <option value="5" selected>5 Stars</option>
-                                        </select>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Features (One per line)</label>
+                                                <textarea name="classes_types[${index}][features]" class="form-control" rows="5"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Available Subjects (Comma separated)</label>
+                                                <textarea name="classes_types[${index}][subjects]" class="form-control" rows="5"></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -595,20 +605,17 @@
                                             <i class="fa fa-upload mr-1"></i> Upload Image
                                         </button>
                                         <input type="file" class="d-none dynamic-image-input" accept="image/*">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group text-left">
-                                        <label>Features (One per line)</label>
-                                        <textarea name="classes_types[${index}][features]" class="form-control" rows="5"></textarea>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group text-left">
-                                        <label>Available Subjects (Comma separated)</label>
-                                        <textarea name="classes_types[${index}][subjects]" class="form-control" rows="5"></textarea>
+                                        
+                                        <div class="form-group mt-3 text-left">
+                                            <label>Star Rating</label>
+                                            <select name="classes_types[${index}][stars]" class="form-control">
+                                                <option value="1">1 Stars</option>
+                                                <option value="2">2 Stars</option>
+                                                <option value="3">3 Stars</option>
+                                                <option value="4">4 Stars</option>
+                                                <option value="5" selected>5 Stars</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

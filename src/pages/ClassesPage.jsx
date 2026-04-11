@@ -6,12 +6,14 @@ import {
 } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuthModal } from '../context/AuthModalContext'
 import { useState, useEffect } from 'react'
 import './ClassesPage.css'
 
 const ClassesPage = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
+  const { openRegister } = useAuthModal()
   const [searchParams] = useSearchParams()
   const type = searchParams.get('type')
 
@@ -63,9 +65,11 @@ const ClassesPage = () => {
       return data.map((item, index) => {
         const title = item.title || 'Class Type';
         const description = item.description || '';
-        const features = (item.features || '').split('\n').filter(f => f.trim());
-        const subjects = (item.subjects || '').split(',').map(s => s.trim()).filter(s => s);
-        
+        const featuresStr = item.features || '';
+        const subjectsStr = item.subjects || '';
+        const features = featuresStr.split('\n').filter(f => f.trim());
+        const subjects = subjectsStr.split(',').map(s => s.trim()).filter(s => s);
+
         return {
           id: item.id || `type-${index}`,
           title: title,
@@ -81,8 +85,8 @@ const ClassesPage = () => {
           price: item.price || 'Contact for Pricing',
           subjects: subjects,
           highlights: [
-            { icon: item.title?.toLowerCase().includes('online') ? <FiMonitor /> : <FiMapPin />, label: item.format || 'Flexible' },
-            { icon: <FiUsers />, label: item.title?.toLowerCase().includes('one-on-one') ? 'Personalized' : 'Group Learning' },
+            { icon: item.title?.toLowerCase().includes('online') ? <FiMonitor /> : <FiMapPin />, label: item.duration || 'Flexible' },
+            { icon: <FiUsers />, label: item.format || 'Group Learning' },
             { icon: <FiStar />, label: `${item.stars || 5} Star Rating` }
           ]
         };
@@ -95,10 +99,10 @@ const ClassesPage = () => {
       initialSubjects[t.title] = t.subjects;
     });
 
-    const initialFiltered = type 
+    const initialFiltered = type
       ? initialTypes.filter(ct => ct.title.toLowerCase().includes(type.toLowerCase()))
       : initialTypes;
-    
+
     setClassTypes(initialFiltered);
     setSubjectsObj(initialSubjects);
 
@@ -117,16 +121,16 @@ const ClassesPage = () => {
           duration: await translate(ct.duration),
           students: await translate(ct.students),
           price: await translate(ct.price),
+          subjects: await Promise.all(ct.subjects.map(s => translate(s))),
           highlights: await Promise.all(ct.highlights.map(async h => ({ ...h, label: await translate(h.label) })))
-        })))
+        })));
 
         const translatedSubjects = {}
-        for (const [key, list] of Object.entries(initialSubjects)) {
-          const translatedKey = await translate(key)
-          translatedSubjects[translatedKey] = await Promise.all(list.map(s => translate(s)))
+        for (const ct of translatedTypes) {
+          translatedSubjects[ct.title] = ct.subjects;
         }
 
-        const filtered = type 
+        const filtered = type
           ? translatedTypes.filter(ct => ct.title.toLowerCase().includes(type.toLowerCase()))
           : translatedTypes;
 
@@ -171,10 +175,10 @@ const ClassesPage = () => {
               <div key={ct.id} className="clp-card" style={{ '--accent-color': ct.color }}>
                 {/* Card Header */}
                 <div className="clp-card-head">
-                  <div 
-                    className="clp-card-head-bg" 
-                    style={{ 
-                      background: ct.image 
+                  <div
+                    className="clp-card-head-bg"
+                    style={{
+                      background: ct.image
                         ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url(${ct.image.startsWith('http') ? ct.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + ct.image})`
                         : `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`,
                       backgroundSize: 'cover',
@@ -186,7 +190,7 @@ const ClassesPage = () => {
                       {ct.image ? <img src={ct.image.startsWith('http') ? ct.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + ct.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /> : <FiStar />}
                     </div>
                     <div>
-                      <span className="clp-card-tag" style={{ color: `${ct.color}aa` }}>{ct.tagline}</span>
+                      {/* <span className="clp-card-tag" style={{ color: `${ct.color}aa` }}>{ct.tagline}</span> */}
                       <h2 className="clp-card-title">{ct.title}</h2>
                     </div>
                   </div>
@@ -255,12 +259,21 @@ const ClassesPage = () => {
 
                   {/* CTA */}
                   <div className="clp-card-cta">
-                    <a href="#register" className="clp-btn-enroll" style={{ background: `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`, boxShadow: `0 12px 36px ${ct.color}44` }}>
+                    <button 
+                      onClick={openRegister}
+                      className="clp-btn-enroll" 
+                      style={{ 
+                        background: `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`, 
+                        boxShadow: `0 12px 36px ${ct.color}44`,
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
                       {t('btn_enroll_now')} <FiArrowRight />
-                    </a>
-                    <a href="#register" className="clp-btn-outline" style={{ borderColor: ct.color, color: ct.color }}>
+                    </button>
+                    <Link to="/contact" className="clp-btn-outline" style={{ borderColor: ct.color, color: ct.color }}>
                       {t('learn_more')}
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

@@ -62,20 +62,20 @@ class ContactMessageResource extends Resource
             ])
             ->actions([
                 Actions\ViewAction::make(),
-                Tables\Actions\Action::make('markRead')
+                Actions\Action::make('markRead')
                     ->label('Mark Read')
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->action(fn (ContactMessage $record) => $record->update(['is_read' => true]))
                     ->visible(fn (ContactMessage $record) => !$record->is_read),
-                Tables\Actions\DeleteAction::make(),
+                Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkAction::make('markAllRead')
+                Actions\BulkAction::make('markAllRead')
                     ->label('Mark as Read')
                     ->icon('heroicon-o-check-circle')
                     ->action(fn ($records) => $records->each->update(['is_read' => true])),
-                Tables\Actions\DeleteBulkAction::make(),
+                Actions\DeleteBulkAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }

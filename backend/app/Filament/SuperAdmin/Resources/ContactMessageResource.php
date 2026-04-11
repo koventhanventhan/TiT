@@ -6,6 +6,7 @@ use App\Filament\SuperAdmin\Resources\ContactMessageResource\Pages;
 use App\Models\ContactMessage;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Actions;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -60,7 +61,7 @@ class ContactMessageResource extends Resource
                     ->falseLabel('Unread'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Actions\ViewAction::make(),
                 Tables\Actions\Action::make('markRead')
                     ->label('Mark Read')
                     ->icon('heroicon-o-check')

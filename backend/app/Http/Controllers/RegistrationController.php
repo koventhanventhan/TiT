@@ -296,6 +296,7 @@ class RegistrationController extends Controller
             'amount' => 'nullable|numeric|min:1',
         ]);
 
+        $user = $request->user();
         if (!$user) {
             \Log::error('RegistrationController@step2 - No authenticated user found');
             return response()->json(['message' => 'Not authenticated.'], 401);

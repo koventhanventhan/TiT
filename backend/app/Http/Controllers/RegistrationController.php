@@ -190,7 +190,10 @@ class RegistrationController extends Controller
             $rules['stream'] = 'nullable|string|max:50';
         }
 
-        $request->validate($rules);
+        $request->validate($rules, [
+            'phone_number.unique' => 'This phone number is already registered / இந்த தொலைபேசி எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
+            'username.unique' => 'This username/email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
+        ]);
 
         // Identify custom fields (everything else in request except fixed keys and internal ones)
         $internalKeys = [

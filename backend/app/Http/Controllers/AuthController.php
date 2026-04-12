@@ -61,37 +61,12 @@ class AuthController extends Controller
         $existingUser = User::where('email', $request->email)->first();
 
         if ($existingUser) {
-            // If user has completed payment step → email is locked → block re-registration
-            if ($existingUser->registration_status === 'payment_completed') {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => [
-                        'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது']
-                    ]
-                ], 422);
-            }
-
-            // Account exists but NOT confirmed → allow re-registration
-            // Update the existing user's password and delete old tokens
-            $existingUser->update([
-                'password' => Hash::make($request->password),
-                'plain_password' => $request->password,
-            ]);
-            $existingUser->tokens()->delete(); // Clear old API tokens
-
-            $token = $existingUser->createToken('auth_token')->plainTextToken;
-
             return response()->json([
-                'message' => 'User registered successfully',
-                'user' => [
-                    'id' => $existingUser->id,
-                    'username' => $existingUser->name,
-                    'email' => $existingUser->email,
-                    'role' => $existingUser->role,
-                    'full_name' => $existingUser->full_name,
-                ],
-                'token' => $token,
-            ], 201);
+                'message' => 'Validation failed',
+                'errors' => [
+                    'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.']
+                ]
+            ], 422);
         }
 
         // --- New user registration ---

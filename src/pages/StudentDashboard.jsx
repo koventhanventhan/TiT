@@ -3,6 +3,7 @@ import { useNavigate, Outlet } from 'react-router-dom'
 import { getCurrentUser } from '../services/authService'
 import StudentDashboardLayout from '../components/student/StudentDashboardLayout'
 import DeactivatedDashboard from '../components/student/DeactivatedDashboard'
+import PendingApprovalDashboard from '../components/student/PendingApprovalDashboard'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
@@ -43,6 +44,11 @@ export default function StudentDashboard() {
 
   if (user.is_deactivated) {
     return <DeactivatedDashboard user={user} />
+  }
+
+  // Check for admin approval (unless they are still in pending_payment redirection phase)
+  if (!user.admin_confirmed_at) {
+    return <PendingApprovalDashboard user={user} />
   }
 
   return (

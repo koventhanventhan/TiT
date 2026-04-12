@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { FiMenu, FiX, FiChevronDown, FiChevronLeft, FiChevronDown as FiChevronDownIcon } from 'react-icons/fi'
+import { FiMenu, FiX, FiChevronDown, FiChevronLeft, FiChevronDown as FiChevronDownIcon, FiLayout } from 'react-icons/fi'
 import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa'
 import { getCurrentUser, isAuthenticated, logout, BASE_URL } from '../services/authService'
 import AnimatedAuth from './AnimatedAuth'
@@ -633,6 +633,17 @@ const Header = () => {
             </nav>
 
             <div className={`header-actions ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+              {currentUser && getDashboardLink() && !isMobileMenuOpen && (
+                currentUser.role?.toLowerCase() === 'admin' ? (
+                  <a href={getDashboardLink()} className="mobile-dashboard-action-btn">
+                    <FiLayout /> <span>{t('nav_dashboard')}</span>
+                  </a>
+                ) : (
+                  <Link to={getDashboardLink()} className="mobile-dashboard-action-btn">
+                    <FiLayout /> <span>{t('nav_dashboard')}</span>
+                  </Link>
+                )
+              )}
               <button
                 className="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

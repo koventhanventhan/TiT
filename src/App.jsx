@@ -78,7 +78,7 @@ function AppContent() {
     location.pathname.startsWith('/super-admin')
 
   return (
-    <div className="App" style={{ minHeight: '100vh', background: isDashboard ? '#f8fafc' : '#ffffff', width: '100%' }}>
+    <div className="App" style={{ minHeight: '100dvh', background: isDashboard ? '#f8fafc' : '#ffffff', width: '100%' }}>
       <CustomCursor />
       {!isDashboard && <Header />}
       <Routes>

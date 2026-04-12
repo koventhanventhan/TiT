@@ -1,10 +1,12 @@
 .hero {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
   padding-top: 6.25rem;
+  padding-top: calc(6.25rem + env(safe-area-inset-top, 0px));
 }
 
 .hero-background {
@@ -593,10 +595,11 @@
   }
 
   .hero-title {
-    font-size: 1.875rem !important;
+    font-size: clamp(1.5rem, 8vw, 1.875rem) !important;
     line-height: 1.2 !important;
     letter-spacing: -0.03125rem;
     margin-bottom: 1.25rem;
+    word-break: break-word;
   }
 
   .hero-description {

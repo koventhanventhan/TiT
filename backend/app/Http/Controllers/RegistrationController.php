@@ -325,6 +325,7 @@ class RegistrationController extends Controller
             return response()->json([
                 'message' => 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',
                 'registration_status' => $user->registration_status,
+                'user' => $this->formatUserResponse($user),
             ]);
         }
 
@@ -381,6 +382,7 @@ class RegistrationController extends Controller
             'amount' => $amount * 100, // paise for Razorpay
             'currency' => 'INR',
             'key' => config('payment.razorpay_key'),
+            'user' => $this->formatUserResponse($user),
         ]);
     }
 

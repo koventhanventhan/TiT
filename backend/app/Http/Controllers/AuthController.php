@@ -266,6 +266,8 @@ class AuthController extends Controller
                 'institute_id' => $user->institute_id,
                 'is_deactivated' => !$user->isActive(),
                 'deactivated_at' => $user->deactivated_at,
+                'admin_confirmed_at' => $user->admin_confirmed_at,
+                'registration_status' => $user->registration_status,
             ],
             'token' => $token,
         ]);
@@ -297,6 +299,8 @@ class AuthController extends Controller
             'user' => array_merge($data, [
                 'is_deactivated' => !$u->isActive(),
                 'deactivated_at' => $u->deactivated_at,
+                'admin_confirmed_at' => $u->admin_confirmed_at,
+                'registration_status' => $u->registration_status,
             ])
         ]);
     }

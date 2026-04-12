@@ -633,17 +633,6 @@ const Header = () => {
             </nav>
 
             <div className={`header-actions ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-              {currentUser && getDashboardLink() && !isMobileMenuOpen && (
-                currentUser.role?.toLowerCase() === 'admin' ? (
-                  <a href={getDashboardLink()} className="mobile-dashboard-action-btn">
-                    <FiLayout /> <span>{t('nav_dashboard')}</span>
-                  </a>
-                ) : (
-                  <Link to={getDashboardLink()} className="mobile-dashboard-action-btn">
-                    <FiLayout /> <span>{t('nav_dashboard')}</span>
-                  </Link>
-                )
-              )}
               <button
                 className="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

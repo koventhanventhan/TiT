@@ -221,21 +221,29 @@ class RegistrationController extends Controller
             'institute_id' => $request->header('X-Institute-Id') ?: 1,
         ];
 
+        \Log::info('RegistrationController@step1 - Start', ['request' => $request->except(['_token', 'password'])]);
+
         if ($user) {
             // Update existing user
             if ($request->username) {
                 $userData['name'] = $request->username;
             }
             $user->update($userData);
+            \Log::info('RegistrationController@step1 - Updated existing user', ['id' => $user->id]);
         } else {
             // Create new user
             $userData['name'] = $request->username;
-            $userData['email'] = $request->username . '@student.local';
+            // If username looks like email, use it directly
+            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                $userData['email'] = $request->username;
+            } else {
+                $userData['email'] = $request->username . '@student.local';
+            }
             $userData['password'] = Hash::make('student123');
             $userData['role'] = 'user';
             $userData['admin_confirmed_at'] = null;
             
-            \Log::info('RegistrationController@step1 - Creating new student with institute_id: ' . ($userData['institute_id'] ?? 'null'));
+            \Log::info('RegistrationController@step1 - Creating new student', ['data' => array_diff_key($userData, ['password' => 1])]);
             
             $user = User::create($userData);
 
@@ -288,8 +296,11 @@ class RegistrationController extends Controller
             'amount' => 'nullable|numeric|min:1',
         ]);
 
-        $user = $request->user();
-        
+        if (!$user) {
+            \Log::error('RegistrationController@step2 - No authenticated user found');
+            return response()->json(['message' => 'Not authenticated.'], 401);
+        }
+
         \Log::info('RegistrationController@step2 - Checking user:', [
             'id' => $user->id,
             'role' => $user->role,
@@ -297,8 +308,13 @@ class RegistrationController extends Controller
             'has_full_name' => !empty($user->full_name)
         ]);
         
-        if ($user->role !== 'user' || !$user->full_name) {
-            return response()->json(['message' => 'Invalid user.'], 403);
+        if ($user->role !== 'user' || empty($user->full_name)) {
+            \Log::warning('RegistrationController@step2 - Invalid user check failed', [
+                'id' => $user->id,
+                'role' => $user->role,
+                'full_name' => $user->full_name
+            ]);
+            return response()->json(['message' => 'Invalid user. Please complete Step 1 again.'], 403);
         }
 
         if ($request->payment_method === 'offline') {

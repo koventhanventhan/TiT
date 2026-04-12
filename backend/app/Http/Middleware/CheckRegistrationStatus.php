@@ -20,12 +20,21 @@ class CheckRegistrationStatus
 
         // Only enforce for students (role 'user')
         if ($user && $user->role === 'user') {
-            // If the user hasn't completed the payment step
+            // 1. Block if registration payment is not even chosen
             if ($user->registration_status === 'pending_payment') {
                 return response()->json([
                     'message' => 'Please complete your registration payment first.',
                     'registration_status' => 'pending_payment',
                     'redirect' => '/register'
+                ], 403);
+            }
+
+            // 2. Block if admin has not confirmed yet
+            if (!$user->admin_confirmed_at) {
+                return response()->json([
+                    'message' => 'Your account is pending admin approval.',
+                    'registration_status' => $user->registration_status,
+                    'is_confirmed' => false
                 ], 403);
             }
         }

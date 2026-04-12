@@ -34,6 +34,21 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     fetchSubjects()
   }, [])
 
+  // Auto-initialize email from currently authenticated user
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr)
+        if (u && u.email) {
+          setFormData(prev => ({ ...prev, email: u.email }))
+        }
+      } catch (e) {
+        console.error('Failed to parse user for email initialization:', e)
+      }
+    }
+  }, [])
+
   const [formData, setFormData] = useState({
     fullName: '',
     dateOfBirth: '',
@@ -469,18 +484,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 </div>
               )}
 
-              {/* Email Address */}
-              <div className="form-group">
-                <label htmlFor="email">Email Address (Optional / மின்னஞ்சல்)</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="e.g. name@example.com"
-                />
-              </div>
 
               {/* Date of Birth */}
               {labelDob && (

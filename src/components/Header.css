@@ -8,6 +8,7 @@
   /* Dark blue */
   color: white;
   padding: 0.5rem 0;
+  padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
   z-index: 1001;
   font-size: 0.875rem;
   transition: transform 0.3s ease-in-out;
@@ -234,6 +235,8 @@
   z-index: 1000;
   transition: top 0.3s ease-in-out, background 0.3s ease, box-shadow 0.3s ease;
   border-bottom: 1.0px solid transparent;
+  /* Add safe area support when top bar is hidden */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .header.scrolled {

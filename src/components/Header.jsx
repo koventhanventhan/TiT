@@ -337,7 +337,7 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <header className={`header ${isScrolled ? 'scrolled' : ''}`} style={{ top: isTopBarVisible ? '2.5rem' : '0' }}>
+      <header className={`header ${isScrolled ? 'scrolled' : ''}`} style={{ top: isTopBarVisible ? 'calc(2.5rem + env(safe-area-inset-top, 0px))' : '0' }}>
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo" style={{ textDecoration: 'none' }}>
@@ -491,17 +491,17 @@ const Header = () => {
                       <div className="mobile-nav-list">
                         {getDashboardLink() && (
                           currentUser?.role?.toLowerCase() === 'admin' ? (
-                            <a 
-                              href={getDashboardLink()} 
-                              className="mobile-nav-link-item secondary" 
+                            <a
+                              href={getDashboardLink()}
+                              className="mobile-nav-link-item secondary"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
                               {t('nav_dashboard')}
                             </a>
                           ) : (
-                            <Link 
-                              to={getDashboardLink()} 
-                              className="mobile-nav-link-item secondary" 
+                            <Link
+                              to={getDashboardLink()}
+                              className="mobile-nav-link-item secondary"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
                               {t('nav_dashboard')}
@@ -523,8 +523,8 @@ const Header = () => {
                   {/* 2. Language Selection Toggle */}
                   {getSetting('topbar_show_lang', 'yes') === 'yes' && (
                     <div className="mobile-section-group">
-                      <button 
-                        className="mobile-nav-link-wrapper" 
+                      <button
+                        className="mobile-nav-link-wrapper"
                         onClick={(e) => { e.stopPropagation(); setIsMobileLangOpen(!isMobileLangOpen); }}
                       >
                         <span className="mobile-nav-link">
@@ -554,14 +554,14 @@ const Header = () => {
                           {isClassesDropdownOpen && (
                             <div className="mobile-dropdown-menu">
                               {classesCategories.map((category, catIndex) => (
-                                <Link 
-                                  key={catIndex} 
-                                  to={category.href} 
-                                  className="mobile-dropdown-item" 
-                                  onClick={(e) => { 
+                                <Link
+                                  key={catIndex}
+                                  to={category.href}
+                                  className="mobile-dropdown-item"
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    setIsClassesDropdownOpen(false); 
-                                    setIsMobileMenuOpen(false); 
+                                    setIsClassesDropdownOpen(false);
+                                    setIsMobileMenuOpen(false);
                                   }}
                                 >
                                   {t(category.nameKey)}
@@ -585,15 +585,15 @@ const Header = () => {
                                   </button>
                                   <div className="mobile-selected-grade">{selectedGrade}</div>
                                   {gradeSubmenuItems.map((subItem, subIndex) => (
-                                    <Link 
-                                      key={subIndex} 
-                                      to={`${subItem.href}?grade=${encodeURIComponent(selectedGrade.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-'))}`} 
-                                      className="mobile-dropdown-item" 
-                                      onClick={(e) => { 
+                                    <Link
+                                      key={subIndex}
+                                      to={`${subItem.href}?grade=${encodeURIComponent(selectedGrade.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-'))}`}
+                                      className="mobile-dropdown-item"
+                                      onClick={(e) => {
                                         e.stopPropagation();
-                                        setIsLearningSuiteDropdownOpen(false); 
-                                        setSelectedGrade(null); 
-                                        setIsMobileMenuOpen(false); 
+                                        setIsLearningSuiteDropdownOpen(false);
+                                        setSelectedGrade(null);
+                                        setIsMobileMenuOpen(false);
                                       }}
                                     >
                                       {t(subItem.nameKey)}

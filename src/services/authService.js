@@ -266,7 +266,20 @@ export const registerStep2 = async (paymentMethod, amount = null) => {
     const error = await response.json().catch(() => ({}))
     throw new Error(error.message || 'Payment step failed')
   }
-  return response.json()
+  const data = await response.json()
+
+  // Update local user data if present
+  if (data.user || data.registration_status) {
+    const currentLocalUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const updatedUser = {
+      ...currentLocalUser,
+      ...(data.user || {}),
+      registration_status: data.registration_status || data.user?.registration_status
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }
+
+  return data
 }
 
 // Report payment success after gateway (e.g. Razorpay)
@@ -283,7 +296,20 @@ export const registerPaymentSuccess = async (orderId, paymentId = null) => {
     const error = await response.json().catch(() => ({}))
     throw new Error(error.message || 'Payment confirmation failed')
   }
-  return response.json()
+  const data = await response.json()
+
+  // Update local user data if present
+  if (data.user || data.registration_status) {
+    const currentLocalUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const updatedUser = {
+      ...currentLocalUser,
+      ...(data.user || {}),
+      registration_status: data.registration_status || data.user?.registration_status
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }
+
+  return data
 }
 
 // Email/Password Registration
@@ -442,38 +468,38 @@ export const loginWithGoogle = () => {
 
       if (event.data && (event.data.token || event.data.error)) {
         clearInterval(checkPopup)
-        
+
         if (event.data.error) {
           reject(new Error(event.data.message || 'Google Auth failed'))
         } else {
           const { user, token } = event.data
           localStorage.setItem('authToken', token)
           localStorage.setItem('user', JSON.stringify(user))
-          
+
           // Role-based redirect logic (same as loginWithEmail)
           const userRole = user?.role
           const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
           const isStudent = userRole && String(userRole).toLowerCase() === 'user'
           const isTeacher = userRole && String(userRole).toLowerCase() === 'teacher'
-          
+
           // If student is pending, DON'T redirect here, let component handle common registration form
           if (isStudent && user.registration_status === 'pending') {
-             console.log('📝 New Google student detected, staying on page for details...')
-             resolve({ user, token })
-             return
+            console.log('📝 New Google student detected, staying on page for details...')
+            resolve({ user, token })
+            return
           }
 
           if (isAdmin) {
-             window.location.href = `${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`
+            window.location.href = `${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`
           } else if (isStudent) {
             window.location.href = '/student/dashboard'
           } else if (isTeacher) {
             window.location.href = '/teacher/dashboard'
           }
-          
+
           resolve({ user, token })
         }
-        
+
         window.removeEventListener('message', handleMessage)
       }
     }

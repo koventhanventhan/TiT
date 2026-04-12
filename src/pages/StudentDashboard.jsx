@@ -24,8 +24,11 @@ export default function StudentDashboard() {
       }
 
       // Check registration status
-      if (u.registration_status === 'pending_payment') {
-        console.log('📝 Student has pending payment, redirecting to registration flow...')
+      console.log('🔍 Dashboard Auth Check - User:', u)
+
+      const regStatus = (u.registration_status || '').toLowerCase()
+      if (regStatus === 'pending_payment' || !u.full_name) {
+        console.log('📝 Student has pending payment or incomplete profile, redirecting to registration flow...')
         navigate('/register?step=2')
         return
       }
@@ -47,7 +50,12 @@ export default function StudentDashboard() {
   }
 
   // Check for admin approval (unless they are still in pending_payment redirection phase)
-  if (!user.admin_confirmed_at) {
+  const isConfirmed = user.admin_confirmed_at &&
+    user.admin_confirmed_at !== 'null' &&
+    user.admin_confirmed_at !== '0000-00-00 00:00:00';
+
+  if (!isConfirmed) {
+    console.log('⏳ User found but not yet confirmed by admin')
     return <PendingApprovalDashboard user={user} />
   }
 

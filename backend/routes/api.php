@@ -55,8 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/register/step2', [RegistrationController::class, 'step2']);
     Route::post('/register/payment-success', [RegistrationController::class, 'paymentSuccess']);
 
-    // Student Dashboard Routes (Tenant Aware + Role: student)
-    Route::middleware(['role:user', 'tenant'])->prefix('student')->group(function () {
+    // Student Dashboard Routes (Tenant Aware + Role: student + Registration check)
+    Route::middleware(['role:user', 'tenant', 'reg_status'])->prefix('student')->group(function () {
         Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
         Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
         Route::post('/attend', [StudentZoomController::class, 'attend']);

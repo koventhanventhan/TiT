@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'reg_status' => \App\Http\Middleware\CheckRegistrationStatus::class,
         ]);
         
         // Custom session timeout middleware

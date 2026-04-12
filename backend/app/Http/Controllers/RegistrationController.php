@@ -277,6 +277,14 @@ class RegistrationController extends Controller
                 'en',
                 [$user->full_name ?? $user->name, $user->name]
             );
+
+            // Send Payment Instruction reminder immediately
+            $this->whatsApp->sendTemplate(
+                $user->phone_number,
+                'tit_payment_reminder',
+                'en',
+                [$user->full_name ?? $user->name, now()->format('F Y')]
+            );
         }
 
         return response()->json([
@@ -321,6 +329,17 @@ class RegistrationController extends Controller
         if ($request->payment_method === 'offline') {
             // Mark registration as completed — email is now locked
             $user->update(['registration_status' => 'payment_completed']);
+
+            // Notify user about offline payment submission
+            if ($user->phone_number) {
+                // Using payment_reminder as a generic "please pay and wait" instruction
+                $this->whatsApp->sendTemplate(
+                    $user->phone_number,
+                    'tit_payment_reminder',
+                    'en',
+                    [$user->full_name ?? $user->name, now()->format('F Y')]
+                );
+            }
 
             return response()->json([
                 'message' => 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',

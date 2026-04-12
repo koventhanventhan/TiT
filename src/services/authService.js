@@ -601,6 +601,11 @@ export const getCurrentUser = async () => {
 
     if (response.ok) {
       const data = await response.json()
+      // Persist fresh user data to storage
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+        console.log('🔄 Local user data synchronized with API')
+      }
       return data.user
     }
   } catch (error) {

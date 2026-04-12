@@ -21,6 +21,14 @@ export default function StudentDashboard() {
         navigate('/')
         return
       }
+
+      // Check registration status
+      if (u.registration_status === 'pending_payment') {
+        console.log('📝 Student has pending payment, redirecting to registration flow...')
+        navigate('/register?step=2')
+        return
+      }
+
       setUser(u)
       setLoading(false)
     }

@@ -44,7 +44,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     deviceUsed: '',
     currentGrade: '',
     username: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    email: ''
   })
   const [regTitle, setRegTitle] = useState('')
   const [regSubtitle, setRegSubtitle] = useState('')
@@ -146,14 +147,14 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       setLabelDevice(getSetting('register_device_label', t('reg_device')))
       setLabelGrade(getSetting('register_grade_label', t('reg_grade')))
       setLabelStream(getSetting('register_stream_label', t('reg_stream')))
-      
+
       const customVal = getSetting('register_custom_fields', '[]')
       try {
         setCustomFieldLabels(typeof customVal === 'string' ? JSON.parse(customVal) : (Array.isArray(customVal) ? customVal : []))
       } catch (e) {
         setCustomFieldLabels([])
       }
-      
+
       setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
     }
   }, [language, getSetting, t, translate])
@@ -308,7 +309,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
     try {
       const userData = {
-        username: username,
+        username: formData.email || username, // Use email as priority for username
         full_name: formData.fullName,
         phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
         date_of_birth: formData.dateOfBirth,
@@ -377,7 +378,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     try {
       const resp = await registerStep2('online', amount)
       setIsLoading(false)
-      
+
       if (!window.payhere) {
         throw new Error('PayHere SDK not loaded. Please check your internet connection.')
       }
@@ -467,6 +468,19 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   />
                 </div>
               )}
+
+              {/* Email Address */}
+              <div className="form-group">
+                <label htmlFor="email">Email Address (Optional / மின்னஞ்சல்)</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="e.g. name@example.com"
+                />
+              </div>
 
               {/* Date of Birth */}
               {labelDob && (
@@ -686,8 +700,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
               <button type="button" className="submit-button" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
                 {t('pay_offline')}
               </button>
-              <button type="button" className="submit-button secondary" 
-                onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} 
+              <button type="button" className="submit-button secondary"
+                onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
                 disabled={isLoading}>
                 {isLoading ? t('pay_processing') : t('pay_online')}
               </button>

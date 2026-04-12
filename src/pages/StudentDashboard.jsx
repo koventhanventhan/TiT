@@ -4,6 +4,7 @@ import { getCurrentUser } from '../services/authService'
 import StudentDashboardLayout from '../components/student/StudentDashboardLayout'
 import DeactivatedDashboard from '../components/student/DeactivatedDashboard'
 import PendingApprovalDashboard from '../components/student/PendingApprovalDashboard'
+import PaymentRequiredDashboard from '../components/student/PaymentRequiredDashboard'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
@@ -57,6 +58,11 @@ export default function StudentDashboard() {
   if (!isConfirmed) {
     console.log('⏳ User found but not yet confirmed by admin')
     return <PendingApprovalDashboard user={user} />
+  }
+
+  if (!user.is_paid) {
+    console.log('💰 User confirmed but payment missing for this month')
+    return <PaymentRequiredDashboard user={user} />
   }
 
   return (

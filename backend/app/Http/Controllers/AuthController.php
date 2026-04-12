@@ -268,6 +268,7 @@ class AuthController extends Controller
                 'deactivated_at' => $user->deactivated_at,
                 'admin_confirmed_at' => $user->admin_confirmed_at,
                 'registration_status' => $user->registration_status,
+                'is_paid' => $user->hasPaidForMonth(now()->format('Y-m')),
             ],
             'token' => $token,
         ]);
@@ -301,6 +302,7 @@ class AuthController extends Controller
                 'deactivated_at' => $u->deactivated_at,
                 'admin_confirmed_at' => $u->admin_confirmed_at,
                 'registration_status' => $u->registration_status,
+                'is_paid' => $u->hasPaidForMonth(now()->format('Y-m')),
             ])
         ]);
     }

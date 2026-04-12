@@ -37,6 +37,16 @@ class CheckRegistrationStatus
                     'is_confirmed' => false
                 ], 403);
             }
+
+            // 3. Block if student has not paid for the current month
+            if (!$user->hasPaidForMonth(now()->format('Y-m'))) {
+                return response()->json([
+                    'message' => 'Please complete your monthly payment to access the dashboard.',
+                    'registration_status' => $user->registration_status,
+                    'needs_payment' => true,
+                    'redirect' => '/student/payment'
+                ], 403);
+            }
         }
 
         return $next($request);

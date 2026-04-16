@@ -13,7 +13,7 @@ class SubjectController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $subjects = Subject::orderBy('category')->orderBy('name')->get();
+        $subjects = Subject::orderBy('category')->orderBy('name')->paginate(15);
         return view('admin.subjects.index', compact('subjects'));
     }
 

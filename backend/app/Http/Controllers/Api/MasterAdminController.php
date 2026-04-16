@@ -137,6 +137,27 @@ class MasterAdminController extends Controller
         return response()->json($classes);
     }
 
+    public function bulkDeleteStudents(Request $request)
+    {
+        $request->validate(['ids' => 'required|array']);
+        User::whereIn('id', $request->ids)->where('role', 'user')->delete();
+        return response()->json(['success' => true, 'message' => 'Students deleted successfully']);
+    }
+
+    public function bulkDeleteTeachers(Request $request)
+    {
+        $request->validate(['ids' => 'required|array']);
+        User::whereIn('id', $request->ids)->where('role', 'teacher')->delete();
+        return response()->json(['success' => true, 'message' => 'Teachers deleted successfully']);
+    }
+
+    public function bulkDeleteZoomClasses(Request $request)
+    {
+        $request->validate(['ids' => 'required|array']);
+        ZoomSchedule::whereIn('id', $request->ids)->delete();
+        return response()->json(['success' => true, 'message' => 'Zoom classes deleted successfully']);
+    }
+
     /**
      * Get LMS Materials
      */

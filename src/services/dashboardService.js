@@ -101,31 +101,31 @@ export const submitStudentAssignment = async (assignmentId, formData) => {
 }
 
 export const getStudentMaterials = async () => {
-    const res = await fetch(`${API_BASE_URL}/student/materials`, {
-        headers: getAuthHeaders(),
-        credentials: 'include',
-    })
-    if (!res.ok) throw new Error('Failed to load materials')
-    return res.json()
+  const res = await fetch(`${API_BASE_URL}/student/materials`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load materials')
+  return res.json()
 }
 
 export const getStudentPaymentStatus = async () => {
-    const res = await fetch(`${API_BASE_URL}/student/payment-status`, {
-        headers: getAuthHeaders(),
-        credentials: 'include',
-    })
-    if (!res.ok) throw new Error('Failed to load payment status')
-    return res.json()
+  const res = await fetch(`${API_BASE_URL}/student/payment-status`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load payment status')
+  return res.json()
 }
 
 export const initializeMonthlyPayment = async () => {
-    const res = await fetch(`${API_BASE_URL}/student/pay-monthly`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-    })
-    if (!res.ok) throw new Error('Failed to initialize monthly payment')
-    return res.json()
+  const res = await fetch(`${API_BASE_URL}/student/pay-monthly`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to initialize monthly payment')
+  return res.json()
 }
 
 export const getTeacherZoomClasses = async () => {
@@ -250,6 +250,39 @@ export const getAdminZoom = async () => {
     credentials: 'include',
   })
   if (!res.ok) throw new Error('Failed to load zoom classes')
+  return res.json()
+}
+
+export const bulkDeleteAdminStudents = async (ids) => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/bulk-delete`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) throw new Error('Failed to delete students')
+  return res.json()
+}
+
+export const bulkDeleteAdminTeachers = async (ids) => {
+  const res = await fetch(`${API_BASE_URL}/admin/teachers/bulk-delete`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) throw new Error('Failed to delete teachers')
+  return res.json()
+}
+
+export const bulkDeleteAdminZoomClasses = async (ids) => {
+  const res = await fetch(`${API_BASE_URL}/admin/zoom/bulk-delete`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) throw new Error('Failed to delete zoom classes')
   return res.json()
 }
 

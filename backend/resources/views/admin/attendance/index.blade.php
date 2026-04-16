@@ -24,6 +24,7 @@
             background-color: #f8fafc;
         }
     </style>
+    @include('admin.partials.pagination-styles')
     <!-- Pusher and Notifications -->
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
     <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
@@ -261,8 +262,24 @@
                 @endforelse
 
                 @if($schedules->hasPages())
-                <div class="mt-4 mb-5">
-                    {{ $schedules->links() }}
+                <div class="card mt-4 mb-5">
+                    <div class="card-body p-0">
+                        <div class="pagination-footer m-0" style="border-radius: 0.5rem; border: none;">
+                            <div class="pagination-info">
+                                Showing {{ $schedules->firstItem() }} to {{ $schedules->lastItem() }} of {{ $schedules->total() }} results
+                            </div>
+                            <div class="pagination-per-page">
+                                <span>Per page</span>
+                                <select disabled>
+                                    <option>10</option>
+                                    <option selected>15</option>
+                                    <option>25</option>
+                                    <option>50</option>
+                                </select>
+                            </div>
+                            {{ $schedules->links('vendor.pagination.custom') }}
+                        </div>
+                    </div>
                 </div>
                 @endif
             </div>

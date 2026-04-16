@@ -85,23 +85,41 @@
                 <div class="row">
                     <div class="col-12">
                         @if(($pendingApprovals ?? 0) > 0)
-                        <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center mb-2" role="alert" style="border-radius: 0.5rem;">
-                            <i class="flaticon-381-warning mr-3" style="font-size: 1.25rem;"></i>
-                            <strong>Attention!</strong> &nbsp; You have <strong>{{ $pendingApprovals }}</strong> students waiting for confirmation.
-                            <a href="{{ route('admin.students.index') }}" class="ml-auto text-dark font-weight-bold"><u>View All</u></a>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                        <div class="alert alert-warning mb-2 p-3" role="alert" style="border-radius: 0.5rem; border: 1px solid rgba(255, 169, 0, 0.3);">
+                            <div class="d-flex align-items-start">
+                                <div class="mr-3 mt-1">
+                                    <i class="flaticon-381-warning text-warning" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mt-1 mb-1 font-weight-bold text-warning">Attention!</h6>
+                                    <p class="mb-2 text-dark" style="font-size: 0.85rem; line-height: 1.4;">You have <strong>{{ $pendingApprovals }}</strong> students waiting for confirmation.</p>
+                                    <a href="{{ route('admin.students.index') }}" class="btn btn-warning btn-sm px-3 py-1">View All</a>
+                                </div>
+                                <div>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="position: static; padding: 0;">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         @endif
                         @if(($pendingPayments ?? 0) > 0)
-                        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center mb-3" role="alert" style="border-radius: 0.5rem;">
-                            <i class="flaticon-381-television mr-3" style="font-size: 1.25rem;"></i>
-                            <strong>Payment Notice:</strong> &nbsp; There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.
-                            <a href="#" class="ml-auto text-dark font-weight-bold"><u>Review Payments</u></a>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                        <div class="alert alert-danger mb-3 p-3" role="alert" style="border-radius: 0.5rem; border: 1px solid rgba(255, 92, 117, 0.3);">
+                            <div class="d-flex align-items-start">
+                                <div class="mr-3 mt-1">
+                                    <i class="flaticon-381-television text-danger" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mt-1 mb-1 font-weight-bold text-danger">Payment Notice</h6>
+                                    <p class="mb-2 text-dark" style="font-size: 0.85rem; line-height: 1.4;">There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.</p>
+                                    <a href="#" class="btn btn-danger btn-sm px-3 py-1">Review Payments</a>
+                                </div>
+                                <div>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="position: static; padding: 0;">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         @endif
                     </div>

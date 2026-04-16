@@ -129,19 +129,21 @@
         background: #d67044;
     }
 
-    /* Compact Table Styles */
+    /* Extreme Compact Table Styles */
     .table.table-responsive-md th,
     .table.table-responsive-md td {
-        padding: 0.5rem 0.4rem !important;
-        font-size: 0.75rem !important;
+        padding: 0.4rem 0.25rem !important;
+        font-size: 0.7rem !important;
         vertical-align: middle;
+        line-height: 1.1;
     }
 
     .table.table-responsive-md th {
         white-space: nowrap;
         text-transform: uppercase;
-        letter-spacing: 0.0313rem;
-        font-weight: 700 !important;
+        letter-spacing: 0.02rem;
+        font-weight: 800 !important;
+        background-color: rgba(0,0,0,0.1);
     }
 
     /* Prevent specific columns from wrapping to save space */
@@ -205,23 +207,13 @@
                 <div class="table-responsive">
                     <table class="table table-responsive-md">
                         <thead>
-                             <tr>
-                                 <th style="width: 2rem;">
-                                     <div class="custom-control custom-checkbox border-0">
-                                         <input type="checkbox" class="custom-control-input" id="checkAll">
-                                         <label class="custom-control-label" for="checkAll"></label>
-                                     </div>
-                                 </th>
-                                 <th style="width: 2rem;">ID</th>
-                                 <th style="min-width: 10rem;">Student</th>
-                                 <th>Grade</th>
-                                 <th class="nowrap-column">Contact</th>
-                                 <th style="width: 3.125rem;">Sex</th>
-                                 <th class="nowrap-column">Status/Payment</th>
-                                 <th>Medium</th>
-                                 <th>Subjects</th>
-                                 <th class="nowrap-column">Created</th>
-                                 <th style="width: 3rem;">Action</th>
+                                 <th style="width: 2rem;">ID/DATE</th>
+                                 <th style="max-width: 7.5rem;">STUDENT</th>
+                                 <th class="text-center">INFO</th>
+                                 <th class="nowrap-column">CONTACT</th>
+                                 <th class="nowrap-column">STATUS/PAYMENT</th>
+                                 <th class="text-center">SUBJ</th>
+                                 <th style="width: 2rem;">ACT</th>
                              </tr>
                          </thead>
                          <tbody>
@@ -243,75 +235,54 @@
                                          }
                                      }
                                  }
-                                 $subjectCount = count($subjectsArray);
-                             @endphp
-                             <tr>
-                                  <td>
-                                      <div class="custom-control custom-checkbox">
-                                          <input type="checkbox" class="custom-control-input student-checkbox" id="customCheckBox{{$student->id}}" value="{{$student->id}}">
-                                          <label class="custom-control-label" for="customCheckBox{{$student->id}}"></label>
-                                      </div>
+                                    <td class="nowrap-column">
+                                       <div style="font-weight: 800; font-size: 0.75rem;">{{ $student->id }}</div>
+                                       <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
+                                   </td>
+                                  <td style="max-width: 7.5rem;">
+                                      <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
+                                      <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->email }}">{{ $student->email }}</div>
                                   </td>
-                                   <td class="nowrap-column"><strong>{{ $student->id }}</strong></td>
-                                  <td>
-                                      <div style="font-weight: 600; color: #ffab2d; font-size: 0.8125rem; line-height: 1.2;">{{ $student->full_name ?? $student->name }}</div>
-                                      <div style="font-size: 0.6875rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 15.625rem;">{{ $student->email }}</div>
-                                  </td>
-                                 <td class="nowrap-column">
-                                     <span style="color:#a78bfa; font-weight:600;">
-                                     {{ $student->current_grade ? 'G'.$student->current_grade : 'N/A' }}
-                                     </span>
+                                 <td class="nowrap-column text-center">
+                                     <span style="color:#a78bfa; font-weight:800;">G{{ $student->current_grade ?: '?' }}</span>
+                                     <span style="opacity: 0.3; margin: 0 0.125rem;">|</span>
+                                     <span style="font-weight:800; color: {{ $student->gender === 'female' ? '#f87171' : '#60a5fa' }}">{{ $student->gender === 'female' ? 'G' : 'M' }}</span>
+                                     <span style="opacity: 0.3; margin: 0 0.125rem;">|</span>
+                                     <span style="font-weight:800; opacity: 0.7;">{{ $student->medium === 'tamil' ? 'TAM' : 'ENG' }}</span>
                                  </td>
                                  <td class="nowrap-column">
-                                     <div style="font-weight: 500;">{{ $student->phone_number ?? 'N/A' }}</div>
-                                 </td>
-                                 <td>
-                                     <div class="text-center">
-                                         @if($student->gender === 'female')
-                                             <span class="badge badge-pill badge-danger" style="width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">G</span>
-                                         @else
-                                             <span class="badge badge-pill badge-primary" style="width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">M</span>
-                                         @endif
-                                     </div>
+                                     <div style="font-weight: 500; font-size: 0.7rem;">{{ $student->phone_number ?? 'N/A' }}</div>
                                  </td>
                                  <td class="nowrap-column">
                                      <div style="margin-bottom: 0.125rem;">
                                          @if($student->deactivated_at)
-                                             <span class="badge badge-xs badge-danger" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">Deactivated</span>
+                                             <span class="badge badge-xs badge-danger" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Deactivated</span>
                                          @elseif($student->admin_confirmed_at)
-                                             <span class="badge badge-xs badge-success" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">Confirmed</span>
+                                             <span class="badge badge-xs badge-success" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Confirmed</span>
                                          @else
-                                             <span class="badge badge-xs badge-warning" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">{{ $student->registration_status ?? 'pending' }}</span>
+                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">{{ $student->registration_status ?? 'pending' }}</span>
                                          @endif
                                      </div>
-                                     <div>
+                                     <div style="display: flex; align-items: center; gap: 0.25rem;">
                                          @if($paidThisMonth)
-                                             <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.25rem; font-size: 0.625rem;">Paid</span>
+                                             <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Paid</span>
                                              @if($latestPayment && $latestPayment->paid_at)
-                                                 <span style="color: #4caf50; font-size: 0.625rem; margin-left: 0.1875rem;">{{ $latestPayment->paid_at->format('M d') }}</span>
+                                                 <span style="color: #4caf50; font-size: 0.55rem; font-weight: 500;">{{ $latestPayment->paid_at->format('M d') }}</span>
                                              @endif
                                          @else
-                                             <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.25rem; font-size: 0.625rem;">Not paid</span>
+                                             <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Not paid</span>
                                          @endif
                                      </div>
                                  </td>
-                                 <td>
-                                     <span class="badge badge-info light text-uppercase" style="font-weight: 600;">{{ $student->medium ?? 'N/A' }}</span>
+                                 <td class="text-center">
+                                     <div style="font-weight: 800; color: #4f46e5; font-size: 0.75rem;">
+                                         {{ $subjectCount }}
+                                     </div>
                                  </td>
-                                 <td>
-                                     @if($subjectCount > 0)
-                                         <div style="font-weight: 600; color: #4f46e5;">
-                                             {{ $subjectCount }} {{ Str::plural('Subject', $subjectCount) }}
-                                         </div>
-                                     @else
-                                         <small class="text-muted">None</small>
-                                     @endif
-                                 </td>
-                                 <td class="nowrap-column"><div style="font-size: 0.6875rem;">{{ $student->created_at->format('M d, y') }}</div></td>
                                  <td>
                                      <div class="dropdown">
-                                         <button type="button" class="btn btn-primary light btn-xs sharp" style="width: 1.5rem; height: 1.5rem;" data-toggle="dropdown">
-                                             <svg width="0.75rem" height="0.75rem" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
+                                         <button type="button" class="btn btn-primary light btn-xs sharp" style="width: 1.25rem; height: 1.25rem; padding: 0.125rem;" data-toggle="dropdown">
+                                             <svg width="0.625rem" height="0.625rem" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
                                               @if(!$student->admin_confirmed_at)

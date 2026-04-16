@@ -13,7 +13,7 @@ class ZoomAccountController extends Controller
      */
     public function index()
     {
-        $accounts = ZoomAccount::latest()->get();
+        $accounts = ZoomAccount::latest()->paginate(15);
         return view('admin.zoom-accounts.index', compact('accounts'));
     }
 

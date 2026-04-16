@@ -10,6 +10,7 @@
         background-color: #3b3363 !important;
     }
 </style>
+@include('admin.partials.pagination-styles')
 @endpush
 
 @section('content')
@@ -120,6 +121,23 @@
                         </tbody>
                     </table>
                 </div>
+                @if($subjects->hasPages())
+                <div class="pagination-footer">
+                    <div class="pagination-info">
+                        Showing {{ $subjects->firstItem() }} to {{ $subjects->lastItem() }} of {{ $subjects->total() }} results
+                    </div>
+                    <div class="pagination-per-page">
+                        <span>Per page</span>
+                        <select disabled>
+                            <option>10</option>
+                            <option selected>15</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    {{ $subjects->links('vendor.pagination.custom') }}
+                </div>
+                @endif
             </div>
         </div>
     </div>

@@ -7,15 +7,18 @@ import {
     FiActivity,
     FiMail,
     FiPhone,
-    FiMoreVertical
+    FiMoreVertical,
+    FiTrash2
 } from 'react-icons/fi'
-import { getAdminTeachers } from '../../services/dashboardService'
+import { getAdminTeachers, bulkDeleteAdminTeachers } from '../../services/dashboardService'
 import './AdminTeachers.css'
 
 export default function AdminTeachers() {
     const [teachers, setTeachers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [selectedTeachers, setSelectedTeachers] = useState([])
+    const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
         async function loadTeachers() {
@@ -31,6 +34,31 @@ export default function AdminTeachers() {
         loadTeachers()
     }, [])
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedTeachers(teachers.map(t => t.id));
+        else setSelectedTeachers([]);
+    };
+
+    const handleSelect = (id) => {
+        if (selectedTeachers.includes(id)) setSelectedTeachers(selectedTeachers.filter(tid => tid !== id));
+        else setSelectedTeachers([...selectedTeachers, id]);
+    };
+
+    const handleDeleteSelected = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedTeachers.length} teachers?`)) return
+        setIsDeleting(true)
+        try {
+            await bulkDeleteAdminTeachers(selectedTeachers)
+            setTeachers(teachers.filter(t => !selectedTeachers.includes(t.id)))
+            setSelectedTeachers([])
+        } catch (error) {
+            console.error('Failed to delete teachers:', error)
+            alert('Error deleting teachers')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
     if (loading) return <div className="loading-shimmer">Accessing teacher records...</div>
 
     return (
@@ -40,13 +68,30 @@ export default function AdminTeachers() {
                     <h1>Faculty Management</h1>
                     <p>Supervise teaching staff, assign classes, and track performance.</p>
                 </div>
-                <button className="add-btn"><FiUserPlus /> Add Instructor</button>
+                <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {selectedTeachers.length > 0 && (
+                        <button className="delete-btn" onClick={handleDeleteSelected} disabled={isDeleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                            <FiTrash2 /> Delete Selected ({selectedTeachers.length})
+                        </button>
+                    )}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', background: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                        <input type="checkbox" onChange={handleSelectAll} checked={teachers.length > 0 && selectedTeachers.length === teachers.length} />
+                        Select All
+                    </label>
+                    <button className="add-btn"><FiUserPlus /> Add Instructor</button>
+                </div>
             </div>
 
             <div className="teachers-grid">
                 {teachers.map((teacher) => (
-                    <div key={teacher.id} className="teacher-card">
-                        <div className="card-top">
+                    <div key={teacher.id} className="teacher-card" style={selectedTeachers.includes(teacher.id) ? { border: '2px solid #3b82f6' } : {}}>
+                        <div className="card-top" style={{ position: 'relative' }}>
+                            <input
+                                type="checkbox"
+                                onChange={() => handleSelect(teacher.id)}
+                                checked={selectedTeachers.includes(teacher.id)}
+                                style={{ position: 'absolute', top: 0, left: 0 }}
+                            />
                             <div className="teacher-main">
                                 <div className="avatar">{teacher.name?.charAt(0)}</div>
                                 <div className="info">

@@ -133,4 +133,15 @@ class TeacherController extends Controller
         $teacher->delete();
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted permanently.');
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->ids);
+        User::where('role', 'teacher')->whereIn('id', $ids)->delete();
+        return redirect()->back()->with('success', count($ids) . ' teachers deleted successfully.');
+    }
 }

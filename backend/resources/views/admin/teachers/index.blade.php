@@ -2,17 +2,31 @@
 
 @section('title', 'Teachers')
 
+@push('styles')
+    @include('admin.partials.pagination-styles')
+@endpush
+
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Teachers</h4>
-            <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary btn-sm">
-                <i class="flaticon-381-add-1"></i> Add Teacher
-            </a>
+            <div>
+                <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
+                    <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                </button>
+                <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary btn-sm">
+                    <i class="flaticon-381-add-1"></i> Add Teacher
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<form id="bulkDeleteForm" action="{{ route('admin.teachers.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="ids" id="bulkDeleteIds">
+</form>
 
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -34,6 +48,12 @@
                     <table class="table table-responsive-md">
                         <thead>
                             <tr>
+                                 <th style="width: 2rem;">
+                                     <div class="custom-control custom-checkbox border-0">
+                                         <input type="checkbox" class="custom-control-input" id="checkAll">
+                                         <label class="custom-control-label" for="checkAll"></label>
+                                     </div>
+                                 </th>
                                 <th style="font-weight: 600;">ID</th>
                                 <th style="font-weight: 600;">Name</th>
                                 <th style="font-weight: 600;">Email</th>
@@ -46,6 +66,12 @@
                         <tbody>
                             @forelse($teachers as $t)
                             <tr>
+                                  <td>
+                                      <div class="custom-control custom-checkbox">
+                                          <input type="checkbox" class="custom-control-input teacher-checkbox" id="customCheckBox{{$t->id}}" value="{{$t->id}}">
+                                          <label class="custom-control-label" for="customCheckBox{{$t->id}}"></label>
+                                      </div>
+                                  </td>
                                 <td><strong>{{ $t->teacher_unique_id ?? 'â€“' }}</strong></td>
                                 <td>{{ $t->name }}</td>
                                 <td>{{ $t->email }}</td>
@@ -95,8 +121,20 @@
                 </div>
 
                 @if($teachers->hasPages())
-                <div class="mt-4">
-                    {{ $teachers->links() }}
+                <div class="pagination-footer">
+                    <div class="pagination-info">
+                        Showing {{ $teachers->firstItem() }} to {{ $teachers->lastItem() }} of {{ $teachers->total() }} results
+                    </div>
+                    <div class="pagination-per-page">
+                        <span>Per page</span>
+                        <select disabled>
+                            <option>10</option>
+                            <option selected>15</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    {{ $teachers->links('vendor.pagination.custom') }}
                 </div>
                 @endif
             </div>
@@ -104,3 +142,41 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('checkAll');
+        const checkboxes = document.querySelectorAll('.teacher-checkbox');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const bulkDeleteIdsInput = document.getElementById('bulkDeleteIds');
+
+        function updateBulkDeleteBtn() {
+            const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            if (selected.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-block';
+                selectedCountSpan.textContent = selected.length;
+                bulkDeleteIdsInput.value = selected.join(',');
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateBulkDeleteBtn();
+            });
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateBulkDeleteBtn));
+    });
+
+    function submitBulkDelete() {
+        if (confirm('Are you sure you want to delete the selected teachers?')) {
+            document.getElementById('bulkDeleteForm').submit();
+        }
+    }
+</script>
+@endpush

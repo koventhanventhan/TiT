@@ -56,8 +56,10 @@ Route::prefix('admin')->group(function () {
         Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy');
         Route::post('/students/{id}/mark-paid', [StudentController::class, 'markPaid'])->name('admin.students.mark-paid');
+        Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
         // Teachers
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');
+        Route::post('/teachers/bulk-delete', [TeacherController::class, 'bulkDelete'])->name('admin.teachers.bulk-delete');
         Route::get('/teachers/create', [TeacherController::class, 'create'])->name('admin.teachers.create');
         Route::post('/teachers', [TeacherController::class, 'store'])->name('admin.teachers.store');
         Route::get('/teachers/{id}/edit', [TeacherController::class, 'edit'])->name('admin.teachers.edit');
@@ -88,6 +90,7 @@ Route::prefix('admin')->group(function () {
 
         // Zoom classes
         Route::get('/zoom', [ZoomScheduleController::class, 'index'])->name('admin.zoom.index');
+        Route::post('/zoom/bulk-delete', [ZoomScheduleController::class, 'bulkDelete'])->name('admin.zoom.bulk-delete');
         Route::get('/zoom/create', [ZoomScheduleController::class, 'create'])->name('admin.zoom.create');
         Route::post('/zoom', [ZoomScheduleController::class, 'store'])->name('admin.zoom.store');
         Route::get('/zoom/{id}/edit', [ZoomScheduleController::class, 'edit'])->name('admin.zoom.edit');

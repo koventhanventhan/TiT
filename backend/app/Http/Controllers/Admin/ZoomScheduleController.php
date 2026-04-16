@@ -325,4 +325,28 @@ class ZoomScheduleController extends Controller
 
         return redirect()->route('admin.zoom.index')->with('success', "Notifications sent to {$sentCount} contacts.");
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->ids);
+        
+        $schedules = ZoomSchedule::whereIn('id', $ids)->get();
+        foreach ($schedules as $schedule) {
+            if ($schedule->meeting_id) {
+                try {
+                    $this->zoom->deleteMeeting($schedule->meeting_id);
+                } catch (\Exception $e) {
+                    Log::error('Failed to delete Zoom meeting from Zoom API: ' . $e->getMessage());
+                }
+            }
+            $schedule->delete();
+        }
+
+        return redirect()->back()->with('success', count($ids) . ' zoom classes deleted successfully.');
+    }
 }

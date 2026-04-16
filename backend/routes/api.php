@@ -98,9 +98,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
+        Route::post('/students/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteStudents']);
         Route::get('/teachers', [\App\Http\Controllers\Api\MasterAdminController::class, 'teachers']);
+        Route::post('/teachers/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteTeachers']);
         Route::get('/finance', [\App\Http\Controllers\Api\MasterAdminController::class, 'finance']);
         Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);
+        Route::post('/zoom/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteZoomClasses']);
         Route::get('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'materials']);
         Route::get('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'settings']);
         Route::post('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateSettings']);

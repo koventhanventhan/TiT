@@ -9,6 +9,8 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap; /* allow wrapping on small screens */
+        gap: 1rem;
         background: #3b3363;/* Dark background */
         padding: 0.9375rem 1.5625rem;
         border-bottom-left-radius: 0.5rem;
@@ -20,11 +22,18 @@
     }
 
     .pagination-info {
-        flex: 1;
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    @media (min-width: 768px) {
+        .pagination-info {
+            flex: 1 1 auto;
+            text-align: left;
+        }
     }
 
     .pagination-per-page {
-        flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -42,14 +51,21 @@
     }
 
     .custom-pagination-container {
-        flex: 1;
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
         border: 1.0px solid #374151;
         border-radius: 0.375rem;
-        overflow: hidden;
-        width: fit-content;
-        margin-left: auto;
+        overflow-x: auto;
+        /* Custom scrollbar for container */
+        scrollbar-width: thin;
+        scrollbar-color: #EB8153 transparent;
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .custom-pagination-container {
+            width: auto;
+            margin-left: auto;
+        }
     }
 
     .pagination-item {
@@ -116,13 +132,16 @@
     /* Compact Table Styles */
     .table.table-responsive-md th,
     .table.table-responsive-md td {
-        padding: 0.75rem 0.625rem !important;
-        font-size: 0.8125rem;
+        padding: 0.5rem 0.4rem !important;
+        font-size: 0.75rem !important;
         vertical-align: middle;
     }
 
     .table.table-responsive-md th {
         white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.0313rem;
+        font-weight: 700 !important;
     }
 
     /* Prevent specific columns from wrapping to save space */
@@ -150,12 +169,22 @@
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
-            <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
-                <i class="flaticon-381-add-1"></i> Add Student
-            </a>
+            <div>
+                <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
+                    <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                </button>
+                <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
+                    <i class="flaticon-381-add-1"></i> Add Student
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<form id="bulkDeleteForm" action="{{ route('admin.students.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="ids" id="bulkDeleteIds">
+</form>
 
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -177,16 +206,22 @@
                     <table class="table table-responsive-md">
                         <thead>
                              <tr>
-                                 <th style="font-weight: 600; width: 3.125rem;">ID</th>
-                                 <th style="font-weight: 600;">Student</th>
-                                 <th style="font-weight: 600;">Greade</th>
-                                 <th class="nowrap-column" style="font-weight: 600;">Contact</th>
-                                 <th style="font-weight: 600; width: 5rem;">Gender</th>
-                                 <th class="nowrap-column" style="font-weight: 600;">Status/Payment</th>
-                                 <th style="font-weight: 600;">Medium</th>
-                                 <th style="font-weight: 600;">Subjects</th>
-                                 <th class="nowrap-column" style="font-weight: 600;">Created</th>
-                                 <th style="font-weight: 600; width: 7.5rem;">Actions</th>
+                                 <th style="width: 2rem;">
+                                     <div class="custom-control custom-checkbox border-0">
+                                         <input type="checkbox" class="custom-control-input" id="checkAll">
+                                         <label class="custom-control-label" for="checkAll"></label>
+                                     </div>
+                                 </th>
+                                 <th style="width: 2rem;">ID</th>
+                                 <th style="min-width: 10rem;">Student</th>
+                                 <th>Grade</th>
+                                 <th class="nowrap-column">Contact</th>
+                                 <th style="width: 3.125rem;">Sex</th>
+                                 <th class="nowrap-column">Status/Payment</th>
+                                 <th>Medium</th>
+                                 <th>Subjects</th>
+                                 <th class="nowrap-column">Created</th>
+                                 <th style="width: 3rem;">Action</th>
                              </tr>
                          </thead>
                          <tbody>
@@ -211,46 +246,52 @@
                                  $subjectCount = count($subjectsArray);
                              @endphp
                              <tr>
-                                  <td class="nowrap-column"><strong>{{ $student->id }}</strong></td>
-                                 <td>
-                                     <div style="font-weight: 600; color: #ffab2d;">{{ $student->full_name ?? $student->name }}</div>
-                                     <small class="text-muted d-block">{{ $student->email }}</small>
+                                  <td>
+                                      <div class="custom-control custom-checkbox">
+                                          <input type="checkbox" class="custom-control-input student-checkbox" id="customCheckBox{{$student->id}}" value="{{$student->id}}">
+                                          <label class="custom-control-label" for="customCheckBox{{$student->id}}"></label>
+                                      </div>
+                                  </td>
+                                   <td class="nowrap-column"><strong>{{ $student->id }}</strong></td>
+                                  <td>
+                                      <div style="font-weight: 600; color: #ffab2d; font-size: 0.8125rem; line-height: 1.2;">{{ $student->full_name ?? $student->name }}</div>
+                                      <div style="font-size: 0.6875rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 15.625rem;">{{ $student->email }}</div>
+                                  </td>
+                                 <td class="nowrap-column">
+                                     <span style="color:#a78bfa; font-weight:600;">
+                                     {{ $student->current_grade ? 'G'.$student->current_grade : 'N/A' }}
+                                     </span>
                                  </td>
-                                <td>
-                                    <small class="d-block mt-1" style="color:#8b5cf6; font-weight:600;">
-                                    {{ $student->current_grade ? 'Grade '.$student->current_grade : 'N/A' }}
-                                    </small>
-                                </td>
                                  <td class="nowrap-column">
                                      <div style="font-weight: 500;">{{ $student->phone_number ?? 'N/A' }}</div>
                                  </td>
                                  <td>
                                      <div class="text-center">
                                          @if($student->gender === 'female')
-                                             <span class="badge badge-pill badge-danger" style="width: 1.875rem; height: 1.875rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem;">G</span>
+                                             <span class="badge badge-pill badge-danger" style="width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">G</span>
                                          @else
-                                             <span class="badge badge-pill badge-primary" style="width: 1.875rem; height: 1.875rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem;">M</span>
+                                             <span class="badge badge-pill badge-primary" style="width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">M</span>
                                          @endif
                                      </div>
                                  </td>
                                  <td class="nowrap-column">
-                                     <div>
+                                     <div style="margin-bottom: 0.125rem;">
                                          @if($student->deactivated_at)
-                                             <span class="badge badge-xs badge-danger">Deactivated</span>
+                                             <span class="badge badge-xs badge-danger" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">Deactivated</span>
                                          @elseif($student->admin_confirmed_at)
-                                             <span class="badge badge-xs badge-success">Confirmed</span>
+                                             <span class="badge badge-xs badge-success" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">Confirmed</span>
                                          @else
-                                             <span class="badge badge-xs badge-warning">{{ $student->registration_status ?? 'pending' }}</span>
+                                             <span class="badge badge-xs badge-warning" style="padding: 0.125rem 0.3125rem; font-size: 0.625rem;">{{ $student->registration_status ?? 'pending' }}</span>
                                          @endif
                                      </div>
-                                     <div class="mt-1">
+                                     <div>
                                          @if($paidThisMonth)
-                                             <span class="badge badge-xs badge-outline-success">Paid</span>
+                                             <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.25rem; font-size: 0.625rem;">Paid</span>
                                              @if($latestPayment && $latestPayment->paid_at)
-                                                 <small class="d-block mt-1" style="color: #4caf50; font-size: 0.6875rem;">{{ $latestPayment->paid_at->format('M d, Y') }}</small>
+                                                 <span style="color: #4caf50; font-size: 0.625rem; margin-left: 0.1875rem;">{{ $latestPayment->paid_at->format('M d') }}</span>
                                              @endif
                                          @else
-                                             <span class="badge badge-xs badge-outline-secondary">Not paid</span>
+                                             <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.25rem; font-size: 0.625rem;">Not paid</span>
                                          @endif
                                      </div>
                                  </td>
@@ -266,11 +307,11 @@
                                          <small class="text-muted">None</small>
                                      @endif
                                  </td>
-                                 <td class="nowrap-column"><small>{{ $student->created_at->format('M d, Y') }}</small></td>
+                                 <td class="nowrap-column"><div style="font-size: 0.6875rem;">{{ $student->created_at->format('M d, y') }}</div></td>
                                  <td>
                                      <div class="dropdown">
-                                         <button type="button" class="btn btn-primary light btn-xs sharp" data-toggle="dropdown">
-                                             <svg width="1rem" height="1rem" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
+                                         <button type="button" class="btn btn-primary light btn-xs sharp" style="width: 1.5rem; height: 1.5rem;" data-toggle="dropdown">
+                                             <svg width="0.75rem" height="0.75rem" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
                                               @if(!$student->admin_confirmed_at)
@@ -331,3 +372,42 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('checkAll');
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const bulkDeleteIdsInput = document.getElementById('bulkDeleteIds');
+
+        function updateBulkDeleteBtn() {
+            const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            if (selected.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-block';
+                selectedCountSpan.textContent = selected.length;
+                bulkDeleteIdsInput.value = selected.join(',');
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateBulkDeleteBtn();
+            });
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateBulkDeleteBtn));
+    });
+
+    function submitBulkDelete() {
+        // Translation: Are you sure you want to delete the selected students?
+        if (confirm('Are you sure you want to delete the selected students?')) {
+            document.getElementById('bulkDeleteForm').submit();
+        }
+    }
+</script>
+@endpush

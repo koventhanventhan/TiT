@@ -375,5 +375,21 @@ class StudentController extends Controller
         ]);
         return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . '.');
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        User::where('role', 'user')->whereIn('id', $ids)->delete();
+
+        return redirect()->back()->with('success', count($ids) . ' students deleted successfully.');
+    }
 }
 

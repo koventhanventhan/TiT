@@ -6,15 +6,18 @@ import {
     FiXCircle,
     FiEye,
     FiMoreVertical,
-    FiUser
+    FiUser,
+    FiTrash2
 } from 'react-icons/fi'
-import { getAdminStudents } from '../../services/dashboardService'
+import { getAdminStudents, bulkDeleteAdminStudents } from '../../services/dashboardService'
 import './AdminStudents.css'
 
 export default function AdminStudents() {
     const [students, setStudents] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [selectedStudents, setSelectedStudents] = useState([])
+    const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
         async function loadStudents() {
@@ -35,6 +38,37 @@ export default function AdminStudents() {
         s.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedStudents(filteredStudents.map(s => s.id))
+        } else {
+            setSelectedStudents([])
+        }
+    }
+
+    const handleSelect = (id) => {
+        if (selectedStudents.includes(id)) {
+            setSelectedStudents(selectedStudents.filter(sid => sid !== id))
+        } else {
+            setSelectedStudents([...selectedStudents, id])
+        }
+    }
+
+    const handleDeleteSelected = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedStudents.length} students?`)) return
+        setIsDeleting(true)
+        try {
+            await bulkDeleteAdminStudents(selectedStudents)
+            setStudents(students.filter(s => !selectedStudents.includes(s.id)))
+            setSelectedStudents([])
+        } catch (error) {
+            console.error('Failed to delete students:', error)
+            alert('Error deleting students')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
     if (loading) return <div className="loading-shimmer">Loading student directory...</div>
 
     return (
@@ -44,7 +78,14 @@ export default function AdminStudents() {
                     <h1>Student Directory</h1>
                     <p>Manage registrations, payments, and academic access.</p>
                 </div>
-                <button className="add-btn">+ Register New Student</button>
+                <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
+                    {selectedStudents.length > 0 && (
+                        <button className="delete-btn" onClick={handleDeleteSelected} disabled={isDeleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                            <FiTrash2 /> Delete Selected ({selectedStudents.length})
+                        </button>
+                    )}
+                    <button className="add-btn">+ Register New Student</button>
+                </div>
             </div>
 
             <div className="table-controls">
@@ -67,6 +108,13 @@ export default function AdminStudents() {
                 <table className="admin-table">
                     <thead>
                         <tr>
+                            <th>
+                                <input
+                                    type="checkbox"
+                                    onChange={handleSelectAll}
+                                    checked={filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length}
+                                />
+                            </th>
                             <th>Student</th>
                             <th>Grade/Stream</th>
                             <th>Registration</th>
@@ -77,7 +125,14 @@ export default function AdminStudents() {
                     </thead>
                     <tbody>
                         {filteredStudents.map((student) => (
-                            <tr key={student.id}>
+                            <tr key={student.id} className={selectedStudents.includes(student.id) ? 'selected-row' : ''}>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedStudents.includes(student.id)}
+                                        onChange={() => handleSelect(student.id)}
+                                    />
+                                </td>
                                 <td>
                                     <div className="student-profile">
                                         <div className="student-avatar">{student.full_name?.charAt(0)}</div>

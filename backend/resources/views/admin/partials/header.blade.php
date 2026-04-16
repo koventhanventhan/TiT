@@ -1,4 +1,49 @@
 <div class="header">
+    <style>
+        @media (max-width: 991px) {
+            /* Keep only search icon */
+            .header-left .search_bar .form-control {
+                display: none !important;
+            }
+            .header-left .search_bar .search_icon {
+                position: static !important;
+                transform: none !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.1) !important;
+                width: 2.25rem;
+                height: 2.25rem;
+                border-radius: 0.375rem;
+                cursor: pointer;
+            }
+            .header-left .search_bar form {
+                margin: 0;
+            }
+
+            /* Keep only home icon */
+            .home-text {
+                display: none !important;
+            }
+            .header-right .nav-item .btn {
+                padding: 0.4rem !important; /* Square button */
+            }
+
+            /* Ensure profile and other icons fit well */
+            .header-right .nav-item {
+                margin-right: 0.5rem !important;
+            }
+            .header-right .nav-link svg {
+                width: 20px;
+                height: 20px;
+            }
+            /* Profile icon resizing */
+            .header-profile img, .header-profile .header-profile-initials {
+                width: 32px !important;
+                height: 32px !important;
+            }
+        }
+    </style>
     <div class="header-content">
         <nav class="navbar navbar-expand">
             <div class="collapse navbar-collapse justify-content-between">
@@ -13,13 +58,12 @@
 
                 <ul class="navbar-nav header-right">
                     {{-- Home Button --}}
-                    <li class="nav-item" style="margin-right: 1.25rem;">
-                        <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; color: white; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; box-shadow: 0 0.125rem 0.5rem rgba(102, 126, 234, 0.3); cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                    <li class="nav-item">
+                        <a class="nav-link ai-icon" href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}" target="_blank" rel="noopener noreferrer" title="Home Website">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
-                            Home
                         </a>
                     </li>
 

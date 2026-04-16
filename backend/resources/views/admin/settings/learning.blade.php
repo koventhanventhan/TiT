@@ -319,6 +319,7 @@
                                                 <label>Notes Page Title</label>
                                                 <input type="text" name="learning_notes_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_notes_title', 'Study Notes') }}">
                                             </div>
+                                            
                                             <div class="form-group">
                                                 <label>Notes Description</label>
                                                 <textarea name="learning_notes_description" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_notes_description', 'Access comprehensive study notes for all subjects and grades.') }}</textarea>

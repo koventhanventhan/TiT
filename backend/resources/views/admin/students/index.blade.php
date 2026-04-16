@@ -207,7 +207,13 @@
                 <div class="table-responsive">
                     <table class="table table-responsive-md">
                         <thead>
-                                 <th style="width: 2rem;">ID/DATE</th>
+                                 <th style="width: 2rem;">
+                                     <div class="custom-control custom-checkbox border-0">
+                                         <input type="checkbox" class="custom-control-input" id="checkAll">
+                                         <label class="custom-control-label" for="checkAll"></label>
+                                     </div>
+                                 </th>
+                                 <th style="width: 3rem;">ID/DATE</th>
                                  <th style="max-width: 7.5rem;">STUDENT</th>
                                  <th class="text-center">INFO</th>
                                  <th class="nowrap-column">CONTACT</th>
@@ -237,6 +243,12 @@
                                  }
                                  $subjectCount = count($subjectsArray);
                              @endphp
+                                   <td>
+                                       <div class="custom-control custom-checkbox">
+                                           <input type="checkbox" class="custom-control-input student-checkbox" id="customCheckBox{{$student->id}}" value="{{$student->id}}">
+                                           <label class="custom-control-label" for="customCheckBox{{$student->id}}"></label>
+                                       </div>
+                                   </td>
                                     <td class="nowrap-column">
                                        <div style="font-weight: 800; font-size: 0.75rem;">{{ $student->id }}</div>
                                        <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>

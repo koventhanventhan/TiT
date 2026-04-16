@@ -235,6 +235,8 @@
                                          }
                                      }
                                  }
+                                 $subjectCount = count($subjectsArray);
+                             @endphp
                                     <td class="nowrap-column">
                                        <div style="font-weight: 800; font-size: 0.75rem;">{{ $student->id }}</div>
                                        <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>

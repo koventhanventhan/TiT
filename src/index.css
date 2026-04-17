@@ -127,7 +127,16 @@ code {
 
 .btn-primary:hover {
   transform: translateY(-0.125rem);
-  box-shadow: 0 0.625rem 1.875rem rgba(37, 99, 235, 0.35);
+  box-shadow: 0 0.625rem 1.875rem rgba(79, 11, 217, 0.35);
+}
+
+.btn-primary:active,
+.btn-primary:focus {
+  background: var(--primary-dark) !important;
+  color: white !important;
+  transform: translateY(0);
+  box-shadow: inset 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2) !important;
+  outline: none !important;
 }
 
 .btn-secondary {
@@ -157,6 +166,8 @@ code {
   transform: translateY(-0.125rem);
   box-shadow: 0 0.625rem 1.5625rem rgba(255, 0, 0, 0.3);
 }
+
+
 
 .btn-youtube .youtube-icon {
   font-size: 1.375rem;

@@ -169,7 +169,7 @@ const Hero = () => {
               {heroDescription}
             </p>
             <div className="hero-actions">
-              <button onClick={openRegister} className="btn btn-primary hero-btn btn ">
+              <button onClick={openRegister} className="btn-register">
                 {t('hero_cta')}
                 <FaArrowRight style={{ fontSize: '1rem', marginLeft: '0.5rem', color: '#ffffff' }} />
               </button>

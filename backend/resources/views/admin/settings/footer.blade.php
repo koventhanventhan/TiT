@@ -178,7 +178,38 @@
                             <input type="text" name="footer_refund_label" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_refund_label', 'Refund Policy') }}">
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Gallery Label</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="footer_gallery_label" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_gallery_label', 'Gallery') }}">
+                        </div>
+                    </div> 
 
+                    <hr>
+                    <h5 class="mb-3 text-warning">Legal Page Content (Full Text)</h5>
+                    <p class="mb-3 text-muted" style="font-size: 0.8rem;">Enter the full text for your legal pages here. These will appear when students click the links in the footer.</p>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Privacy Policy Content</label>
+                        <div class="col-sm-9">
+                            <textarea name="policy_privacy_content" class="form-control" rows="8" placeholder="Type or paste your full Privacy Policy here...">{{ \App\Models\SiteSetting::get('policy_privacy_content', '') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Terms & Conditions Content</label>
+                        <div class="col-sm-9">
+                            <textarea name="policy_terms_content" class="form-control" rows="8" placeholder="Type or paste your full Terms and Conditions here...">{{ \App\Models\SiteSetting::get('policy_terms_content', '') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Refund Policy Content</label>
+                        <div class="col-sm-9">
+                            <textarea name="policy_refund_content" class="form-control" rows="8" placeholder="Type or paste your full Refund Policy here...">{{ \App\Models\SiteSetting::get('policy_refund_content', '') }}</textarea>
+                        </div>
+                    </div>
+                    
                     <hr>
                     <h5 class="mb-3 text-primary">Quick Links Section</h5>
                     <div class="form-group row">
@@ -187,12 +218,7 @@
                             <input type="text" name="footer_quick_links_title" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_quick_links_title', 'Quick Links') }}">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label class="col-sm-3 col-form-label">Gallery Label</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="footer_gallery_label" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_gallery_label', 'Gallery') }}">
-                        </div>
-                    </div>
+                   
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label">Apply as a Tutor Label</label>
                         <div class="col-sm-9">
@@ -203,6 +229,100 @@
                         <label class="col-sm-3 col-form-label">Register as a Student Label</label>
                         <div class="col-sm-9">
                             <input type="text" name="footer_student_label" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_student_label', 'Register as a student') }}">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-info">Tutor Application Settings</h5>
+                    <p class="mb-3 text-muted" style="font-size: 0.8rem;">Configure where tutor applications are sent and what message appears on the form page.</p>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Target Email for Applications</label>
+                        <div class="col-sm-9">
+                            <input type="email" name="footer_tutor_receive_email" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tutor_receive_email', 'admin@titjaffna.lk') }}">
+                            <div class="help-text">Tutor applications will be sent to this email address.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Form Page Title</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="footer_tutor_form_title" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tutor_form_title', 'Tutor Application Form') }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Form Page Description</label>
+                        <div class="col-sm-9">
+                            <textarea name="footer_tutor_form_desc" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('footer_tutor_form_desc', 'Join our elite team of educators. Please fill in your professional details below.') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="class-edit-section mt-4">
+                        <h5>Tutor Form Field Labels</h5>
+                        <p class="mb-3 text-muted" style="font-size: 0.8rem;">Change the names of the questions/fields in the tutor application form.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Full Name Label</label>
+                                    <input type="text" name="tutor_label_fullname" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_fullname', 'Full Name') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email Label</label>
+                                    <input type="text" name="tutor_label_email" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_email', 'Email Address') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Phone Label</label>
+                                    <input type="text" name="tutor_label_phone" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_phone', 'Phone (WhatsApp)') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Medium Label</label>
+                                    <input type="text" name="tutor_label_medium" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_medium', 'Medium of Teaching') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Subject Label</label>
+                                    <input type="text" name="tutor_label_subject" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_subject', 'Subject(s) to Teach') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Qualification Label</label>
+                                    <input type="text" name="tutor_label_qualification" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_qualification', 'Highest Qualification') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Experience Label</label>
+                                    <input type="text" name="tutor_label_experience" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_experience', 'Teaching Experience (Years)') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>CV Link Label</label>
+                                    <input type="text" name="tutor_label_cv" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_cv', 'CV or Portfolio Link') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Availability Label</label>
+                                    <input type="text" name="tutor_label_availability" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_availability', 'Availability (Days/Times)') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Bio/Philosophy Label</label>
+                                    <input type="text" name="tutor_label_bio" class="form-control" value="{{ \App\Models\SiteSetting::get('tutor_label_bio', 'Teaching Philosophy / Brief Bio') }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -226,6 +346,12 @@
                             <input type="text" name="footer_phone" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_phone', '+94 114 477 488') }}">
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Location Name</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="footer_location" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_location', 'Colombo, Sri Lanka') }}">
+                        </div>
+                    </div>
 
                     <hr>
                     <h5 class="mb-3 text-primary">Copyright & Socials</h5>
@@ -233,6 +359,12 @@
                         <label class="col-sm-3 col-form-label">Copyright Text</label>
                         <div class="col-sm-9">
                             <input type="text" name="footer_copyright" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_copyright', '© 2025 TiT. All rights reserved by TIT Online Education (PVT) Ltd.') }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Developed By Text</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="footer_developed_by" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_developed_by', 'Designed & Developed by TiT Team') }}">
                         </div>
                     </div>
                     <div class="form-group row">

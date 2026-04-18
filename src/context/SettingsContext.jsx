@@ -43,7 +43,7 @@ export const SettingsProvider = ({ children }) => {
 
     // Helper to get a setting with a default value
     const getSetting = (key, defaultValue) => {
-        return settings[key] !== undefined ? settings[key] : defaultValue;
+        return (settings[key] !== undefined && settings[key] !== null) ? settings[key] : defaultValue;
     };
 
     if (error && !Object.keys(settings).length) {

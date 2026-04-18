@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { useLocation } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -32,6 +33,17 @@ const AboutPage = () => {
   const [ctaDesc, setCtaDesc] = useState(getSetting('about_cta_desc', t('section_cta_desc')))
   const [ctaBtn1, setCtaBtn1] = useState(getSetting('about_cta_btn1', t('btn_register_now')))
   const [ctaBtn2, setCtaBtn2] = useState(getSetting('about_cta_btn2', t('btn_contact_us')))
+
+  const location = useLocation()
+
+  useEffect(() => {
+    // Deep link to specific tab from URL query param
+    const params = new URLSearchParams(location.search)
+    const tabParam = params.get('tab')
+    if (tabParam === 'images') {
+      setActiveTab('images')
+    }
+  }, [location])
 
   useEffect(() => {
     const translateArray = async (arr, fields) => {

@@ -255,7 +255,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1.0px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.625rem;
-  color: #c4b5fd;
+  color: #f4f3f7;
   font-size: 0.75rem;
   font-weight: 700;
   backdrop-filter: blur(0.5rem);
@@ -460,7 +460,7 @@
 }
 
 .clp-btn-outline:hover {
-  background: var(--primary-color);
+  /* background: var(--primary-color); */
   color: #fff;
   transform: translateY(-0.125rem);
 }

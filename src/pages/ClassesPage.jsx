@@ -198,7 +198,7 @@ const ClassesPage = () => {
                   {/* Highlight pills */}
                   <div className="clp-highlights">
                     {ct.highlights.map((h, i) => (
-                      <span key={i} className="clp-highlight" style={{ borderColor: `${ct.color}33`, color: `${ct.color}cc` }}>
+                      <span key={i} className="clp-highlight" style={{ borderColor: `${ct.color}33` }}>
                         {h.icon} {h.label}
                       </span>
                     ))}
@@ -259,11 +259,11 @@ const ClassesPage = () => {
 
                   {/* CTA */}
                   <div className="clp-card-cta">
-                    <button 
+                    <button
                       onClick={openRegister}
-                      className="clp-btn-enroll" 
-                      style={{ 
-                        background: `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`, 
+                      className="clp-btn-enroll"
+                      style={{
+                        background: `linear-gradient(135deg, ${ct.color} 0%, ${ct.color}dd 100%)`,
                         boxShadow: `0 12px 36px ${ct.color}44`,
                         border: 'none',
                         cursor: 'pointer'

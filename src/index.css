@@ -141,7 +141,7 @@ code {
 
 /* ── Extreme Fix: Register Now Button ── */
 .btn-register {
-  background: #1a103c !important;
+  /* background: #1a103c !important; */
   color: white !important;
   padding: 0.75rem 2rem !important;
   border: none !important;
@@ -155,16 +155,17 @@ code {
   gap: 0.5rem !important;
   text-decoration: none !important;
   box-shadow: 0 0.5rem 1.5rem rgba(26, 16, 60, 0.4) !important;
-  transition: none !important; /* Remove transitions to prevent white flash */
+  transition: none !important;
+  /* Remove transitions to prevent white flash */
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 
-.btn-register:hover, 
-.btn-register:active, 
+.btn-register:hover,
+.btn-register:active,
 .btn-register:focus,
 .btn-register:visited {
-  background: #1a103c !important;
+  background: var(--gradient-1) !important;
   color: white !important;
   box-shadow: 0 0.25rem 0.75rem rgba(26, 16, 60, 0.6) !important;
   outline: none !important;

@@ -42,6 +42,33 @@
                 width: 32px !important;
                 height: 32px !important;
             }
+
+            /* Fix dropdown positioning on mobile */
+            .navbar-nav .dropdown-menu {
+                position: absolute !important;
+                left: auto !important;
+                z-index: 1050;
+                margin-top: 0.5rem;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            }
+            .navbar-nav .dropdown-menu.show {
+                display: block !important;
+                max-width: calc(100vw - 20px) !important;
+            }
+            .header-profile .dropdown-menu {
+                min-width: 200px;
+                right: 0 !important;
+            }
+            .notification_dropdown .dropdown-menu {
+                min-width: 260px;
+                right: 0 !important; 
+            }
+            
+            /* Give header a high z-index to overlay body */
+            .header, .header-content, .navbar {
+                z-index: 1040 !important;
+                overflow: visible !important;
+            }
         }
     </style>
     <div class="header-content">

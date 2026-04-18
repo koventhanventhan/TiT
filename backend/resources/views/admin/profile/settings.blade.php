@@ -328,10 +328,10 @@
                                         {{ strtoupper(substr($user->first_name ?: $user->name, 0, 1)) }}{{ strtoupper(substr($user->last_name, 0, 1)) }}
                                     </div>
                                 @endif
-                                <div class="d-flex flex-column gap-2" style="gap: 10px;">
+                                <div class="d-flex flex-column align-items-start mt-2">
                                     <input type="file" name="avatar" id="settingsAvatarInput" class="d-none" accept="image/*" onchange="previewSettingsAvatar(this)">
                                     <input type="hidden" name="remove_avatar" id="settingsRemoveAvatarInput" value="0">
-                                    <button type="button" class="btn btn-primary btn-sm px-4" style="background: #EB8153; border-color: #EB8153;" onclick="document.getElementById('settingsAvatarInput').click()">Change Photo</button>
+                                    <button type="button" class="btn btn-primary btn-sm px-4 mb-2" style="background: #EB8153; border-color: #EB8153;" onclick="document.getElementById('settingsAvatarInput').click()">Change Photo</button>
                                     <button type="button" class="btn btn-danger btn-sm px-4" id="settingsRemoveAvatarBtn" style="{{ !$user->avatar ? 'display: none;' : '' }}" onclick="removeSettingsAvatar()">Remove Photo</button>
                                 </div>
                             </div>

@@ -46,14 +46,16 @@
             /* Fix dropdown positioning on mobile */
             .navbar-nav .dropdown-menu {
                 position: absolute !important;
+                right: 0 !important;
                 left: auto !important;
-                z-index: 1050;
+                z-index: 1050 !important;
                 margin-top: 0.5rem;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
             }
+            .nav-item.dropdown.show .dropdown-menu,
             .navbar-nav .dropdown-menu.show {
                 display: block !important;
-                max-width: calc(100vw - 20px) !important;
+                max-width: 95vw !important;
             }
             .header-profile .dropdown-menu {
                 min-width: 200px;

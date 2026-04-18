@@ -37,18 +37,15 @@
 
     @media (max-width: 991px) {
         .settings-container {
-            flex-direction: column !important;
-            display: flex !important;
+            flex-direction: column;
         }
         .settings-sidebar {
-            width: 100% !important;
-            min-width: 100% !important;
-            margin-bottom: 1rem !important;
-            height: auto !important;
+            width: 100%;
+            margin-bottom: 1rem;
         }
         .calendar-layout {
-            grid-template-columns: 1fr !important;
-            height: auto !important;
+            grid-template-columns: 1fr;
+            height: auto;
         }
     }
 
@@ -290,12 +287,33 @@
 @endpush
 
 @section('content')
+{{-- Responsive fix: inline style to ensure mobile stacking --}}
+<style>
+    @media (max-width: 991px) {
+        .settings-container {
+            flex-direction: column !important;
+            display: flex !important;
+        }
+        .settings-sidebar {
+            width: 100% !important;
+            margin-bottom: 1rem !important;
+        }
+        .settings-content {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .calendar-layout {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+        }
+    }
+</style>
 <div class="settings-header-section mb-4">
     <h2 class="text-white font-w700 mb-1">Settings</h2>
     <p class="text-muted">Manage your account settings and preferences.</p>
 </div>
 
-<div class="settings-container">
+<div class="settings-container" id="settingsContainer">
     <!-- Internal Sidebar Navigation -->
     <div class="settings-sidebar" id="main_settings_sidebar">
         <!-- Profiles Header/Toggle at the top -->
@@ -336,7 +354,7 @@
                         @csrf
                         <div class="form-group mb-4">
                             <label class="text-white font-w600">Profile Photo</label>
-                            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start mt-3">
+                            <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start mt-3">
                                 @php $user = Auth::user(); @endphp
                                 @if($user->avatar)
                                     <img src="{{ asset($user->avatar) }}" alt="Avatar" class="profile-photo-preview mb-3 mb-sm-0 mr-sm-4" id="settingsAvatarPreview">
@@ -1094,5 +1112,31 @@
             if (confirm('Are you sure you want to delete this administrator?')) submitForm();
         }
     }
+</script>
+<script>
+    // Force responsive layout on mobile
+    (function() {
+        function fixSettingsLayout() {
+            var container = document.getElementById('settingsContainer');
+            var sidebar = document.getElementById('main_settings_sidebar');
+            if (!container) return;
+            if (window.innerWidth <= 991) {
+                container.style.flexDirection = 'column';
+                container.style.display = 'flex';
+                if (sidebar) {
+                    sidebar.style.width = '100%';
+                    sidebar.style.marginBottom = '1rem';
+                }
+            } else {
+                container.style.flexDirection = '';
+                if (sidebar) {
+                    sidebar.style.width = '';
+                    sidebar.style.marginBottom = '';
+                }
+            }
+        }
+        fixSettingsLayout();
+        window.addEventListener('resize', fixSettingsLayout);
+    })();
 </script>
 @endpush

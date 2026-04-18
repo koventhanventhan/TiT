@@ -142,3 +142,6 @@ Route::get('/subjects/prices', [\App\Http\Controllers\Admin\SubjectController::c
 // Contact form (public)
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'send']);
 
+// Tutor Application (public)
+Route::post('/tutor/apply', [\App\Http\Controllers\Api\TutorApplicationController::class, 'apply']);
+

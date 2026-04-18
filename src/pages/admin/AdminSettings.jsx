@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FiSettings, FiGlobe, FiPhone, FiShare2, FiSave, FiLayout, FiImage, FiMenu } from 'react-icons/fi'
+import { FiSettings, FiGlobe, FiPhone, FiShare2, FiSave, FiLayout, FiImage, FiMenu, FiShield } from 'react-icons/fi'
 import { getAdminSettings, updateAdminBranding, updateAdminSettings } from '../../services/dashboardService'
 import { useSettings } from '../../context/SettingsContext'
 import './AdminSettings.css'
@@ -110,6 +110,9 @@ export default function AdminSettings() {
                     </button>
                     <button className={activeTab === 'social' ? 'active' : ''} onClick={() => setActiveTab('social')}>
                         <FiShare2 /> Social Links
+                    </button>
+                    <button className={activeTab === 'legal' ? 'active' : ''} onClick={() => setActiveTab('legal')}>
+                        <FiShield /> Legal Policies
                     </button>
                 </aside>
 
@@ -447,8 +450,13 @@ export default function AdminSettings() {
                                     </div>
                                 </div>
                                 <div className="input-group mt-4">
-                                    <label>Physical Address</label>
-                                    <input type="text" defaultValue={settings.contact_address || '123 Main St, Jaffna'} />
+                                    <label>Location Name (Footer)</label>
+                                    <input 
+                                        type="text" 
+                                        value={settings.footer_location || ''} 
+                                        onChange={(e) => handleInputChange('footer_location', e.target.value)}
+                                        placeholder="Colombo, Sri Lanka" 
+                                    />
                                 </div>
                             </div>
                         )}
@@ -468,6 +476,62 @@ export default function AdminSettings() {
                                     <label>WhatsApp Business Number</label>
                                     <input type="text" placeholder="94771234567" />
                                 </div>
+                                <div className="input-group mb-4">
+                                    <label>Developed By Text (Footer)</label>
+                                    <input 
+                                        type="text" 
+                                        value={settings.footer_developed_by || ''} 
+                                        onChange={(e) => handleInputChange('footer_developed_by', e.target.value)}
+                                        placeholder="Designed & Developed by TiT Team" 
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'legal' && (
+                            <div className="settings-group">
+                                <h3>Legal Policies Content</h3>
+                                <p className="description">Enter the content for your institute's legal documents. These will be displayed when students click the links in the footer.</p>
+                                
+                                <div className="settings-section mt-4">
+                                    <div className="input-group mb-6">
+                                        <label>Privacy Policy Content</label>
+                                        <textarea 
+                                            rows="10" 
+                                            placeholder="Enter your Privacy Policy here..."
+                                            value={settings.policy_privacy_content || ''}
+                                            onChange={(e) => handleInputChange('policy_privacy_content', e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                    
+                                    <div className="input-group mb-6">
+                                        <label>Terms & Conditions Content</label>
+                                        <textarea 
+                                            rows="10" 
+                                            placeholder="Enter your Terms & Conditions here..."
+                                            value={settings.policy_terms_content || ''}
+                                            onChange={(e) => handleInputChange('policy_terms_content', e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                    
+                                    <div className="input-group mb-6">
+                                        <label>Refund Policy Content</label>
+                                        <textarea 
+                                            rows="10" 
+                                            placeholder="Enter your Refund Policy here..."
+                                            value={settings.policy_refund_content || ''}
+                                            onChange={(e) => handleInputChange('policy_refund_content', e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                </div>
+
+                                <button className="save-btn mt-6" onClick={() => handleSettingsSave({
+                                    policy_privacy_content: settings.policy_privacy_content,
+                                    policy_terms_content: settings.policy_terms_content,
+                                    policy_refund_content: settings.policy_refund_content
+                                })}>
+                                    <FiSave /> Save Policy Content
+                                </button>
                             </div>
                         )}
                     </div>

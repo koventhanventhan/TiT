@@ -145,6 +145,18 @@ const ContactPage = () => {
       setMapDesc(t('footer_map_desc'))
     }
   }, [language, translate, getSetting, t])
+  
+  // Handle scrolling to hash anchor on mount or hash change
+  useEffect(() => {
+    if (window.location.hash === '#map-section') {
+      const element = document.getElementById('map-section');
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 500); // Small delay to ensure page is rendered
+      }
+    }
+  }, []);
 
   const socialLinks = [
     { icon: <FiFacebook />, name: 'Facebook', link: getSetting('social_facebook', '#') },

@@ -1,0 +1,135 @@
+.policy-page {
+    min-height: 100vh;
+    background-color: #f1f5f9;
+    padding-bottom: 5rem;
+}
+
+.policy-header-bg {
+    background: #1e293b;
+    padding: 9rem 0 6rem;
+    color: white;
+    text-align: center;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: white;
+}
+
+.policy-title-section h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.last-updated {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.policy-content-card {
+    background: white;
+    max-width: 800px;
+    margin: -4rem auto 0;
+    padding: 4rem 5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    /* Sharp document style */
+    position: relative;
+    border: 1px solid #e2e8f0;
+}
+
+/* Document watermark or seal style */
+.policy-content-card::after {
+    content: 'OFFICIAL DOCUMENT';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 5rem;
+    color: rgba(0, 0, 0, 0.02);
+    font-weight: 900;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.policy-text {
+    font-family: 'Inter', 'Segoe UI', serif;
+    line-height: 1.8;
+    color: #1e293b;
+    font-size: 1.05rem;
+    white-space: pre-wrap;
+    /* Preserve spaces and newlines if needed, though we map paragraphs */
+}
+
+.policy-text p {
+    margin-bottom: 1.5rem;
+    text-align: justify;
+}
+
+.policy-icon {
+    display: none;
+    /* Hide icon for more formal PDF look */
+}
+
+.policy-loading {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 850px) {
+    .policy-content-card {
+        margin: -2rem 1rem 0;
+        padding: 2rem;
+    }
+}
+
+/* Print Styles for PDF feel */
+@media print {
+
+    .policy-header-bg,
+    .back-link {
+        display: none;
+    }
+
+    .policy-content-card {
+        margin: 0;
+        box-shadow: none;
+        border: none;
+        width: 100%;
+        max-width: none;
+    }
+}

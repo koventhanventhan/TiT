@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import CustomCursor from './components/CustomCursor'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
@@ -13,6 +14,8 @@ import NotesPage from './pages/NotesPage'
 import PastPapersPage from './pages/PastPapersPage'
 import RecordingsPage from './pages/RecordingsPage'
 import RegisterPage from './pages/RegisterPage'
+import PolicyPage from './pages/PolicyPage'
+import TutorApplyPage from './pages/TutorApplyPage'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentOverview from './pages/student/StudentOverview'
 import StudentZoom from './pages/student/StudentZoom'
@@ -93,6 +96,12 @@ function AppContent() {
         <Route path="/recordings" element={<PageWrapper><RecordingsPage /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><RegisterPage /></PageWrapper>} />
 
+        {/* Policy Routes */}
+        <Route path="/privacy" element={<PageWrapper><PolicyPage type="privacy" /></PageWrapper>} />
+        <Route path="/terms" element={<PageWrapper><PolicyPage type="terms" /></PageWrapper>} />
+        <Route path="/refund" element={<PageWrapper><PolicyPage type="refund" /></PageWrapper>} />
+        <Route path="/tutor-apply" element={<PageWrapper><TutorApplyPage /></PageWrapper>} />
+
         {/* Student Dashboard Routes */}
         <Route path="/student" element={<PageWrapper><StudentDashboard /></PageWrapper>}>
           <Route index element={<StudentOverview />} />
@@ -155,6 +164,7 @@ function App() {
               v7_relativeSplatPath: true
             }}
           >
+            <ScrollToTop />
             <AppContent />
           </Router>
         </AuthModalProvider>

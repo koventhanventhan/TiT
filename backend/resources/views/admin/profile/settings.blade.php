@@ -37,15 +37,18 @@
 
     @media (max-width: 991px) {
         .settings-container {
-            flex-direction: column;
+            flex-direction: column !important;
+            display: flex !important;
         }
         .settings-sidebar {
-            width: 100%;
-            margin-bottom: 1rem;
+            width: 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 1rem !important;
+            height: auto !important;
         }
         .calendar-layout {
-            grid-template-columns: 1fr;
-            height: auto;
+            grid-template-columns: 1fr !important;
+            height: auto !important;
         }
     }
 
@@ -333,7 +336,7 @@
                         @csrf
                         <div class="form-group mb-4">
                             <label class="text-white font-w600">Profile Photo</label>
-                            <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start mt-3">
+                            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start mt-3">
                                 @php $user = Auth::user(); @endphp
                                 @if($user->avatar)
                                     <img src="{{ asset($user->avatar) }}" alt="Avatar" class="profile-photo-preview mb-3 mb-sm-0 mr-sm-4" id="settingsAvatarPreview">

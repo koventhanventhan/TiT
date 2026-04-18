@@ -35,6 +35,20 @@
         height: fit-content;
     }
 
+    @media (max-width: 991px) {
+        .settings-container {
+            flex-direction: column;
+        }
+        .settings-sidebar {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .calendar-layout {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+    }
+
     .settings-nav-item {
         display: flex;
         align-items: center;

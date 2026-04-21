@@ -104,9 +104,21 @@ const TutorApplyPage = () => {
 
             const response = await fetch(`${API_BASE_URL}/tutor/apply`, {
                 method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
                 body: dataToSubmit
-                // Headers are automatically set for FormData
             })
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || contentType.indexOf("application/json") === -1) {
+                const text = await response.text();
+                // This means the server returned an HTML error page (e.g. 413 Payload Too Large)
+                console.error("Non-JSON Response from server:", text);
+                setError(`Server Error (${response.status}). If you attached a file, it might be too large.`);
+                setLoading(false);
+                return;
+            }
 
             const data = await response.json()
 

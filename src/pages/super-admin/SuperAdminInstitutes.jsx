@@ -64,7 +64,7 @@ export default function SuperAdminInstitutes() {
                         <h3>{inst.name}</h3>
                         <div className="inst-details">
                             <div className="detail-item">
-                                <FiGlobe /> <span>{inst.slug}.lenova.lk</span>
+                                <FiGlobe /> <span>{inst.slug}.titjaffna.lk</span>
                             </div>
                             <div className="detail-item">
                                 <FiCalendar /> <span>Expires: {inst.expires_at ? new Date(inst.expires_at).toLocaleDateString() : 'Unlimited'}</span>

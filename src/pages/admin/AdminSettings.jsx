@@ -127,25 +127,25 @@ export default function AdminSettings() {
                                     <div className="logo-upload-section">
                                         <label>Institute Logo</label>
                                         <div className="logo-preview-box">
-                                        {(logoPreview || settings.logo_url) && !removeLogo ? (
-                                            <div className="preview-container">
-                                                <img src={logoPreview || settings.logo_url} alt="Logo Preview" />
-                                                <button 
-                                                    className="remove-logo-btn"
-                                                    onClick={() => {
-                                                        setRemoveLogo(true);
-                                                        setLogoFile(null);
-                                                        setLogoPreview(null);
-                                                    }}
-                                                    title="Remove Logo"
-                                                >
-                                                    &times;
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="no-logo">No logo uploaded</div>
-                                        )}
-                                    </div>
+                                            {(logoPreview || settings.logo_url) && !removeLogo ? (
+                                                <div className="preview-container">
+                                                    <img src={logoPreview || settings.logo_url} alt="Logo Preview" />
+                                                    <button
+                                                        className="remove-logo-btn"
+                                                        onClick={() => {
+                                                            setRemoveLogo(true);
+                                                            setLogoFile(null);
+                                                            setLogoPreview(null);
+                                                        }}
+                                                        title="Remove Logo"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="no-logo">No logo uploaded</div>
+                                            )}
+                                        </div>
                                         <input type="file" onChange={handleLogoFileChange} accept="image/*" />
                                     </div>
 
@@ -182,24 +182,24 @@ export default function AdminSettings() {
                             <div className="settings-group">
                                 <h3>Topbar & Header Management</h3>
                                 <p className="description">Control the visibility of topbar elements and customize navigation text.</p>
-                                
+
                                 <div className="settings-section mt-4">
                                     <h4>Visibility & Links</h4>
                                     <div className="toggle-grid">
                                         <div className="toggle-item">
                                             <label>Facebook</label>
                                             <div className="d-flex flex-column gap-2">
-                                                <select 
-                                                    value={settings.topbar_show_fb || 'yes'} 
+                                                <select
+                                                    value={settings.topbar_show_fb || 'yes'}
                                                     onChange={(e) => handleInputChange('topbar_show_fb', e.target.value)}
                                                 >
                                                     <option value="yes">On</option>
                                                     <option value="no">Off</option>
                                                 </select>
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     placeholder="Facebook Link"
-                                                    value={settings.social_facebook || ''} 
+                                                    value={settings.social_facebook || ''}
                                                     onChange={(e) => handleInputChange('social_facebook', e.target.value)}
                                                 />
                                             </div>
@@ -207,17 +207,17 @@ export default function AdminSettings() {
                                         <div className="toggle-item">
                                             <label>Instagram</label>
                                             <div className="d-flex flex-column gap-2">
-                                                <select 
-                                                    value={settings.topbar_show_insta || 'yes'} 
+                                                <select
+                                                    value={settings.topbar_show_insta || 'yes'}
                                                     onChange={(e) => handleInputChange('topbar_show_insta', e.target.value)}
                                                 >
                                                     <option value="yes">On</option>
                                                     <option value="no">Off</option>
                                                 </select>
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     placeholder="Instagram Link"
-                                                    value={settings.social_instagram || ''} 
+                                                    value={settings.social_instagram || ''}
                                                     onChange={(e) => handleInputChange('social_instagram', e.target.value)}
                                                 />
                                             </div>
@@ -225,17 +225,17 @@ export default function AdminSettings() {
                                         <div className="toggle-item">
                                             <label>YouTube</label>
                                             <div className="d-flex flex-column gap-2">
-                                                <select 
-                                                    value={settings.topbar_show_youtube || 'yes'} 
+                                                <select
+                                                    value={settings.topbar_show_youtube || 'yes'}
                                                     onChange={(e) => handleInputChange('topbar_show_youtube', e.target.value)}
                                                 >
                                                     <option value="yes">On</option>
                                                     <option value="no">Off</option>
                                                 </select>
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     placeholder="YouTube Link"
-                                                    value={settings.social_youtube || ''} 
+                                                    value={settings.social_youtube || ''}
                                                     onChange={(e) => handleInputChange('social_youtube', e.target.value)}
                                                 />
                                             </div>
@@ -243,25 +243,25 @@ export default function AdminSettings() {
                                         <div className="toggle-item">
                                             <label>Support Email</label>
                                             <div className="d-flex flex-column gap-2">
-                                                <select 
-                                                    value={settings.topbar_show_email || 'yes'} 
+                                                <select
+                                                    value={settings.topbar_show_email || 'yes'}
                                                     onChange={(e) => handleInputChange('topbar_show_email', e.target.value)}
                                                 >
                                                     <option value="yes">On</option>
                                                     <option value="no">Off</option>
                                                 </select>
-                                                <input 
-                                                    type="email" 
+                                                <input
+                                                    type="email"
                                                     placeholder="Email Address"
-                                                    value={settings.footer_email || ''} 
+                                                    value={settings.footer_email || ''}
                                                     onChange={(e) => handleInputChange('footer_email', e.target.value)}
                                                 />
                                             </div>
                                         </div>
                                         <div className="toggle-item">
                                             <label>Show Language</label>
-                                            <select 
-                                                value={settings.topbar_show_lang || 'yes'} 
+                                            <select
+                                                value={settings.topbar_show_lang || 'yes'}
                                                 onChange={(e) => handleInputChange('topbar_show_lang', e.target.value)}
                                             >
                                                 <option value="yes">On</option>
@@ -278,7 +278,7 @@ export default function AdminSettings() {
                                             {(logoPreview || settings.logo_url) && !removeLogo ? (
                                                 <div className="preview-container">
                                                     <img src={logoPreview || settings.logo_url} alt="Logo Preview" />
-                                                    <button 
+                                                    <button
                                                         className="remove-logo-btn"
                                                         onClick={() => {
                                                             setRemoveLogo(true);
@@ -294,10 +294,10 @@ export default function AdminSettings() {
                                                 <div className="no-logo">No logo uploaded</div>
                                             )}
                                         </div>
-                                        <input 
-                                            type="file" 
-                                            onChange={handleLogoFileChange} 
-                                            accept="image/*" 
+                                        <input
+                                            type="file"
+                                            onChange={handleLogoFileChange}
+                                            accept="image/*"
                                             className="mt-2"
                                         />
                                         <p className="description mt-2">Upload a logo to replace the default "TiT" text logo.</p>
@@ -309,45 +309,45 @@ export default function AdminSettings() {
                                     <div className="input-grid">
                                         <div className="input-group">
                                             <label>Home</label>
-                                            <input 
-                                                type="text" 
-                                                value={settings.nav_home || ''} 
+                                            <input
+                                                type="text"
+                                                value={settings.nav_home || ''}
                                                 placeholder="Home"
                                                 onChange={(e) => handleInputChange('nav_home', e.target.value)}
                                             />
                                         </div>
                                         <div className="input-group">
                                             <label>About</label>
-                                            <input 
-                                                type="text" 
-                                                value={settings.nav_about || ''} 
+                                            <input
+                                                type="text"
+                                                value={settings.nav_about || ''}
                                                 placeholder="About"
                                                 onChange={(e) => handleInputChange('nav_about', e.target.value)}
                                             />
                                         </div>
                                         <div className="input-group">
                                             <label>Classes</label>
-                                            <input 
-                                                type="text" 
-                                                value={settings.nav_classes || ''} 
+                                            <input
+                                                type="text"
+                                                value={settings.nav_classes || ''}
                                                 placeholder="Classes"
                                                 onChange={(e) => handleInputChange('nav_classes', e.target.value)}
                                             />
                                         </div>
                                         <div className="input-group">
                                             <label>Learning Suite</label>
-                                            <input 
-                                                type="text" 
-                                                value={settings.nav_learning_suite || ''} 
+                                            <input
+                                                type="text"
+                                                value={settings.nav_learning_suite || ''}
                                                 placeholder="Learning Suite"
                                                 onChange={(e) => handleInputChange('nav_learning_suite', e.target.value)}
                                             />
                                         </div>
                                         <div className="input-group">
                                             <label>Contact</label>
-                                            <input 
-                                                type="text" 
-                                                value={settings.nav_contact || ''} 
+                                            <input
+                                                type="text"
+                                                value={settings.nav_contact || ''}
                                                 placeholder="Contact"
                                                 onChange={(e) => handleInputChange('nav_contact', e.target.value)}
                                             />
@@ -389,25 +389,25 @@ export default function AdminSettings() {
                                 <div className="input-row">
                                     <div className="input-group">
                                         <label>Platform Name</label>
-                                        <input 
-                                            type="text" 
-                                            value={settings.site_name || ''} 
+                                        <input
+                                            type="text"
+                                            value={settings.site_name || ''}
                                             onChange={(e) => handleInputChange('site_name', e.target.value)}
                                         />
                                     </div>
                                     <div className="input-group">
                                         <label>Tagline</label>
-                                        <input 
-                                            type="text" 
-                                            value={settings.site_tagline || ''} 
+                                        <input
+                                            type="text"
+                                            value={settings.site_tagline || ''}
                                             onChange={(e) => handleInputChange('site_tagline', e.target.value)}
                                         />
                                     </div>
                                 </div>
                                 <div className="input-group mt-4">
                                     <label>Site Meta Description</label>
-                                    <textarea 
-                                        rows="3" 
+                                    <textarea
+                                        rows="3"
                                         value={settings.site_meta_desc || ''}
                                         onChange={(e) => handleInputChange('site_meta_desc', e.target.value)}
                                     ></textarea>
@@ -442,20 +442,20 @@ export default function AdminSettings() {
                                 <div className="input-row">
                                     <div className="input-group">
                                         <label>Support Email</label>
-                                        <input type="email" defaultValue={settings.contact_email || 'support@lenova.lk'} />
+                                        <input type="email" defaultValue={settings.contact_email || 'admin@titjaffna.lk'} />
                                     </div>
                                     <div className="input-group">
                                         <label>Primary Phone</label>
-                                        <input type="text" defaultValue={settings.contact_phone || '+94 77 123 4567'} />
+                                        <input type="text" defaultValue={settings.contact_phone || '+94 770158446'} />
                                     </div>
                                 </div>
                                 <div className="input-group mt-4">
                                     <label>Location Name (Footer)</label>
-                                    <input 
-                                        type="text" 
-                                        value={settings.footer_location || ''} 
+                                    <input
+                                        type="text"
+                                        value={settings.footer_location || ''}
                                         onChange={(e) => handleInputChange('footer_location', e.target.value)}
-                                        placeholder="Colombo, Sri Lanka" 
+                                        placeholder="Colombo, Sri Lanka"
                                     />
                                 </div>
                             </div>
@@ -478,11 +478,11 @@ export default function AdminSettings() {
                                 </div>
                                 <div className="input-group mb-4">
                                     <label>Developed By Text (Footer)</label>
-                                    <input 
-                                        type="text" 
-                                        value={settings.footer_developed_by || ''} 
+                                    <input
+                                        type="text"
+                                        value={settings.footer_developed_by || ''}
                                         onChange={(e) => handleInputChange('footer_developed_by', e.target.value)}
-                                        placeholder="Designed & Developed by TiT Team" 
+                                        placeholder="Designed & Developed by TiT Team"
                                     />
                                 </div>
                             </div>
@@ -492,32 +492,32 @@ export default function AdminSettings() {
                             <div className="settings-group">
                                 <h3>Legal Policies Content</h3>
                                 <p className="description">Enter the content for your institute's legal documents. These will be displayed when students click the links in the footer.</p>
-                                
+
                                 <div className="settings-section mt-4">
                                     <div className="input-group mb-6">
                                         <label>Privacy Policy Content</label>
-                                        <textarea 
-                                            rows="10" 
+                                        <textarea
+                                            rows="10"
                                             placeholder="Enter your Privacy Policy here..."
                                             value={settings.policy_privacy_content || ''}
                                             onChange={(e) => handleInputChange('policy_privacy_content', e.target.value)}
                                         ></textarea>
                                     </div>
-                                    
+
                                     <div className="input-group mb-6">
                                         <label>Terms & Conditions Content</label>
-                                        <textarea 
-                                            rows="10" 
+                                        <textarea
+                                            rows="10"
                                             placeholder="Enter your Terms & Conditions here..."
                                             value={settings.policy_terms_content || ''}
                                             onChange={(e) => handleInputChange('policy_terms_content', e.target.value)}
                                         ></textarea>
                                     </div>
-                                    
+
                                     <div className="input-group mb-6">
                                         <label>Refund Policy Content</label>
-                                        <textarea 
-                                            rows="10" 
+                                        <textarea
+                                            rows="10"
                                             placeholder="Enter your Refund Policy here..."
                                             value={settings.policy_refund_content || ''}
                                             onChange={(e) => handleInputChange('policy_refund_content', e.target.value)}

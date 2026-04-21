@@ -367,9 +367,7 @@
         font-size: 0.6875rem;
     }
 
-    .header-right .nav-item:first-child {
-        margin-right: 0.3125rem !important;
-    }
+
 
     .header-right .nav-item .btn {
         padding: 0.3125rem 0.625rem !important;

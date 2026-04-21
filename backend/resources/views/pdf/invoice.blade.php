@@ -31,7 +31,7 @@
                     <table>
                         <tr>
                             <td class="title">
-                                <span style="color: #6366f1; font-weight: bold;">LENOVA</span>
+                                <span style="color: #6366f1; font-weight: bold;">TiT Education </span>
                             </td>
                             <td>
                                 Invoice #: {{ $payment->id }}<br>

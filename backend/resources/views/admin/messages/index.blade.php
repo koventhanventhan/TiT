@@ -72,6 +72,61 @@
     .msg-back { display: inline-flex; align-items: center; gap: 0.375rem; color: #6366f1; font-weight: 500; cursor: pointer; margin-bottom: 1rem; border: none; background: none; font-size: 0.875rem; }
     .msg-back:hover { text-decoration: underline; }
     .msg-loading { display: flex; align-items: center; justify-content: center; padding: 2.5rem; color: #9ca3af; }
+    
+    /* Premium Responsive UI for Tablets and Mobile */
+    @media (max-width: 1024px) {
+        .msg-container { flex-direction: column !important; min-height: auto; gap: 1.5rem !important; padding: 1rem !important; }
+        .msg-sidebar-panel { width: 100% !important; margin-bottom: 0 !important; background: transparent !important; }
+        
+        /* Modern Action Button */
+        .msg-compose-btn { 
+            width: 100% !important; 
+            padding: 1rem !important; 
+            font-size: 1rem !important; 
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+            margin-bottom: 1.25rem !important;
+            border: none !important;
+        }
+
+        /* Modern Segmented Tabs */
+        .msg-nav-list { 
+            display: flex !important; 
+            background: rgba(0,0,0,0.05) !important; 
+            padding: 4px !important; 
+            border-radius: 12px !important;
+            gap: 4px !important;
+        }
+        .msg-nav-list li { 
+            flex: 1 !important; 
+            margin: 0 !important; 
+        }
+        .msg-nav-list li a { 
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0.75rem !important;
+            border-radius: 10px !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            background: transparent !important;
+            border: none !important;
+            color: #64748b !important;
+        }
+        .msg-nav-list li a.active { 
+            background: #fff !important; 
+            color: #6366f1 !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+        }
+        .msg-nav-list li a i { margin-right: 8px !important; font-size: 1.1rem !important; }
+
+        .msg-item { flex-direction: column !important; gap: 0.5rem !important; }
+        .msg-item-top { flex-wrap: wrap !important; }
+        .msg-main-panel { background: #fff !important; border-radius: 16px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important; }
+    }
 </style>
 @endpush
 

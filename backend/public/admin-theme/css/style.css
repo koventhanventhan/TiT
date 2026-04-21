@@ -12000,9 +12000,9 @@ a.active {
 
 @media only screen and (max-width: 575px) {
   .content-body .container-fluid {
-    padding-top: 15px;
-    padding-right: 15px;
-    padding-left: 15px;
+    padding-top: 60px;
+    padding-right: 10px;
+    /* padding-left: 15px; */
   }
 }
 
@@ -52978,6 +52978,8 @@ Fixing Order => Base + Typography >> General Layout + Grid >> Page Layout + Comp
 [data-theme-version="dark"] .header-right .dropdown .nav-link {
   color: #fff;
   background: #2C254A;
+  /* width: 42px;
+  height: 42px; */
 }
 
 [data-theme-version="dark"] .header-right .dropdown .nav-link:hover {

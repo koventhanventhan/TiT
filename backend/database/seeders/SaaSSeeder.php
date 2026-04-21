@@ -27,7 +27,7 @@ class SaaSSeeder extends Seeder
         $institute = \App\Models\Institute::updateOrCreate(
             ['slug' => 'main'],
             [
-                'name' => 'Lenova Main Academy',
+                'name' => 'TiT education main academy',
                 'status' => 'active',
                 'subscription_plan_id' => $plan->id,
             ]

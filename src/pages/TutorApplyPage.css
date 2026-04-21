@@ -1,5 +1,5 @@
 .tutor-apply-page {
-    padding: 80px 0;
+    padding: 180px 0;
     min-height: 100vh;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     color: #f8fafc;
@@ -214,17 +214,21 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Adjustments for smaller screens */
 @media (max-width: 768px) {
     .tutor-apply-page {
-        padding: 40px 0;
+        padding: 150px 0;
     }
+
     .form-wrapper {
         padding: 24px;
     }
+
     .form-header h1 {
         font-size: 1.8rem;
     }

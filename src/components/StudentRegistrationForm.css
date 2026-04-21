@@ -185,7 +185,7 @@
 .form-group input[type="tel"],
 .form-group input[type="date"],
 .form-group input[type="password"] {
-  padding: 0.875rem 1.125rem;
+  /* padding: 0.875rem 1.125rem; */
   border: 0.125rem solid rgba(139, 92, 246, 0.3);
   border-radius: 0.75rem;
   font-size: 0.9375rem;

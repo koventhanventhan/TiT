@@ -105,8 +105,8 @@ const Footer = () => {
   const { t, translate, language } = useLanguage()
   const { openRegister } = useAuthModal()
 
-  const footer_email = getSetting('footer_email', 'info@lenova.lk')
-  const footer_phone = getSetting('footer_phone', '+94 11 123 4567')
+  const footer_email = getSetting('footer_email', 'admin@titjaffna.lk')
+  const footer_phone = getSetting('footer_phone', '+94 0770158446')
   const social_facebook = getSetting('social_facebook', '')
   const social_twitter = getSetting('social_twitter', '')
   const social_instagram = getSetting('social_instagram', '')
@@ -114,8 +114,8 @@ const Footer = () => {
   const social_youtube = getSetting('social_youtube', '')
 
   const footer_tagline = getSetting('footer_tagline', t('footer_your_education'))
-  const footerLogoText = getSetting('footer_logo_text', 'LENOVA')
-  
+  const footerLogoText = getSetting('footer_logo_text', 'TiT Education')
+
   const [footerInfo, setFooterInfo] = useState('')
   const [copyright, setCopyright] = useState('')
   const [legalTitle, setLegalTitle] = useState('')

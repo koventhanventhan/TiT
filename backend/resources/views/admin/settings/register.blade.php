@@ -179,7 +179,7 @@
                         </div>
                         <div class="col-md-6 form-group">
                             <label>Device Used Field Label</label>
-                            <input type="text" name="register_device_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_device_label', 'Online வகுப்பிற்கு பயன்படுத்தும் சாதனம் / Device Used for Online Classes') }}">
+                            <input type="text" name="register_device_label" class="form-control" value="{{ \App\Models\SiteSetting::get('register_device_label', 'Device Used for Online Classes') }}">
                         </div>
                         <div class="col-md-6 form-group">
                             <label>Current Grade Field Label</label>

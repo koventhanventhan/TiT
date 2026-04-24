@@ -6,17 +6,21 @@ use App\Models\User;
 use App\Models\Payment;
 use App\Notifications\AdminNotification;
 use App\Services\WhatsAppService;
+use App\Services\PayHereService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
     protected WhatsAppService $whatsApp;
+    protected PayHereService $payHere;
 
-    public function __construct(WhatsAppService $whatsApp)
+    public function __construct(WhatsAppService $whatsApp, PayHereService $payHere)
     {
         $this->whatsApp = $whatsApp;
+        $this->payHere  = $payHere;
     }
 
     /**
@@ -298,7 +302,7 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Step 2: Payment choice. Offline = just success. Online = create payment order (Razorpay).
+     * Step 2: Payment choice. Offline = just success. Online = create PayHere checkout.
      */
     public function step2(Request $request)
     {
@@ -309,11 +313,11 @@ class RegistrationController extends Controller
 
         $user = $request->user();
         if (!$user) {
-            \Log::error('RegistrationController@step2 - No authenticated user found');
+            Log::error('RegistrationController@step2 - No authenticated user found');
             return response()->json(['message' => 'Not authenticated.'], 401);
         }
 
-        \Log::info('RegistrationController@step2 - Checking user:', [
+        Log::info('RegistrationController@step2 - Checking user:', [
             'id' => $user->id,
             'role' => $user->role,
             'full_name' => $user->full_name,
@@ -321,7 +325,7 @@ class RegistrationController extends Controller
         ]);
         
         if ($user->role !== 'user' || empty($user->full_name)) {
-            \Log::warning('RegistrationController@step2 - Invalid user check failed', [
+            Log::warning('RegistrationController@step2 - Invalid user check failed', [
                 'id' => $user->id,
                 'role' => $user->role,
                 'full_name' => $user->full_name
@@ -335,7 +339,6 @@ class RegistrationController extends Controller
 
             // Notify user about offline payment submission
             if ($user->phone_number) {
-                // Using payment_reminder as a generic "please pay and wait" instruction
                 $this->whatsApp->sendTemplate(
                     $user->phone_number,
                     'tit_payment_reminder',
@@ -351,102 +354,200 @@ class RegistrationController extends Controller
             ]);
         }
 
-        // Online: create Razorpay order if configured, else create a pending payment record and return order_id placeholder
-        $amount = 0;
-        if ($user->selected_subjects) {
-            $category = $this->getSubjectCategoryForUser($user);
-            $selectedSubjects = array_filter(array_map('trim', explode(',', $user->selected_subjects)));
-            
-            $subjectData = \App\Models\Subject::when($category, function($query) use ($category) {
-                return $query->where('category', $category);
-            })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
-            
-            $amount = (float) $subjectData->sum('price');
-        }
-
-        // Fallback to monthly amount if no subjects or sum is 0
-        if ($amount <= 0) {
-            $amount = $request->amount ? (float) $request->amount : (float) config('payment.monthly_amount', 500);
-        }
-
+        // Online: Create PayHere payment
+        $amount = $this->calculateUserAmount($user, $request->amount);
         $yearMonth = now()->format('Y-m');
 
         $payment = Payment::create([
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'status' => 'pending',
-            'year_month' => $yearMonth,
-            'gateway_ref' => 'order_' . uniqid(),
+            'user_id'        => $user->id,
+            'amount'         => $amount,
+            'status'         => 'pending',
+            'payment_method' => 'online',
+            'year_month'     => $yearMonth,
+            'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
+            'institute_id'   => $user->institute_id ?? 1,
         ]);
 
-        // Mark registration as completed — email is now locked
+        // Mark registration status
         $user->update(['registration_status' => 'payment_completed']);
 
-        $orderId = $payment->gateway_ref;
+        // Build PayHere checkout params for frontend JS SDK
+        if ($this->payHere->isConfigured()) {
+            $params = $this->payHere->buildCheckoutParams($payment, $user);
+            $checkoutUrl = $this->payHere->getCheckoutUrl();
 
-        // If Razorpay is configured, create real order (we'll add Razorpay service later)
-        $razorpayOrderId = null;
-        if (config('payment.razorpay_key') && config('payment.razorpay_secret')) {
-            try {
-                $razorpayOrderId = $this->createRazorpayOrder($payment);
-                if ($razorpayOrderId) {
-                    $payment->update(['gateway_ref' => $razorpayOrderId]);
-                    $orderId = $razorpayOrderId;
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('Razorpay order creation failed: ' . $e->getMessage());
-            }
+            Log::info('PayHere checkout params generated', [
+                'order_id' => $payment->gateway_ref,
+                'amount'   => $amount,
+                'user_id'  => $user->id,
+            ]);
+
+            return response()->json([
+                'message'     => 'Payment order created.',
+                'payhere_url' => $checkoutUrl,
+                'params'      => $params,
+                'user'        => $this->formatUserResponse($user),
+            ]);
         }
 
+        // PayHere not configured — return error
+        Log::warning('PayHere credentials not configured. Cannot process online payment.');
         return response()->json([
-            'message' => 'Payment order created.',
-            'order_id' => $orderId,
-            'amount' => $amount * 100, // paise for Razorpay
-            'currency' => 'INR',
-            'key' => config('payment.razorpay_key'),
-            'user' => $this->formatUserResponse($user),
-        ]);
+            'message' => 'Online payment is not configured yet. Please contact admin or choose offline payment.',
+        ], 503);
     }
 
     /**
-     * Called by frontend after successful gateway payment. Verify and mark payment paid.
+     * PayHere server notification callback (public route, called by PayHere servers).
+     * This is the most reliable way to confirm payment — it's server-to-server.
+     */
+    public function payhereNotify(Request $request)
+    {
+        Log::info('PayHere Notification Received', $request->all());
+
+        $data = $request->all();
+
+        // Verify the notification hash
+        if (!$this->payHere->verifyNotification($data)) {
+            Log::error('PayHere notification hash verification FAILED', $data);
+            return response('Hash verification failed', 403);
+        }
+
+        $orderId    = $data['order_id'] ?? '';
+        $statusCode = $data['status_code'] ?? '';
+
+        // Find the payment record
+        $payment = Payment::where('gateway_ref', $orderId)->first();
+
+        if (!$payment) {
+            Log::error('PayHere notification: Payment not found', ['order_id' => $orderId]);
+            return response('Payment not found', 404);
+        }
+
+        // PayHere status codes:
+        // 2 = success
+        // 0 = pending
+        // -1 = canceled
+        // -2 = failed
+        // -3 = chargeback
+        if ($statusCode == 2) {
+            // Payment successful
+            $payment->update([
+                'status'      => 'paid',
+                'paid_at'     => now(),
+                'transaction_id' => $data['payment_id'] ?? null,
+            ]);
+
+            $user = $payment->user;
+            if ($user) {
+                // Update registration status if it was a registration payment
+                if (in_array($user->registration_status, ['pending_payment', 'payment_completed'])) {
+                    $user->update(['registration_status' => 'paid_pending_confirm']);
+                }
+
+                // Notify Admin of successful payment
+                $admin = User::where('role', 'admin')
+                    ->where('institute_id', $user->institute_id)
+                    ->first();
+                if ($admin) {
+                    try {
+                        $admin->notify(new AdminNotification(
+                            "Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
+                            'success',
+                            route('admin.students.edit', $user->id),
+                            'admission_payments'
+                        ));
+                    } catch (\Throwable $e) {
+                        Log::error('PayHere notify: Admin notification failed: ' . $e->getMessage());
+                    }
+                }
+
+                // Send Payment Success WhatsApp
+                if ($user->phone_number) {
+                    $this->whatsApp->sendTemplate(
+                        $user->phone_number,
+                        'tit_payment_success',
+                        'en',
+                        [$user->full_name ?? $user->name]
+                    );
+                }
+
+                Log::info('PayHere payment SUCCESS', [
+                    'order_id'   => $orderId,
+                    'user_id'    => $user->id,
+                    'amount'     => $payment->amount,
+                    'payment_id' => $data['payment_id'] ?? 'N/A',
+                ]);
+            }
+        } elseif (in_array($statusCode, ['-1', '-2', '-3'])) {
+            // Payment failed/canceled/chargeback
+            $payment->update(['status' => 'failed']);
+            Log::warning('PayHere payment FAILED/CANCELED', [
+                'order_id'    => $orderId,
+                'status_code' => $statusCode,
+            ]);
+        } else {
+            // Pending (status_code = 0)
+            Log::info('PayHere payment PENDING', [
+                'order_id'    => $orderId,
+                'status_code' => $statusCode,
+            ]);
+        }
+
+        return response('OK', 200);
+    }
+
+    /**
+     * Called by frontend after successful gateway payment (fallback confirmation).
      */
     public function paymentSuccess(Request $request)
     {
         $request->validate([
             'order_id' => 'required|string',
-            'payment_id' => 'nullable|string', // Razorpay payment_id
+            'payment_id' => 'nullable|string',
         ]);
 
         $user = $request->user();
         $payment = Payment::where('user_id', $user->id)
             ->where('gateway_ref', $request->order_id)
-            ->where('status', 'pending')
             ->first();
 
         if (!$payment) {
-            return response()->json(['message' => 'Payment not found or already processed.'], 404);
+            return response()->json(['message' => 'Payment not found.'], 404);
         }
 
+        // If already paid via server notification, just return success
+        if ($payment->status === 'paid') {
+            return response()->json([
+                'message' => 'Payment already confirmed.',
+                'registration_status' => $user->registration_status,
+            ]);
+        }
+
+        // Mark as paid (server notification is more reliable, but this is a fallback)
         $payment->update([
-            'status' => 'paid',
+            'status'  => 'paid',
             'paid_at' => now(),
         ]);
 
         $user->update(['registration_status' => 'paid_pending_confirm']);
 
-        // Notify Admin of successful payment
+        // Notify Admin
         $admin = User::where('role', 'admin')->first();
         if ($admin) {
-            $admin->notify(new AdminNotification(
-                "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
-                'success',
-                route('admin.students.edit', $user->id),
-                'admission_payments'
-            ));
+            try {
+                $admin->notify(new AdminNotification(
+                    "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
+                    'success',
+                    route('admin.students.edit', $user->id),
+                    'admission_payments'
+                ));
+            } catch (\Throwable $e) {
+                Log::error('Payment success notification failed: ' . $e->getMessage());
+            }
         }
 
-        // Send Payment Success WhatsApp via Template
+        // Send Payment Success WhatsApp
         if ($user->phone_number) {
             $this->whatsApp->sendTemplate(
                 $user->phone_number,
@@ -462,20 +563,129 @@ class RegistrationController extends Controller
         ]);
     }
 
-    private function createRazorpayOrder(Payment $payment): ?string
+    /**
+     * Check if the current student has paid for this month.
+     */
+    public function checkMonthlyPaymentStatus(Request $request)
     {
-        $key = config('payment.razorpay_secret');
-        if (!$key || !class_exists(\Razorpay\Api\Api::class)) {
-            return null;
-        }
-        $amountPaise = (int) round($payment->amount * 100);
-        $client = new \Razorpay\Api\Api(config('payment.razorpay_key'), $key);
-        $order = $client->order->create([
-            'amount' => $amountPaise,
-            'currency' => 'INR',
-            'receipt' => 'pay_' . $payment->id,
+        $user = $request->user();
+        $yearMonth = now()->format('Y-m');
+
+        $payment = Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $amount = $this->calculateUserAmount($user);
+
+        return response()->json([
+            'is_paid'    => $payment && $payment->status === 'paid',
+            'amount'     => $amount,
+            'year_month' => $yearMonth,
+            'payment'    => $payment ? [
+                'id'         => $payment->id,
+                'status'     => $payment->status,
+                'amount'     => $payment->amount,
+                'paid_at'    => $payment->paid_at,
+                'gateway_ref' => $payment->gateway_ref,
+            ] : null,
         ]);
-        return $order['id'] ?? null;
+    }
+
+    /**
+     * Initialize a monthly payment and return PayHere checkout params.
+     */
+    public function initializeMonthlyPayment(Request $request)
+    {
+        $user = $request->user();
+        $yearMonth = now()->format('Y-m');
+
+        // Check if already paid
+        $existingPaid = Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('status', 'paid')
+            ->exists();
+
+        if ($existingPaid) {
+            return response()->json([
+                'message' => 'You have already paid for this month.',
+            ], 400);
+        }
+
+        // Cancel any pending payments for this month
+        Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'cancelled']);
+
+        $amount = $this->calculateUserAmount($user);
+
+        $payment = Payment::create([
+            'user_id'        => $user->id,
+            'amount'         => $amount,
+            'status'         => 'pending',
+            'payment_method' => 'online',
+            'year_month'     => $yearMonth,
+            'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
+            'institute_id'   => $user->institute_id ?? 1,
+        ]);
+
+        if (!$this->payHere->isConfigured()) {
+            return response()->json([
+                'message' => 'Online payment is not configured. Please contact admin.',
+            ], 503);
+        }
+
+        $params = $this->payHere->buildCheckoutParams($payment, $user);
+        $checkoutUrl = $this->payHere->getCheckoutUrl();
+
+        Log::info('Monthly PayHere checkout initialized', [
+            'user_id'    => $user->id,
+            'order_id'   => $payment->gateway_ref,
+            'amount'     => $amount,
+            'year_month' => $yearMonth,
+        ]);
+
+        return response()->json([
+            'message'     => 'Monthly payment initialized.',
+            'payhere_url' => $checkoutUrl,
+            'params'      => $params,
+        ]);
+    }
+
+    /**
+     * Calculate the amount the user needs to pay based on selected subjects.
+     */
+    private function calculateUserAmount(User $user, ?float $fallbackAmount = null): float
+    {
+        $amount = 0;
+
+        if ($user->selected_subjects) {
+            $category = $this->getSubjectCategoryForUser($user);
+
+            // Parse selected subjects (could be JSON array or comma-separated)
+            $subjectsRaw = $user->selected_subjects;
+            if (is_string($subjectsRaw) && str_starts_with(trim($subjectsRaw), '[')) {
+                $selectedSubjects = json_decode($subjectsRaw, true) ?? [];
+            } else {
+                $selectedSubjects = array_filter(array_map('trim', explode(',', (string) $subjectsRaw)));
+            }
+
+            if (!empty($selectedSubjects)) {
+                $subjectData = \App\Models\Subject::when($category, function ($query) use ($category) {
+                    return $query->where('category', $category);
+                })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
+
+                $amount = (float) $subjectData->sum('price');
+            }
+        }
+
+        // Fallback
+        if ($amount <= 0) {
+            $amount = $fallbackAmount ?? 500.0;
+        }
+
+        return $amount;
     }
 
     private function formatUserResponse(User $user): array

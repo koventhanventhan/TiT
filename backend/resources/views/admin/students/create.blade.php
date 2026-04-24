@@ -247,7 +247,7 @@
                         <!-- Device Used -->
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
-                                <label>Device Used for Online Classes / ஆன்லைன் வகுப்பிற்கு பயன்படுத்தும் சாதனம் <span class="text-danger">*</span></label>
+                                <label>Device Used for Online Classes  <span class="text-danger">*</span></label>
                                 <select name="device_used" class="form-control" required>
                                     <option value="">Select Device</option>
                                     @foreach(['Mobile', 'Tablet', 'Laptop', 'Desktop'] as $device)
@@ -372,10 +372,10 @@
                             <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1.0px dashed rgba(255, 255, 255, 0.2); height: 100%;">
                                 <h5 class="mb-3" style="color: #fff;">Custom Payment Month</h5>
                                 <div class="form-group">
-                                    <label class="small text-muted">Select Date / à®¤à®¿à®•à®¤à®¿à®¯à¯ˆà®¤à¯  à®¤à¯‡à®°à¯ à®¨à¯ à®¤à¯†à®Ÿà¯ à®•à¯ à®•à®µà¯ à®®à¯ </label>
+                                    <label class="small text-muted">Select Date </label>
                                     <input type="date" name="custom_payment_month" class="form-control" value="{{ now()->format('Y-m-d') }}" form="studentCreateForm">
                                 </div>
-                                <small class="text-muted d-block mt-2">Select a date to mark payment / à®•à®Ÿà¯ à®Ÿà®£à®¤à¯ à®¤à¯ˆ à®•à¯ à®±à®¿à®•à¯ à®• à®’à®°à¯  à®¤à®¿à®•à®¤à®¿à®¯à¯ˆà®¤à¯  à®¤à¯‡à®°à¯ à®¨à¯ à®¤à¯†à®Ÿà¯ à®•à¯ à®•à®µà¯ à®®à¯ </small>
+                                <small class="text-muted d-block mt-2">Select a date to mark payment</small>
                             </div>
                         </div>
                     </div>

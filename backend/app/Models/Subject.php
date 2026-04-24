@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['name', 'price', 'category'];
+    protected $fillable = ['name', 'name_ta', 'name_si', 'price', 'category'];
 
     protected $casts = [
         'price' => 'decimal:2',

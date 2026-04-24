@@ -74,7 +74,7 @@ class SiteSettingController extends Controller
      */
     public function store(Request $request)
     {
-        $settings = $request->except(['_token', 'learning_notes_pdf', 'learning_pastpapers_pdf', 'learning_recordings_file']);
+        $settings = $request->except(['_token', 'learning_notes_pdf', 'learning_pastpapers_pdf', 'learning_recordings_file', 'frontend_logo', 'admin_logo', 'site_favicon']);
         
         foreach ($settings as $key => $value) {
             // Determine group based on key prefix
@@ -97,35 +97,68 @@ class SiteSettingController extends Controller
             SiteSetting::set($key, $value, $group);
         }
 
-        // Handle logo removal
-        if ($request->has('remove_admin_logo') && $request->remove_admin_logo == '1') {
-            $currentLogo = SiteSetting::get('admin_logo');
-            if ($currentLogo && file_exists(public_path($currentLogo))) {
-                unlink(public_path($currentLogo));
+        // Handle logo/favicon removals
+        $logoTypes = ['admin_logo', 'frontend_logo', 'site_favicon'];
+        foreach ($logoTypes as $type) {
+            $removeKey = 'remove_' . ($type == 'site_favicon' ? 'favicon' : $type);
+            if ($request->has($removeKey) && $request->get($removeKey) == '1') {
+                $currentLogo = SiteSetting::get($type);
+                if ($currentLogo && file_exists(public_path($currentLogo))) {
+                    @unlink(public_path($currentLogo));
+                }
+                \App\Models\SiteSetting::where('key', $type)->delete();
+                
+                // Extra clearing for URLs
+                if ($type == 'frontend_logo') \App\Models\SiteSetting::where('key', 'logo_url')->delete();
+                if ($type == 'site_favicon') \App\Models\SiteSetting::where('key', 'site_favicon_url')->delete();
             }
-            // Clear the setting
-            \App\Models\SiteSetting::where('key', 'admin_logo')->delete();
-            \App\Models\SiteSetting::where('key', 'logo_url')->delete();
         }
 
-        // Handle file uploads (Logo)
+        // Handle file uploads (Admin Logo)
         if ($request->hasFile('admin_logo')) {
             $logo = $request->file('admin_logo');
             $name = 'admin_logo_' . time() . '.' . $logo->getClientOriginalExtension();
             $path = 'uploads/settings';
             $destinationPath = public_path($path);
-            
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0777, true);
-            }
-            
+            if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
             $logo->move($destinationPath, $name);
             $logoPath = $path . '/' . $name;
+            $oldLogo = SiteSetting::get('admin_logo');
+            if ($oldLogo && file_exists(public_path($oldLogo))) { @unlink(public_path($oldLogo)); }
             SiteSetting::set('admin_logo', $logoPath, 'admin_identity');
-            SiteSetting::set('logo_url', asset($logoPath), 'admin_identity');
         }
 
-        return redirect()->back()->with('success', 'Admin identity updated successfully');
+        // Handle file uploads (Frontend Logo)
+        if ($request->hasFile('frontend_logo')) {
+            $logo = $request->file('frontend_logo');
+            $name = 'frontend_logo_' . time() . '.' . $logo->getClientOriginalExtension();
+            $path = 'uploads/settings';
+            $destinationPath = public_path($path);
+            if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
+            $logo->move($destinationPath, $name);
+            $logoPath = $path . '/' . $name;
+            $oldLogo = SiteSetting::get('frontend_logo');
+            if ($oldLogo && file_exists(public_path($oldLogo))) { @unlink(public_path($oldLogo)); }
+            SiteSetting::set('frontend_logo', $logoPath, 'general');
+            SiteSetting::set('logo_url', asset($logoPath), 'general');
+        }
+
+        // Handle file uploads (Favicon)
+        if ($request->hasFile('site_favicon')) {
+            $logo = $request->file('site_favicon');
+            $name = 'favicon_' . time() . '.' . $logo->getClientOriginalExtension();
+            $path = 'uploads/settings';
+            $destinationPath = public_path($path);
+            if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
+            $logo->move($destinationPath, $name);
+            $logoPath = $path . '/' . $name;
+            $oldLogo = SiteSetting::get('site_favicon');
+            if ($oldLogo && file_exists(public_path($oldLogo))) { @unlink(public_path($oldLogo)); }
+            SiteSetting::set('site_favicon', $logoPath, 'general');
+            SiteSetting::set('site_favicon_url', asset($logoPath), 'general');
+        }
+
+        return redirect()->back()->with('success', 'Topbar & Header settings updated successfully');
     }
 
     public function updateBranding(Request $request)

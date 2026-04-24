@@ -371,22 +371,55 @@
                                         </div>
 
                                         <hr>
-                                        <h5 class="mb-3 text-primary">Frontend Logo Edit</h5>
-                                        <div class="row align-items-center">
-                                            <div class="col-md-4 mb-3">
-                                                <div class="clickable-logo-preview" id="logo-preview-container">
-                                                    @if(\App\Models\SiteSetting::get('logo_url'))
-                                                        <img src="{{ \App\Models\SiteSetting::get('logo_url') }}" alt="Logo" id="logo-preview-img" style="max-height: 5rem; max-width: 100%;">
-                                                        <div class="logo-preview-overlay" onclick="removeLogo()">Remove Logo</div>
+                                        <h5 class="mb-3 text-primary">Admin Dashboard Identity</h5>
+                                        <div class="row mb-4">
+                                            <div class="col-md-12 mb-3">
+                                                <label>Admin Dashboard Company Name</label>
+                                                <input type="text" name="admin_company_name" class="form-control" placeholder="e.g. TiT Dashboard" value="{{ \App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}">
+                                                <small class="text-muted">This name appears in the top-left corner of the admin panel.</small>
+                                            </div>
+                                            <!-- <div class="col-md-6 mb-3">
+                                                <label class="d-block">Admin Dashboard Logo</label>
+                                                <div class="clickable-logo-preview mb-2" id="admin-logo-preview-container">
+                                                    @if(\App\Models\SiteSetting::get('admin_logo'))
+                                                        <img src="{{ asset(\App\Models\SiteSetting::get('admin_logo')) }}" alt="Admin Logo" id="admin-logo-preview-img" style="max-height: 5rem; max-width: 100%;">
+                                                        <div class="logo-preview-overlay" onclick="removeLogo('admin')">Remove Logo</div>
                                                     @else
-                                                        <div class="empty-logo">No Logo</div>
+                                                        <div class="empty-logo" onclick="document.querySelector('input[name=\'admin_logo\']').click()">No Logo</div>
                                                     @endif
                                                 </div>
+                                                <input type="file" name="admin_logo" class="form-control-file mb-2" onchange="previewLogo(this, 'admin')">
                                                 <input type="hidden" name="remove_admin_logo" id="remove_admin_logo" value="0">
+                                            </div> -->
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label class="d-block">Frontend Website Logo</label>
+                                                <div class="clickable-logo-preview mb-2" id="frontend-logo-preview-container">
+                                                    @if(\App\Models\SiteSetting::get('frontend_logo'))
+                                                        <img src="{{ asset(\App\Models\SiteSetting::get('frontend_logo')) }}" alt="Frontend Logo" id="frontend-logo-preview-img" style="max-height: 5rem; max-width: 100%;">
+                                                        <div class="logo-preview-overlay" onclick="removeLogo('frontend')">Remove Logo</div>
+                                                    @else
+                                                        <div class="empty-logo" onclick="document.querySelector('input[name=\'frontend_logo\']').click()">No Logo</div>
+                                                    @endif
+                                                </div>
+                                                <input type="file" name="frontend_logo" class="form-control-file mb-2" onchange="previewLogo(this, 'frontend')">
+                                                <input type="hidden" name="remove_frontend_logo" id="remove_frontend_logo" value="0">
+                                                <small class="text-muted d-block">This logo will appear on the main website header.</small>
                                             </div>
-                                            <div class="col-md-8 mb-3">
-                                                <input type="file" name="admin_logo" class="form-control-file mb-2">
-                                                <small class="text-muted d-block">Upload a logo to replace the default text logo in the frontend header.</small>
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="d-block">Site Favicon (Tab Icon)</label>
+                                                <div class="clickable-logo-preview mb-2" id="favicon-logo-preview-container">
+                                                    @if(\App\Models\SiteSetting::get('site_favicon'))
+                                                        <img src="{{ asset(\App\Models\SiteSetting::get('site_favicon')) }}" alt="Favicon" id="favicon-logo-preview-img" style="max-height: 3rem; max-width: 3rem;">
+                                                        <div class="logo-preview-overlay" onclick="removeLogo('favicon')">Remove</div>
+                                                    @else
+                                                        <div class="empty-logo" onclick="document.querySelector('input[name=\'site_favicon\']').click()">No Icon</div>
+                                                    @endif
+                                                </div>
+                                                <input type="file" name="site_favicon" class="form-control-file mb-2" onchange="previewLogo(this, 'favicon')">
+                                                <input type="hidden" name="remove_favicon_logo" id="remove_favicon_logo" value="0">
+                                                <small class="text-muted d-block">Best size: 32x32 or 16x16 pixels.</small>
                                             </div>
                                         </div>
 
@@ -1473,12 +1506,27 @@
         addMobileBtn.addEventListener('click', () => { createMobileFeatureItem(); syncMobileFeatures(); });
         addToolkitBtn.addEventListener('click', () => { createToolkitItem(); syncToolkit(); });
 
-        window.removeLogo = function() {
-            if (confirm('Are you sure you want to remove the frontend logo?')) {
-                document.getElementById('remove_admin_logo').value = '1';
-                document.getElementById('logo-preview-container').innerHTML = '<div class="empty-logo">No Logo</div>';
-                // Clear file input if any
-                const fileInput = document.querySelector('input[name="admin_logo"]');
+        window.previewLogo = function(input, type) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const container = document.getElementById(`${type}-logo-preview-container`);
+                    container.innerHTML = `
+                        <img src="${e.target.result}" alt="${type} Logo" style="max-height: 5rem; max-width: 100%;">
+                        <div class="logo-preview-overlay" onclick="removeLogo('${type}')">Remove Logo</div>
+                    `;
+                    document.getElementById(`remove_${type}_logo`).value = '0';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.removeLogo = function(type) {
+            if (confirm(`Are you sure you want to remove the ${type} logo?`)) {
+                document.getElementById(`remove_${type}_logo`).value = '1';
+                document.getElementById(`${type}-logo-preview-container`).innerHTML = '<div class="empty-logo">No Logo</div>';
+                // Clear file input
+                const fileInput = document.querySelector(`input[name="${type}_logo"]`);
                 if (fileInput) fileInput.value = '';
             }
         };

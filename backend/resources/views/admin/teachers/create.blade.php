@@ -80,7 +80,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="text-label" style="font-weight: 600;">Class / à®µà®•à¯ à®ªà¯ à®ªà¯ </label>
+                                <label class="text-label" style="font-weight: 600;">Class</label>
                                 <input type="text" name="teacher_class" class="form-control" value="{{ old('teacher_class') }}" placeholder="e.g. Grade 10, Grade 11 Arts">
                             </div>
                         </div>

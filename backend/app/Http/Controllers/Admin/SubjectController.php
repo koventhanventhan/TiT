@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use App\Services\GeminiTranslationService;
 
 class SubjectController extends Controller
 {
@@ -17,7 +18,7 @@ class SubjectController extends Controller
         return view('admin.subjects.index', compact('subjects'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, GeminiTranslationService $translator)
     {
         if (auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -37,12 +38,21 @@ class SubjectController extends Controller
             return redirect()->back()->with('error', 'already add panijachu intha subject endu ok');
         }
 
-        Subject::create($request->only(['name', 'price', 'category']));
+        $name_ta = $translator->translate($request->name, 'ta');
+        $name_si = $translator->translate($request->name, 'si');
 
-        return redirect()->back()->with('success', 'Subject added successfully');
+        Subject::create([
+            'name' => $request->name,
+            'name_ta' => $name_ta,
+            'name_si' => $name_si,
+            'price' => $request->price,
+            'category' => $request->category
+        ]);
+
+        return redirect()->back()->with('success', 'Subject added successfully with translations');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, GeminiTranslationService $translator)
     {
         if (auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -65,9 +75,17 @@ class SubjectController extends Controller
             return redirect()->back()->with('error', 'already add panijachu intha subject endu ok');
         }
 
-        $subject->update($request->only(['name', 'price', 'category']));
+        $data = $request->only(['name', 'price', 'category']);
 
-        return redirect()->back()->with('success', 'Subject updated successfully');
+        // Only translate if name is changed or translations are missing
+        if ($subject->name !== $request->name || !$subject->name_ta || !$subject->name_si) {
+            $data['name_ta'] = $translator->translate($request->name, 'ta');
+            $data['name_si'] = $translator->translate($request->name, 'si');
+        }
+
+        $subject->update($data);
+
+        return redirect()->back()->with('success', 'Subject updated successfully with translations');
     }
 
     public function destroy($id)
@@ -90,7 +108,12 @@ class SubjectController extends Controller
         $subjects = Subject::orderBy('name')->get();
         $grouped = $subjects->groupBy('category')->map(function ($items) {
             return $items->map(function ($item) {
-                return ['name' => $item->name, 'price' => $item->price];
+                return [
+                    'name' => $item->name,
+                    'name_ta' => $item->name_ta,
+                    'name_si' => $item->name_si,
+                    'price' => $item->price
+                ];
             })->values();
         });
         return response()->json($grouped);

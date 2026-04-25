@@ -26,14 +26,15 @@ const About = () => {
         const currentSubtitle = getSetting('about_subtitle', defaultEn.about_subtitle)
         const currentDesc = getSetting('about_hero_desc', defaultEn.about_hero_desc)
 
-        if (currentTitle === defaultEn.about_title) setAboutTitle(t('about_title'))
-        else setAboutTitle(await translate(currentTitle))
+        const [title, subtitle, desc] = await Promise.all([
+          currentTitle === defaultEn.about_title ? Promise.resolve(t('about_title')) : translate(currentTitle),
+          currentSubtitle === defaultEn.about_subtitle ? Promise.resolve(t('about_subtitle')) : translate(currentSubtitle),
+          currentDesc === defaultEn.about_hero_desc ? Promise.resolve(t('about_hero_desc')) : translate(currentDesc)
+        ])
 
-        if (currentSubtitle === defaultEn.about_subtitle) setAboutSubtitle(t('about_subtitle'))
-        else setAboutSubtitle(await translate(currentSubtitle))
-
-        if (currentDesc === defaultEn.about_hero_desc) setAboutHeroDesc(t('about_hero_desc'))
-        else setAboutHeroDesc(await translate(currentDesc))
+        setAboutTitle(title)
+        setAboutSubtitle(subtitle)
+        setAboutHeroDesc(desc)
       }
       translateAbout()
     } else {

@@ -43,14 +43,15 @@ const Hero = () => {
         const currentGradient = getSetting('hero_title_gradient', defaultEn.hero_title_gradient)
         const currentDesc = getSetting('hero_description', defaultEn.hero_description)
 
-        if (currentTitle === defaultEn.hero_title) setHeroTitle(t('hero_title'))
-        else setHeroTitle(await translate(currentTitle))
+        const [title, gradient, desc] = await Promise.all([
+          currentTitle === defaultEn.hero_title ? Promise.resolve(t('hero_title')) : translate(currentTitle),
+          currentGradient === defaultEn.hero_title_gradient ? Promise.resolve(t('hero_title_gradient')) : translate(currentGradient),
+          currentDesc === defaultEn.hero_description ? Promise.resolve(t('hero_description')) : translate(currentDesc)
+        ])
 
-        if (currentGradient === defaultEn.hero_title_gradient) setHeroTitleGradient(t('hero_title_gradient'))
-        else setHeroTitleGradient(await translate(currentGradient))
-
-        if (currentDesc === defaultEn.hero_description) setHeroDescription(t('hero_description'))
-        else setHeroDescription(await translate(currentDesc))
+        setHeroTitle(title)
+        setHeroTitleGradient(gradient)
+        setHeroDescription(desc)
       }
       translateHero()
     } else {

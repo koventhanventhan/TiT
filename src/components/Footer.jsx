@@ -127,6 +127,8 @@ const Footer = () => {
   const [tutorLabel, setTutorLabel] = useState('')
   const [studentLabel, setStudentLabel] = useState('')
   const [contactTitle, setContactTitle] = useState('')
+  const [locationLabel, setLocationLabel] = useState('')
+  const [developedBy, setDevelopedBy] = useState('')
 
   useEffect(() => {
     const loadLabels = async () => {
@@ -141,21 +143,43 @@ const Footer = () => {
         footer_gallery: getSetting('footer_gallery_label', 'Gallery'),
         footer_apply_tutor: getSetting('footer_tutor_label', 'Apply as a Tutor'),
         footer_register_student: getSetting('footer_student_label', 'Join as Student'),
-        footer_contact: getSetting('footer_contact_title', 'Contact Us')
+        footer_contact: getSetting('footer_contact_title', 'Contact Us'),
+        footer_location: getSetting('footer_location', 'Colombo, Sri Lanka'),
+        footer_developed_by: getSetting('footer_developed_by', 'Designed & Developed by TiT Team')
       }
 
       if (language !== 'en') {
-        setFooterInfo(await translate(defaultEn.footer_desc))
-        setCopyright(await translate(defaultEn.footer_copyright))
-        setLegalTitle(await translate(defaultEn.footer_legal))
-        setPrivacyLabel(await translate(defaultEn.footer_privacy))
-        setTermsLabel(await translate(defaultEn.footer_terms))
-        setRefundLabel(await translate(defaultEn.footer_refund))
-        setQuickLinksTitle(await translate(defaultEn.footer_quick_links))
-        setGalleryLabel(await translate(defaultEn.footer_gallery))
-        setTutorLabel(await translate(defaultEn.footer_apply_tutor))
-        setStudentLabel(await translate(defaultEn.footer_register_student))
-        setContactTitle(await translate(defaultEn.footer_contact))
+        const [
+          info, copy, legal, privacy, terms, refund, quick, gallery, tutor, student, contact, loc, dev
+        ] = await Promise.all([
+          translate(defaultEn.footer_desc),
+          translate(defaultEn.footer_copyright),
+          translate(defaultEn.footer_legal),
+          translate(defaultEn.footer_privacy),
+          translate(defaultEn.footer_terms),
+          translate(defaultEn.footer_refund),
+          translate(defaultEn.footer_quick_links),
+          translate(defaultEn.footer_gallery),
+          translate(defaultEn.footer_apply_tutor),
+          translate(defaultEn.footer_register_student),
+          translate(defaultEn.footer_contact),
+          translate(defaultEn.footer_location),
+          translate(defaultEn.footer_developed_by)
+        ])
+
+        setFooterInfo(info)
+        setCopyright(copy)
+        setLegalTitle(legal)
+        setPrivacyLabel(privacy)
+        setTermsLabel(terms)
+        setRefundLabel(refund)
+        setQuickLinksTitle(quick)
+        setGalleryLabel(gallery)
+        setTutorLabel(tutor)
+        setStudentLabel(student)
+        setContactTitle(contact)
+        setLocationLabel(loc)
+        setDevelopedBy(dev)
       } else {
         setFooterInfo(defaultEn.footer_desc)
         setCopyright(defaultEn.footer_copyright)
@@ -168,6 +192,8 @@ const Footer = () => {
         setTutorLabel(defaultEn.footer_apply_tutor)
         setStudentLabel(defaultEn.footer_register_student)
         setContactTitle(defaultEn.footer_contact)
+        setLocationLabel(defaultEn.footer_location)
+        setDevelopedBy(defaultEn.footer_developed_by)
       }
     }
     loadLabels()
@@ -244,7 +270,7 @@ const Footer = () => {
               </a>
               <Link to="/contact#map-section" className="contact-link">
                 <div className="contact-icon-box"><FiMapPin /></div>
-                <span>{getSetting('footer_location', 'Colombo, Sri Lanka')}</span>
+                <span>{locationLabel}</span>
               </Link>
             </div>
           </div>
@@ -254,7 +280,7 @@ const Footer = () => {
           <div className="footer-divider"></div>
           <div className="footer-bottom-flex">
             <p className="copyright-text">{copyright}</p>
-            <p className="developed-by">{getSetting('footer_developed_by', 'Designed & Developed by TiT Team')}</p>
+            <p className="developed-by">{developedBy}</p>
           </div>
         </div>
       </div>

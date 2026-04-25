@@ -294,6 +294,15 @@ class RegistrationController extends Controller
             );
         }
 
+        // Auto-fix status if they have a paid record for this month
+        $paidPayment = Payment::where('user_id', $user->id)
+            ->where('status', 'paid')
+            ->first();
+        if ($paidPayment && $user->registration_status !== 'approved') {
+            $user->update(['registration_status' => 'approved']);
+            Log::info('Auto-fixed student status based on existing payment', ['user_id' => $user->id]);
+        }
+
         return response()->json([
             'message' => 'Registration step 1 complete. Proceed to payment.',
             'user' => $this->formatUserResponse($user),

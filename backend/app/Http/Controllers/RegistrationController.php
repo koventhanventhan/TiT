@@ -507,58 +507,62 @@ class RegistrationController extends Controller
             'payment_id' => 'nullable|string',
         ]);
 
-        $user = $request->user();
-        $payment = Payment::where('user_id', $user->id)
-            ->where('gateway_ref', $request->order_id)
-            ->first();
+        // Find the payment by order_id (gateway_ref)
+        $payment = Payment::where('gateway_ref', $request->order_id)->first();
 
         if (!$payment) {
-            return response()->json(['message' => 'Payment not found.'], 404);
+            Log::error('paymentSuccess: Payment record not found', ['order_id' => $request->order_id]);
+            return response()->json(['message' => 'Payment record not found.'], 404);
         }
 
         // If already paid via server notification, just return success
         if ($payment->status === 'paid') {
             return response()->json([
                 'message' => 'Payment already confirmed.',
-                'registration_status' => $user->registration_status,
+                'registration_status' => $payment->user->registration_status ?? 'approved',
             ]);
         }
 
-        // Mark as paid (server notification is more reliable, but this is a fallback)
+        // Mark as paid
         $payment->update([
             'status'  => 'paid',
             'paid_at' => now(),
+            'transaction_id' => $request->payment_id,
         ]);
 
-        $user->update(['registration_status' => 'approved']);
+        $user = $payment->user;
+        if ($user) {
+            $user->update(['registration_status' => 'approved']);
+            Log::info('paymentSuccess: User automatically approved', ['user_id' => $user->id]);
 
-        // Notify Admin
-        $admin = User::where('role', 'admin')->first();
-        if ($admin) {
-            try {
-                $admin->notify(new AdminNotification(
-                    "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
-                    'success',
-                    route('admin.students.edit', $user->id),
-                    'admission_payments'
-                ));
-            } catch (\Throwable $e) {
-                Log::error('Payment success notification failed: ' . $e->getMessage());
+            // Notify Admin
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                try {
+                    $admin->notify(new AdminNotification(
+                        "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
+                        'success',
+                        route('admin.students.edit', $user->id),
+                        'admission_payments'
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('Payment success notification failed: ' . $e->getMessage());
+                }
+            }
+
+            // Send Payment Success WhatsApp
+            if ($user->phone_number) {
+                $this->whatsApp->sendTemplate(
+                    $user->phone_number,
+                    'tit_payment_success',
+                    'en',
+                    [$user->full_name ?? $user->name]
+                );
             }
         }
 
-        // Send Payment Success WhatsApp
-        if ($user->phone_number) {
-            $this->whatsApp->sendTemplate(
-                $user->phone_number,
-                'tit_payment_success',
-                'en',
-                [$user->full_name ?? $user->name]
-            );
-        }
-
         return response()->json([
-            'message' => 'Payment successful. Admin will confirm and you will receive a WhatsApp message.',
+            'message' => 'Payment successful. Your account is now active.',
             'registration_status' => 'approved',
         ]);
     }

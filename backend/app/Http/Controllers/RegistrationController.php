@@ -292,6 +292,17 @@ class RegistrationController extends Controller
                 'en',
                 [$user->full_name ?? $user->name, now()->format('F Y')]
             );
+
+            // Notify Admin via WhatsApp
+            $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+            if ($adminPhone) {
+                $this->whatsApp->sendTemplate(
+                    $adminPhone,
+                    'tit_registration_welcome', // Or a specific admin alert template if available
+                    'en',
+                    ["Admin: New Student - " . ($user->full_name ?? $user->name)]
+                );
+            }
         }
 
         // Auto-fix status if they have a paid record for this month
@@ -474,13 +485,24 @@ class RegistrationController extends Controller
                     }
                 }
 
-                // Send Payment Success WhatsApp
+                // Send Payment Success WhatsApp to Student
                 if ($user->phone_number) {
                     $this->whatsApp->sendTemplate(
                         $user->phone_number,
                         'tit_payment_success',
                         'en',
                         [$user->full_name ?? $user->name]
+                    );
+                }
+
+                // Notify Admin via WhatsApp
+                $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+                if ($adminPhone) {
+                    $this->whatsApp->sendTemplate(
+                        $adminPhone,
+                        'tit_payment_success',
+                        'en',
+                        ["Admin Alert: Payment Received from " . ($user->full_name ?? $user->name)]
                     );
                 }
 
@@ -565,13 +587,24 @@ class RegistrationController extends Controller
                 }
             }
 
-            // Send Payment Success WhatsApp
+            // Send Payment Success WhatsApp to Student
             if ($user->phone_number) {
                 $this->whatsApp->sendTemplate(
                     $user->phone_number,
                     'tit_payment_success',
                     'en',
                     [$user->full_name ?? $user->name]
+                );
+            }
+
+            // Notify Admin via WhatsApp
+            $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+            if ($adminPhone) {
+                $this->whatsApp->sendTemplate(
+                    $adminPhone,
+                    'tit_payment_success',
+                    'en',
+                    ["Admin Alert: Payment Received from " . ($user->full_name ?? $user->name)]
                 );
             }
         }

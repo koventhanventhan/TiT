@@ -451,7 +451,10 @@ class RegistrationController extends Controller
             if ($user) {
                 // Update registration status if it was a registration payment
                 if (in_array($user->registration_status, ['pending_payment', 'payment_completed'])) {
-                    $user->update(['registration_status' => 'approved']);
+                    $user->update([
+                        'registration_status' => 'approved',
+                        'admin_confirmed_at'  => now(),
+                    ]);
                 }
 
                 // Notify Admin of successful payment
@@ -541,7 +544,10 @@ class RegistrationController extends Controller
 
         $user = $payment->user;
         if ($user) {
-            $user->update(['registration_status' => 'approved']);
+            $user->update([
+                'registration_status' => 'approved',
+                'admin_confirmed_at'  => now(),
+            ]);
             Log::info('paymentSuccess: User automatically approved', ['user_id' => $user->id]);
 
             // Notify Admin

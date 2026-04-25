@@ -205,9 +205,21 @@ class AuthController extends Controller
 
         // Check Admin Approval for Students
         if ($user->role === 'user' && !$user->admin_confirmed_at) {
-            return response()->json([
-                'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
-            ], 403);
+            // Auto-approve if they have a successful payment
+            $hasPaid = \App\Models\Payment::where('user_id', $user->id)
+                ->where('status', 'paid')
+                ->exists();
+            if ($hasPaid) {
+                $user->update([
+                    'admin_confirmed_at' => now(),
+                    'registration_status' => 'approved'
+                ]);
+                \Log::info('Auto-approved student during login due to existing payment', ['user_id' => $user->id]);
+            } else {
+                return response()->json([
+                    'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
+                ], 403);
+            }
         }
 
         // Check if account is deactivated

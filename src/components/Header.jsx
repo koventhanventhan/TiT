@@ -88,6 +88,20 @@ const Header = () => {
     }
   }, [])
 
+  // Dynamic Favicon Update
+  useEffect(() => {
+    const faviconUrl = getSetting('site_favicon_url');
+    if (faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = faviconUrl;
+    }
+  }, [getSetting('site_favicon_url')]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {

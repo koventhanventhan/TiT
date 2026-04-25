@@ -442,7 +442,7 @@ class RegistrationController extends Controller
             if ($user) {
                 // Update registration status if it was a registration payment
                 if (in_array($user->registration_status, ['pending_payment', 'payment_completed'])) {
-                    $user->update(['registration_status' => 'paid_pending_confirm']);
+                    $user->update(['registration_status' => 'approved']);
                 }
 
                 // Notify Admin of successful payment
@@ -530,7 +530,7 @@ class RegistrationController extends Controller
             'paid_at' => now(),
         ]);
 
-        $user->update(['registration_status' => 'paid_pending_confirm']);
+        $user->update(['registration_status' => 'approved']);
 
         // Notify Admin
         $admin = User::where('role', 'admin')->first();
@@ -559,7 +559,7 @@ class RegistrationController extends Controller
 
         return response()->json([
             'message' => 'Payment successful. Admin will confirm and you will receive a WhatsApp message.',
-            'registration_status' => 'paid_pending_confirm',
+            'registration_status' => 'approved',
         ]);
     }
 

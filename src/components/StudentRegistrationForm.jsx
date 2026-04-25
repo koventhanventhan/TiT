@@ -403,17 +403,24 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         ...resp.params
       }
 
-      window.payhere.onCompleted = function onCompleted(orderId) {
+      window.payhere.onCompleted = async function onCompleted(orderId) {
         console.log("Payment completed. OrderID:" + orderId)
-        alert(t('pay_online_success'))
-        setStep(1)
-        setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-        setCardData({ number: '', holder: '', expiry: '', cvv: '' })
-        setSelectedStream('')
-        setSelectedSubjects([])
-        if (onClose) onClose()
-        // Optional: redirect to student dashboard
-        window.location.href = '/student/dashboard'
+        try {
+          await registerPaymentSuccess(resp.params.order_id, orderId)
+          alert(t('pay_online_success'))
+          setStep(1)
+          setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
+          setCardData({ number: '', holder: '', expiry: '', cvv: '' })
+          setSelectedStream('')
+          setSelectedSubjects([])
+          if (onClose) onClose()
+          window.location.href = '/student/dashboard'
+        } catch (err) {
+          console.error('Failed to notify backend of payment success:', err)
+          alert('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
+          if (onClose) onClose()
+          window.location.href = '/student/dashboard'
+        }
       }
 
       window.payhere.onDismissed = function onDismissed() {
@@ -436,30 +443,31 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="student-registration-overlay">
-      <div className={`student-registration-wrapper ${step === 3 ? 'payment-step-active' : ''}`}>
+    <div className="tit-reg-overlay">
+      <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
         {onClose && (
-          <button className="student-registration-close" onClick={onClose}>
+          <button className="tit-reg-close" onClick={onClose}>
             <FiX />
           </button>
         )}
 
         {step === 1 && (
-          <div className="student-registration-container">
-            <h2>{regTitle}</h2>
-            <p className="form-subtitle">{regSubtitle}</p>
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">{regTitle}</h2>
+            <p className="tit-reg-subtitle">{regSubtitle}</p>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="tit-reg-error">{error}</div>}
 
-            <form onSubmit={handleSubmit} className="student-registration-form">
+            <form onSubmit={handleSubmit} className="tit-reg-form">
               {/* Full Name */}
               {labelFullname && (
-                <div className="form-group">
-                  <label htmlFor="fullName">{labelFullname} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="fullName" className="tit-reg-label">{labelFullname} <span className="tit-reg-required">*</span></label>
                   <input
                     type="text"
                     id="fullName"
                     name="fullName"
+                    className="tit-reg-input"
                     value={formData.fullName}
                     onChange={handleChange}
                     required
@@ -470,12 +478,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Phone (for WhatsApp) */}
               {labelPhone && (
-                <div className="form-group">
-                  <label htmlFor="phoneNumber">{labelPhone} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
                   <input
                     type="tel"
                     id="phoneNumber"
                     name="phoneNumber"
+                    className="tit-reg-input"
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     required
@@ -487,12 +496,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Date of Birth */}
               {labelDob && (
-                <div className="form-group">
-                  <label htmlFor="dateOfBirth">{labelDob} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="dateOfBirth" className="tit-reg-label">{labelDob} <span className="tit-reg-required">*</span></label>
                   <input
                     type="date"
                     id="dateOfBirth"
                     name="dateOfBirth"
+                    className="tit-reg-input"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     required
@@ -503,11 +513,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Gender */}
               {labelGender && (
-                <div className="form-group">
-                  <label htmlFor="gender">{labelGender} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="gender" className="tit-reg-label">{labelGender} <span className="tit-reg-required">*</span></label>
                   <select
                     id="gender"
                     name="gender"
+                    className="tit-reg-select"
                     value={formData.gender}
                     onChange={handleChange}
                     required
@@ -522,12 +533,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* School Name */}
               {labelSchool && (
-                <div className="form-group">
-                  <label htmlFor="schoolName">{labelSchool} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="schoolName" className="tit-reg-label">{labelSchool} <span className="tit-reg-required">*</span></label>
                   <input
                     type="text"
                     id="schoolName"
                     name="schoolName"
+                    className="tit-reg-input"
                     value={formData.schoolName}
                     onChange={handleChange}
                     required
@@ -538,11 +550,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Medium of Learning */}
               {labelMedium && (
-                <div className="form-group">
-                  <label htmlFor="medium">{labelMedium} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="medium" className="tit-reg-label">{labelMedium} <span className="tit-reg-required">*</span></label>
                   <select
                     id="medium"
                     name="medium"
+                    className="tit-reg-select"
                     value={formData.medium}
                     onChange={handleChange}
                     required
@@ -556,11 +569,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Online Class Experience */}
               {labelExperience && (
-                <div className="form-group">
-                  <label htmlFor="onlineExperience">{labelExperience} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="onlineExperience" className="tit-reg-label">{labelExperience} <span className="tit-reg-required">*</span></label>
                   <select
                     id="onlineExperience"
                     name="onlineExperience"
+                    className="tit-reg-select"
                     value={formData.onlineExperience}
                     onChange={handleChange}
                     required
@@ -574,11 +588,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Device Used */}
               {labelDevice && (
-                <div className="form-group">
-                  <label htmlFor="deviceUsed">{labelDevice} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="deviceUsed" className="tit-reg-label">{labelDevice} <span className="tit-reg-required">*</span></label>
                   <select
                     id="deviceUsed"
                     name="deviceUsed"
+                    className="tit-reg-select"
                     value={formData.deviceUsed}
                     onChange={handleChange}
                     required
@@ -594,11 +609,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Current Grade (2026) */}
               {labelGrade && (
-                <div className="form-group">
-                  <label htmlFor="currentGrade">{labelGrade} <span className="required">*</span></label>
+                <div className="tit-reg-group">
+                  <label htmlFor="currentGrade" className="tit-reg-label">{labelGrade} <span className="tit-reg-required">*</span></label>
                   <select
                     id="currentGrade"
                     name="currentGrade"
+                    className="tit-reg-select"
                     value={formData.currentGrade}
                     onChange={handleChange}
                     required
@@ -618,11 +634,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 const gradeNum = getGradeNumber(formData.currentGrade)
                 if (gradeNum && gradeNum >= 12 && gradeNum <= 13 && labelStream) {
                   return (
-                    <div className="form-group">
-                      <label htmlFor="stream">{labelStream} <span className="required">*</span></label>
+                    <div className="tit-reg-group">
+                      <label htmlFor="stream" className="tit-reg-label">{labelStream} <span className="tit-reg-required">*</span></label>
                       <select
                         id="stream"
                         name="stream"
+                        className="tit-reg-select"
                         value={selectedStream}
                         onChange={handleStreamChange}
                         required
@@ -643,12 +660,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
               {customFieldLabels.map((customLabel, idx) => {
                 const fieldName = customLabel.toLowerCase().replace(/\s+/g, '_')
                 return (
-                  <div className="form-group" key={idx}>
-                    <label htmlFor={fieldName}>{customLabel} <span className="required">*</span></label>
+                  <div className="tit-reg-group" key={idx}>
+                    <label htmlFor={fieldName} className="tit-reg-label">{customLabel} <span className="tit-reg-required">*</span></label>
                     <input
                       type="text"
                       id={fieldName}
                       name={fieldName}
+                      className="tit-reg-input"
                       value={formData[fieldName] || ''}
                       onChange={handleChange}
                       required
@@ -660,20 +678,24 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Subject Selection */}
               {availableSubjects.length > 0 && (
-                <div className="form-group">
-                  <label>{t('reg_subjects')} <span className="required">*</span></label>
-                  <div className="checkbox-group">
+                <div className="tit-reg-group">
+                  <label className="tit-reg-label">{t('reg_subjects')} <span className="tit-reg-required">*</span></label>
+                  <div className="tit-reg-checkbox-group">
                     {availableSubjects.map((subjectObj) => (
                       <label
                         key={subjectObj.name}
-                        className={`checkbox-label ${selectedSubjects.includes(subjectObj.name) ? 'checked' : ''}`}
+                        className={`tit-reg-checkbox-label ${selectedSubjects.includes(subjectObj.name) ? 'tit-reg-checked' : ''}`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedSubjects.includes(subjectObj.name)}
                           onChange={() => handleSubjectToggle(subjectObj.name)}
                         />
-                        <span>{subjectObj.name} {subjectObj.price ? `(Rs. ${parseFloat(subjectObj.price).toFixed(0)})` : ''}</span>
+                        <span>
+                          {language === 'ta' ? (subjectObj.name_ta || subjectObj.name) :
+                            (language === 'si' ? (subjectObj.name_si || subjectObj.name) : subjectObj.name)}
+                          {subjectObj.price ? ` (Rs. ${parseFloat(subjectObj.price).toFixed(0)})` : ''}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -682,7 +704,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               <button
                 type="submit"
-                className="submit-button"
+                className="tit-reg-submit-btn"
                 disabled={isLoading}
               >
                 {isLoading ? t('reg_submitting') : btnNext}
@@ -692,24 +714,24 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         )}
 
         {step === 2 && (
-          <div className="student-registration-container">
-            <h2>{t('pay_title')}</h2>
-            <p className="form-subtitle">{t('pay_subtitle')}</p>
-            {error && <div className="error-message">{error}</div>}
-            <div className="payment-options">
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">{t('pay_title')}</h2>
+            <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
+            {error && <div className="tit-reg-error">{error}</div>}
+            <div className="tit-reg-payment-options">
               <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
                 {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
               </p>
-              <button type="button" className="submit-button" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
+              <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
                 {t('pay_offline')}
               </button>
-              <button type="button" className="submit-button secondary"
+              <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
                 onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
                 disabled={isLoading}>
                 {isLoading ? t('pay_processing') : t('pay_online')}
               </button>
             </div>
-            <button type="button" className="back-link" onClick={() => { setStep(1); setError(''); }}>
+            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
               {t('pay_back')}
             </button>
           </div>

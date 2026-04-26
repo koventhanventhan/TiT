@@ -298,11 +298,11 @@ class RegistrationController extends Controller
             if ($adminPhone) {
                 $this->whatsApp->sendTemplate(
                     $adminPhone,
-                    'tit_registration_welcome',
+                    'tit_welcome',
                     'en',
                     [
-                        "Admin: New Student (" . ($user->full_name ?? $user->name) . ")",
-                        "Contact: " . ($user->phone_number ?? 'N/A')
+                        "Admin Notification",
+                        "New Student: " . ($user->full_name ?? $user->name)
                     ]
                 );
             }
@@ -774,9 +774,9 @@ class RegistrationController extends Controller
         try {
             $response = $this->whatsApp->sendTemplate(
                 $adminPhone,
-                'tit_payment_success',
+                'tit_welcome',
                 'en',
-                ["TEST: Admin Notification Setup"]
+                ["ADMIN TEST", "DEBUG123"]
             );
 
             return response()->json([

@@ -43,6 +43,8 @@ Route::post('/register/step1', [RegistrationController::class, 'step1']);
 // PayHere notification (public - called by PayHere servers)
 Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])->name('payhere.notify');
 
+Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWhatsApp']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);

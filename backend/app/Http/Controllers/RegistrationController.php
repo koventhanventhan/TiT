@@ -298,9 +298,12 @@ class RegistrationController extends Controller
             if ($adminPhone) {
                 $this->whatsApp->sendTemplate(
                     $adminPhone,
-                    'tit_registration_welcome', // Or a specific admin alert template if available
+                    'tit_registration_welcome',
                     'en',
-                    ["Admin: New Student - " . ($user->full_name ?? $user->name)]
+                    [
+                        "Admin: New Student (" . ($user->full_name ?? $user->name) . ")",
+                        "Contact: " . ($user->phone_number ?? 'N/A')
+                    ]
                 );
             }
         }
@@ -502,7 +505,7 @@ class RegistrationController extends Controller
                         $adminPhone,
                         'tit_payment_success',
                         'en',
-                        ["Admin Alert: Payment Received from " . ($user->full_name ?? $user->name)]
+                        ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)]
                     );
                 }
 
@@ -604,7 +607,7 @@ class RegistrationController extends Controller
                     $adminPhone,
                     'tit_payment_success',
                     'en',
-                    ["Admin Alert: Payment Received from " . ($user->full_name ?? $user->name)]
+                    ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)]
                 );
             }
         }
@@ -760,5 +763,32 @@ class RegistrationController extends Controller
             'selected_subjects' => $user->selected_subjects,
             'registration_status' => $user->registration_status,
         ];
+    }
+    public function testAdminWhatsApp()
+    {
+        $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+        if (!$adminPhone) {
+            return response()->json(['error' => 'ADMIN_WHATSAPP_NUMBER is not set in .env'], 400);
+        }
+
+        try {
+            $response = $this->whatsApp->sendTemplate(
+                $adminPhone,
+                'tit_payment_success',
+                'en',
+                ["TEST: Admin Notification Setup"]
+            );
+
+            return response()->json([
+                'message' => 'Test attempt completed',
+                'admin_number' => $adminPhone,
+                'meta_response' => $response
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Exception occurred',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -182,6 +182,17 @@ class StudentController extends Controller
             );
         }
 
+        // Notify Admin via WhatsApp
+        $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+        if ($adminPhone) {
+            $this->whatsApp->sendTemplate(
+                $adminPhone,
+                'tit_admin_approved',
+                'en',
+                ["ADMIN ALERT: Approved student " . ($student->full_name ?? $student->name), "admin"]
+            );
+        }
+
         return redirect()->route('admin.students.index')
             ->with('success', 'Student confirmed and notification sent.');
     }

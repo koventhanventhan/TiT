@@ -936,7 +936,7 @@
 
   .logo-tagline {
     font-size: 0.8125rem !important;
-    color: var(--primary-color) !important;
+    color: #64748b !important;
     font-weight: 600 !important;
     margin-top: -0.125rem !important;
     white-space: nowrap !important;

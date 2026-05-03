@@ -82,7 +82,7 @@ body {
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
-  background: var(--bg-white) !important;
+  background: var(--bg-white);
   min-height: 100vh;
   margin: 0;
   padding: 0;

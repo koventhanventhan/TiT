@@ -69,7 +69,7 @@
                     </svg>
                 @endif
                 <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
-                    {{ $site_settings['admin_company_name'] ?? 'Zenix' }}
+                    {{ $site_settings['admin_company_name'] ?? config('app.name') }}
                 </span>
             </a>
             <div class="nav-control">

@@ -145,7 +145,7 @@ const ContactPage = () => {
       setMapDesc(t('footer_map_desc'))
     }
   }, [language, translate, getSetting, t])
-  
+
   // Handle scrolling to hash anchor on mount or hash change
   useEffect(() => {
     if (window.location.hash === '#map-section') {
@@ -278,7 +278,7 @@ const ContactPage = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder={t('label_email_placeholder') || "john@example.com"} required />
+                        placeholder={t('label_email_placeholder') || "haja@example.com"} required />
                     </div>
                   </div>
 

@@ -192,26 +192,14 @@
   width: 100%;
 }
 
-/* Login form scrollbar - specific color */
+/* Login form scrollbar - completely hidden for neat look */
 .animated-box:not(.register-mode) .animated-form {
-  scrollbar-color: rgba(57, 88, 161, 0.5) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .animated-box:not(.register-mode) .animated-form::-webkit-scrollbar {
-  width: 0.375rem;
-}
-
-.animated-box:not(.register-mode) .animated-form::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.animated-box:not(.register-mode) .animated-form::-webkit-scrollbar-thumb {
-  background: rgba(57, 88, 161, 0.5);
-  border-radius: 0.1875rem;
-}
-
-.animated-box:not(.register-mode) .animated-form::-webkit-scrollbar-thumb:hover {
-  background: rgba(57, 88, 161, 0.7);
+  display: none; /* Chrome/Safari/Opera */
 }
 
 /* Register form scrollbar - keep original pink color */
@@ -819,7 +807,7 @@ input[type="submit"]:hover:not(:disabled),
 .register-submit-input:hover:not(:disabled) {
   opacity: 0.95;
   transform: translateY(-0.125rem);
-  box-shadow: 0 0.375rem 1.25rem rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0.375rem 1.25rem rgba(25, 56, 192, 0.5);
 }
 
 .register-mode input[type="submit"]:hover:not(:disabled),
@@ -967,7 +955,8 @@ input[type="submit"]:disabled,
 
   .animated-auth-wrapper {
     max-width: 100%;
-    padding-top: 2.5rem; /* Make space for close button above tabs */
+    padding-top: 2.5rem;
+    /* Make space for close button above tabs */
   }
 
   .animated-box {
@@ -1016,7 +1005,7 @@ input[type="submit"]:disabled,
     padding: 0.5rem 0.625rem;
     font-size: 0.8125rem;
   }
-  
+
   .animated-auth-close {
     width: 1.75rem;
     height: 1.75rem;

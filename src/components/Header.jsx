@@ -360,7 +360,7 @@ const Header = () => {
               ) : (
                 <span className="logo-text">{getSetting('site_name', 'TiT')}</span>
               )}
-              <span className="logo-tagline">{getSetting('site_tagline', t('logo_tagline'))}</span>
+              {/* <span className="logo-tagline">{getSetting('site_tagline', t('logo_tagline'))}</span> */}
             </Link>
 
             <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>

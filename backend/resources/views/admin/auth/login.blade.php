@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="h-100">
 
 <head>
@@ -36,7 +36,15 @@
                             <div class="col-xl-12">
                                 <div class="auth-form">
                                     <div class="text-center mb-3">
-                                        <img src="{{ asset('admin-theme/images/logo-full.png') }}" alt="">
+                                        @if(isset($site_settings['admin_logo']))
+                                            <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 3rem; object-fit: contain;">
+                                        @else
+                                            <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect width="50" height="50" rx="20" fill="#EB8153"/>
+                                                <path d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                                            </svg>
+                                        @endif
+                                        <h4 class="mt-3" style="font-weight: 700; color: #fff;">{{ $site_settings['admin_company_name'] ?? config('app.name') }}</h4>
                                     </div>
                                     <h4 class="text-center mb-4">Sign in your account</h4>
                                     

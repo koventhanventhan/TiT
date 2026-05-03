@@ -85,8 +85,9 @@ class AdminAuthController extends Controller
             }
         }
         
-        // No token provided - show the actual login form
-        return view('admin.auth.login');
+        // No token provided - redirect to React frontend for login
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:4000');
+        return redirect($frontendUrl . '?redirect=admin');
     }
 
     /**

@@ -123,7 +123,7 @@ export const translations = {
     classes_online_features: "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home",
     classes_direct_description: 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.',
     classes_direct_features: "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline",
-    
+
     // Classes Page Subjects Defaults
     subject_mathematics: 'Mathematics',
     subject_science: 'Science',
@@ -269,7 +269,7 @@ export const translations = {
     contact_visit_label: 'Visit Us',
     contact_support_24_7: '24/7 Support',
     contact_always_available: 'Always available',
-    label_email_placeholder: 'john@example.com',
+    label_email_placeholder: 'haja@example.com',
     label_phone_placeholder: '+94 XX XXX XXXX',
     contact_urgent_desc: 'Call our support line directly for immediate assistance.',
     footer_social_title: 'Connect With Us',

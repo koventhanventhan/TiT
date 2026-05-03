@@ -392,6 +392,12 @@
                                                 <input type="hidden" name="remove_admin_logo" id="remove_admin_logo" value="0">
                                             </div> -->
                                             
+
+
+
+
+
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="d-block">Frontend Website Logo</label>
                                                 <div class="clickable-logo-preview mb-2" id="frontend-logo-preview-container">
@@ -423,6 +429,7 @@
                                             </div>
                                         </div>
 
+                                        
                                         <hr>
                                         <h5 class="mb-3 text-primary">Navigation Labels</h5>
                                         <div class="row">

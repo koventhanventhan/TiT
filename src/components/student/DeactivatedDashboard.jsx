@@ -63,17 +63,17 @@ const DeactivatedDashboard = () => {
   };
 
   return (
-    <div className="student-registration-overlay">
-      <div className={`student-registration-wrapper ${paymentStep === 'options' ? 'payment-step-active' : ''}`}>
-        <button className="student-registration-close" onClick={handleLogout}>
+    <div className="tit-reg-overlay">
+      <div className={`tit-reg-wrapper ${paymentStep === 'options' ? 'payment-step-active' : ''}`}>
+        <button className="tit-reg-close" onClick={handleLogout}>
           <FiX />
         </button>
 
-        <div className="student-registration-container">
+        <div className="tit-reg-container">
           {paymentStep === 'info' ? (
             <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2>Account Status</h2>
-              <p className="form-subtitle">உங்கள் கணக்கு தற்காலிகமாக முடக்கப்பட்டுள்ளது. மீண்டும் தொடங்க தயவுசெய்து பணம் செலுத்தவும்.</p>
+              <h2 className="tit-reg-title">Account Status</h2>
+              <p className="tit-reg-subtitle">உங்கள் கணக்கு தற்காலிகமாக முடக்கப்பட்டுள்ளது. மீண்டும் தொடங்க தயவுசெய்து பணம் செலுத்தவும்.</p>
               
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '2.5rem', color: '#c7d2fe' }}>Loading payment details...</div>
@@ -99,7 +99,7 @@ const DeactivatedDashboard = () => {
                   </div>
 
                   <button 
-                    className="submit-button" 
+                    className="tit-reg-submit-btn" 
                     style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
                     onClick={() => setPaymentStep('options')}
                   >
@@ -109,24 +109,24 @@ const DeactivatedDashboard = () => {
               )}
             </div>
           ) : (
-            <div className="payment-options" style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2>Payment</h2>
-              <p className="form-subtitle">Choose how you would like to pay</p>
+            <div className="tit-reg-payment-options" style={{ animation: 'fadeIn 0.3s ease' }}>
+              <h2 className="tit-reg-title">Payment</h2>
+              <p className="tit-reg-subtitle">Choose how you would like to pay</p>
               
               <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#facc15', marginBottom: '1.875rem', textAlign: 'center' }}>
                 Total Amount: Rs. {parseFloat(paymentData.total).toFixed(0)}
               </p>
 
-              <button className="submit-button" style={{ width: '100%' }} onClick={handlePayOffline} disabled={processing}>
+              <button className="tit-reg-submit-btn" style={{ width: '100%' }} onClick={handlePayOffline} disabled={processing}>
                 {processing ? 'PROCESSING...' : 'I WILL PAY OFFLINE'}
               </button>
               
-              <button className="submit-button secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>
+              <button className="tit-reg-submit-btn tit-reg-secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>
                 {processing ? 'PROCESSING...' : 'PAY ONLINE'}
               </button>
 
               <div style={{ textAlign: 'center' }}>
-                <button className="back-link" onClick={() => setPaymentStep('info')}>
+                <button className="tit-reg-back-link" onClick={() => setPaymentStep('info')}>
                   Back to form
                 </button>
               </div>

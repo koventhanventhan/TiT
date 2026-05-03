@@ -214,7 +214,7 @@ const Footer = () => {
                 </a>
               )}
               {social_instagram && social_instagram !== '#' && (
-                <a href={social_instagram} target="_blank" rel="noopener noreferrer" className="social-icon">
+                <a href={social_instagram} target="_blank" rel="noopener noreferrer" className="social-icon-v2">
                   <FiInstagram />
                 </a>
               )}
@@ -229,7 +229,7 @@ const Footer = () => {
                 </a>
               )}
               {social_youtube && social_youtube !== '#' && (
-                <a href={social_youtube} target="_blank" rel="noopener noreferrer" className="social-icon">
+                <a href={social_youtube} target="_blank" rel="noopener noreferrer" className="social-icon-v2">
                   <FiYoutube />
                 </a>
               )}

@@ -26,10 +26,14 @@
     font-size: 2.25rem;
     font-weight: 900;
     letter-spacing: -0.05em;
-    background: linear-gradient(135deg, #122c4b 0%, #0850ec 100%);
+    background: var(--gradient-1);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
+
+    /* White border around text */
+    -webkit-text-stroke: 1px white;
+    text-stroke: 1px white;
 }
 
 .footer-tagline {
@@ -56,24 +60,51 @@
 .social-icon {
     width: 2.75rem;
     height: 2.75rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1.0px solid rgba(255, 255, 255, 0.08);
+    background: var(--gradient-1);
+    /* border: 1.0px solid rgba(255, 255, 255, 0.08); */
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: #fff;
+    font-size: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+
+.social-icon-v2 {
+    width: 2.75rem;
+    height: 2.75rem;
+    background: var(--gradient-1);
+    /* border: 1.0px solid rgba(255, 255, 255, 0.08); */
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
     font-size: 1.25rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .social-icon:hover {
-    background: #2563eb;
+    background: #0064e0;
     color: white;
     transform: translateY(-0.3125rem);
     border-color: #3b82f6;
     box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(37, 99, 235, 0.3);
 }
+
+.social-icon-v2:hover {
+    background: #f51008;
+    color: white;
+    transform: translateY(-0.3125rem);
+    border-color: #0064e0;
+    box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(37, 99, 235, 0.3);
+}
+
+
 
 .footer-column-title {
     font-size: 1.125rem;
@@ -141,12 +172,12 @@
 .contact-icon-box {
     width: 2.25rem;
     height: 2.25rem;
-    background: linear-gradient(135deg, #071527 0%, #06049c 100%);
+    background: var(--gradient-1);
     border-radius: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3b82f6;
+    color: #fff;
     font-size: 1.125rem;
 }
 

@@ -7,13 +7,13 @@ const PendingApprovalDashboard = ({ user }) => {
     const handleLogout = () => logout();
 
     return (
-        <div className="student-registration-overlay">
-            <div className="student-registration-wrapper" style={{ maxWidth: '600px' }}>
-                <button className="student-registration-close" onClick={handleLogout}>
+        <div className="tit-reg-overlay">
+            <div className="tit-reg-wrapper" style={{ maxWidth: '600px' }}>
+                <button className="tit-reg-close" onClick={handleLogout}>
                     <FiX />
                 </button>
 
-                <div className="student-registration-container" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+                <div className="tit-reg-container" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
                     <div style={{ marginBottom: '2rem' }}>
                         <div style={{
                             width: '80px',
@@ -51,7 +51,7 @@ const PendingApprovalDashboard = ({ user }) => {
                     </div>
 
                     <button
-                        className="submit-button"
+                        className="tit-reg-submit-btn"
                         style={{ width: '100%', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
                         onClick={() => window.location.reload()}
                     >
@@ -59,8 +59,8 @@ const PendingApprovalDashboard = ({ user }) => {
                     </button>
 
                     <button
-                        className="back-link"
-                        style={{ marginTop: '1rem', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                        className="tit-reg-back-link"
+                        style={{ marginTop: '1rem' }}
                         onClick={handleLogout}
                     >
                         Logout

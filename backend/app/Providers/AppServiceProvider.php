@@ -27,11 +27,11 @@ class AppServiceProvider extends ServiceProvider
                 $baseUrl = 'https://titjaffna.lk/api';
                 
                 \Livewire\Livewire::setUpdateRoute(function ($handle) use ($baseUrl) {
-                    return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle);
+                    return \Illuminate\Support\Facades\Route::prefix('api')->post('/livewire/update', $handle);
                 });
                 
                 \Livewire\Livewire::setScriptRoute(function ($handle) use ($baseUrl) {
-                    return \Illuminate\Support\Facades\Route::get('/livewire/livewire.js', $handle);
+                    return \Illuminate\Support\Facades\Route::prefix('api')->get('/livewire/livewire.js', $handle);
                 });
                 
                 // Set the asset URL so it uses the /api prefix

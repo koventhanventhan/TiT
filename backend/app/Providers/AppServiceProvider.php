@@ -19,6 +19,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fix for cPanel subfolder API routing
+        if (request()->is('api/*') || str_contains(request()->getRequestUri(), '/api/')) {
+            config(['app.url' => config('app.url') . '/api']);
+        }
+
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
             

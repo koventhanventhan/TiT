@@ -19,6 +19,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+            
+            // Configure Livewire to use the working /api path on cPanel
+            if (class_exists(\Livewire\Livewire::class)) {
+                \Livewire\Livewire::setUpdateRoute(function ($handle) {
+                    return \Illuminate\Support\Facades\Route::post('/api/livewire/update', $handle);
+                });
+                
+                \Livewire\Livewire::setScriptRoute(function ($handle) {
+                    return \Illuminate\Support\Facades\Route::get('/api/livewire/livewire.js', $handle);
+                });
+            }
+        }
+
         \Illuminate\Support\Facades\Schema::defaultStringLength(191);
         \Illuminate\Pagination\Paginator::useBootstrap();
 

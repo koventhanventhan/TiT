@@ -7,18 +7,16 @@ $content = <<<EOT
     RewriteEngine On
     RewriteBase /
 
-    # 1. Handle API requests
-    RewriteCond %{REQUEST_URI} ^/api/ [OR]
-    RewriteCond %{REQUEST_URI} ^/super-admin [OR]
-    RewriteCond %{REQUEST_URI} ^/livewire/
+    # 1. Handle Backend (API, Super-Admin, Livewire)
+    RewriteCond %{REQUEST_URI} ^/(api|super-admin|livewire) [NC]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ laravel_api/backend/public/index.php [L]
+    RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
-    # 2. Handle Frontend (React)
+    # 2. Handle Frontend (React SPA)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.html [L]
+    RewriteRule ^(.*)$ index.html [QSA,L]
 </IfModule>
 EOT;
 

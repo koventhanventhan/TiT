@@ -29,13 +29,13 @@ const PendingApprovalDashboard = ({ user }) => {
                             <FiClock size={40} color="#3b82f6" />
                         </div>
 
-                        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '1rem', background: 'linear-gradient(to right, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Pending Admin Approval
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', background: 'linear-gradient(to right, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: '1.4' }}>
+                            Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும்.
                         </h2>
 
                         <p style={{ color: '#c7d2fe', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-                            Thank you for registering! Your application is currently being reviewed by our administration team.
-                            You will receive a <strong>WhatsApp message</strong> once your account is activated.
+                            (Account pending admin approval. Please wait.) <br/>
+                            நீங்கள் Manual Payment முறையைத் தேர்ந்தெடுத்திருந்தால், Admin உங்கள் கட்டணத்தைச் சரிபார்த்த பிறகு உங்கள் கணக்கு உறுதிப்படுத்தப்படும்.
                         </p>
                     </div>
 
@@ -44,9 +44,9 @@ const PendingApprovalDashboard = ({ user }) => {
                             <FiShield color="#10b981" /> Next Steps:
                         </h3>
                         <ul style={{ color: 'rgba(199, 210, 254, 0.8)', paddingLeft: '1.25rem', margin: 0 }}>
-                            <li style={{ marginBottom: '0.75rem' }}>Admin will verify your payment and details.</li>
-                            <li style={{ marginBottom: '0.75rem' }}>Your WhatsApp number ({user?.phone_number || 'N/A'}) will be notified.</li>
-                            <li>Once approved, you can access all features, class links, and materials.</li>
+                            <li style={{ marginBottom: '0.75rem' }}>Admin உங்கள் கட்டணம் மற்றும் விபரங்களைச் சரிபார்ப்பார். (Admin will verify details)</li>
+                            <li style={{ marginBottom: '0.75rem' }}>உங்கள் WhatsApp எண் ({user?.phone_number || 'N/A'}) மூலம் உங்களுக்குத் தகவல் தெரிவிக்கப்படும். (WhatsApp notification)</li>
+                            <li>உறுதிப்படுத்தப்பட்ட பிறகு, நீங்கள் அனைத்து பாடங்கள் மற்றும் வகுப்புகளில் இணைய முடியும். (Access after approval)</li>
                         </ul>
                     </div>
 

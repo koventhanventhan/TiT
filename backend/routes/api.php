@@ -57,23 +57,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/register/step2', [RegistrationController::class, 'step2']);
     Route::post('/register/payment-success', [RegistrationController::class, 'paymentSuccess']);
 
-    // Student Dashboard Routes (Tenant Aware + Role: student + Registration check)
-    Route::middleware(['role:user', 'tenant', 'reg_status'])->prefix('student')->group(function () {
-        Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
-        Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
-        Route::post('/attend', [StudentZoomController::class, 'attend']);
-        Route::get('/messages', [StudentMessageController::class, 'index']);
-        Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
-        
-        Route::get('/stats', [\App\Http\Controllers\Api\StudentDashboardController::class, 'stats']);
-        Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
-        Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
-        Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
-        
-        // Monthly Payment Routes
+    // Student Dashboard Routes (Tenant Aware + Role: student)
+    Route::middleware(['role:user', 'tenant'])->prefix('student')->group(function () {
+        // Monthly Payment Routes (Must be accessible even if reg_status check fails)
         Route::get('/payment-status', [RegistrationController::class, 'checkMonthlyPaymentStatus']);
         Route::post('/pay-monthly', [RegistrationController::class, 'initializeMonthlyPayment']);
         Route::get('/payment-details', [RegistrationController::class, 'getPaymentDetails']);
+
+        // Restricted Dashboard Routes
+        Route::middleware(['reg_status'])->group(function () {
+            Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
+            Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
+            Route::post('/attend', [StudentZoomController::class, 'attend']);
+            Route::get('/messages', [StudentMessageController::class, 'index']);
+            Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
+            
+            Route::get('/stats', [\App\Http\Controllers\Api\StudentDashboardController::class, 'stats']);
+            Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
+            Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
+            Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
+        });
     });
 
     // Teacher Dashboard Routes (Tenant Aware + Role: teacher)

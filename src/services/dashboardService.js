@@ -124,7 +124,12 @@ export const initializeMonthlyPayment = async () => {
     headers: getAuthHeaders(),
     credentials: 'include',
   })
-  if (!res.ok) throw new Error('Failed to initialize monthly payment')
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to initialize monthly payment')
+  }
+  
   return res.json()
 }
 

@@ -22,15 +22,20 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
             
-            // Configure Livewire to use the working /api path on cPanel
+            // Force Livewire to use the working API path on cPanel
             if (class_exists(\Livewire\Livewire::class)) {
-                \Livewire\Livewire::setUpdateRoute(function ($handle) {
-                    return \Illuminate\Support\Facades\Route::post('/api/livewire/update', $handle);
+                $baseUrl = 'https://titjaffna.lk/api';
+                
+                \Livewire\Livewire::setUpdateRoute(function ($handle) use ($baseUrl) {
+                    return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle);
                 });
                 
-                \Livewire\Livewire::setScriptRoute(function ($handle) {
-                    return \Illuminate\Support\Facades\Route::get('/api/livewire/livewire.js', $handle);
+                \Livewire\Livewire::setScriptRoute(function ($handle) use ($baseUrl) {
+                    return \Illuminate\Support\Facades\Route::get('/livewire/livewire.js', $handle);
                 });
+                
+                // Set the asset URL so it uses the /api prefix
+                config(['livewire.asset_url' => $baseUrl]);
             }
         }
 

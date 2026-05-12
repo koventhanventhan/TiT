@@ -16,11 +16,15 @@ require \$basePath.'/vendor/autoload.php';
 
 \$request = \Illuminate\Http\Request::capture();
 
-// Manual URI fix to ensure /api/ prefix matches Laravel routes
+// v6 - Smart URI fix
 \$uri = \$_SERVER['REQUEST_URI'];
 if (strpos(\$uri, '/api/') !== 0) {
-    \$request->server->set('REQUEST_URI', '/api' . \$uri);
+    \$uri = '/api' . \$uri;
 }
+
+// Ensure there's no double /api/api/
+\$uri = str_replace('/api/api/', '/api/', \$uri);
+\$request->server->set('REQUEST_URI', \$uri);
 
 \$response = \$kernel->handle(\$request);
 \$response->send();

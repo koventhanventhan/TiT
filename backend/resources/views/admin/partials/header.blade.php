@@ -4,8 +4,11 @@
             margin-top: -1.20rem;
         }
 
-        /* ── MOBILE & TABLET (max 991px) ── */
-        @media (max-width: 991px) {
+        /* ══════════════════════════════════════
+           MOBILE ONLY (max 767px)
+           ══════════════════════════════════════ */
+        @media (max-width: 767px) {
+
             .nav-header {
                 z-index: 10001 !important;
                 width: 4.5rem !important;
@@ -86,6 +89,7 @@
                 width: 100% !important;
             }
 
+            /* Hamburger */
             .custom-hamburger {
                 display: flex !important;
                 flex-direction: column !important;
@@ -116,6 +120,7 @@
                 transform: translateY(-6.5px) rotate(-45deg) !important;
             }
 
+            /* Search */
             .header-left {
                 flex: 1 1 auto !important;
                 min-width: 0 !important;
@@ -148,7 +153,7 @@
             }
             .header-left .search_bar .search_icon {
                 position: absolute !important;
-                left: 120px !important; top: 50% !important;
+                left: 8px !important; top: 50% !important;
                 transform: translateY(-50%) !important;
                 color: rgba(255,255,255,0.55) !important;
                 font-size: 13px !important;
@@ -156,6 +161,7 @@
                 pointer-events: none !important;
             }
 
+            /* Right icons */
             .header-right {
                 flex-shrink: 0 !important;
                 display: flex !important;
@@ -180,108 +186,338 @@
                 position: relative !important;
             }
             .header-right .nav-item:not(.header-profile) .nav-link svg {
-                width: 16px !important; height: 16px !important;
+                width: 18px !important; height: 18px !important;
                 display: block !important; flex-shrink: 0 !important;
             }
+
+            /* Profile avatar - MOBILE */
             .header-profile > .nav-link { padding: 4px !important; }
             .header-profile img,
             .header-profile .header-profile-initials {
-                width: 40px !important; height: 40px !important;
+                width: 36px !important; height: 36px !important;
                 flex-shrink: 0 !important;
                 border: 2px solid rgba(79,70,229,0.55) !important;
                 border-radius: 50% !important;
             }
-            #message-pulse, #notification-pulse {
-                width: 0.65rem !important; height: 0.65rem !important;
-                top: 2px !important; right: 2px !important;
-                
+
+            /* Pulse dot - MOBILE */
+            #message-pulse,
+            #notification-pulse {
+                width: 0.55rem !important;
+                height: 0.55rem !important;
+                top: 3px !important;
+                right: 3px !important;
+                box-shadow: 0 0 0 2px #1f2937 !important;
             }
+            #message-count,
+            #notification-count {
+                display: none !important;
+            }
+
             [data-header-position="fixed"] .content-body {
                 padding-top: 65px !important;
             }
         }
 
+        /* ══════════════════════════════════════
+           TABLET (768px – 1199px)
+           Covers ALL Android phones + tablets
+           ══════════════════════════════════════ */
+        @media (min-width: 768px) and (max-width: 1199px) {
 
+            .nav-header {
+                z-index: 10001 !important;
+                width: 5rem !important;
+                height: 65px !important;
+                background: #1f2937 !important;
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            .nav-header .brand-logo {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 2px !important;
+                text-decoration: none !important;
+                padding: 0 !important;
+            }
+            .nav-header .brand-logo img,
+            .nav-header .brand-logo .logo-abbr {
+                width: 28px !important; height: 28px !important;
+                max-width: 28px !important; display: block !important;
+            }
+            .nav-header .brand-title {
+                display: block !important;
+                font-size: 0.55rem !important;
+                font-weight: 700 !important;
+                color: #fff !important;
+                margin: 0 !important; padding: 0 !important;
+                white-space: nowrap !important;
+                letter-spacing: 0.8px !important;
+                line-height: 1 !important;
+                text-transform: uppercase !important;
+            }
+            .nav-header .nav-control { display: none !important; }
 
+            .header {
+                height: 65px !important;
+                background: #1f2937 !important;
+                border-bottom: 2px solid #4f46e5 !important;
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100% !important;
+                z-index: 10000 !important;
+                padding: 0 0 0 5rem !important;
+                box-sizing: border-box !important;
+            }
+            .header-content {
+                padding: 0 !important;
+                height: 65px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .header .navbar,
+            .header .navbar-expand {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                height: 65px !important;
+                padding: 0 6px 0 0 !important;
+                width: 100% !important;
+                overflow: hidden !important;
+            }
+            .header .collapse.navbar-collapse,
+            .header .navbar-collapse,
+            .header .navbar-collapse.justify-content-between,
+            .header .navbar-expand .navbar-collapse {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                height: 65px !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+                overflow: hidden !important;
+            }
 
+            /* Hamburger - TABLET */
+            .custom-hamburger {
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                width: 20px !important; height: 15px !important;
+                cursor: pointer !important;
+                flex-shrink: 0 !important;
+                margin: 0 6px 0 8px !important;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important; outline: none !important;
+            }
+            .custom-hamburger span {
+                display: block !important;
+                width: 20px !important; height: 2px !important;
+                background: #ffffff !important;
+                border-radius: 2px !important;
+                transition: all 0.3s ease !important;
+                transform-origin: center !important;
+            }
+            .custom-hamburger.active span:nth-child(1) {
+                transform: translateY(6.5px) rotate(45deg) !important;
+            }
+            .custom-hamburger.active span:nth-child(2) {
+                opacity: 0 !important; transform: scaleX(0) !important;
+            }
+            .custom-hamburger.active span:nth-child(3) {
+                transform: translateY(-6.5px) rotate(-45deg) !important;
+            }
 
-      /* ── DESKTOP (min 992px) ── */
-      
-@media (min-width: 992px) {
+            /* Search — fixed width, never grows into icons */
+            .header-left {
+                flex: 0 0 120px !important;
+                width: 120px !important;
+                min-width: 0 !important;
+                max-width: 120px !important;
+                margin-right: 4px !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            .header-left .search_bar { width: 100% !important; }
+            .header-left .search_bar form {
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+                width: 100% !important;
+            }
+            .header-left .search_bar .form-control {
+                height: 30px !important;
+                font-size: 10px !important;
+                padding: 0 6px 0 24px !important;
+                background: rgba(255,255,255,0.1) !important;
+                border: 1px solid rgba(255,255,255,0.18) !important;
+                border-radius: 50px !important;
+                color: #fff !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                outline: none !important;
+            }
+            .header-left .search_bar .form-control::placeholder {
+                color: rgba(255,255,255,0.38) !important;
+                font-size: 10px !important;
+            }
+            .header-left .search_bar .search_icon {
+                position: absolute !important;
+                left: 7px !important; top: 50% !important;
+                transform: translateY(-50%) !important;
+                color: rgba(255,255,255,0.55) !important;
+                font-size: 12px !important;
+                z-index: 10 !important;
+                pointer-events: none !important;
+            }
 
+            /* Right icons — never shrink, always stay right */
+            .header-right {
+                flex: 0 0 auto !important;
+                flex-shrink: 0 !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                flex-wrap: nowrap !important;
+                gap: 0 !important;
+                margin: 0 !important; padding: 0 4px 0 0 !important;
+                list-style: none !important;
+            }
+            .header-right .nav-item {
+                flex-shrink: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: 0 !important; padding: 0 !important;
+            }
+            .header-right .nav-link {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 4px 4px !important;
+                position: relative !important;
+            }
+            .header-right .nav-item:not(.header-profile) .nav-link svg {
+                width: 17px !important; height: 17px !important;
+                display: block !important; flex-shrink: 0 !important;
+            }
 
+            /* Profile avatar - TABLET */
+            .header-profile > .nav-link { padding: 4px !important; }
+            .header-profile img,
+            .header-profile .header-profile-initials {
+                width: 34px !important; height: 34px !important;
+                flex-shrink: 0 !important;
+                border: 2px solid rgba(79,70,229,0.55) !important;
+                border-radius: 50% !important;
+            }
 
+            /* Pulse dot - TABLET */
+            #message-pulse,
+            #notification-pulse {
+                width: 0.55rem !important;
+                height: 0.55rem !important;
+                top: 3px !important;
+                right: 3px !important;
+                box-shadow: 0 0 0 2px #1f2937 !important;
+            }
+            #message-count,
+            #notification-count {
+                display: none !important;
+            }
 
-  /* ✅ Pulse dot — desktop size */
-    #message-pulse,
-    #notification-pulse {
-           width: 1.80rem !important;
-        height: 1.80rem !important;
-        top: -10px !important;
-        right: -10px !important;
-        box-shadow: 0 0 0 2.5px #1f2937 !important;
-    }
+            [data-header-position="fixed"] .content-body {
+                padding-top: 65px !important;
+            }
+        }
 
+        /* ══════════════════════════════════════
+           DESKTOP (min 1200px)
+           ══════════════════════════════════════ */
+        @media (min-width: 1200px) {
 
+            .custom-hamburger { display: none !important; }
 
+            .header-left {
+                flex: 1 !important;
+                max-width: 400px !important;
+            }
 
-    .custom-hamburger { display: none !important; }
+            /* Icons - desktop */
+            .header-right .nav-item:not(.header-profile) .nav-link svg {
+                width: 28px !important;
+                height: 28px !important;
+                display: block !important;
+            }
+            .header-right .nav-link {
+                padding: 5px 10px !important;
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
 
-    .header-left {
-        flex: 1 !important;
-        max-width: 400px !important;
-    }
+            /* Profile avatar - DESKTOP */
+            .header-profile img,
+            .header-profile .header-profile-initials {
+                width: 52px !important;
+                height: 52px !important;
+                border: 2px solid rgba(79,70,229,0.55) !important;
+                border-radius: 50% !important;
+            }
+            .header-profile > .nav-link { padding: 5px !important; }
 
-    /* ✅ Desktop icons — 32px */
-    .header-right .nav-item:not(.header-profile) .nav-link svg {
-        width: 32px !important;
-        height: 32px !important;
-        display: block !important;
-        
-    }
-    .header-right .nav-link {
-        padding: 5px 10px !important;
-        position: relative !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
+            /* Pulse dot - DESKTOP */
+            #message-pulse,
+            #notification-pulse {
+                width: 0.80rem !important;
+                height: 0.80rem !important;
+                top: 4px !important;
+                right: 4px !important;
+                box-shadow: 0 0 0 2.5px #1f2937 !important;
+            }
+            #message-count,
+            #notification-count {
+                font-size: 0.45rem !important;
+                font-weight: bold !important;
+                line-height: 1 !important;
+            }
 
-    /* ✅ Profile avatar — 32px */
-    .header-profile img,
-    .header-profile .header-profile-initials {
-        width: 72px !important;
-        height: 72px !important;
-        border: 2px solid rgba(79,70,229,0.55) !important;
-        border-radius: 50% !important;
-    }
-    .header-profile > .nav-link { padding: 5px !important; }
-
-    .header-profile .dropdown-menu {
-        min-width: 210px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
-        border: 1px solid rgba(0,0,0,0.08) !important;
-        padding: 8px 0 !important;
-        right: 0 !important; left: auto !important;
-        top: calc(100% + 8px) !important;
-    }
-    .header-profile .dropdown-item {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        padding: 9px 16px !important;
-        font-size: 0.82rem !important;
-        color: #333 !important;
-        transition: background 0.15s !important;
-    }
-    .header-profile .dropdown-item:hover { background: #f0f4ff !important; }
-    .header-profile .dropdown-item i {
-        font-size: 1.1rem !important;
-        width: 18px !important;
-        text-align: center !important;
-    }
-}
+            /* Dropdown */
+            .header-profile .dropdown-menu {
+                min-width: 210px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+                border: 1px solid rgba(0,0,0,0.08) !important;
+                padding: 8px 0 !important;
+                right: 0 !important; left: auto !important;
+                top: calc(100% + 8px) !important;
+            }
+            .header-profile .dropdown-item {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                padding: 9px 16px !important;
+                font-size: 0.82rem !important;
+                color: #333 !important;
+                transition: background 0.15s !important;
+            }
+            .header-profile .dropdown-item:hover { background: #f0f4ff !important; }
+            .header-profile .dropdown-item i {
+                font-size: 1.1rem !important;
+                width: 18px !important;
+                text-align: center !important;
+            }
         }
     </style>
 
@@ -290,7 +526,7 @@
             <div class="collapse navbar-collapse justify-content-between"
                  style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;height:65px!important;width:100%!important;">
 
-                {{-- CUSTOM HAMBURGER: mobile/tablet only --}}
+                {{-- CUSTOM HAMBURGER: mobile & tablet only --}}
                 <button class="custom-hamburger"
                         id="customHamburger"
                         aria-label="Toggle menu"
@@ -337,9 +573,8 @@
                                       stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <div class="pulse-css d-none" id="message-pulse"
-                                 style="width:0.65rem;height:0.65rem;background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:2px;right:2px;box-shadow:0 0 0 2px #1f2937;">
-                                <span id="message-count" class="text-white d-none"
-                                      style="font-size:0.4rem;font-weight:bold;line-height:1;">0</span>
+                                 style="background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="message-count" class="text-white d-none">0</span>
                             </div>
                         </a>
                     </li>
@@ -355,9 +590,8 @@
                                       fill="#FFFFFF"/>
                             </svg>
                             <div class="pulse-css d-none" id="notification-pulse"
-                                 style="width:0.65rem;height:0.65rem;background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:2px;right:2px;box-shadow:0 0 0 2px #1f2937;">
-                                <span id="notification-count" class="text-white d-none"
-                                      style="font-size:0.4rem;font-weight:bold;line-height:1;">0</span>
+                                 style="background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="notification-count" class="text-white d-none">0</span>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
@@ -436,8 +670,9 @@
             var btn = document.getElementById('customHamburger');
             if (!btn) return;
             function checkScreen() {
-                btn.style.display = window.innerWidth <= 991 ? 'flex' : 'none';
-                if (window.innerWidth > 991) btn.classList.remove('active');
+                // Show hamburger for both mobile (<=767) and tablet (768-1199)
+                btn.style.display = window.innerWidth <= 1199 ? 'flex' : 'none';
+                if (window.innerWidth > 1199) btn.classList.remove('active');
             }
             checkScreen();
             window.addEventListener('resize', checkScreen);

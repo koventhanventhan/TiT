@@ -204,21 +204,35 @@ class AuthController extends Controller
         }
 
         // Check Admin Approval for Students
-        if ($user->role === 'user' && !$user->admin_confirmed_at) {
-            // Auto-approve if they have a successful payment
-            $hasPaid = \App\Models\Payment::where('user_id', $user->id)
-                ->where('status', 'paid')
-                ->exists();
-            if ($hasPaid) {
-                $user->update([
-                    'admin_confirmed_at' => now(),
-                    'registration_status' => 'approved'
-                ]);
-                \Log::info('Auto-approved student during login due to existing payment', ['user_id' => $user->id]);
-            } else {
-                return response()->json([
-                    'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
-                ], 403);
+        if ($user->role === 'user') {
+            // 1. Check Registration Confirmation
+            if (!$user->admin_confirmed_at) {
+                // Auto-approve if they have a successful payment
+                $hasPaid = \App\Models\Payment::where('user_id', $user->id)
+                    ->where('status', 'paid')
+                    ->exists();
+                if ($hasPaid) {
+                    $user->update([
+                        'admin_confirmed_at' => now(),
+                        'registration_status' => 'approved'
+                    ]);
+                    \Log::info('Auto-approved student during login due to existing payment', ['user_id' => $user->id]);
+                } else {
+                    return response()->json([
+                        'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
+                    ], 403);
+                }
+            }
+
+            // 2. Check Payment Status for Manual/Pending users
+            // If they completed Step 2 but admin hasn't marked as 'paid' yet
+            if ($user->registration_status === 'payment_completed') {
+                $isPaid = $user->hasPaidForMonth(now()->format('Y-m'));
+                if (!$isPaid) {
+                    return response()->json([
+                        'message' => 'அட்மின் இன்னும் உங்கள் கட்டணத்தை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Admin yet to update your payment status. Please wait.)',
+                    ], 403);
+                }
             }
         }
 

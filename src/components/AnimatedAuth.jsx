@@ -71,10 +71,21 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       console.log('User role:', result?.user?.role)
       console.log('Is admin redirect?', result?._isAdminRedirect)
 
-      // Check if user is admin FIRST - before any alerts or other logic
+      // Check if user is admin or super_admin FIRST - before any alerts or other logic
       if (result && result.user && result.token) {
         const userRole = result.user.role
         const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
+        const isSuperAdmin = userRole && String(userRole).toLowerCase() === 'super_admin'
+
+        if (isSuperAdmin) {
+          console.log('✅ Super Admin detected - redirecting to super admin dashboard...')
+          console.log('   User:', result.user.email)
+          console.log('   Role:', result.user.role)
+          setIsLoading(false)
+          onClose()
+          window.location.href = '/super-admin/dashboard'
+          return
+        }
 
         if (isAdmin) {
           console.log('✅ Admin detected - redirecting to dashboard immediately...')

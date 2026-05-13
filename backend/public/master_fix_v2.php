@@ -7,6 +7,10 @@ $content = <<<EOT
     RewriteEngine On
     RewriteBase /
 
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # 1. If it's a real file or folder in the root (like assets, images), serve it
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d

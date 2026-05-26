@@ -26,17 +26,45 @@ class UserResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('User Information')
+                Section::make('User Details')
                     ->schema([
                         TextInput::make('name')
-                            ->disabled(),
+                            ->required()
+                            ->maxLength(255),
                         TextInput::make('email')
-                            ->disabled(),
-                        TextInput::make('role')
-                            ->disabled(),
+                            ->email()
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(255),
                         TextInput::make('phone_number')
-                            ->disabled(),
+                            ->tel()
+                            ->maxLength(20),
+                        \Filament\Forms\Components\Select::make('role')
+                            ->options([
+                                'super_admin' => 'Super Admin',
+                                'admin' => 'Admin',
+                                'teacher' => 'Teacher',
+                                'user' => 'Student',
+                            ])
+                            ->required(),
+                        TextInput::make('password')
+                            ->password()
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create'),
+                        TextInput::make('password_confirmation')
+                            ->password()
+                            ->same('password')
+                            ->dehydrated(false)
+                            ->required(fn (string $context): bool => $context === 'create'),
                     ])->columns(2),
+                
+                Section::make('Account Status')
+                    ->schema([
+                        \Filament\Forms\Components\Toggle::make('deactivated_at')
+                            ->label('Is Blocked')
+                            ->formatStateUsing(fn ($state) => $state !== null)
+                            ->dehydrateStateUsing(fn ($state) => $state ? now() : null)
+                    ])->visible(fn ($record) => $record !== null),
             ]);
     }
 
@@ -64,13 +92,16 @@ class UserResource extends Resource
 
                 Tables\Columns\TextColumn::make('institute.name')
                     ->label('Institute')
-                    ->default('N/A')
+                    ->default('Platform Level')
                     ->searchable(),
 
-                Tables\Columns\IconColumn::make('is_active')
+                Tables\Columns\IconColumn::make('status')
                     ->label('Active')
                     ->state(fn (User $record) => $record->deactivated_at === null)
-                    ->boolean(),
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->color(fn ($state) => $state ? 'success' : 'danger'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Joined')
@@ -86,45 +117,43 @@ class UserResource extends Resource
                         'user' => 'Student',
                     ]),
 
-                Tables\Filters\SelectFilter::make('institute_id')
-                    ->label('Institute')
-                    ->options(fn () => Institute::pluck('name', 'id')->toArray()),
-
                 Tables\Filters\TernaryFilter::make('active')
-                    ->label('Active Status')
+                    ->label('Blocked Status')
+                    ->placeholder('All Users')
+                    ->trueLabel('Active Only')
+                    ->falseLabel('Blocked Only')
                     ->queries(
                         true: fn (Builder $query) => $query->whereNull('deactivated_at'),
                         false: fn (Builder $query) => $query->whereNotNull('deactivated_at'),
                     ),
             ])
             ->actions([
-                Actions\ViewAction::make(),
-
-                Actions\Action::make('suspend')
-                    ->label('Suspend')
+                Actions\EditAction::make(),
+                
+                Actions\Action::make('block')
+                    ->label('Block')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (User $record) => $record->deactivated_at === null && $record->role !== 'super_admin')
                     ->action(fn (User $record) => $record->update(['deactivated_at' => now()])),
 
-                Actions\Action::make('activate')
-                    ->label('Activate')
+                Actions\Action::make('unblock')
+                    ->label('Unblock')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn (User $record) => $record->deactivated_at !== null)
                     ->action(fn (User $record) => $record->update(['deactivated_at' => null])),
-
-                Actions\Action::make('impersonate')
-                    ->label('Impersonate')
-                    ->icon('heroicon-o-finger-print')
-                    ->color('warning')
-                    ->requiresConfirmation()
-                    ->visible(fn (User $record) => auth()->user()->canImpersonate() && $record->canBeImpersonated())
-                    ->action(fn (User $record) => auth()->user()->impersonate($record)),
+                
+                Actions\DeleteAction::make()
+                    ->visible(fn (User $record) => $record->role === 'admin'),
             ])
-            ->bulkActions([]);
+            ->bulkActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder
@@ -141,11 +170,13 @@ class UserResource extends Resource
     {
         return [
             'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
     public static function canCreate(): bool
     {
-        return false;
+        return true;
     }
 }

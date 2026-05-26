@@ -20,7 +20,8 @@ class CouponForm
                         TextInput::make('code')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->uppercase(),
+                            ->extraInputAttributes(['style' => 'text-transform: uppercase'])
+                            ->dehydrateStateUsing(fn ($state) => strtoupper($state)),
                         Select::make('type')
                             ->options([
                                 'fixed' => 'Fixed Amount',
@@ -32,8 +33,8 @@ class CouponForm
                         TextInput::make('value')
                             ->required()
                             ->numeric()
-                            ->prefix(fn (Filament\Forms\Get $get) => $get('type') === 'fixed' ? '$' : null)
-                            ->suffix(fn (Filament\Forms\Get $get) => $get('type') === 'percentage' ? '%' : null),
+                            ->prefix(fn ($get) => $get('type') === 'fixed' ? '$' : null)
+                            ->suffix(fn ($get) => $get('type') === 'percentage' ? '%' : null),
                     ])->columns(3),
 
                 Section::make('Usage Limits & Validity')

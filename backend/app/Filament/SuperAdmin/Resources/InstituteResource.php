@@ -37,7 +37,7 @@ class InstituteResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (Filament\Forms\Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                            ->afterStateUpdated(fn ($set, ?string $state) => $set('slug', Str::slug($state))),
 
                         TextInput::make('slug')
                             ->required()

@@ -4,12 +4,11 @@ namespace App\Filament\SuperAdmin\Resources;
 
 use App\Filament\SuperAdmin\Resources\PlanResource\Pages;
 use App\Models\SubscriptionPlan;
-use Filament\Actions;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Actions;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,9 +18,8 @@ class PlanResource extends Resource
 {
     protected static ?string $model = SubscriptionPlan::class;
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-credit-card';
-    protected static string | \UnitEnum | null $navigationGroup = 'Subscription & Billing';
-    protected static ?string $navigationLabel = 'Plans';
-    protected static ?int $navigationSort = 2;
+    protected static string | \UnitEnum | null $navigationGroup = 'Plans & Subscriptions';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -31,48 +29,37 @@ class PlanResource extends Resource
                     ->schema([
                         TextInput::make('name')
                             ->required()
-                            ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (Filament\Forms\Set $set, ?string $state) => $set('slug', Str::slug($state))),
-
+                            ->afterStateUpdated(fn (string $operation, $state, $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null),
                         TextInput::make('slug')
+                            ->disabled()
+                            ->dehydrated()
                             ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
-                    ])->columns(2),
-
-                Section::make('Pricing')
-                    ->schema([
+                            ->unique(SubscriptionPlan::class, 'slug', ignoreRecord: true),
                         TextInput::make('monthly_price')
                             ->numeric()
-                            ->prefix('$')
+                            ->prefix('LKR')
                             ->required(),
-
                         TextInput::make('yearly_price')
                             ->numeric()
-                            ->prefix('$')
+                            ->prefix('LKR')
                             ->required(),
                     ])->columns(2),
 
-                Section::make('Limits')
+                Section::make('Limits & Features')
                     ->schema([
                         TextInput::make('max_students')
                             ->numeric()
-                            ->default(-1)
-                            ->helperText('-1 for unlimited'),
-
+                            ->default(0)
+                            ->helperText('Use 0 for unlimited'),
                         TextInput::make('max_teachers')
                             ->numeric()
-                            ->default(-1)
-                            ->helperText('-1 for unlimited'),
-                    ])->columns(2),
-
-                Section::make('Features')
-                    ->schema([
+                            ->default(0)
+                            ->helperText('Use 0 for unlimited'),
                         KeyValue::make('features')
-                            ->label('Feature Flags')
-                            ->helperText('Key-value pairs of features included in this plan'),
-                    ]),
+                            ->label('Key Features')
+                            ->helperText('List features that will be shown to users'),
+                    ])->columns(2),
             ]);
     }
 
@@ -83,34 +70,18 @@ class PlanResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('monthly_price')
-                    ->label('Monthly')
-                    ->money('usd')
+                    ->money('LKR')
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('yearly_price')
-                    ->label('Yearly')
-                    ->money('usd')
+                    ->money('LKR')
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('max_students')
-                    ->label('Max Students')
-                    ->formatStateUsing(fn ($state) => $state == -1 ? 'Unlimited' : $state),
-
-                Tables\Columns\TextColumn::make('max_teachers')
-                    ->label('Max Teachers')
-                    ->formatStateUsing(fn ($state) => $state == -1 ? 'Unlimited' : $state),
-
+                    ->label('Students Limit')
+                    ->formatStateUsing(fn ($state) => $state == 0 ? 'Unlimited' : $state),
                 Tables\Columns\TextColumn::make('institutes_count')
                     ->counts('institutes')
-                    ->label('Institutes')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime('M d, Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Active Institutes'),
             ])
             ->filters([])
             ->actions([

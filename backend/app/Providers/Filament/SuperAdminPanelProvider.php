@@ -27,6 +27,23 @@ class SuperAdminPanelProvider extends PanelProvider
             ->id('super-admin')
             ->path('super-admin')
             ->login()
+            ->brandName(fn () => 
+                (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings')) 
+                ? \App\Models\SiteSetting::where('key', 'site_name')->value('value') ?? 'TiT' 
+                : 'TiT'
+            )
+            ->brandLogo(function () {
+                try {
+                    if (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+                        $logo = \App\Models\SiteSetting::where('key', 'site_logo')->value('value');
+                        return $logo ? asset('storage/' . $logo) : null;
+                    }
+                } catch (\Exception $e) {
+                    return null;
+                }
+                return null;
+            })
+            ->brandLogoHeight('3rem')
             ->colors([
                 'primary' => Color::Amber,
             ])

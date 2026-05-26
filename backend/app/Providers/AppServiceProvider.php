@@ -4,6 +4,20 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+// Polyfill for PHP 8.4 Dom API which is expected by some newer Symfony components
+if (!class_exists('Dom\Node')) {
+    eval('namespace Dom; class Node {}');
+}
+if (!class_exists('Dom\HTMLDocument')) {
+    eval('namespace Dom; class HTMLDocument extends \DOMDocument { 
+        public static function createFromString(string $source, ?string $encoding = null, int $options = 0): self {
+            $doc = new self();
+            @$doc->loadHTML($source, $options);
+            return $doc;
+        }
+    }');
+}
+
 class AppServiceProvider extends ServiceProvider
 {
     /**

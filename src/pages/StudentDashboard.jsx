@@ -15,11 +15,13 @@ export default function StudentDashboard() {
     async function checkAuth() {
       const u = await getCurrentUser()
       if (!u) {
+        setLoading(false)
         navigate('/')
         return
       }
       const role = (u.role || '').toLowerCase()
       if (role !== 'user' && role !== 'student') {
+        setLoading(false)
         navigate('/')
         return
       }
@@ -30,6 +32,7 @@ export default function StudentDashboard() {
       const regStatus = (u.registration_status || '').toLowerCase()
       if (regStatus === 'pending_payment' || !u.full_name) {
         console.log('📝 Student has pending payment or incomplete profile, redirecting to registration flow...')
+        setLoading(false)
         navigate('/register?step=2')
         return
       }
@@ -40,11 +43,13 @@ export default function StudentDashboard() {
     checkAuth()
   }, [navigate])
 
-  if (loading || !user) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
   )
+  
+  if (!user) return null;
 
   if (user.is_deactivated) {
     return <DeactivatedDashboard user={user} />

@@ -16,13 +16,9 @@ class StatsOverviewWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $totalInstitutes = Institute::count();
-        $activeInstitutes = Institute::where('status', 'active')->count();
-        $suspendedInstitutes = Institute::where('status', 'suspended')->count();
-
         $totalStudents = User::withoutGlobalScopes()->where('role', 'user')->count();
         $totalTeachers = User::withoutGlobalScopes()->where('role', 'teacher')->count();
-        $totalClasses = ZoomSchedule::withoutGlobalScopes()->count();
+        $totalAdmins = User::withoutGlobalScopes()->where('role', 'admin')->count();
 
         $monthlyRevenue = Payment::withoutGlobalScopes()
             ->where('status', 'paid')
@@ -30,41 +26,37 @@ class StatsOverviewWidget extends BaseWidget
             ->whereYear('created_at', now()->year)
             ->sum('amount');
 
-        $expiringInstitutes = Institute::where('status', 'active')
-            ->where('expires_at', '<=', now()->addDays(7))
-            ->where('expires_at', '>', now())
+        $allTimeRevenue = Payment::withoutGlobalScopes()
+            ->where('status', 'paid')
+            ->sum('amount');
+
+        $activeSubscriptions = Institute::where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
             ->count();
 
         return [
-            Stat::make('Total Institutes', $totalInstitutes)
-                ->description("{$activeInstitutes} active, {$suspendedInstitutes} suspended")
-                ->descriptionIcon('heroicon-m-building-office-2')
+            Stat::make('Total Users', number_format($totalStudents + $totalTeachers + $totalAdmins))
+                ->description("{$totalStudents} Students, {$totalTeachers} Teachers, {$totalAdmins} Admins")
+                ->descriptionIcon('heroicon-m-users')
                 ->color('primary'),
 
-            Stat::make('Total Students', number_format($totalStudents))
-                ->description('Across all institutes')
-                ->descriptionIcon('heroicon-m-academic-cap')
-                ->color('success'),
-
-            Stat::make('Total Teachers', number_format($totalTeachers))
-                ->description('Across all institutes')
-                ->descriptionIcon('heroicon-m-user-group')
-                ->color('info'),
-
-            Stat::make('Active Classes', number_format($totalClasses))
-                ->description('Zoom schedules')
-                ->descriptionIcon('heroicon-m-video-camera')
-                ->color('warning'),
-
-            Stat::make('Monthly Revenue', '$' . number_format($monthlyRevenue, 2))
-                ->description(now()->format('F Y'))
+            Stat::make('Monthly Revenue', 'LKR ' . number_format($monthlyRevenue, 2))
+                ->description('Current Month')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('success'),
 
-            Stat::make('Expiry Alerts', $expiringInstitutes)
-                ->description('Expiring within 7 days')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color($expiringInstitutes > 0 ? 'danger' : 'success'),
+            Stat::make('All Time Revenue', 'LKR ' . number_format($allTimeRevenue, 2))
+                ->description('Total platform earnings')
+                ->descriptionIcon('heroicon-m-banknotes')
+                ->color('info'),
+
+            Stat::make('Active Subscriptions', $activeSubscriptions)
+                ->description('Institutes with active plans')
+                ->descriptionIcon('heroicon-m-check-badge')
+                ->color('success'),
         ];
     }
 }

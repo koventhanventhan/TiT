@@ -16,7 +16,7 @@ class ListUsers extends ListRecords
         return [
             'all' => Tab::make('All Users'),
             'students' => Tab::make('Students')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('role', 'student')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('role', 'user')),
             'teachers' => Tab::make('Teachers')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('role', 'teacher')),
             'admins' => Tab::make('Admins')

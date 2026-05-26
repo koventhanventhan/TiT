@@ -3,10 +3,9 @@
 namespace App\Filament\SuperAdmin\Resources\PaymentResource\Pages;
 
 use App\Filament\SuperAdmin\Resources\PaymentResource;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ViewRecord;
 
-class ListPayments extends ListRecords
+class ViewPayment extends ViewRecord
 {
     protected static string $resource = PaymentResource::class;
 }

@@ -104,7 +104,7 @@ export default function TeacherMaterials() {
             window.open(item.url, '_blank')
         } else if (item.file_path) {
             const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
-            window.open(`${baseUrl}/storage/${item.file_path}`, '_blank')
+            window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
         } else {
             alert('File not available')
         }

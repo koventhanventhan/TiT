@@ -54,4 +54,20 @@ class TeacherMaterialController extends Controller
         
         return response()->json(['message' => 'Material deleted successfully.']);
     }
+
+    public function download(Request $request)
+    {
+        $path = $request->query('path');
+        if (!$path || str_contains($path, '..')) {
+            return response('Invalid path', 400);
+        }
+
+        $fullPath = storage_path('app/public/' . $path);
+        
+        if (file_exists($fullPath)) {
+            return response()->download($fullPath);
+        }
+        
+        return response('File not found on server', 404);
+    }
 }

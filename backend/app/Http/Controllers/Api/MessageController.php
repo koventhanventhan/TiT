@@ -178,15 +178,17 @@ class MessageController extends Controller
     {
         $user = $request->user();
         $options = [];
+        $instituteId = $user->institute_id;
 
         if ($user->role === 'admin') {
             $options['broadcast'] = [
                 ['value' => 'all_teachers', 'label' => 'All Teachers'],
-                ['value' => 'all_students', 'label' => 'All Students'],
             ];
 
-            // Grade-based
-            $grades = User::where('role', 'user')
+            // Grade-based (bypass scope, filter by same institute)
+            $grades = User::withoutGlobalScopes()
+                ->where('role', 'user')
+                ->where('institute_id', $instituteId)
                 ->whereNotNull('current_grade')
                 ->whereNull('deactivated_at')
                 ->distinct()
@@ -199,7 +201,9 @@ class MessageController extends Controller
             }
 
             // Individual teachers
-            $options['teachers'] = User::where('role', 'teacher')
+            $options['teachers'] = User::withoutGlobalScopes()
+                ->where('role', 'teacher')
+                ->where('institute_id', $instituteId)
                 ->whereNull('deactivated_at')
                 ->select('id', 'name', 'full_name', 'email')
                 ->orderBy('name')
@@ -207,7 +211,9 @@ class MessageController extends Controller
                 ->map(fn($t) => ['id' => $t->id, 'name' => $t->full_name ?? $t->name, 'email' => $t->email]);
 
             // Individual students
-            $options['students'] = User::where('role', 'user')
+            $options['students'] = User::withoutGlobalScopes()
+                ->where('role', 'user')
+                ->where('institute_id', $instituteId)
                 ->whereNull('deactivated_at')
                 ->select('id', 'name', 'full_name', 'email', 'current_grade')
                 ->orderBy('full_name')
@@ -219,37 +225,42 @@ class MessageController extends Controller
                 ['value' => 'admin', 'label' => 'Admin'],
             ];
 
-            // Grade-based
-            $grades = User::where('role', 'user')
-                ->whereNotNull('current_grade')
-                ->whereNull('deactivated_at')
-                ->distinct()
-                ->pluck('current_grade')
-                ->sort()
-                ->values();
-
-            foreach ($grades as $grade) {
-                $options['broadcast'][] = ['value' => 'grade_' . $grade, 'label' => 'Grade ' . $grade . ' Students'];
-            }
-
             // Individual students
-            $options['students'] = User::where('role', 'user')
+            $options['students'] = User::withoutGlobalScopes()
+                ->where('role', 'user')
+                ->where('institute_id', $instituteId)
                 ->whereNull('deactivated_at')
                 ->select('id', 'name', 'full_name', 'email', 'current_grade')
                 ->orderBy('full_name')
                 ->get()
                 ->map(fn($s) => ['id' => $s->id, 'name' => $s->full_name ?? $s->name, 'email' => $s->email, 'grade' => $s->current_grade]);
-
-        } elseif ($user->role === 'user') {
-            // Students can send to admin and teachers
-            $options['admins'] = User::where('role', 'admin')
+                
+            // Individual admins
+            $options['admins'] = User::withoutGlobalScopes()
+                ->where('role', 'admin')
+                ->where('institute_id', $instituteId)
                 ->whereNull('deactivated_at')
                 ->select('id', 'name', 'full_name', 'email')
                 ->orderBy('name')
                 ->get()
                 ->map(fn($a) => ['id' => $a->id, 'name' => $a->full_name ?? $a->name, 'email' => $a->email]);
 
-            $options['teachers'] = User::where('role', 'teacher')
+        } elseif ($user->role === 'user') {
+            // Students can ONLY send to admins/teachers (individual dropdown)
+            $options['broadcast'] = [];
+
+            $options['admins'] = User::withoutGlobalScopes()
+                ->where('role', 'admin')
+                ->where('institute_id', $instituteId)
+                ->whereNull('deactivated_at')
+                ->select('id', 'name', 'full_name', 'email')
+                ->orderBy('name')
+                ->get()
+                ->map(fn($a) => ['id' => $a->id, 'name' => $a->full_name ?? $a->name, 'email' => $a->email]);
+
+            $options['teachers'] = User::withoutGlobalScopes()
+                ->where('role', 'teacher')
+                ->where('institute_id', $instituteId)
                 ->whereNull('deactivated_at')
                 ->select('id', 'name', 'full_name', 'email')
                 ->orderBy('name')
@@ -351,9 +362,8 @@ class MessageController extends Controller
         }
 
         if ($sender->role === 'teacher') {
-            // Teacher → admin, individual student, grade broadcast
+            // Teacher → admin broadcast, individual student/admin
             if ($recipientType === 'admin') return true;
-            if ($recipientType === 'grade') return true;
             if ($recipientType === 'individual') {
                 $recipient = User::find($recipientId);
                 return $recipient && in_array($recipient->role, ['user', 'admin']);
@@ -362,7 +372,7 @@ class MessageController extends Controller
         }
 
         if ($sender->role === 'user') {
-            // Student → admin or teacher only (individual)
+            // Student → individual admin/teacher ONLY
             if ($recipientType === 'individual') {
                 $recipient = User::find($recipientId);
                 return $recipient && in_array($recipient->role, ['admin', 'teacher']);

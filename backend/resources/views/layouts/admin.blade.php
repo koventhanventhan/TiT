@@ -136,7 +136,7 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright Â© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>
     </div>

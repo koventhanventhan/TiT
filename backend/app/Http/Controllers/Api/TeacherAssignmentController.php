@@ -14,6 +14,9 @@ class TeacherAssignmentController extends Controller
     {
         $assignments = Assignment::where('teacher_id', $request->user()->id)
             ->withCount('submissions')
+            ->withCount(['submissions as ungraded_count' => function($query) {
+                $query->where('status', 'pending');
+            }])
             ->orderBy('created_at', 'desc')
             ->get();
         return response()->json($assignments);
@@ -38,10 +41,10 @@ class TeacherAssignmentController extends Controller
         $assignment = Assignment::create([
             'teacher_id' => $request->user()->id,
             'title' => $validated['title'],
-            'description' => $validated['description'],
-            'subject' => $validated['subject'],
-            'grade' => $validated['grade'],
-            'due_date' => $validated['due_date'],
+            'description' => $validated['description'] ?? null,
+            'subject' => $validated['subject'] ?? null,
+            'grade' => $validated['grade'] ?? null,
+            'due_date' => $validated['due_date'] ?? null,
             'file_path' => $filePath,
         ]);
 

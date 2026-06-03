@@ -41,4 +41,17 @@ class TeacherMaterialController extends Controller
 
         return response()->json($material, 201);
     }
+
+    public function destroy($id)
+    {
+        $material = LearningMaterial::findOrFail($id);
+        
+        if ($material->file_path && \Storage::disk('public')->exists($material->file_path)) {
+            \Storage::disk('public')->delete($material->file_path);
+        }
+        
+        $material->delete();
+        
+        return response()->json(['message' => 'Material deleted successfully.']);
+    }
 }

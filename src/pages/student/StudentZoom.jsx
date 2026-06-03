@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch } from 'react-icons/fi'
-import { getStudentZoomClasses, markAttendance } from '../../services/dashboardService'
+import { getStudentZoomClasses, studentAttend } from '../../services/dashboardService'
 
 export default function StudentZoom() {
     const [classes, setClasses] = useState([])
@@ -31,7 +31,7 @@ export default function StudentZoom() {
 
     const handleJoin = async (cls) => {
         try {
-            await markAttendance(cls.id)
+            await studentAttend(cls.id)
             const link = cls.join_url || cls.zoom_link;
             if (link) window.open(link, '_blank')
         } catch (e) {
@@ -109,7 +109,7 @@ export default function StudentZoom() {
                                     onClick={() => handleJoin(cls)}
                                     disabled={!cls.zoom_link && !cls.join_url}
                                     style={{
-                                        width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                                        width: '100%', padding: '12px', borderRadius: 12,
                                         background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
                                         color: isLive ? '#fff' : '#475569', fontSize: 14, fontWeight: 700,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

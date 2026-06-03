@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch } from 'react-icons/fi'
+import { FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch, FiExternalLink } from 'react-icons/fi'
 import { getStudentMaterials } from '../../services/dashboardService'
 
 export default function StudentMaterials() {
@@ -36,6 +36,17 @@ export default function StudentMaterials() {
             case 'document': return { icon: <FiFileText />, color: '#3b82f6', bg: '#eff6ff' }
             case 'link': return { icon: <FiLink />, color: '#10b981', bg: '#ecfdf5' }
             default: return { icon: <FiFolder />, color: '#6366f1', bg: '#eef2ff' }
+        }
+    }
+
+    const handleDownload = (item) => {
+        if (item.type?.toLowerCase() === 'link' && item.url) {
+            window.open(item.url, '_blank')
+        } else if (item.file_path) {
+            const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
+            window.open(`${baseUrl}/storage/${item.file_path}`, '_blank')
+        } else {
+            alert('File not available')
         }
     }
 
@@ -137,14 +148,14 @@ export default function StudentMaterials() {
                                 </p>
                                 <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
-                                        {new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        {item.size !== '--' && <><span style={{ margin: '0 6px' }}>•</span>{item.size}</>}
+                                        {new Date(item.created_at || item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        {item.size && item.size !== '--' && <><span style={{ margin: '0 6px' }}>•</span>{item.size}</>}
                                     </div>
-                                    <button style={{
+                                    <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} style={{
                                         width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s'
                                     }} onMouseEnter={e => { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#6366f1' }} onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0' }}>
-                                        {item.type === 'link' ? <FiLink /> : <FiDownload />}
+                                        {item.type?.toLowerCase() === 'link' ? <FiExternalLink /> : <FiDownload />}
                                     </button>
                                 </div>
                             </div>

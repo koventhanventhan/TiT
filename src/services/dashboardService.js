@@ -190,16 +190,27 @@ export const getTeacherAssignments = async () => {
 }
 
 export const createTeacherAssignment = async (formData) => {
+  const token = localStorage.getItem('authToken')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  }
+  if (user?.institute_id) {
+    headers['X-Institute-Id'] = user.institute_id
+  }
+
   const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      Accept: 'application/json',
-    },
+    headers,
     credentials: 'include',
     body: formData,
   })
-  if (!res.ok) throw new Error('Failed to create assignment')
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to create assignment')
+  }
   return res.json()
 }
 
@@ -209,6 +220,52 @@ export const getTeacherMaterials = async () => {
     credentials: 'include',
   })
   if (!res.ok) throw new Error('Failed to load materials')
+  return res.json()
+}
+
+export const uploadTeacherMaterial = async (formData) => {
+  const token = localStorage.getItem('authToken')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  }
+  if (user?.institute_id) {
+    headers['X-Institute-Id'] = user.institute_id
+  }
+
+  const res = await fetch(`${API_BASE_URL}/teacher/materials`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: formData,
+  })
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to upload material')
+  }
+  return res.json()
+}
+
+export const deleteTeacherMaterial = async (id) => {
+  const token = localStorage.getItem('authToken')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  }
+  if (user?.institute_id) {
+    headers['X-Institute-Id'] = user.institute_id
+  }
+
+  const res = await fetch(`${API_BASE_URL}/teacher/materials/${id}`, {
+    method: 'DELETE',
+    headers,
+    credentials: 'include',
+  })
+  
+  if (!res.ok) throw new Error('Failed to delete material')
   return res.json()
 }
 

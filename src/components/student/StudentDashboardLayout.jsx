@@ -77,7 +77,7 @@ export default function StudentDashboardLayout({ children, user }) {
                 </div>
 
                 {/* Nav */}
-                <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
+                <nav className="hide-scrollbar" style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
                     <div style={{ color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', padding: '8px 12px', marginBottom: 4 }}>
                         Menu
                     </div>

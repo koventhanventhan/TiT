@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiCalendar, FiClock, FiVideo, FiMapPin } from 'react-icons/fi'
-import { getStudentUpcomingClasses } from '../../services/dashboardService'
+import { getStudentUpcomingSchedules } from '../../services/dashboardService'
 
 export default function StudentSchedule() {
     const [schedules, setSchedules] = useState([])
@@ -9,7 +9,7 @@ export default function StudentSchedule() {
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentUpcomingClasses().catch(() => null)
+                let data = await getStudentUpcomingSchedules().catch(() => null)
                 if (!data || data.length === 0) {
                     data = [
                         { id: 1, title: 'Advanced Calculus', subject: 'Mathematics', teacher: 'Prof. Kumara', duration: 120, scheduled_at: new Date().setHours(9, 0, 0, 0), type: 'online' },

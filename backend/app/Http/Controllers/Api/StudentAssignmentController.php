@@ -14,7 +14,12 @@ class StudentAssignmentController extends Controller
     {
         $user = $request->user();
         
-        $assignments = Assignment::with(['submissions' => function($q) use ($user) {
+        $assignments = Assignment::where(function($query) use ($user) {
+                $query->where('grade', $user->current_grade)
+                      ->orWhereNull('grade')
+                      ->orWhere('grade', '');
+            })
+            ->with(['submissions' => function($q) use ($user) {
                 $q->where('student_id', $user->id);
             }])
             ->orderBy('due_date', 'asc')

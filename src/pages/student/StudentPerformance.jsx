@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiTrendingUp, FiAward, FiCheckCircle, FiClock, FiTarget } from 'react-icons/fi'
-import { getStudentDashboardStats } from '../../services/dashboardService'
+import { getStudentStats } from '../../services/dashboardService'
 
 function StatCard({ title, value, subtitle, icon: Icon, color, bg }) {
     return (
@@ -36,7 +36,7 @@ export default function StudentPerformance() {
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentDashboardStats().catch(() => null)
+                let data = await getStudentStats().catch(() => null)
                 setStats(data || {
                     attendance_rate: 92,
                     assignments_completed: 18,

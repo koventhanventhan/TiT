@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::get('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'index']);
         Route::post('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'store']);
+        Route::delete('/materials/{id}', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'destroy']);
     });
 
     // Admin Master Control Routes (Tenant Aware + Role: admin)

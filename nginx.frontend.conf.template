@@ -1,8 +1,29 @@
 server {
     listen ${PORT};
+
+    root /usr/share/nginx/html;
+    index index.html index.htm;
+
+    # Serve static assets (images, fonts, media) directly with caching
+    location ~* \.(gif|png|jpg|jpeg|svg|ico|webp|avif|mp4|woff|woff2|ttf|eot)$ {
+        root /usr/share/nginx/html;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Serve JS/CSS assets with immutable caching
+    location ~* \.(js|css|map)$ {
+        root /usr/share/nginx/html;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # React SPA fallback — all other routes go to index.html
     location / {
-        root   /usr/share/nginx/html;
-        index  index.html index.htm;
         try_files $uri $uri/ /index.html;
     }
 }

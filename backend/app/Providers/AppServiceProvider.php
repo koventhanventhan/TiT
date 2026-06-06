@@ -25,7 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // 100% Foolproof method for cPanel (Addon domains & public_html)
+        if (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT'])) {
+            $this->app->bind('path.public', function() {
+                return $_SERVER['DOCUMENT_ROOT'];
+            });
+        }
     }
 
     /**

@@ -13,8 +13,8 @@ class TeacherStudentController extends Controller
     {
         // Simple logic: return all students for now. 
         // In a real system, we might filter by those who attend this teacher's classes.
-        $students = User::where('role', 'student')
-            ->select('id', 'name', 'email', 'phone_number', 'current_grade', 'stream')
+        $students = User::where('role', 'user')
+            ->select('id', 'name', 'email', 'phone_number', 'current_grade', 'stream', 'registration_status as status')
             ->get();
         return response()->json($students);
     }

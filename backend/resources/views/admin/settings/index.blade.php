@@ -1211,6 +1211,7 @@
         }
 
         window.syncWhyBenefits = syncWhyBenefits;
+        document.getElementById('why-benefits-repeater').innerHTML = ''; // Prevent duplicates on hot-reload
         if (whyBenefitsArr.length > 0) whyBenefitsArr.forEach(b => createWhyBenefitItem(b));
         addWhyBenefitBtn.addEventListener('click', () => { createWhyBenefitItem(); syncWhyBenefits(); });
 
@@ -1257,7 +1258,7 @@
                 <div class="testimonial-item class-type-item mb-4" id="cls-${id}" style="border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; position: relative; background: rgba(255,255,255,0.02);">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="text-white mb-0">Class Configuration</h6>
-                        <button type="button" class="btn btn-danger btn-xs" onclick="if(confirm('Delete this class type?')){document.getElementById('cls-${id}').remove(); window.syncClasses();}">
+                        <button type="button" class="btn btn-danger btn-xs" onclick="window.removeClassType('${id}')">
                             <i class="fa fa-trash mr-1"></i> 
                         </button>
                     </div>
@@ -1312,6 +1313,18 @@
             const previewEl = document.getElementById(`preview-cls-${id}`);
             const hiddenInput = document.querySelector(`#cls-${id} .c-image`);
             const overlay = document.querySelector(`#cls-${id} .logo-preview-overlay`);
+            
+            // Delete existing image
+            let existingImagePath = hiddenInput.value;
+            if (existingImagePath && existingImagePath.includes('uploads/settings/')) {
+                const fd = new FormData();
+                fd.append('_token', '{{ csrf_token() }}');
+                fd.append('image_path', existingImagePath);
+                fetch('{{ route("admin.settings.delete-image") }}', {
+                    method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).catch(e => console.error(e));
+            }
+
             const formData = new FormData();
             formData.append('image', input.files[0]);
             formData.append('_token', '{{ csrf_token() }}');
@@ -1337,6 +1350,23 @@
         window.syncWhy = syncWhy;
         window.syncClasses = syncClasses;
 
+        window.removeClassType = function(id) {
+            if(confirm('Delete this class type?')){
+                const el = document.getElementById('cls-' + id);
+                const imgPath = el.querySelector('.c-image').value;
+                if (imgPath && imgPath.includes('uploads/settings/')) {
+                    const fd = new FormData();
+                    fd.append('_token', '{{ csrf_token() }}');
+                    fd.append('image_path', imgPath);
+                    fetch('{{ route("admin.settings.delete-image") }}', {
+                        method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).catch(e => console.error(e));
+                }
+                el.remove(); 
+                window.syncClasses();
+            }
+        };
+
         window.uploadTestimonialImage = function(input, id) {
             if (!input.files || !input.files[0]) return;
             const statusEl = document.getElementById(`status-${id}`);
@@ -1360,9 +1390,16 @@
         };
 
         // Initial renders
+        document.getElementById('testimonials-repeater').innerHTML = '';
         if (testimonials.length > 0) testimonials.forEach(t => createTestimonialItem(t));
+        
+        document.getElementById('onboarding-repeater').innerHTML = '';
         if (onboardingSteps.length > 0) onboardingSteps.forEach(s => createOnboardingItem(s));
+        
+        document.getElementById('why-repeater').innerHTML = '';
         if (whyReasons.length > 0) whyReasons.forEach(r => createWhyItem(r));
+        
+        document.getElementById('classes-repeater').innerHTML = '';
         if (classesTypes.length > 0) classesTypes.forEach(c => createClassTypeItem(c));
 
         addButton.addEventListener('click', () => { createTestimonialItem(); syncTestimonials(); });
@@ -1446,6 +1483,7 @@
         }
 
         window.syncMobileScreens = syncMobileScreens;
+        document.getElementById('mobile-screens-repeater').innerHTML = ''; // Prevent duplicates
         if (mobileScreens.length > 0) mobileScreens.forEach(s => createMobileScreenItem(s));
         addMobileScreenBtn.addEventListener('click', () => { createMobileScreenItem(); syncMobileScreens(); });
 

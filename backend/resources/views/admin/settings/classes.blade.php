@@ -425,10 +425,24 @@
         });
 
         // Remove class type
-        $(document).on('click', '.remove-class-type', function() {
+        $(document).off('click', '.remove-class-type').on('click', '.remove-class-type', function() {
             if ($('#class-types-container .class-type-item').length > 1) {
                 if (confirm('Are you sure you want to remove this class type?')) {
-                    $(this).closest('.class-type-item').remove();
+                    let container = $(this).closest('.class-type-item');
+                    let imagePath = container.find('.image-path-input').val();
+                    
+                    if (imagePath && imagePath.includes('uploads/settings/')) {
+                        $.ajax({
+                            url: "{{ route('admin.settings.delete-image') }}",
+                            method: 'POST',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content'),
+                                image_path: imagePath
+                            }
+                        });
+                    }
+                    
+                    container.remove();
                     reIndexItems();
                 }
             } else {
@@ -437,17 +451,30 @@
         });
 
         // Image Upload Trigger
-        $(document).on('click', '.upload-image-btn', function() {
+        $(document).off('click', '.upload-image-btn').on('click', '.upload-image-btn', function() {
             $(this).closest('.form-group').find('.dynamic-image-input').click();
         });
 
         // AJAX Image Upload
-        $(document).on('change', '.dynamic-image-input', function() {
+        $(document).off('change', '.dynamic-image-input').on('change', '.dynamic-image-input', function() {
             let input = this;
             let container = $(this).closest('.form-group');
             let file = input.files[0];
             
             if (file) {
+                // Delete existing image if there is one, to prevent accumulation
+                let existingImagePath = container.find('.image-path-input').val();
+                if (existingImagePath && existingImagePath.includes('uploads/settings/')) {
+                    $.ajax({
+                        url: "{{ route('admin.settings.delete-image') }}",
+                        method: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            image_path: existingImagePath
+                        }
+                    });
+                }
+
                 let formData = new FormData();
                 formData.append('image', file);
                 formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
@@ -485,8 +512,26 @@
         });
 
         // Remove Image
-        $(document).on('click', '.remove-image', function() {
+        $(document).off('click', '.remove-image').on('click', '.remove-image', function() {
             let container = $(this).closest('.form-group');
+            let imagePath = container.find('.image-path-input').val();
+            
+            if (imagePath && imagePath.includes('uploads/settings/')) {
+                $.ajax({
+                    url: "{{ route('admin.settings.delete-image') }}",
+                    method: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        image_path: imagePath
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            console.log('Image removed from server');
+                        }
+                    }
+                });
+            }
+
             container.find('.image-path-input').val('');
             container.find('.image-preview-container img').attr('src', '').hide();
             container.find('.no-image-placeholder').show();

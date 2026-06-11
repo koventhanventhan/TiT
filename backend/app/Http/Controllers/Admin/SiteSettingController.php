@@ -92,7 +92,26 @@ class SiteSettingController extends Controller
             elseif (collect(['about_', 'stats_', 'why_', 'love_us_', 'mobile_'])->contains(fn($prefix) => str_starts_with($key, $prefix))) $group = 'sections';
 
             if (is_array($value)) {
-                $value = json_encode(array_values(array_filter($value)));
+                // Special handling for classes_types: preserve all fields, sanitize image paths
+                if ($key === 'classes_types') {
+                    $cleanedTypes = [];
+                    foreach ($value as $typeItem) {
+                        if (is_array($typeItem)) {
+                            // Sanitize image path: strip any full URL prefix, keep only relative path
+                            if (!empty($typeItem['image'])) {
+                                $img = $typeItem['image'];
+                                if (str_contains($img, 'uploads/settings/')) {
+                                    $parts = explode('uploads/settings/', $img);
+                                    $typeItem['image'] = 'uploads/settings/' . end($parts);
+                                }
+                            }
+                            $cleanedTypes[] = $typeItem;
+                        }
+                    }
+                    $value = json_encode(array_values($cleanedTypes));
+                } else {
+                    $value = json_encode(array_values(array_filter($value)));
+                }
             }
             SiteSetting::set($key, $value, $group);
         }
@@ -326,5 +345,37 @@ class SiteSettingController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'Upload failed']);
+    }
+
+    /**
+     * Handle AJAX image deletion for settings
+     */
+    public function deleteImage(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'image_path' => 'required|string',
+        ]);
+
+        $path = $request->image_path;
+        \Illuminate\Support\Facades\Log::info('Custom deleteImage called for path: ' . $path);
+
+        // Ensure it's inside the uploads directory to prevent path traversal
+        if (str_contains($path, 'uploads/settings/')) {
+            // Strip any asset URL prefix if present
+            $pathParts = explode('uploads/settings/', $path);
+            $cleanPath = 'uploads/settings/' . end($pathParts);
+            
+            $fullPath = public_path($cleanPath);
+            \Illuminate\Support\Facades\Log::info('Attempting to delete fullPath: ' . $fullPath);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+                \Illuminate\Support\Facades\Log::info('Deleted successfully.');
+                return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
+            } else {
+                \Illuminate\Support\Facades\Log::info('File does not exist: ' . $fullPath);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'Image not found or invalid path.']);
     }
 }

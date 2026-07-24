@@ -280,6 +280,11 @@ const Footer = () => {
           <div className="footer-divider"></div>
           <div className="footer-bottom-flex">
             <p className="copyright-text">{copyright}</p>
+            <div className="footer-payment-banner">
+              <a href="https://www.payhere.lk" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', transition: 'opacity 0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+                <img src="https://www.payhere.lk/downloads/images/payhere_short_banner_dark.png" alt="PayHere" width="250" />
+              </a>
+            </div>
             <p className="developed-by">{developedBy}</p>
           </div>
         </div>

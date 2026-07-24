@@ -103,9 +103,9 @@ export default function TeacherReports() {
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {[
-                            { label: 'Grade 12 - Maths', val: 92 },
-                            { label: 'Grade 11 - Science', val: 78 },
-                            { label: 'Grade 10 - ICT', val: 85 }
+                            { label: 'Group / Batch A', val: 92 },
+                            { label: 'Group / Batch B', val: 78 },
+                            { label: 'Group / Batch C', val: 85 }
                         ].map((item, i) => (
                             <div key={i}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>

@@ -275,6 +275,38 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $path = $file->store('avatars', 'public');
+
+            // Delete old avatar if it exists
+            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                // Ignore errors on delete to prevent failing if file doesn't actually exist
+                try {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+                } catch (\Exception $e) {}
+            }
+
+            $user->avatar = $path;
+            $user->save();
+
+            return response()->json([
+                'message' => 'Avatar updated successfully',
+                'avatar' => '/storage/' . $path
+            ]);
+        }
+
+        return response()->json(['message' => 'No file uploaded'], 400);
+    }
+
     /**
      * Get authenticated user
      */
@@ -288,8 +320,23 @@ class AuthController extends Controller
             'role' => $u->role,
             'institute_id' => $u->institute_id, // Added institute_id to user data
         ];
+        if ($u->avatar) {
+            // Check if it's already a full URL or starts with /storage/
+            $data['avatar'] = (str_starts_with($u->avatar, 'http') || str_starts_with($u->avatar, '/storage/')) 
+                ? $u->avatar 
+                : '/storage/' . $u->avatar;
+        }
         if ($u->full_name) {
             $data['full_name'] = $u->full_name;
+        }
+        if ($u->name) {
+            $data['name'] = $u->name;
+        }
+        if ($u->first_name) {
+            $data['first_name'] = $u->first_name;
+        }
+        if ($u->last_name) {
+            $data['last_name'] = $u->last_name;
         }
         if ($u->phone_number) {
             $data['phone_number'] = $u->phone_number;

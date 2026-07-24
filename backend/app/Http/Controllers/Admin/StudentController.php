@@ -7,18 +7,18 @@ use App\Models\User;
 use App\Models\Payment;
 use App\Models\Subject;
 use App\Notifications\AdminNotification;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
-    protected WhatsAppService $whatsApp;
+    protected NotificationService $notifier;
 
-    public function __construct(WhatsAppService $whatsApp)
+    public function __construct(NotificationService $notifier)
     {
-        $this->whatsApp = $whatsApp;
+        $this->notifier = $notifier;
     }
     /**
      * Display a listing of all students
@@ -172,26 +172,19 @@ class StudentController extends Controller
             'registration_status' => 'confirmed',
         ]);
 
-        $phone = $student->phone_number;
-        if ($phone) {
-            $this->whatsApp->sendTemplate(
-                $phone,
-                'tit_admin_approved',
-                'en',
-                [$student->full_name ?? $student->name, 'admin']
-            );
-        }
+        // Notify student (WhatsApp with email fallback)
+        $this->notifier->notifyUser(
+            $student, 'admin_approved', 'tit_admin_approved',
+            [$student->full_name ?? $student->name, 'admin'],
+            ['student_name' => $student->full_name ?? $student->name]
+        );
 
-        // Notify Admin via WhatsApp
-        $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
-        if ($adminPhone) {
-            $this->whatsApp->sendTemplate(
-                $adminPhone,
-                'tit_admin_approved',
-                'en',
-                ["ADMIN ALERT: Approved student " . ($student->full_name ?? $student->name), "admin"]
-            );
-        }
+        // Notify Admin
+        $this->notifier->notifyAdmin(
+            'admin_alert', 'tit_admin_approved',
+            ["ADMIN ALERT: Approved student " . ($student->full_name ?? $student->name), "admin"],
+            ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
+        );
 
         return redirect()->route('admin.students.index')
             ->with('success', 'Student confirmed and notification sent.');
@@ -312,16 +305,12 @@ class StudentController extends Controller
         $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
         $student->update(['deactivated_at' => now()]);
 
-        // Send WhatsApp notification
-        $phone = $student->phone_number;
-        if ($phone) {
-            $this->whatsApp->sendTemplate(
-                $phone,
-                'tit_account_deactivated',
-                'en',
-                [$student->full_name ?? $student->name, 'admin']
-            );
-        }
+        // Send deactivation notification (WhatsApp with email fallback)
+        $this->notifier->notifyUser(
+            $student, 'account_deactivated', 'tit_account_deactivated',
+            [$student->full_name ?? $student->name, 'admin'],
+            ['student_name' => $student->full_name ?? $student->name]
+        );
 
         return redirect()->route('admin.students.index')->with('success', 'Student deactivated and notification sent.');
     }

@@ -94,6 +94,82 @@
         transform: translateY(-0.125rem);
         box-shadow: 0 0.25rem 0.75rem rgba(102, 126, 234, 0.4) !important;
     }
+
+    .image-picker-container {
+        position: relative;
+        width: 100%;
+        height: 9.375rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 0.125rem dashed rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-picker-container:hover {
+        border-color: #EB8153;
+        background: rgba(235, 129, 83, 0.05);
+    }
+
+    .image-picker-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-picker-placeholder {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .image-picker-placeholder i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .image-picker-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-picker-container:hover .image-picker-overlay {
+        opacity: 1;
+    }
+
+    .upload-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+    }
+
+    .upload-loading .spinner-border {
+        width: 1.875rem;
+        height: 1.875rem;
+        color: #EB8153;
+    }
 </style>
 @endpush
 
@@ -171,18 +247,22 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>CTA Title</label>
+                                <label>CTA Label (small text above heading)</label>
                                 <input type="text" name="learning_cta_title" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_title', 'Need More Resources?') }}">
                             </div>
                             <div class="form-group">
+                                <label>CTA Heading</label>
+                                <input type="text" name="learning_cta_heading" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_heading', "We're here to help you!") }}">
+                            </div>
+                            <div class="form-group">
                                 <label>CTA Description</label>
-                                <textarea name="learning_cta_desc" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_cta_desc', 'Contact us to request specific materials or get access to premium content.') }}</textarea>
+                                <textarea name="learning_cta_desc" class="form-control" rows="2">{{ \App\Models\SiteSetting::get('learning_cta_desc', 'Contact us to request specific materials or for any platform assistance.') }}</textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>CTA Button Text</label>
-                                <input type="text" name="learning_cta_btn" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_btn', 'Contact Us') }}">
+                                <input type="text" name="learning_cta_btn" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_btn', 'Get in Touch') }}">
                             </div>
                             <div class="form-group">
                                 <label>CTA Button Link</label>
@@ -190,6 +270,115 @@
                             </div>
                         </div>
                     </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary mt-3">CTA Contact Details</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>WhatsApp Number</label>
+                                <input type="text" name="learning_cta_whatsapp" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_whatsapp', \App\Models\SiteSetting::get('footer_phone', '+94 77 123 4567')) }}" placeholder="+94 77 123 4567">
+                                <small class="text-muted">Shown in the CTA contact card</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="text" name="learning_cta_email" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_email', \App\Models\SiteSetting::get('footer_email', 'info@titjaffna.lk')) }}" placeholder="info@titjaffna.lk">
+                                <small class="text-muted">Shown in the CTA contact card</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="learning_cta_location" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_location', \App\Models\SiteSetting::get('contact_location', 'Kokuvil, Jaffna, Sri Lanka')) }}" placeholder="Kokuvil, Jaffna, Sri Lanka">
+                                <small class="text-muted">Shown in the CTA contact card</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary mt-3">Page Images</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Past Papers Hero Image</label>
+                                <div class="image-picker-container" onclick="document.getElementById('pp_hero_image_file').click()">
+                                    <div class="upload-loading"><div class="spinner-border"></div></div>
+                                    <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                    @php $ppHeroImg = \App\Models\SiteSetting::get('learning_pastpapers_hero_image', ''); @endphp
+                                    <div class="image-picker-placeholder" style="{{ $ppHeroImg ? 'display:none' : '' }}">
+                                        <i class="la la-image"></i> Select Image
+                                    </div>
+                                    <img id="pp_hero_image_preview" src="{{ $ppHeroImg }}" class="image-picker-preview" style="{{ $ppHeroImg ? '' : 'display:none' }}">
+                                    <input type="file" id="pp_hero_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'pp_hero_image_preview', 'pp_hero_image_input')">
+                                </div>
+                                <input type="hidden" name="learning_pastpapers_hero_image" id="pp_hero_image_input" value="{{ $ppHeroImg }}">
+                                <button type="button" class="btn btn-danger btn-sm mt-2" id="pp_hero_remove_btn" style="{{ $ppHeroImg ? '' : 'display:none' }}" onclick="removeImage('pp_hero_image_preview', 'pp_hero_image_input', this)"><i class="la la-trash"></i> Remove</button>
+                                <small class="text-muted d-block mt-1">Hero image for Past Papers page.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Notes Hero Image</label>
+                                <div class="image-picker-container" onclick="document.getElementById('notes_hero_image_file').click()">
+                                    <div class="upload-loading"><div class="spinner-border"></div></div>
+                                    <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                    @php $notesHeroImg = \App\Models\SiteSetting::get('learning_notes_hero_image', ''); @endphp
+                                    <div class="image-picker-placeholder" style="{{ $notesHeroImg ? 'display:none' : '' }}">
+                                        <i class="la la-image"></i> Select Image
+                                    </div>
+                                    <img id="notes_hero_image_preview" src="{{ $notesHeroImg }}" class="image-picker-preview" style="{{ $notesHeroImg ? '' : 'display:none' }}">
+                                    <input type="file" id="notes_hero_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'notes_hero_image_preview', 'notes_hero_image_input')">
+                                </div>
+                                <input type="hidden" name="learning_notes_hero_image" id="notes_hero_image_input" value="{{ $notesHeroImg }}">
+                                <button type="button" class="btn btn-danger btn-sm mt-2" id="notes_hero_remove_btn" style="{{ $notesHeroImg ? '' : 'display:none' }}" onclick="removeImage('notes_hero_image_preview', 'notes_hero_image_input', this)"><i class="la la-trash"></i> Remove</button>
+                                <small class="text-muted d-block mt-1">Hero image for Notes page.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Recordings Hero Image</label>
+                                <div class="image-picker-container" onclick="document.getElementById('rec_hero_image_file').click()">
+                                    <div class="upload-loading"><div class="spinner-border"></div></div>
+                                    <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                    @php $recHeroImg = \App\Models\SiteSetting::get('learning_recordings_hero_image', ''); @endphp
+                                    <div class="image-picker-placeholder" style="{{ $recHeroImg ? 'display:none' : '' }}">
+                                        <i class="la la-image"></i> Select Image
+                                    </div>
+                                    <img id="rec_hero_image_preview" src="{{ $recHeroImg }}" class="image-picker-preview" style="{{ $recHeroImg ? '' : 'display:none' }}">
+                                    <input type="file" id="rec_hero_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'rec_hero_image_preview', 'rec_hero_image_input')">
+                                </div>
+                                <input type="hidden" name="learning_recordings_hero_image" id="rec_hero_image_input" value="{{ $recHeroImg }}">
+                                <button type="button" class="btn btn-danger btn-sm mt-2" id="rec_hero_remove_btn" style="{{ $recHeroImg ? '' : 'display:none' }}" onclick="removeImage('rec_hero_image_preview', 'rec_hero_image_input', this)"><i class="la la-trash"></i> Remove</button>
+                                <small class="text-muted d-block mt-1">Hero image for Recordings page.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary mt-3">CTA Section Image</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>CTA Section Image (Headset illustration)</label>
+                                <div class="image-picker-container" onclick="document.getElementById('pp_cta_image_file').click()">
+                                    <div class="upload-loading"><div class="spinner-border"></div></div>
+                                    <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                                    @php $ppCtaImg = \App\Models\SiteSetting::get('learning_cta_image', ''); @endphp
+                                    <div class="image-picker-placeholder" style="{{ $ppCtaImg ? 'display:none' : '' }}">
+                                        <i class="la la-image"></i> Select Image
+                                    </div>
+                                    <img id="pp_cta_image_preview" src="{{ $ppCtaImg }}" class="image-picker-preview" style="{{ $ppCtaImg ? '' : 'display:none' }}">
+                                    <input type="file" id="pp_cta_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'pp_cta_image_preview', 'pp_cta_image_input')">
+                                </div>
+                                <input type="hidden" name="learning_cta_image" id="pp_cta_image_input" value="{{ $ppCtaImg }}">
+                                <button type="button" class="btn btn-danger btn-sm mt-2" id="pp_cta_remove_btn" style="{{ $ppCtaImg ? '' : 'display:none' }}" onclick="removeImage('pp_cta_image_preview', 'pp_cta_image_input', this)"><i class="la la-trash"></i> Remove</button>
+                                <small class="text-muted d-block mt-1">The illustration in the CTA contact banner. Leave blank for default.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary mt-3">Save General Settings</button>
                 </form>
             </div>
@@ -472,3 +661,75 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    async function uploadImage(input, previewId, targetInputId) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const container = input.closest('.image-picker-container');
+        const loader = container.querySelector('.upload-loading');
+        const preview = previewId ? document.getElementById(previewId) : container.querySelector('.image-picker-preview');
+        const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
+
+        loader.style.display = 'flex';
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch('{{ route("admin.settings.upload") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (preview) {
+                    preview.src = data.path;
+                    preview.style.display = 'block';
+                    const placeholder = container.querySelector('.image-picker-placeholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+                if (targetInput) {
+                    targetInput.value = data.path;
+                }
+                // Show remove button
+                const removeBtn = container.parentElement.querySelector('.btn-danger');
+                if (removeBtn) removeBtn.style.display = '';
+            } else {
+                alert(data.message || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('An error occurred during upload');
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function removeImage(previewId, inputId, btn) {
+        const inputField = document.getElementById(inputId);
+        if (inputField) inputField.value = '';
+
+        const preview = document.getElementById(previewId);
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+
+        const container = btn.closest('.form-group').querySelector('.image-picker-container');
+        if (container) {
+            const placeholder = container.querySelector('.image-picker-placeholder');
+            if (placeholder) placeholder.style.display = 'block';
+        }
+
+        btn.style.display = 'none';
+    }
+</script>
+@endpush

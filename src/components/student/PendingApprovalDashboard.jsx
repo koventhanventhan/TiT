@@ -45,7 +45,7 @@ const PendingApprovalDashboard = ({ user }) => {
                         </h3>
                         <ul style={{ color: 'rgba(199, 210, 254, 0.8)', paddingLeft: '1.25rem', margin: 0 }}>
                             <li style={{ marginBottom: '0.75rem' }}>Admin உங்கள் கட்டணம் மற்றும் விபரங்களைச் சரிபார்ப்பார். (Admin will verify details)</li>
-                            <li style={{ marginBottom: '0.75rem' }}>உங்கள் WhatsApp எண் ({user?.phone_number || 'N/A'}) மூலம் உங்களுக்குத் தகவல் தெரிவிக்கப்படும். (WhatsApp notification)</li>
+                            <li style={{ marginBottom: '0.75rem' }}>உங்கள் WhatsApp எண் ({user?.phone_number || 'N/A'}) அல்லது Email மூலம் உங்களுக்குத் தகவல் தெரிவிக்கப்படும். (WhatsApp / Email notification)</li>
                             <li>உறுதிப்படுத்தப்பட்ட பிறகு, நீங்கள் அனைத்து பாடங்கள் மற்றும் வகுப்புகளில் இணைய முடியும். (Access after approval)</li>
                         </ul>
                     </div>

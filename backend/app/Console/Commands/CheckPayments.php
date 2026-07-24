@@ -23,7 +23,7 @@ class CheckPayments extends Command
     /**
      * Execute the console command.
      */
-    public function handle(\App\Services\WhatsAppService $whatsApp)
+    public function handle(\App\Services\NotificationService $notifier)
     {
         $day = now()->day;
         $yearMonth = now()->format('Y-m');
@@ -51,16 +51,12 @@ class CheckPayments extends Command
         $deactivatedList = [];
 
         foreach ($unpaidStudents as $student) {
-            $phone = $student->phone_number;
-            if (!$phone) continue;
-
             if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
-                // Reminder via Template
-                $whatsApp->sendTemplate(
-                    $phone,
-                    'tit_payment_reminder',
-                    'en',
-                    [$student->full_name ?? $student->name, now()->format('F Y')]
+                // Reminder via NotificationService (WhatsApp + Email fallback)
+                $notifier->notifyUser(
+                    $student, 'payment_reminder', 'tit_payment_reminder',
+                    [$student->full_name ?? $student->name, now()->format('F Y')],
+                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
                 );
                 $this->line("Sent reminder to: " . $student->email);
             } 
@@ -70,11 +66,10 @@ class CheckPayments extends Command
                 $student->update(['deactivated_at' => now()]);
                 $deactivatedList[] = ($student->full_name ?? $student->name) . " (" . $student->email . ")";
 
-                $whatsApp->sendTemplate(
-                    $phone,
-                    'tit_account_suspended',
-                    'en',
-                    [$student->full_name ?? $student->name, now()->format('F Y')]
+                $notifier->notifyUser(
+                    $student, 'account_suspended', 'tit_account_suspended',
+                    [$student->full_name ?? $student->name, now()->format('F Y')],
+                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
                 );
                 $this->line("Deactivated and notified: " . $student->email);
             }
@@ -82,18 +77,12 @@ class CheckPayments extends Command
 
         // Notify Admin on Day 5
         if ($day === 5 && !empty($deactivatedList)) {
-            $admin = \App\Models\User::whereIn('role', ['admin', 'super_admin'])
-                ->whereNotNull('phone_number')
-                ->first();
-
-            if ($admin) {
-                $whatsApp->sendTemplate(
-                    $admin->phone_number,
-                    'titeducation',
-                    'en'
-                );
-                $this->info("Notified admin: " . $admin->name);
-            }
+            $notifier->notifyAdmin(
+                'admin_alert', 'titeducation',
+                [],
+                ['alert_title' => 'Students Deactivated', 'alert_message' => count($deactivatedList) . ' students were deactivated for non-payment.', 'alert_details' => implode("\n", $deactivatedList)]
+            );
+            $this->info("Admin notified about deactivations.");
         }
 
         $this->info("Finished payment automation tasks.");

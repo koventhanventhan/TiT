@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Payment;
 use App\Notifications\AdminNotification;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 use App\Services\PayHereService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,12 +14,12 @@ use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
-    protected WhatsAppService $whatsApp;
+    protected NotificationService $notifier;
     protected PayHereService $payHere;
 
-    public function __construct(WhatsAppService $whatsApp, PayHereService $payHere)
+    public function __construct(NotificationService $notifier, PayHereService $payHere)
     {
-        $this->whatsApp = $whatsApp;
+        $this->notifier = $notifier;
         $this->payHere  = $payHere;
     }
 
@@ -276,37 +276,26 @@ class RegistrationController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Send Welcome WhatsApp via Template
-        if ($user->phone_number) {
-            $this->whatsApp->sendTemplate(
-                $user->phone_number,
-                'tit_welcome',
-                'en',
-                [$user->full_name ?? $user->name, $user->name]
-            );
+        // Send Welcome notification (WhatsApp with email fallback)
+        $this->notifier->notifyUser(
+            $user, 'welcome', 'tit_welcome',
+            [$user->full_name ?? $user->name, $user->name],
+            ['student_name' => $user->full_name ?? $user->name, 'username' => $user->name]
+        );
 
-            // Send Payment Instruction reminder immediately
-            $this->whatsApp->sendTemplate(
-                $user->phone_number,
-                'tit_payment_reminder',
-                'en',
-                [$user->full_name ?? $user->name, now()->format('F Y')]
-            );
+        // Send Payment Instruction reminder immediately
+        $this->notifier->notifyUser(
+            $user, 'payment_reminder', 'tit_payment_reminder',
+            [$user->full_name ?? $user->name, now()->format('F Y')],
+            ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+        );
 
-            // Notify Admin via WhatsApp
-            $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
-            if ($adminPhone) {
-                $this->whatsApp->sendTemplate(
-                    $adminPhone,
-                    'tit_welcome',
-                    'en',
-                    [
-                        "Admin Notification",
-                        "New Student: " . ($user->full_name ?? $user->name)
-                    ]
-                );
-            }
-        }
+        // Notify Admin
+        $this->notifier->notifyAdmin(
+            'admin_alert', 'tit_welcome',
+            ["Admin Notification", "New Student: " . ($user->full_name ?? $user->name)],
+            ['alert_title' => 'New Student Registration', 'alert_message' => 'New Student: ' . ($user->full_name ?? $user->name)]
+        );
 
         // Auto-fix status if they have a paid record for this month
         $paidPayment = Payment::where('user_id', $user->id)
@@ -361,14 +350,11 @@ class RegistrationController extends Controller
             $user->update(['registration_status' => 'payment_completed']);
 
             // Notify user about offline payment submission
-            if ($user->phone_number) {
-                $this->whatsApp->sendTemplate(
-                    $user->phone_number,
-                    'tit_payment_reminder',
-                    'en',
-                    [$user->full_name ?? $user->name, now()->format('F Y')]
-                );
-            }
+            $this->notifier->notifyUser(
+                $user, 'payment_reminder', 'tit_payment_reminder',
+                [$user->full_name ?? $user->name, now()->format('F Y')],
+                ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+            );
 
             return response()->json([
                 'message' => 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',
@@ -488,26 +474,19 @@ class RegistrationController extends Controller
                     }
                 }
 
-                // Send Payment Success WhatsApp to Student
-                if ($user->phone_number) {
-                    $this->whatsApp->sendTemplate(
-                        $user->phone_number,
-                        'tit_payment_success',
-                        'en',
-                        [$user->full_name ?? $user->name]
-                    );
-                }
+                // Send Payment Success notification to Student
+                $this->notifier->notifyUser(
+                    $user, 'payment_success', 'tit_payment_success',
+                    [$user->full_name ?? $user->name],
+                    ['student_name' => $user->full_name ?? $user->name]
+                );
 
-                // Notify Admin via WhatsApp
-                $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
-                if ($adminPhone) {
-                    $this->whatsApp->sendTemplate(
-                        $adminPhone,
-                        'tit_payment_success',
-                        'en',
-                        ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)]
-                    );
-                }
+                // Notify Admin
+                $this->notifier->notifyAdmin(
+                    'admin_alert', 'tit_payment_success',
+                    ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)],
+                    ['alert_title' => 'Payment Received', 'alert_message' => ($user->full_name ?? $user->name) . ' paid LKR ' . number_format($payment->amount, 2)]
+                );
 
                 Log::info('PayHere payment SUCCESS', [
                     'order_id'   => $orderId,
@@ -590,26 +569,19 @@ class RegistrationController extends Controller
                 }
             }
 
-            // Send Payment Success WhatsApp to Student
-            if ($user->phone_number) {
-                $this->whatsApp->sendTemplate(
-                    $user->phone_number,
-                    'tit_payment_success',
-                    'en',
-                    [$user->full_name ?? $user->name]
-                );
-            }
+            // Send Payment Success notification to Student
+            $this->notifier->notifyUser(
+                $user, 'payment_success', 'tit_payment_success',
+                [$user->full_name ?? $user->name],
+                ['student_name' => $user->full_name ?? $user->name]
+            );
 
-            // Notify Admin via WhatsApp
-            $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
-            if ($adminPhone) {
-                $this->whatsApp->sendTemplate(
-                    $adminPhone,
-                    'tit_payment_success',
-                    'en',
-                    ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)]
-                );
-            }
+            // Notify Admin
+            $this->notifier->notifyAdmin(
+                'admin_alert', 'tit_payment_success',
+                ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)],
+                ['alert_title' => 'Payment Received', 'alert_message' => ($user->full_name ?? $user->name) . ' paid LKR ' . number_format($payment->amount, 2)]
+            );
         }
 
         return response()->json([
@@ -766,23 +738,17 @@ class RegistrationController extends Controller
     }
     public function testAdminWhatsApp()
     {
-        $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
-        if (!$adminPhone) {
-            return response()->json(['error' => 'ADMIN_WHATSAPP_NUMBER is not set in .env'], 400);
-        }
-
         try {
-            $response = $this->whatsApp->sendTemplate(
-                $adminPhone,
-                'tit_welcome',
-                'en',
-                ["ADMIN TEST", "DEBUG123"]
+            $response = $this->notifier->notifyAdmin(
+                'admin_alert', 'tit_welcome',
+                ["ADMIN TEST", "DEBUG123"],
+                ['alert_title' => 'Test Notification', 'alert_message' => 'This is a test notification from TiT Education system.']
             );
 
             return response()->json([
                 'message' => 'Test attempt completed',
-                'admin_number' => $adminPhone,
-                'meta_response' => $response
+                'channel' => env('NOTIFICATION_CHANNEL', 'auto'),
+                'result' => $response
             ]);
         } catch (\Exception $e) {
             return response()->json([

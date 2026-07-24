@@ -219,6 +219,67 @@
                     <textarea name="about_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('about_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support.") }}</textarea>
                 </div>
             </div>
+
+            <hr>
+            <h6 style="color:#fff;font-weight:600;margin-bottom:1rem;">Hero Images &amp; Float Badges</h6>
+
+            {{-- Left Student Image --}}
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Left Student Image</label>
+                <div class="col-sm-9">
+                    <div class="image-picker-container" onclick="document.getElementById('hero_left_image_file').click()">
+                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                        @php $heroLeftImg = \App\Models\SiteSetting::get('about_hero_left_image', ''); @endphp
+                        <div class="image-picker-placeholder" style="{{ $heroLeftImg ? 'display:none' : '' }}">
+                            <i class="la la-image"></i> Select Image
+                        </div>
+                        <img id="hero_left_image_preview" src="{{ $heroLeftImg }}" class="image-picker-preview" style="{{ $heroLeftImg ? '' : 'display:none' }}">
+                        <input type="file" id="hero_left_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'hero_left_image_preview', 'hero_left_image_input')">
+                    </div>
+                    <input type="hidden" name="about_hero_left_image" id="hero_left_image_input" value="{{ $heroLeftImg }}">
+                    <button type="button" class="btn btn-danger btn-sm mt-2" id="hero_left_remove_btn" style="{{ $heroLeftImg ? '' : 'display:none' }}" onclick="removeImage('hero_left_image_preview', 'hero_left_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
+                    <small class="text-muted d-block mt-1">The student image on the LEFT side of the hero. Leave blank to use the default local image.</small>
+                </div>
+            </div>
+
+            {{-- Left Float Badge --}}
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Left Badge Text</label>
+                <div class="col-sm-9">
+                    <input type="text" name="about_hero_left_badge" class="form-control" value="{{ \App\Models\SiteSetting::get('about_hero_left_badge', '500+ Courses') }}" placeholder="e.g. 500+ Courses">
+                    <small class="text-muted">Text shown on the floating badge over the left student image.</small>
+                </div>
+            </div>
+
+            {{-- Right Student Image --}}
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Right Student Image</label>
+                <div class="col-sm-9">
+                    <div class="image-picker-container" onclick="document.getElementById('hero_right_image_file').click()">
+                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                        @php $heroRightImg = \App\Models\SiteSetting::get('about_hero_right_image', ''); @endphp
+                        <div class="image-picker-placeholder" style="{{ $heroRightImg ? 'display:none' : '' }}">
+                            <i class="la la-image"></i> Select Image
+                        </div>
+                        <img id="hero_right_image_preview" src="{{ $heroRightImg }}" class="image-picker-preview" style="{{ $heroRightImg ? '' : 'display:none' }}">
+                        <input type="file" id="hero_right_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'hero_right_image_preview', 'hero_right_image_input')">
+                    </div>
+                    <input type="hidden" name="about_hero_right_image" id="hero_right_image_input" value="{{ $heroRightImg }}">
+                    <button type="button" class="btn btn-danger btn-sm mt-2" id="hero_right_remove_btn" style="{{ $heroRightImg ? '' : 'display:none' }}" onclick="removeImage('hero_right_image_preview', 'hero_right_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
+                    <small class="text-muted d-block mt-1">The student image on the RIGHT side of the hero. Leave blank to use the default local image.</small>
+                </div>
+            </div>
+
+            {{-- Right Float Badge --}}
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Right Badge Text</label>
+                <div class="col-sm-9">
+                    <input type="text" name="about_hero_right_badge" class="form-control" value="{{ \App\Models\SiteSetting::get('about_hero_right_badge', '98% Success') }}" placeholder="e.g. 98% Success">
+                    <small class="text-muted">Text shown on the floating badge over the right student image.</small>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -507,6 +568,102 @@
                     <input type="text" name="about_cta_btn2_link" class="form-control" value="{{ \App\Models\SiteSetting::get('about_cta_btn2_link', '/contact') }}">
                 </div>
             </div>
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">CTA Banner Image</label>
+                <div class="col-sm-9">
+                    <div class="image-picker-container" onclick="document.getElementById('about_cta_image_file').click()">
+                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                        @php $ctaImage = \App\Models\SiteSetting::get('about_cta_image', 'https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&h=600&fit=crop'); @endphp
+                        <div class="image-picker-placeholder" style="{{ $ctaImage ? 'display:none' : '' }}">
+                            <i class="la la-image"></i> Select Image
+                        </div>
+                        <img id="about_cta_image_preview" src="{{ $ctaImage }}" class="image-picker-preview" style="{{ $ctaImage ? '' : 'display:none' }}">
+                        <input type="file" id="about_cta_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'about_cta_image_preview', 'about_cta_image_input')">
+                    </div>
+                    <input type="hidden" name="about_cta_image" id="about_cta_image_input" value="{{ $ctaImage }}">
+                    <button type="button" class="btn btn-danger btn-sm mt-2" style="{{ $ctaImage ? '' : 'display:none' }}" onclick="removeImage('about_cta_image_preview', 'about_cta_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
+                    <small class="text-muted d-block mt-1">This image appears inside the floating glass window on the right side. Delete to leave blank.</small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">CTA Background Image</label>
+                <div class="col-sm-9">
+                    <div class="image-picker-container" onclick="document.getElementById('about_cta_bg_image_file').click()">
+                        <div class="upload-loading"><div class="spinner-border"></div></div>
+                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
+                        @php $ctaBgImage = \App\Models\SiteSetting::get('about_cta_bg_image', 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&h=900&fit=crop'); @endphp
+                        <div class="image-picker-placeholder" style="{{ $ctaBgImage ? 'display:none' : '' }}">
+                            <i class="la la-image"></i> Select Image
+                        </div>
+                        <img id="about_cta_bg_image_preview" src="{{ $ctaBgImage }}" class="image-picker-preview" style="{{ $ctaBgImage ? '' : 'display:none' }}">
+                        <input type="file" id="about_cta_bg_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'about_cta_bg_image_preview', 'about_cta_bg_image_input')">
+                    </div>
+                    <input type="hidden" name="about_cta_bg_image" id="about_cta_bg_image_input" value="{{ $ctaBgImage }}">
+                    <button type="button" class="btn btn-danger btn-sm mt-2" style="{{ $ctaBgImage ? '' : 'display:none' }}" onclick="removeImage('about_cta_bg_image_preview', 'about_cta_bg_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
+                    <small class="text-muted d-block mt-1">This is the edge-to-edge background behind the entire CTA banner section. Delete to leave blank.</small>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="card-title mb-0" style="color:#fff;font-weight:600;">CTA Feature Boxes</h6>
+                <button type="button" class="btn btn-info btn-xs" onclick="addRow('cta-boxes-container')">+ Add Box</button>
+            </div>
+            <small class="text-muted d-block mb-3">These are the 4 feature boxes displayed on the right side of the CTA banner (e.g. Live / Zoom Classes, Expert / Teachers).</small>
+            <div id="cta-boxes-container">
+                @php
+                    $ctaBoxes = json_decode(\App\Models\SiteSetting::get('about_cta_boxes', '[]'), true);
+                    if(empty($ctaBoxes)) {
+                        $ctaBoxes = [
+                            ['icon' => 'FiVideo', 'title' => 'Live', 'subtitle' => 'Zoom Classes'],
+                            ['icon' => 'FaGraduationCap', 'title' => 'Expert', 'subtitle' => 'Teachers'],
+                            ['icon' => 'FiClock', 'title' => 'Study', 'subtitle' => 'Anytime'],
+                            ['icon' => 'FiAward', 'title' => 'Achieve', 'subtitle' => 'Excellence']
+                        ];
+                    }
+                @endphp
+                @foreach($ctaBoxes as $box)
+                    <div class="dynamic-row">
+                        <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Icon Code</label>
+                                    <select name="cta_box_icon[]" class="form-control">
+                                        <option value="FiVideo" {{ ($box['icon'] ?? '') == 'FiVideo' ? 'selected' : '' }}>📹 FiVideo</option>
+                                        <option value="FaGraduationCap" {{ ($box['icon'] ?? '') == 'FaGraduationCap' ? 'selected' : '' }}>🎓 FaGraduationCap</option>
+                                        <option value="FiClock" {{ ($box['icon'] ?? '') == 'FiClock' ? 'selected' : '' }}>🕐 FiClock</option>
+                                        <option value="FiAward" {{ ($box['icon'] ?? '') == 'FiAward' ? 'selected' : '' }}>🏆 FiAward</option>
+                                        <option value="FiBookOpen" {{ ($box['icon'] ?? '') == 'FiBookOpen' ? 'selected' : '' }}>📖 FiBookOpen</option>
+                                        <option value="FiUsers" {{ ($box['icon'] ?? '') == 'FiUsers' ? 'selected' : '' }}>👥 FiUsers</option>
+                                        <option value="FiCheckCircle" {{ ($box['icon'] ?? '') == 'FiCheckCircle' ? 'selected' : '' }}>✅ FiCheckCircle</option>
+                                        <option value="FiHeart" {{ ($box['icon'] ?? '') == 'FiHeart' ? 'selected' : '' }}>❤️ FiHeart</option>
+                                        <option value="FiStar" {{ ($box['icon'] ?? '') == 'FiStar' ? 'selected' : '' }}>⭐ FiStar</option>
+                                        <option value="FiTarget" {{ ($box['icon'] ?? '') == 'FiTarget' ? 'selected' : '' }}>🎯 FiTarget</option>
+                                        <option value="FiTrendingUp" {{ ($box['icon'] ?? '') == 'FiTrendingUp' ? 'selected' : '' }}>📈 FiTrendingUp</option>
+                                    </select>
+                                    <small class="text-muted">Select the icon for this box</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" name="cta_box_title[]" class="form-control" value="{{ $box['title'] ?? '' }}">
+                                    <small class="text-muted">Bold heading (e.g. Live, Expert)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Subtitle</label>
+                                    <input type="text" name="cta_box_subtitle[]" class="form-control" value="{{ $box['subtitle'] ?? '' }}">
+                                    <small class="text-muted">Small text below (e.g. Zoom Classes)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <input type="hidden" name="about_cta_boxes" id="about_cta_boxes_json">
         </div>
     </div>
 
@@ -788,6 +945,38 @@
                         </div>
                     </div>
                 </div>`;
+        } else if (containerId === 'cta-boxes-container') {
+            html = `
+                <div class="dynamic-row">
+                    <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Icon Code</label>
+                                <select name="cta_box_icon[]" class="form-control">
+                                    <option value="FiVideo">📹 FiVideo</option>
+                                    <option value="FaGraduationCap">🎓 FaGraduationCap</option>
+                                    <option value="FiClock">🕐 FiClock</option>
+                                    <option value="FiAward">🏆 FiAward</option>
+                                    <option value="FiBookOpen">📖 FiBookOpen</option>
+                                    <option value="FiUsers">👥 FiUsers</option>
+                                    <option value="FiCheckCircle">✅ FiCheckCircle</option>
+                                    <option value="FiHeart">❤️ FiHeart</option>
+                                    <option value="FiStar">⭐ FiStar</option>
+                                    <option value="FiTarget">🎯 FiTarget</option>
+                                    <option value="FiTrendingUp">📈 FiTrendingUp</option>
+                                </select>
+                                <small class="text-muted">Select the icon</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Title</label><input type="text" name="cta_box_title[]" class="form-control"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Subtitle</label><input type="text" name="cta_box_subtitle[]" class="form-control"></div>
+                        </div>
+                    </div>
+                </div>`;
         }
         
         container.insertAdjacentHTML('beforeend', html);
@@ -869,6 +1058,20 @@
             });
         }
         document.getElementById('about_gallery_json').value = JSON.stringify(gallery);
+
+        // Process CTA Boxes
+        const ctaBoxes = [];
+        const cbIcons = document.getElementsByName('cta_box_icon[]');
+        const cbTitles = document.getElementsByName('cta_box_title[]');
+        const cbSubtitles = document.getElementsByName('cta_box_subtitle[]');
+        for (let i = 0; i < cbIcons.length; i++) {
+            ctaBoxes.push({
+                icon: cbIcons[i].value,
+                title: cbTitles[i].value,
+                subtitle: cbSubtitles[i].value
+            });
+        }
+        document.getElementById('about_cta_boxes_json').value = JSON.stringify(ctaBoxes);
     }
     async function uploadImage(input, previewId, targetInputId) {
         const file = input.files[0];
@@ -922,6 +1125,31 @@
         } finally {
             loader.style.display = 'none';
         }
+    }
+
+    function removeImage(previewId, inputId, btn) {
+        // Clear hidden input
+        const inputField = document.getElementById(inputId);
+        if (inputField) inputField.value = '';
+
+        // Hide preview and show placeholder
+        const preview = document.getElementById(previewId);
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+
+        const container = btn.closest('.form-group').querySelector('.image-picker-container');
+        if (container) {
+            const placeholder = container.querySelector('.image-picker-placeholder');
+            if (placeholder) placeholder.style.display = 'block';
+
+            const overlay = container.querySelector('.image-picker-overlay');
+            if (overlay) overlay.innerHTML = '<i class="la la-cloud-upload"></i> Click to Upload';
+        }
+
+        // Hide the remove button
+        btn.style.display = 'none';
     }
 </script>
 @endpush

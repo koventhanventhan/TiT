@@ -39,7 +39,7 @@ class WhatsAppService
         }
 
         Log::info('WhatsApp (no driver): would send to ' . $phone . ': ' . substr($message, 0, 50) . '...');
-        return true;
+        return false;
     }
 
     /**
@@ -85,7 +85,7 @@ class WhatsAppService
         }
 
         Log::info('SMS (no driver): would send to ' . $phone . ': ' . substr($message, 0, 50) . '...');
-        return true;
+        return false;
     }
 
     protected function normalizePhone(string $phone, bool $withPlus = true): string
@@ -115,7 +115,7 @@ class WhatsAppService
 
         if (!$token || !$phoneNumberId) {
             Log::warning('Meta WhatsApp not configured (missing token or ID). Skipping send to ' . $to);
-            return true;
+            return false;
         }
 
         try {
@@ -180,7 +180,7 @@ class WhatsAppService
 
         if (!$sid || !$token || !$from) {
             Log::warning('Twilio ' . ($isWhatsApp ? 'WhatsApp' : 'SMS') . ' not configured. Skipping send to ' . $to);
-            return true;
+            return false;
         }
 
         try {

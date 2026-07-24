@@ -28,10 +28,6 @@ function StatCard({ icon: Icon, label, value, color, iconBg }) {
                 <div style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8', marginBottom: 2 }}>{label}</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', lineHeight: 1 }}>{value}</div>
             </div>
-            <div style={{
-                position: 'absolute', right: -20, top: -20, width: 80, height: 80,
-                borderRadius: '50%', background: iconBg, opacity: 0.4
-            }} />
         </div>
     )
 }
@@ -39,6 +35,9 @@ function StatCard({ icon: Icon, label, value, color, iconBg }) {
 export default function TeacherOverview() {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    const hour = new Date().getHours()
+    const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
 
     useEffect(() => {
         async function loadStats() {
@@ -76,22 +75,14 @@ export default function TeacherOverview() {
                 borderRadius: 20, padding: '32px 28px', marginBottom: 24,
                 position: 'relative', overflow: 'hidden', color: '#fff'
             }}>
-                <div style={{
-                    position: 'absolute', right: 40, top: -30, width: 160, height: 160,
-                    borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)'
-                }} />
-                <div style={{
-                    position: 'absolute', right: 120, bottom: -40, width: 100, height: 100,
-                    borderRadius: '50%', background: 'rgba(255,255,255,0.03)'
-                }} />
 
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
                     <div>
                         <div style={{ fontSize: 14, fontWeight: 500, color: '#7dd3fc', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <FiTrendingUp /> Good Morning
+                            <FiTrendingUp /> {greeting}
                         </div>
                         <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.5px', lineHeight: 1.2, marginBottom: 6 }}>
-                            Welcome Back, Prof. {stats?.user_name}! 👋
+                            Welcome Back, Prof. {stats?.user?.full_name || stats?.user?.name || stats?.user?.first_name || stats?.user_name || 'Teacher'}! 👋
                         </h1>
                         <p style={{ fontSize: 15, color: '#bae6fd', margin: 0, maxWidth: 500 }}>
                             You have {stats?.today_classes || 0} classes today. Let's make it a great day!
@@ -152,69 +143,9 @@ export default function TeacherOverview() {
                             textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4
                         }}>View All <FiArrowRight /></Link>
                     </div>
-
-                    {/* Class 1 */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16, padding: '16px 22px',
-                        borderBottom: '1px solid #f8fafc',
-                        background: 'linear-gradient(90deg, rgba(14,165,233,0.04) 0%, transparent 100%)',
-                        flexWrap: 'wrap'
-                    }}>
-                        <div style={{
-                            width: 56, height: 56, borderRadius: 14,
-                            background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', color: '#fff', flexShrink: 0
-                        }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>09</span>
-                            <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.8 }}>AM</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>Advanced Calculus - Grade 12</div>
-                            <div style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <FiUsers style={{ color: '#cbd5e1' }} /> 45 Students expected
-                            </div>
-                        </div>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: 'none',
-                            background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
-                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            boxShadow: '0 4px 12px rgba(14,165,233,0.35)', transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(14,165,233,0.45)' }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(14,165,233,0.35)' }}
-                        >
-                            <FiPlay style={{ fill: 'currentColor' }} /> Host
-                        </button>
-                    </div>
-
-                    {/* Class 2 */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16,
-                        padding: '16px 22px', flexWrap: 'wrap'
-                    }}>
-                        <div style={{
-                            width: 56, height: 56, borderRadius: 14, background: '#f1f5f9',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', color: '#64748b', flexShrink: 0
-                        }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>14</span>
-                            <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>PM</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>Linear Algebra Revision</div>
-                            <div style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <FiUsers style={{ color: '#cbd5e1' }} /> 30 Students expected
-                            </div>
-                        </div>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0',
-                            background: '#f8fafc', color: '#94a3b8', fontSize: 13, fontWeight: 600,
-                            cursor: 'default', display: 'flex', alignItems: 'center', gap: 6
-                        }}>
-                            <FiClock /> Upcoming
-                        </button>
+                    {/* Class List Placeholder */}
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                        No upcoming schedules found for today.
                     </div>
                 </div>
 
@@ -231,62 +162,9 @@ export default function TeacherOverview() {
                         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>📋 Recent Submissions</h3>
                     </div>
 
-                    {/* Submission 1 */}
-                    <div style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 22px',
-                        borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                        <div style={{
-                            width: 40, height: 40, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #a855f7, #ec4899)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0
-                        }}>K</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>Kamal Perera</div>
-                            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Calculus Quiz 1</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{
-                                    fontSize: 10, fontWeight: 700, color: '#f59e0b', background: '#fffbeb',
-                                    padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase'
-                                }}>Needs Grading</span>
-                                <span style={{ fontSize: 11, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                    <FiClock /> 2m ago
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Submission 2 */}
-                    <div style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 22px',
-                        borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                        <div style={{
-                            width: 40, height: 40, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0
-                        }}>S</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>Saman Fernando</div>
-                            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Calculus Quiz 1</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{
-                                    fontSize: 10, fontWeight: 700, color: '#10b981', background: '#ecfdf5',
-                                    padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase'
-                                }}>Graded ✓</span>
-                                <span style={{ fontSize: 11, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                    <FiCheck /> 1h ago
-                                </span>
-                            </div>
-                        </div>
+                    {/* Submissions Placeholder */}
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                        No recent submissions pending review.
                     </div>
 
                     {/* Footer */}
@@ -318,7 +196,7 @@ export default function TeacherOverview() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                         position: 'relative', zIndex: 1
                     }}><FiPlus /></div>
-                    <div style={{ position: 'absolute', right: -30, bottom: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+
                 </Link>
 
                 <Link to="/teacher/materials" style={{
@@ -339,7 +217,7 @@ export default function TeacherOverview() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                         position: 'relative', zIndex: 1
                     }}><FiArrowRight /></div>
-                    <div style={{ position: 'absolute', right: -30, bottom: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+
                 </Link>
 
                 <Link to="/teacher/reports" style={{
@@ -360,7 +238,7 @@ export default function TeacherOverview() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                         position: 'relative', zIndex: 1
                     }}><FiArrowRight /></div>
-                    <div style={{ position: 'absolute', right: -30, bottom: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+
                 </Link>
             </div>
         </div>

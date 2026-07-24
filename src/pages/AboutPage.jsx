@@ -412,10 +412,7 @@ const AboutPage = () => {
 
             {/* Center content */}
             <div className="about-hero-content">
-              <span className="about-hero-label">
-                <FiBookOpen className="label-icon" />
-                ABOUT US
-              </span>
+
               <h1 className="about-hero-title">{aboutTitle}</h1>
 
               <p className="about-hero-description">

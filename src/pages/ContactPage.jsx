@@ -178,7 +178,7 @@ const ContactPage = () => {
 
         <div className="container cp-hero-inner">
           <div className="cp-hero-left">
-            <div className="cp-badge"><FiMessageCircle /> {t('contact_hero_badge')}</div>
+
             <h1 className="cp-title">
               {heroTitle}
             </h1>

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\ZoomSchedule;
 use App\Models\User;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 
 class SendZoomReminders extends Command
@@ -27,7 +27,7 @@ class SendZoomReminders extends Command
     /**
      * Execute the console command.
      */
-    public function handle(WhatsAppService $whatsApp)
+    public function handle(NotificationService $notifier)
     {
         $this->info('Checking for Zoom schedules starting in 15 minutes...');
 
@@ -52,14 +52,11 @@ class SendZoomReminders extends Command
 
             // 1. Notify Teachers
             foreach ($schedule->teachers as $teacher) {
-                if ($teacher->phone_number) {
-                    $whatsApp->sendTemplate(
-                        $teacher->phone_number,
-                        'tit_zoom_reminder',
-                        'en',
-                        [$schedule->title, $time]
-                    );
-                }
+                $notifier->notifyUser(
+                    $teacher, 'zoom_reminder', 'tit_zoom_reminder',
+                    [$schedule->title, $time],
+                    ['class_title' => $schedule->title, 'class_time' => $time]
+                );
             }
 
             // 2. Notify Students in the same grade
@@ -116,16 +113,15 @@ class SendZoomReminders extends Command
                         }
                     }
 
-                    if ($student->phone_number) {
-                        $this->info("Sending message to {$student->name} ({$student->phone_number})");
-                        $whatsApp->sendTemplate(
-                            $student->phone_number,
-                            'tit_zoom_reminder',
-                            'en',
-                            [$schedule->title, $time]
+                    if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                        $this->info("Sending message to {$student->name}");
+                        $notifier->notifyUser(
+                            $student, 'zoom_reminder', 'tit_zoom_reminder',
+                            [$schedule->title, $time],
+                            ['class_title' => $schedule->title, 'class_time' => $time]
                         );
                     } else {
-                        $this->warn("Skipping student {$student->name} (No phone number)");
+                        $this->warn("Skipping student {$student->name} (No phone number or email)");
                     }
                 }
             }

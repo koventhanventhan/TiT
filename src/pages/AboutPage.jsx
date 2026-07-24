@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight, FiVideo, FiClock } from 'react-icons/fi'
+import { FaGraduationCap } from 'react-icons/fa'
 import { useLocation } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -18,7 +19,13 @@ const AboutPage = () => {
   const [missionText, setMissionText] = useState(getSetting('about_mission_text', t('about_mission_text'))) // Note: t('about_mission_text') might not be in translations.js, falling back to setting
 
   const about_mission_image = getSetting('about_mission_image', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop')
-  
+
+  // Hero section images & badges (admin-editable)
+  const heroLeftImage = getSetting('about_hero_left_image', '') || '/asian-student-with-laptop-smiles-cut-out-transparent-png.png'
+  const heroRightImage = getSetting('about_hero_right_image', '') || '/cute-freelance-girl-using-laptop-sitting-floor-smiling_176420-20221.avif'
+  const heroLeftBadge = getSetting('about_hero_left_badge', '500+ Courses')
+  const heroRightBadge = getSetting('about_hero_right_badge', '98% Success')
+
   const [features, setFeatures] = useState([])
   const [values, setValues] = useState([])
   const [successfulJourney, setSuccessfulJourney] = useState([])
@@ -33,6 +40,23 @@ const AboutPage = () => {
   const [ctaDesc, setCtaDesc] = useState(getSetting('about_cta_desc', t('section_cta_desc')))
   const [ctaBtn1, setCtaBtn1] = useState(getSetting('about_cta_btn1', t('btn_register_now')))
   const [ctaBtn2, setCtaBtn2] = useState(getSetting('about_cta_btn2', t('btn_contact_us')))
+
+  const ctaImage = getSetting('about_cta_image', '')
+  const ctaBgImage = getSetting('about_cta_bg_image', '')
+
+  // CTA Boxes State
+  const defaultCtaBoxes = [
+    { icon: 'FiVideo', title: 'Live', subtitle: 'Zoom Classes' },
+    { icon: 'FaGraduationCap', title: 'Expert', subtitle: 'Teachers' },
+    { icon: 'FiClock', title: 'Study', subtitle: 'Anytime' },
+    { icon: 'FiAward', title: 'Achieve', subtitle: 'Excellence' }
+  ]
+  const [ctaBoxes, setCtaBoxes] = useState(() => {
+    try {
+      const parsed = JSON.parse(getSetting('about_cta_boxes', '[]'))
+      return parsed.length > 0 ? parsed : defaultCtaBoxes
+    } catch { return defaultCtaBoxes }
+  })
 
   const location = useLocation()
 
@@ -122,22 +146,35 @@ const AboutPage = () => {
         const mTitle = await translate(getSetting('about_mission_title', t('section_mission')))
         let mText = getSetting('about_mission_text', '') || t('about_mission_text')
         mText = await translate(mText)
-        
+
         const ctaTitle = await translate(getSetting('about_cta_title', t('section_cta_title')))
         const ctaDesc = await translate(getSetting('about_cta_desc', t('section_cta_desc')))
         const ctaBtn1 = await translate(getSetting('about_cta_btn1', t('btn_register_now')))
         const ctaBtn2 = await translate(getSetting('about_cta_btn2', t('btn_contact_us')))
-        
+
         setAboutTitle(title)
         setAboutSubtitle(sub)
         setAboutDescription(desc)
         setMissionTitle(mTitle)
         setMissionText(mText)
-        
+
         setCtaTitle(ctaTitle)
         setCtaDesc(ctaDesc)
         setCtaBtn1(ctaBtn1)
         setCtaBtn2(ctaBtn2)
+
+        // CTA Boxes (translate titles/subtitles)
+        try {
+          let ctaBoxRaw = JSON.parse(getSetting('about_cta_boxes', '[]'))
+          if (ctaBoxRaw.length > 0) {
+            ctaBoxRaw = await Promise.all(ctaBoxRaw.map(async (box) => ({
+              ...box,
+              title: await translate(box.title),
+              subtitle: await translate(box.subtitle)
+            })))
+            setCtaBoxes(ctaBoxRaw)
+          }
+        } catch { }
 
         setFeatures(await translateArray(fRaw, ['title', 'description']))
         setValues(await translateArray(vRaw, ['title', 'description']))
@@ -149,11 +186,17 @@ const AboutPage = () => {
         setAboutDescription(getSetting('about_description', t('about_hero_desc')))
         setMissionTitle(getSetting('about_mission_title', t('section_mission')))
         setMissionText(getSetting('about_mission_text', t('about_mission_text')))
-        
+
         setCtaTitle(getSetting('about_cta_title', t('section_cta_title')))
         setCtaDesc(getSetting('about_cta_desc', t('section_cta_desc')))
         setCtaBtn1(getSetting('about_cta_btn1', t('btn_register_now')))
         setCtaBtn2(getSetting('about_cta_btn2', t('btn_contact_us')))
+
+        // CTA Boxes
+        try {
+          const parsedBoxes = JSON.parse(getSetting('about_cta_boxes', '[]'))
+          if (parsedBoxes.length > 0) setCtaBoxes(parsedBoxes)
+        } catch { }
 
         setFeatures(fRaw)
         setValues(vRaw)
@@ -169,6 +212,21 @@ const AboutPage = () => {
     FiBookOpen: <FiBookOpen />,
     FiUsers: <FiUsers />,
     FiAward: <FiAward />,
+    FiCheckCircle: <FiCheckCircle />,
+    FiHeart: <FiHeart />,
+    FiStar: <FiStar />,
+    FiTarget: <FiTarget />,
+    FiTrendingUp: <FiTrendingUp />
+  }
+
+  // Icon map for CTA boxes (includes FaGraduationCap)
+  const ctaIconMap = {
+    FiVideo: <FiVideo />,
+    FaGraduationCap: <FaGraduationCap />,
+    FiClock: <FiClock />,
+    FiAward: <FiAward />,
+    FiBookOpen: <FiBookOpen />,
+    FiUsers: <FiUsers />,
     FiCheckCircle: <FiCheckCircle />,
     FiHeart: <FiHeart />,
     FiStar: <FiStar />,
@@ -254,10 +312,10 @@ const AboutPage = () => {
   // Group dynamic gallery images by category
   const groupImagesByCategory = (images) => {
     if (!images || images.length === 0) return []
-    
+
     // Get unique categories from the images themselves
     const categories = [...new Set(images.map(img => img.category).filter(Boolean))]
-    
+
     // If no categories found in images, fallback to default list
     const finalCategories = categories.length > 0 ? categories : [
       t('gallery_online_classes'),
@@ -265,7 +323,7 @@ const AboutPage = () => {
       t('gallery_teacher_training'),
       t('gallery_award_ceremony')
     ]
-    
+
     return finalCategories.map(cat => ({
       name: cat,
       images: images.filter(img => img.category === cat).map(img => ({ image: img.image, title: img.title }))
@@ -324,17 +382,74 @@ const AboutPage = () => {
 
   return (
     <div className="about-page">
-      {/* Hero Section */}
+      {/* Hero Section - Modern Design */}
       <section className="about-hero">
+        {/* Decorative background elements */}
+        <div className="about-hero-bg-shapes">
+          {/* <div className="hero-shape hero-shape-1"></div>
+          <div className="hero-shape hero-shape-2"></div>
+          <div className="hero-shape hero-shape-3"></div> */}
+          <div className="hero-dots hero-dots-left"></div>
+          <div className="hero-dots hero-dots-right"></div>
+        </div>
+
         <div className="container">
-          <div className="about-hero-content">
-            <h1 className="about-hero-title">{aboutTitle}</h1>
-            <p className="about-hero-subtitle">
-              {aboutSubtitle}
-            </p>
-            <p className="about-hero-description">
-              {aboutDescription}
-            </p>
+          <div className="about-hero-layout">
+            {/* Left student image */}
+            <div className="about-hero-image about-hero-image-left">
+              <div className="hero-image-blob">
+                <img
+                  src={heroLeftImage}
+                  alt="Student"
+                  className="hero-student-img"
+                />
+              </div>
+              <div className="hero-image-float-card float-card-1">
+                <FiBookOpen className="float-card-icon" />
+                <span>{heroLeftBadge}</span>
+              </div>
+            </div>
+
+            {/* Center content */}
+            <div className="about-hero-content">
+              <span className="about-hero-label">
+                <FiBookOpen className="label-icon" />
+                ABOUT US
+              </span>
+              <h1 className="about-hero-title">{aboutTitle}</h1>
+
+              <p className="about-hero-description">
+                {aboutDescription}
+              </p>
+            </div>
+
+            {/* Right student image */}
+            <div className="about-hero-image about-hero-image-right">
+              <div className="hero-image-blob hero-image-blob-right">
+                <img
+                  src={heroRightImage}
+                  alt="Student"
+                  className="hero-student-img"
+                />
+              </div>
+              <div className="hero-image-float-card float-card-2">
+                <FiAward className="float-card-icon" />
+                <span>{heroRightBadge}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="about-hero-stats">
+            {stats.map((stat, index) => (
+              <div key={index} className="hero-stat-item">
+                <div className="hero-stat-icon">{stat.icon}</div>
+                <div className="hero-stat-info">
+                  <span className="hero-stat-number">{stat.number}</span>
+                  <span className="hero-stat-label">{stat.label}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -442,20 +557,7 @@ const AboutPage = () => {
             </div>
           </section>
 
-          {/* Stats Section */}
-          <section className="about-stats-section">
-            <div className="container">
-              <div className="stats-grid">
-                {stats.map((stat, index) => (
-                  <div key={index} className="stat-card">
-                    <div className="stat-icon">{stat.icon}</div>
-                    <div className="stat-number">{stat.number}</div>
-                    <div className="stat-label">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+
 
           {/* Features Section */}
           <section className="about-features-section">
@@ -530,21 +632,42 @@ const AboutPage = () => {
             </div>
           </section>
 
-          {/* CTA Section */}
-          <section className="about-cta-section">
-            <div className="container">
-              <div className="cta-content">
-                <h2 className="cta-title">{ctaTitle}</h2>
-                <p className="cta-description">
-                  {ctaDesc}
-                </p>
-                <div className="cta-buttons">
-                  <button onClick={openRegister} className="btn btn-primary btn-large">
+          {/* CTA Section - 2nd Image Banner Style */}
+          <section className="about-cta-section" style={{ backgroundImage: ctaBgImage ? `url(${ctaBgImage})` : 'none', backgroundColor: ctaBgImage ? 'transparent' : '#1f2937' }}>
+            <div className="cta-overlay-dark"></div>
+            <div className="cta-banner-inner container">
+              {/* Left Text Content */}
+              <div className="cta-banner-left">
+
+                <h2 className="cta-banner-title">
+                  {ctaTitle.split(' ').slice(0, Math.ceil(ctaTitle.split(' ').length / 2)).join(' ')}{' '}
+                  <span className="cta-banner-highlight">
+                    {ctaTitle.split(' ').slice(Math.ceil(ctaTitle.split(' ').length / 2)).join(' ')}
+                  </span>
+                </h2>
+                <p className="cta-banner-description">{ctaDesc}</p>
+                <div className="cta-banner-buttons">
+                  <button onClick={openRegister} className="cta-btn-primary-blue">
                     {ctaBtn1}
                   </button>
-                  <a href={getSetting('about_cta_btn2_link', '/contact')} className="btn btn-secondary btn-large">
+                  <a href={getSetting('about_cta_btn2_link', '/contact')} className="cta-btn-outline">
                     {ctaBtn2}
                   </a>
+                </div>
+              </div>
+
+              {/* Right Image Panel - Small Glowing Boxes */}
+              <div className="cta-banner-right">
+                <div className="cta-boxes-grid">
+                  {ctaBoxes.map((box, index) => (
+                    <div className="cta-feature-box" key={index}>
+                      <div className="cta-box-icon">{ctaIconMap[box.icon] || <FiCheckCircle />}</div>
+                      <div className="cta-box-text">
+                        <h4>{box.title}</h4>
+                        <p>{box.subtitle}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

@@ -1,0 +1,361 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { FiBell, FiX, FiCheckCircle, FiMessageSquare, FiRefreshCw } from 'react-icons/fi'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+  return {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  }
+}
+
+function timeAgo(dateStr) {
+  const now = new Date()
+  const date = new Date(dateStr)
+  const diff = Math.floor((now - date) / 1000)
+  if (diff < 60) return 'Just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
+}
+
+export default function NotificationBell({ apiPrefix = 'student' }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const dropdownRef = useRef(null)
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  const fetchNotifications = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE_URL}/${apiPrefix}/messages`, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setNotifications(data.messages || [])
+    } catch (err) {
+      setError('Could not load notifications')
+    } finally {
+      setLoading(false)
+    }
+  }, [apiPrefix])
+
+  // Fetch on mount and every 60s
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60000)
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleOpen = () => {
+    setIsOpen(prev => !prev)
+    if (!isOpen) fetchNotifications()
+  }
+
+  const markAsRead = async (id) => {
+    // Optimistically update UI
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    )
+    try {
+      await fetch(`${API_BASE_URL}/${apiPrefix}/messages/${id}/read`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
+    } catch (err) {
+      // Revert on failure
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, read: false } : n)
+      )
+    }
+  }
+
+  const markAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.read)
+    // Optimistic update
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    try {
+      await Promise.all(
+        unread.map(n =>
+          fetch(`${API_BASE_URL}/${apiPrefix}/messages/${n.id}/read`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            credentials: 'include',
+          })
+        )
+      )
+    } catch (err) {
+      fetchNotifications() // Re-fetch on error
+    }
+  }
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative' }}>
+      {/* Bell Button */}
+      <button
+        onClick={handleOpen}
+        title="Notifications"
+        style={{
+          position: 'relative',
+          width: 40, height: 40, borderRadius: 10,
+          border: isOpen ? '1px solid #818cf8' : '1px solid #e2e8f0',
+          background: isOpen ? 'rgba(129,140,248,0.08)' : '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: isOpen ? '#6366f1' : '#64748b',
+          cursor: 'pointer', fontSize: 18,
+          transition: 'all 0.2s ease',
+          boxShadow: isOpen ? '0 0 0 3px rgba(99,102,241,0.15)' : 'none',
+        }}
+      >
+        <FiBell />
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: 6, right: 6,
+            minWidth: 18, height: 18, borderRadius: 99,
+            background: '#ef4444', border: '2px solid #fff',
+            color: '#fff', fontSize: 9, fontWeight: 800,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 3px', lineHeight: 1,
+            animation: 'notifPulse 2s ease-in-out infinite',
+          }}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+          width: 360, maxHeight: 480,
+          background: '#fff', borderRadius: 16,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(226,232,240,0.8)',
+          zIndex: 9999,
+          overflow: 'hidden',
+          animation: 'notifSlideDown 0.2s ease',
+        }}>
+
+          {/* Header */}
+          <div style={{
+            padding: '16px 20px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #f1f5f9',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FiBell style={{ color: '#6366f1', fontSize: 16 }} />
+              <span style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span style={{
+                  background: '#6366f1', color: '#fff',
+                  borderRadius: 99, fontSize: 11, fontWeight: 700,
+                  padding: '1px 7px',
+                }}>
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  title="Mark all as read"
+                  style={{
+                    background: 'rgba(99,102,241,0.08)', border: 'none',
+                    borderRadius: 8, padding: '4px 10px',
+                    color: '#6366f1', fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark all read
+                </button>
+              )}
+              <button
+                onClick={fetchNotifications}
+                title="Refresh"
+                style={{
+                  background: 'none', border: 'none', borderRadius: 8,
+                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center',
+                }}
+              >
+                <FiRefreshCw style={{ fontSize: 13, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{
+                  background: 'none', border: 'none', borderRadius: 8,
+                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center',
+                }}
+              >
+                <FiX style={{ fontSize: 14 }} />
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+            {loading && notifications.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  border: '3px solid #e2e8f0', borderTopColor: '#6366f1',
+                  margin: '0 auto 12px', animation: 'spin 0.8s linear infinite',
+                }} />
+                <div style={{ color: '#94a3b8', fontSize: 13 }}>Loading notifications...</div>
+              </div>
+            ) : error ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>⚠️</div>
+                <div style={{ color: '#ef4444', fontSize: 13, fontWeight: 500 }}>{error}</div>
+                <button
+                  onClick={fetchNotifications}
+                  style={{
+                    marginTop: 12, background: '#6366f1', color: '#fff',
+                    border: 'none', borderRadius: 8, padding: '6px 16px',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>
+                <FiMessageSquare style={{ fontSize: 36, color: '#cbd5e1', marginBottom: 10 }} />
+                <div style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500 }}>
+                  No notifications yet
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: 12, marginTop: 4 }}>
+                  You'll see messages from your admin here
+                </div>
+              </div>
+            ) : (
+              notifications.map((notif, idx) => (
+                <div
+                  key={notif.id}
+                  onClick={() => !notif.read && markAsRead(notif.id)}
+                  style={{
+                    padding: '14px 20px',
+                    borderBottom: idx < notifications.length - 1 ? '1px solid #f8fafc' : 'none',
+                    background: notif.read ? '#fff' : 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.03) 100%)',
+                    cursor: notif.read ? 'default' : 'pointer',
+                    transition: 'background 0.15s ease',
+                    display: 'flex', gap: 12, alignItems: 'flex-start',
+                  }}
+                  onMouseEnter={e => {
+                    if (!notif.read) e.currentTarget.style.background = 'rgba(99,102,241,0.08)'
+                  }}
+                  onMouseLeave={e => {
+                    if (!notif.read) e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.03) 100%)'
+                  }}
+                >
+                  {/* Icon */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: notif.read ? '#f1f5f9' : 'linear-gradient(135deg, #6366f1, #a855f7)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 15,
+                  }}>
+                    <FiMessageSquare style={{ color: notif.read ? '#94a3b8' : '#fff' }} />
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 13, fontWeight: notif.read ? 500 : 700,
+                      color: notif.read ? '#475569' : '#1e293b',
+                      marginBottom: 3,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {notif.title}
+                    </div>
+                    <div style={{
+                      fontSize: 12, color: '#64748b', lineHeight: 1.4,
+                      display: '-webkit-box', WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    }}>
+                      {notif.body}
+                    </div>
+                    <div style={{
+                      fontSize: 10, color: '#94a3b8', marginTop: 4,
+                      fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      {timeAgo(notif.created_at)}
+                      {notif.target_type === 'broadcast' && (
+                        <span style={{
+                          background: '#f0fdf4', color: '#16a34a',
+                          padding: '1px 6px', borderRadius: 99, fontSize: 9, fontWeight: 700,
+                        }}>
+                          Broadcast
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Unread dot */}
+                  {!notif.read && (
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: '#6366f1', flexShrink: 0, marginTop: 4,
+                    }} />
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div style={{
+              padding: '10px 20px', borderTop: '1px solid #f1f5f9',
+              background: '#fafbfc', textAlign: 'center',
+            }}>
+              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
+                {notifications.length} total • {unreadCount} unread
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes notifSlideDown {
+          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes notifPulse {
+          0%, 100% { transform: scale(1); }
+          50%       { transform: scale(1.15); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  )
+}

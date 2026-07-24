@@ -52,6 +52,7 @@ Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWha
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/update-avatar', [AuthController::class, 'updateAvatar']);
     
     // Route to create web session from API token (for admin dashboard access)
     Route::post('/auth/create-session', [AuthController::class, 'createWebSession']);

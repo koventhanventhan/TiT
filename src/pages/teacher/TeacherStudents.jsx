@@ -12,9 +12,9 @@ export default function TeacherStudents() {
             try {
                 const data = await getTeacherStudents().catch(() => null)
                 setStudents(data || [
-                    { id: 1, name: 'Saman Fernando', email: 'saman@example.com', phone_number: '+94 77 123 4567', current_grade: 'A/L 2026', stream: 'Maths', status: 'Enrolled' },
-                    { id: 2, name: 'Kamal Perera', email: 'kamal@example.com', phone_number: '+94 71 234 5678', current_grade: 'A/L 2026', stream: 'Science', status: 'Enrolled' },
-                    { id: 3, name: 'Nimali Silva', email: 'nimali@example.com', phone_number: '+94 76 345 6789', current_grade: 'A/L 2025', stream: 'Maths', status: 'Pending' }
+                    { id: 1, name: 'Saman Fernando', email: 'saman@example.com', phone_number: '+94 77 123 4567', current_grade: 'A/L 2026', stream: 'Maths', attendance: 92 },
+                    { id: 2, name: 'Kamal Perera', email: 'kamal@example.com', phone_number: '+94 71 234 5678', current_grade: 'A/L 2026', stream: 'Science', attendance: 88 },
+                    { id: 3, name: 'Nimali Silva', email: 'nimali@example.com', phone_number: '+94 76 345 6789', current_grade: 'A/L 2025', stream: 'Maths', attendance: 75 }
                 ])
             } catch (e) {
                 console.error(e)
@@ -99,7 +99,7 @@ export default function TeacherStudents() {
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Student Info</th>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Grade / Stream</th>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contact</th>
-                                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
+                                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</th>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
@@ -135,13 +135,12 @@ export default function TeacherStudents() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <span style={{
-                                            padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase',
-                                            background: student.status === 'Pending' ? '#fef3c7' : '#ecfdf5',
-                                            color: student.status === 'Pending' ? '#d97706' : '#10b981'
-                                        }}>
-                                            {student.status || 'Enrolled'}
-                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <div style={{ width: 60, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                                                <div style={{ width: `${student.attendance || 0}%`, height: '100%', background: (student.attendance || 0) < 80 ? '#f59e0b' : '#10b981' }} />
+                                            </div>
+                                            <span style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>{student.attendance || 0}%</span>
+                                        </div>
                                     </td>
                                     <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                         <button style={{

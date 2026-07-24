@@ -27,6 +27,8 @@ const Header = () => {
   const [currentUser, setCurrentUser] = useState(null)
   const [isTopBarVisible, setIsTopBarVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
+  const [topBarHeight, setTopBarHeight] = useState(0)
+  const topBarRef = useRef(null)
   const location = useLocation()
   const classesDropdownRef = useRef(null)
   const learningSuiteDropdownRef = useRef(null)
@@ -41,25 +43,30 @@ const Header = () => {
     return null;
   };
 
+  // Measure top bar height dynamically
+  useEffect(() => {
+    const measureTopBar = () => {
+      if (topBarRef.current) {
+        setTopBarHeight(topBarRef.current.offsetHeight)
+      }
+    }
+    measureTopBar()
+    window.addEventListener('resize', measureTopBar)
+    return () => window.removeEventListener('resize', measureTopBar)
+  }, [])
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-
-      // Update scrolled state for main header
       setIsScrolled(currentScrollY > 50)
-
-      // Hide topbar when scrolling down, show when scrolling up
+      // Hide topbar on scroll down, show on scroll up
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
         setIsTopBarVisible(false)
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
         setIsTopBarVisible(true)
       }
-
       setLastScrollY(currentScrollY)
     }
-
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [lastScrollY])
@@ -203,15 +210,22 @@ const Header = () => {
   ]
 
   const gradeSubmenuItems = [
-    { nameKey: 'nav_notes', name: 'Notes', href: '/notes' },
-    { nameKey: 'nav_past_papers', name: 'Past papers', href: '/past-papers' },
-    { nameKey: 'nav_recordings', name: 'Recording section', href: '/recordings' }
+    { nameKey: 'nav_notes', name: getSetting('learning_notes_title', t('nav_notes') || 'Notes'), href: '/notes' },
+    { nameKey: 'nav_past_papers', name: getSetting('learning_pastpapers_title', t('nav_past_papers') || 'Past papers'), href: '/past-papers' },
+    { nameKey: 'nav_recordings', name: getSetting('learning_recordings_title', t('nav_recordings') || 'Recordings'), href: '/recordings' }
   ]
 
   return (
     <>
-      {/* Top Bar */}
-      <div className={`top-bar ${isTopBarVisible ? 'visible' : 'hidden'}`}>
+      {/* Top Bar Wrapper — slides UP and hides on scroll down */}
+      <div
+        className="top-bar-wrapper"
+        ref={topBarRef}
+        style={{
+          transform: isTopBarVisible ? 'translateY(0)' : 'translateY(-100%)'
+        }}
+      >
+        <div className="top-bar">
         <div className="container">
           <div className="top-bar-content">
             <div className="top-bar-left">
@@ -348,10 +362,17 @@ const Header = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>{/* end top-bar */}
+      </div>{/* end top-bar-wrapper */}
 
-      {/* Main Header */}
-      <header className={`header ${isScrolled ? 'scrolled' : ''}`} style={{ top: isTopBarVisible ? 'calc(2.5rem + env(safe-area-inset-top, 0px))' : '0' }}>
+      {/* Main Header — always visible, slides up by topBarHeight when topbar hides */}
+      <header
+        className={`header ${isScrolled ? 'scrolled' : ''}`}
+        style={{
+          top: `${topBarHeight}px`,
+          transform: isTopBarVisible ? 'translateY(0)' : `translateY(-${topBarHeight}px)`
+        }}
+      >
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo" style={{ textDecoration: 'none' }}>
@@ -459,7 +480,7 @@ const Header = () => {
                                     className="grade-submenu-button"
                                     onClick={() => { setIsLearningSuiteDropdownOpen(false); setSelectedGrade(null); setIsMobileMenuOpen(false); }}
                                   >
-                                    {t(subItem.nameKey)}
+                                    {subItem.name}
                                   </Link>
                                 ))}
                               </div>
@@ -610,7 +631,7 @@ const Header = () => {
                                         setIsMobileMenuOpen(false);
                                       }}
                                     >
-                                      {t(subItem.nameKey)}
+                                      {subItem.name}
                                     </Link>
                                   ))}
                                 </div>

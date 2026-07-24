@@ -33,11 +33,6 @@ function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
                 <div style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8', marginBottom: 2 }}>{label}</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', lineHeight: 1 }}>{value}</div>
             </div>
-            {/* Decorative circle */}
-            <div style={{
-                position: 'absolute', right: -20, top: -20, width: 80, height: 80,
-                borderRadius: '50%', background: bgColor, opacity: 0.5
-            }} />
         </div>
     )
 }
@@ -45,6 +40,9 @@ function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
 export default function StudentOverview() {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    const hour = new Date().getHours()
+    const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
 
     useEffect(() => {
         async function loadStats() {
@@ -82,25 +80,15 @@ export default function StudentOverview() {
                 borderRadius: 20, padding: '32px 28px', marginBottom: 24,
                 position: 'relative', overflow: 'hidden', color: '#fff'
             }}>
-                {/* Decorative shapes */}
-                <div style={{
-                    position: 'absolute', right: 40, top: -30, width: 160, height: 160,
-                    borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)'
-                }} />
-                <div style={{
-                    position: 'absolute', right: 120, bottom: -40, width: 100, height: 100,
-                    borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
-                }} />
-
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#a5b4fc', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <FiTrendingUp /> Good Morning
+                        <FiTrendingUp /> {greeting}
                     </div>
                     <h1 style={{
                         fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.5px',
                         lineHeight: 1.2, marginBottom: 6
                     }}>
-                        Welcome Back, {stats?.user_name || 'Student'}! 👋
+                        Welcome Back, {stats?.user?.full_name || stats?.user?.name || stats?.user?.first_name || stats?.user_name || 'Student'}! 👋
                     </h1>
                     <p style={{ fontSize: 15, color: '#c7d2fe', margin: 0, maxWidth: 500 }}>
                         Here's what's happening with your learning today. Stay consistent and keep growing!
@@ -275,10 +263,6 @@ export default function StudentOverview() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                         backdropFilter: 'blur(4px)', position: 'relative', zIndex: 1
                     }}><FiArrowRight /></div>
-                    <div style={{
-                        position: 'absolute', right: -30, bottom: -30, width: 120, height: 120,
-                        borderRadius: '50%', background: 'rgba(255,255,255,0.08)'
-                    }} />
                 </Link>
 
                 <Link to="/student/assignments" style={{
@@ -300,10 +284,6 @@ export default function StudentOverview() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                         backdropFilter: 'blur(4px)', position: 'relative', zIndex: 1
                     }}><FiArrowRight /></div>
-                    <div style={{
-                        position: 'absolute', right: -30, bottom: -30, width: 120, height: 120,
-                        borderRadius: '50%', background: 'rgba(255,255,255,0.08)'
-                    }} />
                 </Link>
             </div>
         </div>

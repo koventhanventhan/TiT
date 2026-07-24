@@ -1,28 +1,23 @@
-/* Top Bar */
-.top-bar {
+/* Top Bar Wrapper — only the topbar slides up on scroll down */
+.top-bar-wrapper {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 1001;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Top Bar */
+.top-bar {
   background: #11316c;
-  /* Dark blue */
   color: white;
   padding: 0.5rem 0;
   padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
-  z-index: 1001;
   font-size: 0.875rem;
-  transition: transform 0.3s ease-in-out;
-  transform: translateY(0);
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
 }
 
-.top-bar.visible {
-  transform: translateY(0);
-}
-
-.top-bar.hidden {
-  transform: translateY(-100%);
-}
 
 .top-bar-content {
   display: flex;
@@ -225,22 +220,21 @@
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Main Header */
+/* Main Header — position:fixed, uses transform to stay at top when topbar hides */
 .header {
   position: fixed;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   backdrop-filter: blur(0.625rem);
   z-index: 1000;
-  transition: top 0.3s ease-in-out, background 0.3s ease, box-shadow 0.3s ease;
-  border-bottom: 1.0px solid transparent;
-  /* Add safe area support when top bar is hidden */
-  padding-top: env(safe-area-inset-top, 0px);
+  /* Same transition as top-bar-wrapper for perfect pixel sync */
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, box-shadow 0.3s ease;
+  border-bottom: 1px solid transparent;
 }
 
 .header.scrolled {
-  background: rgba(255, 255, 255, 0.98);
+  background: #ffffff;
   box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.08);
   border-bottom-color: var(--border-color);
 }
@@ -1287,11 +1281,13 @@
 }
 
 @media (max-width: 36rem) {
-  .top-bar {
+  .top-bar-wrapper {
     display: none !important;
   }
 
   .header {
     top: 0 !important;
+    transform: translateY(0) !important;
   }
 }
+

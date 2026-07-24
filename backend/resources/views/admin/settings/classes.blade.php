@@ -147,151 +147,306 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
                     <hr class="my-4">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="text-primary mb-0">Class Types & Categories</h5>
-                        <button type="button" class="btn btn-info btn-sm" id="add-class-type">
-                            <i class="fa fa-plus mr-2"></i> Add New Class Type
-                        </button>
-                    </div>
-
-                    <div id="class-types-container">
-                        @php
-                            $types = json_decode(\App\Models\SiteSetting::get('classes_types', '[]'), true);
-                            
-                            // Migration logic if empty
-                            if (empty($types)) {
-                                $types = [
-                                    [
-                                        'id' => uniqid(),
-                                        'title' => 'Direct Physical Class',
-                                        'description' => \App\Models\SiteSetting::get('classes_direct_description', 'Comprehensive face-to-face learning experience with expert tutors in a physical classroom setting.'),
-                                        'duration' => \App\Models\SiteSetting::get('classes_direct_duration', 'Flexible schedules'),
-                                        'price' => \App\Models\SiteSetting::get('classes_direct_price', 'Affordable rates'),
-                                        'format' => \App\Models\SiteSetting::get('classes_direct_format', 'Small Groups'),
-                                        'features' => \App\Models\SiteSetting::get('classes_direct_features', "Small group sessions\nDirect teacher interaction\nPhysical learning materials\nIn-person assessments\nFocus and discipline"),
-                                        'subjects' => \App\Models\SiteSetting::get('classes_direct_subjects', 'Mathematics, Science, English, Sinhala, Tamil, History, Geography, Commerce, ICT, Art'),
-                                        'color' => '#EB8153',
-                                        'image' => '',
-                                        'stars' => 5
-                                    ],
-                                    [
-                                        'id' => uniqid(),
-                                        'title' => 'Online Live Class',
-                                        'description' => \App\Models\SiteSetting::get('classes_online_description', 'Convenient live interactive sessions accessible from anywhere with high-quality digital resources.'),
-                                        'duration' => \App\Models\SiteSetting::get('classes_online_duration', 'Flexible schedules'),
-                                        'price' => \App\Models\SiteSetting::get('classes_online_price', 'Competitive pricing'),
-                                        'format' => \App\Models\SiteSetting::get('classes_online_format', 'Group & One-on-One'),
-                                        'features' => \App\Models\SiteSetting::get('classes_online_features', "Interactive live classes\nRecorded lesson access\nDigital study materials\nOnline quizzes/exams\nFlexible learning from home"),
-                                        'subjects' => \App\Models\SiteSetting::get('classes_online_subjects', 'Mathematics, Physics, Chemistry, Biology, English, Business Studies, Economics, Accounting, ICT, Computer Science'),
-                                        'color' => '#667eea',
-                                        'image' => '',
-                                        'stars' => 5
-                                    ]
-                                ];
-                            }
-                        @endphp
-
-                        @foreach($types as $index => $type)
-                            <div class="class-type-item mb-5 p-4" data-index="{{ $index }}" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem;">
-                                <div class="class-edit-section">
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <div class="d-flex align-items-center flex-grow-1">
-                                            <input type="text" name="classes_types[{{ $index }}][title]" class="form-control font-weight-bold mr-3" value="{{ $type['title'] ?? 'New Class Type' }}" style="font-size: 1.25rem; border: none !important; background: transparent !important; padding-left: 0; width: auto; min-width: 200px;">
-                                            <span class="badge badge-outline-primary ml-2">Class #{{ $index + 1 }}</span>
+                    <h5 class="text-primary mb-4">Online Classes Expert Layout Settings (ocl-)</h5>
+                    
+                    <div class="row">
+                        <!-- Left Text Settings -->
+                        <div class="col-md-7">
+                            <div class="class-edit-section">
+                                <h6 class="mb-3">Hero Text Content</h6>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tagline</label>
+                                            <input type="text" name="ocl_tagline" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_tagline', 'TiT KALVI NILAYAM – JAFFNA') }}">
                                         </div>
-                                        <button type="button" class="btn btn-danger btn-xs remove-class-type">
-                                            <i class="fa fa-trash"></i> Remove
-                                        </button>
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <label>Description</label>
-                                                <textarea name="classes_types[{{ $index }}][description]" class="form-control" rows="3">{{ $type['description'] ?? '' }}</textarea>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Duration</label>
-                                                        <input type="text" name="classes_types[{{ $index }}][duration]" class="form-control" value="{{ $type['duration'] ?? '' }}">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Pricing Label</label>
-                                                        <input type="text" name="classes_types[{{ $index }}][price]" class="form-control" value="{{ $type['price'] ?? '' }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Format / Students</label>
-                                                        <input type="text" name="classes_types[{{ $index }}][format]" class="form-control" value="{{ $type['format'] ?? '' }}">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Color Theme</label>
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            <input type="color" name="classes_types[{{ $index }}][color]" class="form-control p-1" value="{{ $type['color'] ?? '#EB8153' }}" style="width: 3.125rem; height: 2.1875rem;">
-                                                            <span class="ml-2 text-muted small">{{ $type['color'] ?? '#EB8153' }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Features (One per line)</label>
-                                                        <textarea name="classes_types[{{ $index }}][features]" class="form-control" rows="5" placeholder="Small group sessions\nDirect teacher interaction">{{ $type['features'] ?? '' }}</textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label>Available Subjects (Comma separated)</label>
-                                                        <textarea name="classes_types[{{ $index }}][subjects]" class="form-control" rows="5" placeholder="Mathematics, Science, English">{{ $type['subjects'] ?? '' }}</textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Title Line 1 (Dark)</label>
+                                            <input type="text" name="ocl_title_line1" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_title_line1', 'ONLINE') }}">
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group text-center">
-                                                <label>Card Image</label>
-                                                <div class="image-preview-container mb-2" style="background: rgba(0,0,0,0.3); border: 2.0px dashed rgba(255,255,255,0.1); border-radius: 0.5rem; min-height: 15.625rem; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                                                    <img src="{{ !empty($type['image']) ? asset($type['image']) : '' }}" class="img-fluid" style="{{ !empty($type['image']) ? 'display: block;' : 'display: none;' }} max-height: 15.625rem;">
-                                                    <div class="no-image-placeholder" style="{{ !empty($type['image']) ? 'display: none;' : 'display: block;' }}">
-                                                        <i class="fa fa-image fa-3x mb-2 text-muted"></i>
-                                                        <p class="small text-muted">No image uploaded</p>
-                                                    </div>
-                                                    <button type="button" class="btn btn-danger btn-xs position-absolute remove-image" style="top: 0.625rem; right: 0.625rem; {{ !empty($type['image']) ? '' : 'display: none;' }}">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
-                                                </div>
-                                                <input type="hidden" name="classes_types[{{ $index }}][image]" value="{{ $type['image'] ?? '' }}" class="image-path-input">
-                                                <button type="button" class="btn btn-info btn-xs btn-block upload-image-btn">
-                                                    <i class="fa fa-upload mr-1"></i> Upload Image
-                                                </button>
-                                                <input type="file" class="d-none dynamic-image-input" accept="image/*">
-                                                
-                                                <div class="form-group mt-3 text-left">
-                                                    <label>Star Rating</label>
-                                                    <select name="classes_types[{{ $index }}][stars]" class="form-control">
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            <option value="{{ $i }}" {{ ($type['stars'] ?? 5) == $i ? 'selected' : '' }}>{{ $i }} Stars</option>
-                                                        @endfor
-                                                    </select>
-                                                </div>
-                                            </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Title Line 2 (Gold)</label>
+                                            <input type="text" name="ocl_title_line2" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_title_line2', 'CLASSES') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tamil Subtitle</label>
+                                            <input type="text" name="ocl_subtitle_tamil" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_subtitle_tamil', 'இணையவழி வகுப்புகள்') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Small Secondary Text</label>
+                                            <input type="text" name="ocl_sub_text" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_sub_text', 'தரம் 01 முதல் A/L வரை') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Hero Highlights (One per line)</label>
+                                            <textarea name="ocl_highlights" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('ocl_highlights', "LIVE CLASSES\nRECORDED CLASSES\nSTUDY MATERIAL") }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>CTA Button Text</label>
+                                            <input type="text" name="ocl_cta_text" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_cta_text', 'இப்போது சேருங்கள்') }}">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
+
+                        <!-- Right Media Settings -->
+                        <div class="col-md-5">
+                            <div class="class-edit-section">
+                                <h6 class="mb-3">Hero Media</h6>
+                                
+                                <div class="form-group">
+                                    <label>Main Laptop Image (ocl_hero_image)</label>
+                                    @php $heroImg = \App\Models\SiteSetting::get('ocl_hero_image'); @endphp
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input image-upload" data-setting-key="ocl_hero_image" accept="image/*">
+                                            <label class="custom-file-label">Choose image</label>
+                                        </div>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-danger remove-image-btn" data-setting-key="ocl_hero_image" {{ $heroImg ? '' : 'style="display:none;"' }}>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 preview-container" id="preview-ocl_hero_image">
+                                        @if($heroImg)
+                                            <img src="{{ Str::startsWith($heroImg, 'http') ? $heroImg : asset($heroImg) }}" class="img-thumbnail" style="max-height: 200px;">
+                                        @endif
+                                    </div>
+                                    <input type="hidden" name="ocl_hero_image" id="input-ocl_hero_image" value="{{ $heroImg }}">
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <label>Floating Badge Image (ocl_badge_image)</label>
+                                    @php $badgeImg = \App\Models\SiteSetting::get('ocl_badge_image'); @endphp
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input image-upload" data-setting-key="ocl_badge_image" accept="image/*">
+                                            <label class="custom-file-label">Choose image</label>
+                                        </div>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-danger remove-image-btn" data-setting-key="ocl_badge_image" {{ $badgeImg ? '' : 'style="display:none;"' }}>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 preview-container" id="preview-ocl_badge_image">
+                                        @if($badgeImg)
+                                            <img src="{{ Str::startsWith($badgeImg, 'http') ? $badgeImg : asset($badgeImg) }}" class="img-thumbnail" style="max-height: 100px;">
+                                        @endif
+                                    </div>
+                                    <input type="hidden" name="ocl_badge_image" id="input-ocl_badge_image" value="{{ $badgeImg }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="class-edit-section">
+                        <h6 class="mb-3">Grades Selector</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Section Title</label>
+                                    <input type="text" name="ocl_grades_title" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_grades_title', 'தரம் தேர்வு செய்க') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label>Grades (Comma separated)</label>
+                                    <input type="text" name="ocl_grades" class="form-control" value="{{ \App\Models\SiteSetting::get('ocl_grades', '01,02,03,04,05,06,07,08,09,10,11,A/L') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="class-edit-section">
+                        <h6 class="mb-3">Features, Stats & Subjects (Advanced JSON)</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Features Grid (JSON array)</label>
+                                    <textarea name="ocl_features" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('ocl_features', '[{"icon":"FiMonitor","title":"நேரலை வகுப்புகள்","description":"அனுபவமிக்க ஆசிரியர்களின் நேரலை வகுப்புகள்"},{"icon":"FiPlay","title":"வகுப்பு பதிவு","description":"பதிவு செய்யப்பட்ட வகுப்புகளை மீண்டும் பார்க்கலாம்"},{"icon":"FiFolder","title":"கல்வி பொருட்கள்","description":"PDF குறிப்புகள் & தேவையான படிப்பு பொருட்கள்"}]') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Stats Bar (JSON array)</label>
+                                    <textarea name="ocl_stats" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('ocl_stats', '[{"icon":"FaGraduationCap","number":"3000+","label":"மாணவர்கள்"},{"icon":"FiUsers","number":"30+","label":"ஆசிரியர்கள்"},{"icon":"FiPlay","number":"500+","label":"வீடியோ வகுப்புகள்"},{"icon":"FiHeadphones","number":"24/7","label":"ஆதரவு"}]') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Subjects Row (JSON array)</label>
+                                    <textarea name="ocl_subjects" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('ocl_subjects', '[{"icon":"FiBook","name":"தமிழ்"},{"icon":"FiGlobe","name":"ஆங்கிலம்"},{"icon":"FiEdit","name":"கணிதம்"},{"icon":"FiStar","name":"அறிவியல்"}]') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="text-primary mb-4">Direct Classes Expert Layout Settings (dcl-)</h5>
+                    
+                    <div class="row">
+                        <!-- Left Text Settings -->
+                        <div class="col-md-7">
+                            <div class="class-edit-section">
+                                <h6 class="mb-3">Hero Text Content</h6>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tagline</label>
+                                            <input type="text" name="dcl_tagline" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_tagline', 'TiT KALVI NILAYAM – JAFFNA') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Title Line 1 (Dark)</label>
+                                            <input type="text" name="dcl_title_line1" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_title_line1', 'DIRECT') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Title Line 2 (Gold)</label>
+                                            <input type="text" name="dcl_title_line2" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_title_line2', 'CLASSES') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tamil Subtitle</label>
+                                            <input type="text" name="dcl_subtitle_tamil" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_subtitle_tamil', 'நேரடி வகுப்புகள்') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Small Secondary Text</label>
+                                            <input type="text" name="dcl_sub_text" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_sub_text', 'தரம் 01 முதல் A/L வரை') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Hero Highlights (One per line)</label>
+                                            <textarea name="dcl_highlights" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('dcl_highlights', "IN-PERSON CLASSES\nEXPERT TUTORS\nSTUDY MATERIAL") }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>CTA Button Text</label>
+                                            <input type="text" name="dcl_cta_text" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_cta_text', 'இப்போது சேருங்கள்') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Media Settings -->
+                        <div class="col-md-5">
+                            <div class="class-edit-section">
+                                <h6 class="mb-3">Hero Media</h6>
+                                
+                                <div class="form-group">
+                                    <label>Main Background Image (dcl_hero_image)</label>
+                                    @php $dclHeroImg = \App\Models\SiteSetting::get('dcl_hero_image'); @endphp
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input image-upload" data-setting-key="dcl_hero_image" accept="image/*">
+                                            <label class="custom-file-label">Choose image</label>
+                                        </div>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-danger remove-image-btn" data-setting-key="dcl_hero_image" {{ $dclHeroImg ? '' : 'style="display:none;"' }}>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 preview-container" id="preview-dcl_hero_image">
+                                        @if($dclHeroImg)
+                                            <img src="{{ Str::startsWith($dclHeroImg, 'http') ? $dclHeroImg : asset($dclHeroImg) }}" class="img-thumbnail" style="max-height: 200px;">
+                                        @endif
+                                    </div>
+                                    <input type="hidden" name="dcl_hero_image" id="input-dcl_hero_image" value="{{ $dclHeroImg }}">
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <label>Floating Badge Image (dcl_badge_image)</label>
+                                    @php $dclBadgeImg = \App\Models\SiteSetting::get('dcl_badge_image'); @endphp
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input image-upload" data-setting-key="dcl_badge_image" accept="image/*">
+                                            <label class="custom-file-label">Choose image</label>
+                                        </div>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-danger remove-image-btn" data-setting-key="dcl_badge_image" {{ $dclBadgeImg ? '' : 'style="display:none;"' }}>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 preview-container" id="preview-dcl_badge_image">
+                                        @if($dclBadgeImg)
+                                            <img src="{{ Str::startsWith($dclBadgeImg, 'http') ? $dclBadgeImg : asset($dclBadgeImg) }}" class="img-thumbnail" style="max-height: 100px;">
+                                        @endif
+                                    </div>
+                                    <input type="hidden" name="dcl_badge_image" id="input-dcl_badge_image" value="{{ $dclBadgeImg }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="class-edit-section">
+                        <h6 class="mb-3">Grades Selector</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Section Title</label>
+                                    <input type="text" name="dcl_grades_title" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_grades_title', 'தரம் தேர்வு செய்க') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label>Grades (Comma separated)</label>
+                                    <input type="text" name="dcl_grades" class="form-control" value="{{ \App\Models\SiteSetting::get('dcl_grades', '01,02,03,04,05,06,07,08,09,10,11,A/L') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="class-edit-section">
+                        <h6 class="mb-3">Features, Stats & Subjects (Advanced JSON)</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Features Grid (JSON array)</label>
+                                    <textarea name="dcl_features" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('dcl_features', '[{"icon":"FiUsers","title":"சிறு குழுக்கள்","description":"சிறிய குழுக்கள் மூலம் ஆசிரியரின் தனிப்பட்ட கவனம்"},{"icon":"FiCheck","title":"நேரடி கற்றல்","description":"ஆசிரியர்களுடன் நேரடி தொடர்பு மற்றும் உரையாடல்"},{"icon":"FiFolder","title":"கற்றல் உபகரணங்கள்","description":"தேவையான அனைத்து பௌதீக கற்றல் பொருட்களும் வழங்கப்படும்"}]') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Stats Bar (JSON array)</label>
+                                    <textarea name="dcl_stats" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('dcl_stats', '[{"icon":"FaGraduationCap","number":"2000+","label":"மாணவர்கள்"},{"icon":"FiUsers","number":"25+","label":"ஆசிரியர்கள்"},{"icon":"FiBook","number":"15+","label":"பாடநெறிகள்"},{"icon":"FiAward","number":"100%","label":"வெற்றி"}]') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Subjects Row (JSON array)</label>
+                                    <textarea name="dcl_subjects" class="form-control" rows="6">{{ \App\Models\SiteSetting::get('dcl_subjects', '[{"icon":"FiBook","name":"தமிழ்"},{"icon":"FiGlobe","name":"ஆங்கிலம்"},{"icon":"FiEdit","name":"கணிதம்"},{"icon":"FiStar","name":"அறிவியல்"},{"icon":"FiClock","name":"வரலாறு"},{"icon":"FiMapPin","name":"புவியியல்"}]') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 text-center">
@@ -307,182 +462,19 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Function to re-index items after removal
-        function reIndexItems() {
-            $('#class-types-container .class-type-item').each(function(index) {
-                $(this).attr('data-index', index);
-                $(this).find('[name^="classes_types"]').each(function() {
-                    let name = $(this).attr('name');
-                    $(this).attr('name', name.replace(/classes_types\[\d+\]/, 'classes_types[' + index + ']'));
-                });
-            });
-        }
-
-        // Add new class type
-        $('#add-class-type').click(function() {
-            let index = $('#class-types-container .class-type-item').length;
-            let template = `
-                <div class="class-type-item mb-5 p-4" data-index="${index}" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem;">
-                    <div class="class-edit-section">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="d-flex align-items-center flex-grow-1">
-                                <input type="text" name="classes_types[${index}][title]" class="form-control font-weight-bold mr-3" value="New Class Type" style="font-size: 1.25rem; border: none !important; background: transparent !important; padding-left: 0; width: auto; min-width: 200px;">
-                                <span class="badge badge-outline-primary ml-2">Class #${index + 1}</span>
-                            </div>
-                            <button type="button" class="btn btn-danger btn-xs remove-class-type">
-                                <i class="fa fa-trash"></i> Remove
-                            </button>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <textarea name="classes_types[${index}][description]" class="form-control" rows="3"></textarea>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Duration</label>
-                                            <input type="text" name="classes_types[${index}][duration]" class="form-control" value="Flexible schedules">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Pricing Label</label>
-                                            <input type="text" name="classes_types[${index}][price]" class="form-control" value="Affordable rates">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Format / Students</label>
-                                            <input type="text" name="classes_types[${index}][format]" class="form-control" value="Small Groups">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Color Theme</label>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <input type="color" name="classes_types[${index}][color]" class="form-control p-1" value="#EB8153" style="width: 3.125rem; height: 2.1875rem;">
-                                                <span class="ml-2 text-muted small">#EB8153</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Features (One per line)</label>
-                                            <textarea name="classes_types[${index}][features]" class="form-control" rows="5"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Available Subjects (Comma separated)</label>
-                                            <textarea name="classes_types[${index}][subjects]" class="form-control" rows="5"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group text-center">
-                                    <label>Card Image</label>
-                                    <div class="image-preview-container mb-2" style="background: rgba(0,0,0,0.3); border: 2.0px dashed rgba(255,255,255,0.1); border-radius: 0.5rem; min-height: 15.625rem; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                                        <img src="" class="img-fluid" style="display: none; max-height: 15.625rem;">
-                                        <div class="no-image-placeholder">
-                                            <i class="fa fa-image fa-3x mb-2 text-muted"></i>
-                                            <p class="small text-muted">No image uploaded</p>
-                                        </div>
-                                        <button type="button" class="btn btn-danger btn-xs position-absolute remove-image" style="top: 0.625rem; right: 0.625rem; display: none;">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                    <input type="hidden" name="classes_types[${index}][image]" value="" class="image-path-input">
-                                    <button type="button" class="btn btn-info btn-xs btn-block upload-image-btn">
-                                        <i class="fa fa-upload mr-1"></i> Upload Image
-                                    </button>
-                                    <input type="file" class="d-none dynamic-image-input" accept="image/*">
-                                    
-                                    <div class="form-group mt-3 text-left">
-                                        <label>Star Rating</label>
-                                        <select name="classes_types[${index}][stars]" class="form-control">
-                                            <option value="1">1 Stars</option>
-                                            <option value="2">2 Stars</option>
-                                            <option value="3">3 Stars</option>
-                                            <option value="4">4 Stars</option>
-                                            <option value="5" selected>5 Stars</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            $('#class-types-container').append(template);
-        });
-
-        // Remove class type
-        $(document).off('click', '.remove-class-type').on('click', '.remove-class-type', function() {
-            if ($('#class-types-container .class-type-item').length > 1) {
-                if (confirm('Are you sure you want to remove this class type?')) {
-                    let container = $(this).closest('.class-type-item');
-                    let imagePath = container.find('.image-path-input').val();
-                    
-                    if (imagePath && imagePath.includes('uploads/settings/')) {
-                        $.ajax({
-                            url: "{{ route('admin.settings.delete-image') }}",
-                            method: 'POST',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content'),
-                                image_path: imagePath
-                            }
-                        });
-                    }
-                    
-                    container.remove();
-                    reIndexItems();
-                }
-            } else {
-                alert('You must have at least one class type.');
-            }
-        });
-
-        // Image Upload Trigger
-        $(document).off('click', '.upload-image-btn').on('click', '.upload-image-btn', function() {
-            $(this).closest('.form-group').find('.dynamic-image-input').click();
-        });
-
-        // AJAX Image Upload
-        $(document).off('change', '.dynamic-image-input').on('change', '.dynamic-image-input', function() {
+        // Fixed Image Upload logic for OCL Settings
+        $(document).off('change', '.image-upload').on('change', '.image-upload', function() {
             let input = this;
-            let container = $(this).closest('.form-group');
             let file = input.files[0];
-            
+            let settingKey = $(this).data('setting-key');
             if (file) {
-                // Delete existing image if there is one, to prevent accumulation
-                let existingImagePath = container.find('.image-path-input').val();
-                if (existingImagePath && existingImagePath.includes('uploads/settings/')) {
-                    $.ajax({
-                        url: "{{ route('admin.settings.delete-image') }}",
-                        method: 'POST',
-                        data: {
-                            _token: $('meta[name="csrf-token"]').attr('content'),
-                            image_path: existingImagePath
-                        }
-                    });
-                }
-
                 let formData = new FormData();
                 formData.append('image', file);
                 formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
 
-                // Show loading state on button
-                let uploadBtn = container.find('.upload-image-btn');
-                let originalText = uploadBtn.html();
-                uploadBtn.html('<i class="fa fa-spinner fa-spin mr-1"></i> Uploading...').prop('disabled', true);
+                let label = $(this).next('.custom-file-label');
+                let originalText = label.text();
+                label.text('Uploading...');
 
                 $.ajax({
                     url: "{{ route('admin.settings.upload') }}",
@@ -492,30 +484,29 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            container.find('.image-path-input').val(response.relative_path);
-                            container.find('.image-preview-container img').attr('src', response.path).show();
-                            container.find('.no-image-placeholder').hide();
-                            container.find('.remove-image').show();
+                            $('#input-' + settingKey).val(response.relative_path);
+                            $('#preview-' + settingKey).html('<img src="' + response.path + '" class="img-thumbnail" style="max-height: 200px;">');
+                            $('.remove-image-btn[data-setting-key="' + settingKey + '"]').show();
+                            label.text('Choose image');
                             toastr.success('Image uploaded successfully');
                         } else {
+                            label.text(originalText);
                             toastr.error(response.message || 'Upload failed');
                         }
                     },
                     error: function() {
+                        label.text(originalText);
                         toastr.error('Connection error occurred');
-                    },
-                    complete: function() {
-                        uploadBtn.html(originalText).prop('disabled', false);
                     }
                 });
             }
         });
 
-        // Remove Image
-        $(document).off('click', '.remove-image').on('click', '.remove-image', function() {
-            let container = $(this).closest('.form-group');
-            let imagePath = container.find('.image-path-input').val();
-            
+        // Remove Fixed Image
+        $(document).off('click', '.remove-image-btn').on('click', '.remove-image-btn', function() {
+            let settingKey = $(this).data('setting-key');
+            let imagePath = $('#input-' + settingKey).val();
+
             if (imagePath && imagePath.includes('uploads/settings/')) {
                 $.ajax({
                     url: "{{ route('admin.settings.delete-image') }}",
@@ -523,25 +514,14 @@
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
                         image_path: imagePath
-                    },
-                    success: function(response) {
-                        if(response.success) {
-                            console.log('Image removed from server');
-                        }
                     }
                 });
             }
-
-            container.find('.image-path-input').val('');
-            container.find('.image-preview-container img').attr('src', '').hide();
-            container.find('.no-image-placeholder').show();
+            $('#input-' + settingKey).val('');
+            $('#preview-' + settingKey).html('');
             $(this).hide();
         });
 
-        // Update color hex display
-        $(document).on('input', 'input[type="color"]', function() {
-            $(this).next('span').text($(this).val());
-        });
     });
 </script>
 @endpush

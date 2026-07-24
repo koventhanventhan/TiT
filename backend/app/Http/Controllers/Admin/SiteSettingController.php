@@ -74,7 +74,7 @@ class SiteSettingController extends Controller
      */
     public function store(Request $request)
     {
-        $settings = $request->except(['_token', 'learning_notes_pdf', 'learning_pastpapers_pdf', 'learning_recordings_file', 'frontend_logo', 'admin_logo', 'site_favicon']);
+        $settings = $request->except(['_token', 'learning_notes_pdf', 'learning_pastpapers_pdf', 'learning_recordings_file', 'frontend_logo', 'admin_logo', 'site_favicon', 'cta_box_icon', 'cta_box_title', 'cta_box_subtitle']);
         
         foreach ($settings as $key => $value) {
             // Determine group based on key prefix
@@ -113,6 +113,11 @@ class SiteSettingController extends Controller
                     $value = json_encode(array_values(array_filter($value)));
                 }
             }
+
+            if ($value === null) {
+                $value = '';
+            }
+
             SiteSetting::set($key, $value, $group);
         }
 

@@ -5,19 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ZoomSchedule;
 use App\Models\User;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 use App\Services\ZoomService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ZoomScheduleController extends Controller
 {
-    protected WhatsAppService $whatsApp;
+    protected NotificationService $notifier;
     protected ZoomService $zoom;
 
-    public function __construct(WhatsAppService $whatsApp, ZoomService $zoom)
+    public function __construct(NotificationService $notifier, ZoomService $zoom)
     {
-        $this->whatsApp = $whatsApp;
+        $this->notifier = $notifier;
         $this->zoom = $zoom;
     }
 
@@ -103,14 +103,11 @@ class ZoomScheduleController extends Controller
 
         // Notify Teachers
         foreach ($schedule->teachers as $teacher) {
-            if ($teacher->phone_number) {
-                $this->whatsApp->sendTemplate(
-                    $teacher->phone_number,
-                    'tit_zoom_reminder',
-                    'en',
-                    [$schedule->title, $schedule->scheduled_at->format('H:i')]
-                );
-            }
+            $this->notifier->notifyUser(
+                $teacher, 'zoom_reminder', 'tit_zoom_reminder',
+                [$schedule->title, $schedule->scheduled_at->format('H:i')],
+                ['class_title' => $schedule->title, 'class_time' => $schedule->scheduled_at->format('H:i')]
+            );
         }
 
         // Notify Students in the same grade
@@ -157,12 +154,11 @@ class ZoomScheduleController extends Controller
                     }
                 }
 
-                if ($student->phone_number) {
-                    $this->whatsApp->sendTemplate(
-                        $student->phone_number,
-                        'tit_zoom_reminder',
-                        'en',
-                        [$schedule->title, $schedule->scheduled_at->format('H:i')]
+                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                    $this->notifier->notifyUser(
+                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$schedule->title, $schedule->scheduled_at->format('H:i')],
+                        ['class_title' => $schedule->title, 'class_time' => $schedule->scheduled_at->format('H:i')]
                     );
                 }
             }
@@ -256,15 +252,12 @@ class ZoomScheduleController extends Controller
 
         // 1. Notify Assigned Teachers
         foreach ($schedule->teachers as $teacher) {
-            if ($teacher->phone_number) {
-                $this->whatsApp->sendTemplate(
-                    $teacher->phone_number,
-                    'tit_zoom_reminder',
-                    'en',
-                    [$schedule->title, $time]
-                );
-                $sentCount++;
-            }
+            $this->notifier->notifyUser(
+                $teacher, 'zoom_reminder', 'tit_zoom_reminder',
+                [$schedule->title, $time],
+                ['class_title' => $schedule->title, 'class_time' => $time]
+            );
+            $sentCount++;
         }
 
         // 2. Notify Students of the relevant grade
@@ -311,12 +304,11 @@ class ZoomScheduleController extends Controller
                     }
                 }
 
-                if ($student->phone_number) {
-                    $this->whatsApp->sendTemplate(
-                        $student->phone_number,
-                        'tit_zoom_reminder',
-                        'en',
-                        [$schedule->title, $time]
+                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                    $this->notifier->notifyUser(
+                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$schedule->title, $time],
+                        ['class_title' => $schedule->title, 'class_time' => $time]
                     );
                     $sentCount++;
                 }

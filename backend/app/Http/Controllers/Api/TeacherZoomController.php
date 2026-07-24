@@ -5,17 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ZoomSchedule;
 use App\Models\Attendance;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class TeacherZoomController extends Controller
 {
-    protected WhatsAppService $whatsApp;
+    protected NotificationService $notifier;
 
-    public function __construct(WhatsAppService $whatsApp)
+    public function __construct(NotificationService $notifier)
     {
-        $this->whatsApp = $whatsApp;
+        $this->notifier = $notifier;
     }
     /**
      * Get zoom classes for teacher (assigned or all for today) within time window.
@@ -91,17 +91,13 @@ class TeacherZoomController extends Controller
             ]
         );
         
-        // Send WhatsApp Attendance Message via Template
+        // Send Attendance Message via NotificationService (WhatsApp with Email fallback)
         $schedule = ZoomSchedule::find($scheduleId);
-        $phone = $user->phone_number;
-        if ($phone) {
-            $this->whatsApp->sendTemplate(
-                $phone,
-                'tit_zoom_reminder',
-                'en',
-                [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at->format('H:i')]
-            );
-        }
+        $this->notifier->notifyUser(
+            $user, 'zoom_reminder', 'tit_zoom_reminder',
+            [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at->format('H:i')],
+            ['class_title' => $schedule->title ?? 'Zoom Class', 'class_time' => $schedule->scheduled_at->format('H:i')]
+        );
 
         return response()->json(['message' => 'Attendance recorded.']);
     }

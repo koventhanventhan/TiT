@@ -61,7 +61,8 @@ const ClassesPage = () => {
 
   const getImageUrl = (img) => {
     if (!img) return ''
-    return img.startsWith('http') ? img : `http://localhost:8000/${img}` // Adjust proxy/app setting as needed for prod
+    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : ''
+    return img.startsWith('http') ? img : `${baseUrl}/${img.replace(/^\/+/, '')}`
   }
 
   // ── Translation Effect ──

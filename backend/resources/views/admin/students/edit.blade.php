@@ -287,7 +287,7 @@
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
                                                 <label>{{ ucwords(str_replace('_', ' ', $key)) }}</label>
-                                                <input type="text" name="custom_fields[{{ $key }}]" class="form-control" value="{{ is_array($value) ? implode(', ', $value) : $value }}">
+                                                <input type="text" name="custom_fields[{{ $key }}]" class="form-control" value="{{ (is_array($value) || is_object($value)) ? json_encode($value) : $value }}">
                                             </div>
                                         </div>
                                     @endforeach

@@ -66,7 +66,7 @@ class SendZoomReminders extends Command
                     ->get();
 
                 preg_match('/(\d+)/', $schedule->grade, $classMatch);
-                $classNum = $classMatch[1] ?? null;
+                $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
 
                 foreach ($students as $student) {
                     // 1. Grade Match
@@ -77,9 +77,9 @@ class SendZoomReminders extends Command
                     }
 
                     preg_match('/(\d+)/', $userGrade, $userMatch);
-                    $userNum = $userMatch[1] ?? null;
+                    $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
-                    if ($userNum === null || $classNum === null || $userNum !== $classNum) {
+                    if ($userRef !== $classRef) {
                         // Silent skip for grade mismatch is fine as there are many students
                         continue;
                     }

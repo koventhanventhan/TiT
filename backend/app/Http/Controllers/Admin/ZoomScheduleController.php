@@ -117,7 +117,7 @@ class ZoomScheduleController extends Controller
                 ->get();
 
             preg_match('/(\d+)/', $schedule->grade, $classMatch);
-            $classNum = $classMatch[1] ?? null;
+            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
 
             foreach ($students as $student) {
                 // 1. Grade Match
@@ -125,9 +125,9 @@ class ZoomScheduleController extends Controller
                 if (!$userGrade) continue;
 
                 preg_match('/(\d+)/', $userGrade, $userMatch);
-                $userNum = $userMatch[1] ?? null;
+                $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
-                if ($userNum === null || $classNum === null || $userNum !== $classNum) {
+                if ($userRef !== $classRef) {
                     continue;
                 }
 

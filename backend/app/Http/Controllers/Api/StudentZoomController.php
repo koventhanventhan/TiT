@@ -38,8 +38,8 @@ class StudentZoomController extends Controller
             ]);
         }
 
-        // Only show classes that started in the last 2 hours or are starting in the next 90 days
-        $startBuffer = Carbon::now()->subHours(2);
+        // Only show classes from the last 2 days up to 90 days ahead
+        $startBuffer = Carbon::now()->subDays(2);
         $endBuffer = Carbon::now()->addDays(90);
 
         $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
@@ -176,8 +176,8 @@ class StudentZoomController extends Controller
             return response()->json([]);
         }
 
-        // Only show upcoming or started in the last 2 hours (up to 90 days ahead)
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subHours(2))
+        // Only show schedules from the last 2 days up to 90 days ahead
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subDays(2))
             ->where('scheduled_at', '<=', now()->addDays(90))
             ->orderBy('scheduled_at')
             ->get();

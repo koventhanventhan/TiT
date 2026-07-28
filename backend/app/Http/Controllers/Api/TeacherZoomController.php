@@ -27,7 +27,7 @@ class TeacherZoomController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $startBuffer = Carbon::now()->subHours(2);
+        $startBuffer = Carbon::now()->subDays(2);
         $endBuffer = Carbon::now()->addDays(90);
 
         $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)

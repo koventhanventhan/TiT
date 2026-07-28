@@ -60,8 +60,8 @@ const NotesPage = () => {
   const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || (window.location.origin + '/')
 
   // Dynamic settings
-  const heroImage = getSetting('learning_notes_hero_image', '/assets/images/hero_notes_3d.png')
-  const ctaImage = getSetting('learning_cta_image', '/assets/images/cta_headset_3d.png')
+  const heroImage = '/assets/images/Notes%20animation.svg'
+  const ctaImage = '/assets/images/zxdhD87HrW.svg'
   const ctaWhatsapp = getSetting('learning_cta_whatsapp', getSetting('footer_phone', '+94 77 123 4567'))
   const ctaEmail = getSetting('learning_cta_email', getSetting('footer_email', 'info@titjafna.lk'))
   const ctaLocation = getSetting('learning_cta_location', getSetting('contact_location', 'Kokuvil, Jaffna, Sri Lanka'))

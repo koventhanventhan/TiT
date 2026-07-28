@@ -10,7 +10,7 @@
 
 /* ── Hero Section ── */
 .past-papers-page-hero {
-  background: linear-gradient(135deg, #3B0E8D 0%, #5013AF 30%, #762FE1 70%, #9042F6 100%);
+  background: var(--gradient-1);
   padding: 4.5rem 0 7rem;
   color: white;
   position: relative;
@@ -73,7 +73,7 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  background: #7331D4;
+  background: var(--primary-light);
   border-radius: 50%;
   color: white;
   font-size: 0.9rem;
@@ -81,7 +81,7 @@
 }
 
 .pp-breadcrumb-home:hover {
-  background: #8b5cf6;
+  background: var(--accent-color);
 }
 
 .pp-breadcrumb a:not(.pp-breadcrumb-home) {
@@ -153,19 +153,19 @@
   align-items: center;
   gap: 0.75rem;
   background: transparent;
-  color: #3B0E8D;
+  color: var(--primary-color);
   padding: 0.25rem 1.5rem 0.25rem 0.35rem; /* tight left padding to hug icon */
   border-radius: 2rem;
   font-weight: 700;
   font-size: 1.1rem;
   margin-bottom: 1.25rem;
-  border: 1.5px solid #3B0E8D; 
+  border: 1.5px solid var(--primary-color); 
 }
 
 .grade-badge-icon {
   width: 2.25rem;
   height: 2.25rem;
-  background: #5013AF;
+  background: var(--primary-color);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -179,7 +179,7 @@
   color: #475569;
 }
 .past-papers-description .highlight-text {
-  color: #5013AF;
+  color: var(--primary-color);
   font-weight: 700;
 }
 
@@ -196,12 +196,12 @@
 .pp-dot-divider .line {
   width: 30px;
   height: 1px;
-  background: #3B0E8D;
+  background: var(--primary-color);
 }
 .pp-dot-divider .diamond {
   width: 6px;
   height: 6px;
-  background: #3B0E8D;
+  background: var(--primary-color);
   transform: rotate(45deg);
 }
 
@@ -222,7 +222,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  border: 1.5px solid #3B0E8D; /* Distinct purple outline */
+  border: 1.5px solid var(--primary-color); /* Distinct purple outline */
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -242,7 +242,7 @@
   flex-shrink: 0;
   width: 3rem;
   height: 3rem;
-  background: #762FE1;
+  background: var(--primary-color);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -277,13 +277,13 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  color: #762FE1;
+  color: var(--primary-color);
   font-weight: 600;
 }
 
 .paper-date {
   font-weight: 600;
-  color: #762FE1;
+  color: var(--primary-color);
 }
 
 .paper-card-divider {
@@ -309,7 +309,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #762FE1;
+  background: var(--primary-color);
   color: white !important;
   border: none;
   padding: 0.55rem 1.25rem;
@@ -321,12 +321,12 @@
 }
 
 .btn-download:hover {
-  background: #5013AF;
+  background: var(--primary-color);
 }
 
 /* ── CTA Banner ── */
 .past-papers-cta-banner {
-  background: linear-gradient(90deg, #F0E6FF 0%, #DBC1FF 100%);
+  background: var(--bg-light);
   border-radius: 12px;
   padding: 2.5rem;
   display: flex;
@@ -359,7 +359,7 @@
 }
 
 .cta-headset-img {
-  width: 9rem;
+  width: 14rem;
   flex-shrink: 0;
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
 }
@@ -374,7 +374,7 @@
 }
 
 .cta-subtitle {
-  color: #5013AF;
+  color: var(--primary-color);
   font-weight: 700;
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
@@ -515,7 +515,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #3B0E8D;
+  background: var(--primary-color);
   color: white;
   padding: 0.6rem 1.25rem;
   border-radius: 6px;
@@ -526,7 +526,7 @@
 }
 
 .btn-get-in-touch:hover {
-  background: #5013AF;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -568,19 +568,15 @@
     align-items: flex-start;
     gap: 0.5rem;
   }
-  .paper-action {
-    width: 100%;
-    text-align: left;
-  }
+  .paper-action { width: 100%; } .btn-download, .btn-watch { width: 100%; justify-content: center; margin-top: 0.5rem; }
   .cta-contact-box {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
   }
-  .border-right {
-    border-right: none;
-  }
+  .border-right { border-right: none; } .contact-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
   .cta-left {
     flex-direction: column;
     text-align: center;
   }
 }
+

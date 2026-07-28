@@ -28,10 +28,10 @@ class TeacherZoomController extends Controller
         }
 
         $startBuffer = Carbon::now()->subHours(2);
-        $endOfDay = Carbon::now()->endOfDay();
+        $endBuffer = Carbon::now()->addDays(90);
 
         $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
-            ->where('scheduled_at', '<=', $endOfDay)
+            ->where('scheduled_at', '<=', $endBuffer)
             ->where(function ($q) use ($user) {
                 $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
                     ->orWhereDoesntHave('teachers');

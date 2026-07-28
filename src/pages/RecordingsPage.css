@@ -10,7 +10,7 @@
 
 /* ── Hero Section ── */
 .recordings-page-hero {
-  background: linear-gradient(135deg, #3B0E8D 0%, #5013AF 30%, #762FE1 70%, #9042F6 100%);
+  background: var(--gradient-1);
   padding: 4.5rem 0 7rem;
   color: white;
   position: relative;
@@ -73,7 +73,7 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  background: #7331D4;
+  background: var(--primary-light);
   border-radius: 50%;
   color: white;
   font-size: 0.9rem;
@@ -81,7 +81,7 @@
 }
 
 .rec-breadcrumb-home:hover {
-  background: #8b5cf6;
+  background: var(--accent-color);
 }
 
 .rec-breadcrumb a:not(.rec-breadcrumb-home) {
@@ -153,19 +153,19 @@
   align-items: center;
   gap: 0.75rem;
   background: transparent;
-  color: #3B0E8D;
+  color: var(--primary-color);
   padding: 0.25rem 1.5rem 0.25rem 0.35rem;
   border-radius: 2rem;
   font-weight: 700;
   font-size: 1.1rem;
   margin-bottom: 1.25rem;
-  border: 1.5px solid #3B0E8D; 
+  border: 1.5px solid var(--primary-color); 
 }
 
 .grade-badge-icon {
   width: 2.25rem;
   height: 2.25rem;
-  background: #5013AF;
+  background: var(--primary-color);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -179,7 +179,7 @@
   color: #475569;
 }
 .recordings-description .highlight-text {
-  color: #5013AF;
+  color: var(--primary-color);
   font-weight: 700;
 }
 
@@ -196,12 +196,12 @@
 .rec-dot-divider .line {
   width: 30px;
   height: 1px;
-  background: #3B0E8D;
+  background: var(--primary-color);
 }
 .rec-dot-divider .diamond {
   width: 6px;
   height: 6px;
-  background: #3B0E8D;
+  background: var(--primary-color);
   transform: rotate(45deg);
 }
 
@@ -228,7 +228,7 @@
 .recording-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(59, 14, 141, 0.15);
-  border-color: #762FE1;
+  border-color: var(--primary-color);
 }
 
 /* Video preview area */
@@ -297,7 +297,7 @@
   flex-shrink: 0;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(135deg, #762FE1, #5013AF);
+  background: var(--gradient-1);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -333,7 +333,7 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  color: #762FE1;
+  color: var(--primary-color);
   font-weight: 600;
 }
 
@@ -363,7 +363,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: linear-gradient(135deg, #762FE1, #5013AF);
+  background: var(--gradient-1);
   color: white !important;
   border: none;
   padding: 0.45rem 1rem;
@@ -376,14 +376,14 @@
 }
 
 .btn-watch:hover {
-  background: linear-gradient(135deg, #5013AF, #3B0E8D);
+  background: var(--gradient-hero);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(80, 19, 175, 0.3);
 }
 
 /* ── CTA Banner ── */
 .recordings-cta-banner {
-  background: linear-gradient(90deg, #F0E6FF 0%, #DBC1FF 100%);
+  background: var(--bg-light);
   border-radius: 12px;
   padding: 2.5rem;
   display: flex;
@@ -416,7 +416,7 @@
 }
 
 .cta-headset-img {
-  width: 9rem;
+  width: 14rem;
   flex-shrink: 0;
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
 }
@@ -431,7 +431,7 @@
 }
 
 .cta-subtitle {
-  color: #5013AF;
+  color: var(--primary-color);
   font-weight: 700;
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
@@ -572,7 +572,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #3B0E8D;
+  background: var(--primary-color);
   color: white;
   padding: 0.6rem 1.25rem;
   border-radius: 6px;
@@ -583,7 +583,7 @@
 }
 
 .btn-get-in-touch:hover {
-  background: #5013AF;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -636,12 +636,13 @@
     grid-template-columns: 1fr;
     grid-template-rows: auto;
   }
-  .border-right {
-    border-right: none;
-  }
+  .border-right { border-right: none; } .contact-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
   .cta-left {
     flex-direction: column;
     text-align: center;
   }
 }
+
+
+
 

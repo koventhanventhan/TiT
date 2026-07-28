@@ -38,30 +38,30 @@ class StudentZoomController extends Controller
             ]);
         }
 
-        // Only show classes that started in the last 2 hours or are starting later today
+        // Only show classes that started in the last 2 hours or are starting in the next 90 days
         $startBuffer = Carbon::now()->subHours(2);
-        $endOfDay = Carbon::now()->endOfDay();
+        $endBuffer = Carbon::now()->addDays(90);
 
         $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
-            ->where('scheduled_at', '<=', $endOfDay)
+            ->where('scheduled_at', '<=', $endBuffer)
             ->orderBy('scheduled_at')
             ->get();
 
-        // 1. Filter by Grade (Normalize strings like "Grade 10" or "தரம் 10" to "10")
+        // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
         $schedules = $schedules->filter(function($s) use ($user) {
             $userGrade = $user->current_grade;
             $classGrade = $s->grade;
             
             if (!$userGrade || !$classGrade) return false;
 
-            // Extract numeric values
+            // Extract numeric values, fallback to normalized string for O/L, A/L etc.
             preg_match('/(\d+)/', $userGrade, $userMatch);
-            preg_match('/(\d+)/', $classGrade, $classMatch);
-            
-            $userNum = $userMatch[1] ?? null;
-            $classNum = $classMatch[1] ?? null;
+            $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
-            return $userNum !== null && $userNum === $classNum;
+            preg_match('/(\d+)/', $classGrade, $classMatch);
+            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($classGrade));
+
+            return $userRef === $classRef;
         });
 
         // Filter by student's selected subjects (Robust substring match)
@@ -176,13 +176,13 @@ class StudentZoomController extends Controller
             return response()->json([]);
         }
 
-        // Only show today's schedules (upcoming or started in the last 2 hours)
-        $schedules = ZoomSchedule::whereDate('scheduled_at', now())
-            ->where('scheduled_at', '>=', now()->subHours(2))
+        // Only show upcoming or started in the last 2 hours (up to 90 days ahead)
+        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subHours(2))
+            ->where('scheduled_at', '<=', now()->addDays(90))
             ->orderBy('scheduled_at')
             ->get();
 
-        // 1. Filter by Grade (Normalize strings)
+        // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
         $schedules = $schedules->filter(function($s) use ($user) {
             $userGrade = $user->current_grade;
             $classGrade = $s->grade;
@@ -190,12 +190,12 @@ class StudentZoomController extends Controller
             if (!$userGrade || !$classGrade) return false;
 
             preg_match('/(\d+)/', $userGrade, $userMatch);
-            preg_match('/(\d+)/', $classGrade, $classMatch);
-            
-            $userNum = $userMatch[1] ?? null;
-            $classNum = $classMatch[1] ?? null;
+            $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
-            return $userNum !== null && $userNum === $classNum;
+            preg_match('/(\d+)/', $classGrade, $classMatch);
+            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($classGrade));
+
+            return $userRef === $classRef;
         });
 
         // Filter by student's selected subjects (Robust substring match)

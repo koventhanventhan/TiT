@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Timetable;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Services\ZoomService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 class TimetableController extends Controller
 {
@@ -118,16 +121,17 @@ class TimetableController extends Controller
         $data['is_active'] = $request->has('is_active');
         $data['institute_id'] = auth()->user()->institute_id;
 
-        Timetable::create($data);
+        $timetableEntry = Timetable::create($data);
 
-        // Immediate sync to Zoom (non-blocking)
+        // Immediate sync to create ZoomSchedule records (works even without Zoom credentials)
         try {
-            if ($this->zoom) {
-                \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
-            }
+            Artisan::call('zoom:sync-timetable');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
+            Log::error('Auto-sync failed: ' . $e->getMessage());
         }
+
+        // Send notifications to teacher and matching students
+        $this->sendClassNotifications($timetableEntry);
 
         return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
     }
@@ -189,13 +193,11 @@ class TimetableController extends Controller
 
         $timetable->update($data);
 
-        // Immediate sync to Zoom (non-blocking)
+        // Immediate sync to update ZoomSchedule records with new time
         try {
-            if ($this->zoom) {
-                \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
-            }
+            Artisan::call('zoom:sync-timetable');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
+            Log::error('Auto-sync failed: ' . $e->getMessage());
         }
 
         return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully.');
@@ -216,11 +218,94 @@ class TimetableController extends Controller
     public function sync()
     {
         try {
-            \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
-            $output = \Illuminate\Support\Facades\Artisan::output();
+            Artisan::call('zoom:sync-timetable');
+            $output = Artisan::output();
             return redirect()->route('admin.timetables.index')->with('success', 'Zoom sync completed: ' . $output);
         } catch (\Exception $e) {
             return redirect()->route('admin.timetables.index')->with('error', 'Sync failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notifications to teacher and matching students when a timetable slot is created.
+     */
+    private function sendClassNotifications(Timetable $timetable): void
+    {
+        try {
+            $notifier = app(NotificationService::class);
+        } catch (\Exception $e) {
+            Log::warning('NotificationService not available for timetable notifications: ' . $e->getMessage());
+            return;
+        }
+
+        $timetable->load('subject');
+        $subjectName = $timetable->subject->name ?? 'General';
+        $dayTime = $timetable->day_of_week . ' @ ' . date('H:i', strtotime($timetable->start_time));
+        $classTitle = $timetable->title . ' (' . $subjectName . ')';
+
+        // 1. Notify the assigned teacher
+        try {
+            $teacher = User::find($timetable->teacher_id);
+            if ($teacher) {
+                $notifier->notifyUser(
+                    $teacher, 'zoom_reminder', 'tit_zoom_reminder',
+                    [$classTitle, $dayTime],
+                    ['class_title' => $classTitle, 'class_time' => $dayTime]
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Teacher notification failed: ' . $e->getMessage());
+        }
+
+        // 2. Notify students of the matching grade
+        try {
+            if (!$timetable->grade) return;
+
+            preg_match('/(\d+)/', $timetable->grade, $classMatch);
+            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($timetable->grade));
+
+            $students = User::where('role', 'user')
+                ->whereNull('deactivated_at')
+                ->get();
+
+            foreach ($students as $student) {
+                $userGrade = $student->current_grade;
+                if (!$userGrade) continue;
+
+                preg_match('/(\d+)/', $userGrade, $userMatch);
+                $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
+
+                if ($userRef !== $classRef) continue;
+
+                // Filter by selected subjects
+                $selected = $student->selected_subjects;
+                if (!empty($subjectName) && $subjectName !== 'General') {
+                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                    $selectedArr = array_map('trim', (array)$selectedArr);
+
+                    $subjectMatch = false;
+                    foreach ($selectedArr as $studentSub) {
+                        $studentSub = trim($studentSub);
+                        if ($studentSub === $subjectName ||
+                            stripos($studentSub, $subjectName) !== false ||
+                            stripos($subjectName, $studentSub) !== false) {
+                            $subjectMatch = true;
+                            break;
+                        }
+                    }
+                    if (!$subjectMatch) continue;
+                }
+
+                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                    $notifier->notifyUser(
+                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$classTitle, $dayTime],
+                        ['class_title' => $classTitle, 'class_time' => $dayTime]
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Student notification failed: ' . $e->getMessage());
         }
     }
 }

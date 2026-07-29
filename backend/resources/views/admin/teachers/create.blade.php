@@ -84,6 +84,21 @@
                                 <input type="text" name="teacher_class" class="form-control" value="{{ old('teacher_class') }}" placeholder="e.g. Grade 10, Grade 11 Arts">
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="text-label" style="font-weight: 600;">Teacher Photo (Avatar)</label>
+                                <div class="text-center" style="border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 1.25rem; background: #f9fafb; cursor: pointer; position: relative;" onclick="document.getElementById('teacherAvatarInput').click()">
+                                    <img id="teacherAvatarPreview" src="" style="width: 6.25rem; height: 6.25rem; border-radius: 50%; object-fit: cover; display: none; margin: 0 auto 0.625rem;">
+                                    <div id="teacherAvatarPlaceholder">
+                                        <i class="la la-image" style="font-size: 2.5rem; color: #9ca3af;"></i>
+                                        <p class="mt-2 mb-0" style="color: #6b7280; font-size: 0.875rem;">Click to upload photo</p>
+                                        <small class="text-muted">JPG, PNG or WebP</small>
+                                    </div>
+                                </div>
+                                <input type="file" id="teacherAvatarInput" accept="image/jpeg, image/png, image/webp" style="display: none;" onchange="handleTeacherAvatar(this)">
+                                <input type="hidden" name="avatar_base64" id="teacherAvatarBase64">
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mt-4">
@@ -109,6 +124,23 @@
             input.type = 'password';
             icon.textContent = '👁️';
         }
+    }
+
+    function handleTeacherAvatar(input) {
+        if (!input.files || input.files.length === 0) return;
+        if (typeof openCropper === 'function') {
+            openCropper(input.files[0], {
+                aspectRatio: 1, // Square avatar
+                wantsDataURL: true,
+                callback: function(dataUrl) {
+                    document.getElementById('teacherAvatarPreview').src = dataUrl;
+                    document.getElementById('teacherAvatarPreview').style.display = 'block';
+                    document.getElementById('teacherAvatarPlaceholder').style.display = 'none';
+                    document.getElementById('teacherAvatarBase64').value = dataUrl;
+                }
+            });
+        }
+        input.value = ''; // Reset so the same file could be selected again if needed
     }
 </script>
 @endpush

@@ -42,4 +42,4 @@ Schedule::command('zoom:send-reminders')->everyMinute();
 
 Schedule::call(function () {
     \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(2))->delete();
-})->dailyAt('01:00')->purpose('Delete zoom schedules older than 2 days');
+})->dailyAt('01:00');

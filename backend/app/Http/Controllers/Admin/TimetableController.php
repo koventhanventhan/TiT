@@ -11,11 +11,15 @@ use Illuminate\Http\Request;
 
 class TimetableController extends Controller
 {
-    protected ZoomService $zoom;
+    protected ?ZoomService $zoom = null;
 
-    public function __construct(ZoomService $zoom)
+    public function __construct()
     {
-        $this->zoom = $zoom;
+        try {
+            $this->zoom = app(ZoomService::class);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('ZoomService could not be initialized: ' . $e->getMessage());
+        }
     }
     public function index()
     {
@@ -23,7 +27,14 @@ class TimetableController extends Controller
         
         $subjects = Subject::orderBy('name')->get();
         $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
-        $zoomUsers = $this->zoom->listUsers();
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
 
         // Group by day for the grid view
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -57,7 +68,15 @@ class TimetableController extends Controller
         $subjects = Subject::orderBy('name')->get();
         $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        $zoomUsers = $this->zoom->listUsers();
+        
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
         
         return view('admin.timetable.create', compact('subjects', 'teachers', 'days', 'zoomUsers'));
     }
@@ -101,14 +120,16 @@ class TimetableController extends Controller
 
         Timetable::create($data);
 
-        // Immediate sync to Zoom
+        // Immediate sync to Zoom (non-blocking)
         try {
-            \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+            if ($this->zoom) {
+                \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully and synced to Zoom.');
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
     }
 
     public function edit(Timetable $timetable)
@@ -116,7 +137,15 @@ class TimetableController extends Controller
         $subjects = Subject::orderBy('name')->get();
         $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        $zoomUsers = $this->zoom->listUsers();
+        
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
         
         return view('admin.timetable.edit', compact('timetable', 'subjects', 'teachers', 'days', 'zoomUsers'));
     }
@@ -160,14 +189,16 @@ class TimetableController extends Controller
 
         $timetable->update($data);
 
-        // Immediate sync to Zoom
+        // Immediate sync to Zoom (non-blocking)
         try {
-            \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+            if ($this->zoom) {
+                \Illuminate\Support\Facades\Artisan::call('zoom:sync-timetable');
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Auto-sync failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully and synced to Zoom.');
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully.');
     }
 
     public function destroy(Timetable $timetable)

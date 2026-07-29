@@ -19,6 +19,8 @@
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
         html {
             font-size: 16px;
@@ -150,6 +152,103 @@
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+    <!-- Global Cropper Modal -->
+    <div class="modal fade" id="globalCropperModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title text-dark">Crop Image</h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div style="max-height: 400px; width: 100%; overflow: hidden; background: #e5e5e5; position: relative;">
+                        <img id="cropperImage" src="" style="max-width: 100%; display: block;">
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="globalCropper.zoom(0.1)"><i class="la la-search-plus"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="globalCropper.zoom(-0.1)"><i class="la la-search-minus"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="globalCropper.rotate(-45)"><i class="la la-undo"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="globalCropper.rotate(45)"><i class="la la-redo"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="globalCropper.reset()">Reset</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                     <button type="button" class="btn btn-primary" id="btnCropSave">Crop & Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let globalCropper = null;
+        let cropperOptions = {};
+        
+        function openCropper(file, options) {
+            // Options: { callback: fn, aspectRatio: 1 (default), wantsDataURL: boolean }
+            cropperOptions = options || {};
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file format. Please upload JPG, PNG, or WebP.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File is too large. Maximum size is 5MB.');
+                return;
+            }
+
+            cropperCallback = cropperOptions.callback;
+            const ratio = cropperOptions.aspectRatio !== undefined ? cropperOptions.aspectRatio : 1;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('cropperImage');
+                img.src = e.target.result;
+                $('#globalCropperModal').modal('show');
+                
+                $('#globalCropperModal').one('shown.bs.modal', function () {
+                    if (globalCropper) { globalCropper.destroy(); }
+                    globalCropper = new Cropper(img, {
+                        aspectRatio: ratio,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        dragMode: 'move',
+                        rotatable: true,
+                        zoomable: true
+                    });
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        $('#btnCropSave').on('click', function() {
+            if (!globalCropper) return;
+            // Get cropped WebP, much better performance and quality
+            if (cropperOptions.wantsDataURL) {
+                if (cropperCallback) {
+                    cropperCallback(globalCropper.getCroppedCanvas().toDataURL('image/webp', 0.85));
+                }
+                $('#globalCropperModal').modal('hide');
+            } else {
+                globalCropper.getCroppedCanvas().toBlob((blob) => {
+                    if (cropperCallback) {
+                        cropperCallback(blob);
+                    }
+                    $('#globalCropperModal').modal('hide');
+                }, 'image/webp', 0.85);
+            }
+        });
+        
+        $('#globalCropperModal').on('hidden.bs.modal', function () {
+            if (globalCropper) {
+                globalCropper.destroy();
+                globalCropper = null;
+            }
+            document.getElementById('cropperImage').src = '';
+        });
+    </script>
     @stack('scripts')
 </body>
 

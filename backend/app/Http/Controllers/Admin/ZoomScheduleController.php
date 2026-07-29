@@ -12,13 +12,21 @@ use Illuminate\Support\Facades\Log;
 
 class ZoomScheduleController extends Controller
 {
-    protected NotificationService $notifier;
-    protected ZoomService $zoom;
+    protected ?NotificationService $notifier = null;
+    protected ?ZoomService $zoom = null;
 
-    public function __construct(NotificationService $notifier, ZoomService $zoom)
+    public function __construct()
     {
-        $this->notifier = $notifier;
-        $this->zoom = $zoom;
+        try {
+            $this->notifier = app(NotificationService::class);
+        } catch (\Exception $e) {
+            Log::warning('NotificationService could not be initialized: ' . $e->getMessage());
+        }
+        try {
+            $this->zoom = app(ZoomService::class);
+        } catch (\Exception $e) {
+            Log::warning('ZoomService could not be initialized: ' . $e->getMessage());
+        }
     }
 
     public function index()
@@ -75,7 +83,15 @@ class ZoomScheduleController extends Controller
 
         // Auto-create Zoom meeting if no link provided
         if (!$request->filled('zoom_link')) {
-            $meeting = $this->zoom->createMeeting($request->title, date('Y-m-d\TH:i:s', strtotime($request->scheduled_at)));
+            $meeting = null;
+            try {
+                if ($this->zoom) {
+                    $meeting = $this->zoom->createMeeting($request->title, date('Y-m-d\TH:i:s', strtotime($request->scheduled_at)));
+                }
+            } catch (\Exception $e) {
+                Log::error('Zoom meeting creation exception: ' . $e->getMessage());
+            }
+
             if ($meeting) {
                 $data['meeting_id'] = $meeting['id'];
                 $data['zoom_link'] = $meeting['join_url'];
@@ -83,8 +99,8 @@ class ZoomScheduleController extends Controller
                 $data['join_url'] = $meeting['join_url'];
                 $data['password'] = $meeting['password'] ?? null;
             } else {
-                Log::error('Automated Zoom meeting creation failed');
-                return redirect()->back()->withInput()->with('error', 'Failed to create automated Zoom meeting. Please provide a link manually or try again.');
+                Log::warning('Zoom meeting could not be created automatically. Saving class without Zoom link.');
+                // Still save the class even without zoom — admin can add the link later
             }
         } else {
             $data['zoom_link'] = $request->zoom_link;
@@ -101,70 +117,75 @@ class ZoomScheduleController extends Controller
         // Fetch the schedule with relations for notification
         $schedule->load('teachers');
 
-        // Notify Teachers
-        foreach ($schedule->teachers as $teacher) {
-            $this->notifier->notifyUser(
-                $teacher, 'zoom_reminder', 'tit_zoom_reminder',
-                [$schedule->title, $schedule->scheduled_at->format('H:i')],
-                ['class_title' => $schedule->title, 'class_time' => $schedule->scheduled_at->format('H:i')]
-            );
-        }
-
-        // Notify Students in the same grade
-        if ($schedule->grade) {
-            $students = User::where('role', 'user')
-                ->whereNull('deactivated_at')
-                ->get();
-
-            preg_match('/(\d+)/', $schedule->grade, $classMatch);
-            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
-
-            foreach ($students as $student) {
-                // 1. Grade Match
-                $userGrade = $student->current_grade;
-                if (!$userGrade) continue;
-
-                preg_match('/(\d+)/', $userGrade, $userMatch);
-                $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-                if ($userRef !== $classRef) {
-                    continue;
-                }
-
-                // 2. Filter by selected subjects (Robust substring match)
-                $selected = $student->selected_subjects;
-                $classSubject = trim($schedule->subject);
-                
-                if (!empty($classSubject)) {
-                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-                    $selectedArr = array_map('trim', (array)$selectedArr);
-                    
-                    $subjectMatch = false;
-                    foreach ($selectedArr as $studentSub) {
-                        $studentSub = trim($studentSub);
-                        if ($studentSub === $classSubject || 
-                            stripos($studentSub, $classSubject) !== false || 
-                            stripos($classSubject, $studentSub) !== false) {
-                            $subjectMatch = true;
-                            break;
-                        }
-                    }
-                    if (!$subjectMatch) {
-                        continue;
-                    }
-                }
-
-                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+        // Notify Teachers (non-blocking)
+        try {
+            if ($this->notifier) {
+                foreach ($schedule->teachers as $teacher) {
                     $this->notifier->notifyUser(
-                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        $teacher, 'zoom_reminder', 'tit_zoom_reminder',
                         [$schedule->title, $schedule->scheduled_at->format('H:i')],
                         ['class_title' => $schedule->title, 'class_time' => $schedule->scheduled_at->format('H:i')]
                     );
                 }
             }
+        } catch (\Exception $e) {
+            Log::error('Teacher notification failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created and notifications sent.');
+        // Notify Students in the same grade (non-blocking)
+        try {
+            if ($this->notifier && $schedule->grade) {
+                $students = User::where('role', 'user')
+                    ->whereNull('deactivated_at')
+                    ->get();
+
+                preg_match('/(\d+)/', $schedule->grade, $classMatch);
+                $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
+
+                foreach ($students as $student) {
+                    $userGrade = $student->current_grade;
+                    if (!$userGrade) continue;
+
+                    preg_match('/(\d+)/', $userGrade, $userMatch);
+                    $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
+
+                    if ($userRef !== $classRef) continue;
+
+                    // Filter by selected subjects
+                    $selected = $student->selected_subjects;
+                    $classSubject = trim($schedule->subject);
+                    
+                    if (!empty($classSubject)) {
+                        $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                        $selectedArr = array_map('trim', (array)$selectedArr);
+                        
+                        $subjectMatch = false;
+                        foreach ($selectedArr as $studentSub) {
+                            $studentSub = trim($studentSub);
+                            if ($studentSub === $classSubject || 
+                                stripos($studentSub, $classSubject) !== false || 
+                                stripos($classSubject, $studentSub) !== false) {
+                                $subjectMatch = true;
+                                break;
+                            }
+                        }
+                        if (!$subjectMatch) continue;
+                    }
+
+                    if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                        $this->notifier->notifyUser(
+                            $student, 'zoom_reminder', 'tit_zoom_reminder',
+                            [$schedule->title, $schedule->scheduled_at->format('H:i')],
+                            ['class_title' => $schedule->title, 'class_time' => $schedule->scheduled_at->format('H:i')]
+                        );
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Student notification failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created successfully.');
     }
 
     public function edit($id)
@@ -207,11 +228,15 @@ class ZoomScheduleController extends Controller
         }
 
         // Update Zoom meeting if it was auto-created
-        if ($schedule->meeting_id) {
-            $this->zoom->updateMeeting($schedule->meeting_id, [
-                'topic' => $request->title,
-                'start_time' => date('Y-m-d\TH:i:s', strtotime($request->scheduled_at)),
-            ]);
+        if ($schedule->meeting_id && $this->zoom) {
+            try {
+                $this->zoom->updateMeeting($schedule->meeting_id, [
+                    'topic' => $request->title,
+                    'start_time' => date('Y-m-d\TH:i:s', strtotime($request->scheduled_at)),
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to update Zoom meeting: ' . $e->getMessage());
+            }
         }
 
         $schedule->update($data);
@@ -230,8 +255,12 @@ class ZoomScheduleController extends Controller
         $schedule = ZoomSchedule::findOrFail($id);
         
         // Delete Zoom meeting if it was auto-created
-        if ($schedule->meeting_id) {
-            $this->zoom->deleteMeeting($schedule->meeting_id);
+        if ($schedule->meeting_id && $this->zoom) {
+            try {
+                $this->zoom->deleteMeeting($schedule->meeting_id);
+            } catch (\Exception $e) {
+                Log::error('Failed to delete Zoom meeting from API: ' . $e->getMessage());
+            }
         }
 
         $schedule->delete();
@@ -249,6 +278,10 @@ class ZoomScheduleController extends Controller
         
         $sentCount = 0;
         $baseUrl = config('app.url');
+
+        if (!$this->notifier) {
+            return redirect()->route('admin.zoom.index')->with('error', 'Notification service is not available.');
+        }
 
         // 1. Notify Assigned Teachers
         foreach ($schedule->teachers as $teacher) {
@@ -329,7 +362,7 @@ class ZoomScheduleController extends Controller
         
         $schedules = ZoomSchedule::whereIn('id', $ids)->get();
         foreach ($schedules as $schedule) {
-            if ($schedule->meeting_id) {
+            if ($schedule->meeting_id && $this->zoom) {
                 try {
                     $this->zoom->deleteMeeting($schedule->meeting_id);
                 } catch (\Exception $e) {

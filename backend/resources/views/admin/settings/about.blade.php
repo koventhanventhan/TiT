@@ -721,7 +721,7 @@
                                             <i class="la la-image"></i> Select
                                         </div>
                                         <img src="{{ $teacher['image'] }}" class="image-picker-preview" style="{{ $teacher['image'] ? '' : 'display:none' }}">
-                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                        <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null, 1)">
                                     </div>
                                     <input type="hidden" name="teacher_image[]" value="{{ $teacher['image'] }}">
                                 </div>
@@ -839,7 +839,7 @@
                                     <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
                                     <div class="image-picker-placeholder"><i class="la la-image"></i> Select</div>
                                     <img src="" class="image-picker-preview" style="display:none">
-                                    <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
+                                    <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null, 1)">
                                 </div>
                                 <input type="hidden" name="teacher_image[]">
                             </div>
@@ -1073,20 +1073,39 @@
         }
         document.getElementById('about_cta_boxes_json').value = JSON.stringify(ctaBoxes);
     }
-    async function uploadImage(input, previewId, targetInputId) {
+    function uploadImage(input, previewId, targetInputId, aspectRatio = NaN) {
         const file = input.files[0];
         if (!file) return;
 
+        // Open the cropper modal
+        if (typeof openCropper === 'function') {
+            openCropper(file, {
+                aspectRatio: aspectRatio, // NaN means free crop
+                callback: async function (blob) {
+                    await processUpload(blob, input, previewId, targetInputId);
+                }
+            });
+        } else {
+            // Fallback if cropper isn't loaded
+            processUpload(file, input, previewId, targetInputId);
+        }
+        
+        // Clear file input so same file can be selected again if needed
+        input.value = '';
+    }
+
+    async function processUpload(blobOrFile, input, previewId, targetInputId) {
         const container = input.closest('.image-picker-container');
         const loader = container.querySelector('.upload-loading');
         const preview = previewId ? document.getElementById(previewId) : container.querySelector('.image-picker-preview');
         const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
 
-        // Show loading
         loader.style.display = 'flex';
 
         const formData = new FormData();
-        formData.append('image', file);
+        // Naming the blob to .webp if it's a cropped blob
+        const fileName = blobOrFile instanceof Blob && blobOrFile.type === 'image/webp' ? 'cropped.webp' : 'upload.jpg';
+        formData.append('image', blobOrFile, fileName);
 
         try {
             const response = await fetch('{{ route("admin.settings.upload") }}', {
@@ -1111,7 +1130,6 @@
                 if (targetInput) {
                     targetInput.value = data.path;
                 }
-                // If it's a dynamic row, update the sibling input
                 const siblingInput = input.closest('.dynamic-row') ? input.closest('.dynamic-row').querySelector('input[type="hidden"][name*="image"]') : null;
                 if (!targetInput && siblingInput) {
                     siblingInput.value = data.path;

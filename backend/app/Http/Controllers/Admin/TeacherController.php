@@ -49,7 +49,7 @@ class TeacherController extends Controller
             ? (string)((int)$lastTeacher->teacher_unique_id + 1)
             : '1';
 
-        User::create([
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -58,7 +58,24 @@ class TeacherController extends Controller
             'phone_number' => $request->phone_number,
             'teacher_unique_id' => $newId,
             'teacher_class' => $request->teacher_class,
-        ]);
+        ];
+
+        if ($request->filled('avatar_base64')) {
+            $base64 = $request->avatar_base64;
+            $imageParts = explode(";base64,", $base64);
+            $imageTypeAux = explode("image/", $imageParts[0]);
+            $imageType = $imageTypeAux[1];
+            $imageBase64 = base64_decode($imageParts[1]);
+            $fileName = 'teacher_' . time() . '.' . $imageType;
+            $folderPath = public_path('uploads/avatars');
+            if (!file_exists($folderPath)) {
+                mkdir($folderPath, 0777, true);
+            }
+            file_put_contents($folderPath . '/' . $fileName, $imageBase64);
+            $data['avatar'] = 'uploads/avatars/' . $fileName;
+        }
+
+        User::create($data);
 
         return redirect()->route('admin.teachers.index')
             ->with('success', 'Teacher added successfully! ID: ' . $newId . ' | Password: ' . $request->password);
@@ -98,6 +115,27 @@ class TeacherController extends Controller
         if ($request->filled('password') && $request->password !== $teacher->plain_password) {
             $data['password'] = Hash::make($request->password);
             $data['plain_password'] = $request->password;
+        }
+
+        if ($request->filled('avatar_base64')) {
+            $base64 = $request->avatar_base64;
+            $imageParts = explode(";base64,", $base64);
+            $imageTypeAux = explode("image/", $imageParts[0]);
+            $imageType = $imageTypeAux[1];
+            $imageBase64 = base64_decode($imageParts[1]);
+            $fileName = 'teacher_' . time() . '.' . $imageType;
+            $folderPath = public_path('uploads/avatars');
+            if (!file_exists($folderPath)) {
+                mkdir($folderPath, 0777, true);
+            }
+            file_put_contents($folderPath . '/' . $fileName, $imageBase64);
+            
+            // Delete old avatar if exists
+            if ($teacher->avatar && file_exists(public_path($teacher->avatar))) {
+                @unlink(public_path($teacher->avatar));
+            }
+            
+            $data['avatar'] = 'uploads/avatars/' . $fileName;
         }
 
         $teacher->update($data);

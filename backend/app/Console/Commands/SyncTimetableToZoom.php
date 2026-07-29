@@ -58,13 +58,28 @@ class SyncTimetableToZoom extends Command
                         
                         if ($scheduledAt->isPast()) continue;
 
-                        // Check if schedule already exists (withoutGlobalScopes for cron context)
+                        // Check if schedule already exists for THIS specific timetable entry on this date
                         $existingSchedule = ZoomSchedule::withoutGlobalScopes()
-                            ->where('grade', $timetable->grade)
-                            ->where('institute_id', $timetable->institute_id)
+                            ->where('timetable_id', $timetable->id)
                             ->whereDate('scheduled_at', $scheduledAt->toDateString())
-                            ->where('subject', $timetable->subject->name ?? 'General')
                             ->first();
+
+                        // Also check for legacy records without timetable_id (old data)
+                        if (!$existingSchedule) {
+                            $existingSchedule = ZoomSchedule::withoutGlobalScopes()
+                                ->whereNull('timetable_id')
+                                ->where('grade', $timetable->grade)
+                                ->where('institute_id', $timetable->institute_id)
+                                ->whereDate('scheduled_at', $scheduledAt->toDateString())
+                                ->where('subject', $timetable->subject->name ?? 'General')
+                                ->where('title', $timetable->title)
+                                ->first();
+                            
+                            // Claim this legacy record for this timetable
+                            if ($existingSchedule) {
+                                $existingSchedule->update(['timetable_id' => $timetable->id]);
+                            }
+                        }
 
                         if ($existingSchedule) {
                             // Update existing schedule if the time has changed in the timetable
@@ -91,6 +106,7 @@ class SyncTimetableToZoom extends Command
                             'duration' => $timetable->duration,
                             'grade' => $timetable->grade,
                             'subject' => $timetable->subject->name ?? 'General',
+                            'timetable_id' => $timetable->id,
                             'created_by' => $timetable->teacher_id,
                             'institute_id' => $timetable->institute_id,
                         ];

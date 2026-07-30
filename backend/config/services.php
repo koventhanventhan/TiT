@@ -71,4 +71,10 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/api/auth/google/callback'),
     ],
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:4000'),
+
+    'notification_channel' => env('NOTIFICATION_CHANNEL', 'auto'),
+
+    'admin_whatsapp_number' => env('ADMIN_WHATSAPP_NUMBER'),
 ];

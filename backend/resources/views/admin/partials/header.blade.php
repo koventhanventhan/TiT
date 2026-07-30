@@ -552,7 +552,7 @@
 
                     {{-- Home --}}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}"
+                        <a class="nav-link" href="{{ config('services.frontend_url') }}"
                            target="_blank" rel="noopener noreferrer" title="Home">
                             <svg viewBox="0 0 24 24" fill="none"
                                  stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

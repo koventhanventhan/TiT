@@ -65,13 +65,13 @@ class AdminAuthController extends Controller
                     } else {
                         \Log::warning('User is not admin', ['user_id' => $user->id, 'role' => $user->role]);
                         // Redirect to React frontend with error message
-                        $frontendUrl = env('FRONTEND_URL', 'http://localhost:4000');
+                        $frontendUrl = config('services.frontend_url');
                         return redirect($frontendUrl . '?error=admin_required');
                     }
                 } else {
                     \Log::warning('Token not found or invalid', ['token' => substr($token, 0, 20) . '...']);
                     // Redirect to React frontend
-                    $frontendUrl = env('FRONTEND_URL', 'http://localhost:4000');
+                    $frontendUrl = config('services.frontend_url');
                     return redirect($frontendUrl . '?error=invalid_token');
                 }
             } catch (\Exception $e) {
@@ -80,13 +80,13 @@ class AdminAuthController extends Controller
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                $frontendUrl = env('FRONTEND_URL', 'http://localhost:4000');
+                $frontendUrl = config('services.frontend_url');
                 return redirect($frontendUrl . '?error=login_required');
             }
         }
         
         // No token provided - redirect to React frontend for login
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:4000');
+        $frontendUrl = config('services.frontend_url');
         return redirect($frontendUrl . '?redirect=admin');
     }
 
@@ -155,7 +155,7 @@ class AdminAuthController extends Controller
         
         // Redirect to React frontend with logout parameter
         // React will detect this and clear localStorage
-        $reactUrl = env('FRONTEND_URL', 'http://localhost:4000');
+        $reactUrl = config('services.frontend_url');
         return redirect($reactUrl . '?logout=1&from=dashboard');
     }
 }

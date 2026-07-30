@@ -109,7 +109,7 @@
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Classes Settings</h4>
             <div>
-                <a href="{{ env('FRONTEND_URL', 'http://localhost:4000') }}/classes" target="_blank" class="btn btn-primary btn-sm">
+                <a href="{{ config('services.frontend_url') }}/classes" target="_blank" class="btn btn-primary btn-sm">
                     View Classes Page
                 </a>
             </div>

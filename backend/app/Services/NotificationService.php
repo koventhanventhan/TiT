@@ -18,7 +18,7 @@ class NotificationService
         // 'auto' = try WhatsApp first, fallback to email
         // 'email' = email only
         // 'whatsapp' = whatsapp only
-        $this->channel = config('services.notification_channel', env('NOTIFICATION_CHANNEL', 'auto'));
+        $this->channel = config('services.notification_channel', 'auto');
     }
 
     /**
@@ -80,7 +80,7 @@ class NotificationService
         array $emailData = [],
         string $langCode = 'en'
     ): bool {
-        $adminPhone = env('ADMIN_WHATSAPP_NUMBER');
+        $adminPhone = config('services.admin_whatsapp_number');
         $adminEmail = $this->getAdminEmail();
         $sent = false;
 

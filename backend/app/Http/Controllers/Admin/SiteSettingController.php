@@ -328,7 +328,7 @@ class SiteSettingController extends Controller
     public function uploadImage(\Illuminate\Http\Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
         ]);
 
         if ($request->hasFile('image')) {

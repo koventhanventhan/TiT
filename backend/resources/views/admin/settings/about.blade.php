@@ -1135,7 +1135,13 @@
                     siblingInput.value = data.path;
                 }
             } else {
-                alert(data.message || 'Upload failed');
+                // Handle Laravel validation errors (422 status)
+                let errorMsg = data.message || 'Upload failed';
+                if (data.errors) {
+                    const firstError = Object.values(data.errors)[0];
+                    errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                }
+                alert(errorMsg);
             }
         } catch (error) {
             console.error('Error uploading image:', error);

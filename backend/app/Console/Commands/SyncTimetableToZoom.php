@@ -86,13 +86,23 @@ class SyncTimetableToZoom extends Command
                             $existingTime = Carbon::parse($existingSchedule->scheduled_at)->format('H:i:s');
                             $newTime = $scheduledAt->format('H:i:s');
 
-                            if ($existingTime !== $newTime || $existingSchedule->title !== $timetable->title || $existingSchedule->duration !== $timetable->duration) {
+                            $timetableSubject = $timetable->subject->name ?? 'General';
+                            
+                            $changed = ($existingTime !== $newTime) || 
+                                       ($existingSchedule->title !== $timetable->title) || 
+                                       ($existingSchedule->duration !== $timetable->duration) ||
+                                       ($existingSchedule->grade !== $timetable->grade) ||
+                                       ($existingSchedule->subject !== $timetableSubject);
+
+                            if ($changed) {
                                 $existingSchedule->update([
                                     'title' => $timetable->title,
                                     'scheduled_at' => $scheduledAt->toDateTimeString(),
                                     'duration' => $timetable->duration,
+                                    'grade' => $timetable->grade,
+                                    'subject' => $timetableSubject,
                                 ]);
-                                $this->info("Updated schedule #{$existingSchedule->id} time from {$existingTime} to {$newTime}");
+                                $this->info("Updated schedule #{$existingSchedule->id} (Time/Grade/Subject changes applied)");
                             }
                             continue;
                         }

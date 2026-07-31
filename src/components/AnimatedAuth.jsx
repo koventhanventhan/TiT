@@ -243,12 +243,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         return
       }
 
-      alert(`Welcome, ${result.user?.name || result.user?.username || 'User'}!`)
       onClose()
-      window.location.reload()
+      // Redirection is handled inside loginWithGoogle in authService.js
     } catch (err) {
       setError(err.message || 'Login failed')
-    } finally {
       setIsLoading(false)
     }
   }

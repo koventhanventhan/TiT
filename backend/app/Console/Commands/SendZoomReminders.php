@@ -31,9 +31,9 @@ class SendZoomReminders extends Command
     {
         $this->info('Checking for Zoom schedules starting in 15 minutes...');
 
-        // Find schedules starting in the next 0-30 minutes that haven't been reminded
-        $startTime = Carbon::now();
-        $endTime = Carbon::now()->addMinutes(30);
+        // Find schedules starting in the next 0-45 minutes (and up to 20 mins in the past) that haven't been reminded
+        $startTime = Carbon::now()->subMinutes(20);
+        $endTime = Carbon::now()->addMinutes(45);
 
         $schedules = ZoomSchedule::with(['teachers'])
             ->whereBetween('scheduled_at', [$startTime, $endTime])

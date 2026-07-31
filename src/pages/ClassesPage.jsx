@@ -302,12 +302,11 @@ const ClassesPage = () => {
             <h3>{currentText.subjectsTitle}</h3>
             {currentSubjects.length > 6 && (
               <button 
-                onClick={() => setShowAllSubjects(!showAllSubjects)} 
+                onClick={() => setShowAllSubjects(!showAllSubjects)}
                 className="ocl-subjects-link"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                {showAllSubjects ? 'Show Less' : currentText.subjectsLink} 
-                <FiArrowRight style={{ transform: showAllSubjects ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 0.3s' }} />
+                {showAllSubjects ? 'Show Less' : currentText.subjectsLink} <FiArrowRight style={{ transform: showAllSubjects ? 'rotate(-90deg)' : 'none', transition: '0.3s' }} />
               </button>
             )}
           </div>

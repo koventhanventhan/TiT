@@ -479,6 +479,7 @@ export const loginWithGoogle = () => {
           // Role-based redirect logic (same as loginWithEmail)
           const userRole = user?.role
           const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
+          const isSuperAdmin = userRole && String(userRole).toLowerCase() === 'super_admin'
           const isStudent = userRole && String(userRole).toLowerCase() === 'user'
           const isTeacher = userRole && String(userRole).toLowerCase() === 'teacher'
 
@@ -489,7 +490,9 @@ export const loginWithGoogle = () => {
             return
           }
 
-          if (isAdmin) {
+          if (isSuperAdmin) {
+            window.location.href = '/super-admin/dashboard'
+          } else if (isAdmin) {
             window.location.href = `${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`
           } else if (isStudent) {
             window.location.href = '/student/dashboard'

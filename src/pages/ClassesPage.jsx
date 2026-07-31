@@ -32,6 +32,7 @@ const ClassesPage = () => {
 
   // ── Shared Expert Layout State ──
   const [activeGrade, setActiveGrade] = useState(0)
+  const [showAllSubjects, setShowAllSubjects] = useState(false)
 
   // ── Online Classes State (ocl_) ──
   const [oclText, setOclText] = useState({
@@ -42,8 +43,8 @@ const ClassesPage = () => {
     subText: getSetting('ocl_sub_text') || 'தரம் 01 முதல் A/L வரை',
     ctaText: getSetting('ocl_cta_text') || 'இப்போது சேருங்கள்',
     gradesTitle: getSetting('ocl_grades_title') || 'தரம் தேர்வு செய்க',
-    subjectsTitle: getSetting('ocl_subjects_title') || 'பாடங்கள்',
-    subjectsLink: getSetting('ocl_subjects_link_text') || 'அனைத்து பாடங்களும்',
+    subjectsTitle: getSetting('ocl_subjects_title') || 'Subjects',
+    subjectsLink: getSetting('ocl_subjects_link_text') || 'All Subjects',
   })
 
   // ── Direct Classes State (dcl_) ──
@@ -55,8 +56,8 @@ const ClassesPage = () => {
     subText: getSetting('dcl_sub_text') || 'தரம் 01 முதல் A/L வரை',
     ctaText: getSetting('dcl_cta_text') || 'இப்போது சேருங்கள்',
     gradesTitle: getSetting('dcl_grades_title') || 'தரம் தேர்வு செய்க',
-    subjectsTitle: getSetting('dcl_subjects_title') || 'பாடங்கள்',
-    subjectsLink: getSetting('dcl_subjects_link_text') || 'அனைத்து பாடங்களும்',
+    subjectsTitle: getSetting('dcl_subjects_title') || 'Subjects',
+    subjectsLink: getSetting('dcl_subjects_link_text') || 'All Subjects',
   })
 
   const getImageUrl = (img) => {
@@ -77,8 +78,8 @@ const ClassesPage = () => {
           subText: await translate(getSetting('ocl_sub_text') || 'தரம் 01 முதல் A/L வரை'),
           ctaText: await translate(getSetting('ocl_cta_text') || 'இப்போது சேருங்கள்'),
           gradesTitle: await translate(getSetting('ocl_grades_title') || 'தரம் தேர்வு செய்க'),
-          subjectsTitle: await translate(getSetting('ocl_subjects_title') || 'பாடங்கள்'),
-          subjectsLink: await translate(getSetting('ocl_subjects_link_text') || 'அனைத்து பாடங்களும்')
+          subjectsTitle: await translate(getSetting('ocl_subjects_title') || 'Subjects'),
+          subjectsLink: await translate(getSetting('ocl_subjects_link_text') || 'All Subjects')
         })
         setDclText({
           tagline: await translate(getSetting('dcl_tagline') || 'TiT KALVI NILAYAM – JAFFNA'),
@@ -88,8 +89,8 @@ const ClassesPage = () => {
           subText: await translate(getSetting('dcl_sub_text') || 'தரம் 01 முதல் A/L வரை'),
           ctaText: await translate(getSetting('dcl_cta_text') || 'இப்போது சேருங்கள்'),
           gradesTitle: await translate(getSetting('dcl_grades_title') || 'தரம் தேர்வு செய்க'),
-          subjectsTitle: await translate(getSetting('dcl_subjects_title') || 'பாடங்கள்'),
-          subjectsLink: await translate(getSetting('dcl_subjects_link_text') || 'அனைத்து பாடங்களும்')
+          subjectsTitle: await translate(getSetting('dcl_subjects_title') || 'Subjects'),
+          subjectsLink: await translate(getSetting('dcl_subjects_link_text') || 'All Subjects')
         })
       } else {
         setOclText({
@@ -100,8 +101,8 @@ const ClassesPage = () => {
           subText: getSetting('ocl_sub_text') || 'தரம் 01 முதல் A/L வரை',
           ctaText: getSetting('ocl_cta_text') || 'இப்போது சேருங்கள்',
           gradesTitle: getSetting('ocl_grades_title') || 'தரம் தேர்வு செய்க',
-          subjectsTitle: getSetting('ocl_subjects_title') || 'பாடங்கள்',
-          subjectsLink: getSetting('ocl_subjects_link_text') || 'அனைத்து பாடங்களும்'
+          subjectsTitle: getSetting('ocl_subjects_title') || 'Subjects',
+          subjectsLink: getSetting('ocl_subjects_link_text') || 'All Subjects'
         })
         setDclText({
           tagline: getSetting('dcl_tagline') || 'TiT KALVI NILAYAM – JAFFNA',
@@ -111,8 +112,8 @@ const ClassesPage = () => {
           subText: getSetting('dcl_sub_text') || 'தரம் 01 முதல் A/L வரை',
           ctaText: getSetting('dcl_cta_text') || 'இப்போது சேருங்கள்',
           gradesTitle: getSetting('dcl_grades_title') || 'தரம் தேர்வு செய்க',
-          subjectsTitle: getSetting('dcl_subjects_title') || 'பாடங்கள்',
-          subjectsLink: getSetting('dcl_subjects_link_text') || 'அனைத்து பாடங்களும்'
+          subjectsTitle: getSetting('dcl_subjects_title') || 'Subjects',
+          subjectsLink: getSetting('dcl_subjects_link_text') || 'All Subjects'
         })
       }
     }
@@ -121,9 +122,9 @@ const ClassesPage = () => {
 
   // ── JSON Parsers for OCL ──
   const parseSafe = (val, fallback) => {
-    try { return JSON.parse(val) } catch(e) { return fallback }
+    try { return JSON.parse(val) } catch (e) { return fallback }
   }
-  
+
   const oclHeroImage = getSetting('ocl_hero_image')
   const oclBadgeImage = getSetting('ocl_badge_image')
   const oclHighlights = (getSetting('ocl_highlights') || "LIVE CLASSES\nRECORDED CLASSES\nSTUDY MATERIAL").split('\n').filter(Boolean)
@@ -140,8 +141,9 @@ const ClassesPage = () => {
     { icon: "FiHeadphones", number: "24/7", label: "ஆதரவு" }
   ])
   const oclSubjects = parseSafe(getSetting('ocl_subjects'), [
-    { icon: "FiBook", name: "தமிழ்" }, { icon: "FiGlobe", name: "ஆங்கிலம்" },
-    { icon: "FiEdit", name: "கணிதம்" }, { icon: "FiStar", name: "அறிவியல்" }
+    { icon: "FiBook", name: "Tamil" }, { icon: "FiGlobe", name: "English" },
+    { icon: "FiEdit", name: "Mathematics" }, { icon: "FiStar", name: "Science" },
+    { icon: "FiClock", name: "History" }, { icon: "FiMapPin", name: "Geography" }
   ])
 
   // ── JSON Parsers for DCL ──
@@ -161,9 +163,9 @@ const ClassesPage = () => {
     { icon: "FiAward", number: "100%", label: "வெற்றி" }
   ])
   const dclSubjects = parseSafe(getSetting('dcl_subjects'), [
-    { icon: "FiBook", name: "தமிழ்" }, { icon: "FiGlobe", name: "ஆங்கிலம்" },
-    { icon: "FiEdit", name: "கணிதம்" }, { icon: "FiStar", name: "அறிவியல்" },
-    { icon: "FiClock", name: "வரலாறு" }, { icon: "FiMapPin", name: "புவியியல்" }
+    { icon: "FiBook", name: "Tamil" }, { icon: "FiGlobe", name: "English" },
+    { icon: "FiEdit", name: "Mathematics" }, { icon: "FiStar", name: "Science" },
+    { icon: "FiClock", name: "History" }, { icon: "FiMapPin", name: "Geography" }
   ])
 
   // Guard for invalid type parameter
@@ -216,7 +218,7 @@ const ClassesPage = () => {
             {/* Right - Hero Media */}
             <div className="ocl-hero-media">
               <div className="ocl-live-indicator" style={!isOnline ? { background: 'rgba(235, 129, 83, 0.2)', color: '#EB8153', border: '1px solid rgba(235, 129, 83, 0.3)' } : {}}>
-                <span className="ocl-live-dot" style={!isOnline ? { background: '#EB8153' } : {}}></span> 
+                <span className="ocl-live-dot" style={!isOnline ? { background: '#EB8153' } : {}}></span>
                 {isOnline ? 'LIVE' : 'IN-PERSON'}
               </div>
               {currentHeroImage ? (
@@ -298,12 +300,19 @@ const ClassesPage = () => {
         <div className="container">
           <div className="ocl-subjects-header">
             <h3>{currentText.subjectsTitle}</h3>
-            <Link to="/classes" className="ocl-subjects-link">
-              {currentText.subjectsLink} <FiArrowRight />
-            </Link>
+            {currentSubjects.length > 6 && (
+              <button 
+                onClick={() => setShowAllSubjects(!showAllSubjects)} 
+                className="ocl-subjects-link"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
+              >
+                {showAllSubjects ? 'Show Less' : currentText.subjectsLink} 
+                <FiArrowRight style={{ transform: showAllSubjects ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 0.3s' }} />
+              </button>
+            )}
           </div>
           <div className="ocl-subjects-grid">
-            {currentSubjects.map((s, i) => (
+            {(showAllSubjects ? currentSubjects : currentSubjects.slice(0, 6)).map((s, i) => (
               <div key={i} className="ocl-subject-chip">
                 <div className="ocl-subject-icon">
                   {ICON_MAP[s.icon] || <FiBook />}

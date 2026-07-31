@@ -46,7 +46,17 @@ class SendZoomReminders extends Command
         }
 
         foreach ($schedules as $schedule) {
-            $this->info("Sending reminders for: {$schedule->title}");
+            // Idempotency / Race Condition Check: Atomic Update
+            $updated = \App\Models\ZoomSchedule::where('id', $schedule->id)
+                ->whereNull('reminded_at')
+                ->update(['reminded_at' => \Carbon\Carbon::now()]);
+
+            if (!$updated) {
+                $this->info("Reminder already sent for: {$schedule->title}, skipping");
+                continue;
+            }
+
+            $this->info("Locked and sending reminders for: {$schedule->title}");
             $time = $schedule->scheduled_at->format('H:i');
             $baseUrl = config('app.url');
 
@@ -126,8 +136,7 @@ class SendZoomReminders extends Command
                 }
             }
 
-            $schedule->update(['reminded_at' => Carbon::now()]);
-            $this->info("Reminders sent for schedule ID: {$schedule->id}");
+            $this->info("Reminders sent successfully for schedule ID: {$schedule->id}");
         }
 
         $this->info('Reminder process completed.');

@@ -64,9 +64,14 @@
                             <div class="form-group">
                                 <label class="text-label" style="font-weight: 600;">Password <small class="text-muted">(leave blank to keep current)</small></label>
                                 <div style="position: relative;">
-                                    <input type="text" name="password" id="editTeacherPassword" class="form-control" value="{{ $teacher->plain_password }}" placeholder="{{ $teacher->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 3.125rem;">
+                                    <input type="password" name="password" id="editTeacherPassword" class="form-control" placeholder="Enter new password" minlength="8" style="padding-right: 3.125rem;">
                                     <button type="button" onclick="togglePassword('editTeacherPassword', 'editTeacherEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
-                                        <span id="editTeacherEyeIcon">🙈</span>
+                                        <span id="editTeacherEyeIcon">👁️</span>
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-info w-100" id="generatePasswordBtn" onclick="generateAndSendPassword({{ $teacher->id }}, 'teacher')">
+                                        <i class="flaticon-381-paper-plane"></i> Generate & Send New Password
                                     </button>
                                 </div>
                             </div>
@@ -132,6 +137,41 @@
             input.type = 'password';
             icon.textContent = '👁️';
         }
+    }
+
+    function generateAndSendPassword(id, type) {
+        if (!confirm('Are you sure you want to generate a new password and email it to this ' + type + '?')) return;
+        
+        let btn = document.getElementById('generatePasswordBtn');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+
+        fetch(`/admin/${type}s/${id}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('editTeacherPassword').value = '';
+            } else {
+                alert(data.message || 'An error occurred.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('A network error occurred.');
+        });
     }
 
     function handleTeacherAvatar(input) {

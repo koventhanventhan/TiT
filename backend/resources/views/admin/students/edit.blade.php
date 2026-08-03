@@ -175,10 +175,15 @@
                             <div class="form-group">
                                 <label>Password  <small class="text-muted">(Leave blank to keep current)</small></label>
                                 <div style="position: relative;">
-                                    <input type="password" name="password" id="editPassword" class="form-control" value="{{ $student->plain_password }}" placeholder="{{ $student->plain_password ? '' : 'Enter new password' }}" minlength="8" style="padding-right: 3.125rem;">
+                                    <input type="password" name="password" id="editPassword" class="form-control" placeholder="Enter new password" minlength="8" style="padding-right: 3.125rem;">
                                      <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
                                          <i id="editEyeIcon" class="la la-eye"></i>
                                      </button>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-info w-100" id="generatePasswordBtn" onclick="generateAndSendPassword({{ $student->id }}, 'student')">
+                                        <i class="flaticon-381-paper-plane"></i> Generate & Send New Password
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -532,6 +537,41 @@
             icon.classList.remove('la-eye-slash');
             icon.classList.add('la-eye');
         }
+    }
+
+    function generateAndSendPassword(id, type) {
+        if (!confirm('Are you sure you want to generate a new password and email it to this ' + type + '?')) return;
+        
+        let btn = document.getElementById('generatePasswordBtn');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+
+        fetch(`/admin/${type}s/${id}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('editPassword').value = '';
+            } else {
+                alert(data.message || 'An error occurred.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('A network error occurred.');
+        });
     }
 </script>
 @endpush

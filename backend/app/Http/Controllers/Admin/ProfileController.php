@@ -139,7 +139,7 @@ class ProfileController extends Controller
 
             // DO NOT USE Hash::make here because the User model handles it via the 'hashed' cast
             $user->password = $request->new_password;
-            $user->plain_password = $request->new_password;
+
             
             \Log::info('Password attribute set for ' . $user->email);
         }
@@ -186,7 +186,7 @@ class ProfileController extends Controller
 
         // Force Hash::make just to be absolutely sure, as 'hashed' cast might behave differently across versions
         $user->password = Hash::make($request->new_password);
-        $user->plain_password = $request->new_password;
+
         
         \Log::info('Hash After (Memory): ' . $user->password);
         
@@ -219,7 +219,7 @@ class ProfileController extends Controller
             'name' => $request->first_name . ' ' . $request->last_name,
             'email' => $request->email,
             'password' => $request->password,
-            'plain_password' => $request->password,
+
             'role' => 'admin',
             'institute_id' => auth()->user()->institute_id ?? 1,
         ]);
@@ -247,7 +247,7 @@ class ProfileController extends Controller
 
         if ($request->filled('password')) {
             $data['password'] = $request->password;
-            $data['plain_password'] = $request->password;
+
         }
 
         $admin->update($data);

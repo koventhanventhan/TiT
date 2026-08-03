@@ -66,7 +66,7 @@ class User extends Authenticatable implements FilamentUser
         'selected_subjects',
         'admin_confirmed_at',
         'registration_status',
-        'plain_password',
+
         'teacher_unique_id',
         'teacher_class',
         'deactivated_at',

@@ -26,11 +26,7 @@ export default function TeacherAssignments() {
         try {
             // Mocking data if API fails
             const data = await getTeacherAssignments().catch(() => null)
-            setAssignments(data?.data || data || [
-                { id: 1, title: 'Calculus Quiz 1', subject: 'Mathematics', grade: 'A/L 2026', description: 'Complete all 10 questions on integration and differentiation.', due_date: '2026-05-25', submissions_count: 32, total_students: 45, status: 'active' },
-                { id: 2, title: 'Thermodynamics Essay', subject: 'Physics', grade: 'A/L 2026', description: 'Write a 1000-word essay on the laws of thermodynamics with real-world examples.', due_date: '2026-05-28', submissions_count: 12, total_students: 45, status: 'active' },
-                { id: 3, title: 'Organic Chemistry Lab Report', subject: 'Chemistry', grade: 'A/L 2025', description: 'Submit the lab report for the esterification experiment.', due_date: '2026-05-20', submissions_count: 50, total_students: 50, status: 'closed' }
-            ])
+            setAssignments(data?.data || data || [])
         } catch (e) {
             console.error(e)
         } finally {

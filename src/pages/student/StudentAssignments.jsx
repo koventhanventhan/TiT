@@ -9,16 +9,8 @@ export default function StudentAssignments() {
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentAssignments().catch(() => null)
-                if (!data || data.length === 0) {
-                    data = [
-                        { id: 1, title: 'Calculus Quiz 1', subject: 'Mathematics', teacher: 'Prof. Kumara', description: 'Complete all 10 questions on integration.', due_date: '2026-05-25', status: 'pending' },
-                        { id: 2, title: 'Thermodynamics Essay', subject: 'Physics', teacher: 'Prof. Silva', description: 'Write a 1000-word essay on the laws of thermodynamics.', due_date: '2026-05-28', status: 'pending' },
-                        { id: 3, title: 'Organic Chemistry Lab', subject: 'Chemistry', teacher: 'Dr. Perera', description: 'Submit the lab report for the esterification experiment.', due_date: '2026-05-20', status: 'submitted' },
-                        { id: 4, title: 'Vectors Worksheet', subject: 'Mathematics', teacher: 'Prof. Kumara', description: 'Solve problems 1-20 from chapter 4.', due_date: '2026-05-18', status: 'graded', grade: '95/100' }
-                    ]
-                }
-                setAssignments(data)
+                let data = await getStudentAssignments().catch(() => [])
+                setAssignments(data || [])
             } catch (e) {
                 console.error(e)
             } finally {
@@ -38,7 +30,7 @@ export default function StudentAssignments() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#fff7ed', color: '#f97316', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316' }} /> {assignments.filter(a => a.status === 'pending').length} Pending
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316' }} /> {assignments.filter(a => { const sub = a.submissions && a.submissions.length > 0 ? a.submissions[0] : null; return !sub || sub.status === 'pending'; }).length} Pending
                     </div>
                 </div>
             </div>
@@ -56,9 +48,10 @@ export default function StudentAssignments() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
                     {assignments.map(assign => {
-                        const isPending = assign.status === 'pending' || !assign.status;
-                        const isSubmitted = assign.status === 'submitted';
-                        const isGraded = assign.status === 'graded';
+                        const submission = assign.submissions && assign.submissions.length > 0 ? assign.submissions[0] : null;
+                        const isPending = !submission || submission.status === 'pending';
+                        const isSubmitted = submission && submission.status === 'submitted';
+                        const isGraded = submission && submission.status === 'graded';
                         
                         let statusColor = '#f59e0b'; let statusBg = '#fffbeb'; let statusText = 'Pending';
                         if (isSubmitted) { statusColor = '#3b82f6'; statusBg = '#eff6ff'; statusText = 'Submitted'; }
@@ -92,7 +85,7 @@ export default function StudentAssignments() {
                                 </div>
 
                                 <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#1e293b', lineHeight: 1.3 }}>{assign.title}</h3>
-                                <div style={{ color: '#64748b', fontSize: 13, fontWeight: 500, marginBottom: 16 }}>By {assign.teacher}</div>
+                                <div style={{ color: '#64748b', fontSize: 13, fontWeight: 500, marginBottom: 16 }}>By {assign.teacher?.full_name || assign.teacher?.name || 'Your Teacher'}</div>
                                 
                                 <p style={{ margin: '0 0 16px 0', color: '#475569', fontSize: 13, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {assign.description}
@@ -105,7 +98,7 @@ export default function StudentAssignments() {
                                             {isOverdue ? 'Overdue' : 'Due'} {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                         {isGraded && (
-                                            <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>{assign.grade}</div>
+                                            <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>{submission.marks}/100</div>
                                         )}
                                     </div>
 

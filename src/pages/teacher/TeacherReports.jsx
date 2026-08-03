@@ -24,7 +24,6 @@ function ReportCard({ title, value, subtitle, icon: Icon, color, bg }) {
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#94a3b8', fontWeight: 500, zIndex: 1, position: 'relative' }}>
                 {subtitle}
             </div>
-            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, borderRadius: '50%', background: bg, opacity: 0.5 }} />
         </div>
     )
 }
@@ -37,13 +36,7 @@ export default function TeacherReports() {
         async function load() {
             try {
                 const data = await getTeacherDashboardStats().catch(() => null)
-                setStats(data || {
-                    total_students: 145,
-                    total_assignments: 24,
-                    total_submissions: 856,
-                    upcoming_classes: 8,
-                    avg_attendance: 85
-                })
+                setStats(data || {})
             } catch (e) {
                 console.error('Error loading reports:', e)
             } finally {

@@ -11,11 +11,7 @@ export default function TeacherStudents() {
         async function load() {
             try {
                 const data = await getTeacherStudents().catch(() => null)
-                setStudents(data || [
-                    { id: 1, name: 'Saman Fernando', email: 'saman@example.com', phone_number: '+94 77 123 4567', current_grade: 'A/L 2026', stream: 'Maths', attendance: 92 },
-                    { id: 2, name: 'Kamal Perera', email: 'kamal@example.com', phone_number: '+94 71 234 5678', current_grade: 'A/L 2026', stream: 'Science', attendance: 88 },
-                    { id: 3, name: 'Nimali Silva', email: 'nimali@example.com', phone_number: '+94 76 345 6789', current_grade: 'A/L 2025', stream: 'Maths', attendance: 75 }
-                ])
+                setStudents(data || [])
             } catch (e) {
                 console.error(e)
             } finally {

@@ -10,16 +10,8 @@ export default function StudentMaterials() {
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentMaterials().catch(() => null)
-                if (!data || data.length === 0) {
-                    data = [
-                        { id: 1, title: 'Calculus Chapter 1 Notes', subject: 'Mathematics', teacher: 'Prof. Kumara', type: 'pdf', size: '2.4 MB', date: '2026-05-18' },
-                        { id: 2, title: 'Thermodynamics Video Lecture', subject: 'Physics', teacher: 'Prof. Silva', type: 'video', size: '450 MB', date: '2026-05-15' },
-                        { id: 3, title: 'Organic Chemistry Reactions', subject: 'Chemistry', teacher: 'Dr. Perera', type: 'document', size: '1.2 MB', date: '2026-05-10' },
-                        { id: 4, title: 'Useful Physics Simulations', subject: 'Physics', teacher: 'Prof. Silva', type: 'link', size: '--', date: '2026-05-01' }
-                    ]
-                }
-                setMaterials(data)
+                let data = await getStudentMaterials().catch(() => [])
+                setMaterials(data || [])
             } catch (e) {
                 console.error(e)
             } finally {
@@ -141,15 +133,15 @@ export default function StudentMaterials() {
                                     {item.title}
                                 </h3>
                                 <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: 13, fontWeight: 500 }}>
-                                    {item.subject}
+                                    {item.group || 'General Material'}
                                 </p>
                                 <p style={{ margin: '0 0 16px 0', color: '#94a3b8', fontSize: 12 }}>
-                                    By {item.teacher}
+                                    Grade: {item.grade || 'All'}
                                 </p>
                                 <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
                                         {new Date(item.created_at || item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        {item.size && item.size !== '--' && <><span style={{ margin: '0 6px' }}>•</span>{item.size}</>}
+                                        {item.file_size && item.file_size !== '--' && <><span style={{ margin: '0 6px' }}>•</span>{item.file_size}</>}
                                     </div>
                                     <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} style={{
                                         width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0',

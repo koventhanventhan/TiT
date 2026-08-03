@@ -24,7 +24,6 @@ function StatCard({ title, value, subtitle, icon: Icon, color, bg }) {
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#94a3b8', fontWeight: 500, zIndex: 1, position: 'relative' }}>
                 {subtitle}
             </div>
-            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, borderRadius: '50%', background: bg, opacity: 0.5 }} />
         </div>
     )
 }
@@ -36,14 +35,8 @@ export default function StudentPerformance() {
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentStats().catch(() => null)
-                setStats(data || {
-                    attendance_rate: 92,
-                    assignments_completed: 18,
-                    assignments_total: 20,
-                    average_grade: 'A-',
-                    study_hours: 45
-                })
+                let data = await getStudentStats().catch(() => ({}))
+                setStats(data || {})
             } catch (e) {
                 console.error(e)
             } finally {
@@ -59,7 +52,7 @@ export default function StudentPerformance() {
         </div>
     )
 
-    const completionRate = Math.min(100, Math.round(((stats?.assignments_completed || 0) / (stats?.assignments_total || 1)) * 100));
+    const completionRate = Math.min(100, Math.round(((stats?.completed_assignments || 0) / (stats?.assignments_total || 1)) * 100));
 
     return (
         <div style={{ paddingBottom: 40 }}>
@@ -76,10 +69,10 @@ export default function StudentPerformance() {
 
             {/* Overview Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 24 }}>
-                <StatCard title="Average Grade" value={stats?.average_grade || 'B+'} subtitle="Top 15% of your class" icon={FiAward} color="#8b5cf6" bg="#f5f3ff" />
-                <StatCard title="Attendance" value={`${stats?.attendance_rate || 0}%`} subtitle="Excellent participation" icon={FiCheckCircle} color="#10b981" bg="#ecfdf5" />
-                <StatCard title="Assignments" value={`${stats?.assignments_completed}/${stats?.assignments_total}`} subtitle={`${completionRate}% completion rate`} icon={FiTarget} color="#0ea5e9" bg="#e0f2fe" />
-                <StatCard title="Study Hours" value={`${stats?.study_hours || 0}h`} subtitle="Time spent in live classes" icon={FiClock} color="#f59e0b" bg="#fffbeb" />
+                <StatCard title="Average Grade" value={stats?.average_grade || 'N/A'} subtitle="Overall performance" icon={FiAward} color="#8b5cf6" bg="#f5f3ff" />
+                <StatCard title="Attendance" value={`${stats?.attendance_rate || 0}%`} subtitle="Class participation" icon={FiCheckCircle} color="#10b981" bg="#ecfdf5" />
+                <StatCard title="Assignments" value={`${stats?.completed_assignments || 0}/${stats?.assignments_total || 0}`} subtitle={`${completionRate}% completion rate`} icon={FiTarget} color="#0ea5e9" bg="#e0f2fe" />
+                <StatCard title="Study Hours" value={`${stats?.study_hours || 0}h`} subtitle="Time spent in classes" icon={FiClock} color="#f59e0b" bg="#fffbeb" />
             </div>
 
             {/* Detailed Progress */}
@@ -95,11 +88,7 @@ export default function StudentPerformance() {
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {[
-                            { label: 'Mathematics', val: 95, color: '#0ea5e9' },
-                            { label: 'Physics', val: 82, color: '#8b5cf6' },
-                            { label: 'Chemistry', val: 88, color: '#10b981' }
-                        ].map((item, i) => (
+                        {stats?.subject_mastery?.length > 0 ? stats.subject_mastery.map((item, i) => (
                             <div key={i}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
                                     <span>{item.label}</span>
@@ -109,7 +98,9 @@ export default function StudentPerformance() {
                                     <div style={{ width: `${item.val}%`, height: '100%', background: item.color, borderRadius: 6 }} />
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>No subjects graded yet.</div>
+                        )}
                     </div>
                 </div>
 
@@ -123,14 +114,15 @@ export default function StudentPerformance() {
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {[
-                            { title: 'Perfect Attendance', desc: 'Attended all classes in May', date: 'May 15, 2026', icon: <FiCheckCircle />, color: '#10b981', bg: '#ecfdf5' },
-                            { title: 'Top Scorer', desc: 'Highest grade in Calculus Quiz 1', date: 'May 10, 2026', icon: <FiAward />, color: '#f59e0b', bg: '#fffbeb' },
-                            { title: 'Fast Learner', desc: 'Completed 5 assignments early', date: 'May 02, 2026', icon: <FiTrendingUp />, color: '#6366f1', bg: '#eef2ff' }
-                        ].map((item, i) => (
-                            <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: 16, borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none' }}>
+                        {stats?.recent_achievements?.length > 0 ? stats.recent_achievements.map((item, i) => {
+                            let ItemIcon = FiAward;
+                            if (item.icon === 'FiCheckCircle') ItemIcon = FiCheckCircle;
+                            if (item.icon === 'FiTrendingUp') ItemIcon = FiTrendingUp;
+
+                            return (
+                            <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: 16, borderBottom: i < stats.recent_achievements.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                                 <div style={{ width: 48, height: 48, borderRadius: 12, background: item.bg, color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                                    {item.icon}
+                                    <ItemIcon />
                                 </div>
                                 <div>
                                     <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 2 }}>{item.title}</div>
@@ -138,7 +130,9 @@ export default function StudentPerformance() {
                                     <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>{item.date}</div>
                                 </div>
                             </div>
-                        ))}
+                        )}) : (
+                            <div style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>Work hard to earn achievements!</div>
+                        )}
                     </div>
                 </div>
             </div>

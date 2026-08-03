@@ -19,7 +19,7 @@ class StudentAssignmentController extends Controller
                       ->orWhereNull('grade')
                       ->orWhere('grade', '');
             })
-            ->with(['submissions' => function($q) use ($user) {
+            ->with(['teacher', 'submissions' => function($q) use ($user) {
                 $q->where('student_id', $user->id);
             }])
             ->orderBy('due_date', 'asc')

@@ -5,7 +5,7 @@ import {
     FiArrowRight, FiBook, FiPlay, FiAlertCircle, FiClock,
     FiTrendingUp
 } from 'react-icons/fi'
-import { getStudentStats } from '../../services/dashboardService'
+import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 
 // Reusable Stat Card
@@ -39,6 +39,7 @@ function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
 
 export default function StudentOverview() {
     const [stats, setStats] = useState(null)
+    const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
 
     const hour = new Date().getHours()
@@ -47,14 +48,22 @@ export default function StudentOverview() {
     useEffect(() => {
         async function loadStats() {
             try {
-                const data = await getStudentStats().catch(() => null)
+                const [data, schedules] = await Promise.all([
+                    getStudentStats().catch(() => null),
+                    getStudentUpcomingSchedules().catch(() => [])
+                ])
                 setStats(data || {
-                    user_name: 'Student',
-                    today_classes: 2,
-                    pending_assignments: 3,
-                    attendance_rate: 85,
-                    upcoming_classes: 5
+                    user: { name: 'Student' },
+                    today_classes: 0,
+                    pending_assignments: 0,
+                    attendance_rate: 0,
+                    upcoming_classes: 0,
+                    recent_announcements: []
                 })
+                
+                const todayStr = new Date().toDateString()
+                const todays = (schedules || []).filter(s => new Date(s.scheduled_at).toDateString() === todayStr)
+                setTodaySchedules(todays)
             } finally {
                 setLoading(false)
             }
@@ -130,73 +139,75 @@ export default function StudentOverview() {
                         </Link>
                     </div>
 
-                    {/* Active Class */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16,
-                        padding: '16px 22px', borderBottom: '1px solid #f1f5f9',
-                        background: 'linear-gradient(90deg, rgba(99,102,241,0.04) 0%, transparent 100%)',
-                        flexWrap: 'wrap'
-                    }}>
-                        <div style={{
-                            width: 56, height: 56, borderRadius: 14,
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', color: '#fff', flexShrink: 0
-                        }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>09</span>
-                            <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.8 }}>AM</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                                <span style={{
-                                    padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                                    background: '#dcfce7', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px'
-                                }}>● Live Now</span>
-                                <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>Mathematics - Calculus Intro</span>
+                    {todaySchedules.length > 0 ? todaySchedules.map((schedule, i) => {
+                        const dateObj = new Date(schedule.scheduled_at)
+                        const hour = dateObj.getHours()
+                        let hourStr = hour % 12 || 12
+                        hourStr = hourStr < 10 ? '0' + hourStr : hourStr
+                        const ampm = hour >= 12 ? 'PM' : 'AM'
+                        
+                        // Roughly consider class live if we are between start time and +2 hours
+                        const isLive = new Date() >= dateObj && new Date() <= new Date(dateObj.getTime() + 2 * 60 * 60 * 1000)
+                        
+                        return (
+                            <div key={i} style={{
+                                display: 'flex', alignItems: 'center', gap: 16,
+                                padding: '16px 22px', borderBottom: i < todaySchedules.length - 1 ? '1px solid #f1f5f9' : 'none',
+                                background: isLive ? 'linear-gradient(90deg, rgba(99,102,241,0.04) 0%, transparent 100%)' : 'transparent',
+                                flexWrap: 'wrap'
+                            }}>
+                                <div style={{
+                                    width: 56, height: 56, borderRadius: 14,
+                                    background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f1f5f9',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexDirection: 'column', color: isLive ? '#fff' : '#64748b', flexShrink: 0
+                                }}>
+                                    <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{hourStr}</span>
+                                    <span style={{ fontSize: 9, fontWeight: 600, opacity: isLive ? 0.8 : 0.7 }}>{ampm}</span>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 180 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                                        {isLive && (
+                                            <span style={{
+                                                padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                                                background: '#dcfce7', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px'
+                                            }}>● Live Now</span>
+                                        )}
+                                        <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>{schedule.subject || schedule.title}</span>
+                                    </div>
+                                    <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>{schedule.title} {schedule.grade ? `• ${schedule.grade}` : ''}</span>
+                                </div>
+                                {isLive ? (
+                                    <button style={{
+                                        padding: '10px 20px', borderRadius: 12, border: 'none',
+                                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onClick={() => { if (schedule.join_url) window.open(schedule.join_url, '_blank') }}
+                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,0.45)' }}
+                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35)' }}>
+                                        <FiPlay style={{ fill: 'currentColor' }} /> Join Class
+                                    </button>
+                                ) : (
+                                    <button style={{
+                                        padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0',
+                                        background: '#f8fafc', color: '#94a3b8', fontSize: 13, fontWeight: 600,
+                                        cursor: 'default', display: 'flex', alignItems: 'center', gap: 6
+                                    }}>
+                                        <FiClock /> Upcoming
+                                    </button>
+                                )}
                             </div>
-                            <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>Prof. Kumara • A/L 2026</span>
+                        )
+                    }) : (
+                        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
+                            <div style={{ fontSize: 32, marginBottom: 8 }}>☕</div>
+                            No classes scheduled for today.
                         </div>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: 'none',
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
-                            transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,0.45)' }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35)' }}
-                        >
-                            <FiPlay style={{ fill: 'currentColor' }} /> Join Class
-                        </button>
-                    </div>
-
-                    {/* Upcoming Class */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16,
-                        padding: '16px 22px', flexWrap: 'wrap'
-                    }}>
-                        <div style={{
-                            width: 56, height: 56, borderRadius: 14,
-                            background: '#f1f5f9',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', color: '#64748b', flexShrink: 0
-                        }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>11</span>
-                            <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>AM</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>Physics - Thermodynamics</div>
-                            <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>Prof. Silva • A/L 2026</span>
-                        </div>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0',
-                            background: '#f8fafc', color: '#94a3b8', fontSize: 13, fontWeight: 600,
-                            cursor: 'default', display: 'flex', alignItems: 'center', gap: 6
-                        }}>
-                            <FiClock /> Upcoming
-                        </button>
-                    </div>
+                    )}
                 </div>
 
                 {/* Notice Board */}
@@ -212,32 +223,25 @@ export default function StudentOverview() {
                         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>📢 Notice Board</h3>
                     </div>
                     <div style={{ padding: '12px 22px', flex: 1 }}>
-                        {/* Notice 1 */}
-                        <div style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #f8fafc' }}>
-                            <div style={{
-                                width: 40, height: 40, borderRadius: 12, background: '#fef2f2',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#ef4444', fontSize: 18, flexShrink: 0
-                            }}><FiAlertCircle /></div>
-                            <div>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 3 }}>Today, 08:30 AM</div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', marginBottom: 3 }}>Physics Class Rescheduled</div>
-                                <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>The evening physics class has been moved to tomorrow 8 AM.</div>
+                        {stats?.recent_announcements?.length > 0 ? stats.recent_announcements.map((notice, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: i < stats.recent_announcements.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: 12, 
+                                    background: notice.type === 'important' ? '#fef2f2' : '#eef2ff',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: notice.type === 'important' ? '#ef4444' : '#6366f1', fontSize: 18, flexShrink: 0
+                                }}>{notice.type === 'important' ? <FiAlertCircle /> : <FiBook />}</div>
+                                <div>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 3 }}>{notice.date}</div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', marginBottom: 3 }}>{notice.title}</div>
+                                    <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>{notice.message}</div>
+                                </div>
                             </div>
-                        </div>
-                        {/* Notice 2 */}
-                        <div style={{ display: 'flex', gap: 12, padding: '12px 0' }}>
-                            <div style={{
-                                width: 40, height: 40, borderRadius: 12, background: '#eef2ff',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#6366f1', fontSize: 18, flexShrink: 0
-                            }}><FiBook /></div>
-                            <div>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 3 }}>Yesterday</div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', marginBottom: 3 }}>New Notes Uploaded</div>
-                                <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>Chemistry organic chapters 1-3 PDF notes are available.</div>
+                        )) : (
+                            <div style={{ padding: '30px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
+                                No new notices
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

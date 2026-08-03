@@ -466,3 +466,176 @@ export const getSuperAdminActivityLogs = async () => {
   if (!res.ok) throw new Error('Failed to load activity logs')
   return res.json()
 }
+
+// ── EXAM RESULTS API ──
+
+// Public: Search exam results
+export const searchExamResults = async (params) => {
+  const query = new URLSearchParams(params).toString()
+  const res = await fetch(`${API_BASE_URL}/exam-results/search?${query}`, {
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'No results found')
+  }
+  return res.json()
+}
+
+// Public: Get available terms
+export const getExamTerms = async () => {
+  const res = await fetch(`${API_BASE_URL}/exam-results/terms`, {
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load terms')
+  return res.json()
+}
+
+// Public: Get available grades
+export const getExamGrades = async () => {
+  const res = await fetch(`${API_BASE_URL}/exam-results/grades`, {
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load grades')
+  return res.json()
+}
+
+// Public: Get available years
+export const getExamYears = async () => {
+  const res = await fetch(`${API_BASE_URL}/exam-results/years`, {
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load years')
+  return res.json()
+}
+
+// Admin: Get all exam results
+export const getAdminExamResults = async (params = {}) => {
+  const query = new URLSearchParams(params).toString()
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results?${query}`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load exam results')
+  return res.json()
+}
+
+// Admin: Create result
+export const createExamResult = async (data) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to create result')
+  }
+  return res.json()
+}
+
+// Admin: Update result
+export const updateExamResult = async (id, data) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/${id}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to update result')
+  }
+  return res.json()
+}
+
+// Admin: Delete result
+export const deleteExamResult = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to delete result')
+  return res.json()
+}
+
+// Admin: Bulk delete
+export const bulkDeleteExamResults = async (ids) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/bulk-delete`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) throw new Error('Failed to delete results')
+  return res.json()
+}
+
+// Admin: Import file
+export const importExamResults = async (formData) => {
+  const token = localStorage.getItem('authToken')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  }
+  if (user?.institute_id) {
+    headers['X-Institute-Id'] = user.institute_id
+  }
+
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/import`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Import failed')
+  }
+  return res.json()
+}
+
+// Admin: Export results URL
+export const getExamResultsExportUrl = (params = {}) => {
+  const query = new URLSearchParams(params).toString()
+  return `${API_BASE_URL}/admin/exam-results/export?${query}`
+}
+
+// Admin: Get terms list (for management)
+export const getAdminExamTerms = async () => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/terms`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load terms')
+  return res.json()
+}
+
+// Admin: Add term
+export const createExamTerm = async (name) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/terms`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to add term')
+  }
+  return res.json()
+}
+
+// Admin: Delete term
+export const deleteExamTerm = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/admin/exam-results/terms/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to delete term')
+  return res.json()
+}

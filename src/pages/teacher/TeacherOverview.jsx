@@ -43,13 +43,7 @@ export default function TeacherOverview() {
         async function loadStats() {
             try {
                 const data = await getTeacherDashboardStats().catch(() => null)
-                setStats(data || {
-                    user_name: 'Teacher',
-                    today_classes: 3,
-                    total_students: 145,
-                    new_submissions: 12,
-                    upcoming_classes: 8
-                })
+                setStats(data || {})
             } finally {
                 setLoading(false)
             }

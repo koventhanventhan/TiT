@@ -12,11 +12,7 @@ export default function TeacherSchedule() {
                 // Mock data fallback if API fails
                 let data = await getTeacherUpcomingSchedules().catch(() => null)
                 if (!data || data.length === 0) {
-                    data = [
-                        { id: 1, title: 'Advanced Calculus', subject: 'Mathematics', student_count: 45, duration: 120, scheduled_at: new Date().setHours(9, 0, 0, 0), zoom_link: '#' },
-                        { id: 2, title: 'Linear Algebra Revision', subject: 'Mathematics', student_count: 30, duration: 90, scheduled_at: new Date().setHours(14, 0, 0, 0), zoom_link: '#' },
-                        { id: 3, title: 'Quantum Physics Intro', subject: 'Physics', student_count: 50, duration: 120, scheduled_at: new Date(new Date().getTime() + 86400000).setHours(10, 0, 0, 0), zoom_link: '#' },
-                    ]
+                    data = []
                 }
                 const arr = Array.isArray(data) ? data : data.data || []
                 arr.sort((a, b) => new Date(a.scheduled_at || a.start_time) - new Date(b.scheduled_at || b.start_time))

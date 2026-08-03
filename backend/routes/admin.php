@@ -57,6 +57,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy');
         Route::post('/students/{id}/mark-paid', [StudentController::class, 'markPaid'])->name('admin.students.mark-paid');
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
+        Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password');
         // Teachers
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');
         Route::post('/teachers/bulk-delete', [TeacherController::class, 'bulkDelete'])->name('admin.teachers.bulk-delete');
@@ -67,6 +68,8 @@ Route::prefix('admin')->group(function () {
         Route::post('/teachers/{id}/deactivate', [TeacherController::class, 'deactivate'])->name('admin.teachers.deactivate');
         Route::post('/teachers/{id}/activate', [TeacherController::class, 'activate'])->name('admin.teachers.activate');
         Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->name('admin.teachers.destroy');
+
+        Route::post('/teachers/{id}/reset-password', [TeacherController::class, 'resetPasswordAndNotify'])->name('admin.teachers.reset-password');
 
         // Subjects
         Route::get('/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
@@ -140,6 +143,12 @@ Route::prefix('admin')->group(function () {
         Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-as-read');
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-as-read');
         
+        // Exam Results View and built-in API calls for blade
+        Route::get('/exam-results', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'view'])->name('admin.exam-results.index');
+        Route::get('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'index']);
+        Route::post('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'store']);
+        Route::delete('/exam-results/data/{id}', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'destroy']);
+        Route::post('/exam-results/data/import', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'import']);
 
         // Zoom accounts management
         Route::resource('zoom-accounts', ZoomAccountController::class)->names([

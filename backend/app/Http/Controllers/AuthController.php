@@ -85,7 +85,6 @@ class AuthController extends Controller
             'role' => 'user', // Always 'user' (student)
             'email' => $request->email,
             'password' => Hash::make($request->password), // Always hashed with Hash::make()
-            'plain_password' => $request->password, // Store readable password for admin
             'full_name' => $fullName,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -462,19 +461,25 @@ class AuthController extends Controller
                 $firstName = $nameParts[0];
                 $lastName = $nameParts[1] ?? '';
                 
+                $plainPassword = Str::random(10);
+                
                 $user = User::create([
                     'name' => $fullName,
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'full_name' => $fullName,
                     'email' => $googleUser->getEmail(),
-                    'password' => Hash::make(Str::random(16)),
+                    'password' => Hash::make($plainPassword),
                     'role' => 'user',
                     'institute_id' => $instituteId,
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
+                    'email_verified_at' => now(),
                     'registration_status' => 'pending', // Requires admin approval normally
                 ]);
+
+                // Send the generated plain text password to the student
+                \Illuminate\Support\Facades\Mail::to($user->email)->queue(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
             } else {
                 // Update google_id if not set
                 if (!$user->google_id) {

@@ -53,7 +53,6 @@ class TeacherController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'plain_password' => $request->password,
             'role' => 'teacher',
             'phone_number' => $request->phone_number,
             'teacher_unique_id' => $newId,
@@ -111,10 +110,10 @@ class TeacherController extends Controller
             'teacher_class' => $request->teacher_class,
         ];
 
-        // Only update password if changed
-        if ($request->filled('password') && $request->password !== $teacher->plain_password) {
+        if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
-            $data['plain_password'] = $request->password;
+        } else {
+            unset($data['password']);
         }
 
         if ($request->filled('avatar_base64')) {
@@ -140,6 +139,23 @@ class TeacherController extends Controller
 
         $teacher->update($data);
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated.');
+    }
+
+    public function resetPasswordAndNotify($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Admin access required'], 403);
+        }
+        $teacher = User::where('role', 'teacher')->findOrFail($id);
+        
+        $newPassword = \Illuminate\Support\Str::random(10);
+        $teacher->update([
+            'password' => Hash::make($newPassword)
+        ]);
+        
+        \Illuminate\Support\Facades\Mail::to($teacher->email)->queue(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
+        
+        return response()->json(['success' => true, 'message' => 'New password generated and emailed to the teacher.']);
     }
 
     public function deactivate($id)

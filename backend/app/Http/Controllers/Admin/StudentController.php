@@ -141,10 +141,10 @@ class StudentController extends Controller
             'custom_fields' => $request->custom_fields,
         ];
 
-        // Only update password if admin changed it (different from stored plain_password)
-        if (!empty($validated['password']) && $validated['password'] !== $student->plain_password) {
-            $updateData['password'] = Hash::make($validated['password']);
-            $updateData['plain_password'] = $validated['password'];
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        } else {
+            unset($updateData['password']);
         }
 
         $student->update($updateData);
@@ -242,7 +242,6 @@ class StudentController extends Controller
             'name' => $username,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'plain_password' => $validated['password'],
             'role' => 'user',
             'full_name' => $validated['full_name'],
             'phone_number' => $validated['phone_number'] ?? null,
@@ -343,6 +342,23 @@ class StudentController extends Controller
         $student->delete();
         
         return redirect()->route('admin.students.index')->with('success', 'Student account deleted permanently.');
+    }
+
+    public function resetPasswordAndNotify($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Admin access required'], 403);
+        }
+        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
+        
+        $newPassword = \Illuminate\Support\Str::random(10);
+        $student->update([
+            'password' => Hash::make($newPassword)
+        ]);
+        
+        \Illuminate\Support\Facades\Mail::to($student->email)->queue(new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true));
+        
+        return response()->json(['success' => true, 'message' => 'New password generated and emailed to the student.']);
     }
 
     public function markPaid(Request $request, $id)

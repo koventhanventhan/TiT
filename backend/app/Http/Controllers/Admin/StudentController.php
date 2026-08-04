@@ -356,7 +356,18 @@ class StudentController extends Controller
             'password' => Hash::make($newPassword)
         ]);
         
-        \Illuminate\Support\Facades\Mail::to($student->email)->queue(new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true));
+        try {
+            \Illuminate\Support\Facades\Log::info('Initiating password reset email for ID: ' . $id . ' with Email: ' . $student->email);
+            
+            $mail = new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true);
+            \Illuminate\Support\Facades\Log::info('Mail body preview', ['html_length' => strlen($mail->render())]);
+            
+            \Illuminate\Support\Facades\Mail::to($student->email)->send($mail);
+            \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $student->email);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $student->email . '. Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
+        }
         
         return response()->json(['success' => true, 'message' => 'New password generated and emailed to the student.']);
     }

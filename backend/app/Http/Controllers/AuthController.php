@@ -479,7 +479,7 @@ class AuthController extends Controller
                 ]);
 
                 // Send the generated plain text password to the student
-                \Illuminate\Support\Facades\Mail::to($user->email)->queue(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
             } else {
                 // Update google_id if not set
                 if (!$user->google_id) {

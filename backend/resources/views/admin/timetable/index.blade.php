@@ -394,7 +394,7 @@
                             <label>Assigned Teacher</label>
                             <select name="teacher_id" class="form-control" required>
                                 @foreach($teachers as $t)
-                                    <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                    <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}{{ $t->teacher_class ? ' ('.$t->teacher_class.')' : '' }} - {{ $t->email }}</option>
                                 @endforeach
                             </select>
                         </div>

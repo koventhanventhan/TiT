@@ -9,9 +9,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class GoogleAutoPasswordMail extends Mailable implements ShouldQueue
+class GoogleAutoPasswordMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use SerializesModels;
 
     public $user;
     public $plainPassword;

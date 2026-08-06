@@ -265,7 +265,13 @@
                                      <span style="font-weight:800; opacity: 0.7;">{{ $student->medium === 'tamil' ? 'TAM' : 'ENG' }}</span>
                                  </td>
                                  <td class="nowrap-column">
-                                     <div style="font-weight: 500; font-size: 0.7rem;">{{ $student->phone_number ?? 'N/A' }}</div>
+                                     <div style="font-weight: 500; font-size: 0.7rem;">
+                                         @if($student->phone_number)
+                                             {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}
+                                         @else
+                                             N/A
+                                         @endif
+                                     </div>
                                  </td>
                                  <td class="nowrap-column">
                                      <div style="margin-bottom: 0.125rem;">

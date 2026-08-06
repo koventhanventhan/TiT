@@ -127,7 +127,7 @@ export default function TeacherStudents() {
                                             <FiMail style={{ color: '#94a3b8' }} /> {student.email}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569', fontSize: 13 }}>
-                                            <FiPhone style={{ color: '#94a3b8' }} /> {student.phone_number}
+                                            <FiPhone style={{ color: '#94a3b8' }} /> {student.phone_number?.startsWith('94') ? '+' + student.phone_number : student.phone_number}
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>

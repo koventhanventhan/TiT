@@ -153,7 +153,7 @@ class TeacherController extends Controller
             'password' => Hash::make($newPassword)
         ]);
         
-        \Illuminate\Support\Facades\Mail::to($teacher->email)->queue(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
+        \Illuminate\Support\Facades\Mail::to($teacher->email)->send(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
         
         return response()->json(['success' => true, 'message' => 'New password generated and emailed to the teacher.']);
     }

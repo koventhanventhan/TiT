@@ -101,10 +101,21 @@ class StudentController extends Controller
             ->whereNotNull('full_name')
             ->firstOrFail();
         
+        // Normalize phone number
+        if ($request->has('phone_number')) {
+            $phone = preg_replace('/\D/', '', $request->phone_number);
+            if (strlen($phone) == 10 && str_starts_with($phone, '0')) {
+                $phone = '94' . substr($phone, 1);
+            } elseif (strlen($phone) == 9 && str_starts_with($phone, '7')) {
+                $phone = '94' . $phone;
+            }
+            $request->merge(['phone_number' => $phone]);
+        }
+        
         // Validate the request
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number,' . $student->id,
+            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number,' . $student->id,
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
@@ -204,9 +215,20 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
+        // Normalize phone number
+        if ($request->has('phone_number')) {
+            $phone = preg_replace('/\D/', '', $request->phone_number);
+            if (strlen($phone) == 10 && str_starts_with($phone, '0')) {
+                $phone = '94' . substr($phone, 1);
+            } elseif (strlen($phone) == 9 && str_starts_with($phone, '7')) {
+                $phone = '94' . $phone;
+            }
+            $request->merge(['phone_number' => $phone]);
+        }
+
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:10,15|unique:users,phone_number',
+            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'date_of_birth' => 'required|date',

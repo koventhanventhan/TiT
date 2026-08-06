@@ -295,8 +295,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
 
     const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
-    if (!formData.phoneNumber || phoneDigits.length < 10 || phoneDigits.length > 15) {
-      setError('Phone number must be 10-15 digits / தொலைபேசி எண் 10-15 இலக்கங்களாக இருக்க வேண்டும்')
+    if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
+      setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
       return
     }
 

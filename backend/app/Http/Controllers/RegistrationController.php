@@ -135,6 +135,30 @@ class RegistrationController extends Controller
             $user = null; // Ignore admin/teacher sessions for registration
         }
 
+        // --- PRE-VALIDATION FIXES for Same Name & Phone Number normalization ---
+        if ($request->has('phone_number')) {
+            $phone = preg_replace('/\D/', '', $request->phone_number);
+            if (strlen($phone) == 10 && str_starts_with($phone, '0')) {
+                $phone = '94' . substr($phone, 1);
+            } elseif (strlen($phone) == 9 && str_starts_with($phone, '7')) {
+                $phone = '94' . $phone;
+            }
+            $request->merge(['phone_number' => $phone]);
+        }
+
+        if ($request->has('username') && !filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+            // Auto-increment username if duplicate (to allow same full name)
+            $username = strtolower(preg_replace('/\s+/', '', (string)$request->username));
+            $originalUsername = $username;
+            $counter = 1;
+            while (\App\Models\User::where('name', $username)->where('id', '!=', $user?->id ?? 0)->exists()) {
+                $username = $originalUsername . $counter;
+                $counter++;
+            }
+            $request->merge(['username' => $username]);
+        }
+        // -----------------------------------------------------------------------
+
         $gradeNum = null;
         if ($request->current_grade) {
             if (preg_match('/தரம்\s*(\d+)/', $request->current_grade, $m)) {
@@ -171,7 +195,7 @@ class RegistrationController extends Controller
             $label = \App\Models\SiteSetting::get($settingKey);
             if (!empty($label)) {
                 if ($field === 'phone_number') {
-                    $rules[$field] = 'required|digits_between:10,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL');
+                    $rules[$field] = 'required|digits_between:9,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL');
                 } elseif ($field === 'date_of_birth') {
                     $rules[$field] = 'required|date';
                 } elseif ($field === 'gender') {

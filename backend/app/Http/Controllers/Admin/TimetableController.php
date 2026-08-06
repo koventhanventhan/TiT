@@ -130,8 +130,9 @@ class TimetableController extends Controller
             Log::error('Auto-sync failed: ' . $e->getMessage());
         }
 
-        // Send notifications to teacher and matching students
-        $this->sendClassNotifications($timetableEntry);
+        // No immediate notification on timetable creation.
+        // The cron job (zoom:send-reminders) will automatically notify
+        // teachers and students before the class starts.
 
         return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
     }

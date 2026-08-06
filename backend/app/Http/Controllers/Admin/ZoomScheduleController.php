@@ -114,14 +114,11 @@ class ZoomScheduleController extends Controller
             $schedule->teachers()->sync($request->teacher_ids);
         }
 
-        // Fetch the schedule with relations
-        $schedule->load('teachers');
+        // No immediate notification on class creation.
+        // The cron job (zoom:send-reminders) will automatically notify
+        // teachers and students ~45 minutes before the class starts.
 
-        // Note: We removed the immediate notification here.
-        // Reminders will be sent automatically 15-45 minutes before the class
-        // starts via the SendZoomReminders console command (Cron Job).
-
-        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created successfully.');
+        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created successfully. Reminders will be sent automatically before the class starts.');
     }
 
     public function edit($id)

@@ -28,8 +28,10 @@ class TimetableController extends Controller
     {
         $timetables = Timetable::with(['subject', 'teacher'])->orderBy('day_of_week')->orderBy('start_time')->get();
         
-        $subjects = Subject::orderBy('name')->get();
+        // Get unique subject names (no duplicates across categories)
+        $subjects = Subject::select('id', 'name')->orderBy('name')->get()->unique('name')->values();
         $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
+        $teachersJson = $teachers->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'teacher_class' => $t->teacher_class, 'email' => $t->email])->values();
         $zoomUsers = [];
         try {
             if ($this->zoom) {
@@ -63,7 +65,7 @@ class TimetableController extends Controller
             'Grade 13 / தரம் 13',
         ];
 
-        return view('admin.timetable.index', compact('groupedTimetables', 'days', 'subjects', 'teachers', 'zoomUsers', 'grades'));
+        return view('admin.timetable.index', compact('groupedTimetables', 'days', 'subjects', 'teachers', 'teachersJson', 'zoomUsers', 'grades'));
     }
 
     public function create()

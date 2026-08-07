@@ -121,6 +121,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendance', [\App\Http\Controllers\Api\MasterAdminController::class, 'attendanceStats']);
         Route::post('/branding', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateBranding']);
         Route::get('/calendar', [\App\Http\Controllers\Api\MasterAdminController::class, 'calendarEvents']);
+
+        // ── Exam Results Management ──
+        Route::prefix('exam-results')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\ExamResultController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\ExamResultController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\ExamResultController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\ExamResultController::class, 'destroy']);
+            Route::post('/bulk-delete', [\App\Http\Controllers\Api\ExamResultController::class, 'bulkDelete']);
+            Route::post('/import', [\App\Http\Controllers\Api\ExamResultController::class, 'import']);
+            Route::get('/export', [\App\Http\Controllers\Api\ExamResultController::class, 'export']);
+            Route::get('/terms', [\App\Http\Controllers\Api\ExamResultController::class, 'listTerms']);
+            Route::post('/terms', [\App\Http\Controllers\Api\ExamResultController::class, 'storeTerm']);
+            Route::delete('/terms/{id}', [\App\Http\Controllers\Api\ExamResultController::class, 'destroyTerm']);
+        });
     });
 
     // Super Admin Routes (Role: super_admin) - Note: Global context, no tenant middleware usually
@@ -148,6 +162,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('/subjects/prices', [\App\Http\Controllers\Admin\SubjectController::class, 'getPrices']);
+
+// ── Exam Results (Public) ──
+Route::prefix('exam-results')->group(function () {
+    Route::get('/search', [\App\Http\Controllers\Api\ExamResultController::class, 'search']);
+    Route::get('/terms', [\App\Http\Controllers\Api\ExamResultController::class, 'getTerms']);
+    Route::get('/grades', [\App\Http\Controllers\Api\ExamResultController::class, 'getGrades']);
+    Route::get('/years', [\App\Http\Controllers\Api\ExamResultController::class, 'getYears']);
+});
 
 // Contact form (public)
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'send']);

@@ -144,6 +144,7 @@
     </div>
 
     <!-- Required vendors -->
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('admin-theme/vendor/global/global.min.js') }}"></script>
     <script src="{{ asset('admin-theme/vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>

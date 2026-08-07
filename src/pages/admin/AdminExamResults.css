@@ -1,0 +1,520 @@
+/* ═══════════════════════════════════════════
+   ADMIN EXAM RESULTS — Dashboard Styles
+   ═══════════════════════════════════════════ */
+
+.admin-exam-results {
+    padding: 20px;
+}
+
+.aer-loading {
+    padding: 60px 20px;
+    text-align: center;
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+/* ── Header ── */
+.aer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.aer-header-info h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin: 0 0 4px;
+}
+
+.aer-header-info p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.aer-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.aer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.aer-btn.primary {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.25);
+}
+
+.aer-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35); }
+
+.aer-btn.secondary {
+    background: #f3f0ff;
+    color: #7c3aed;
+    border: 1px solid #e5e0f5;
+}
+
+.aer-btn.secondary:hover { background: #ede5ff; }
+
+.aer-btn.danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.aer-btn.danger:hover { background: #fcd0d0; }
+
+.aer-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* ── Controls (Search + Filter) ── */
+.aer-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.aer-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 2px solid #e9e5f5;
+    border-radius: 10px;
+    padding: 8px 14px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.aer-search svg { color: #a78bfa; flex-shrink: 0; }
+
+.aer-search input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    width: 100%;
+    background: transparent;
+}
+
+.aer-filters {
+    display: flex;
+    gap: 10px;
+}
+
+.aer-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 2px solid #e9e5f5;
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.aer-filter svg { color: #a78bfa; font-size: 0.85rem; }
+
+.aer-filter select {
+    border: none;
+    outline: none;
+    font-size: 0.88rem;
+    background: transparent;
+    cursor: pointer;
+    color: #1e1b4b;
+}
+
+/* ── Table ── */
+.aer-table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    overflow-x: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    border: 1px solid #ede9fe;
+}
+
+.aer-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.aer-table thead {
+    background: #f5f3ff;
+}
+
+.aer-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #4c1d95;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.aer-table td {
+    padding: 11px 14px;
+    font-size: 0.88rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f0fb;
+}
+
+.aer-table tbody tr:hover { background: #faf8ff; }
+.aer-table tbody tr.selected { background: #f3f0ff; }
+.aer-table tbody tr:last-child td { border-bottom: none; }
+
+.td-name { font-weight: 600; color: #1e1b4b; }
+.td-index { font-family: monospace; color: #7c3aed; font-weight: 600; }
+.td-subject { font-weight: 500; }
+.td-marks { font-weight: 700; color: #1e1b4b; }
+
+.aer-empty {
+    text-align: center;
+    padding: 40px !important;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Grade Pills */
+.aer-grade-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.g-excellent { background: #dcfce7; color: #166534; }
+.g-good { background: #dbeafe; color: #1e40af; }
+.g-average { background: #fef3c7; color: #92400e; }
+.g-simple { background: #f3e8ff; color: #6b21a8; }
+.g-fail { background: #fee2e2; color: #991b1b; }
+
+/* Action Buttons */
+.aer-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.aer-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.aer-icon-btn.edit { background: #ede9fe; color: #7c3aed; }
+.aer-icon-btn.edit:hover { background: #ddd6fe; }
+.aer-icon-btn.delete { background: #fee2e2; color: #dc2626; }
+.aer-icon-btn.delete:hover { background: #fcd0d0; }
+
+/* Pagination Info */
+.aer-pagination-info {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* ═══ MODALS ═══ */
+.aer-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.aer-modal {
+    background: #fff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+.aer-modal.modal-sm {
+    max-width: 480px;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.aer-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #ede9fe;
+}
+
+.aer-modal-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin: 0;
+}
+
+.aer-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: #f3f0ff;
+    color: #7c3aed;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+
+.aer-modal-close:hover { background: #ede5ff; }
+
+.aer-modal-body {
+    padding: 24px;
+}
+
+.aer-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.aer-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.aer-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.aer-form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4c1d95;
+    margin-bottom: 6px;
+}
+
+.aer-form-group input,
+.aer-form-group select {
+    padding: 10px 14px;
+    border: 2px solid #e9e5f5;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.aer-form-group input:focus,
+.aer-form-group select:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.file-input {
+    padding: 10px !important;
+    background: #faf8ff;
+}
+
+.aer-form-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    margin-bottom: 16px;
+}
+
+.aer-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f0fb;
+}
+
+/* Import Info Box */
+.import-info-box {
+    background: #f5f3ff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border: 1px solid #ede9fe;
+}
+
+.import-info-box h4 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+    color: #4c1d95;
+}
+
+.import-info-box p {
+    margin: 4px 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.import-info-box code {
+    display: block;
+    background: #1e1b4b;
+    color: #a78bfa;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    margin: 8px 0;
+}
+
+.import-note {
+    font-style: italic;
+    color: #7c3aed !important;
+    font-weight: 500;
+}
+
+.import-result {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.import-result.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.import-result.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+.import-warnings {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: #92400e;
+}
+
+/* Terms Management */
+.terms-add-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.terms-add-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e9e5f5;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.terms-add-row input:focus {
+    border-color: #7c3aed;
+}
+
+.terms-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.terms-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 20px;
+}
+
+.term-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #faf8ff;
+    border-radius: 10px;
+    border: 1px solid #ede9fe;
+}
+
+.term-name {
+    font-weight: 600;
+    color: #1e1b4b;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .aer-header {
+        flex-direction: column;
+    }
+
+    .aer-header-actions {
+        width: 100%;
+    }
+
+    .aer-header-actions .aer-btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+    }
+
+    .aer-controls {
+        flex-direction: column;
+    }
+
+    .aer-search {
+        width: 100%;
+    }
+
+    .aer-filters {
+        width: 100%;
+    }
+
+    .aer-filter {
+        flex: 1;
+    }
+
+    .aer-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aer-modal {
+        max-width: 100%;
+        margin: 10px;
+    }
+}

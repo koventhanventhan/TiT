@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess } from '../services/authService'
+import { useLocation } from 'react-router-dom'
 import { FiX } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -14,7 +15,16 @@ const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
-  const [step, setStep] = useState(1)
+  const location = useLocation()
+  
+  // Read step from URL
+  const initialStep = React.useMemo(() => {
+    const searchParams = new window.URLSearchParams(location.search)
+    const stepParam = searchParams.get('step')
+    return stepParam ? parseInt(stepParam, 10) : 1
+  }, [location.search])
+
+  const [step, setStep] = useState(initialStep)
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
 
   // Fetch subjects grouped by category from backend
@@ -43,8 +53,30 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         if (u && u.email) {
           setFormData(prev => ({ ...prev, email: u.email }))
         }
+        
+        // Also initialize selected subjects to accurately calculate the amount in step 2
+        if (u && u.selected_subjects) {
+          let subs = u.selected_subjects
+          if (typeof subs === 'string') {
+            try { subs = JSON.parse(subs) } catch(e) { subs = subs.split(',').map(s => s.trim()) }
+          }
+          if (Array.isArray(subs)) {
+             // In setFormData, also need to know the stream/grade to figure out availableSubjects
+             if (u.current_grade) {
+               setFormData(prev => ({ ...prev, currentGrade: u.current_grade }))
+             }
+             if (u.stream) {
+               setSelectedStream(u.stream)
+             }
+             
+             // Wait for state updates, we can just set selected subjects directly 
+             // but they need to match the API data format.
+             // Usually it's just an array of names.
+             setSelectedSubjects(subs)
+          }
+        }
       } catch (e) {
-        console.error('Failed to parse user for email initialization:', e)
+        console.error('Failed to parse user for initialization:', e)
       }
     }
   }, [])

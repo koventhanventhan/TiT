@@ -84,6 +84,19 @@
                 </ul>
             </li>
 
+            {{-- Exam Results --}}
+            <li class="{{ request()->routeIs('admin.exam-results.*') ? 'mm-active' : '' }}">
+                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                    <i class="flaticon-381-notepad-1"></i>
+                    <span class="nav-text">Exam Results</span>
+                </a>
+                <ul aria-expanded="{{ request()->routeIs('admin.exam-results.*') ? 'true' : 'false' }}">
+                    <li class="{{ request()->routeIs('admin.exam-results.index') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.exam-results.index') }}">Manage Results</a>
+                    </li>
+                </ul>
+            </li>
+
             {{-- Settings --}}
 
             {{-- Settings --}}

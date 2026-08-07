@@ -15,6 +15,7 @@ import PastPapersPage from './pages/PastPapersPage'
 import RecordingsPage from './pages/RecordingsPage'
 import RegisterPage from './pages/RegisterPage'
 import PolicyPage from './pages/PolicyPage'
+import ExamResultsPage from './pages/ExamResultsPage'
 import TutorApplyPage from './pages/TutorApplyPage'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentOverview from './pages/student/StudentOverview'
@@ -94,6 +95,7 @@ function AppContent() {
         <Route path="/notes" element={<PageWrapper><NotesPage /></PageWrapper>} />
         <Route path="/past-papers" element={<PageWrapper><PastPapersPage /></PageWrapper>} />
         <Route path="/recordings" element={<PageWrapper><RecordingsPage /></PageWrapper>} />
+        <Route path="/exam-results" element={<PageWrapper><ExamResultsPage /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><RegisterPage /></PageWrapper>} />
 
         {/* Policy Routes */}

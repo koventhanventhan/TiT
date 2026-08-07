@@ -276,7 +276,7 @@ class StudentController extends Controller
             'current_grade' => $validated['current_grade'],
             'stream' => $validated['stream'] ?? null,
             'selected_subjects' => $subjects,
-            'registration_status' => 'pending_payment',
+            'registration_status' => 'approved',
             'admin_confirmed_at' => now(),
         ]);
 

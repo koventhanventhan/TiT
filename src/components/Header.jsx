@@ -196,6 +196,7 @@ const Header = () => {
     { nameKey: 'nav_about', name: getSetting('nav_about', t('nav_about')), href: '/about', isRoute: true },
     { nameKey: 'nav_classes', name: getSetting('nav_classes', t('nav_classes')), href: '/classes', isRoute: true, hasDropdown: true },
     { nameKey: 'nav_learning_suite', name: getSetting('nav_learning_suite', t('nav_learning_suite')), href: '#learning-suite', isRoute: false, hasDropdown: true },
+    { nameKey: 'nav_exam_results', name: getSetting('nav_exam_results', t('nav_exam_results')), href: '/exam-results', isRoute: true },
     { nameKey: 'nav_contact', name: getSetting('nav_contact', t('nav_contact')), href: '/contact', isRoute: true },
   ]
 

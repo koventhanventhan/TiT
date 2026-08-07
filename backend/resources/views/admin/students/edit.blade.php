@@ -468,16 +468,16 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        const gradeSelect = $('#current_grade');
-        const streamSelect = $('#stream');
-        const streamContainer = $('#stream_container');
+    document.addEventListener('DOMContentLoaded', function() {
+        const gradeSelect = document.getElementById('current_grade');
+        const streamSelect = document.getElementById('stream');
+        const streamContainer = document.getElementById('stream_container');
         
         function updateSubjectSections() {
-            const gradeValue = gradeSelect.val() || "";
-            const streamValue = streamSelect.val() || "";
+            const gradeValue = gradeSelect.value || "";
+            const streamValue = streamSelect.value || "";
             
-            // Extract number from value (could be "1", "Grade 1", or "à®¤à®°à®®à¯  1 / Grade 1")
+            // Extract number from value
             let gradeNum = null;
             if (!isNaN(gradeValue) && gradeValue !== "") {
                 gradeNum = parseInt(gradeValue);
@@ -487,38 +487,65 @@
             }
             
             // Hide all sections first and DISABLE their checkboxes
-            $('.subject-section'). hide().find('input[type="checkbox"]').prop('disabled', true);
-            streamContainer.hide();
+            document.querySelectorAll('.subject-section').forEach(section => {
+                section.style.display = 'none';
+                section.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+            });
+            streamContainer.style.display = 'none';
             
             if (gradeNum) {
                 if (gradeNum >= 1 && gradeNum <= 5) {
-                    $('#subjects_1_5').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                    const sec = document.getElementById('subjects_1_5');
+                    if (sec) {
+                        sec.style.display = 'block';
+                        sec.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+                    }
                 } else if (gradeNum >= 6 && gradeNum <= 11) {
-                    $('#subjects_6_11').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                    const sec = document.getElementById('subjects_6_11');
+                    if (sec) {
+                        sec.style.display = 'block';
+                        sec.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+                    }
                 } else if (gradeNum >= 12 && gradeNum <= 13) {
-                    streamContainer.fadeIn();
+                    streamContainer.style.display = 'block';
                     if (streamValue === 'arts') {
-                        $('#subjects_arts').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                        const sec = document.getElementById('subjects_arts');
+                        if (sec) {
+                            sec.style.display = 'block';
+                            sec.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+                        }
                     } else if (streamValue === 'bio_maths') {
-                        $('#subjects_bio_maths').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                        const sec = document.getElementById('subjects_bio_maths');
+                        if (sec) {
+                            sec.style.display = 'block';
+                            sec.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+                        }
                     }
                 }
             }
         }
         
-        gradeSelect.on('change', function() {
-            // If not 12-13, clear stream
-            const gradeValue = $(this).val() || "";
-            const match = gradeValue.match(/Grade\s*(\d+)/i);
-            const gradeNum = match ? parseInt(match[1]) : null;
-            
-            if (gradeNum < 12) {
-                streamSelect.val('');
-            }
-            updateSubjectSections();
-        });
+        if (gradeSelect) {
+            gradeSelect.addEventListener('change', function() {
+                const gradeValue = this.value || "";
+                let gradeNum = null;
+                if (!isNaN(gradeValue) && gradeValue !== "") {
+                    gradeNum = parseInt(gradeValue);
+                } else {
+                    const match = gradeValue.match(/Grade\s*(\d+)/i);
+                    gradeNum = match ? parseInt(match[1]) : null;
+                }
+                
+                if (gradeNum < 12 && streamSelect) {
+                    streamSelect.value = '';
+                }
+                updateSubjectSections();
+            });
+        }
         
-        streamSelect.on('change', updateSubjectSections);
+        if (streamSelect) {
+            streamSelect.addEventListener('change', updateSubjectSections);
+        }
         
         // Initial call
         updateSubjectSections();

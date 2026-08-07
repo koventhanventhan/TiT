@@ -204,19 +204,19 @@ class AuthController extends Controller
 
         // Check Admin Approval for Students
         if ($user->role === 'user') {
-            // 1. Check Registration Confirmation
-            if (!$user->admin_confirmed_at) {
+            // 1. Check Registration Confirmation or Pending Status
+            if (!$user->admin_confirmed_at || in_array($user->registration_status, ['pending', 'pending_payment'])) {
                 // Auto-approve if they have a successful payment
                 $hasPaid = \App\Models\Payment::where('user_id', $user->id)
                     ->where('status', 'paid')
                     ->exists();
                 if ($hasPaid) {
                     $user->update([
-                        'admin_confirmed_at' => now(),
+                        'admin_confirmed_at' => $user->admin_confirmed_at ?? now(),
                         'registration_status' => 'approved'
                     ]);
                     \Log::info('Auto-approved student during login due to existing payment', ['user_id' => $user->id]);
-                } else {
+                } elseif (!$user->admin_confirmed_at) {
                     return response()->json([
                         'message' => 'Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும். (Account pending admin approval. Please wait.)',
                     ], 403);
@@ -312,6 +312,22 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         $u = $request->user();
+        
+        // Auto-approve logic for users stuck in pending_payment but have a paid status
+        if (!$u->admin_confirmed_at || in_array($u->registration_status, ['pending', 'pending_payment'])) {
+            $hasPaid = \App\Models\Payment::where('user_id', $u->id)
+                ->where('status', 'paid')
+                ->exists();
+            if ($hasPaid) {
+                $u->update([
+                    'admin_confirmed_at' => $u->admin_confirmed_at ?? now(),
+                    'registration_status' => 'approved'
+                ]);
+                $u->refresh();
+                \Log::info('Auto-approved student during user API fetch due to existing payment', ['user_id' => $u->id]);
+            }
+        }
+
         $data = [
             'id' => $u->id,
             'username' => $u->name,

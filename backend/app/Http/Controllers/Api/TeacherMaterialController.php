@@ -8,9 +8,11 @@ use Illuminate\Http\Request;
 
 class TeacherMaterialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $materials = LearningMaterial::orderBy('created_at', 'desc')->get();
+        $materials = LearningMaterial::where('teacher_id', $request->user()->id)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
         return response()->json($materials);
     }
 
@@ -37,6 +39,7 @@ class TeacherMaterialController extends Controller
             'grade' => $validated['grade'] ?? null,
             'file_path' => $filePath,
             'url' => $validated['url'] ?? null,
+            'teacher_id' => $request->user()->id,
         ]);
 
         return response()->json($material, 201);

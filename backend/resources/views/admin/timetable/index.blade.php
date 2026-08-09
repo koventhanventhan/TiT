@@ -384,7 +384,7 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label>Subject</label>
-                            <select name="subject_id" id="addSubjectSelect" class="form-control" required onchange="filterTeachersBySubject(this.value, 'addTeacherSelect')">
+                            <select name="subject_id" id="addSubjectSelect" class="form-control" required>
                                 <option value="">Select Subject</option>
                                 @foreach($subjects as $s)
                                     <option value="{{ $s->id }}" data-name="{{ $s->name }}" {{ old('subject_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
@@ -394,7 +394,7 @@
                         <div class="form-group col-md-6">
                             <label>Assigned Teacher</label>
                             <select name="teacher_id" id="addTeacherSelect" class="form-control" required>
-                                <option value="">Select Subject first</option>
+                                <option value="">Select Teacher</option>
                                 @foreach($teachers as $t)
                                     <option value="{{ $t->id }}" data-subject="{{ strtolower($t->teacher_class ?? '') }}">{{ $t->name }}{{ $t->teacher_class ? ' ('.$t->teacher_class.')' : '' }} - {{ $t->email }}</option>
                                 @endforeach
@@ -429,50 +429,8 @@
 
 @push('scripts')
 <script>
-    // Teacher data for filtering
+    // Teacher data
     const allTeachers = @json($teachersJson);
-
-    function filterTeachersBySubject(subjectId, teacherSelectId) {
-        const teacherSelect = document.getElementById(teacherSelectId);
-        const subjectSelect = subjectId ? document.querySelector(`option[value="${subjectId}"]`) : null;
-        const subjectName = subjectSelect ? subjectSelect.getAttribute('data-name')?.toLowerCase() : '';
-
-        // Clear current options
-        teacherSelect.innerHTML = '';
-
-        if (!subjectName) {
-            teacherSelect.innerHTML = '<option value="">Select Subject first</option>';
-            return;
-        }
-
-        // Filter teachers matching the subject
-        const matched = allTeachers.filter(t => {
-            if (!t.teacher_class) return false;
-            const tc = t.teacher_class.toLowerCase();
-            return tc === subjectName || tc.includes(subjectName) || subjectName.includes(tc);
-        });
-
-        if (matched.length > 0) {
-            matched.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = `${t.name} (${t.teacher_class}) - ${t.email}`;
-                teacherSelect.appendChild(opt);
-            });
-        } else {
-            // Show all teachers if no match found (fallback)
-            const fallbackOpt = document.createElement('option');
-            fallbackOpt.value = '';
-            fallbackOpt.textContent = '⚠️ No teacher found for this subject - showing all';
-            teacherSelect.appendChild(fallbackOpt);
-            allTeachers.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = `${t.name}${t.teacher_class ? ' (' + t.teacher_class + ')' : ''} - ${t.email}`;
-                teacherSelect.appendChild(opt);
-            });
-        }
-    }
 
     function runSync() {
         if(confirm('This will generate Zoom links for the next 90 days based on this timetable. Continue?')) {
@@ -496,12 +454,7 @@
         form.find('input[name="duration"]').val(slot.duration);
         form.find('[name="grade"]').val(slot.grade);
         form.find('select[name="subject_id"]').val(slot.subject_id);
-        
-        // Trigger teacher filter based on selected subject, then set teacher
-        filterTeachersBySubject(slot.subject_id, 'addTeacherSelect');
-        setTimeout(() => {
-            form.find('select[name="teacher_id"]').val(slot.teacher_id);
-        }, 100);
+        form.find('select[name="teacher_id"]').val(slot.teacher_id);
         
         form.find('select[name="zoom_host_email"]').val(slot.zoom_host_email);
         form.find('input[name="is_active"]').prop('checked', slot.is_active);
@@ -517,8 +470,6 @@
         form.attr('action', "{{ route('admin.timetables.store') }}");
         form.find('input[name="_method"]').remove();
         form[0].reset();
-        // Reset teacher dropdown
-        document.getElementById('addTeacherSelect').innerHTML = '<option value="">Select Subject first</option>';
     });
 </script>
 @endpush

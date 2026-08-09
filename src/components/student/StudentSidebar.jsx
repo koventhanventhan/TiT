@@ -22,7 +22,7 @@ export default function StudentSidebar() {
         { name: 'Zoom Classes', icon: <FiVideo />, path: '/student/zoom' },
         { name: 'Assignments', icon: <FiFileText />, path: '/student/assignments' },
         { name: 'Materials', icon: <FiBookOpen />, path: '/student/materials' },
-        { name: 'Performance', icon: <FiBarChart2 />, path: '/student/performance' },
+        // { name: 'Performance', icon: <FiBarChart2 />, path: '/student/performance' }, // Hidden temporarily
         { name: 'Messages', icon: <FiMessageSquare />, path: '/student/messages' },
         { name: 'Settings', icon: <FiSettings />, path: '/student/settings' },
     ]

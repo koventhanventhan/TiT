@@ -84,7 +84,7 @@
                 </ul>
             </li>
 
-            {{-- Exam Results --}}
+            {{-- Exam Results (Hidden temporarily as it is not fully finished)
             <li class="{{ request()->routeIs('admin.exam-results.*') ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
                     <i class="flaticon-381-notepad-1"></i>
@@ -96,6 +96,7 @@
                     </li>
                 </ul>
             </li>
+            --}}
 
             {{-- Settings --}}
 

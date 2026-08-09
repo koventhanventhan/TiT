@@ -21,5 +21,6 @@ class LearningMaterial extends Model
         'group',
         'file_size',
         'url',
+        'teacher_id',
     ];
 }

@@ -46,7 +46,8 @@ class StudentZoomController extends Controller
         $startBuffer = Carbon::now()->subDays(2);
         $endBuffer = Carbon::now()->addDays(90);
 
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', $startBuffer)
+        $schedules = ZoomSchedule::with('teachers')
+            ->where('scheduled_at', '>=', $startBuffer)
             ->where('scheduled_at', '<=', $endBuffer)
             ->orderBy('scheduled_at')
             ->get();
@@ -101,6 +102,7 @@ class StudentZoomController extends Controller
                 'scheduled_at' => $s->scheduled_at->toIso8601String(),
                 'subject' => $s->subject,
                 'grade' => $s->grade,
+                'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
         });
@@ -187,7 +189,8 @@ class StudentZoomController extends Controller
         }
 
         // Only show schedules from the last 2 days up to 90 days ahead
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subDays(2))
+        $schedules = ZoomSchedule::with('teachers')
+            ->where('scheduled_at', '>=', now()->subDays(2))
             ->where('scheduled_at', '<=', now()->addDays(90))
             ->orderBy('scheduled_at')
             ->get();
@@ -230,6 +233,11 @@ class StudentZoomController extends Controller
             });
         }
 
-        return response()->json($schedules->values()->all());
+        $mapped = $schedules->values()->map(function($s) {
+            $s->teacher = $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher';
+            return $s;
+        });
+
+        return response()->json($mapped->all());
     }
 }

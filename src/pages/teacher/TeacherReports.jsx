@@ -57,10 +57,7 @@ export default function TeacherReports() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Reports & Analytics</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Track student performance and engagement</p>
@@ -83,7 +80,7 @@ export default function TeacherReports() {
             </div>
 
             {/* Performance Bars */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* Attendance Chart (Simulated) */}
                 <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

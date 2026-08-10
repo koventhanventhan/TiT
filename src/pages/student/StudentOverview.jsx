@@ -120,7 +120,7 @@ export default function StudentOverview() {
             </div>
 
             {/* Main Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr', gap: 24 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
                 {/* Today's Learning Path */}
                 <div style={{
                     background: '#fff', borderRadius: 16, border: '1px solid #f1f5f9',

@@ -37,10 +37,7 @@ export default function TeacherStudents() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>My Students</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Live Classroom Monitoring</p>
@@ -65,13 +62,8 @@ export default function TeacherStudents() {
             </div>
 
             {/* Toolbar */}
-            <div style={{
-                display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24,
-                background: '#fff', padding: 16, borderRadius: 16,
-                border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                alignItems: 'center', justifyContent: 'space-between'
-            }}>
-                <div style={{ position: 'relative', flex: '1 1 300px', maxWidth: 400 }}>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[250px] sm:max-w-[400px]">
                     <FiSearch style={{ position: 'absolute', left: 14, top: 12, color: '#94a3b8' }} />
                     <input
                         type="text"
@@ -98,7 +90,7 @@ export default function TeacherStudents() {
                     <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 </div>
             ) : (
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                <div className="overflow-x-auto w-full bg-white rounded-2xl border border-slate-200 shadow-sm">
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 800 }}>
                         <thead>
                             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>

@@ -66,10 +66,7 @@ export default function TeacherAssignments() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Assignments</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage your homework and class assignments</p>
@@ -210,9 +207,9 @@ export default function TeacherAssignments() {
                     backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', 
                     alignItems: 'center', justifyContent: 'center', padding: 20
                 }}>
-                    <div style={{
+                    <div className="max-h-[90vh] overflow-y-auto p-6 sm:p-8" style={{
                         background: '#fff', width: '100%', maxWidth: 500, 
-                        borderRadius: 24, padding: 32, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                        borderRadius: 24, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
                         animation: 'page-enter-active 0.3s ease-out'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

@@ -81,31 +81,24 @@ export default function TeacherDashboardLayout({ children, user }) {
     }
 
     return (
-        <div style={{ display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
+        <div className="flex h-screen overflow-hidden" style={{ background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
                     onClick={toggleSidebar}
-                    style={{
-                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-                        zIndex: 998, backdropFilter: 'blur(4px)'
-                    }}
+                    className="fixed inset-0 z-[998] lg:hidden backdrop-blur-sm transition-opacity"
+                    style={{ background: 'rgba(0,0,0,0.5)' }}
                 />
             )}
 
             {/* ═══════════ SIDEBAR ═══════════ */}
-            <aside style={{
+            <aside className={`fixed inset-y-0 left-0 z-[999] flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} 
+                style={{
                 width: 260,
                 background: 'linear-gradient(180deg, #0c1322 0%, #162032 100%)',
-                display: 'flex', flexDirection: 'column',
-                position: isSidebarOpen ? 'fixed' : undefined,
-                inset: isSidebarOpen ? '0 auto 0 0' : undefined,
-                zIndex: 999,
                 boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
-                transition: 'transform 0.3s ease',
-                ...(window.innerWidth < 1024 && !isSidebarOpen ? { display: 'none' } : {})
             }}>
-                {/* Logo */}
+                    {/* Logo */}
                 <div style={{
                     padding: '24px 20px', display: 'flex', alignItems: 'center',
                     gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)'
@@ -114,21 +107,18 @@ export default function TeacherDashboardLayout({ children, user }) {
                         width: 40, height: 40, borderRadius: 12,
                         background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 800, fontSize: 18,
+                        color: '#fff', fontWeight: 800, fontSize: 18, flexShrink: 0,
                         boxShadow: '0 4px 12px rgba(14,165,233,0.4)'
                     }}>TiT</div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                         <div style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: '-0.5px' }}>
                             TiT<span style={{ color: '#38bdf8' }}>Education</span>
                         </div>
                         <div style={{ color: '#64748b', fontSize: 11, fontWeight: 500 }}>Teacher Portal</div>
                     </div>
-                    {isSidebarOpen && (
-                        <button onClick={toggleSidebar} style={{
-                            marginLeft: 'auto', background: 'none', border: 'none',
-                            color: '#94a3b8', cursor: 'pointer', fontSize: 22
-                        }}><FiX /></button>
-                    )}
+                    <button onClick={toggleSidebar} className="lg:hidden shrink-0 flex items-center justify-center p-1" style={{
+                        background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 22
+                    }}><FiX /></button>
                 </div>
 
                 {/* Nav */}
@@ -198,25 +188,22 @@ export default function TeacherDashboardLayout({ children, user }) {
             </aside>
 
             {/* ═══════════ MAIN CONTENT ═══════════ */}
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header style={{
-                    height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 24px', background: '#fff',
-                    borderBottom: '1px solid #e2e8f0', zIndex: 30
+                <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 z-30" style={{
+                    background: '#fff',
+                    borderBottom: '1px solid #e2e8f0'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="flex items-center gap-3 lg:gap-4">
                         <button
                             onClick={toggleSidebar}
+                            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg shrink-0"
                             style={{
-                                display: window.innerWidth < 1024 ? 'flex' : 'none',
-                                alignItems: 'center', justifyContent: 'center',
-                                width: 40, height: 40, borderRadius: 10, border: 'none',
-                                background: '#f1f5f9', color: '#475569', cursor: 'pointer', fontSize: 20
+                                border: 'none', background: '#f1f5f9', color: '#475569', cursor: 'pointer', fontSize: 20
                             }}
                         ><FiMenu /></button>
 
-                        <div style={{ position: 'relative', display: window.innerWidth < 640 ? 'none' : 'flex', alignItems: 'center' }}>
+                        <div className="relative hidden sm:flex items-center">
                             <FiSearch style={{ position: 'absolute', left: 14, color: '#94a3b8', fontSize: 16 }} />
                             <input
                                 type="text"
@@ -290,11 +277,10 @@ export default function TeacherDashboardLayout({ children, user }) {
                         {/* Notification Bell */}
                         <GlobalNotificationBell />
 
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            paddingLeft: 16, borderLeft: '1px solid #e2e8f0', position: 'relative'
+                        <div className="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-4 relative" style={{
+                            borderLeft: '1px solid #e2e8f0'
                         }}>
-                            <div style={{ textAlign: 'right', display: window.innerWidth < 640 ? 'none' : 'block' }}>
+                            <div className="hidden sm:block text-right">
                                 <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{displayName} </div>
                                 <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Instructor</div>
                             </div>
@@ -331,11 +317,10 @@ export default function TeacherDashboardLayout({ children, user }) {
 
                             {/* Profile Menu Dropdown */}
                             {showProfileMenu && (
-                                <div style={{
-                                    position: 'absolute', top: '100%', right: 0, marginTop: 12,
-                                    width: 200, background: '#fff', borderRadius: 12,
+                                <div className="absolute top-full right-0 mt-3 w-48 sm:w-56 overflow-hidden z-[100]" style={{
+                                    background: '#fff', borderRadius: 12,
                                     boxShadow: '0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
-                                    border: '1px solid #e2e8f0', zIndex: 100, overflow: 'hidden',
+                                    border: '1px solid #e2e8f0',
                                     animation: 'slideDown 0.2s ease'
                                 }}>
                                     <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
@@ -377,11 +362,10 @@ export default function TeacherDashboardLayout({ children, user }) {
                 </header>
 
                 {/* Content */}
-                <div style={{
-                    flex: 1, overflowY: 'auto', padding: '24px',
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6" style={{
                     background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)'
                 }}>
-                    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                    <div className="max-w-7xl mx-auto w-full">
                         {children}
                     </div>
                 </div>

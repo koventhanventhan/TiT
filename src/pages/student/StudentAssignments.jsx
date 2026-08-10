@@ -23,7 +23,7 @@ export default function StudentAssignments() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24, '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Assignments</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Track and submit your class homework</p>
@@ -46,7 +46,7 @@ export default function StudentAssignments() {
                     <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>You have no assignments at the moment. Great job!</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                     {assignments.map(assign => {
                         const submission = assign.submissions && assign.submissions.length > 0 ? assign.submissions[0] : null;
                         const isPending = !submission || submission.status === 'pending';

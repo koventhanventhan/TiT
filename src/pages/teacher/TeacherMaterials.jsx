@@ -133,10 +133,7 @@ export default function TeacherMaterials() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Teaching Materials</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage and share resources with your students</p>
@@ -280,9 +277,10 @@ export default function TeacherMaterials() {
                     })}
                 </div>
             ) : (
+            ) : (
                 /* List View */
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div className="w-full overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 600 }}>
                         <thead>
                             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                 <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name</th>
@@ -343,10 +341,9 @@ export default function TeacherMaterials() {
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.6)',
                     backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
                 }}>
-                    <div style={{
+                    <div className="max-h-[90vh] overflow-y-auto" style={{
                         background: '#fff', borderRadius: 20, width: '100%', maxWidth: 500,
                         boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-                        overflow: 'hidden' // for rounded corners with header
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
                             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Upload Material</h2>
@@ -360,7 +357,7 @@ export default function TeacherMaterials() {
                                     <input type="text" required style={inputStyle} value={uploadFormData.title} onChange={e => setUploadFormData({...uploadFormData, title: e.target.value})} placeholder="e.g., Chapter 1 Physics Notes" />
                                 </div>
                                 
-                                <div style={{ display: 'flex', gap: 16 }}>
+                                <div className="flex flex-col sm:flex-row gap-4">
                                     <div style={{ flex: 1 }}>
                                         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Type</label>
                                         <select style={inputStyle} value={uploadFormData.type} onChange={e => setUploadFormData({...uploadFormData, type: e.target.value})}>

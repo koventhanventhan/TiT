@@ -41,10 +41,7 @@ export default function StudentSchedule() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>My Schedule</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>View your upcoming physical and online classes</p>
@@ -88,31 +85,27 @@ export default function StudentSchedule() {
                                     const isOnline = cls.type === 'online' || cls.zoom_link;
 
                                     return (
-                                        <div key={cls.id} style={{
-                                            display: 'flex', alignItems: 'stretch',
-                                            background: '#fff', borderRadius: 16,
+                                        <div key={cls.id} className="flex flex-col sm:flex-row items-stretch bg-white rounded-2xl overflow-hidden transition-all duration-200" style={{
                                             border: isLive ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
                                             boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
-                                            overflow: 'hidden', transition: 'all 0.2s'
                                         }}
                                         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.04)' }}
                                         onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(99,102,241,0.1)' : '0 1px 3px rgba(0,0,0,0.02)' }}
                                         >
                                             {/* Time Block */}
-                                            <div style={{
-                                                width: 100, padding: 20,
+                                            <div className="w-full sm:w-[100px] p-4 sm:p-5 flex flex-row sm:flex-col items-center justify-between sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-200" style={{
                                                 background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
-                                                borderRight: '1px solid #e2e8f0',
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                                 color: isLive ? '#fff' : '#1e293b'
                                             }}>
-                                                <span style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</span>
-                                                <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.8 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</span>
-                                                {isLive && <span style={{ padding: '2px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.2)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginTop: 8 }}>Live Now</span>}
+                                                <div className="flex items-center sm:flex-col gap-2 sm:gap-0">
+                                                    <span style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</span>
+                                                    <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.8 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</span>
+                                                </div>
+                                                {isLive && <span style={{ padding: '2px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.2)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginTop: 0 }} className="sm:mt-2">Live Now</span>}
                                             </div>
 
                                             {/* Info Block */}
-                                            <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                                                     <span style={{ padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{cls.subject || 'Subject'}</span>
                                                     <span style={{ padding: '2px 8px', borderRadius: 6, background: isOnline ? '#eff6ff' : '#ecfdf5', color: isOnline ? '#3b82f6' : '#10b981', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>

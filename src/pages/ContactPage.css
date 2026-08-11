@@ -865,11 +865,11 @@
 
 @media (max-width: 48rem) {
   .cp {
-    padding-top: 3.75rem;
+    padding-top: 5rem;
   }
 
   .cp-hero {
-    padding: 3.75rem 0 4.375rem;
+    padding: 4.5rem 0 4.375rem;
   }
 
   .cp-title {

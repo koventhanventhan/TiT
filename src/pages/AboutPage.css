@@ -1552,7 +1552,23 @@
 
   .about-hero-image-left,
   .about-hero-image-right {
-    display: none;
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+  
+  .hero-image-blob {
+    width: 220px;
+    height: 250px;
+  }
+  
+  .hero-image-float-card {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  
+  .float-card-1, .float-card-2 {
+    bottom: 15px;
   }
 
   .about-hero-title {

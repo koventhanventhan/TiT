@@ -87,6 +87,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/settings/footer', [SiteSettingController::class, 'footer'])->name('admin.settings.footer');
         Route::get('/settings/register', [SiteSettingController::class, 'register'])->name('admin.settings.register');
         Route::post('/settings', [SiteSettingController::class, 'store'])->name('admin.settings.store');
+        Route::get('/settings/admission-fees', [SiteSettingController::class, 'admissionFees'])->name('admin.settings.admission-fees');
+        Route::post('/settings/admission-fees', [SiteSettingController::class, 'storeAdmissionFees'])->name('admin.settings.admission-fees.store');
         Route::post('/settings/learning/store', [SiteSettingController::class, 'storeMaterial'])->name('admin.settings.learning.material.store');
         Route::delete('/settings/learning/{id}', [SiteSettingController::class, 'deleteMaterial'])->name('admin.settings.learning.material.delete');
         Route::post('/settings/upload', [SiteSettingController::class, 'uploadImage'])->name('admin.settings.upload');

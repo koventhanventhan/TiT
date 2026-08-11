@@ -114,9 +114,32 @@ class RegistrationController extends Controller
         })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
 
         $total = $subjectData->sum('price');
+        $monthlyFee = $total;
+        $admissionFee = 0;
+        
+        $isFirstPayment = !$user->payments()->where('status', 'paid')->exists();
+        
+        if ($isFirstPayment && $user->current_grade) {
+            $gradeNum = 0;
+            if (preg_match('/(\d+)/', $user->current_grade, $m)) {
+                $gradeNum = (int)$m[1];
+            }
+            if ($gradeNum > 0) {
+                $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
+                $config = json_decode($configStr, true) ?? [];
+                
+                if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
+                    $admissionFee = (float)$config[$gradeNum]['amount'];
+                    $total += $admissionFee;
+                }
+            }
+        }
 
         return response()->json([
             'total' => $total > 0 ? (float)$total : 500.0,
+            'monthly_total' => (float)$monthlyFee,
+            'admission_fee' => $admissionFee,
+            'is_first_payment' => $isFirstPayment,
             'subjects' => $subjectData,
             'category' => $category,
             'user_grade' => $user->current_grade
@@ -734,6 +757,24 @@ class RegistrationController extends Controller
         // Fallback
         if ($amount <= 0) {
             $amount = $fallbackAmount ?? 500.0;
+        }
+
+        // Add admission fee for first payment
+        $isFirstPayment = !$user->payments()->where('status', 'paid')->exists();
+        if ($isFirstPayment && $user->current_grade) {
+            $gradeNum = 0;
+            if (preg_match('/(\d+)/', $user->current_grade, $m)) {
+                $gradeNum = (int)$m[1];
+            }
+            if ($gradeNum > 0) {
+                $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
+                $config = json_decode($configStr, true) ?? [];
+                
+                if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
+                    $admissionFee = (float)$config[$gradeNum]['amount'];
+                    $amount += $admissionFee;
+                }
+            }
         }
 
         return $amount;

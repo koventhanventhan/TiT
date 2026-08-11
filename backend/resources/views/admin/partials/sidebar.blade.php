@@ -107,8 +107,11 @@
                     <span class="nav-text">Settings</span>
                 </a>
                 <ul aria-expanded="{{ request()->routeIs('admin.settings.*') ? 'true' : 'false' }}">
-                     <li class="{{ request()->routeIs('admin.settings.register') ? 'mm-active' : '' }}">
+                    <li class="{{ request()->routeIs('admin.settings.register') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.register') }}">Register Form</a>
+                    </li>
+                    <li class="{{ request()->routeIs('admin.settings.admission-fees') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.admission-fees') }}">Admission Fees</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.settings.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.index') }}">Frontend Page</a>

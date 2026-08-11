@@ -56,7 +56,7 @@ export default function StudentMaterials() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24, '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } }}>
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Study Materials</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Access your class notes, videos, and resources</p>
@@ -89,8 +89,8 @@ export default function StudentMaterials() {
 
                     <div style={{ position: 'relative' }}>
                         <FiSearch style={{ position: 'absolute', left: 12, top: 10, color: '#94a3b8' }} />
-                        <input type="text" placeholder="Search materials..." className="w-full sm:w-[200px]" style={{
-                            padding: '8px 12px 8px 36px', borderRadius: 8,
+                        <input type="text" placeholder="Search materials..." style={{
+                            width: 200, padding: '8px 12px 8px 36px', borderRadius: 8,
                             border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 13,
                             outline: 'none', transition: 'border-color 0.2s'
                         }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />

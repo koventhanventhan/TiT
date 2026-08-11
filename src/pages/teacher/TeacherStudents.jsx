@@ -37,6 +37,19 @@ export default function TeacherStudents() {
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>My Students</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage your enrolled students and their details</p>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
+                        background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 99,
+                        color: '#ef4444', fontWeight: 700, fontSize: 13
+                    }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+                        LIVE: Monitoring
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 99, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>
+                        <FiUsers /> Total Present: {filtered.filter(s => s.is_online).length}
+                    </div>
+                </div>
             </div>
 
             {/* Toolbar */}
@@ -94,8 +107,7 @@ export default function TeacherStudents() {
                             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Student Info</th>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Grade / Stream</th>
-                                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contact</th>
-                                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</th>
+                                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Status</th>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
@@ -114,7 +126,7 @@ export default function TeacherStudents() {
                                             }}>{student.name.charAt(0)}</div>
                                             <div>
                                                 <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 2 }}>{student.name}</div>
-                                                <div style={{ fontSize: 13, color: '#64748b' }}>ID: STU-{1000 + student.id}</div>
+                                                <div style={{ fontSize: 13, color: '#64748b' }}>STU-{1000 + student.id} • {student.email}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -123,20 +135,26 @@ export default function TeacherStudents() {
                                         <div style={{ fontSize: 13, color: '#64748b' }}>{student.stream || 'General'}</div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569', fontSize: 13, marginBottom: 4 }}>
-                                            <FiMail style={{ color: '#94a3b8' }} /> {student.email}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569', fontSize: 13 }}>
-                                            <FiPhone style={{ color: '#94a3b8' }} /> {student.phone_number?.startsWith('94') ? '+' + student.phone_number : student.phone_number}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <div style={{ width: 60, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
-                                                <div style={{ width: `${student.attendance || 0}%`, height: '100%', background: (student.attendance || 0) < 80 ? '#f59e0b' : '#10b981' }} />
-                                            </div>
-                                            <span style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>{student.attendance || 0}%</span>
-                                        </div>
+                                        {(() => {
+                                            const isJoined = Boolean(student.is_online); // Uses actual API field now (defaults to false)
+                                            return (
+                                                <div style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                    padding: '6px 12px', borderRadius: 99,
+                                                    background: isJoined ? '#f0fdf4' : '#f8fafc',
+                                                    border: `1px solid ${isJoined ? '#bbf7d0' : '#e2e8f0'}`,
+                                                    color: isJoined ? '#16a34a' : '#64748b',
+                                                    fontSize: 12, fontWeight: 700
+                                                }}>
+                                                    <div style={{
+                                                        width: 6, height: 6, borderRadius: '50%',
+                                                        background: isJoined ? '#22c55e' : '#cbd5e1',
+                                                        boxShadow: isJoined ? '0 0 8px #4ade80' : 'none'
+                                                    }} />
+                                                    {isJoined ? 'Joined Class' : 'Not Joined'}
+                                                </div>
+                                            )
+                                        })()}
                                     </td>
                                     <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                         <button style={{

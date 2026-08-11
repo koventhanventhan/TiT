@@ -121,7 +121,7 @@ export default function TeacherOverview() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr', gap: 24 }}>
                 {/* Schedule */}
                 <div style={{
                     background: '#fff', borderRadius: 16, border: '1px solid #f1f5f9',

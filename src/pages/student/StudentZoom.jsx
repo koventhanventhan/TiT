@@ -44,7 +44,7 @@ export default function StudentZoom() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24, '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } }}>
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Zoom Classes</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Join your live online classes</p>
@@ -63,7 +63,7 @@ export default function StudentZoom() {
                     <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>There are no live classes scheduled for you right now.</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
                     {classes.map(cls => {
                         const time = new Date(cls.scheduled_at || cls.start_time)
                         const now = new Date()

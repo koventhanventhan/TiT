@@ -8,7 +8,10 @@ export default function TeacherSettings() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div style={{
+                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
+                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
+            }}>
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Account Settings</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage your profile, security, and preferences</p>
@@ -28,7 +31,7 @@ export default function TeacherSettings() {
             </div>
 
             {/* Settings Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '250px 1fr' : '1fr', gap: 24 }}>
                 
                 {/* Sidebar Nav */}
                 <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, height: 'fit-content' }}>
@@ -89,7 +92,7 @@ export default function TeacherSettings() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 640 ? '1fr 1fr' : '1fr', gap: 24 }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Full Name</label>
                                     <div style={{ position: 'relative' }}>

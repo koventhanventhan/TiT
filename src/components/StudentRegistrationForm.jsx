@@ -238,15 +238,35 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
   const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream, subjectsByCategory])
 
+  // Retrieve admission fees config
+  const admissionFeesConfigStr = getSetting('admission_fees_config', '{}')
+  const admissionFeesConfig = useMemo(() => {
+    try {
+      return JSON.parse(admissionFeesConfigStr)
+    } catch (e) {
+      return {}
+    }
+  }, [admissionFeesConfigStr])
+
   // Calculate total amount based on selected subjects
-  const totalAmount = useMemo(() => {
-    if (selectedSubjects.length === 0) return 0
-    return selectedSubjects.reduce((sum, subjectName) => {
+  const { monthlyAmount, admissionFee, totalAmount } = useMemo(() => {
+    if (selectedSubjects.length === 0) return { monthlyAmount: 0, admissionFee: 0, totalAmount: 0 }
+    
+    // Monthly Fee Calculation
+    const mAmount = selectedSubjects.reduce((sum, subjectName) => {
       // Find the subject's price from the available subjects array
       const subjectObj = availableSubjects.find(s => s.name === subjectName)
       return sum + (subjectObj ? parseFloat(subjectObj.price) : 0)
     }, 0)
-  }, [selectedSubjects, availableSubjects])
+
+    let admFee = 0
+    const gradeNum = getGradeNumber(formData.currentGrade)
+    if (gradeNum && admissionFeesConfig[gradeNum] && admissionFeesConfig[gradeNum].enabled) {
+      admFee = parseFloat(admissionFeesConfig[gradeNum].amount) || 0
+    }
+
+    return { monthlyAmount: mAmount, admissionFee: admFee, totalAmount: mAmount + admFee }
+  }, [selectedSubjects, availableSubjects, formData.currentGrade, admissionFeesConfig])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -751,9 +771,33 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
             <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="tit-reg-error">{error}</div>}
             <div className="tit-reg-payment-options">
-              <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
-                {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
-              </p>
+              {totalAmount > 0 && admissionFee > 0 && (
+                <div style={{ marginBottom: '1rem', background: 'rgba(235, 129, 83, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(235, 129, 83, 0.3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                    <span>Monthly Fee:</span>
+                    <span>Rs. {monthlyAmount.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                    <span>Admission Fee (First Time):</span>
+                    <span>Rs. {admissionFee.toFixed(2)}</span>
+                  </div>
+                  <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '0.5rem 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                    <span>Total Amount:</span>
+                    <span>Rs. {totalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+              {totalAmount > 0 && admissionFee === 0 && (
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
+                  {t('pay_total')}: Rs. {totalAmount} (Monthly)
+                </p>
+              )}
+              {totalAmount === 0 && (
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
+                  {t('pay_total')}: Rs. {MONTHLY_AMOUNT} (Monthly)
+                </p>
+              )}
               <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
                 {t('pay_offline')}
               </button>

@@ -70,6 +70,35 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Display the Admission Fees settings page.
+     */
+    public function admissionFees()
+    {
+        return view('admin.settings.admission_fees');
+    }
+
+    /**
+     * Store admission fees settings.
+     */
+    public function storeAdmissionFees(Request $request)
+    {
+        $fees = $request->input('fees', []);
+        
+        // Ensure values are properly cast (boolean for enabled, float for amount)
+        $formattedFees = [];
+        foreach ($fees as $grade => $data) {
+            $formattedFees[$grade] = [
+                'enabled' => isset($data['enabled']) && $data['enabled'] == '1',
+                'amount' => isset($data['amount']) ? (float)$data['amount'] : 0,
+            ];
+        }
+
+        SiteSetting::set('admission_fees_config', json_encode($formattedFees), 'general');
+
+        return redirect()->back()->with('success', 'Admission fees settings updated successfully.');
+    }
+
+    /**
      * Store site settings.
      */
     public function store(Request $request)

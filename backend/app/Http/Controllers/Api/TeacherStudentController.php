@@ -11,9 +11,8 @@ class TeacherStudentController extends Controller
 {
     public function index(Request $request)
     {
-        // Simple logic: return all students for now. 
-        // In a real system, we might filter by those who attend this teacher's classes.
         $students = User::where('role', 'user')
+            ->whereIn('registration_status', ['approved', 'payment_completed'])
             ->select('id', 'name', 'email', 'phone_number', 'current_grade', 'stream', 'registration_status as status')
             ->get();
         return response()->json($students);

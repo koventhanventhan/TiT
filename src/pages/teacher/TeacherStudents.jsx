@@ -126,13 +126,13 @@ export default function TeacherStudents() {
                                             }}>{student.name.charAt(0)}</div>
                                             <div>
                                                 <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 2 }}>{student.name}</div>
-                                                <div style={{ fontSize: 13, color: '#64748b' }}>STU-{1000 + student.id} • {student.email}</div>
+                                                <div style={{ fontSize: 13, color: '#64748b' }}>STU-{student.id} • {student.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 2 }}>{student.current_grade || 'N/A'}</div>
-                                        <div style={{ fontSize: 13, color: '#64748b' }}>{student.stream || 'General'}</div>
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 2, minHeight: 20 }}>{student.current_grade || ''}</div>
+                                        <div style={{ fontSize: 13, color: '#64748b', minHeight: 18 }}>{student.stream || ''}</div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         {(() => {

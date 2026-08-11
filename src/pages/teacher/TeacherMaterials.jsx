@@ -277,7 +277,6 @@ export default function TeacherMaterials() {
                     })}
                 </div>
             ) : (
-            ) : (
                 /* List View */
                 <div className="w-full overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 600 }}>

@@ -100,7 +100,7 @@
 .animated-box {
   position: relative;
   width: 100%;
-  min-height: 32.5rem;
+  min-height: 37.5rem;
   max-height: 95vh;
   display: flex;
   flex-direction: column;
@@ -111,7 +111,7 @@
 }
 
 .animated-box.register-mode {
-  min-height: 37.5rem;
+  min-height: 39rem;
   max-height: 95vh;
 }
 
@@ -176,6 +176,28 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(57, 88, 161, 0.5) transparent;
   gap: 0;
+}
+
+@media (max-width: 480px) {
+  .animated-box {
+    min-height: 39rem;
+  }
+  .animated-form {
+    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+  }
+  .animated-form h2 {
+    font-size: 1.35rem;
+    margin: 0 0 0.5rem 0;
+  }
+  .inputbox {
+    margin-top: 1.5rem !important;
+  }
+  .register-mode .inputbox {
+    margin-top: 1.5rem !important;
+  }
+  .remember-me-container {
+    margin: 0.5rem 0;
+  }
 }
 
 .animated-form form {

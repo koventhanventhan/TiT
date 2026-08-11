@@ -52,7 +52,7 @@ export default function TeacherReports() {
         </div>
     )
 
-    const submissionRate = Math.min(100, Math.round(((stats?.total_submissions || 0) / ((stats?.total_assignments || 1) * (stats?.total_students || 1))) * 100)) || 75;
+    const submissionRate = Math.min(100, Math.round(((stats?.total_submissions || 0) / ((stats?.total_assignments || 1) * (stats?.total_students || 1))) * 100)) || 0;
 
     return (
         <div style={{ paddingBottom: 40 }}>
@@ -91,25 +91,16 @@ export default function TeacherReports() {
                             <h3 style={{ margin: '0 0 4px 0', fontSize: 18, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}><FiBarChart2 style={{ color: '#0ea5e9' }} /> Average Attendance</h3>
                             <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>Student participation across all classes</p>
                         </div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{stats?.avg_attendance || 85}%</div>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>0%</div>
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {[
-                            { label: 'Group / Batch A', val: 92 },
-                            { label: 'Group / Batch B', val: 78 },
-                            { label: 'Group / Batch C', val: 85 }
-                        ].map((item, i) => (
-                            <div key={i}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-                                    <span>{item.label}</span>
-                                    <span>{item.val}%</span>
-                                </div>
-                                <div style={{ width: '100%', height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
-                                    <div style={{ width: `${item.val}%`, height: '100%', background: 'linear-gradient(90deg, #38bdf8, #0ea5e9)', borderRadius: 4 }} />
-                                </div>
-                            </div>
-                        ))}
+                        <div style={{
+                            padding: '30px 20px', textAlign: 'center', background: '#f8fafc',
+                            borderRadius: 12, border: '1px dashed #cbd5e1', color: '#64748b', fontSize: 14
+                        }}>
+                            Insufficient data to generate attendance groups.
+                        </div>
                     </div>
                 </div>
 
@@ -124,21 +115,12 @@ export default function TeacherReports() {
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {[
-                            { label: 'On Time Submissions', val: 65, color: '#10b981' },
-                            { label: 'Late Submissions', val: 20, color: '#f59e0b' },
-                            { label: 'Missing', val: 15, color: '#ef4444' }
-                        ].map((item, i) => (
-                            <div key={i}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-                                    <span>{item.label}</span>
-                                    <span>{item.val}%</span>
-                                </div>
-                                <div style={{ width: '100%', height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
-                                    <div style={{ width: `${item.val}%`, height: '100%', background: item.color, borderRadius: 4 }} />
-                                </div>
-                            </div>
-                        ))}
+                        <div style={{
+                            padding: '30px 20px', textAlign: 'center', background: '#f8fafc',
+                            borderRadius: 12, border: '1px dashed #cbd5e1', color: '#64748b', fontSize: 14
+                        }}>
+                            Insufficient data to calculate submission rates.
+                        </div>
                     </div>
                 </div>
             </div>

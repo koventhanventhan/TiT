@@ -146,16 +146,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
 
       {/* Dropdown */}
       {isOpen && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-          width: 360, maxHeight: 480,
-          background: '#fff', borderRadius: 16,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)',
-          border: '1px solid rgba(226,232,240,0.8)',
-          zIndex: 9999,
-          overflow: 'hidden',
-          animation: 'notifSlideDown 0.2s ease',
-        }}>
+        <div className="student-notif-dropdown">
 
           {/* Header */}
           <div style={{
@@ -344,6 +335,32 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       )}
 
       <style>{`
+        .student-notif-dropdown {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 0;
+          width: 360px;
+          max-height: 480px;
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
+          border: 1px solid rgba(226,232,240,0.8);
+          z-index: 10000;
+          overflow: hidden;
+          animation: notifSlideDown 0.2s ease;
+        }
+        @media (max-width: 768px) {
+          .student-notif-dropdown {
+            position: fixed !important;
+            top: 70px !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+            max-width: calc(100vw - 24px) !important;
+            max-height: calc(100vh - 90px) !important;
+            border-radius: 14px;
+          }
+        }
         @keyframes notifSlideDown {
           from { opacity: 0; transform: translateY(-8px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }

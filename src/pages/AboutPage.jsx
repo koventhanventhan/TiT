@@ -34,6 +34,7 @@ const AboutPage = () => {
   const [activeTab, setActiveTab] = useState('journey')
   const [activeGalleryItems, setActiveGalleryItems] = useState(null)
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
+  const [activeTeacherIndex, setActiveTeacherIndex] = useState(null)
 
   // CTA States
   const [ctaTitle, setCtaTitle] = useState(getSetting('about_cta_title', t('section_cta_title')))
@@ -206,6 +207,7 @@ const AboutPage = () => {
     }
     parseAndTranslate()
   }, [language, translate, getSetting, t])
+
 
   // Mapping icons after translation
   const iconMap = {
@@ -485,21 +487,25 @@ const AboutPage = () => {
         <section className="about-teachers-section">
           <div className="container">
             <h3 className="tab-content-title">{t('tab_teachers')}</h3>
-            <div className="teachers-grid-tab">
+            <ul className="teachers-grid-tab">
               {teachers.map((teacher, index) => (
-                <div key={index} className="teacher-card-tab">
-                  <div className="teacher-image-tab">
-                    <img src={teacher.image} alt={teacher.name} />
+                <li 
+                  key={index} 
+                  className={`teacher-card-tab ${activeTeacherIndex === index ? 'active' : ''}`}
+                  onClick={() => setActiveTeacherIndex(activeTeacherIndex === index ? null : index)}
+                >
+                  <img src={teacher.photo || teacher.image} alt={teacher.name} />
+                  <div className="teacher-info-tab content">
+                    <span className="content-span">
+                      <h2 className="teacher-name-tab">{teacher.name}</h2>
+                      <p className="teacher-subject-tab">{teacher.subject}</p>
+                      <p className="teacher-qualification-tab" style={{ fontSize: '13px', color: '#e2e8f0', margin: '4px 0 0' }}>{teacher.qualification}</p>
+                      <p className="teacher-experience-tab" style={{ fontSize: '12px', color: '#cbd5e1', margin: '4px 0 0', fontWeight: 600 }}>{t('experience_years')}{teacher.experience}</p>
+                    </span>
                   </div>
-                  <div className="teacher-info-tab">
-                    <h4 className="teacher-name-tab">{teacher.name}</h4>
-                    <p className="teacher-subject-tab">{teacher.subject}</p>
-                    <p className="teacher-qualification-tab">{teacher.qualification}</p>
-                    <p className="teacher-experience-tab">{t('experience_years')}{teacher.experience}</p>
-                  </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </section>
       )}

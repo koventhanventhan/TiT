@@ -198,12 +198,13 @@ export default function TeacherDashboardLayout({ children, user }) {
             </aside>
 
             {/* ═══════════ MAIN CONTENT ═══════════ */}
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'visible' }}>
                 {/* Header */}
                 <header style={{
                     height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '0 24px', background: '#fff',
-                    borderBottom: '1px solid #e2e8f0', zIndex: 30
+                    borderBottom: '1px solid #e2e8f0', zIndex: 30,
+                    position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <button

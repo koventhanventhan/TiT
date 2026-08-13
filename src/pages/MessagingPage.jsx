@@ -254,8 +254,8 @@ export default function MessagingPage() {
 
 
     return (
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', height: 'calc(100vh - 40px)', fontFamily: "'Inter', sans-serif" }}>
-            <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', display: 'flex', height: '100%', overflow: 'hidden' }}>
+        <div className="messaging-container" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', height: 'calc(100vh - 40px)', fontFamily: "'Inter', sans-serif" }}>
+            <div className="messaging-wrapper" style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', display: 'flex', height: '100%', overflow: 'hidden' }}>
                 
                 {/* Left Sidebar (Contacts/Threads List) */}
                 <div className={`chat-sidebar ${activeChatId || isComposeMode ? 'hide-on-mobile' : ''}`} style={{ width: 350, borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
@@ -323,7 +323,7 @@ export default function MessagingPage() {
                                 </div>
                             </div>
                             
-                            <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+                            <div className="compose-body" style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
                                 <div style={{ marginBottom: 24 }}>
                                     <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 12 }}>Send To</label>
                                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -361,7 +361,7 @@ export default function MessagingPage() {
                                 </div>
                             </div>
 
-                            <div style={{ padding: 20, borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                            <div className="compose-footer" style={{ padding: 20, borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <textarea 
                                         rows="2" placeholder="Type a message to start..." 
@@ -388,7 +388,7 @@ export default function MessagingPage() {
                                 </div>
                             </div>
 
-                            <div style={{ flex: 1, padding: 24, overflowY: 'auto', background: 'url("https://www.transparenttextures.com/patterns/always-grey.png"), #f4f7f6', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <div className="chat-messages-area" style={{ flex: 1, padding: 24, overflowY: 'auto', background: 'url("https://www.transparenttextures.com/patterns/always-grey.png"), #f4f7f6', display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 {activeChat.messages.map(m => {
                                     const isMe = m.dir === 'out';
                                     return (
@@ -410,7 +410,7 @@ export default function MessagingPage() {
                                 <div ref={chatEndRef} />
                             </div>
 
-                            <div style={{ padding: 20, background: '#fff', borderTop: '1px solid #e2e8f0' }}>
+                            <div className="chat-reply-bar" style={{ padding: 20, background: '#fff', borderTop: '1px solid #e2e8f0' }}>
                                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
                                     <textarea 
                                         rows="1" placeholder="Type your message..." 
@@ -439,9 +439,46 @@ export default function MessagingPage() {
                     .hide-on-mobile { display: none !important; }
                     .mobile-only { display: block !important; }
                     .chat-sidebar { width: 100% !important; border-right: none !important; }
+                    .chat-main { width: 100% !important; }
                 }
                 @media (min-width: 769px) {
                     .mobile-only { display: none !important; }
+                }
+                /* Fix input/select/textarea overflow on mobile */
+                .chat-main input,
+                .chat-main select,
+                .chat-main textarea {
+                    box-sizing: border-box !important;
+                    max-width: 100% !important;
+                }
+                /* Fix compose area padding on mobile */
+                @media (max-width: 768px) {
+                    .messaging-container {
+                        padding: 0 !important;
+                        height: calc(100vh - 64px) !important;
+                    }
+                    .messaging-wrapper {
+                        border-radius: 0 !important;
+                        border: none !important;
+                    }
+                    .compose-body {
+                        padding: 16px !important;
+                    }
+                    .compose-footer {
+                        padding: 12px !important;
+                    }
+                    .compose-footer > div {
+                        gap: 8px !important;
+                    }
+                    .chat-reply-bar {
+                        padding: 12px !important;
+                    }
+                    .chat-reply-bar > div {
+                        gap: 8px !important;
+                    }
+                    .chat-messages-area {
+                        padding: 16px !important;
+                    }
                 }
             `}</style>
         </div>

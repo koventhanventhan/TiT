@@ -46,11 +46,16 @@ class StudentZoomController extends Controller
         $startBuffer = Carbon::now()->subDays(2);
         $endBuffer = Carbon::now()->addDays(90);
 
-        $schedules = ZoomSchedule::with('teachers')
+        $query = ZoomSchedule::with('teachers')
             ->where('scheduled_at', '>=', $startBuffer)
-            ->where('scheduled_at', '<=', $endBuffer)
-            ->orderBy('scheduled_at')
-            ->get();
+            ->where('scheduled_at', '<=', $endBuffer);
+
+        // Filter by student's medium (English/Tamil)
+        if ($user->medium) {
+            $query->where('medium', $user->medium);
+        }
+
+        $schedules = $query->orderBy('scheduled_at')->get();
 
         // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
         $schedules = $schedules->filter(function($s) use ($user) {
@@ -189,11 +194,16 @@ class StudentZoomController extends Controller
         }
 
         // Only show schedules from the last 2 days up to 90 days ahead
-        $schedules = ZoomSchedule::with('teachers')
+        $query = ZoomSchedule::with('teachers')
             ->where('scheduled_at', '>=', now()->subDays(2))
-            ->where('scheduled_at', '<=', now()->addDays(90))
-            ->orderBy('scheduled_at')
-            ->get();
+            ->where('scheduled_at', '<=', now()->addDays(90));
+
+        // Filter by student's medium (English/Tamil)
+        if ($user->medium) {
+            $query->where('medium', $user->medium);
+        }
+
+        $schedules = $query->orderBy('scheduled_at')->get();
 
         // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
         $schedules = $schedules->filter(function($s) use ($user) {

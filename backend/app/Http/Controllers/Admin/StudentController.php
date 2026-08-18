@@ -470,12 +470,23 @@ class StudentController extends Controller
             $gradeNum = (int)$m[1];
         }
 
-        if ($gradeNum >= 1 && $gradeNum <= 5) {
-            return 'grade_1_to_5';
+        if ($gradeNum >= 1 && $gradeNum <= 2) {
+            return 'grade_1_to_2';
         }
-
-        if ($gradeNum >= 6 && $gradeNum <= 11) {
-            return 'grade_6_to_11';
+        if ($gradeNum == 3) {
+            return 'grade_3';
+        }
+        if ($gradeNum == 4) {
+            return 'grade_4';
+        }
+        if ($gradeNum == 5) {
+            return 'grade_5';
+        }
+        if ($gradeNum >= 6 && $gradeNum <= 9) {
+            return 'grade_6_to_9';
+        }
+        if ($gradeNum >= 10 && $gradeNum <= 11) {
+            return 'grade_10_to_11';
         }
 
         if ($gradeNum >= 12 && $gradeNum <= 13) {
@@ -485,7 +496,7 @@ class StudentController extends Controller
             if (str_contains($stream, 'bio') || str_contains($stream, 'math')) {
                 return 'bio_maths_stream';
             }
-            return 'grade_6_to_11'; // Fallback
+            return 'grade_12_to_13'; // Fallback
         }
 
         return null;
@@ -514,7 +525,26 @@ class StudentController extends Controller
                     return $query->where('category', $category);
                 })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
 
-                $amount = (float) $subjectData->sum('price');
+                $sumAmount = (float) $subjectData->sum('price');
+                
+                // Check for a package bundle
+                $package = \App\Models\Package::where('category', $category)
+                    ->where('medium', strtolower($user->medium))
+                    ->first();
+                
+                if ($package) {
+                    // Count total available subjects for this category and medium
+                    $totalSubjectsForCategory = \App\Models\Subject::where('category', $category)
+                        ->where('medium', strtolower($user->medium))
+                        ->count();
+                    
+                    // If the user has selected all available subjects (or equal to the total count)
+                    if ($totalSubjectsForCategory > 0 && count($subjectData) >= $totalSubjectsForCategory) {
+                        $sumAmount = (float) $package->package_price;
+                    }
+                }
+
+                $amount = $sumAmount;
             }
         }
 

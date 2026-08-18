@@ -53,6 +53,7 @@
                                 <th style="font-weight: 600;">#</th>
                                 <th style="font-weight: 600;">Subject Name</th>
                                 <th style="font-weight: 600;">Category</th>
+                                <th style="font-weight: 600;">Medium</th>
                                 <th style="font-weight: 600;">Price (LKR)</th>
                                 <th style="font-weight: 600;">Actions</th>
                             </tr>
@@ -65,13 +66,20 @@
                                 <td>
                                     @php
                                         $categoryLabels = [
-                                            'grade_1_to_5' => 'Grade 1-5',
-                                            'grade_6_to_11' => 'Grade 6-11',
+                                            'grade_1_to_2' => 'Grade 1-2',
+                                            'grade_3' => 'Grade 3',
+                                            'grade_4' => 'Grade 4',
+                                            'grade_5' => 'Grade 5',
+                                            'grade_6_to_9' => 'Grade 6-9',
+                                            'grade_10_to_11' => 'Grade 10-11',
                                             'arts_stream' => 'A/L Arts',
                                             'bio_maths_stream' => 'A/L Bio & Maths',
                                         ];
                                     @endphp
                                     <span class="badge badge-info light">{{ $categoryLabels[$s->category] ?? $s->category }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary light">{{ ucfirst($s->medium) }}</span>
                                 </td>
                                 <td>{{ number_format($s->price, 2) }}</td>
                                 <td>
@@ -98,10 +106,22 @@
                                                     <div class="modal-body">
                                                         <div class="form-group"><label>Subject Name</label><input type="text" name="name" class="form-control" value="{{ $s->name }}" required></div>
                                                         <div class="form-group">
+                                                            <label>Medium</label>
+                                                            <select name="medium" class="form-control" required>
+                                                                <option value="tamil" {{ $s->medium == 'tamil' ? 'selected' : '' }}>Tamil</option>
+                                                                <option value="english" {{ $s->medium == 'english' ? 'selected' : '' }}>English</option>
+                                                                <option value="both" {{ $s->medium == 'both' ? 'selected' : '' }}>Both (Tamil & English)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group">
                                                             <label>Category</label>
                                                             <select name="category" class="form-control" required>
-                                                                <option value="grade_1_to_5" {{ $s->category == 'grade_1_to_5' ? 'selected' : '' }}>Grade 1-5</option>
-                                                                <option value="grade_6_to_11" {{ $s->category == 'grade_6_to_11' ? 'selected' : '' }}>Grade 6-11</option>
+                                                                <option value="grade_1_to_2" {{ $s->category == 'grade_1_to_2' ? 'selected' : '' }}>Grade 1-2</option>
+                                                                <option value="grade_3" {{ $s->category == 'grade_3' ? 'selected' : '' }}>Grade 3</option>
+                                                                <option value="grade_4" {{ $s->category == 'grade_4' ? 'selected' : '' }}>Grade 4</option>
+                                                                <option value="grade_5" {{ $s->category == 'grade_5' ? 'selected' : '' }}>Grade 5</option>
+                                                                <option value="grade_6_to_9" {{ $s->category == 'grade_6_to_9' ? 'selected' : '' }}>Grade 6-9</option>
+                                                                <option value="grade_10_to_11" {{ $s->category == 'grade_10_to_11' ? 'selected' : '' }}>Grade 10-11</option>
                                                                 <option value="arts_stream" {{ $s->category == 'arts_stream' ? 'selected' : '' }}>A/L Arts</option>
                                                                 <option value="bio_maths_stream" {{ $s->category == 'bio_maths_stream' ? 'selected' : '' }}>A/L Bio & Maths</option>
                                                             </select>
@@ -116,7 +136,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="5" class="text-center">No subjects found.</td></tr>
+                            <tr><td colspan="6" class="text-center">No subjects found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -151,13 +171,25 @@
                 @csrf
                 <div class="modal-header"><h5 class="modal-title">Add New Subject</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
                 <div class="modal-body">
-                    <div class="form-group"><label>Subject Name</label><input type="text" name="name" class="form-control" placeholder="e.g. à®¤à®®à®¿à®´à¯ " required></div>
+                    <div class="form-group"><label>Subject Name</label><input type="text" name="name" class="form-control" placeholder="e.g. தமிழ்" required></div>
+                    <div class="form-group">
+                        <label>Medium</label>
+                        <select name="medium" class="form-control" required>
+                            <option value="tamil" selected>Tamil</option>
+                            <option value="english">English</option>
+                            <option value="both">Both (Tamil & English)</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>Category</label>
                         <select name="category" class="form-control" required>
                             <option value="">Select Category</option>
-                            <option value="grade_1_to_5">Grade 1-5</option>
-                            <option value="grade_6_to_11">Grade 6-11</option>
+                            <option value="grade_1_to_2">Grade 1-2</option>
+                            <option value="grade_3">Grade 3</option>
+                            <option value="grade_4">Grade 4</option>
+                            <option value="grade_5">Grade 5</option>
+                            <option value="grade_6_to_9">Grade 6-9</option>
+                            <option value="grade_10_to_11">Grade 10-11</option>
                             <option value="arts_stream">A/L Arts</option>
                             <option value="bio_maths_stream">A/L Bio & Maths</option>
                         </select>

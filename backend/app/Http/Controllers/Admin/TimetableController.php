@@ -98,6 +98,7 @@ class TimetableController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'zoom_host_email' => 'nullable|email',
             'is_active' => 'nullable',
+            'medium' => 'required|in:english,tamil',
         ]);
 
         $startTime = $request->start_time;
@@ -169,6 +170,7 @@ class TimetableController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'zoom_host_email' => 'nullable|email',
             'is_active' => 'nullable',
+            'medium' => 'required|in:english,tamil',
         ]);
 
         $startTime = $request->start_time;
@@ -279,6 +281,9 @@ class TimetableController extends Controller
                 $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
                 if ($userRef !== $classRef) continue;
+
+                // Filter by medium
+                if ($timetable->medium !== 'both' && $student->medium && $student->medium !== $timetable->medium) continue;
 
                 // Filter by selected subjects
                 $selected = $student->selected_subjects;

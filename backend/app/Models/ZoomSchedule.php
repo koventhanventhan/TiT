@@ -26,6 +26,7 @@ class ZoomSchedule extends Model
         'duration',
         'grade',
         'subject',
+        'medium',
         'zoom_account_id',
         'timetable_id',
         'created_by',

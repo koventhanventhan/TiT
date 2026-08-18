@@ -273,11 +273,11 @@
                              <div class="form-group">
                                  <label class="d-block mb-3" style="font-size: 1rem; color: #ffab2d; font-weight: 700;">Select Subjects <span class="text-danger">*</span></label>
                                  
-                                 {{-- Subjects for Grade 1-5 --}}
-                                 <div class="subject-section" id="subjects_1_5" style="display: none;">
+                                 {{-- Subjects for Grade 1-2 --}}
+                                 <div class="subject-section" id="subjects_1_2" style="display: none;">
                                      <div class="row">
-                                         @if(isset($subjects['grade_1_to_5']))
-                                             @foreach($subjects['grade_1_to_5'] as $subject)
+                                         @if(isset($subjects['grade_1_to_2']))
+                                             @foreach($subjects['grade_1_to_2'] as $subject)
                                              <div class="col-md-4 col-6 mb-2">
                                                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
                                                      <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
@@ -289,11 +289,75 @@
                                      </div>
                                  </div>
 
-                                 {{-- Subjects for Grade 6-11 --}}
-                                 <div class="subject-section" id="subjects_6_11" style="display: none;">
+                                 {{-- Subjects for Grade 3 --}}
+                                 <div class="subject-section" id="subjects_3" style="display: none;">
                                      <div class="row">
-                                         @if(isset($subjects['grade_6_to_11']))
-                                             @foreach($subjects['grade_6_to_11'] as $subject)
+                                         @if(isset($subjects['grade_3']))
+                                             @foreach($subjects['grade_3'] as $subject)
+                                             <div class="col-md-4 col-6 mb-2">
+                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
+                                                     <span>{{ $subject->name }}</span>
+                                                 </label>
+                                             </div>
+                                             @endforeach
+                                         @endif
+                                     </div>
+                                 </div>
+
+                                 {{-- Subjects for Grade 4 --}}
+                                 <div class="subject-section" id="subjects_4" style="display: none;">
+                                     <div class="row">
+                                         @if(isset($subjects['grade_4']))
+                                             @foreach($subjects['grade_4'] as $subject)
+                                             <div class="col-md-4 col-6 mb-2">
+                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
+                                                     <span>{{ $subject->name }}</span>
+                                                 </label>
+                                             </div>
+                                             @endforeach
+                                         @endif
+                                     </div>
+                                 </div>
+
+                                 {{-- Subjects for Grade 5 --}}
+                                 <div class="subject-section" id="subjects_5" style="display: none;">
+                                     <div class="row">
+                                         @if(isset($subjects['grade_5']))
+                                             @foreach($subjects['grade_5'] as $subject)
+                                             <div class="col-md-4 col-6 mb-2">
+                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
+                                                     <span>{{ $subject->name }}</span>
+                                                 </label>
+                                             </div>
+                                             @endforeach
+                                         @endif
+                                     </div>
+                                 </div>
+
+                                 {{-- Subjects for Grade 6-9 --}}
+                                 <div class="subject-section" id="subjects_6_9" style="display: none;">
+                                     <div class="row">
+                                         @if(isset($subjects['grade_6_to_9']))
+                                             @foreach($subjects['grade_6_to_9'] as $subject)
+                                             <div class="col-md-4 col-6 mb-2">
+                                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
+                                                     <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
+                                                     <span>{{ $subject->name }}</span>
+                                                 </label>
+                                             </div>
+                                             @endforeach
+                                         @endif
+                                     </div>
+                                 </div>
+
+                                 {{-- Subjects for Grade 10-11 --}}
+                                 <div class="subject-section" id="subjects_10_11" style="display: none;">
+                                     <div class="row">
+                                         @if(isset($subjects['grade_10_to_11']))
+                                             @foreach($subjects['grade_10_to_11'] as $subject)
                                              <div class="col-md-4 col-6 mb-2">
                                                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1.0px solid rgba(255,255,255,0.15); margin: 0; font-weight: 500; color: #e0e0e0; transition: all 0.2s;">
                                                      <input type="checkbox" name="selected_subjects[]" value="{{ $subject->name }}" style="width: 1.125rem; height: 1.125rem; accent-color: #ffab2d; cursor: pointer;" {{ is_array(old('selected_subjects')) && in_array($subject->name, old('selected_subjects')) ? 'checked' : '' }}>
@@ -411,10 +475,18 @@
             streamContainer.hide();
             
             if (gradeNum) {
-                if (gradeNum >= 1 && gradeNum <= 5) {
-                    $('#subjects_1_5').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
-                } else if (gradeNum >= 6 && gradeNum <= 11) {
-                    $('#subjects_6_11').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                if (gradeNum >= 1 && gradeNum <= 2) {
+                    $('#subjects_1_2').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                } else if (gradeNum === 3) {
+                    $('#subjects_3').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                } else if (gradeNum === 4) {
+                    $('#subjects_4').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                } else if (gradeNum === 5) {
+                    $('#subjects_5').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                } else if (gradeNum >= 6 && gradeNum <= 9) {
+                    $('#subjects_6_9').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
+                } else if (gradeNum >= 10 && gradeNum <= 11) {
+                    $('#subjects_10_11').fadeIn().find('input[type="checkbox"]').prop('disabled', false);
                 } else if (gradeNum >= 12 && gradeNum <= 13) {
                     streamContainer.fadeIn();
                     if (streamValue === 'arts') {

@@ -315,7 +315,7 @@
                         <div class="slot-time">{{ date('h:i A', strtotime($slot->start_time)) }}</div>
                         <div class="slot-title"><strong>{{ $slot->title }}</strong></div>
                         <div class="slot-details">
-                            <div>Grade: {{ $slot->grade }}</div>
+                            <div>Grade: {{ $slot->grade }} <span class="badge badge-sm badge-{{ $slot->medium == 'english' ? 'info' : 'primary' }}">{{ ucfirst($slot->medium) }}</span></div>
                             <div>Subject: {{ $slot->subject->name ?? 'N/A' }}</div>
                             <div>Teacher: {{ $slot->teacher->name ?? 'N/A' }}</div>
                         </div>
@@ -380,6 +380,13 @@
                                 @foreach($grades as $grade)
                                     <option value="{{ $grade }}" {{ old('grade') == $grade ? 'selected' : '' }}>{{ $grade }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Medium</label>
+                            <select name="medium" class="form-control" required>
+                                <option value="tamil" {{ old('medium') == 'tamil' ? 'selected' : '' }}>Tamil</option>
+                                <option value="english" {{ old('medium') == 'english' ? 'selected' : '' }}>English</option>
                             </select>
                         </div>
                         <div class="form-group col-md-6">
@@ -453,7 +460,8 @@
         form.find('input[name="start_time"]').val(slot.start_time.substring(0, 5));
         form.find('input[name="duration"]').val(slot.duration);
         form.find('[name="grade"]').val(slot.grade);
-        form.find('select[name="subject_id"]').val(slot.subject_id);
+        form.find('[name="medium"]').val(slot.medium);
+        form.find('[name="subject_id"]').val(slot.subject_id);
         form.find('select[name="teacher_id"]').val(slot.teacher_id);
         
         form.find('select[name="zoom_host_email"]').val(slot.zoom_host_email);

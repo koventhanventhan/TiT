@@ -17,6 +17,7 @@ class Timetable extends Model
         'start_time',
         'duration',
         'grade',
+        'medium',
         'subject_id',
         'teacher_id',
         'zoom_account_id',

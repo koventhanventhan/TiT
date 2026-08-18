@@ -22,6 +22,14 @@ class StudentMaterialController extends Controller
             });
         }
 
+        // Filter by student's medium (English/Tamil)
+        if ($user && $user->medium) {
+            $query->where(function($q) use ($user) {
+                $q->where('medium', $user->medium)
+                  ->orWhere('medium', 'both');
+            });
+        }
+
         $materials = $query->get();
         return response()->json($materials);
     }

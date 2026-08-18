@@ -84,6 +84,21 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
+                                <label class="text-label" style="font-weight: 600;">Subject</label>
+                                <input type="text" name="subject" class="form-control" value="{{ old('subject', $schedule->subject) }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="text-label" style="font-weight: 600;">Medium <span class="text-danger">*</span></label>
+                                <select name="medium" class="form-control" required>
+                                    <option value="tamil" {{ old('medium', $schedule->medium) == 'tamil' ? 'selected' : '' }}>Tamil</option>
+                                    <option value="english" {{ old('medium', $schedule->medium) == 'english' ? 'selected' : '' }}>English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="text-label" style="font-weight: 600;">Target Grade</label>
                                 <input type="text" name="grade" class="form-control" value="{{ old('grade', $schedule->grade) }}">
                             </div>

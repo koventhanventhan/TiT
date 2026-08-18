@@ -162,6 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('/subjects/prices', [\App\Http\Controllers\Admin\SubjectController::class, 'getPrices']);
+Route::get('/packages', [\App\Http\Controllers\Admin\PackageController::class, 'getActivePackages']);
 
 // ── Exam Results (Public) ──
 Route::prefix('exam-results')->group(function () {

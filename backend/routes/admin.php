@@ -71,6 +71,14 @@ Route::prefix('admin')->group(function () {
 
         Route::post('/teachers/{id}/reset-password', [TeacherController::class, 'resetPasswordAndNotify'])->name('admin.teachers.reset-password');
 
+        // Packages
+        Route::resource('packages', \App\Http\Controllers\Admin\PackageController::class)->except(['create', 'edit', 'show'])->names([
+            'index' => 'admin.packages.index',
+            'store' => 'admin.packages.store',
+            'update' => 'admin.packages.update',
+            'destroy' => 'admin.packages.destroy',
+        ]);
+
         // Subjects
         Route::get('/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
         Route::post('/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');

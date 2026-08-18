@@ -94,9 +94,19 @@
                                     <small class="text-muted">Required for concurrent meetings at the same time.</small>
                                 </div>
                                 <div class="form-group col-12">
-                                    <div class="custom-control custom-checkbox mb-3">
-                                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" checked>
-                                        <label class="custom-control-label" for="is_active">Active (Set to inactive to pause this slot)</label>
+                                    <div class="col-sm-6 mb-3">
+                                        <label>Medium <span class="text-danger">*</span></label>
+                                        <select name="medium" class="form-control default-select" required>
+                                            <option value="tamil">Tamil</option>
+                                            <option value="english">English</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-sm-6 mb-3">
+                                        <div class="custom-control custom-checkbox mb-3">
+                                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" checked>
+                                            <label class="custom-control-label" for="is_active">Active (Set to inactive to pause this slot)</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

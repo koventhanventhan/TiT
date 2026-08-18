@@ -262,6 +262,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'full_name' => $user->full_name,
+                'medium' => $user->medium,
                 'selected_subjects' => $user->selected_subjects,
                 'institute_id' => $user->institute_id,
                 'is_deactivated' => !$user->isActive(),

@@ -95,9 +95,18 @@
                                     <small class="text-muted">Required for concurrent meetings at the same time.</small>
                                 </div>
                                 <div class="form-group col-12">
-                                    <div class="custom-control custom-checkbox mb-3">
-                                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" {{ $timetable->is_active ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="is_active">Active</label>
+                                    <div class="col-sm-6 mb-3">
+                                        <label>Medium <span class="text-danger">*</span></label>
+                                        <select name="medium" class="form-control default-select" required>
+                                            <option value="tamil" {{ old('medium', $timetable->medium) == 'tamil' ? 'selected' : '' }}>Tamil</option>
+                                            <option value="english" {{ old('medium', $timetable->medium) == 'english' ? 'selected' : '' }}>English</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <div class="custom-control custom-checkbox mb-3">
+                                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" {{ $timetable->is_active ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="is_active">Active</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

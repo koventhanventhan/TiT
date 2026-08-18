@@ -17,6 +17,7 @@ class LearningMaterial extends Model
         'file_path',
         'thumbnail_path',
         'grade',
+        'medium',
         'institute_id',
         'group',
         'file_size',

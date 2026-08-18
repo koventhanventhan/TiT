@@ -27,11 +27,13 @@ class SubjectController extends Controller
         $request->validate([
             'name' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'category' => 'required|in:grade_1_to_5,grade_6_to_11,arts_stream,bio_maths_stream',
+            'category' => 'required|in:grade_1_to_2,grade_3,grade_4,grade_5,grade_6_to_9,grade_10_to_11,arts_stream,bio_maths_stream',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         $exists = Subject::where('name', $request->name)
             ->where('category', $request->category)
+            ->where('medium', $request->medium)
             ->exists();
 
         if ($exists) {
@@ -46,7 +48,8 @@ class SubjectController extends Controller
             'name_ta' => $name_ta,
             'name_si' => $name_si,
             'price' => $request->price,
-            'category' => $request->category
+            'category' => $request->category,
+            'medium' => $request->medium
         ]);
 
         return redirect()->back()->with('success', 'Subject added successfully with translations');
@@ -63,11 +66,13 @@ class SubjectController extends Controller
         $request->validate([
             'name' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'category' => 'required|in:grade_1_to_5,grade_6_to_11,arts_stream,bio_maths_stream',
+            'category' => 'required|in:grade_1_to_2,grade_3,grade_4,grade_5,grade_6_to_9,grade_10_to_11,arts_stream,bio_maths_stream',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         $exists = Subject::where('name', $request->name)
             ->where('category', $request->category)
+            ->where('medium', $request->medium)
             ->where('id', '!=', $id)
             ->exists();
 
@@ -75,7 +80,7 @@ class SubjectController extends Controller
             return redirect()->back()->with('error', 'already add panijachu intha subject endu ok');
         }
 
-        $data = $request->only(['name', 'price', 'category']);
+        $data = $request->only(['name', 'price', 'category', 'medium']);
 
         // Only translate if name is changed or translations are missing
         if ($subject->name !== $request->name || !$subject->name_ta || !$subject->name_si) {
@@ -101,18 +106,31 @@ class SubjectController extends Controller
     }
 
     /**
-     * API for frontend to get subjects grouped by category with prices
+     * API for frontend to get subjects grouped by category with prices.
+     * Supports optional ?medium=english|tamil filter for student-specific views.
      */
-    public function getPrices()
+    public function getPrices(Request $request)
     {
-        $subjects = Subject::orderBy('name')->get();
+        $query = Subject::orderBy('name');
+
+        // Filter by medium if provided (student views)
+        $medium = $request->query('medium');
+        if ($medium && in_array($medium, ['english', 'tamil'])) {
+            $query->where(function($q) use ($medium) {
+                $q->where('medium', $medium)
+                  ->orWhere('medium', 'both');
+            });
+        }
+
+        $subjects = $query->get();
         $grouped = $subjects->groupBy('category')->map(function ($items) {
             return $items->map(function ($item) {
                 return [
                     'name' => $item->name,
                     'name_ta' => $item->name_ta,
                     'name_si' => $item->name_si,
-                    'price' => $item->price
+                    'price' => $item->price,
+                    'medium' => $item->medium,
                 ];
             })->values();
         });

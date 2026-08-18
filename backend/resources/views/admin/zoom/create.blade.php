@@ -78,10 +78,19 @@
                                 <input type="text" name="grade" class="form-control" value="{{ old('grade') }}" placeholder="e.g. Grade 10">
                             </div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label class="text-label" style="font-weight: 600;">Subject / à®ªà®¾à®Ÿà®®à¯ </label>
+                                <label class="text-label" style="font-weight: 600;">Subject / பாடம்</label>
                                 <input type="text" name="subject" class="form-control" value="{{ old('subject') }}" placeholder="e.g. Mathematics">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="text-label" style="font-weight: 600;">Medium <span class="text-danger">*</span></label>
+                                <select name="medium" class="form-control" required>
+                                    <option value="tamil">Tamil</option>
+                                    <option value="english">English</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-12">

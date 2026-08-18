@@ -67,6 +67,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => 'required|date',
             'subject' => 'nullable|string|max:100',
             'grade' => 'nullable|string|max:50',
+            'medium' => 'required|in:english,tamil',
             'teacher_ids' => 'nullable|array',
             'teacher_ids.*' => 'exists:users,id',
         ]);
@@ -76,6 +77,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => $request->scheduled_at,
             'subject' => $request->subject,
             'grade' => $request->grade,
+            'medium' => $request->medium,
             'created_by' => auth()->id(),
         ];
 
@@ -145,6 +147,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => 'required|date',
             'subject' => 'nullable|string|max:100',
             'grade' => 'nullable|string|max:50',
+            'medium' => 'required|in:english,tamil',
             'teacher_ids' => 'nullable|array',
             'teacher_ids.*' => 'exists:users,id',
         ]);
@@ -154,6 +157,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => $request->scheduled_at,
             'subject' => $request->subject,
             'grade' => $request->grade,
+            'medium' => $request->medium,
         ];
 
         if ($request->filled('zoom_link')) {

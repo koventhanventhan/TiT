@@ -47,12 +47,15 @@
             </li>
 
             {{-- Payment Settings --}}
-            <li class="{{ request()->routeIs('admin.subjects.*') ? 'mm-active' : '' }}">
+            <li class="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*')) ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
                     <i class="flaticon-381-settings-2"></i>
                     <span class="nav-text">Payment Settings</span>
                 </a>
-                <ul aria-expanded="{{ request()->routeIs('admin.subjects.*') ? 'true' : 'false' }}">
+                <ul aria-expanded="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*')) ? 'true' : 'false' }}">
+                    <li class="{{ request()->routeIs('admin.packages.index') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.packages.index') }}">Packages / Bundles</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.subjects.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.subjects.index') }}">Subject Pricing</a>
                     </li>

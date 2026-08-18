@@ -19,13 +19,20 @@ class StudentDashboardController extends Controller
         $user = $request->user();
         $today = Carbon::today();
         
-        // Classes today
-        $todayClasses = ZoomSchedule::whereDate('scheduled_at', $today)->count();
+        // Classes today (filtered by student's medium)
+        $todayClassesQuery = ZoomSchedule::whereDate('scheduled_at', $today);
+        if ($user->medium) {
+            $todayClassesQuery->where('medium', $user->medium);
+        }
+        $todayClasses = $todayClassesQuery->count();
         
-        // Upcoming classes (next 7 days)
-        $upcomingClasses = ZoomSchedule::where('scheduled_at', '>', now())
-            ->where('scheduled_at', '<=', now()->addDays(7))
-            ->count();
+        // Upcoming classes (next 7 days, filtered by student's medium)
+        $upcomingQuery = ZoomSchedule::where('scheduled_at', '>', now())
+            ->where('scheduled_at', '<=', now()->addDays(7));
+        if ($user->medium) {
+            $upcomingQuery->where('medium', $user->medium);
+        }
+        $upcomingClasses = $upcomingQuery->count();
             
         // Assignments (Total based on student's grade)
         $assignmentsQuery = Assignment::where(function($query) use ($user) {

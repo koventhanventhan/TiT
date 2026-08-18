@@ -28,20 +28,29 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
 
   // Fetch subjects grouped by category from backend
+  const [packages, setPackages] = useState([])
   React.useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       try {
         const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_BASE_URL}/subjects/prices`)
-        if (response.ok) {
-          const data = await response.json()
+        const [subRes, pkgRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/subjects/prices`),
+          fetch(`${API_BASE_URL}/packages`)
+        ])
+        
+        if (subRes.ok) {
+          const data = await subRes.json()
           setSubjectsByCategory(data)
         }
+        if (pkgRes.ok) {
+          const pkgData = await pkgRes.json()
+          setPackages(pkgData)
+        }
       } catch (err) {
-        console.error('Failed to fetch subjects:', err)
+        console.error('Failed to fetch data:', err)
       }
     }
-    fetchSubjects()
+    fetchData()
   }, [])
 
   // Auto-initialize email from currently authenticated user
@@ -226,10 +235,18 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     const gradeNum = getGradeNumber(formData.currentGrade)
     if (!gradeNum) return []
 
-    if (gradeNum >= 1 && gradeNum <= 5) {
-      return subjectsByCategory['grade_1_to_5'] || []
-    } else if (gradeNum >= 6 && gradeNum <= 11) {
-      return subjectsByCategory['grade_6_to_11'] || []
+    if (gradeNum >= 1 && gradeNum <= 2) {
+      return subjectsByCategory['grade_1_to_2'] || []
+    } else if (gradeNum === 3) {
+      return subjectsByCategory['grade_3'] || []
+    } else if (gradeNum === 4) {
+      return subjectsByCategory['grade_4'] || []
+    } else if (gradeNum === 5) {
+      return subjectsByCategory['grade_5'] || []
+    } else if (gradeNum >= 6 && gradeNum <= 9) {
+      return subjectsByCategory['grade_6_to_9'] || []
+    } else if (gradeNum >= 10 && gradeNum <= 11) {
+      return subjectsByCategory['grade_10_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
       return subjectsByCategory[selectedStream] || []
     }
@@ -249,24 +266,79 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   }, [admissionFeesConfigStr])
 
   // Calculate total amount based on selected subjects
-  const { monthlyAmount, admissionFee, totalAmount } = useMemo(() => {
-    if (selectedSubjects.length === 0) return { monthlyAmount: 0, admissionFee: 0, totalAmount: 0 }
+  const { monthlyAmount, admissionFee, totalAmount, appliedPackage, originalAmount } = useMemo(() => {
+    if (selectedSubjects.length === 0) return { monthlyAmount: 0, admissionFee: 0, totalAmount: 0, appliedPackage: null, originalAmount: 0 }
     
-    // Monthly Fee Calculation
-    const mAmount = selectedSubjects.reduce((sum, subjectName) => {
-      // Find the subject's price from the available subjects array
+    const gradeNum = getGradeNumber(formData.currentGrade)
+    
+    // Original Monthly Fee Calculation (without package)
+    const originalMonthly = selectedSubjects.reduce((sum, subjectName) => {
       const subjectObj = availableSubjects.find(s => s.name === subjectName)
       return sum + (subjectObj ? parseFloat(subjectObj.price) : 0)
     }, 0)
+    
+    let mAmount = originalMonthly
+    let appliedPkg = null
+
+    // Find applicable packages for this grade and medium
+    if (gradeNum && packages && packages.length > 0) {
+      const applicablePkgs = packages.filter(p => {
+        let grades = p.applicable_grades
+        if (typeof grades === 'string') {
+          try { grades = JSON.parse(grades) } catch(e) { grades = [] }
+        }
+        const hasGrade = Array.isArray(grades) && grades.some(g => parseInt(g, 10) === gradeNum)
+        const hasMedium = p.medium === 'both' || p.medium === formData.medium
+        return hasGrade && hasMedium
+      })
+      
+      const allSubjPkg = applicablePkgs.find(p => p.type === 'all_subjects')
+      if (allSubjPkg && availableSubjects.length > 0 && selectedSubjects.length === availableSubjects.length) {
+         mAmount = parseFloat(allSubjPkg.package_price)
+         appliedPkg = allSubjPkg
+      } else {
+         const mainSubjPkg = applicablePkgs.find(p => p.type === 'main_subjects')
+         // Apply main_subjects package when student selects 2+ subjects
+         // and their total would exceed the package price
+         if (mainSubjPkg && selectedSubjects.length >= 2) {
+            const pkgBasePrice = parseFloat(mainSubjPkg.package_price)
+            let price = pkgBasePrice
+            // If addon_price exists and they selected more than base subjects count,
+            // calculate: how many subjects fit in the base package price?
+            // Extra subjects beyond base count get addon pricing
+            if (mainSubjPkg.addon_price && parseFloat(mainSubjPkg.addon_price) > 0) {
+               const addonPrice = parseFloat(mainSubjPkg.addon_price)
+               // Determine base subject count from the package
+               // Base count = how many subjects the package covers at its base price
+               // We estimate base count by: subjects whose individual sum first exceeds package price
+               const baseCount = Math.max(2, Math.floor(pkgBasePrice / (originalMonthly / selectedSubjects.length)))
+               if (selectedSubjects.length > baseCount) {
+                  const extraCount = selectedSubjects.length - baseCount
+                  price += extraCount * addonPrice
+               }
+            }
+            // Only apply if it actually saves money
+            if (price < originalMonthly) {
+               mAmount = price
+               appliedPkg = mainSubjPkg
+            }
+         }
+      }
+    }
 
     let admFee = 0
-    const gradeNum = getGradeNumber(formData.currentGrade)
     if (gradeNum && admissionFeesConfig[gradeNum] && admissionFeesConfig[gradeNum].enabled) {
       admFee = parseFloat(admissionFeesConfig[gradeNum].amount) || 0
     }
 
-    return { monthlyAmount: mAmount, admissionFee: admFee, totalAmount: mAmount + admFee }
-  }, [selectedSubjects, availableSubjects, formData.currentGrade, admissionFeesConfig])
+    return { 
+      monthlyAmount: mAmount, 
+      admissionFee: admFee, 
+      totalAmount: mAmount + admFee,
+      appliedPackage: appliedPkg,
+      originalAmount: originalMonthly
+    }
+  }, [selectedSubjects, availableSubjects, formData.currentGrade, formData.medium, admissionFeesConfig, packages])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -771,27 +843,40 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
             <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="tit-reg-error">{error}</div>}
             <div className="tit-reg-payment-options">
-              {totalAmount > 0 && admissionFee > 0 && (
+              {totalAmount > 0 && (
                 <div style={{ marginBottom: '1rem', background: 'rgba(235, 129, 83, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(235, 129, 83, 0.3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                    <span>Monthly Fee:</span>
-                    <span>Rs. {monthlyAmount.toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                    <span>Admission Fee (First Time):</span>
-                    <span>Rs. {admissionFee.toFixed(2)}</span>
-                  </div>
+                  
+                  {appliedPackage ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                        <span>Subjects Total:</span>
+                        <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                        <span>Package Discount ({appliedPackage.name}):</span>
+                        <span>Rs. {monthlyAmount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                      <span>Monthly Fee:</span>
+                      <span>Rs. {monthlyAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {admissionFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                      <span>Admission Fee (First Time):</span>
+                      <span>Rs. {admissionFee.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '0.5rem 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '1.25rem' }}>
                     <span>Total Amount:</span>
                     <span>Rs. {totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
-              )}
-              {totalAmount > 0 && admissionFee === 0 && (
-                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
-                  {t('pay_total')}: Rs. {totalAmount} (Monthly)
-                </p>
               )}
               {totalAmount === 0 && (
                 <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>

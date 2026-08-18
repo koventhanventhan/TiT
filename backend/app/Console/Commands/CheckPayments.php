@@ -56,7 +56,7 @@ class CheckPayments extends Command
                 $notifier->notifyUser(
                     $student, 'payment_reminder', 'tit_payment_reminder',
                     [$student->full_name ?? $student->name, now()->format('F Y')],
-                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
+                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y'), 'amount' => $student->calculateMonthlyFee()]
                 );
                 $this->line("Sent reminder to: " . $student->email);
             } 

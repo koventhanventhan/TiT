@@ -161,4 +161,98 @@ class User extends Authenticatable implements FilamentUser
 
         return false;
     }
+
+    public function getSubjectCategory()
+    {
+        $grade = $this->current_grade;
+        $stream = strtolower($this->stream ?? '');
+        $gradeNum = 0;
+
+        if (preg_match('/Grade\s*(\d+)/i', $grade, $m)) {
+            $gradeNum = (int)$m[1];
+        } elseif (preg_match('/(\d+)/', $grade, $m)) {
+            $gradeNum = (int)$m[1];
+        }
+
+        if ($gradeNum >= 1 && $gradeNum <= 2) return 'grade_1_to_2';
+        if ($gradeNum == 3) return 'grade_3';
+        if ($gradeNum == 4) return 'grade_4';
+        if ($gradeNum == 5) return 'grade_5';
+        if ($gradeNum >= 6 && $gradeNum <= 9) return 'grade_6_to_9';
+        if ($gradeNum >= 10 && $gradeNum <= 11) return 'grade_10_to_11';
+
+        if ($gradeNum >= 12 && $gradeNum <= 13) {
+            if (str_contains($stream, 'art')) return 'arts_stream';
+            if (str_contains($stream, 'bio') || str_contains($stream, 'math')) return 'bio_maths_stream';
+            return 'grade_12_to_13'; // Fallback
+        }
+
+        return null;
+    }
+
+    public function calculateMonthlyFee(?float $fallbackAmount = null): float
+    {
+        $amount = 0;
+
+        if ($this->selected_subjects) {
+            $category = $this->getSubjectCategory();
+
+            // Parse selected subjects (could be JSON array or comma-separated)
+            $subjectsRaw = $this->selected_subjects;
+            if (is_string($subjectsRaw) && str_starts_with(trim($subjectsRaw), '[')) {
+                $selectedSubjects = json_decode($subjectsRaw, true) ?? [];
+            } else {
+                $selectedSubjects = array_filter(array_map('trim', explode(',', (string) $subjectsRaw)));
+            }
+
+            if (!empty($selectedSubjects)) {
+                $subjectData = \App\Models\Subject::when($category, function ($query) use ($category) {
+                    return $query->where('category', $category);
+                })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
+
+                $sumAmount = (float) $subjectData->sum('price');
+                
+                // Check for a package bundle
+                $package = \App\Models\Package::where('category', $category)
+                    ->where('medium', strtolower($this->medium))
+                    ->first();
+                
+                if ($package) {
+                    // Count total available subjects for this category and medium
+                    $totalSubjectsForCategory = \App\Models\Subject::where('category', $category)
+                        ->where('medium', strtolower($this->medium))
+                        ->count();
+                    
+                    if ($totalSubjectsForCategory > 0 && count($subjectData) >= $totalSubjectsForCategory) {
+                        $sumAmount = (float) $package->package_price;
+                    }
+                }
+
+                $amount = $sumAmount;
+            }
+        }
+
+        if ($amount <= 0) {
+            $amount = $fallbackAmount ?? config('payment.monthly_amount', 500.0);
+        }
+
+        $isFirstPayment = !$this->payments()->where('status', 'paid')->exists();
+        if ($isFirstPayment && $this->current_grade) {
+            $gradeNum = 0;
+            if (preg_match('/(\d+)/', $this->current_grade, $m)) {
+                $gradeNum = (int)$m[1];
+            }
+            if ($gradeNum > 0) {
+                $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
+                $config = json_decode($configStr, true) ?? [];
+                
+                if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
+                    $admissionFee = (float)$config[$gradeNum]['amount'];
+                    $amount += $admissionFee;
+                }
+            }
+        }
+
+        return $amount;
+    }
 }

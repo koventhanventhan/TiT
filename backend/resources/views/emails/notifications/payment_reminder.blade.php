@@ -25,6 +25,15 @@
             <p style="color:#4b5563;font-size:15px;line-height:1.7;margin:0 0 16px;">
                 {{ $data['month'] ?? 'இந்த மாதத்திற்கான' }} கட்டணம் நிலுவையில் உள்ளது என்பதை நினைவூட்டுகிறோம்.
             </p>
+            @if(isset($data['amount']))
+            <table cellpadding="0" cellspacing="0" style="background:#e0f2fe;border-radius:10px;width:100%;margin:20px 0;border-left:4px solid #0ea5e9;">
+                <tr><td style="padding:15px 20px;">
+                    <p style="color:#0369a1;font-size:16px;margin:0;font-weight:600;">
+                        Amount to Pay: Rs. {{ number_format($data['amount'], 2) }}
+                    </p>
+                </td></tr>
+            </table>
+            @endif
             <table cellpadding="0" cellspacing="0" style="background:#fef3c7;border-radius:10px;width:100%;margin:20px 0;border-left:4px solid #f59e0b;">
                 <tr><td style="padding:20px;">
                     <p style="color:#92400e;font-size:14px;margin:0;font-weight:600;">

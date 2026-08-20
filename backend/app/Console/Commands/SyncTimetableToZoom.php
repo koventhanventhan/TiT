@@ -92,6 +92,7 @@ class SyncTimetableToZoom extends Command
                                        ($existingSchedule->title !== $timetable->title) || 
                                        ($existingSchedule->duration !== $timetable->duration) ||
                                        ($existingSchedule->grade !== $timetable->grade) ||
+                                       ($existingSchedule->medium !== $timetable->medium) ||
                                        ($existingSchedule->subject !== $timetableSubject);
 
                             if ($changed) {
@@ -100,9 +101,10 @@ class SyncTimetableToZoom extends Command
                                     'scheduled_at' => $scheduledAt->toDateTimeString(),
                                     'duration' => $timetable->duration,
                                     'grade' => $timetable->grade,
+                                    'medium' => $timetable->medium,
                                     'subject' => $timetableSubject,
                                 ]);
-                                $this->info("Updated schedule #{$existingSchedule->id} (Time/Grade/Subject changes applied)");
+                                $this->info("Updated schedule #{$existingSchedule->id} (Time/Grade/Medium/Subject changes applied)");
                             }
                             continue;
                         }
@@ -115,6 +117,7 @@ class SyncTimetableToZoom extends Command
                             'scheduled_at' => $scheduledAt->toDateTimeString(),
                             'duration' => $timetable->duration,
                             'grade' => $timetable->grade,
+                            'medium' => $timetable->medium,
                             'subject' => $timetable->subject->name ?? 'General',
                             'timetable_id' => $timetable->id,
                             'created_by' => $timetable->teacher_id,

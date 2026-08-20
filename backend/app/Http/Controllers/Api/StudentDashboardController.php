@@ -19,18 +19,18 @@ class StudentDashboardController extends Controller
         $user = $request->user();
         $today = Carbon::today();
         
-        // Classes today (filtered by student's medium)
+        // Classes today (filtered by student's medium — also include 'both' medium classes)
         $todayClassesQuery = ZoomSchedule::whereDate('scheduled_at', $today);
         if ($user->medium) {
-            $todayClassesQuery->where('medium', $user->medium);
+            $todayClassesQuery->whereIn('medium', [$user->medium, 'both']);
         }
         $todayClasses = $todayClassesQuery->count();
         
-        // Upcoming classes (next 7 days, filtered by student's medium)
+        // Upcoming classes (next 7 days, filtered by student's medium — also include 'both')
         $upcomingQuery = ZoomSchedule::where('scheduled_at', '>', now())
             ->where('scheduled_at', '<=', now()->addDays(7));
         if ($user->medium) {
-            $upcomingQuery->where('medium', $user->medium);
+            $upcomingQuery->whereIn('medium', [$user->medium, 'both']);
         }
         $upcomingClasses = $upcomingQuery->count();
             

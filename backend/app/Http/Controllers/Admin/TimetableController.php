@@ -98,7 +98,7 @@ class TimetableController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'zoom_host_email' => 'nullable|email',
             'is_active' => 'nullable',
-            'medium' => 'required|in:english,tamil',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         $startTime = $request->start_time;
@@ -171,7 +171,7 @@ class TimetableController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'zoom_host_email' => 'nullable|email',
             'is_active' => 'nullable',
-            'medium' => 'required|in:english,tamil',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         $startTime = $request->start_time;

@@ -94,6 +94,12 @@ class SendZoomReminders extends Command
                         continue;
                     }
 
+                    // 2. Filter by medium (skip if student's medium doesn't match)
+                    $classMedium = $schedule->medium;
+                    if ($classMedium && $classMedium !== 'both' && $student->medium && $student->medium !== $classMedium) {
+                        continue;
+                    }
+
                     // 2. Filter by selected subjects (Robust substring match)
                     $selected = $student->selected_subjects;
                     $classSubject = trim($schedule->subject);

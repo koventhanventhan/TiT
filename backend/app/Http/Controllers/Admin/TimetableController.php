@@ -104,9 +104,10 @@ class TimetableController extends Controller
         $startTime = $request->start_time;
         $endTime = date('H:i:s', strtotime($startTime) + ($request->duration * 60));
 
-        // Conflict check for same grade at same time (overlap check)
+        // Conflict check for same grade and medium at same time (overlap check)
         $conflict = Timetable::where('day_of_week', $request->day_of_week)
             ->where('grade', $request->grade)
+            ->where('medium', $request->medium)
             ->where('is_active', true)
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime, $endTime) {
@@ -176,10 +177,11 @@ class TimetableController extends Controller
         $startTime = $request->start_time;
         $endTime = date('H:i:s', strtotime($startTime) + ($request->duration * 60));
 
-        // Conflict check for same grade at same time
+        // Conflict check for same grade and medium at same time
         $conflict = Timetable::where('id', '!=', $timetable->id)
             ->where('day_of_week', $request->day_of_week)
             ->where('grade', $request->grade)
+            ->where('medium', $request->medium)
             ->where('is_active', true)
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime, $endTime) {

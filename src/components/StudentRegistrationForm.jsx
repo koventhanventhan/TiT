@@ -498,13 +498,9 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setIsLoading(true)
     try {
       await registerStep2('offline', amount)
-      setIsLoading(false)
       alert(t('pay_offline_success'))
-      setStep(1)
-      setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-      setSelectedStream('')
-      setSelectedSubjects([])
       if (onClose) onClose()
+      window.location.href = '/student/dashboard'
     } catch (err) {
       setIsLoading(false)
       setError(err.message || 'Failed.')
@@ -549,11 +545,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         try {
           await registerPaymentSuccess(resp.params.order_id, orderId)
           alert(t('pay_online_success'))
-          setStep(1)
-          setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-          setCardData({ number: '', holder: '', expiry: '', cvv: '' })
-          setSelectedStream('')
-          setSelectedSubjects([])
           if (onClose) onClose()
           window.location.href = '/student/dashboard'
         } catch (err) {

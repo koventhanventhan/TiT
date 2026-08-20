@@ -30,8 +30,13 @@ export default function StudentDashboard() {
       console.log('🔍 Dashboard Auth Check - User:', u)
 
       const regStatus = (u.registration_status || '').toLowerCase()
-      if (regStatus === 'pending_payment' || !u.full_name) {
-        console.log('📝 Student has pending payment or incomplete profile, redirecting to registration flow...')
+      if (!u.full_name) {
+        console.log('📝 Student has incomplete profile, redirecting to registration flow step 1...')
+        setLoading(false)
+        navigate('/register?step=1')
+        return
+      } else if (regStatus === 'pending_payment') {
+        console.log('📝 Student has pending payment, redirecting to registration flow step 2...')
         setLoading(false)
         navigate('/register?step=2')
         return

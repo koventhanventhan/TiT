@@ -235,25 +235,42 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     const gradeNum = getGradeNumber(formData.currentGrade)
     if (!gradeNum) return []
 
+    let subs = []
     if (gradeNum >= 1 && gradeNum <= 2) {
-      return subjectsByCategory['grade_1_to_2'] || []
+      subs = subjectsByCategory['grade_1_to_2'] || []
     } else if (gradeNum === 3) {
-      return subjectsByCategory['grade_3'] || []
+      subs = subjectsByCategory['grade_3'] || []
     } else if (gradeNum === 4) {
-      return subjectsByCategory['grade_4'] || []
+      subs = subjectsByCategory['grade_4'] || []
     } else if (gradeNum === 5) {
-      return subjectsByCategory['grade_5'] || []
+      subs = subjectsByCategory['grade_5'] || []
     } else if (gradeNum >= 6 && gradeNum <= 9) {
-      return subjectsByCategory['grade_6_to_9'] || []
+      subs = subjectsByCategory['grade_6_to_9'] || []
     } else if (gradeNum >= 10 && gradeNum <= 11) {
-      return subjectsByCategory['grade_10_to_11'] || []
+      subs = subjectsByCategory['grade_10_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
-      return subjectsByCategory[selectedStream] || []
+      subs = subjectsByCategory[selectedStream] || []
     }
-    return []
+    
+    // Filter by selected medium if any
+    if (formData.medium) {
+      subs = subs.filter(s => s.medium === formData.medium || s.medium === 'both')
+    }
+
+    // Ensure unique subjects by name
+    const uniqueSubs = []
+    const seen = new Set()
+    for (const s of subs) {
+      if (!seen.has(s.name)) {
+        seen.add(s.name)
+        uniqueSubs.push(s)
+      }
+    }
+    
+    return uniqueSubs
   }
 
-  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream, subjectsByCategory])
+  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, formData.medium, selectedStream, subjectsByCategory])
 
   // Retrieve admission fees config
   const admissionFeesConfigStr = getSetting('admission_fees_config', '{}')

@@ -81,7 +81,16 @@ class StudentController extends Controller
             ->orderBy('paid_at', 'desc')
             ->get();
         
-        $subjects = Subject::orderBy('name')->get()->groupBy('category');
+        $medium = strtolower($student->medium ?? '');
+        $subjectsQuery = Subject::orderBy('name');
+        if ($medium) {
+            $subjectsQuery->where(function ($q) use ($medium) {
+                $q->where('medium', $medium)->orWhere('medium', 'both');
+            });
+        }
+        $subjects = $subjectsQuery->get()->groupBy('category')->map(function ($items) {
+            return $items->unique('name')->values();
+        });
         
         return view('admin.students.edit', compact('student', 'payments', 'subjects'));
     }

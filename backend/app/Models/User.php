@@ -206,24 +206,40 @@ class User extends Authenticatable implements FilamentUser
             }
 
             if (!empty($selectedSubjects)) {
+                $medium = strtolower($this->medium ?? '');
                 $subjectData = \App\Models\Subject::when($category, function ($query) use ($category) {
                     return $query->where('category', $category);
-                })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
+                })
+                ->whereIn('name', $selectedSubjects)
+                ->when($medium, function ($query) use ($medium) {
+                    return $query->where(function ($q) use ($medium) {
+                        $q->where('medium', $medium)->orWhere('medium', 'both');
+                    });
+                })
+                ->get(['name', 'price']);
 
-                $sumAmount = (float) $subjectData->sum('price');
+                // Deduplicate by name (in case both medium-specific and 'both' entries exist)
+                $uniqueSubjects = $subjectData->unique('name');
+                $sumAmount = (float) $uniqueSubjects->sum('price');
                 
                 // Check for a package bundle
                 $package = \App\Models\Package::where('category', $category)
-                    ->where('medium', strtolower($this->medium))
+                    ->where(function ($q) use ($medium) {
+                        $q->where('medium', $medium)->orWhere('medium', 'both');
+                    })
                     ->first();
                 
                 if ($package) {
                     // Count total available subjects for this category and medium
                     $totalSubjectsForCategory = \App\Models\Subject::where('category', $category)
-                        ->where('medium', strtolower($this->medium))
+                        ->where(function ($q) use ($medium) {
+                            $q->where('medium', $medium)->orWhere('medium', 'both');
+                        })
+                        ->get()
+                        ->unique('name')
                         ->count();
                     
-                    if ($totalSubjectsForCategory > 0 && count($subjectData) >= $totalSubjectsForCategory) {
+                    if ($totalSubjectsForCategory > 0 && count($uniqueSubjects) >= $totalSubjectsForCategory) {
                         $sumAmount = (float) $package->package_price;
                     }
                 }

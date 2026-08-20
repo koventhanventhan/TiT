@@ -31,13 +31,18 @@ class SubjectController extends Controller
             'medium' => 'required|in:english,tamil,both',
         ]);
 
+        // Check for medium overlap: "both" conflicts with "english" and "tamil"
+        $mediumCheck = $request->medium === 'both'
+            ? ['english', 'tamil', 'both']
+            : [$request->medium, 'both'];
+
         $exists = Subject::where('name', $request->name)
             ->where('category', $request->category)
-            ->where('medium', $request->medium)
+            ->whereIn('medium', $mediumCheck)
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('error', 'already add panijachu intha subject endu ok');
+            return redirect()->back()->with('error', 'This subject already exists in the selected category. A subject with medium "both" covers English and Tamil.');
         }
 
         $name_ta = $translator->translate($request->name, 'ta');
@@ -70,14 +75,19 @@ class SubjectController extends Controller
             'medium' => 'required|in:english,tamil,both',
         ]);
 
+        // Check for medium overlap: "both" conflicts with "english" and "tamil"
+        $mediumCheck = $request->medium === 'both'
+            ? ['english', 'tamil', 'both']
+            : [$request->medium, 'both'];
+
         $exists = Subject::where('name', $request->name)
             ->where('category', $request->category)
-            ->where('medium', $request->medium)
+            ->whereIn('medium', $mediumCheck)
             ->where('id', '!=', $id)
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('error', 'already add panijachu intha subject endu ok');
+            return redirect()->back()->with('error', 'This subject already exists in the selected category. A subject with medium "both" covers English and Tamil.');
         }
 
         $data = $request->only(['name', 'price', 'category', 'medium']);

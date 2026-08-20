@@ -94,6 +94,7 @@
                                 <select name="medium" class="form-control" required>
                                     <option value="tamil" {{ old('medium', $schedule->medium) == 'tamil' ? 'selected' : '' }}>Tamil</option>
                                     <option value="english" {{ old('medium', $schedule->medium) == 'english' ? 'selected' : '' }}>English</option>
+                                    <option value="both" {{ old('medium', $schedule->medium) == 'both' ? 'selected' : '' }}>Both (Tamil + English)</option>
                                 </select>
                             </div>
                         </div>

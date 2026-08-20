@@ -50,9 +50,9 @@ class StudentZoomController extends Controller
             ->where('scheduled_at', '>=', $startBuffer)
             ->where('scheduled_at', '<=', $endBuffer);
 
-        // Filter by student's medium (English/Tamil)
+        // Filter by student's medium (English/Tamil) — also include 'both' medium classes
         if ($user->medium) {
-            $query->where('medium', $user->medium);
+            $query->whereIn('medium', [$user->medium, 'both']);
         }
 
         $schedules = $query->orderBy('scheduled_at')->get();
@@ -198,9 +198,9 @@ class StudentZoomController extends Controller
             ->where('scheduled_at', '>=', now()->subDays(2))
             ->where('scheduled_at', '<=', now()->addDays(90));
 
-        // Filter by student's medium (English/Tamil)
+        // Filter by student's medium (English/Tamil) — also include 'both' medium classes
         if ($user->medium) {
-            $query->where('medium', $user->medium);
+            $query->whereIn('medium', [$user->medium, 'both']);
         }
 
         $schedules = $query->orderBy('scheduled_at')->get();

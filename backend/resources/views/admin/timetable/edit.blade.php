@@ -100,6 +100,7 @@
                                         <select name="medium" class="form-control default-select" required>
                                             <option value="tamil" {{ old('medium', $timetable->medium) == 'tamil' ? 'selected' : '' }}>Tamil</option>
                                             <option value="english" {{ old('medium', $timetable->medium) == 'english' ? 'selected' : '' }}>English</option>
+                                            <option value="both" {{ old('medium', $timetable->medium) == 'both' ? 'selected' : '' }}>Both (Tamil + English)</option>
                                         </select>
                                     </div>
                                     <div class="col-sm-6 mb-3">

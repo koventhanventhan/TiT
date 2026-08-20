@@ -315,7 +315,7 @@
                         <div class="slot-time">{{ date('h:i A', strtotime($slot->start_time)) }}</div>
                         <div class="slot-title"><strong>{{ $slot->title }}</strong></div>
                         <div class="slot-details">
-                            <div>Grade: {{ $slot->grade }} <span class="badge badge-sm badge-{{ $slot->medium == 'english' ? 'info' : 'primary' }}">{{ ucfirst($slot->medium) }}</span></div>
+                            <div>Grade: {{ $slot->grade }} <span class="badge badge-sm badge-{{ $slot->medium == 'english' ? 'info' : ($slot->medium == 'both' ? 'success' : 'primary') }}">{{ ucfirst($slot->medium) }}</span></div>
                             <div>Subject: {{ $slot->subject->name ?? 'N/A' }}</div>
                             <div>Teacher: {{ $slot->teacher->name ?? 'N/A' }}</div>
                         </div>
@@ -387,6 +387,7 @@
                             <select name="medium" class="form-control" required>
                                 <option value="tamil" {{ old('medium') == 'tamil' ? 'selected' : '' }}>Tamil</option>
                                 <option value="english" {{ old('medium') == 'english' ? 'selected' : '' }}>English</option>
+                                <option value="both" {{ old('medium') == 'both' ? 'selected' : '' }}>Both (Tamil + English)</option>
                             </select>
                         </div>
                         <div class="form-group col-md-6">

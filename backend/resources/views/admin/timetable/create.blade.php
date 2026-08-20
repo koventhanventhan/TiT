@@ -99,6 +99,7 @@
                                         <select name="medium" class="form-control default-select" required>
                                             <option value="tamil">Tamil</option>
                                             <option value="english">English</option>
+                                            <option value="both">Both (Tamil + English)</option>
                                         </select>
                                     </div>
 

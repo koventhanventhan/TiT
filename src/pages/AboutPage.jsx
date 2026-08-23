@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight, FiVideo, FiClock } from 'react-icons/fi'
 import { FaGraduationCap } from 'react-icons/fa'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import './AboutPage.css'
 
 const AboutPage = () => {
-  const { getSetting } = useSettings()
+  const { getSetting, settings, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const { openRegister } = useAuthModal()
+
+  const resolveImageUrl = (url) => {
+    if (!url) return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80'
+    if (url.startsWith('http://') || url.startsWith('https://')) return url
+    const backendBase = (import.meta.env.VITE_API_URL || '/api').replace('/api', '')
+    return `${backendBase}/${url.startsWith('/') ? url.slice(1) : url}`
+  }
 
   const [aboutTitle, setAboutTitle] = useState(getSetting('about_title', t('about_title')))
   const [aboutSubtitle, setAboutSubtitle] = useState(getSetting('about_subtitle', t('about_subtitle')))
@@ -35,6 +42,11 @@ const AboutPage = () => {
   const [activeGalleryItems, setActiveGalleryItems] = useState(null)
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
   const [activeTeacherIndex, setActiveTeacherIndex] = useState(null)
+  const [likedFeatures, setLikedFeatures] = useState({})
+
+  const toggleLikeFeature = (index) => {
+    setLikedFeatures(prev => ({ ...prev, [index]: !prev[index] }))
+  }
 
   // CTA States
   const [ctaTitle, setCtaTitle] = useState(getSetting('about_cta_title', t('section_cta_title')))
@@ -88,13 +100,71 @@ const AboutPage = () => {
       // Features
       let fRaw = []
       try {
-        fRaw = JSON.parse(getSetting('about_features', '[]'))
-        if (fRaw.length === 0) {
+        const rawSetting = getSetting('about_features', null)
+        let parsed = []
+        if (typeof rawSetting === 'string') {
+          parsed = JSON.parse(rawSetting)
+        } else if (Array.isArray(rawSetting)) {
+          parsed = rawSetting
+        }
+
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          fRaw = parsed.map((item) => ({
+            icon: item.icon || 'FiVideo',
+            title: item.title || '',
+            subtitle: item.subtitle || 'TiT Excellence',
+            description: item.description || '',
+            image: resolveImageUrl(item.image),
+            tags: Array.isArray(item.tags)
+              ? item.tags
+              : typeof item.tags === 'string' && item.tags.trim()
+                ? item.tags.split(',').map((t) => t.trim()).filter(Boolean)
+                : ['Online Education'],
+            ctaText: item.ctaText || item.cta_text || 'Explore Classes',
+            ctaLink: item.ctaLink || item.cta_link || '/classes'
+          }))
+        } else {
           fRaw = [
-            { icon: 'FiBookOpen', title: t('feature_online_title'), description: t('feature_online_desc'), image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop' },
-            { icon: 'FiUsers', title: t('feature_service_title'), description: t('feature_service_desc'), image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop' },
-            { icon: 'FiAward', title: t('feature_success_title'), description: t('feature_success_desc'), image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop' },
-            { icon: 'FiCheckCircle', title: t('feature_tutors_title'), description: t('feature_tutors_desc'), image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&h=400&fit=crop' }
+            {
+              icon: 'FiVideo',
+              title: t('feature_online_title') || 'Top-notch Online Classes',
+              subtitle: 'Interactive Live Learning',
+              description: t('feature_online_desc') || 'Interactive live sessions with modern tools for a seamless learning experience.',
+              tags: ['Live Zoom', 'Interactive HD', 'Recordings'],
+              ctaText: t('nav_classes') || 'Explore Classes',
+              ctaLink: '/classes',
+              image: 'https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80'
+            },
+            {
+              icon: 'FiUsers',
+              title: t('feature_service_title') || 'Unmatched Student Support',
+              subtitle: '24/7 Academic Guidance',
+              description: t('feature_service_desc') || 'Dedicated support team to guide you through your educational journey.',
+              tags: ['Dedicated Mentors', 'Doubt Clearing', '24/7 Care'],
+              ctaText: t('nav_contact') || 'Get in Touch',
+              ctaLink: '/contact',
+              image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80'
+            },
+            {
+              icon: 'FiAward',
+              title: t('feature_success_title') || 'Proven Success Record',
+              subtitle: 'Top District & Island Ranks',
+              description: t('feature_success_desc') || 'Join a community of high achievers with consistent top results.',
+              tags: ['98% Pass Rate', 'Island Rankers', 'Past Papers'],
+              ctaText: t('nav_learning_suite') || 'View Results',
+              ctaLink: '/exam-results',
+              image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80'
+            },
+            {
+              icon: 'FiCheckCircle',
+              title: t('feature_tutors_title') || 'Expert Academic Tutors',
+              subtitle: '10+ Years Qualified Faculty',
+              description: t('feature_tutors_desc') || 'Learn from highly qualified educators with years of experience.',
+              tags: ['Subject Experts', 'A/L & O/L', 'Mentorship'],
+              ctaText: t('tab_teachers') || 'Meet Tutors',
+              ctaLink: '/about?tab=teachers',
+              image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80'
+            }
           ]
         }
       } catch (e) { fRaw = [] }
@@ -206,7 +276,7 @@ const AboutPage = () => {
       }
     }
     parseAndTranslate()
-  }, [language, translate, getSetting, t])
+  }, [language, translate, getSetting, t, settings])
 
 
   // Mapping icons after translation
@@ -218,7 +288,10 @@ const AboutPage = () => {
     FiHeart: <FiHeart />,
     FiStar: <FiStar />,
     FiTarget: <FiTarget />,
-    FiTrendingUp: <FiTrendingUp />
+    FiTrendingUp: <FiTrendingUp />,
+    FiVideo: <FiVideo />,
+    FiClock: <FiClock />,
+    FaGraduationCap: <FaGraduationCap />
   }
 
   // Icon map for CTA boxes (includes FaGraduationCap)
@@ -562,7 +635,7 @@ const AboutPage = () => {
 
 
 
-          {/* Features Section */}
+          {/* Features Section - FrontendJoe Modern Dark Card Layout */}
           <section className="about-features-section">
             <div className="container">
               <div className="section-header">
@@ -572,19 +645,53 @@ const AboutPage = () => {
                 </p>
               </div>
 
-              <div className="features-list">
+              <div className="about-diff-grid">
                 {finalFeatures.map((feature, index) => (
-                  <div key={index} className={`feature-item ${index % 2 === 0 ? 'left-image' : 'right-image'}`}>
-                    <div className="feature-image-wrapper">
-                      <img src={feature.image} alt={feature.title} className="feature-image" />
-                      <div className="feature-overlay"></div>
-                    </div>
-                    <div className="feature-content">
-                      <div className="feature-icon-wrapper">
-                        <div className="feature-icon">{feature.icon}</div>
+                  <div key={index} className="diff-card">
+                    <div className="diff-image-wrapper">
+                      <img src={feature.image} alt={feature.title} className="diff-image" />
+                      <div className="diff-icon-badge">
+                        {feature.icon}
                       </div>
-                      <h3 className="feature-title">{feature.title}</h3>
-                      <p className="feature-description">{feature.description}</p>
+                    </div>
+                    <div className="diff-content">
+                      <h2 className="diff-title">{feature.title}</h2>
+                      <h3 className="diff-subtitle">{feature.subtitle || 'TiT Excellence'}</h3>
+                      <p className="diff-desc">{feature.description}</p>
+                      <div className="diff-footer">
+                        <div className="diff-details">
+                          {Array.isArray(feature.tags) && feature.tags.length > 0 ? (
+                            feature.tags.map((tag, tIdx) => (
+                              <span key={tIdx} className="diff-tag-item">
+                                <em>{tag}</em>
+                              </span>
+                            ))
+                          ) : typeof feature.tags === 'string' && feature.tags.trim() ? (
+                            feature.tags.split(',').map((tag, tIdx) => (
+                              <span key={tIdx} className="diff-tag-item">
+                                <em>{tag.trim()}</em>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="diff-tag-item">
+                              <em>Online Education</em>
+                            </span>
+                          )}
+                        </div>
+                        <div className="diff-buttons">
+                          <Link to={feature.ctaLink || '/classes'} className="diff-primary-btn">
+                            {feature.ctaText || 'Learn more'}
+                          </Link>
+                          <button
+                            type="button"
+                            className={`diff-icon-btn ${likedFeatures[index] ? 'active' : ''}`}
+                            onClick={() => toggleLikeFeature(index)}
+                            title="Save"
+                          >
+                            <FiHeart />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -44,6 +44,119 @@
   }
 }
 
+/* =========================================================
+   Hero Custom Background Modes (Single Image & Slider)
+   ========================================================= */
+.hero.has-custom-bg {
+  color: #f8fafc;
+}
+
+.hero.has-custom-bg .hero-title {
+  color: #ffffff;
+}
+
+.hero.has-custom-bg .hero-description {
+  color: #cbd5e1;
+}
+
+.hero.has-custom-bg .stat-label {
+  color: #94a3b8;
+}
+
+.hero.has-custom-bg .stat-number {
+  color: #ffffff;
+}
+
+.hero-slider-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-slide-item {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 1.4s ease-in-out, transform 7s ease-out;
+  will-change: opacity, transform;
+}
+
+.hero-slide-item.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.hero-single-bg-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-single-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+}
+
+.hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.4s ease, background-color 0.4s ease;
+}
+
+.hero-slider-dots {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  pointer-events: auto;
+}
+
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-dot:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(1.15);
+}
+
+.hero-dot.active {
+  width: 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+}
+
 .hero-gradient {
   position: absolute;
   top: -50%;

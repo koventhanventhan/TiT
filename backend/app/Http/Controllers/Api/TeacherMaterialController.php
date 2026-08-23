@@ -20,14 +20,18 @@ class TeacherMaterialController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|string', // PDF, Video, Link, etc.
+            'type' => 'required|string', // note, paper, recording, video, PDF, etc.
             'subject' => 'nullable|string',
             'grade' => 'nullable|string',
-            'file' => 'nullable|file|max:20480',
+            'medium' => 'nullable|string|in:tamil,english,all',
+            'file' => 'nullable|file|max:51200',
+            'file_path' => 'nullable|string',
+            'file_size' => 'nullable|string',
             'url' => 'nullable|string',
+            'description' => 'nullable|string',
         ]);
 
-        $filePath = null;
+        $filePath = $validated['file_path'] ?? null;
         if ($request->hasFile('file')) {
             $filePath = $request->file('file')->store('materials', 'public');
         }
@@ -37,9 +41,13 @@ class TeacherMaterialController extends Controller
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
             'grade' => $validated['grade'] ?? null,
+            'medium' => $validated['medium'] ?? 'all',
+            'description' => $validated['description'] ?? null,
             'file_path' => $filePath,
+            'file_size' => $validated['file_size'] ?? null,
             'url' => $validated['url'] ?? null,
             'teacher_id' => $request->user()->id,
+            'institute_id' => $request->user()->institute_id ?? 1,
         ]);
 
         return response()->json($material, 201);

@@ -103,7 +103,7 @@ export const loginWithEmail = async (usernameOrEmail, password, remember = false
         (fetchError.message.includes('Failed to fetch') ||
           fetchError.message.includes('NetworkError') ||
           fetchError.message.includes('Network request failed'))) {
-        throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
+        throw new Error('Unable to connect to server. Please check your internet connection or try again later')
       }
       // Re-throw other errors as-is
       throw fetchError
@@ -209,14 +209,15 @@ export const loginWithEmail = async (usernameOrEmail, password, remember = false
         error.message.includes('NetworkError') ||
         error.message.includes('Network request failed'))
 
-    const isSpecificError = error.message.includes('Cannot connect') ||
+    const isSpecificError = error.message.includes('Unable to connect') ||
+      error.message.includes('Cannot connect') ||
       error.message.includes('credentials') ||
       error.message.includes('incorrect') ||
       error.message.includes('Login failed') ||
       error.message.includes('validation')
 
     if (isNetworkError && !isSpecificError) {
-      throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
+      throw new Error('Unable to connect to server. Please check your internet connection or try again later')
     }
 
     // Re-throw the error (either original or already modified)
@@ -246,7 +247,7 @@ export const registerStep1 = async (userData) => {
     return data
   } catch (error) {
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running.`)
+      throw new Error('Unable to connect to server. Please check your internet connection or try again later')
     }
     throw error
   }
@@ -356,7 +357,7 @@ export const registerWithEmail = async (userData) => {
         (fetchError.message.includes('Failed to fetch') ||
           fetchError.message.includes('NetworkError') ||
           fetchError.message.includes('Network request failed'))) {
-        throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
+        throw new Error('Unable to connect to server. Please check your internet connection or try again later')
       }
       // Re-throw other errors as-is
       throw fetchError
@@ -416,14 +417,15 @@ export const registerWithEmail = async (userData) => {
         error.message.includes('NetworkError') ||
         error.message.includes('Network request failed'))
 
-    const isSpecificError = error.message.includes('Cannot connect') ||
+    const isSpecificError = error.message.includes('Unable to connect') ||
+      error.message.includes('Cannot connect') ||
       error.message.includes('Registration failed') ||
       error.message.includes('validation') ||
       error.message.includes('already exists') ||
       error.message.includes('duplicate')
 
     if (isNetworkError && !isSpecificError) {
-      throw new Error(`Cannot connect to server at ${API_BASE_URL}. Please ensure Laravel server is running: cd backend && php artisan serve`)
+      throw new Error('Unable to connect to server. Please check your internet connection or try again later')
     }
 
     // Re-throw the error (either original or already modified)

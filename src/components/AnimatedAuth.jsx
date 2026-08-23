@@ -147,8 +147,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       })
 
       // Show more helpful error messages
-      if (errorMessage.includes('Cannot connect') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        setError('Cannot connect to server. Please ensure Laravel server is running: cd backend && php artisan serve')
+      if (errorMessage.includes('Unable to connect') || errorMessage.includes('Cannot connect') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        setError('Unable to connect to server. Please check your internet connection or try again later')
       } else if (errorMessage.includes('credentials') || errorMessage.includes('incorrect')) {
         // Keep the original error message for credential errors
         setError(errorMessage)

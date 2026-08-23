@@ -357,6 +357,7 @@ export const translations = {
     reg_stream: 'Stream / Section',
     reg_stream_select: 'Select Stream',
     reg_subjects: 'Preferred Online Subject(s)',
+    reg_fee_note: 'Note: Your monthly fee is calculated based on the subjects you select. If you select all subjects in a package, a special package discount will be automatically applied!',
     reg_next_payment: 'Next: Payment',
     reg_submitting: 'Submitting...',
     reg_experience_select: 'Select Option',
@@ -780,6 +781,7 @@ export const translations = {
     reg_stream: 'பிரிவு',
     reg_stream_select: 'பிரிவு தேர்ந்தெடுக்கவும்',
     reg_subjects: 'பாடங்கள்',
+    reg_fee_note: 'குறிப்பு: நீங்கள் தேர்ந்தெடுக்கும் பாடங்களின் அடிப்படையிலேயே மாதக் கட்டணம் கணக்கிடப்படும். நீங்கள் ஒரு Package-ல் உள்ள அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால், சிறப்புச் சலுகைக் கட்டணம் (Package Discount) தானாகவேப் பொருந்திவிடும்!',
     reg_next_payment: 'அடுத்து: கட்டணம்',
     reg_submitting: 'சமர்ப்பிக்கிறது...',
     reg_experience_select: 'விருப்பத்தைத் தேர்ந்தெடுக்கவும்',
@@ -1330,6 +1332,7 @@ export const translations = {
     exam_rank: 'ස්ථානය',
     exam_total_marks: 'මුළු ලකුණු',
     exam_subjects: 'විෂයයන්',
+    reg_fee_note: 'සටහන: ඔබගේ මාසික ගාස්තුව ගණනය කරනු ලබන්නේ ඔබ තෝරා ගන්නා විෂයයන් මත පදනම්වය. ඔබ සියලුම විෂයයන් (Package) තෝරා ගන්නේ නම්, විශේෂ පැකේජ වට්ටමක් ස්වයංක්‍රීයව අදාළ වේ!',
     exam_average: 'සාමාන්‍ය',
   },
 }

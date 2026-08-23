@@ -28,36 +28,7 @@ class RegistrationController extends Controller
      */
     private function getSubjectCategoryForUser(User $user)
     {
-        $grade = $user->current_grade;
-        $stream = strtolower($user->stream ?? '');
-        $gradeNum = 0;
-
-        if (preg_match('/Grade\s*(\d+)/i', $grade, $m)) {
-            $gradeNum = (int)$m[1];
-        } elseif (preg_match('/(\d+)/', $grade, $m)) {
-            $gradeNum = (int)$m[1];
-        }
-
-        if ($gradeNum >= 1 && $gradeNum <= 5) {
-            return 'grade_1_to_5';
-        }
-
-        if ($gradeNum >= 6 && $gradeNum <= 11) {
-            return 'grade_6_to_11';
-        }
-
-        if ($gradeNum >= 12 && $gradeNum <= 13) {
-            if (str_contains($stream, 'art')) {
-                return 'arts_stream';
-            }
-            if (str_contains($stream, 'bio') || str_contains($stream, 'math')) {
-                return 'bio_maths_stream';
-            }
-            // Add other streams as needed
-            return 'grade_6_to_11'; // Fallback
-        }
-
-        return null;
+        return $user->getSubjectCategory();
     }
 
     /**
@@ -732,52 +703,7 @@ class RegistrationController extends Controller
      */
     private function calculateUserAmount(User $user, ?float $fallbackAmount = null): float
     {
-        $amount = 0;
-
-        if ($user->selected_subjects) {
-            $category = $this->getSubjectCategoryForUser($user);
-
-            // Parse selected subjects (could be JSON array or comma-separated)
-            $subjectsRaw = $user->selected_subjects;
-            if (is_string($subjectsRaw) && str_starts_with(trim($subjectsRaw), '[')) {
-                $selectedSubjects = json_decode($subjectsRaw, true) ?? [];
-            } else {
-                $selectedSubjects = array_filter(array_map('trim', explode(',', (string) $subjectsRaw)));
-            }
-
-            if (!empty($selectedSubjects)) {
-                $subjectData = \App\Models\Subject::when($category, function ($query) use ($category) {
-                    return $query->where('category', $category);
-                })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
-
-                $amount = (float) $subjectData->sum('price');
-            }
-        }
-
-        // Fallback
-        if ($amount <= 0) {
-            $amount = $fallbackAmount ?? 500.0;
-        }
-
-        // Add admission fee for first payment
-        $isFirstPayment = !$user->payments()->where('status', 'paid')->exists();
-        if ($isFirstPayment && $user->current_grade) {
-            $gradeNum = 0;
-            if (preg_match('/(\d+)/', $user->current_grade, $m)) {
-                $gradeNum = (int)$m[1];
-            }
-            if ($gradeNum > 0) {
-                $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
-                $config = json_decode($configStr, true) ?? [];
-                
-                if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
-                    $admissionFee = (float)$config[$gradeNum]['amount'];
-                    $amount += $admissionFee;
-                }
-            }
-        }
-
-        return $amount;
+        return $user->calculateMonthlyFee($fallbackAmount);
     }
 
     private function formatUserResponse(User $user): array

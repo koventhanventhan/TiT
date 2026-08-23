@@ -194,7 +194,7 @@
     </div>
 @endif
 
-<form action="{{ route('admin.settings.store') }}" method="POST">
+<form action="{{ route('admin.settings.store') }}" method="POST" onsubmit="prepareJsonData()">
     @csrf
     
     {{-- Hero Section --}}
@@ -219,59 +219,6 @@
                     <textarea name="about_description" class="form-control" rows="3">{{ \App\Models\SiteSetting::get('about_description', "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support.") }}</textarea>
                 </div>
             </div>
-
-            <hr>
-            <h6 style="color:#fff;font-weight:600;margin-bottom:1rem;">Hero Images &amp; Float Badges</h6>
-
-            {{-- Left Student Image --}}
-            <div class="form-group row">
-                <label class="col-sm-3 col-form-label">Left Student Image</label>
-                <div class="col-sm-9">
-                    <div class="image-picker-container" onclick="document.getElementById('hero_left_image_file').click()">
-                        <div class="upload-loading"><div class="spinner-border"></div></div>
-                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
-                        @php $heroLeftImg = \App\Models\SiteSetting::get('about_hero_left_image', ''); @endphp
-                        <div class="image-picker-placeholder" style="{{ $heroLeftImg ? 'display:none' : '' }}">
-                            <i class="la la-image"></i> Select Image
-                        </div>
-                        <img id="hero_left_image_preview" src="{{ $heroLeftImg }}" class="image-picker-preview" style="{{ $heroLeftImg ? '' : 'display:none' }}">
-                        <input type="file" id="hero_left_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'hero_left_image_preview', 'hero_left_image_input')">
-                    </div>
-                    <input type="hidden" name="about_hero_left_image" id="hero_left_image_input" value="{{ $heroLeftImg }}">
-                    <button type="button" class="btn btn-danger btn-sm mt-2" id="hero_left_remove_btn" style="{{ $heroLeftImg ? '' : 'display:none' }}" onclick="removeImage('hero_left_image_preview', 'hero_left_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
-                    <small class="text-muted d-block mt-1">The student image on the LEFT side of the hero. Leave blank to use the default local image.</small>
-                </div>
-            </div>
-
-            {{-- Left Float Badge --}}
-            <div class="form-group row">
-                <label class="col-sm-3 col-form-label">Left Badge Text</label>
-                <div class="col-sm-9">
-                    <input type="text" name="about_hero_left_badge" class="form-control" value="{{ \App\Models\SiteSetting::get('about_hero_left_badge', '500+ Courses') }}" placeholder="e.g. 500+ Courses">
-                    <small class="text-muted">Text shown on the floating badge over the left student image.</small>
-                </div>
-            </div>
-
-            {{-- Right Student Image --}}
-            <div class="form-group row">
-                <label class="col-sm-3 col-form-label">Right Student Image</label>
-                <div class="col-sm-9">
-                    <div class="image-picker-container" onclick="document.getElementById('hero_right_image_file').click()">
-                        <div class="upload-loading"><div class="spinner-border"></div></div>
-                        <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
-                        @php $heroRightImg = \App\Models\SiteSetting::get('about_hero_right_image', ''); @endphp
-                        <div class="image-picker-placeholder" style="{{ $heroRightImg ? 'display:none' : '' }}">
-                            <i class="la la-image"></i> Select Image
-                        </div>
-                        <img id="hero_right_image_preview" src="{{ $heroRightImg }}" class="image-picker-preview" style="{{ $heroRightImg ? '' : 'display:none' }}">
-                        <input type="file" id="hero_right_image_file" style="display:none" accept="image/*" onchange="uploadImage(this, 'hero_right_image_preview', 'hero_right_image_input')">
-                    </div>
-                    <input type="hidden" name="about_hero_right_image" id="hero_right_image_input" value="{{ $heroRightImg }}">
-                    <button type="button" class="btn btn-danger btn-sm mt-2" id="hero_right_remove_btn" style="{{ $heroRightImg ? '' : 'display:none' }}" onclick="removeImage('hero_right_image_preview', 'hero_right_image_input', this)"><i class="la la-trash"></i> Remove Image</button>
-                    <small class="text-muted d-block mt-1">The student image on the RIGHT side of the hero. Leave blank to use the default local image.</small>
-                </div>
-            </div>
-
             {{-- Right Float Badge --}}
             <div class="form-group row">
                 <label class="col-sm-3 col-form-label">Right Badge Text</label>
@@ -385,7 +332,46 @@
                     $features = json_decode(\App\Models\SiteSetting::get('about_features', '[]'), true);
                     if(empty($features)) {
                         $features = [
-                            ['icon' => 'FiBookOpen', 'title' => 'Top-notch Online Classes', 'description' => 'Interactive live sessions...', 'image' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f']
+                            [
+                                'icon' => 'FiVideo',
+                                'title' => 'Top-notch Online Classes',
+                                'subtitle' => 'Interactive Live Learning',
+                                'description' => 'Interactive live sessions with modern tools for a seamless learning experience.',
+                                'tags' => ['Live Zoom', 'Interactive HD', 'Recordings'],
+                                'ctaText' => 'Explore Classes',
+                                'ctaLink' => '/classes',
+                                'image' => 'https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80'
+                            ],
+                            [
+                                'icon' => 'FiUsers',
+                                'title' => 'Unmatched Student Support',
+                                'subtitle' => '24/7 Academic Guidance',
+                                'description' => 'Dedicated support team to guide you through your educational journey.',
+                                'tags' => ['Dedicated Mentors', 'Doubt Clearing', '24/7 Care'],
+                                'ctaText' => 'Get in Touch',
+                                'ctaLink' => '/contact',
+                                'image' => 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80'
+                            ],
+                            [
+                                'icon' => 'FiAward',
+                                'title' => 'Proven Success Record',
+                                'subtitle' => 'Top District & Island Ranks',
+                                'description' => 'Join a community of high achievers with consistent top results.',
+                                'tags' => ['98% Pass Rate', 'Island Rankers', 'Past Papers'],
+                                'ctaText' => 'View Results',
+                                'ctaLink' => '/exam-results',
+                                'image' => 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80'
+                            ],
+                            [
+                                'icon' => 'FiCheckCircle',
+                                'title' => 'Expert Academic Tutors',
+                                'subtitle' => '10+ Years Qualified Faculty',
+                                'description' => 'Learn from highly qualified educators with years of experience.',
+                                'tags' => ['Subject Experts', 'A/L & O/L', 'Mentorship'],
+                                'ctaText' => 'Meet Tutors',
+                                'ctaLink' => '/about?tab=teachers',
+                                'image' => 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80'
+                            ]
                         ];
                     }
                 @endphp
@@ -393,37 +379,67 @@
                     <div class="dynamic-row">
                         <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
-                                    <label>Icon Code (e.g. FiBookOpen)</label>
-                                    <input type="text" name="feature_icon[]" class="form-control" value="{{ $feature['icon'] }}">
+                                    <label>Icon (e.g. FiVideo, FiUsers, FiAward)</label>
+                                    <input type="text" name="feature_icon[]" class="form-control" value="{{ $feature['icon'] ?? 'FiVideo' }}">
                                 </div>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-5">
                                 <div class="form-group">
-                                    <label>Title</label>
-                                    <input type="text" name="feature_title[]" class="form-control" value="{{ $feature['title'] }}">
+                                    <label>Card Title</label>
+                                    <input type="text" name="feature_title[]" class="form-control" value="{{ $feature['title'] ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Subtitle / Role</label>
+                                    <input type="text" name="feature_subtitle[]" class="form-control" value="{{ $feature['subtitle'] ?? 'TiT Excellence' }}" placeholder="e.g. Interactive Live Learning">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Description</label>
-                                    <textarea name="feature_description[]" class="form-control" rows="2">{{ $feature['description'] }}</textarea>
+                                    <textarea name="feature_description[]" class="form-control" rows="2">{{ $feature['description'] ?? '' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Pill Tags (Comma separated)</label>
+                                    @php
+                                        $tagVal = '';
+                                        if (isset($feature['tags'])) {
+                                            $tagVal = is_array($feature['tags']) ? implode(', ', $feature['tags']) : $feature['tags'];
+                                        }
+                                    @endphp
+                                    <input type="text" name="feature_tags[]" class="form-control" value="{{ $tagVal }}" placeholder="e.g. Live Zoom, Interactive HD, Recordings">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Button Text</label>
+                                    <input type="text" name="feature_cta_text[]" class="form-control" value="{{ $feature['ctaText'] ?? $feature['cta_text'] ?? 'Explore Classes' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Button Link</label>
+                                    <input type="text" name="feature_cta_link[]" class="form-control" value="{{ $feature['ctaLink'] ?? $feature['cta_link'] ?? '/classes' }}">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Feature Image</label>
+                                    <label>Card Image</label>
                                     <div class="image-picker-container" style="height: 7.5rem;" onclick="this.querySelector('input[type=file]').click()">
                                         <div class="upload-loading"><div class="spinner-border"></div></div>
                                         <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Change</div>
-                                        <div class="image-picker-placeholder" style="{{ $feature['image'] ? 'display:none' : '' }}">
+                                        <div class="image-picker-placeholder" style="{{ !empty($feature['image']) ? 'display:none' : '' }}">
                                             <i class="la la-image"></i> Select
                                         </div>
-                                        <img src="{{ $feature['image'] }}" class="image-picker-preview" style="{{ $feature['image'] ? '' : 'display:none' }}">
+                                        <img src="{{ $feature['image'] ?? '' }}" class="image-picker-preview" style="{{ !empty($feature['image']) ? '' : 'display:none' }}">
                                         <input type="file" style="display:none" accept="image/*" onchange="uploadImage(this, null, null)">
                                     </div>
-                                    <input type="hidden" name="feature_image[]" value="{{ $feature['image'] }}">
+                                    <input type="hidden" name="feature_image[]" value="{{ $feature['image'] ?? '' }}">
                                 </div>
                             </div>
                         </div>
@@ -851,18 +867,30 @@
                 <div class="dynamic-row">
                     <i class="la la-trash remove-row" onclick="this.parentElement.remove()"></i>
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group"><label>Icon Code</label><input type="text" name="feature_icon[]" class="form-control"></div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Icon (e.g. FiVideo, FiUsers)</label><input type="text" name="feature_icon[]" class="form-control" value="FiVideo"></div>
                         </div>
-                        <div class="col-md-8">
-                            <div class="form-group"><label>Title</label><input type="text" name="feature_title[]" class="form-control"></div>
+                        <div class="col-md-5">
+                            <div class="form-group"><label>Card Title</label><input type="text" name="feature_title[]" class="form-control"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Subtitle</label><input type="text" name="feature_subtitle[]" class="form-control" placeholder="e.g. Interactive Live Learning"></div>
                         </div>
                         <div class="col-md-12">
                             <div class="form-group"><label>Description</label><textarea name="feature_description[]" class="form-control" rows="2"></textarea></div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group"><label>Pill Tags (Comma separated)</label><input type="text" name="feature_tags[]" class="form-control" placeholder="e.g. Live Zoom, Interactive HD, Recordings"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Button Text</label><input type="text" name="feature_cta_text[]" class="form-control" value="Explore Classes"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Button Link</label><input type="text" name="feature_cta_link[]" class="form-control" value="/classes"></div>
+                        </div>
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label>Feature Image</label>
+                                <label>Card Image</label>
                                 <div class="image-picker-container" style="height: 7.5rem;" onclick="this.querySelector('input[type=file]').click()">
                                     <div class="upload-loading"><div class="spinner-border"></div></div>
                                     <div class="image-picker-overlay"><i class="la la-cloud-upload"></i> Click to Upload</div>
@@ -1005,14 +1033,22 @@
         const features = [];
         const fIcons = document.getElementsByName('feature_icon[]');
         const fTitles = document.getElementsByName('feature_title[]');
+        const fSubtitles = document.getElementsByName('feature_subtitle[]');
         const fDescs = document.getElementsByName('feature_description[]');
+        const fTags = document.getElementsByName('feature_tags[]');
+        const fCtaTexts = document.getElementsByName('feature_cta_text[]');
+        const fCtaLinks = document.getElementsByName('feature_cta_link[]');
         const fImages = document.getElementsByName('feature_image[]');
         for (let i = 0; i < fIcons.length; i++) {
             features.push({
-                icon: fIcons[i].value,
-                title: fTitles[i].value,
-                description: fDescs[i].value,
-                image: fImages[i].value
+                icon: fIcons[i] ? fIcons[i].value : 'FiVideo',
+                title: fTitles[i] ? fTitles[i].value : '',
+                subtitle: fSubtitles[i] ? fSubtitles[i].value : '',
+                description: fDescs[i] ? fDescs[i].value : '',
+                tags: fTags[i] ? fTags[i].value.split(',').map(t => t.trim()).filter(Boolean) : [],
+                ctaText: fCtaTexts[i] ? fCtaTexts[i].value : '',
+                ctaLink: fCtaLinks[i] ? fCtaLinks[i].value : '',
+                image: fImages[i] ? fImages[i].value : ''
             });
         }
         document.getElementById('about_features_json').value = JSON.stringify(features);

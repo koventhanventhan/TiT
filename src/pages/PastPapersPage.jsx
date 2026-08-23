@@ -77,6 +77,13 @@ const PastPapersPage = () => {
     return g.replace(/-/g, ' ').toUpperCase()
   }
 
+  const resolveFileUrl = (filePath, url) => {
+    const target = url || filePath
+    if (!target) return '#'
+    if (target.startsWith('http://') || target.startsWith('https://')) return target
+    return `${backendUrl}${target.startsWith('/') ? target.slice(1) : target}`
+  }
+
   const resolveImage = (img) => {
     if (!img) return ''
     if (img.startsWith('http')) return img
@@ -178,7 +185,7 @@ const PastPapersPage = () => {
                   <div className="paper-type-tag">PDF</div>
                   <div className="paper-action">
                     <a
-                      href={`${backendUrl}${paper.file_path}`}
+                      href={resolveFileUrl(paper.file_path, paper.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-download"

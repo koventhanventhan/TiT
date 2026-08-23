@@ -28,6 +28,33 @@ const Hero = () => {
   const [heroTitleGradient, setHeroTitleGradient] = useState(getSetting('hero_title_gradient', t('hero_title_gradient')))
   const [heroDescription, setHeroDescription] = useState(getSetting('hero_description', t('hero_description')))
 
+  // Hero Background & Slider Settings
+  const heroBgMode = getSetting('hero_bg_mode', 'default')
+  const heroBgImage = getSetting('hero_bg_image', '')
+  const heroSliderImagesRaw = getSetting('hero_slider_images', '[]')
+  const heroSliderInterval = (parseInt(getSetting('hero_slider_interval', '5')) || 5) * 1000
+  const heroOverlayOpacity = parseFloat(getSetting('hero_overlay_opacity', '0.55'))
+  const heroOverlayColor = getSetting('hero_overlay_color', '#0a0f1e')
+
+  let heroSlides = []
+  try {
+    heroSlides = JSON.parse(heroSliderImagesRaw)
+    if (!Array.isArray(heroSlides)) heroSlides = []
+  } catch (e) {
+    heroSlides = []
+  }
+
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    if (heroBgMode === 'slider' && heroSlides.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+      }, heroSliderInterval)
+      return () => clearInterval(timer)
+    }
+  }, [heroBgMode, heroSlides.length, heroSliderInterval])
+
   const statsRef = useRef(null)
 
   useEffect(() => {
@@ -156,9 +183,59 @@ const Hero = () => {
   }
 
   return (
-    <section id="home" className="hero">
-      <div className="hero-background">
-      </div>
+    <section id="home" className={`hero ${heroBgMode !== 'default' ? 'has-custom-bg' : ''}`}>
+      {/* Background Mode Rendering */}
+      {heroBgMode === 'slider' && heroSlides.length > 0 ? (
+        <div className="hero-slider-bg">
+          {heroSlides.map((slide, index) => {
+            const slideImg = typeof slide === 'string' ? slide : (slide.image || '')
+            return (
+              <div
+                key={index}
+                className={`hero-slide-item ${index === currentSlide ? 'active' : ''}`}
+                style={{ backgroundImage: `url(${slideImg})` }}
+              />
+            )
+          })}
+          <div
+            className="hero-bg-overlay"
+            style={{
+              backgroundColor: heroOverlayColor,
+              opacity: heroOverlayOpacity
+            }}
+          />
+          {heroSlides.length > 1 && (
+            <div className="hero-slider-dots">
+              {heroSlides.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className={`hero-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => setCurrentSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : heroBgMode === 'single' && heroBgImage ? (
+        <div className="hero-single-bg-wrap">
+          <div
+            className="hero-single-bg"
+            style={{ backgroundImage: `url(${heroBgImage})` }}
+          />
+          <div
+            className="hero-bg-overlay"
+            style={{
+              backgroundColor: heroOverlayColor,
+              opacity: heroOverlayOpacity
+            }}
+          />
+        </div>
+      ) : (
+        <div className="hero-background"></div>
+      )}
+
       <div className="container">
         <div className="hero-content">
           <div className="hero-text">

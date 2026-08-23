@@ -115,6 +115,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);
         Route::post('/zoom/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteZoomClasses']);
         Route::get('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'materials']);
+        Route::post('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'storeMaterial']);
+        Route::delete('/materials/{id}', [\App\Http\Controllers\Api\MasterAdminController::class, 'deleteMaterial']);
         Route::get('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'settings']);
         Route::post('/settings', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateSettings']);
         Route::get('/assignments', [\App\Http\Controllers\Api\MasterAdminController::class, 'assignments']);

@@ -77,6 +77,13 @@ const RecordingsPage = () => {
     return g.replace(/-/g, ' ').toUpperCase()
   }
 
+  const resolveFileUrl = (filePath, url) => {
+    const target = url || filePath
+    if (!target) return ''
+    if (target.startsWith('http://') || target.startsWith('https://')) return target
+    return `${backendUrl}${target.startsWith('/') ? target.slice(1) : target}`
+  }
+
   const resolveImage = (img) => {
     if (!img) return ''
     if (img.startsWith('http')) return img
@@ -155,40 +162,35 @@ const RecordingsPage = () => {
               <div key={recording.id} className="recording-card">
                 {/* Video preview area */}
                 <div className="recording-card-preview">
-                  {recording.url ? (
+                  {recording.url && (recording.url.includes('youtube.com') || recording.url.includes('youtu.be')) ? (
                     <div className="recording-embed-wrap">
-                      {recording.url.includes('youtube.com') || recording.url.includes('youtu.be') ? (
-                        <iframe
-                          src={`https://www.youtube.com/embed/${recording.url.includes('youtu.be') ? recording.url.split('/').pop().split('?')[0] : new URLSearchParams(new URL(recording.url).search).get('v')}`}
-                          title={recording.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="recording-iframe"
-                        />
-                      ) : recording.url.includes('vimeo.com') ? (
-                        <iframe
-                          src={`https://player.vimeo.com/video/${recording.url.split('/').pop()}`}
-                          title={recording.title}
-                          frameBorder="0"
-                          allow="autoplay; fullscreen; picture-in-picture"
-                          allowFullScreen
-                          className="recording-iframe"
-                        />
-                      ) : (
-                        <div className="recording-url-preview">
-                          <FiVideo className="recording-url-icon" />
-                          <span>{t('external_video') || 'External Video'}</span>
-                        </div>
-                      )}
+                      <iframe
+                        src={`https://www.youtube.com/embed/${recording.url.includes('youtu.be') ? recording.url.split('/').pop().split('?')[0] : new URLSearchParams(new URL(recording.url).search).get('v')}`}
+                        title={recording.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="recording-iframe"
+                      />
                     </div>
-                  ) : recording.file_path ? (
+                  ) : recording.url && recording.url.includes('vimeo.com') ? (
+                    <div className="recording-embed-wrap">
+                      <iframe
+                        src={`https://player.vimeo.com/video/${recording.url.split('/').pop()}`}
+                        title={recording.title}
+                        frameBorder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        className="recording-iframe"
+                      />
+                    </div>
+                  ) : (recording.file_path || recording.url) ? (
                     <video
                       className="recording-video-player"
                       controls
                       preload="metadata"
                     >
-                      <source src={`${backendUrl}${recording.file_path}`} />
+                      <source src={resolveFileUrl(recording.file_path, recording.url)} />
                       Your browser does not support the video tag.
                     </video>
                   ) : (

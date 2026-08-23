@@ -163,8 +163,59 @@ class MasterAdminController extends Controller
      */
     public function materials(Request $request)
     {
-        $materials = \App\Models\LearningMaterial::latest()->paginate(20);
+        $query = \App\Models\LearningMaterial::latest();
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+        if ($request->has('grade')) {
+            $query->where('grade', $request->grade);
+        }
+        $materials = $query->paginate(30);
         return response()->json($materials);
+    }
+
+    /**
+     * Store LMS Material (Admin)
+     */
+    public function storeMaterial(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'type' => 'required|string', // note, paper, recording, video, PDF
+            'subject' => 'nullable|string',
+            'grade' => 'nullable|string',
+            'medium' => 'nullable|string|in:tamil,english,all',
+            'file_path' => 'nullable|string',
+            'file_size' => 'nullable|string',
+            'url' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        $material = \App\Models\LearningMaterial::create([
+            'title' => $validated['title'],
+            'type' => $validated['type'],
+            'subject' => $validated['subject'] ?? null,
+            'grade' => $validated['grade'] ?? null,
+            'medium' => $validated['medium'] ?? 'all',
+            'description' => $validated['description'] ?? null,
+            'file_path' => $validated['file_path'] ?? null,
+            'file_size' => $validated['file_size'] ?? null,
+            'url' => $validated['url'] ?? null,
+            'institute_id' => $request->user()->institute_id ?? 1,
+            'teacher_id' => $request->user()->id,
+        ]);
+
+        return response()->json($material, 201);
+    }
+
+    /**
+     * Delete LMS Material (Admin)
+     */
+    public function deleteMaterial($id)
+    {
+        $material = \App\Models\LearningMaterial::findOrFail($id);
+        $material->delete();
+        return response()->json(['message' => 'Material deleted successfully.']);
     }
 
     public function settings(Request $request)

@@ -315,7 +315,117 @@
                                                 <textarea name="hero_description" class="form-control" rows="4">{{ \App\Models\SiteSetting::get('hero_description', 'Top-notch online tutoring from qualified tutors at the comfort of your home. Join thousands of students achieving academic excellence with personalized learning.') }}</textarea>
                                             </div>
                                         </div>
-                                        <button type="submit" class="btn btn-primary mt-3">Save Hero Changes</button>
+
+                                        <hr style="border-color: rgba(255,255,255,0.1); margin: 2rem 0 1.5rem;">
+                                        <h5 class="text-primary mb-3" style="font-weight: 600;">Hero Background &amp; Slider Mode</h5>
+
+                                        @php
+                                            $heroBgMode = \App\Models\SiteSetting::get('hero_bg_mode', 'default');
+                                            $heroBgImg = \App\Models\SiteSetting::get('hero_bg_image', '');
+                                            $heroSliderImgs = json_decode(\App\Models\SiteSetting::get('hero_slider_images', '[]'), true) ?: [];
+                                            $heroOpacity = \App\Models\SiteSetting::get('hero_overlay_opacity', '0.55');
+                                            $heroInterval = \App\Models\SiteSetting::get('hero_slider_interval', '5');
+                                            $heroOverlayColor = \App\Models\SiteSetting::get('hero_overlay_color', '#0a0f1e');
+                                        @endphp
+
+                                        {{-- Mode Selection --}}
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Background Mode</label>
+                                            <div class="col-sm-9">
+                                                <select name="hero_bg_mode" id="hero_bg_mode" class="form-control" onchange="toggleHeroBgMode(this.value)">
+                                                    <option value="default" {{ $heroBgMode === 'default' ? 'selected' : '' }}>Mode 1: Default Animated Shapes &amp; Gradients</option>
+                                                    <option value="single" {{ $heroBgMode === 'single' ? 'selected' : '' }}>Mode 2: Single Background Image</option>
+                                                    <option value="slider" {{ $heroBgMode === 'slider' ? 'selected' : '' }}>Mode 3: Multi-Image Background Slider (Carousel)</option>
+                                                </select>
+                                                <small class="text-muted d-block mt-1">Select how you want the Hero background to display. You can switch between Default, Single Image, or Slider anytime.</small>
+                                            </div>
+                                        </div>
+
+                                        {{-- Single Background Image Panel --}}
+                                        <div id="hero_single_panel" class="form-group row" style="{{ $heroBgMode === 'single' ? '' : 'display:none;' }}">
+                                            <label class="col-sm-3 col-form-label">Single Hero Image</label>
+                                            <div class="col-sm-9">
+                                                <div class="image-picker-container" style="height: 10rem; width: 100%; max-width: 480px; position: relative; background: rgba(0,0,0,0.2); border: 2px dashed rgba(255,255,255,0.15); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;" onclick="this.querySelector('input[type=file]').click()">
+                                                    <div class="upload-loading" style="display:none; position: absolute; inset:0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 5;"><div class="spinner-border text-primary"></div></div>
+                                                    <div class="image-picker-placeholder" style="{{ $heroBgImg ? 'display:none;' : '' }}">
+                                                        <i class="la la-image" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i> Select / Upload Image
+                                                    </div>
+                                                    <img src="{{ $heroBgImg }}" class="image-picker-preview" style="width: 100%; height: 100%; object-fit: cover; {{ $heroBgImg ? '' : 'display:none;' }}">
+                                                    <input type="file" style="display:none;" accept="image/*" onchange="uploadHeroImage(this, null, 'hero_bg_image_input')">
+                                                </div>
+                                                <input type="hidden" name="hero_bg_image" id="hero_bg_image_input" value="{{ $heroBgImg }}">
+                                                <button type="button" class="btn btn-danger btn-sm mt-2" style="{{ $heroBgImg ? '' : 'display:none;' }}" onclick="removeHeroSingleImage(this)"><i class="la la-trash"></i> Remove Image</button>
+                                            </div>
+                                        </div>
+
+                                        {{-- Slider Manager Panel --}}
+                                        <div id="hero_slider_panel" style="{{ $heroBgMode === 'slider' ? '' : 'display:none;' }}">
+                                            <div class="form-group row">
+                                                <label class="col-sm-3 col-form-label">Slide Autoplay Speed</label>
+                                                <div class="col-sm-4">
+                                                    <div class="input-group">
+                                                        <input type="number" name="hero_slider_interval" class="form-control" value="{{ $heroInterval }}" min="2" max="30">
+                                                        <div class="input-group-append"><span class="input-group-text">Seconds</span></div>
+                                                    </div>
+                                                    <small class="text-muted">Seconds before automatically transitioning to the next slide.</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <label class="col-sm-3 col-form-label">Slider Images</label>
+                                                <div class="col-sm-9">
+                                                    <div id="hero_slider_container">
+                                                        @foreach($heroSliderImgs as $sIdx => $sImg)
+                                                            <div class="dynamic-slider-row mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 1rem; position: relative;">
+                                                                <button type="button" class="btn btn-danger btn-xs" style="position: absolute; top: 0.75rem; right: 0.75rem;" onclick="this.closest('.dynamic-slider-row').remove(); syncHeroSlider();"><i class="la la-trash"></i> Remove</button>
+                                                                <div class="row align-items-center">
+                                                                    <div class="col-md-5">
+                                                                        <div class="image-picker-container" style="height: 7rem; width: 100%; position: relative; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;" onclick="this.querySelector('input[type=file]').click()">
+                                                                            <div class="upload-loading" style="display:none; position: absolute; inset:0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 5;"><div class="spinner-border text-primary"></div></div>
+                                                                            <div class="image-picker-placeholder" style="{{ !empty($sImg['image']) ? 'display:none;' : '' }}">
+                                                                                <i class="la la-image"></i> Select Slide Image
+                                                                            </div>
+                                                                            <img src="{{ is_array($sImg) ? ($sImg['image'] ?? '') : $sImg }}" class="image-picker-preview" style="width: 100%; height: 100%; object-fit: cover; {{ !empty($sImg['image']) || !empty($sImg) ? '' : 'display:none;' }}">
+                                                                            <input type="file" style="display:none;" accept="image/*" onchange="uploadHeroImage(this, null, null, true)">
+                                                                        </div>
+                                                                        <input type="hidden" class="slider-img-url" value="{{ is_array($sImg) ? ($sImg['image'] ?? '') : $sImg }}">
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <label style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Optional Caption / Title</label>
+                                                                        <input type="text" class="form-control form-control-sm slider-img-title" value="{{ is_array($sImg) ? ($sImg['title'] ?? '') : '' }}" placeholder="e.g. Modern Virtual Classroom" oninput="syncHeroSlider()">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                    <button type="button" class="btn btn-info btn-sm" onclick="addHeroSlideRow()"><i class="la la-plus"></i> + Add Slide Image</button>
+                                                    <input type="hidden" name="hero_slider_images" id="hero_slider_images_json" value="{{ \App\Models\SiteSetting::get('hero_slider_images', '[]') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Overlay Opacity & Color Tint Settings --}}
+                                        <div id="hero_overlay_settings" style="{{ $heroBgMode === 'default' ? 'display:none;' : '' }}">
+                                            <hr style="border-color: rgba(255,255,255,0.08); margin: 1.5rem 0;">
+                                            <div class="form-group row align-items-center">
+                                                <label class="col-sm-3 col-form-label">Overlay Opacity (Darkness)</label>
+                                                <div class="col-sm-6">
+                                                    <input type="range" name="hero_overlay_opacity" id="hero_overlay_opacity_range" class="form-control-range" min="0" max="1" step="0.05" value="{{ $heroOpacity }}" oninput="document.getElementById('opacity_val_label').innerText = Math.round(this.value * 100) + '%'">
+                                                    <small class="text-muted">Controls darkness overlay so foreground text and buttons remain 100% readable over images.</small>
+                                                </div>
+                                                <div class="col-sm-3">
+                                                    <span id="opacity_val_label" class="badge badge-primary" style="font-size: 1rem; padding: 0.5rem 0.85rem;">{{ round(((float)$heroOpacity) * 100) }}%</span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row align-items-center">
+                                                <label class="col-sm-3 col-form-label">Overlay Tint Color</label>
+                                                <div class="col-sm-4">
+                                                    <input type="color" name="hero_overlay_color" class="form-control" style="height: 42px; width: 100px; padding: 4px;" value="{{ $heroOverlayColor }}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary mt-4" onclick="syncHeroSlider()"><i class="la la-save"></i> Save Hero Changes</button>
                                     </form>
                                 </div>
                             </div>
@@ -1566,14 +1676,139 @@
             }
         };
 
-        window.removeLogo = function(type) {
-            if (confirm(`Are you sure you want to remove the ${type} logo?`)) {
-                document.getElementById(`remove_${type}_logo`).value = '1';
-                document.getElementById(`${type}-logo-preview-container`).innerHTML = '<div class="empty-logo">No Logo</div>';
-                // Clear file input
-                const fileInput = document.querySelector(`input[name="${type}_logo"]`);
-                if (fileInput) fileInput.value = '';
+        // ── Hero Background & Slider Management ──
+        window.toggleHeroBgMode = function(mode) {
+            const singlePanel = document.getElementById('hero_single_panel');
+            const sliderPanel = document.getElementById('hero_slider_panel');
+            const overlaySettings = document.getElementById('hero_overlay_settings');
+
+            if (mode === 'single') {
+                if (singlePanel) singlePanel.style.display = 'flex';
+                if (sliderPanel) sliderPanel.style.display = 'none';
+                if (overlaySettings) overlaySettings.style.display = 'block';
+            } else if (mode === 'slider') {
+                if (singlePanel) singlePanel.style.display = 'none';
+                if (sliderPanel) sliderPanel.style.display = 'block';
+                if (overlaySettings) overlaySettings.style.display = 'block';
+            } else {
+                // Default
+                if (singlePanel) singlePanel.style.display = 'none';
+                if (sliderPanel) sliderPanel.style.display = 'none';
+                if (overlaySettings) overlaySettings.style.display = 'none';
             }
+        };
+
+        window.removeHeroSingleImage = function(btn) {
+            const container = btn.closest('.col-sm-9').querySelector('.image-picker-container');
+            const preview = container.querySelector('.image-picker-preview');
+            const placeholder = container.querySelector('.image-picker-placeholder');
+            const inputField = document.getElementById('hero_bg_image_input');
+
+            if (preview) { preview.src = ''; preview.style.display = 'none'; }
+            if (placeholder) { placeholder.style.display = 'block'; }
+            if (inputField) { inputField.value = ''; }
+            btn.style.display = 'none';
+        };
+
+        window.uploadHeroImage = async function(input, previewId, targetInputId, isSlider = false) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const container = input.closest('.image-picker-container');
+            const loader = container.querySelector('.upload-loading');
+            const preview = container.querySelector('.image-picker-preview');
+            const placeholder = container.querySelector('.image-picker-placeholder');
+
+            if (loader) loader.style.display = 'flex';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('{{ route("admin.settings.upload") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (preview) {
+                        preview.src = data.path;
+                        preview.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    if (targetInputId) {
+                        const targetInput = document.getElementById(targetInputId);
+                        if (targetInput) targetInput.value = data.path;
+                    }
+                    if (isSlider) {
+                        const hiddenInput = container.closest('.row').querySelector('.slider-img-url');
+                        if (hiddenInput) hiddenInput.value = data.path;
+                        window.syncHeroSlider();
+                    } else {
+                        const removeBtn = container.closest('.col-sm-9').querySelector('button.btn-danger');
+                        if (removeBtn) removeBtn.style.display = 'inline-block';
+                    }
+                } else {
+                    alert(data.message || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('An error occurred during upload');
+            } finally {
+                if (loader) loader.style.display = 'none';
+                input.value = '';
+            }
+        };
+
+        window.addHeroSlideRow = function() {
+            const container = document.getElementById('hero_slider_container');
+            if (!container) return;
+
+            const html = `
+                <div class="dynamic-slider-row mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 1rem; position: relative;">
+                    <button type="button" class="btn btn-danger btn-xs" style="position: absolute; top: 0.75rem; right: 0.75rem;" onclick="this.closest('.dynamic-slider-row').remove(); window.syncHeroSlider();"><i class="la la-trash"></i> Remove</button>
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <div class="image-picker-container" style="height: 7rem; width: 100%; position: relative; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;" onclick="this.querySelector('input[type=file]').click()">
+                                <div class="upload-loading" style="display:none; position: absolute; inset:0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 5;"><div class="spinner-border text-primary"></div></div>
+                                <div class="image-picker-placeholder">
+                                    <i class="la la-image"></i> Select Slide Image
+                                </div>
+                                <img src="" class="image-picker-preview" style="width: 100%; height: 100%; object-fit: cover; display:none;">
+                                <input type="file" style="display:none;" accept="image/*" onchange="uploadHeroImage(this, null, null, true)">
+                            </div>
+                            <input type="hidden" class="slider-img-url" value="">
+                        </div>
+                        <div class="col-md-6">
+                            <label style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Optional Caption / Title</label>
+                            <input type="text" class="form-control form-control-sm slider-img-title" placeholder="e.g. Virtual Classroom Session" oninput="window.syncHeroSlider()">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        };
+
+        window.syncHeroSlider = function() {
+            const items = [];
+            document.querySelectorAll('.dynamic-slider-row').forEach(row => {
+                const urlEl = row.querySelector('.slider-img-url');
+                const titleEl = row.querySelector('.slider-img-title');
+                const imgUrl = urlEl ? urlEl.value : '';
+                const title = titleEl ? titleEl.value : '';
+                if (imgUrl) {
+                    items.push({ image: imgUrl, title: title });
+                }
+            });
+            const jsonField = document.getElementById('hero_slider_images_json');
+            if (jsonField) jsonField.value = JSON.stringify(items);
         };
     });
 </script>

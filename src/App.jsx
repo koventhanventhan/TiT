@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom'
+import { ToastProvider } from './components/shared/ToastContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -157,21 +158,23 @@ function AppContent() {
 
 function App() {
   return (
-    <SettingsProvider>
-      <LanguageProvider>
-        <AuthModalProvider>
-          <Router
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true
-            }}
-          >
-            <ScrollToTop />
-            <AppContent />
-          </Router>
-        </AuthModalProvider>
-      </LanguageProvider>
-    </SettingsProvider>
+    <ToastProvider>
+      <SettingsProvider>
+        <LanguageProvider>
+          <AuthModalProvider>
+            <Router
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true
+              }}
+            >
+              <ScrollToTop />
+              <AppContent />
+            </Router>
+          </AuthModalProvider>
+        </LanguageProvider>
+      </SettingsProvider>
+    </ToastProvider>
   )
 }
 

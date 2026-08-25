@@ -8,8 +8,12 @@ import {
     FiCheckCircle
 } from 'react-icons/fi'
 import './AdminMessages.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function AdminMessages() {
+  const toast = useToast();
+
     const [targetType, setTargetType] = useState('broadcast')
     const [message, setMessage] = useState({ title: '', body: '' })
     const [sending, setSending] = useState(false)
@@ -19,7 +23,7 @@ export default function AdminMessages() {
         // Simulate API call
         setTimeout(() => {
             setSending(false)
-            alert('Message sent successfully!')
+            toast.success('Message sent successfully!')
             setMessage({ title: '', body: '' })
         }, 1500)
     }

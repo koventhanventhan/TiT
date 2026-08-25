@@ -5,6 +5,8 @@ import {
 } from 'react-icons/fi'
 import echo from '../services/echo'
 import './MessagingPage.css' // We might not perfectly align with existing css, we will rely on inline styles for chat
+import { useToast } from '../components/shared/ToastContext';
+
 
 const API = import.meta.env.VITE_API_URL || '/api'
 
@@ -14,6 +16,8 @@ function getAuth() {
 }
 
 export default function MessagingPage() {
+  const toast = useToast();
+
     const [messages, setMessages] = useState([])
     const [sentMessages, setSentMessages] = useState([])
     const [recipients, setRecipients] = useState({})
@@ -227,9 +231,9 @@ export default function MessagingPage() {
                 }
                 fetchSent()
             } else {
-                alert('Failed to send message.')
+                toast.error('Failed to send message.')
             }
-        } catch { alert('Network error.') }
+        } catch { toast.error('Network error.') }
         setReplying(false)
     }
 

@@ -12,8 +12,12 @@ import {
 } from 'react-icons/fi'
 import { getAdminTeachers, bulkDeleteAdminTeachers } from '../../services/dashboardService'
 import './AdminTeachers.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function AdminTeachers() {
+  const toast = useToast();
+
     const [teachers, setTeachers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
@@ -53,7 +57,7 @@ export default function AdminTeachers() {
             setSelectedTeachers([])
         } catch (error) {
             console.error('Failed to delete teachers:', error)
-            alert('Error deleting teachers')
+            toast.error('Error deleting teachers')
         } finally {
             setIsDeleting(false)
         }

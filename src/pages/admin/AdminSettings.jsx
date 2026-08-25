@@ -3,8 +3,12 @@ import { FiSettings, FiGlobe, FiPhone, FiShare2, FiSave, FiLayout, FiImage, FiMe
 import { getAdminSettings, updateAdminBranding, updateAdminSettings } from '../../services/dashboardService'
 import { useSettings } from '../../context/SettingsContext'
 import './AdminSettings.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function AdminSettings() {
+  const toast = useToast();
+
     const { refreshSettings } = useSettings()
     const [settings, setSettings] = useState({})
     const [loading, setLoading] = useState(true)
@@ -37,7 +41,7 @@ export default function AdminSettings() {
 
         try {
             await updateAdminBranding(formData)
-            alert('Branding updated successfully! Refresh to apply changes.')
+            toast.success('Branding updated successfully! Refresh to apply changes.')
             setRemoveLogo(false); // Reset removeLogo after successful save
             setLogoFile(null); // Clear file input
             setLogoPreview(null); // Clear preview
@@ -49,7 +53,7 @@ export default function AdminSettings() {
             // If a new logo was uploaded, the logo_url might be updated by the backend,
             // but for now, we just clear the preview if a new file was selected.
         } catch (error) {
-            alert('Failed to update branding')
+            toast.error('Failed to update branding')
         }
     }
 
@@ -58,9 +62,9 @@ export default function AdminSettings() {
             await updateAdminSettings(updatedSettings)
             setSettings({ ...settings, ...updatedSettings })
             refreshSettings()
-            alert('Settings updated successfully!')
+            toast.success('Settings updated successfully!')
         } catch (error) {
-            alert('Failed to update settings')
+            toast.error('Failed to update settings')
         }
     }
 

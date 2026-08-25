@@ -12,8 +12,11 @@ import {
 import { getAdminZoom, bulkDeleteAdminZoomClasses } from '../../services/dashboardService'
 import { BASE_URL } from '../../services/authService'
 import './AdminZoom.css'
+import ZoomRecordingSettingsModal from '../../components/admin/ZoomRecordingSettingsModal';
+import { FiSettings } from 'react-icons/fi';
 
 export default function AdminZoom() {
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedClasses, setSelectedClasses] = useState([])
@@ -66,6 +69,8 @@ export default function AdminZoom() {
 
     return (
         <div className="admin-zoom">
+            <ZoomRecordingSettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
+            
             <div className="page-header">
                 <div className="header-info">
                     <h1>Zoom Class Control</h1>
@@ -81,6 +86,9 @@ export default function AdminZoom() {
                         <input type="checkbox" onChange={handleSelectAll} checked={classes.length > 0 && selectedClasses.length === classes.length} />
                         Select All
                     </label>
+                    <button className="add-btn" onClick={() => setIsSettingsModalOpen(true)} style={{ backgroundColor: '#475569', color: 'white', border: 'none' }}>
+                        <FiSettings /> Auto-Recording
+                    </button>
                     <button className="add-btn" onClick={handleNewSession}><FiPlus /> Schedule New Session</button>
                 </div>
             </div>

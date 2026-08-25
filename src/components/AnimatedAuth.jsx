@@ -4,8 +4,12 @@ import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword } fr
 import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
+import { useToast } from '../components/shared/ToastContext';
+
 
 const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
+  const toast = useToast();
+
   const { t } = useLanguage()
   const [isLogin, setIsLogin] = useState(defaultTab === 'login')
   const [showPassword, setShowPassword] = useState(false)
@@ -132,7 +136,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       } else {
         // Unknown role - just reload
         console.log('❓ Unknown role - reloading page')
-        alert(`Welcome back, ${result?.user?.username || result?.user?.email || 'User'}!`)
+        toast.info(`Welcome back, ${result?.user?.username || result?.user?.email || 'User'}!`)
         window.location.reload()
       }
     } catch (err) {
@@ -218,7 +222,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       setIsLoading(false)
 
       // Show success message
-      alert(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
+      toast.success(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
       // After successful admin registration, show student entry form
       setShowStudentForm(true)

@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { FiPlus, FiFileText, FiCalendar, FiCheckCircle, FiUsers, FiClock, FiSearch, FiFilter, FiX } from 'react-icons/fi'
 import { getTeacherAssignments, createTeacherAssignment } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function TeacherAssignments() {
+  const toast = useToast();
+
     const [assignments, setAssignments] = useState([])
     const [loading, setLoading] = useState(true)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -52,12 +56,12 @@ export default function TeacherAssignments() {
             }
 
             await createTeacherAssignment(formData)
-            alert('Assignment created successfully!')
+            toast.success('Assignment created successfully!')
             setIsCreateModalOpen(false)
             setNewAssignment({ title: '', subject: '', description: '', due_date: '', grade: '' })
             loadAssignments()
         } catch (error) {
-            alert(error.message || 'Error creating assignment')
+            toast.error(error.message || 'Error creating assignment')
         } finally {
             setCreateLoading(false)
         }

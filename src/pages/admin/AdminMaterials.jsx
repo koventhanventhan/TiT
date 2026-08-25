@@ -14,10 +14,14 @@ import { getAdminMaterials } from '../../services/dashboardService'
 import LearningSuiteUploadModal from '../../components/shared/LearningSuiteUploadModal'
 import { deleteFileFromFirebase } from '../../services/firebaseStorageService'
 import './AdminMaterials.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function AdminMaterials() {
+  const toast = useToast();
+
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
@@ -63,11 +67,11 @@ export default function AdminMaterials() {
                 }
                 setMaterials((prev) => prev.filter((m) => m.id !== item.id))
             } else {
-                alert('Failed to delete material.')
+                toast.error('Failed to delete material.')
             }
         } catch (error) {
             console.error('Error deleting material:', error)
-            alert('An error occurred while deleting.')
+            toast.error('An error occurred while deleting.')
         }
     }
 

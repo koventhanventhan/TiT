@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch, FiExternalLink } from 'react-icons/fi'
 import { getStudentMaterials } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function StudentMaterials() {
+  const toast = useToast();
+
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('all')
@@ -38,7 +42,7 @@ export default function StudentMaterials() {
             const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
             window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
         } else {
-            alert('File not available')
+            toast.info('File not available')
         }
     }
 

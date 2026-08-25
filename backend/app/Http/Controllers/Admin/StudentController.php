@@ -51,8 +51,12 @@ class StudentController extends Controller
         
         $student = User::where('role', 'user')
             ->where('id', $id)
-            ->whereNotNull('full_name')
-            ->firstOrFail();
+            ->first();
+
+        if (!$student) {
+            return redirect()->route('admin.students.index')
+                ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
+        }
 
         $payments = \App\Models\Payment::where('user_id', $student->id)
             ->orderBy('paid_at', 'desc')
@@ -74,8 +78,12 @@ class StudentController extends Controller
         
         $student = User::where('role', 'user')
             ->where('id', $id)
-            ->whereNotNull('full_name')
-            ->firstOrFail();
+            ->first();
+
+        if (!$student) {
+            return redirect()->route('admin.students.index')
+                ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
+        }
 
         $payments = Payment::where('user_id', $student->id)
             ->orderBy('paid_at', 'desc')

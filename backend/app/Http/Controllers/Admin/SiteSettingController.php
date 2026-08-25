@@ -323,6 +323,22 @@ class SiteSettingController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Apply 2-day limit for automated recordings
+        $query->where(function ($q) {
+            $q->where('type', '!=', 'recording')
+              ->orWhereNull('zoom_schedule_id') // Manually uploaded recordings don't have zoom_schedule_id
+              ->orWhere('created_at', '>=', now()->subDays(2));
+        });
+
+        // Skip disabled grades for recordings
+        $disabledGrades = json_decode(\App\Models\SiteSetting::get('zoom_recordings_disabled_grades', '[]'), true);
+        if (is_array($disabledGrades) && count($disabledGrades) > 0) {
+            $query->where(function ($q) use ($disabledGrades) {
+                $q->where('type', '!=', 'recording')
+                  ->orWhereNotIn('grade', $disabledGrades);
+            });
+        }
+
         return response()->json($query->get());
     }
 

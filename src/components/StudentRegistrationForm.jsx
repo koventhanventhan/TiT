@@ -5,6 +5,8 @@ import { FiX } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
+import { useToast } from '../components/shared/ToastContext';
+
 
 // Subject data structures
 // (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
@@ -13,6 +15,8 @@ const MONTHLY_AMOUNT = 500
 const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
+  const toast = useToast();
+
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
@@ -559,7 +563,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setIsLoading(true)
     try {
       await registerStep2('offline', amount)
-      alert(t('pay_offline_success'))
+      toast.success(t('pay_offline_success'))
       if (onClose) onClose()
       window.location.href = '/student/dashboard'
     } catch (err) {
@@ -605,12 +609,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         console.log("Payment completed. OrderID:" + orderId)
         try {
           await registerPaymentSuccess(resp.params.order_id, orderId)
-          alert(t('pay_online_success'))
+          toast.success(t('pay_online_success'))
           if (onClose) onClose()
           window.location.href = '/student/dashboard'
         } catch (err) {
           console.error('Failed to notify backend of payment success:', err)
-          alert('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
+          toast.info('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
           if (onClose) onClose()
           window.location.href = '/student/dashboard'
         }
@@ -638,11 +642,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   return (
     <div className="tit-reg-overlay">
       <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
-        {onClose && (
-          <button className="tit-reg-close" onClick={onClose}>
-            <FiX />
-          </button>
-        )}
+        <button className="tit-reg-close" onClick={() => {
+          if (step === 2) {
+            setStep(1);
+          } else if (onClose) {
+            onClose();
+          } else {
+            window.location.href = '/';
+          }
+        }}>
+          <FiX />
+        </button>
 
         {step === 1 && (
           <div className="tit-reg-container">

@@ -210,4 +210,30 @@ class ZoomService
 
         return false;
     }
+
+    /**
+     * Get recordings for a specific Zoom Meeting.
+     */
+    public function getMeetingRecordings(string $meetingId)
+    {
+        $token = $this->getAccessToken();
+        if (!$token) return null;
+
+        $response = Http::withToken($token)
+            ->get("{$this->baseUrl}/meetings/{$meetingId}/recordings");
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() !== 404) {
+            Log::error('Zoom Meeting Recordings Fetch Failed', [
+                'meeting_id' => $meetingId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        }
+
+        return null;
+    }
 }

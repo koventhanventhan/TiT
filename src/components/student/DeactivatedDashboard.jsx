@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FiLock, FiCreditCard, FiX } from 'react-icons/fi';
 import { logout, registerStep2 } from '../../services/authService';
 import '../StudentRegistrationForm.css';
+import { useToast } from '../../components/shared/ToastContext';
+
 
 const DeactivatedDashboard = () => {
+  const toast = useToast();
+
   const [paymentData, setPaymentData] = useState({ total: 500, subjects: [] });
   const [loading, setLoading] = useState(true);
   const [paymentStep, setPaymentStep] = useState('info'); // 'info' or 'options'
@@ -38,9 +42,9 @@ const DeactivatedDashboard = () => {
     setProcessing(true);
     try {
       await registerStep2('offline', paymentData.total);
-      alert('உங்கள் விண்ணப்பம் சமர்ப்பிக்கப்பட்டது. (Registration submitted.)');
+      toast.info('உங்கள் விண்ணப்பம் சமர்ப்பிக்கப்பட்டது. (Registration submitted.)');
     } catch (err) {
-      alert('Error: ' + err.message);
+      toast.error('Error: ' + err.message);
     } finally {
       setProcessing(false);
     }
@@ -50,14 +54,14 @@ const DeactivatedDashboard = () => {
     setProcessing(true);
     try {
       const resp = await registerStep2('online', paymentData.total);
-      if (!window.payhere) { alert('PayHere SDK not loaded.'); return; }
+      if (!window.payhere) { toast.info('PayHere SDK not loaded.'); return; }
       const payment = { sandbox: resp.payhere_url.includes('sandbox'), ...resp.params };
-      window.payhere.onCompleted = () => { alert('Success!'); window.location.reload(); };
+      window.payhere.onCompleted = () => { toast.success('Success!'); window.location.reload(); };
       window.payhere.onDismissed = () => setProcessing(false);
-      window.payhere.onError = (err) => { alert("Error: " + err); setProcessing(false); };
+      window.payhere.onError = (err) => { toast.error("Error: " + err); setProcessing(false); };
       window.payhere.startPayment(payment);
     } catch (err) {
-      alert('Failed: ' + err.message);
+      toast.error('Failed: ' + err.message);
       setProcessing(false);
     }
   };

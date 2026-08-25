@@ -39,7 +39,17 @@ Artisan::command('reminders:month-end-payment', function () {
 Schedule::command('app:check-payments')->dailyAt('09:00');
 Schedule::command('zoom:sync-timetable')->dailyAt('00:00');
 Schedule::command('zoom:send-reminders')->everyMinute();
+Schedule::command('zoom:fetch-recordings')->hourly();
 
 Schedule::call(function () {
     \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(2))->delete();
 })->dailyAt('01:00');
+
+// Clean up zoom recordings older than 1 week from the database
+Schedule::call(function () {
+    \App\Models\LearningMaterial::where('type', 'recording')
+        ->whereNotNull('zoom_schedule_id') // Only auto-fetched recordings
+        ->where('created_at', '<', now()->subDays(7))
+        ->delete();
+})->dailyAt('02:00');
+

@@ -56,11 +56,41 @@ class AuthController extends Controller
         $request->validate($validationRules, $customMessages);
 
         // --- Manual email uniqueness check ---
-        // Allow re-registration ONLY if the user hasn't completed payment yet
-        // After completing payment (online or offline), the email is locked
+        // Allow re-registration if the user hasn't completed Step 1 (full_name is still NULL).
+        // Once Step 1 is done (full_name is set), the email is permanently locked.
         $existingUser = User::where('email', $request->email)->first();
 
         if ($existingUser) {
+            // If registration is incomplete (full_name is NULL), allow re-try
+            // by updating their password and returning a fresh token
+            if ($existingUser->full_name === null) {
+                \Log::info('AuthController@register - Allowing re-registration for incomplete user', [
+                    'id' => $existingUser->id,
+                    'email' => $existingUser->email,
+                ]);
+                
+                // Update password (student may have forgotten the first one)
+                $existingUser->update([
+                    'password' => Hash::make($request->password),
+                ]);
+
+                $token = $existingUser->createToken('auth_token')->plainTextToken;
+
+                return response()->json([
+                    'message' => 'User registered successfully',
+                    'user' => [
+                        'id' => $existingUser->id,
+                        'username' => $existingUser->name,
+                        'email' => $existingUser->email,
+                        'role' => $existingUser->role,
+                        'full_name' => $existingUser->full_name,
+                        'registration_status' => $existingUser->registration_status,
+                    ],
+                    'token' => $token,
+                ], 200);
+            }
+
+            // Registration is complete — block duplicate email
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => [
@@ -135,24 +165,14 @@ class AuthController extends Controller
 
         $user = User::create($userData);
 
-        // Notify All Admins of new registration
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            \Log::info('AuthController@register - Notifying admin: ' . $admin->id);
-            try {
-                $admin->notify(new \App\Notifications\AdminNotification(
-                    "New Student Registered: " . ($user->full_name ?? $user->name),
-                    'info',
-                    route('admin.students.show', $user->id),
-                    'admission_new'
-                ));
-            } catch (\Exception $e) {
-                \Log::error('AuthController@register - Notification failed for admin ' . $admin->id . ': ' . $e->getMessage());
-            }
-        }
-        if ($admins->isEmpty()) {
-            \Log::error('AuthController@register - No admin users found for notification');
-        }
+        // NOTE: Admin notification is NOT sent here (basic signup).
+        // It is sent in RegistrationController@step1 after the student completes
+        // their full registration details (full_name, phone, etc.).
+        // This prevents "ghost notifications" that link to incomplete student records (404).
+        \Log::info('AuthController@register - New student created (notification deferred to step1)', [
+            'id' => $user->id,
+            'email' => $user->email,
+        ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

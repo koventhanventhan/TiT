@@ -10,6 +10,8 @@ import {
     getExamResultsExportUrl
 } from '../../services/dashboardService'
 import './AdminExamResults.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 const RESULT_GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'S', 'W', 'F']
 const DEFAULT_GRADES = [
@@ -24,6 +26,8 @@ const emptyForm = {
 }
 
 export default function AdminExamResults() {
+  const toast = useToast();
+
     const [results, setResults] = useState([])
     const [pagination, setPagination] = useState({})
     const [loading, setLoading] = useState(true)
@@ -112,7 +116,7 @@ export default function AdminExamResults() {
             setSelectedIds([])
             loadResults()
         } catch (err) {
-            alert('Error deleting: ' + err.message)
+            toast.error('Error deleting: ' + err.message)
         } finally {
             setIsDeleting(false)
         }
@@ -173,7 +177,7 @@ export default function AdminExamResults() {
             await deleteExamResult(id)
             loadResults()
         } catch (err) {
-            alert('Error: ' + err.message)
+            toast.error('Error: ' + err.message)
         }
     }
 
@@ -222,7 +226,7 @@ export default function AdminExamResults() {
             setNewTermName('')
             loadTerms()
         } catch (err) {
-            alert('Error: ' + err.message)
+            toast.error('Error: ' + err.message)
         } finally {
             setTermsLoading(false)
         }
@@ -234,7 +238,7 @@ export default function AdminExamResults() {
             await deleteExamTerm(id)
             loadTerms()
         } catch (err) {
-            alert('Error: ' + err.message)
+            toast.error('Error: ' + err.message)
         }
     }
 

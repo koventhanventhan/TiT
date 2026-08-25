@@ -4,8 +4,12 @@ import { useSettings } from '../../context/SettingsContext'
 import './AdminDashboardLayout.css'
 import { FiBell, FiMessageSquare, FiSearch, FiChevronDown, FiUser, FiSettings, FiLogOut, FiCalendar, FiMenu, FiX } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function AdminDashboardLayout({ children, user }) {
+  const toast = useToast();
+
     const { getSetting } = useSettings()
     const [showProfileDropdown, setShowProfileDropdown] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -55,7 +59,7 @@ export default function AdminDashboardLayout({ children, user }) {
             const newAvatar = data.avatar.startsWith('http') ? data.avatar : `${baseUrl}${data.avatar}`;
             setLocalAvatar(newAvatar);
         } catch (err) {
-            alert('Failed to update profile picture.');
+            toast.error('Failed to update profile picture.');
         } finally {
             setUploadingAvatar(false);
             setShowProfileDropdown(false);

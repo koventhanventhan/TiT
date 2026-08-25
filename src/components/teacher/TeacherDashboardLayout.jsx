@@ -6,6 +6,8 @@ import {
     FiMenu, FiX, FiSearch, FiBell, FiChevronRight
 } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 const menuItems = [
     { name: 'Dashboard', icon: FiHome, path: '/teacher/dashboard' },
@@ -18,6 +20,8 @@ const menuItems = [
 ]
 
 export default function TeacherDashboardLayout({ children, user }) {
+  const toast = useToast();
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -73,7 +77,7 @@ export default function TeacherDashboardLayout({ children, user }) {
             const newAvatar = data.avatar.startsWith('http') ? data.avatar : `${baseUrl}${data.avatar}`;
             setLocalAvatar(newAvatar);
         } catch (err) {
-            alert('Failed to update profile picture.');
+            toast.error('Failed to update profile picture.');
         } finally {
             setUploadingAvatar(false);
             setShowProfileMenu(false);

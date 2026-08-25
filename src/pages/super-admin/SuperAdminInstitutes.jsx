@@ -6,8 +6,12 @@ import {
     updateSuperAdminInstitute
 } from '../../services/dashboardService'
 import './SuperAdminInstitutes.css'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function SuperAdminInstitutes() {
+  const toast = useToast();
+
     const [institutes, setInstitutes] = useState([])
     const [plans, setPlans] = useState([])
     const [loading, setLoading] = useState(true)
@@ -36,7 +40,7 @@ export default function SuperAdminInstitutes() {
             const updated = await updateSuperAdminInstitute(inst.id, { status: newStatus })
             setInstitutes(prev => prev.map(i => i.id === updated.id ? updated : i))
         } catch (error) {
-            alert('Failed to update institute status')
+            toast.error('Failed to update institute status')
         }
     }
 

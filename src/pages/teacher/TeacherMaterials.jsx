@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { FiUpload, FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch, FiGrid, FiList, FiX, FiExternalLink, FiTrash2 } from 'react-icons/fi'
 import { getTeacherMaterials, uploadTeacherMaterial, deleteTeacherMaterial } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext';
+
 
 export default function TeacherMaterials() {
+  const toast = useToast();
+
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
     const [viewMode, setViewMode] = useState('grid')
@@ -62,7 +66,7 @@ export default function TeacherMaterials() {
 
     const handleUpload = async (e) => {
         e.preventDefault()
-        if (!uploadFormData.title) return alert('Title is required')
+        if (!uploadFormData.title) return toast.info('Title is required')
         
         setUploading(true)
         try {
@@ -75,13 +79,13 @@ export default function TeacherMaterials() {
             if (uploadFormData.type.toLowerCase() === 'link') {
                 if (!uploadFormData.url) {
                     setUploading(false)
-                    return alert('URL is required for link type')
+                    return toast.info('URL is required for link type')
                 }
                 formData.append('url', uploadFormData.url)
             } else {
                 if (!uploadFile) {
                     setUploading(false)
-                    return alert('File is required')
+                    return toast.info('File is required')
                 }
                 formData.append('file', uploadFile)
             }
@@ -93,7 +97,7 @@ export default function TeacherMaterials() {
             load()
         } catch (err) {
             console.error(err)
-            alert(err.message || 'Error uploading material')
+            toast.error(err.message || 'Error uploading material')
         } finally {
             setUploading(false)
         }
@@ -106,7 +110,7 @@ export default function TeacherMaterials() {
             const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
             window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
         } else {
-            alert('File not available')
+            toast.info('File not available')
         }
     }
 
@@ -115,11 +119,11 @@ export default function TeacherMaterials() {
         
         try {
             await deleteTeacherMaterial(item.id);
-            alert('Deleted successfully');
+            toast.success('Deleted successfully');
             load();
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to delete material');
+            toast.error(err.message || 'Failed to delete material');
         }
     }
 

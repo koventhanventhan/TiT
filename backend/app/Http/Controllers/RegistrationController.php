@@ -162,13 +162,19 @@ class RegistrationController extends Controller
             }
         }
 
+        $usernameRules = [
+            $user ? 'nullable' : 'required',
+            'string',
+            'max:255',
+            Rule::unique('users', 'name')->ignore($user?->id),
+        ];
+
+        if ($request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+            $usernameRules[] = Rule::unique('users', 'email')->ignore($user?->id);
+        }
+
         $rules = [
-            'username' => [
-                $user ? 'nullable' : 'required',
-                'string',
-                'max:255',
-                Rule::unique('users', 'name')->ignore($user?->id),
-            ],
+            'username' => $usernameRules,
             'selected_subjects' => 'required|string',
         ];
 

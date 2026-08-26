@@ -14,6 +14,8 @@ use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
+    use \App\Traits\ValidatesEmail;
+
     protected NotificationService $notifier;
     protected PayHereService $payHere;
 
@@ -222,6 +224,18 @@ class RegistrationController extends Controller
             'phone_number.unique' => 'This phone number is already registered / இந்த தொலைபேசி எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
             'username.unique' => 'This username/email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
         ]);
+
+        // Email domain validation (DNS/MX)
+        if ($request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+            if (!$this->isValidEmailForSending($request->username)) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => [
+                        'username' => ['This email address appears to be invalid or cannot receive emails. Please provide a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
+                    ]
+                ], 422);
+            }
+        }
 
         // Identify custom fields (everything else in request except fixed keys and internal ones)
         $internalKeys = [

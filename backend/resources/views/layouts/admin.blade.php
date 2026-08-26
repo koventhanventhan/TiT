@@ -19,6 +19,7 @@
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
+    <link href="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
     <!-- Cropper.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
@@ -249,6 +250,65 @@
             }
             document.getElementById('cropperImage').src = '';
         });
+    </script>
+    <script src="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.js') }}"></script>
+    <script>
+    // Global SweetAlert override for all confirm() popups
+    (function() {
+        // Override native confirm() with SweetAlert
+        const originalConfirm = window.confirm;
+        window.confirm = function(message) {
+            // This is called synchronously, but SweetAlert is async.
+            // For forms with onsubmit="return confirm(...)", we intercept differently below.
+            // This fallback handles JS-only confirm() calls (like bulk delete).
+            return originalConfirm.call(window, message);
+        };
+
+        // Intercept all forms with onsubmit containing confirm()
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('form[onsubmit*="confirm("]').forEach(function(form) {
+                // Extract the confirm message
+                var onsubmitStr = form.getAttribute('onsubmit') || '';
+                var match = onsubmitStr.match(/confirm\(['"](.+?)['"]\)/);
+                if (!match) return;
+                var message = match[1];
+
+                // Determine icon/color based on message content
+                var isDelete = /delete|remove|permanently/i.test(message);
+                var isDeactivate = /deactivate/i.test(message);
+                var confirmColor = isDelete ? '#d33' : (isDeactivate ? '#f59e0b' : '#3085d6');
+                var confirmText = isDelete ? 'Yes, delete!' : (isDeactivate ? 'Yes, deactivate!' : 'Yes, proceed!');
+                var icon = (isDelete || isDeactivate) ? 'warning' : 'question';
+
+                // Remove the original onsubmit
+                form.removeAttribute('onsubmit');
+
+                // Add new submit handler with SweetAlert
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var thisForm = this;
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: message,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: confirmColor,
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: confirmText,
+                        cancelButtonText: 'Cancel',
+                        customClass: { popup: 'swal-dark-popup' }
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            // Temporarily remove the listener to allow real submit
+                            var clone = thisForm.cloneNode(true);
+                            thisForm.parentNode.replaceChild(clone, thisForm);
+                            clone.submit();
+                        }
+                    });
+                });
+            });
+        });
+    })();
     </script>
     @stack('scripts')
 </body>

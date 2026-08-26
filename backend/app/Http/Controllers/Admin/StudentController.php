@@ -8,12 +8,15 @@ use App\Models\Payment;
 use App\Models\Subject;
 use App\Notifications\AdminNotification;
 use App\Services\NotificationService;
+use App\Traits\ValidatesEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
+    use ValidatesEmail;
+
     protected NotificationService $notifier;
 
     public function __construct(NotificationService $notifier)
@@ -403,10 +406,16 @@ class StudentController extends Controller
             $mail = new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true);
             \Illuminate\Support\Facades\Log::info('Mail body preview', ['html_length' => strlen($mail->render())]);
             
+            if (!$this->isValidEmailForSending($student->email)) {
+                \Illuminate\Support\Facades\Log::warning('StudentController: Skipped password reset email — invalid address: ' . $student->email);
+                return response()->json(['success' => true, 'message' => 'New password generated, but email could not be sent (invalid email address). Please share the password manually.', 'password' => $newPassword]);
+            }
+
             \Illuminate\Support\Facades\Mail::to($student->email)->send($mail);
             \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $student->email);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $student->email . '. Error: ' . $e->getMessage());
+            $this->markEmailAsBounced($student->email);
             return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
         }
         

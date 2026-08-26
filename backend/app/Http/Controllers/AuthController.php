@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\ValidatesEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    use ValidatesEmail;
+
     /**
      * Register a new user
      */
@@ -515,8 +518,12 @@ class AuthController extends Controller
                     'registration_status' => 'pending', // Requires admin approval normally
                 ]);
 
-                // Send the generated plain text password to the student
-                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
+                // Send the generated plain text password to the student (with email validation)
+                if ($this->isValidEmailForSending($user->email)) {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('AuthController: Skipped password email — invalid address: ' . $user->email);
+                }
             } else {
                 // Update google_id if not set
                 if (!$user->google_id) {

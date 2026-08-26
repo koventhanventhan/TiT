@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\ValidatesEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class TeacherController extends Controller
 {
+    use ValidatesEmail;
+
     public function index()
     {
         if (auth()->user()->role !== 'admin') {
@@ -153,9 +156,13 @@ class TeacherController extends Controller
             'password' => Hash::make($newPassword)
         ]);
         
-        \Illuminate\Support\Facades\Mail::to($teacher->email)->send(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
-        
-        return response()->json(['success' => true, 'message' => 'New password generated and emailed to the teacher.']);
+        if ($this->isValidEmailForSending($teacher->email)) {
+            \Illuminate\Support\Facades\Mail::to($teacher->email)->send(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
+            return response()->json(['success' => true, 'message' => 'New password generated and emailed to the teacher.']);
+        } else {
+            \Illuminate\Support\Facades\Log::warning('TeacherController: Skipped password reset email — invalid address: ' . $teacher->email);
+            return response()->json(['success' => true, 'message' => 'New password generated, but email could not be sent (invalid email address). Please share the password manually.', 'password' => $newPassword]);
+        }
     }
 
     public function deactivate($id)

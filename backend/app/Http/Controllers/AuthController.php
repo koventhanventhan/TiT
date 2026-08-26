@@ -58,6 +58,17 @@ class AuthController extends Controller
 
         $request->validate($validationRules, $customMessages);
 
+        // --- DNS/MX email domain validation ---
+        // Reject emails with unreachable/non-existent domains BEFORE any DB operations
+        if (!$this->isValidEmailForSending($request->email)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'email' => ['This email address appears to be invalid or cannot receive emails. Please use a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
+                ]
+            ], 422);
+        }
+
         // --- Manual email uniqueness check ---
         // Allow re-registration if the user hasn't completed Step 1 (full_name is still NULL).
         // Once Step 1 is done (full_name is set), the email is permanently locked.

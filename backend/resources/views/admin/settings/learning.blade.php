@@ -242,6 +242,26 @@
                             </div>
                         </div>
                     </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary mt-3">Automated Zoom Recordings</h5>
+                    <p class="text-muted mb-3">Select the grades for which automatic Zoom Cloud Recordings fetching should be <strong>DISABLED</strong>.</p>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            @php
+                                $disabledGrades = json_decode(\App\Models\SiteSetting::get('zoom_recordings_disabled_grades', '[]'), true) ?: [];
+                                $allGrades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Grade 13'];
+                            @endphp
+                            <div class="d-flex flex-wrap" style="gap: 15px;">
+                                @foreach($allGrades as $grade)
+                                <div class="custom-control custom-checkbox custom-control-inline">
+                                    <input type="checkbox" class="custom-control-input" id="disable_{{ str_replace(' ', '', $grade) }}" name="zoom_recordings_disabled_grades[]" value="{{ $grade }}" {{ in_array($grade, $disabledGrades) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="disable_{{ str_replace(' ', '', $grade) }}" style="cursor: pointer;">{{ $grade }}</label>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                     <hr>
                     <h5 class="mb-3 text-primary mt-3">Call to Action (CTA) Section - Bottom of All Pages</h5>
                     <div class="row">

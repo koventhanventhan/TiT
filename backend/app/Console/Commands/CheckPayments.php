@@ -2,10 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Traits\ValidatesEmail;
 use Illuminate\Console\Command;
 
 class CheckPayments extends Command
 {
+    use ValidatesEmail;
+
     /**
      * The name and signature of the console command.
      *
@@ -49,6 +52,7 @@ class CheckPayments extends Command
         }
 
         $deactivatedList = [];
+        $emailsSent = 0;
 
         foreach ($unpaidStudents as $student) {
             if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
@@ -59,6 +63,12 @@ class CheckPayments extends Command
                     ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y'), 'amount' => $student->calculateMonthlyFee()]
                 );
                 $this->line("Sent reminder to: " . $student->email);
+                $emailsSent++;
+
+                // Rate limiting: sleep 2 seconds between sends to stay within hourly limit
+                if ($emailsSent % 5 === 0) {
+                    sleep(2);
+                }
             } 
             
             if ($day === 5 || ($day > 5 && $this->option('force'))) {
@@ -72,6 +82,12 @@ class CheckPayments extends Command
                     ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
                 );
                 $this->line("Deactivated and notified: " . $student->email);
+                $emailsSent++;
+
+                // Rate limiting
+                if ($emailsSent % 5 === 0) {
+                    sleep(2);
+                }
             }
         }
 
@@ -85,6 +101,7 @@ class CheckPayments extends Command
             $this->info("Admin notified about deactivations.");
         }
 
-        $this->info("Finished payment automation tasks.");
+        $this->info("Finished payment automation tasks. ($emailsSent notifications sent)");
     }
 }
+

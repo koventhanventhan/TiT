@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Mail\NotificationMail;
 use App\Models\User;
+use App\Traits\ValidatesEmail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
+    use ValidatesEmail;
+
     protected WhatsAppService $whatsApp;
     protected string $channel;
 
@@ -52,8 +55,8 @@ class NotificationService
             Log::warning("NotificationService: WhatsApp failed for [{$type}] to {$phone}, attempting email fallback...");
         }
 
-        // Fallback to Email (if channel allows)
-        if ($this->shouldTryEmail() && $email && !str_ends_with($email, '@student.local')) {
+        // Fallback to Email (if channel allows) — with DNS/MX validation
+        if ($this->shouldTryEmail() && $this->isValidEmailForSending($email)) {
             return $this->sendEmail($email, $type, $emailData);
         }
 
@@ -94,8 +97,8 @@ class NotificationService
             Log::warning("NotificationService: Admin WhatsApp failed for [{$type}], attempting email fallback...");
         }
 
-        // Fallback to Email
-        if ($this->shouldTryEmail() && $adminEmail) {
+        // Fallback to Email — admin email is validated too
+        if ($this->shouldTryEmail() && $adminEmail && $this->isValidEmailForSending($adminEmail)) {
             return $this->sendEmail($adminEmail, $type, $emailData);
         }
 
@@ -108,6 +111,7 @@ class NotificationService
 
     /**
      * Send email using the NotificationMail Mailable.
+     * Records bounces on failure for future blocklisting.
      */
     protected function sendEmail(string $to, string $type, array $data): bool
     {
@@ -117,6 +121,10 @@ class NotificationService
             return true;
         } catch (\Throwable $e) {
             Log::error("NotificationService: Email failed for [{$type}] to {$to}: " . $e->getMessage());
+
+            // Track the bounce — after 2 bounces the address will be blocklisted
+            $this->markEmailAsBounced($to);
+
             return false;
         }
     }

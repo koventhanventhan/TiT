@@ -6,10 +6,12 @@ use Illuminate\Console\Command;
 use App\Models\ZoomSchedule;
 use App\Models\User;
 use App\Services\NotificationService;
+use App\Traits\ValidatesEmail;
 use Carbon\Carbon;
 
 class SendZoomReminders extends Command
 {
+    use ValidatesEmail;
     /**
      * The name and signature of the console command.
      *
@@ -59,6 +61,7 @@ class SendZoomReminders extends Command
             $this->info("Locked and sending reminders for: {$schedule->title}");
             $time = $schedule->scheduled_at->format('H:i');
             $baseUrl = config('app.url');
+            $emailsSent = 0;
 
             // 1. Notify Teachers
             foreach ($schedule->teachers as $teacher) {
@@ -129,15 +132,20 @@ class SendZoomReminders extends Command
                         }
                     }
 
-                    if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                    if ($student->phone_number || ($student->email && $this->isValidEmailForSending($student->email))) {
                         $this->info("Sending message to {$student->name}");
                         $notifier->notifyUser(
                             $student, 'zoom_reminder', 'tit_zoom_reminder',
                             [$schedule->title, $time],
                             ['class_title' => $schedule->title, 'class_time' => $time]
                         );
+                        $emailsSent++;
+
+                        if ($emailsSent % 5 === 0) {
+                            sleep(2);
+                        }
                     } else {
-                        $this->warn("Skipping student {$student->name} (No phone number or email)");
+                        $this->warn("Skipping student {$student->name} (No valid phone number or email)");
                     }
                 }
             }

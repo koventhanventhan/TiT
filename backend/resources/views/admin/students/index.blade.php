@@ -3,6 +3,7 @@
 @section('title', 'Student Entries')
 
 @push('styles')
+<link href="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
 <style>
     /* Custom Pagination Styles */
     .pagination-footer {
@@ -318,15 +319,15 @@
                                                     <button type="submit" class="dropdown-item text-success">Activate Student</button>
                                                 </form>
                                             @else
-                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" onsubmit="return confirm('Deactivate this student?');">
+                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" class="deactivate-form">
                                                     @csrf
-                                                    <button type="submit" class="dropdown-item text-warning">Deactivate Student</button>
+                                                    <button type="button" class="dropdown-item text-warning deactivate-btn">Deactivate Student</button>
                                                 </form>
                                             @endif
-                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" onsubmit="return confirm('à®¨à®¿à®šà¯ à®šà®¯à®®à®¾à®• à®‡à®¨à¯ à®¤ à®®à®¾à®£à®µà®°à¯ˆ à®¨à¯€à®•à¯ à®• à®µà¯‡à®£à¯ à®Ÿà¯ à®®à®¾? (Are you sure you want to delete this student?)');">
+                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="dropdown-item text-danger">Delete Student</button>
+                                                <button type="button" class="dropdown-item text-danger delete-btn">Delete Student</button>
                                             </form>
                                         </div>
                                     </div>
@@ -365,6 +366,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const selectAll = document.getElementById('checkAll');
@@ -395,10 +397,64 @@
     });
 
     function submitBulkDelete() {
-        // Translation: Are you sure you want to delete the selected students?
-        if (confirm('Are you sure you want to delete the selected students?')) {
-            document.getElementById('bulkDeleteForm').submit();
-        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You are about to delete the selected students. This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete them!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('bulkDeleteForm').submit();
+            }
+        });
     }
+
+    // Attach SweetAlert to individual delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('.delete-form');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Are you sure you want to delete this student? This action is permanent.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+
+    // Attach SweetAlert to individual deactivate buttons
+    document.querySelectorAll('.deactivate-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('.deactivate-form');
+            Swal.fire({
+                title: 'Deactivate Student?',
+                text: "This student will no longer be able to log in.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, deactivate!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
 </script>
 @endpush

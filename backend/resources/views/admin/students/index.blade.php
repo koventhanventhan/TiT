@@ -429,36 +429,37 @@
         });
     }
 
-    // SweetAlert confirmation for all action buttons (delete, deactivate, activate)
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.swal-confirm-btn').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                var formId = this.getAttribute('data-form-id');
-                var title = this.getAttribute('data-title') || 'Are you sure?';
-                var text = this.getAttribute('data-text') || 'This action cannot be undone.';
-                var confirmText = this.getAttribute('data-confirm-text') || 'Yes, proceed!';
-                var confirmColor = this.getAttribute('data-confirm-color') || '#d33';
-                var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
+    // SweetAlert confirmation for all action buttons using Event Delegation
+    document.addEventListener('click', function(e) {
+        // Find if the clicked element or its parent has the swal-confirm-btn class
+        var btn = e.target.closest('.swal-confirm-btn');
+        if (!btn) return;
 
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: icon,
-                    showCancelButton: true,
-                    confirmButtonColor: confirmColor,
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: confirmText,
-                    cancelButtonText: 'Cancel',
-                    customClass: { popup: 'swal-dark-popup' }
-                }).then(function(result) {
-                    if (result.isConfirmed) {
-                        document.getElementById(formId).submit();
-                    }
-                });
-            });
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var formId = btn.getAttribute('data-form-id');
+        var title = btn.getAttribute('data-title') || 'Are you sure?';
+        var text = btn.getAttribute('data-text') || 'This action cannot be undone.';
+        var confirmText = btn.getAttribute('data-confirm-text') || 'Yes, proceed!';
+        var confirmColor = btn.getAttribute('data-confirm-color') || '#d33';
+        var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
+
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: icon,
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'swal-dark-popup' }
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                var form = document.getElementById(formId);
+                if (form) form.submit();
+            }
         });
     });
 </script>

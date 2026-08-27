@@ -100,16 +100,26 @@
                         </td>
                         <td>
                             <div class="d-flex">
-                                <form action="{{ route('admin.zoom.notify', $s->id) }}" method="POST" class="mr-1" onsubmit="return confirm('Send WhatsApp notification to all students and teachers?');">
+                                <form action="{{ route('admin.zoom.notify', $s->id) }}" method="POST" class="mr-1" id="zoom-notify-{{ $s->id }}">
                                     @csrf
-                                    <button type="submit" class="btn btn-success shadow btn-xs sharp mr-1" title="Notify">
+                                    <button type="button" class="btn btn-success shadow btn-xs sharp mr-1 swal-confirm-btn" 
+                                        title="Notify"
+                                        data-form-id="zoom-notify-{{ $s->id }}"
+                                        data-title="Send Notification?"
+                                        data-text="Send WhatsApp notification to all students and teachers?">
                                         <i class="fa fa-paper-plane"></i>
                                     </button>
                                 </form>
                                 <a href="{{ route('admin.zoom.edit', $s->id) }}" class="btn btn-primary shadow btn-xs sharp mr-1" title="Edit"><i class="fa fa-pencil"></i></a>
-                                <form action="{{ route('admin.zoom.destroy', $s->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this zoom class?');">
+                                <form action="{{ route('admin.zoom.destroy', $s->id) }}" method="POST" class="d-inline" id="zoom-del-{{ $s->id }}">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-danger shadow btn-xs sharp" title="Delete"><i class="fa fa-trash"></i></button>
+                                    <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn" 
+                                        title="Delete"
+                                        data-form-id="zoom-del-{{ $s->id }}"
+                                        data-title="Delete Zoom Class?"
+                                        data-text="Are you sure you want to delete this zoom class?">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>

@@ -474,10 +474,13 @@
                                         <td>
                                             <div class="d-flex">
                                                 <a href="{{ asset($note->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
-                                                <form action="{{ route('admin.settings.learning.material.delete', $note->id) }}" method="POST" onsubmit="return confirm('Delete this note?')">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $note->id) }}" method="POST" id="note-del-{{ $note->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></button>
+                                                    <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
+                                                        data-form-id="note-del-{{ $note->id }}"
+                                                        data-title="Delete Note?"
+                                                        data-text="Are you sure you want to delete this note?"><i class="fa fa-trash"></i></button>
                                                 </form>
                                             </div>
                                         </td>
@@ -561,10 +564,13 @@
                                         <td>
                                             <div class="d-flex">
                                                 <a href="{{ asset($paper->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
-                                                <form action="{{ route('admin.settings.learning.material.delete', $paper->id) }}" method="POST" onsubmit="return confirm('Delete this paper?')">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $paper->id) }}" method="POST" id="paper-del-{{ $paper->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></button>
+                                                    <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
+                                                        data-form-id="paper-del-{{ $paper->id }}"
+                                                        data-title="Delete Past Paper?"
+                                                        data-text="Are you sure you want to delete this paper?"><i class="fa fa-trash"></i></button>
                                                 </form>
                                             </div>
                                         </td>
@@ -662,10 +668,13 @@
                                                 @else
                                                     <a href="{{ asset($recording->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
                                                 @endif
-                                                <form action="{{ route('admin.settings.learning.material.delete', $recording->id) }}" method="POST" onsubmit="return confirm('Delete this recording?')">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $recording->id) }}" method="POST" id="rec-del-{{ $recording->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></button>
+                                                    <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
+                                                        data-form-id="rec-del-{{ $recording->id }}"
+                                                        data-title="Delete Recording?"
+                                                        data-text="Are you sure you want to delete this recording?"><i class="fa fa-trash"></i></button>
                                                 </form>
                                             </div>
                                         </td>

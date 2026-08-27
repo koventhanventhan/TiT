@@ -158,9 +158,12 @@
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
                                             <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#editPackageModal{{ $p->id }}">Edit</a>
-                                            <form action="{{ route('admin.packages.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Delete this package?');">
+                                            <form action="{{ route('admin.packages.destroy', $p->id) }}" method="POST" id="pkg-del-{{ $p->id }}">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                <button type="button" class="dropdown-item text-danger swal-confirm-btn"
+                                                    data-form-id="pkg-del-{{ $p->id }}"
+                                                    data-title="Delete Package?"
+                                                    data-text="Are you sure you want to delete this package?">Delete</button>
                                             </form>
                                         </div>
                                     </div>

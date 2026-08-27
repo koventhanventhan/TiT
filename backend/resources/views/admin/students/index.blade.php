@@ -314,20 +314,20 @@
                                             @endif
                                             <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
                                             @if($student->deactivated_at)
-                                                <form action="{{ route('admin.students.activate', $student->id) }}" method="POST">
+                                                <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" onsubmit="return confirm('Activate Student?');">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">Activate Student</button>
                                                 </form>
                                             @else
-                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" class="deactivate-form">
+                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" onsubmit="return confirm('Deactivate Student? This student will no longer be able to log in.');">
                                                     @csrf
-                                                    <button type="button" class="dropdown-item text-warning deactivate-btn">Deactivate Student</button>
+                                                    <button type="submit" class="dropdown-item text-warning">Deactivate Student</button>
                                                 </form>
                                             @endif
-                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this student? This action is permanent.');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="dropdown-item text-danger delete-btn">Delete Student</button>
+                                                <button type="submit" class="dropdown-item text-danger">Delete Student</button>
                                             </form>
                                         </div>
                                     </div>
@@ -405,56 +405,13 @@
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Yes, delete them!',
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'swal-dark-popup' }
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('bulkDeleteForm').submit();
             }
         });
     }
-
-    // Attach SweetAlert to individual delete buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const form = this.closest('.delete-form');
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Are you sure you want to delete this student? This action is permanent.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
-
-    // Attach SweetAlert to individual deactivate buttons
-    document.querySelectorAll('.deactivate-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const form = this.closest('.deactivate-form');
-            Swal.fire({
-                title: 'Deactivate Student?',
-                text: "This student will no longer be able to log in.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#f59e0b',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, deactivate!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
 </script>
 @endpush

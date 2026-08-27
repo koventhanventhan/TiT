@@ -272,15 +272,15 @@
         Swal.fire({
             title: title,
             text: text,
-            icon: icon,
+            type: icon,
             showCancelButton: true,
             confirmButtonColor: confirmColor,
             cancelButtonColor: '#6c757d',
             confirmButtonText: confirmText,
             cancelButtonText: 'Cancel',
-            customClass: { popup: 'swal-dark-popup' }
+            customClass: 'swal-dark-popup'
         }).then(function(result) {
-            if (result.isConfirmed) {
+            if (result.value) {
                 var form = document.getElementById(formId);
                 if (form) form.submit();
             }

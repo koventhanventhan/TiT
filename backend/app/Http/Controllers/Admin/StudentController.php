@@ -380,7 +380,7 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
+        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
         
         // Delete the student (this will also trigger cascades if defined in migration)
         $student->delete();

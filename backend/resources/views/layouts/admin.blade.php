@@ -255,15 +255,6 @@
     <script>
     // Global SweetAlert override for all confirm() popups
     (function() {
-        // Override native confirm() with SweetAlert
-        const originalConfirm = window.confirm;
-        window.confirm = function(message) {
-            // This is called synchronously, but SweetAlert is async.
-            // For forms with onsubmit="return confirm(...)", we intercept differently below.
-            // This fallback handles JS-only confirm() calls (like bulk delete).
-            return originalConfirm.call(window, message);
-        };
-
         // Intercept all forms with onsubmit containing confirm()
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('form[onsubmit*="confirm("]').forEach(function(form) {
@@ -282,9 +273,16 @@
 
                 // Remove the original onsubmit
                 form.removeAttribute('onsubmit');
+                // Mark this form as intercepted
+                form._swalBypassed = false;
 
                 // Add new submit handler with SweetAlert
                 form.addEventListener('submit', function(e) {
+                    // If already confirmed, allow the submit
+                    if (this._swalBypassed) {
+                        this._swalBypassed = false;
+                        return true;
+                    }
                     e.preventDefault();
                     var thisForm = this;
                     Swal.fire({
@@ -299,8 +297,13 @@
                         customClass: { popup: 'swal-dark-popup' }
                     }).then(function(result) {
                         if (result.isConfirmed) {
-                            // Safely submit the original form bypassing submit event listeners
-                            HTMLFormElement.prototype.submit.call(thisForm);
+                            thisForm._swalBypassed = true;
+                            // Use requestSubmit to trigger native submit with all hidden fields
+                            if (thisForm.requestSubmit) {
+                                thisForm.requestSubmit();
+                            } else {
+                                thisForm.submit();
+                            }
                         }
                     });
                 });

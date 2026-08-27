@@ -97,15 +97,25 @@
                                                     <button type="submit" class="dropdown-item text-success">Activate Teacher</button>
                                                 </form>
                                             @else
-                                                <form action="{{ route('admin.teachers.deactivate', $t->id) }}" method="POST" onsubmit="return confirm('Deactivate this teacher?');">
+                                                <form action="{{ route('admin.teachers.deactivate', $t->id) }}" method="POST" id="teacher-deactivate-form-{{ $t->id }}">
                                                     @csrf
-                                                    <button type="submit" class="dropdown-item text-warning">Deactivate Teacher</button>
+                                                    <button type="button" class="dropdown-item text-warning swal-confirm-btn"
+                                                        data-form-id="teacher-deactivate-form-{{ $t->id }}"
+                                                        data-title="Deactivate Teacher?"
+                                                        data-text="This teacher will no longer be able to log in."
+                                                        data-confirm-text="Yes, deactivate!"
+                                                        data-confirm-color="#f59e0b">Deactivate Teacher</button>
                                                 </form>
                                             @endif
-                                            <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to PERMANENTLY DELETE this teacher?');">
+                                            <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" id="teacher-delete-form-{{ $t->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="dropdown-item text-danger">Delete Teacher</button>
+                                                <button type="button" class="dropdown-item text-danger swal-confirm-btn"
+                                                    data-form-id="teacher-delete-form-{{ $t->id }}"
+                                                    data-title="Delete Teacher?"
+                                                    data-text="Are you sure you want to PERMANENTLY DELETE this teacher?"
+                                                    data-confirm-text="Yes, delete!"
+                                                    data-confirm-color="#d33">Delete Teacher</button>
                                             </form>
                                         </div>
                                     </div>
@@ -174,9 +184,52 @@
     });
 
     function submitBulkDelete() {
-        if (confirm('Are you sure you want to delete the selected teachers?')) {
-            document.getElementById('bulkDeleteForm').submit();
-        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You are about to delete the selected teachers. This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete them!',
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'swal-dark-popup' }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('bulkDeleteForm').submit();
+            }
+        });
     }
+
+    // SweetAlert confirmation for action buttons
+    document.querySelectorAll('.swal-confirm-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var formId = this.getAttribute('data-form-id');
+            var title = this.getAttribute('data-title') || 'Are you sure?';
+            var text = this.getAttribute('data-text') || 'This action cannot be undone.';
+            var confirmText = this.getAttribute('data-confirm-text') || 'Yes, proceed!';
+            var confirmColor = this.getAttribute('data-confirm-color') || '#d33';
+            var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Cancel',
+                customClass: { popup: 'swal-dark-popup' }
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        });
+    });
 </script>
 @endpush

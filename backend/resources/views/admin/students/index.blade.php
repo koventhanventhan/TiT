@@ -314,20 +314,35 @@
                                             @endif
                                             <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
                                             @if($student->deactivated_at)
-                                                <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" onsubmit="return confirm('Activate Student?');">
+                                                <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" id="activate-form-{{ $student->id }}">
                                                     @csrf
-                                                    <button type="submit" class="dropdown-item text-success">Activate Student</button>
+                                                    <button type="button" class="dropdown-item text-success swal-confirm-btn"
+                                                        data-form-id="activate-form-{{ $student->id }}"
+                                                        data-title="Activate Student?"
+                                                        data-text="This student will be able to log in again."
+                                                        data-confirm-text="Yes, activate!"
+                                                        data-confirm-color="#28a745">Activate Student</button>
                                                 </form>
                                             @else
-                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" onsubmit="return confirm('Deactivate Student? This student will no longer be able to log in.');">
+                                                <form action="{{ route('admin.students.deactivate', $student->id) }}" method="POST" id="deactivate-form-{{ $student->id }}">
                                                     @csrf
-                                                    <button type="submit" class="dropdown-item text-warning">Deactivate Student</button>
+                                                    <button type="button" class="dropdown-item text-warning swal-confirm-btn"
+                                                        data-form-id="deactivate-form-{{ $student->id }}"
+                                                        data-title="Deactivate Student?"
+                                                        data-text="This student will no longer be able to log in."
+                                                        data-confirm-text="Yes, deactivate!"
+                                                        data-confirm-color="#f59e0b">Deactivate Student</button>
                                                 </form>
                                             @endif
-                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this student? This action is permanent.');">
+                                            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" id="delete-form-{{ $student->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="dropdown-item text-danger">Delete Student</button>
+                                                <button type="button" class="dropdown-item text-danger swal-confirm-btn"
+                                                    data-form-id="delete-form-{{ $student->id }}"
+                                                    data-title="Delete Student?"
+                                                    data-text="Are you sure? This action is permanent and cannot be undone."
+                                                    data-confirm-text="Yes, delete!"
+                                                    data-confirm-color="#d33">Delete Student</button>
                                             </form>
                                         </div>
                                     </div>
@@ -413,5 +428,38 @@
             }
         });
     }
+
+    // SweetAlert confirmation for all action buttons (delete, deactivate, activate)
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.swal-confirm-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var formId = this.getAttribute('data-form-id');
+                var title = this.getAttribute('data-title') || 'Are you sure?';
+                var text = this.getAttribute('data-text') || 'This action cannot be undone.';
+                var confirmText = this.getAttribute('data-confirm-text') || 'Yes, proceed!';
+                var confirmColor = this.getAttribute('data-confirm-color') || '#d33';
+                var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
+
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonColor: confirmColor,
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'Cancel',
+                    customClass: { popup: 'swal-dark-popup' }
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            });
+        });
+    });
 </script>
 @endpush

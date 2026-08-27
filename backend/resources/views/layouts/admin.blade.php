@@ -299,10 +299,8 @@
                         customClass: { popup: 'swal-dark-popup' }
                     }).then(function(result) {
                         if (result.isConfirmed) {
-                            // Temporarily remove the listener to allow real submit
-                            var clone = thisForm.cloneNode(true);
-                            thisForm.parentNode.replaceChild(clone, thisForm);
-                            clone.submit();
+                            // Safely submit the original form bypassing submit event listeners
+                            HTMLFormElement.prototype.submit.call(thisForm);
                         }
                     });
                 });

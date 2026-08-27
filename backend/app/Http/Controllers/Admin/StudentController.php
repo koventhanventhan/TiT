@@ -345,7 +345,7 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
+        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
         $student->update(['deactivated_at' => now()]);
 
         // Send deactivation notification (WhatsApp with email fallback)
@@ -366,7 +366,7 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
+        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
         $student->update(['deactivated_at' => null]);
         
         return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully.');

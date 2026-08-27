@@ -327,9 +327,12 @@
                                     <i class="fa fa-{{ $slot->is_active ? 'pause' : 'play' }}"></i>
                                 </button>
                             </form>
-                            <form action="{{ route('admin.timetables.destroy', $slot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this slot?');">
+                            <form action="{{ route('admin.timetables.destroy', $slot->id) }}" method="POST" class="d-inline" id="tt-del-{{ $slot->id }}">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-xs btn-danger sharp"><i class="fa fa-trash"></i></button>
+                                <button type="button" class="btn btn-xs btn-danger sharp swal-confirm-btn"
+                                    data-form-id="tt-del-{{ $slot->id }}"
+                                    data-title="Delete Slot?"
+                                    data-text="Are you sure you want to delete this timetable slot?"><i class="fa fa-trash"></i></button>
                             </form>
                         </div>
                     </div>

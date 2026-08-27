@@ -62,9 +62,13 @@
                                     <a href="{{ route('admin.zoom-accounts.edit', $account->id) }}" class="btn btn-primary shadow btn-xs sharp mr-1" title="Edit">
                                         <i class="fa fa-pencil"></i>
                                     </a>
-                                    <form action="{{ route('admin.zoom-accounts.destroy', $account->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this account?');">
+                                    <form action="{{ route('admin.zoom-accounts.destroy', $account->id) }}" method="POST" class="d-inline" id="za-del-{{ $account->id }}">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger shadow btn-xs sharp" title="Delete">
+                                        <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn" 
+                                            title="Delete"
+                                            data-form-id="za-del-{{ $account->id }}"
+                                            data-title="Delete Account?"
+                                            data-text="Are you sure you want to delete this Zoom account?">
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     </form>

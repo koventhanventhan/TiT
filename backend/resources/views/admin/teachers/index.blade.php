@@ -201,37 +201,6 @@
         });
     }
 
-    // SweetAlert confirmation for action buttons using Event Delegation
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('.swal-confirm-btn');
-        if (!btn) return;
 
-        e.preventDefault();
-        e.stopPropagation();
-        
-        var formId = btn.getAttribute('data-form-id');
-        var title = btn.getAttribute('data-title') || 'Are you sure?';
-        var text = btn.getAttribute('data-text') || 'This action cannot be undone.';
-        var confirmText = btn.getAttribute('data-confirm-text') || 'Yes, proceed!';
-        var confirmColor = btn.getAttribute('data-confirm-color') || '#d33';
-        var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
-
-        Swal.fire({
-            title: title,
-            text: text,
-            icon: icon,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: confirmText,
-            cancelButtonText: 'Cancel',
-            customClass: { popup: 'swal-dark-popup' }
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                var form = document.getElementById(formId);
-                if (form) form.submit();
-            }
-        });
-    });
 </script>
 @endpush

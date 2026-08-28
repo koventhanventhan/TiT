@@ -88,7 +88,7 @@ export default function AdminStudents() {
                             <FiTrash2 /> Delete Selected ({selectedStudents.length})
                         </button>
                     )}
-                    <button className="add-btn">+ Register New Student</button>
+                    <button className="add-btn" onClick={() => toast.info("Registration feature coming soon")}>+ Register New Student</button>
                 </div>
             </div>
 
@@ -103,8 +103,8 @@ export default function AdminStudents() {
                     />
                 </div>
                 <div className="filter-group">
-                    <button className="filter-btn"><FiFilter /> Grade</button>
-                    <button className="filter-btn"><FiFilter /> Status</button>
+                    <button className="filter-btn" onClick={() => toast.info("Grade filter coming soon")}><FiFilter /> Grade</button>
+                    <button className="filter-btn" onClick={() => toast.info("Status filter coming soon")}><FiFilter /> Status</button>
                 </div>
             </div>
 
@@ -165,11 +165,11 @@ export default function AdminStudents() {
                                 </td>
                                 <td>
                                     <div className="action-btns">
-                                        <button title="View Dashboard" className="icon-btn blue"><FiEye /></button>
+                                        <button title="View Dashboard" className="icon-btn blue" onClick={() => toast.info("View Dashboard coming soon")}><FiEye /></button>
                                         {student.registration_status === 'pending_confirm' && (
-                                            <button title="Confirm Registration" className="icon-btn green"><FiCheckCircle /></button>
+                                            <button title="Confirm Registration" className="icon-btn green" onClick={() => toast.info("Confirm Registration coming soon")}><FiCheckCircle /></button>
                                         )}
-                                        <button title="More Actions" className="icon-btn grey"><FiMoreVertical /></button>
+                                        <button title="More Actions" className="icon-btn grey" onClick={() => toast.info("More Actions coming soon")}><FiMoreVertical /></button>
                                     </div>
                                 </td>
                             </tr>

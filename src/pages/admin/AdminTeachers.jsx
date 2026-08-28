@@ -82,7 +82,7 @@ export default function AdminTeachers() {
                         <input type="checkbox" onChange={handleSelectAll} checked={teachers.length > 0 && selectedTeachers.length === teachers.length} />
                         Select All
                     </label>
-                    <button className="add-btn"><FiUserPlus /> Add Instructor</button>
+                    <button className="add-btn" onClick={() => toast.info("Add Instructor coming soon")}><FiUserPlus /> Add Instructor</button>
                 </div>
             </div>
 
@@ -103,7 +103,7 @@ export default function AdminTeachers() {
                                     <span>Senior Instructor</span>
                                 </div>
                             </div>
-                            <button className="more-btn"><FiMoreVertical /></button>
+                            <button className="more-btn" onClick={() => toast.info("More Options coming soon")}><FiMoreVertical /></button>
                         </div>
 
                         <div className="card-stats">
@@ -123,8 +123,8 @@ export default function AdminTeachers() {
                         </div>
 
                         <div className="card-footer">
-                            <button className="action-link"><FiVideo /> View Schedule</button>
-                            <button className="action-link"><FiActivity /> Performance</button>
+                            <button className="action-link" onClick={() => toast.info("View Schedule coming soon")}><FiVideo /> View Schedule</button>
+                            <button className="action-link" onClick={() => toast.info("Performance coming soon")}><FiActivity /> Performance</button>
                         </div>
                     </div>
                 ))}

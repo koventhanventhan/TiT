@@ -8,9 +8,11 @@ import {
     FiExternalLink
 } from 'react-icons/fi'
 import { getSuperAdminStats } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext'
 import './SuperAdminOverview.css'
 
 export default function SuperAdminOverview() {
+    const toast = useToast()
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
 
@@ -71,7 +73,7 @@ export default function SuperAdminOverview() {
                 <div className="recent-activity-card">
                     <div className="card-header">
                         <h4>Recent System-Wide Events</h4>
-                        <button className="view-all">View All Logs</button>
+                        <button className="view-all" onClick={() => toast.info("Full system logs view coming soon")}>View All Logs</button>
                     </div>
                     <div className="activity-list">
                         {stats?.recent_activity?.length > 0 ? (

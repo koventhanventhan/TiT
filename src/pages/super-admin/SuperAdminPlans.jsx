@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { FiPackage, FiPlus, FiCheck, FiInfo, FiEdit3 } from 'react-icons/fi'
 import { getSuperAdminPlans } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext'
 import './SuperAdminPlans.css'
 
 export default function SuperAdminPlans() {
+    const toast = useToast()
     const [plans, setPlans] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -30,7 +32,7 @@ export default function SuperAdminPlans() {
                     <h1>Subscription Plans</h1>
                     <p>Define pricing tiers, resource limits, and feature availability for institutes.</p>
                 </div>
-                <button className="add-btn"><FiPlus /> Create New Plan</button>
+                <button className="add-btn" onClick={() => toast.info("Plan creation wizard coming soon")}><FiPlus /> Create New Plan</button>
             </div>
 
             <div className="plans-grid">
@@ -52,8 +54,8 @@ export default function SuperAdminPlans() {
                             ))}
                         </ul>
                         <div className="plan-actions">
-                            <button className="edit-btn"><FiEdit3 /> Edit Tier</button>
-                            <button className="delete-btn">Archive</button>
+                            <button className="edit-btn" onClick={() => toast.info("Plan editing coming soon")}><FiEdit3 /> Edit Tier</button>
+                            <button className="delete-btn" onClick={() => toast.info("Plan archiving coming soon")}>Archive</button>
                         </div>
                     </div>
                 ))}

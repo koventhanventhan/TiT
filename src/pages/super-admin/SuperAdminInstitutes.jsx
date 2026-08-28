@@ -53,7 +53,7 @@ export default function SuperAdminInstitutes() {
                     <h1>Institutes & Tenants</h1>
                     <p>Full lifecycle management for all educational institutions on the platform.</p>
                 </div>
-                <button className="add-btn"><FiPlus /> Onboard New Institute</button>
+                <button className="add-btn" onClick={() => toast.info("Onboarding wizard coming soon")}><FiPlus /> Onboard New Institute</button>
             </div>
 
             <div className="institutes-grid">
@@ -75,7 +75,7 @@ export default function SuperAdminInstitutes() {
                             </div>
                         </div>
                         <div className="card-actions">
-                            <button className="manage-btn">Manage</button>
+                            <button className="manage-btn" onClick={() => toast.info("Tenant management panel coming soon")}>Manage</button>
                             <button
                                 className={inst.status === 'active' ? 'suspend-btn' : 'activate-btn'}
                                 onClick={() => toggleStatus(inst)}

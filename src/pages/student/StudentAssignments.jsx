@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { FiFileText, FiClock, FiCheckCircle, FiUpload, FiAlertCircle } from 'react-icons/fi'
 import { getStudentAssignments } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext'
 
 export default function StudentAssignments() {
+    const toast = useToast()
     const [assignments, setAssignments] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -103,20 +105,24 @@ export default function StudentAssignments() {
                                     </div>
 
                                     {isPending && (
-                                        <button style={{
-                                            width: '100%', padding: '10px', background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
-                                            border: 'none', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 12px rgba(14,165,233,0.3)', transition: 'all 0.2s'
-                                        }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                                        <button 
+                                            onClick={() => toast.info("Assignment submission will be available soon.")}
+                                            style={{
+                                                width: '100%', padding: '10px', background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
+                                                border: 'none', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 12px rgba(14,165,233,0.3)', transition: 'all 0.2s'
+                                            }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                                             <FiUpload /> Submit Work
                                         </button>
                                     )}
                                     {(isSubmitted || isGraded) && (
-                                        <button style={{
-                                            width: '100%', padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0',
-                                            borderRadius: 10, color: '#475569', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s'
-                                        }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}>
+                                        <button 
+                                            onClick={() => toast.info("Viewing submissions will be available soon.")}
+                                            style={{
+                                                width: '100%', padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0',
+                                                borderRadius: 10, color: '#475569', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s'
+                                            }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}>
                                             <FiCheckCircle style={{ color: '#10b981' }} /> View Submission
                                         </button>
                                     )}

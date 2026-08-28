@@ -1098,15 +1098,15 @@
             swalPlugin.fire({
                 title: 'Are you sure?',
                 text: "This administrator account will be permanently deleted!",
-                icon: 'warning',
+                type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#EB8153',
                 cancelButtonColor: '#3b3363',
                 confirmButtonText: 'Yes, delete it!',
                 background: '#3b3363',
                 color: '#fff'
-            }).then((result) => {
-                if (result.isConfirmed) submitForm();
+            }).then(function(result) {
+                if (result.value) submitForm();
             });
         } else {
             if (confirm('Are you sure you want to delete this administrator?')) submitForm();

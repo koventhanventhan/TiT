@@ -6,6 +6,7 @@ import {
     FiTrendingUp, FiPlay, FiPlus
 } from 'react-icons/fi'
 import { getTeacherDashboardStats } from '../../services/dashboardService'
+import { useToast } from '../../components/shared/ToastContext'
 
 function StatCard({ icon: Icon, label, value, color, iconBg }) {
     return (
@@ -33,6 +34,7 @@ function StatCard({ icon: Icon, label, value, color, iconBg }) {
 }
 
 export default function TeacherOverview() {
+    const toast = useToast()
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
 
@@ -89,6 +91,7 @@ export default function TeacherOverview() {
                             fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                             backdropFilter: 'blur(4px)', transition: 'all 0.2s'
                         }}
+                        onClick={() => toast.info("Schedule feature coming soon")}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                         >
@@ -100,6 +103,7 @@ export default function TeacherOverview() {
                             fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)', transition: 'all 0.2s'
                         }}
+                        onClick={() => toast.info("Start Class feature coming soon")}
                         onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
                         onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                         >

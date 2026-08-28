@@ -14,8 +14,10 @@ import { BASE_URL } from '../../services/authService'
 import './AdminZoom.css'
 import ZoomRecordingSettingsModal from '../../components/admin/ZoomRecordingSettingsModal';
 import { FiSettings } from 'react-icons/fi';
+import { useToast } from '../../components/shared/ToastContext';
 
 export default function AdminZoom() {
+    const toast = useToast();
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
@@ -133,8 +135,8 @@ export default function AdminZoom() {
                         )}
 
                         <div className="card-actions">
-                            <button className="edit-btn"><FiEdit /> Edit</button>
-                            <button className="delete-btn"><FiTrash2 /> Remove</button>
+                            <button className="edit-btn" onClick={() => toast.info("Edit feature coming soon")}><FiEdit /> Edit</button>
+                            <button className="delete-btn" onClick={() => toast.info("Remove feature coming soon")}><FiTrash2 /> Remove</button>
                         </div>
                     </div>
                 ))}

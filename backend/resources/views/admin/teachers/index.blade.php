@@ -187,15 +187,15 @@
         Swal.fire({
             title: 'Are you sure?',
             text: "You are about to delete the selected teachers. This action cannot be undone!",
-            icon: 'warning',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, delete them!',
             cancelButtonText: 'Cancel',
-            customClass: { popup: 'swal-dark-popup' }
-        }).then((result) => {
-            if (result.isConfirmed) {
+            customClass: 'swal-dark-popup'
+        }).then(function(result) {
+            if (result.value) {
                 document.getElementById('bulkDeleteForm').submit();
             }
         });

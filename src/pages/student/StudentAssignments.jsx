@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { FiFileText, FiClock, FiCheckCircle, FiUpload, FiAlertCircle } from 'react-icons/fi'
 import { getStudentAssignments } from '../../services/dashboardService'
 import { useToast } from '../../components/shared/ToastContext'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 
 export default function StudentAssignments() {
     const toast = useToast()
+    const { selectedChild } = React.useContext(SelectedChildContext)
     const [assignments, setAssignments] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -19,8 +21,17 @@ export default function StudentAssignments() {
                 setLoading(false)
             }
         }
-        load()
-    }, [])
+        if (selectedChild) {
+            setLoading(true)
+            load()
+        }
+    }, [selectedChild])
+
+    if (loading || !selectedChild) return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+            <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+    )
 
     return (
         <div style={{ paddingBottom: 40 }}>
@@ -37,11 +48,7 @@ export default function StudentAssignments() {
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-                    <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                </div>
-            ) : assignments.length === 0 ? (
+            {assignments.length === 0 ? (
                 <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                     <div style={{ width: 64, height: 64, borderRadius: 16, background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiFileText /></div>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#334155' }}>No assignments</h3>

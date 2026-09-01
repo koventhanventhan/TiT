@@ -38,7 +38,7 @@ class CheckPayments extends Command
 
         $this->info("Running payment checks for $yearMonth (Day $day)...");
 
-        $unpaidStudents = \App\Models\User::where('role', 'user')
+        $unpaidParents = \App\Models\User::where('role', 'user')
             ->whereNotNull('full_name')
             ->whereNull('deactivated_at')
             ->get()
@@ -46,23 +46,23 @@ class CheckPayments extends Command
                 return !$user->hasPaidForMonth($yearMonth);
             });
 
-        if ($unpaidStudents->isEmpty()) {
-            $this->info("No unpaid students found.");
+        if ($unpaidParents->isEmpty()) {
+            $this->info("No unpaid parents found.");
             return;
         }
 
         $deactivatedList = [];
         $emailsSent = 0;
 
-        foreach ($unpaidStudents as $student) {
+        foreach ($unpaidParents as $parent) {
             if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
                 // Reminder via NotificationService (WhatsApp + Email fallback)
                 $notifier->notifyUser(
-                    $student, 'payment_reminder', 'tit_payment_reminder',
-                    [$student->full_name ?? $student->name, now()->format('F Y')],
-                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y'), 'amount' => $student->calculateMonthlyFee()]
+                    $parent, 'payment_reminder', 'tit_payment_reminder',
+                    [$parent->full_name ?? $parent->name, now()->format('F Y')],
+                    ['student_name' => $parent->full_name ?? $parent->name, 'month' => now()->format('F Y'), 'amount' => $parent->calculateMonthlyFee()]
                 );
-                $this->line("Sent reminder to: " . $student->email);
+                $this->line("Sent reminder to: " . $parent->email);
                 $emailsSent++;
 
                 // Rate limiting: sleep 2 seconds between sends to stay within hourly limit
@@ -73,15 +73,15 @@ class CheckPayments extends Command
             
             if ($day === 5 || ($day > 5 && $this->option('force'))) {
                 // Deactivation Logic
-                $student->update(['deactivated_at' => now()]);
-                $deactivatedList[] = ($student->full_name ?? $student->name) . " (" . $student->email . ")";
+                $parent->update(['deactivated_at' => now()]);
+                $deactivatedList[] = ($parent->full_name ?? $parent->name) . " (" . $parent->email . ")";
 
                 $notifier->notifyUser(
-                    $student, 'account_suspended', 'tit_account_suspended',
-                    [$student->full_name ?? $student->name, now()->format('F Y')],
-                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
+                    $parent, 'account_suspended', 'tit_account_suspended',
+                    [$parent->full_name ?? $parent->name, now()->format('F Y')],
+                    ['student_name' => $parent->full_name ?? $parent->name, 'month' => now()->format('F Y')]
                 );
-                $this->line("Deactivated and notified: " . $student->email);
+                $this->line("Deactivated and notified: " . $parent->email);
                 $emailsSent++;
 
                 // Rate limiting
@@ -96,7 +96,7 @@ class CheckPayments extends Command
             $notifier->notifyAdmin(
                 'admin_alert', 'titeducation',
                 [],
-                ['alert_title' => 'Students Deactivated', 'alert_message' => count($deactivatedList) . ' students were deactivated for non-payment.', 'alert_details' => implode("\n", $deactivatedList)]
+                ['alert_title' => 'Accounts Deactivated', 'alert_message' => count($deactivatedList) . ' accounts were deactivated for non-payment.', 'alert_details' => implode("\n", $deactivatedList)]
             );
             $this->info("Admin notified about deactivations.");
         }

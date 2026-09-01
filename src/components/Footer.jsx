@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiMail, FiPhone, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiYoutube, FiMapPin, FiArrowRight } from 'react-icons/fi'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -103,7 +103,7 @@ const StudentToolkit = () => {
 const Footer = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
-  const { openRegister } = useAuthModal()
+  const navigate = useNavigate()
 
   const footer_email = getSetting('footer_email', 'admin@titjaffna.lk')
   const footer_phone = getSetting('footer_phone', '+94 0770158446')
@@ -253,7 +253,7 @@ const Footer = () => {
               <li><Link to="/classes">{t('nav_classes') || 'Classes'}</Link></li>
               <li><Link to="/contact">{t('nav_contact') || 'Contact'}</Link></li>
               <li><Link to="/tutor-apply">{tutorLabel}</Link></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); openRegister(); }}>{studentLabel}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }}>{studentLabel}</a></li>
             </ul>
           </div>
 

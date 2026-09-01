@@ -22,19 +22,34 @@ class StudentZoomController extends Controller
             \Illuminate\Support\Facades\Log::warning('NotificationService init failed: ' . $e->getMessage());
         }
     }
+
     /**
-     * Get zoom classes for today within time window (e.g. same day, 1 hour before/after).
+     * Get zoom classes for today within time window.
      * Only for students who have paid for current month.
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-        if ($user->role !== 'user' || $user->deactivated_at) {
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        if ($studentId) {
+            $student = $parent->students()->where('id', $studentId)->first();
+            if (!$student) {
+                return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+            }
+        } else {
+            $student = $parent->students()->first();
+        }
+
+        if (!$student) {
+            return response()->json(['message' => 'Forbidden: No student profile found.'], 403);
+        }
+
         $yearMonth = now()->format('Y-m');
-        $hasPaid = $user->hasPaidForMonth($yearMonth);
+        $hasPaid = $parent->hasPaidForMonth($yearMonth);
         if (!$hasPaid) {
             return response()->json([
                 'data' => [],
@@ -51,20 +66,19 @@ class StudentZoomController extends Controller
             ->where('scheduled_at', '<=', $endBuffer);
 
         // Filter by student's medium (English/Tamil) — also include 'both' medium classes
-        if ($user->medium) {
-            $query->whereIn('medium', [$user->medium, 'both']);
+        if ($student->medium) {
+            $query->whereIn('medium', [$student->medium, 'both']);
         }
 
         $schedules = $query->orderBy('scheduled_at')->get();
 
         // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
-        $schedules = $schedules->filter(function($s) use ($user) {
-            $userGrade = $user->current_grade;
+        $schedules = $schedules->filter(function($s) use ($student) {
+            $userGrade = $student->current_grade;
             $classGrade = $s->grade;
             
             if (!$userGrade || !$classGrade) return false;
 
-            // Extract numeric values, fallback to normalized string for O/L, A/L etc.
             preg_match('/(\d+)/', $userGrade, $userMatch);
             $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
@@ -75,7 +89,7 @@ class StudentZoomController extends Controller
         });
 
         // Filter by student's selected subjects (Robust substring match)
-        $selected = $user->selected_subjects;
+        $selected = $student->selected_subjects;
         if (!empty($selected)) {
             $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
             $selectedArr = array_map('trim', (array)$selectedArr);
@@ -96,8 +110,8 @@ class StudentZoomController extends Controller
             });
         }
 
-        $items = $schedules->values()->map(function ($s) use ($user) {
-            $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
+        $items = $schedules->values()->map(function ($s) use ($student) {
+            $att = Attendance::where('zoom_schedule_id', $s->id)->where('student_id', $student->id)->first();
             return [
                 'id' => $s->id,
                 'title' => $s->title,
@@ -113,17 +127,17 @@ class StudentZoomController extends Controller
         });
 
         // Get payment info
-        $lastPayment = Payment::where('user_id', $user->id)->where('status', 'paid')->latest('paid_at')->first();
+        $lastPayment = Payment::where('user_id', $parent->id)->where('status', 'paid')->latest('paid_at')->first();
         $nextPaymentDate = Carbon::now()->addMonth()->startOfMonth()->toDateString();
 
         return response()->json([
             'data' => $items,
             'user_profile' => [
-                'full_name' => $user->full_name,
-                'school_name' => $user->school_name,
-                'current_grade' => $user->current_grade,
-                'medium' => $user->medium,
-                'stream' => $user->stream,
+                'full_name' => $student->full_name,
+                'school_name' => $student->school_name,
+                'current_grade' => $student->current_grade,
+                'medium' => $student->medium,
+                'stream' => $student->stream,
             ],
             'payment_info' => [
                 'has_paid' => $hasPaid,
@@ -139,9 +153,23 @@ class StudentZoomController extends Controller
      */
     public function attend(Request $request)
     {
-        $user = $request->user();
-        if ($user->role !== 'user' || $user->deactivated_at) {
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        if ($studentId) {
+            $student = $parent->students()->where('id', $studentId)->first();
+            if (!$student) {
+                return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+            }
+        } else {
+            $student = $parent->students()->first();
+        }
+
+        if (!$student) {
+            return response()->json(['message' => 'Forbidden: No student profile found.'], 403);
         }
 
         $request->validate(['zoom_schedule_id' => 'required|exists:zoom_schedules,id']);
@@ -150,7 +178,7 @@ class StudentZoomController extends Controller
         Attendance::updateOrCreate(
             [
                 'zoom_schedule_id' => $scheduleId,
-                'user_id' => $user->id,
+                'student_id' => $student->id,
             ],
             [
                 'role' => 'student',
@@ -165,7 +193,7 @@ class StudentZoomController extends Controller
             if ($this->notifier) {
                 $schedule = ZoomSchedule::find($scheduleId);
                 $this->notifier->notifyUser(
-                    $user, 'zoom_reminder', 'tit_zoom_reminder',
+                    $parent, 'zoom_reminder', 'tit_zoom_reminder',
                     [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at->format('H:i')],
                     ['class_title' => $schedule->title ?? 'Zoom Class', 'class_time' => $schedule->scheduled_at->format('H:i')]
                 );
@@ -182,13 +210,27 @@ class StudentZoomController extends Controller
      */
     public function upcomingSchedules(Request $request)
     {
-        $user = $request->user();
-        if ($user->role !== 'user' || $user->deactivated_at) {
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        if ($studentId) {
+            $student = $parent->students()->where('id', $studentId)->first();
+            if (!$student) {
+                return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+            }
+        } else {
+            $student = $parent->students()->first();
+        }
+
+        if (!$student) {
+            return response()->json([]);
+        }
+
         $yearMonth = now()->format('Y-m');
-        $hasPaid = $user->hasPaidForMonth($yearMonth);
+        $hasPaid = $parent->hasPaidForMonth($yearMonth);
         if (!$hasPaid) {
             return response()->json([]);
         }
@@ -199,15 +241,15 @@ class StudentZoomController extends Controller
             ->where('scheduled_at', '<=', now()->addDays(90));
 
         // Filter by student's medium (English/Tamil) — also include 'both' medium classes
-        if ($user->medium) {
-            $query->whereIn('medium', [$user->medium, 'both']);
+        if ($student->medium) {
+            $query->whereIn('medium', [$student->medium, 'both']);
         }
 
         $schedules = $query->orderBy('scheduled_at')->get();
 
         // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
-        $schedules = $schedules->filter(function($s) use ($user) {
-            $userGrade = $user->current_grade;
+        $schedules = $schedules->filter(function($s) use ($student) {
+            $userGrade = $student->current_grade;
             $classGrade = $s->grade;
             
             if (!$userGrade || !$classGrade) return false;
@@ -222,7 +264,7 @@ class StudentZoomController extends Controller
         });
 
         // Filter by student's selected subjects (Robust substring match)
-        $selected = $user->selected_subjects;
+        $selected = $student->selected_subjects;
         if (!empty($selected)) {
             $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
             $selectedArr = array_map('trim', (array)$selectedArr);

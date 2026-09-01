@@ -13,13 +13,14 @@ class Attendance extends Model
     use HasFactory, BelongsToInstitute;
 
     protected $fillable = [
-        'user_id',
+        'student_id',
         'zoom_schedule_id',
         'status',
         'attended_at',
         'institute_id',
         'marked_at',
         'source',
+        'role',
     ];
 
     protected function casts(): array
@@ -34,8 +35,8 @@ class Attendance extends Model
         return $this->belongsTo(ZoomSchedule::class);
     }
 
-    public function user(): BelongsTo
+    public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Student::class);
     }
 }

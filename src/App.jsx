@@ -50,6 +50,7 @@ import TeacherSettings from './pages/teacher/TeacherSettings'
 import { SettingsProvider } from './context/SettingsContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthModalProvider } from './context/AuthModalContext'
+import { SelectedChildProvider } from './context/SelectedChildContext'
 import './App.css'
 
 // Wrapper component that includes logout handler
@@ -62,6 +63,7 @@ function PageWrapper({ children }) {
       // Clear all authentication data
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
+      localStorage.removeItem('selectedChild')
 
       // Remove logout parameter from URL
       searchParams.delete('logout')
@@ -158,23 +160,25 @@ function AppContent() {
 
 function App() {
   return (
-    <ToastProvider>
-      <SettingsProvider>
-        <LanguageProvider>
-          <AuthModalProvider>
-            <Router
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true
-              }}
-            >
-              <ScrollToTop />
-              <AppContent />
-            </Router>
-          </AuthModalProvider>
-        </LanguageProvider>
-      </SettingsProvider>
-    </ToastProvider>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
+      <ToastProvider>
+        <SettingsProvider>
+          <LanguageProvider>
+            <AuthModalProvider>
+              <SelectedChildProvider>
+                <ScrollToTop />
+                <AppContent />
+              </SelectedChildProvider>
+            </AuthModalProvider>
+          </LanguageProvider>
+        </SettingsProvider>
+      </ToastProvider>
+    </Router>
   )
 }
 

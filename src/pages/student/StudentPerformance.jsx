@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FiTrendingUp, FiAward, FiCheckCircle, FiClock, FiTarget } from 'react-icons/fi'
 import { getStudentStats } from '../../services/dashboardService'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 
 function StatCard({ title, value, subtitle, icon: Icon, color, bg }) {
     return (
@@ -29,6 +30,7 @@ function StatCard({ title, value, subtitle, icon: Icon, color, bg }) {
 }
 
 export default function StudentPerformance() {
+    const { selectedChild } = React.useContext(SelectedChildContext)
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
 
@@ -43,10 +45,13 @@ export default function StudentPerformance() {
                 setLoading(false)
             }
         }
-        load()
-    }, [])
+        if (selectedChild) {
+            setLoading(true)
+            load()
+        }
+    }, [selectedChild])
 
-    if (loading) return (
+    if (loading || !selectedChild) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
             <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>

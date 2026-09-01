@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi'
 import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 
 // Reusable Stat Card
 function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
@@ -38,6 +39,7 @@ function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
 }
 
 export default function StudentOverview() {
+    const { selectedChild } = React.useContext(SelectedChildContext)
     const [stats, setStats] = useState(null)
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
@@ -68,10 +70,13 @@ export default function StudentOverview() {
                 setLoading(false)
             }
         }
-        loadStats()
-    }, [])
+        if (selectedChild) {
+            setLoading(true)
+            loadStats()
+        }
+    }, [selectedChild])
 
-    if (loading) return (
+    if (loading || !selectedChild) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
             <div style={{
                 width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1',
@@ -97,10 +102,10 @@ export default function StudentOverview() {
                         fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.5px',
                         lineHeight: 1.2, marginBottom: 6
                     }}>
-                        Welcome Back, {stats?.user?.full_name || stats?.user?.name || stats?.user?.first_name || stats?.user_name || 'Student'}! 👋
+                        Welcome Back, {selectedChild?.full_name || stats?.user?.full_name || 'Student'}! 👋
                     </h1>
                     <p style={{ fontSize: 15, color: '#c7d2fe', margin: 0, maxWidth: 500 }}>
-                        Here's what's happening with your learning today. Stay consistent and keep growing!
+                        Here's what's happening with {selectedChild?.first_name || 'your'} learning today. Stay consistent and keep growing!
                     </p>
                 </div>
             </div>

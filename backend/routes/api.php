@@ -51,6 +51,7 @@ Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWha
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::get('/user', [AuthController::class, 'user']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/update-avatar', [AuthController::class, 'updateAvatar']);
     

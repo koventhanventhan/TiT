@@ -113,10 +113,10 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // --- New user registration ---
+        // --- New user registration (Parent Account) ---
         $username = $request->username ?? $request->email;
         if (!$username) {
-            $username = 'student_' . time();
+            $username = 'parent_' . time();
         }
 
         $fullName = $request->full_name;
@@ -126,45 +126,21 @@ class AuthController extends Controller
 
         $userData = [
             'name' => $username,
-            'role' => 'user', // Always 'user' (student)
+            'role' => 'user', // Always 'user' (acts as Parent)
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Always hashed with Hash::make()
+            'password' => Hash::make($request->password),
             'full_name' => $fullName,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'phone_number' => $request->phone_number,
+            'registration_status' => 'pending', // Default
         ];
 
-        // Add student fields if provided
-        if ($request->has('date_of_birth')) {
-            $userData['date_of_birth'] = $request->date_of_birth;
-        }
-        if ($request->has('gender')) {
-            $userData['gender'] = $request->gender;
-        }
-        if ($request->has('school_name')) {
-            $userData['school_name'] = $request->school_name;
-        }
-        if ($request->has('medium')) {
-            $userData['medium'] = $request->medium;
-        }
-        if ($request->has('online_experience')) {
-            $userData['online_experience'] = $request->boolean('online_experience');
-        }
-        if ($request->has('device_used')) {
-            $userData['device_used'] = is_array($request->device_used) 
-                ? json_encode($request->device_used) 
-                : $request->device_used;
-        }
-        if ($request->has('current_grade')) {
-            $userData['current_grade'] = $request->current_grade;
-        }
-        if ($request->has('stream')) {
-            $userData['stream'] = $request->stream;
-        }
-        if ($request->has('selected_subjects')) {
-            $userData['selected_subjects'] = $request->selected_subjects;
-        }
+        // Legacy single-child fields (fallback)
+        if ($request->has('current_grade')) $userData['current_grade'] = $request->current_grade;
+        if ($request->has('selected_subjects')) $userData['selected_subjects'] = $request->selected_subjects;
+        if ($request->has('medium')) $userData['medium'] = $request->medium;
+        if ($request->has('stream')) $userData['stream'] = $request->stream;
         
         // Identify Institute
         $instituteId = $request->header('X-Institute-Id') ?: 1;
@@ -179,6 +155,23 @@ class AuthController extends Controller
 
         $user = User::create($userData);
 
+        // Process children array if provided
+        if ($request->has('children') && is_array($request->children)) {
+            foreach ($request->children as $child) {
+                $user->students()->create([
+                    'full_name' => $child['full_name'] ?? ($child['first_name'] . ' ' . $child['last_name']),
+                    'first_name' => $child['first_name'] ?? null,
+                    'last_name' => $child['last_name'] ?? null,
+                    'date_of_birth' => $child['date_of_birth'] ?? null,
+                    'gender' => $child['gender'] ?? null,
+                    'school_name' => $child['school_name'] ?? null,
+                    'medium' => $child['medium'] ?? null,
+                    'current_grade' => $child['current_grade'] ?? null,
+                    'stream' => $child['stream'] ?? null,
+                    'selected_subjects' => $child['selected_subjects'] ?? null,
+                ]);
+            }
+        }
         // NOTE: Admin notification is NOT sent here (basic signup).
         // It is sent in RegistrationController@step1 after the student completes
         // their full registration details (full_name, phone, etc.).
@@ -190,21 +183,16 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->load('students');
+
         $responseData = [
             'id' => $user->id,
             'username' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
             'full_name' => $user->full_name,
-            'date_of_birth' => $user->date_of_birth,
-            'gender' => $user->gender,
-            'school_name' => $user->school_name,
-            'medium' => $user->medium,
-            'online_experience' => $user->online_experience,
-            'device_used' => $user->device_used,
-            'current_grade' => $user->current_grade,
-            'stream' => $user->stream,
-            'selected_subjects' => $user->selected_subjects,
+            'phone_number' => $user->phone_number,
+            'children' => $user->students,
         ];
 
         return response()->json([
@@ -288,6 +276,10 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Auth::guard('web')->login($user, $request->boolean('remember'));
         }
 
+        if ($user->role === 'user') {
+            $user->load('students');
+        }
+
         return response()->json([
             'message' => 'Login successful',
             'user' => [
@@ -296,14 +288,15 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'full_name' => $user->full_name,
-                'medium' => $user->medium,
-                'selected_subjects' => $user->selected_subjects,
+                'medium' => $user->medium, // legacy
+                'selected_subjects' => $user->selected_subjects, // legacy
                 'institute_id' => $user->institute_id,
                 'is_deactivated' => !$user->isActive(),
                 'deactivated_at' => $user->deactivated_at,
                 'admin_confirmed_at' => $user->admin_confirmed_at,
                 'registration_status' => $user->registration_status,
                 'is_paid' => $user->hasPaidForMonth(now()->format('Y-m')),
+                'children' => $user->role === 'user' ? $user->students : [],
             ],
             'token' => $token,
         ]);
@@ -394,6 +387,11 @@ class AuthController extends Controller
         if ($u->selected_subjects) {
             $data['selected_subjects'] = $u->selected_subjects;
         }
+        if ($u->role === 'user') {
+            $u->load('students');
+            $data['children'] = $u->students;
+        }
+
         return response()->json([
             'user' => array_merge($data, [
                 'is_deactivated' => !$u->isActive(),

@@ -1,12 +1,22 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess } from '../services/authService'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { FiX } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
 import { useToast } from '../components/shared/ToastContext';
 
+const DRAFT_STORAGE_KEY = 'student_reg_form_draft'
+
+const getSavedDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch (e) {
+    return null
+  }
+}
 
 // Subject data structures
 // (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
@@ -16,6 +26,7 @@ const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
@@ -57,34 +68,74 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     fetchData()
   }, [])
 
-  // Auto-initialize email from currently authenticated user
+  const [formData, setFormData] = useState(() => {
+    const defaultData = {
+      parentName: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+      fullName: '', // Child's name
+      dateOfBirth: '',
+      gender: '',
+      schoolName: '',
+      medium: '',
+      onlineExperience: '',
+      deviceUsed: '',
+      currentGrade: '',
+      username: ''
+    }
+    const saved = getSavedDraft()
+    return saved?.formData ? { ...defaultData, ...saved.formData } : defaultData
+  })
+  const [formMode, setFormMode] = useState(() => getSavedDraft()?.formMode || 'new') // 'new' or 'link'
+  const [linkData, setLinkData] = useState(() => getSavedDraft()?.linkData || { email: '', password: '' })
+  const [selectedStream, setSelectedStream] = useState(() => getSavedDraft()?.selectedStream || '')
+  const [selectedSubjects, setSelectedSubjects] = useState(() => getSavedDraft()?.selectedSubjects || [])
+
+  // Save form draft to sessionStorage
+  React.useEffect(() => {
+    try {
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+        formData,
+        selectedStream,
+        selectedSubjects,
+        formMode,
+        linkData
+      }))
+    } catch (e) {
+      console.error('Failed to save registration draft:', e)
+    }
+  }, [formData, selectedStream, selectedSubjects, formMode, linkData])
+
+  // Auto-initialize email from currently authenticated user if not already set
   React.useEffect(() => {
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
     if (userStr) {
       try {
         const u = JSON.parse(userStr)
         if (u && u.email) {
-          setFormData(prev => ({ ...prev, email: u.email }))
+          setFormData(prev => ({
+            ...prev,
+            email: prev.email || u.email,
+            parentName: prev.parentName || u.name || ''
+          }))
         }
         
-        // Also initialize selected subjects to accurately calculate the amount in step 2
-        if (u && u.selected_subjects) {
+        // Also initialize selected subjects to accurately calculate the amount in step 2 if not in draft
+        const saved = getSavedDraft()
+        if (u && u.selected_subjects && (!saved?.selectedSubjects || saved.selectedSubjects.length === 0)) {
           let subs = u.selected_subjects
           if (typeof subs === 'string') {
             try { subs = JSON.parse(subs) } catch(e) { subs = subs.split(',').map(s => s.trim()) }
           }
           if (Array.isArray(subs)) {
-             // In setFormData, also need to know the stream/grade to figure out availableSubjects
-             if (u.current_grade) {
+             if (u.current_grade && !formData.currentGrade) {
                setFormData(prev => ({ ...prev, currentGrade: u.current_grade }))
              }
-             if (u.stream) {
+             if (u.stream && !selectedStream) {
                setSelectedStream(u.stream)
              }
-             
-             // Wait for state updates, we can just set selected subjects directly 
-             // but they need to match the API data format.
-             // Usually it's just an array of names.
              setSelectedSubjects(subs)
           }
         }
@@ -93,20 +144,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       }
     }
   }, [])
-
-  const [formData, setFormData] = useState({
-    fullName: '',
-    dateOfBirth: '',
-    gender: '',
-    schoolName: '',
-    medium: '',
-    onlineExperience: '',
-    deviceUsed: '',
-    currentGrade: '',
-    username: '',
-    phoneNumber: '',
-    email: ''
-  })
+  
+  const isAuthenticated = !!(localStorage.getItem('authToken') || sessionStorage.getItem('authToken'))
   const [regTitle, setRegTitle] = useState('')
   const [regSubtitle, setRegSubtitle] = useState('')
   const [labelFullname, setLabelFullname] = useState('')
@@ -218,8 +257,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
     }
   }, [language, getSetting, t, translate])
-  const [selectedStream, setSelectedStream] = useState('')
-  const [selectedSubjects, setSelectedSubjects] = useState([])
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [paymentChoice, setPaymentChoice] = useState(null)
@@ -460,66 +498,93 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setError('')
 
     // Validation
-    if (!formData.fullName || formData.fullName.length < 2) {
-      setError('Full name must be at least 2 characters')
-      return
-    }
-
-    if (!formData.dateOfBirth) {
-      setError('Date of birth is required')
-      return
-    }
-
-    if (!formData.gender) {
-      setError('Gender is required')
-      return
-    }
-
-    if (!formData.schoolName) {
-      setError('School name is required')
-      return
-    }
-
-    if (!formData.medium) {
-      setError('Medium of learning is required')
-      return
-    }
-
-    if (!formData.onlineExperience) {
-      setError('Please specify if you have online class experience')
-      return
-    }
-
-    if (!formData.deviceUsed) {
-      setError('Please select a device')
-      return
-    }
-
-    if (!formData.currentGrade) {
-      setError('Current grade is required')
-      return
-    }
-
-    const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
-    if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
-      setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
-      return
-    }
-
-    const gradeNum = getGradeNumber(formData.currentGrade)
-
-    // For grades 12-13, stream is required
-    if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
-      if (!selectedStream) {
-        setError('Please select a stream (A/L – ARTS or A/L – BIO & MATHS)')
+    if (!isAuthenticated && formMode === 'new') {
+      if (!formData.parentName || formData.parentName.length < 2) {
+        setError('Parent name must be at least 2 characters')
+        return
+      }
+      if (!formData.email) {
+        setError('Email is required')
+        return
+      }
+      if (!formData.password || formData.password.length < 6) {
+        setError('Password must be at least 6 characters')
+        return
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match')
         return
       }
     }
 
-    // At least one subject must be selected
-    if (selectedSubjects.length === 0) {
-      setError('Please select at least one subject')
-      return
+    if (formMode === 'new') {
+      if (!formData.fullName || formData.fullName.length < 2) {
+        setError('Full name must be at least 2 characters')
+        return
+      }
+
+      if (!formData.dateOfBirth) {
+        setError('Date of birth is required')
+        return
+      }
+
+      if (!formData.gender) {
+        setError('Gender is required')
+        return
+      }
+
+      if (!formData.schoolName) {
+        setError('School name is required')
+        return
+      }
+
+      if (!formData.medium) {
+        setError('Medium of learning is required')
+        return
+      }
+
+      if (!formData.onlineExperience) {
+        setError('Please specify if you have online class experience')
+        return
+      }
+
+      if (!formData.deviceUsed) {
+        setError('Please select a device')
+        return
+      }
+
+      if (!formData.currentGrade) {
+        setError('Current grade is required')
+        return
+      }
+
+      const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+      if (!isAuthenticated && (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15)) {
+        setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
+        return
+      }
+
+      const gradeNum = getGradeNumber(formData.currentGrade)
+
+      // For grades 12-13, stream is required
+      if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
+        if (!selectedStream) {
+          setError('Please select a stream (A/L – ARTS or A/L – BIO & MATHS)')
+          return
+        }
+      }
+
+      // At least one subject must be selected
+      if (selectedSubjects.length === 0) {
+        setError('Please select at least one subject')
+        return
+      }
+    } else {
+      // Link validation
+      if (!linkData.email || !linkData.password) {
+        setError('Please enter the sibling\'s email and password')
+        return
+      }
     }
 
     // Generate username if not provided (use full name or default)
@@ -529,22 +594,37 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setError('')
 
     try {
-      const userData = {
-        username: formData.email || username, // Use email as priority for username
-        full_name: formData.fullName,
-        phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
-        date_of_birth: formData.dateOfBirth,
-        gender: formData.gender,
-        school_name: formData.schoolName,
-        medium: formData.medium,
-        online_experience: formData.onlineExperience === 'yes',
-        device_used: formData.deviceUsed,
-        current_grade: formData.currentGrade,
-        stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
-        selected_subjects: JSON.stringify(selectedSubjects),
-        ...Object.fromEntries(
-          customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
-        )
+      let userData = {}
+
+      if (formMode === 'link') {
+         userData = {
+           mode: 'link',
+           email: linkData.email,
+           password: linkData.password
+         }
+      } else {
+        const gradeNum = getGradeNumber(formData.currentGrade)
+        userData = {
+          mode: 'new',
+          parent_name: isAuthenticated ? undefined : formData.parentName,
+          email: isAuthenticated ? undefined : formData.email,
+          password: isAuthenticated ? undefined : formData.password,
+          username: formData.email || username, // Use email as priority for username
+          full_name: formData.fullName,
+          phone_number: isAuthenticated ? undefined : formData.phoneNumber.trim().replace(/\D/g, ''),
+          date_of_birth: formData.dateOfBirth,
+          gender: formData.gender,
+          school_name: formData.schoolName,
+          medium: formData.medium,
+          online_experience: formData.onlineExperience === 'yes',
+          device_used: formData.deviceUsed,
+          current_grade: formData.currentGrade,
+          stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
+          selected_subjects: JSON.stringify(selectedSubjects),
+          ...Object.fromEntries(
+            customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
+          )
+        }
       }
 
       await registerStep1(userData)
@@ -563,6 +643,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setIsLoading(true)
     try {
       await registerStep2('offline', amount)
+      try { sessionStorage.removeItem(DRAFT_STORAGE_KEY) } catch (_) {}
       toast.success(t('pay_offline_success'))
       if (onClose) onClose()
       window.location.href = '/student/dashboard'
@@ -609,11 +690,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         console.log("Payment completed. OrderID:" + orderId)
         try {
           await registerPaymentSuccess(resp.params.order_id, orderId)
+          try { sessionStorage.removeItem(DRAFT_STORAGE_KEY) } catch (_) {}
           toast.success(t('pay_online_success'))
           if (onClose) onClose()
           window.location.href = '/student/dashboard'
         } catch (err) {
           console.error('Failed to notify backend of payment success:', err)
+          try { sessionStorage.removeItem(DRAFT_STORAGE_KEY) } catch (_) {}
           toast.info('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
           if (onClose) onClose()
           window.location.href = '/student/dashboard'
@@ -637,31 +720,129 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
   }
 
+  const handleClose = () => {
+    if (step === 2) {
+      setStep(1)
+      return
+    }
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY)
+    } catch (_) {}
+    if (onClose) {
+      onClose()
+    } else {
+      navigate('/')
+    }
+  }
+
   if (!isOpen) return null
 
   return (
     <div className="tit-reg-overlay">
       <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
-        <button className="tit-reg-close" onClick={() => {
-          if (step === 2) {
-            setStep(1);
-          } else if (onClose) {
-            onClose();
-          } else {
-            window.location.href = '/';
-          }
-        }}>
+        <button className="tit-reg-close" onClick={handleClose}>
           <FiX />
         </button>
 
         {step === 1 && (
           <div className="tit-reg-container">
-            <h2 className="tit-reg-title">{regTitle}</h2>
-            <p className="tit-reg-subtitle">{regSubtitle}</p>
+            {isAuthenticated ? (
+              <div className="form-mode-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button 
+                  type="button"
+                  className={`tab-btn ${formMode === 'new' ? 'active' : ''}`}
+                  onClick={() => { setFormMode('new'); setError(''); }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: formMode === 'new' ? '#6366f1' : '#fff', color: formMode === 'new' ? '#fff' : '#475569', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Add New Child
+                </button>
+                <button 
+                  type="button"
+                  className={`tab-btn ${formMode === 'link' ? 'active' : ''}`}
+                  onClick={() => { setFormMode('link'); setError(''); }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: formMode === 'link' ? '#6366f1' : '#fff', color: formMode === 'link' ? '#fff' : '#475569', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Link Existing Sibling
+                </button>
+              </div>
+            ) : null}
+
+            <h2 className="tit-reg-title">{formMode === 'link' ? 'Link Sibling Account' : regTitle}</h2>
+            <p className="tit-reg-subtitle">{formMode === 'link' ? 'Enter the sibling\'s old email and password to link them to your parent account.' : regSubtitle}</p>
 
             {error && <div className="tit-reg-error">{error}</div>}
 
             <form onSubmit={handleSubmit} className="tit-reg-form">
+              {formMode === 'link' ? (
+                <>
+                  <div className="tit-reg-group">
+                    <label className="tit-reg-label">Sibling's Email / Username <span className="tit-reg-required">*</span></label>
+                    <input
+                      type="text"
+                      className="tit-reg-input"
+                      value={linkData.email}
+                      onChange={(e) => setLinkData({ ...linkData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="tit-reg-group">
+                    <label className="tit-reg-label">Sibling's Password <span className="tit-reg-required">*</span></label>
+                    <input
+                      type="password"
+                      className="tit-reg-input"
+                      value={linkData.password}
+                      onChange={(e) => setLinkData({ ...linkData, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {!isAuthenticated && (
+                    <div className="parent-info-section" style={{ padding: '15px', background: '#f8fafc', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
+                      <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b' }}>Parent Information</h3>
+                      
+                      <div className="tit-reg-group">
+                        <label className="tit-reg-label">Parent's Full Name <span className="tit-reg-required">*</span></label>
+                        <input type="text" name="parentName" className="tit-reg-input" value={formData.parentName} onChange={handleChange} required />
+                      </div>
+                      
+                      <div className="tit-reg-group">
+                        <label className="tit-reg-label">Parent's Email <span className="tit-reg-required">*</span></label>
+                        <input type="email" name="email" className="tit-reg-input" value={formData.email} onChange={handleChange} required />
+                      </div>
+                      
+                      {labelPhone && (
+                        <div className="tit-reg-group">
+                          <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
+                          <input
+                            type="tel"
+                            id="phoneNumber"
+                            name="phoneNumber"
+                            className="tit-reg-input"
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
+                            required
+                            placeholder="e.g. 07XXXXXXXX"
+                          />
+                        </div>
+                      )}
+
+                      <div className="tit-reg-group">
+                        <label className="tit-reg-label">Password <span className="tit-reg-required">*</span></label>
+                        <input type="password" name="password" className="tit-reg-input" value={formData.password} onChange={handleChange} required />
+                      </div>
+
+                      <div className="tit-reg-group">
+                        <label className="tit-reg-label">Confirm Password <span className="tit-reg-required">*</span></label>
+                        <input type="password" name="confirmPassword" className="tit-reg-input" value={formData.confirmPassword} onChange={handleChange} required />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="student-info-section">
+                    {!isAuthenticated && <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b' }}>Student Information</h3>}
+
               {/* Full Name */}
               {labelFullname && (
                 <div className="tit-reg-group">
@@ -675,23 +856,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                     onChange={handleChange}
                     required
                     placeholder={t('reg_fullname_placeholder')}
-                  />
-                </div>
-              )}
-
-              {/* Phone (for WhatsApp) */}
-              {labelPhone && (
-                <div className="tit-reg-group">
-                  <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
-                  <input
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    className="tit-reg-input"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. 07XXXXXXXX"
                   />
                 </div>
               )}
@@ -908,6 +1072,9 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                     ))}
                   </div>
                 </div>
+              )}
+              </div>
+              </>
               )}
 
               <button

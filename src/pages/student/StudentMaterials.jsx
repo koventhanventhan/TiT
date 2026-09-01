@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch, FiExternalLink } from 'react-icons/fi'
 import { getStudentMaterials } from '../../services/dashboardService'
 import { useToast } from '../../components/shared/ToastContext';
+import { SelectedChildContext } from '../../context/SelectedChildContext';
 
 
 export default function StudentMaterials() {
   const toast = useToast();
+  const { selectedChild } = React.useContext(SelectedChildContext);
 
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
@@ -22,8 +24,17 @@ export default function StudentMaterials() {
                 setLoading(false)
             }
         }
-        load()
-    }, [])
+        if (selectedChild) {
+            setLoading(true)
+            load()
+        }
+    }, [selectedChild])
+
+    if (loading || !selectedChild) return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+            <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+    )
 
     const getIcon = (type) => {
         switch (type?.toLowerCase()) {
@@ -102,11 +113,7 @@ export default function StudentMaterials() {
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-                    <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                </div>
-            ) : filteredMaterials.length === 0 ? (
+            {filteredMaterials.length === 0 ? (
                 <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                     <div style={{ width: 64, height: 64, borderRadius: 16, background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiFolder /></div>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#334155' }}>No materials found</h3>

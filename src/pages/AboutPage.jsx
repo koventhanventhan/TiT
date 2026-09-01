@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight, FiVideo, FiClock } from 'react-icons/fi'
 import { FaGraduationCap } from 'react-icons/fa'
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -11,6 +11,7 @@ const AboutPage = () => {
   const { getSetting, settings, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const { openRegister } = useAuthModal()
+  const navigate = useNavigate()
 
   const resolveImageUrl = (url) => {
     if (!url) return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80'
@@ -757,7 +758,7 @@ const AboutPage = () => {
                 </h2>
                 <p className="cta-banner-description">{ctaDesc}</p>
                 <div className="cta-banner-buttons">
-                  <button onClick={openRegister} className="cta-btn-primary-blue">
+                  <button onClick={() => navigate('/register')} className="cta-btn-primary-blue">
                     {ctaBtn1}
                   </button>
                   <a href={getSetting('about_cta_btn2_link', '/contact')} className="cta-btn-outline">

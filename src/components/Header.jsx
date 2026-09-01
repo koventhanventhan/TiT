@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FiMenu, FiX, FiChevronDown, FiChevronLeft, FiChevronDown as FiChevronDownIcon, FiLayout } from 'react-icons/fi'
 import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa'
 import { getCurrentUser, isAuthenticated, logout, BASE_URL } from '../services/authService'
@@ -17,7 +17,8 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileLangOpen, setIsMobileLangOpen] = useState(false)
-  const { isAuthOpen, openLogin, openRegister, closeAuth, authTab, setAuthTab } = useAuthModal()
+  const { isAuthOpen, openLogin, closeAuth, authTab, setAuthTab } = useAuthModal()
+  const navigate = useNavigate()
   const [isClassesDropdownOpen, setIsClassesDropdownOpen] = useState(false)
   const [classesTimeout, setClassesTimeout] = useState(null)
   const [isLearningSuiteDropdownOpen, setIsLearningSuiteDropdownOpen] = useState(false)
@@ -348,7 +349,7 @@ const Header = () => {
                 <div className="top-bar-auth">
                   <button
                     className="top-bar-btn"
-                    onClick={openRegister}
+                    onClick={() => navigate('/register')}
                   >
                     {t('nav_register')}
                   </button>
@@ -551,7 +552,7 @@ const Header = () => {
                     </div>
                   ) : (
                     <div className="mobile-section-group auth-group">
-                      <button className="mobile-auth-btn-list register" onClick={() => { openRegister(); setIsMobileMenuOpen(false); }}>{t('nav_register')}</button>
+                      <button className="mobile-auth-btn-list register" onClick={() => { navigate('/register'); setIsMobileMenuOpen(false); }}>{t('nav_register')}</button>
                       <button className="mobile-auth-btn-list login" onClick={() => { openLogin(); setIsMobileMenuOpen(false); }}>{t('nav_login')}</button>
                     </div>
                   )}

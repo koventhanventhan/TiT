@@ -10,11 +10,15 @@ import {
     FiMessageSquare,
     FiSettings,
     FiLogOut,
-    FiCreditCard
+    FiCreditCard,
+    FiUsers
 } from 'react-icons/fi'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 import './StudentSidebar.css'
 
 export default function StudentSidebar() {
+    const { selectedChild, changeSelectedChild, childrenList } = React.useContext(SelectedChildContext)
+
     const menuItems = [
         { name: 'Dashboard', icon: <FiHome />, path: '/student/dashboard' },
         { name: 'Payments', icon: <FiCreditCard />, path: '/student/overview' }, // Redirect to overview where module is
@@ -34,6 +38,40 @@ export default function StudentSidebar() {
                     <span className="logo-icon student">S</span>
                     <span className="logo-text">Student Portal</span>
                 </div>
+                
+                {childrenList && childrenList.length > 0 && (
+                    <div className="child-selector">
+                        {childrenList.length <= 3 ? (
+                            <div className="child-chips">
+                                {childrenList.map(child => (
+                                    <button
+                                        key={child.id}
+                                        className={`child-chip ${selectedChild?.id === child.id ? 'active' : ''}`}
+                                        onClick={() => changeSelectedChild(child)}
+                                    >
+                                        <FiUsers className="chip-icon" />
+                                        <span>{child.first_name || child.full_name?.split(' ')[0]}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <select 
+                                className="child-dropdown"
+                                value={selectedChild?.id || ''}
+                                onChange={(e) => {
+                                    const child = childrenList.find(c => c.id === parseInt(e.target.value))
+                                    if (child) changeSelectedChild(child)
+                                }}
+                            >
+                                {childrenList.map(child => (
+                                    <option key={child.id} value={child.id}>
+                                        {child.full_name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                )}
             </div>
 
             <nav className="sidebar-nav">
@@ -51,7 +89,9 @@ export default function StudentSidebar() {
             </nav>
 
             <div className="sidebar-footer">
-                <button className="logout-btn" onClick={() => window.location.href = '/?logout=1'}>
+                <button className="logout-btn" onClick={() => {
+                    import('../../services/authService').then(m => m.logout());
+                }}>
                     <FiLogOut /> <span>Logout</span>
                 </button>
             </div>

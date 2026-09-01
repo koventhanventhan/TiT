@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const AuthModalContext = createContext(null)
 
@@ -12,15 +13,23 @@ export function AuthModalProvider({ children }) {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [authTab, setAuthTab] = useState('login')
 
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // Ensure modal is closed when navigating between routes
+  useEffect(() => {
+    setIsAuthOpen(false)
+  }, [location.pathname])
+
   const openLogin = useCallback(() => {
     setAuthTab('login')
     setIsAuthOpen(true)
   }, [])
 
   const openRegister = useCallback(() => {
-    setAuthTab('register')
-    setIsAuthOpen(true)
-  }, [])
+    setIsAuthOpen(false)
+    navigate('/register')
+  }, [navigate])
 
   const closeAuth = useCallback(() => {
     setIsAuthOpen(false)

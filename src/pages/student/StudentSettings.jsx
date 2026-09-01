@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { FiUser, FiMail, FiLock, FiBell, FiSave, FiPhone, FiShield, FiCamera, FiBook } from 'react-icons/fi'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 
 export default function StudentSettings() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const parent = JSON.parse(localStorage.getItem('user') || '{}')
+    const { selectedChild } = useContext(SelectedChildContext)
+    const user = selectedChild || parent // Fallback to parent for some info if child missing
     const [activeTab, setActiveTab] = useState('profile')
 
     return (
@@ -133,7 +136,7 @@ export default function StudentSettings() {
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Date of Birth</label>
-                                    <input type="date" defaultValue="2008-05-14" style={{
+                                    <input type="date" defaultValue={user.date_of_birth || ''} style={{
                                         width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
                                         background: '#f8fafc', fontSize: 14, color: '#1e293b', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
                                     }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
@@ -148,30 +151,21 @@ export default function StudentSettings() {
                             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 640 ? '1fr 1fr' : '1fr', gap: 24 }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Current Grade / Level</label>
-                                    <select style={{
+                                    <input type="text" defaultValue={user.current_grade || user.grade || ''} style={{
                                         width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
                                         background: '#f8fafc', fontSize: 14, color: '#1e293b', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
-                                    }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'}>
-                                        <option>A/L 2026</option>
-                                        <option>A/L 2025</option>
-                                        <option>O/L 2024</option>
-                                    </select>
+                                    }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Stream / Subject Area</label>
-                                    <select style={{
+                                    <input type="text" defaultValue={user.stream || ''} style={{
                                         width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
                                         background: '#f8fafc', fontSize: 14, color: '#1e293b', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
-                                    }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'}>
-                                        <option>Mathematics</option>
-                                        <option>Science</option>
-                                        <option>Commerce</option>
-                                        <option>Arts</option>
-                                    </select>
+                                    }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>School Name</label>
-                                    <input type="text" placeholder="Enter your school name" style={{
+                                    <input type="text" defaultValue={user.school_name || ''} placeholder="Enter your school name" style={{
                                         width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
                                         background: '#f8fafc', fontSize: 14, color: '#1e293b', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
                                     }} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />

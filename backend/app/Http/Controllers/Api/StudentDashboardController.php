@@ -16,7 +16,17 @@ class StudentDashboardController extends Controller
 {
     public function stats(Request $request)
     {
-        $user = $request->user();
+        $parent = $request->user();
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        
+        $user = $studentId 
+            ? $parent->students()->where('id', $studentId)->first() 
+            : $parent->students()->first();
+            
+        if (!$user) {
+            return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+        }
+
         $today = Carbon::today();
         
         // Classes today (filtered by student's medium — also include 'both' medium classes)
@@ -51,8 +61,8 @@ class StudentDashboardController extends Controller
             ->count();
             
         // Attendance
-        $totalClasses = Attendance::where('user_id', $user->id)->count();
-        $presentClasses = Attendance::where('user_id', $user->id)
+        $totalClasses = Attendance::where('student_id', $user->id)->count();
+        $presentClasses = Attendance::where('student_id', $user->id)
             ->where('status', 'present')
             ->count();
             

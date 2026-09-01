@@ -295,7 +295,7 @@ class MasterAdminController extends Controller
      */
     public function attendanceStats(Request $request)
     {
-        $attendance = \App\Models\Attendance::with(['user:id,full_name,name', 'zoomSchedule:id,title'])
+        $attendance = \App\Models\Attendance::with(['student:id,full_name', 'zoomSchedule:id,title'])
             ->latest()
             ->paginate(30);
             

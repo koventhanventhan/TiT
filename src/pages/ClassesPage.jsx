@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useSearchParams, Navigate } from 'react-router-dom'
+import { Link, useSearchParams, Navigate, useNavigate } from 'react-router-dom'
 import {
   FiBook, FiGlobe, FiArrowRight, FiCheck, FiUsers, FiClock,
   FiAward, FiMonitor, FiMapPin, FiStar, FiPlay, FiFileText, FiShield,
@@ -26,7 +26,7 @@ const ICON_MAP = {
 const ClassesPage = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
-  const { openRegister } = useAuthModal()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const type = searchParams.get('type') || 'online' // Default to online if missing
 
@@ -210,7 +210,7 @@ const ClassesPage = () => {
                   </React.Fragment>
                 ))}
               </div>
-              <button onClick={openRegister} className="ocl-cta-btn">
+              <button onClick={() => navigate('/register')} className="ocl-cta-btn">
                 <FiCheckCircle /> {currentText.ctaText} <FiArrowRight />
               </button>
             </div>

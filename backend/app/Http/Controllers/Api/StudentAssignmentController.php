@@ -12,7 +12,20 @@ class StudentAssignmentController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        
+        $user = $studentId 
+            ? $parent->students()->where('id', $studentId)->first() 
+            : $parent->students()->first();
+            
+        if (!$user) {
+            return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+        }
         
         $assignments = Assignment::where(function($query) use ($user) {
                 $query->where('grade', $user->current_grade)
@@ -34,7 +47,21 @@ class StudentAssignmentController extends Controller
             'file' => 'required|file|max:10240', // 10MB
         ]);
 
-        $user = $request->user();
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        
+        $user = $studentId 
+            ? $parent->students()->where('id', $studentId)->first() 
+            : $parent->students()->first();
+            
+        if (!$user) {
+            return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+        }
+
         $assignment = Assignment::findOrFail($assignmentId);
 
         $filePath = $request->file('file')->store('submissions', 'public');

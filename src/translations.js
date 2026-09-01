@@ -408,7 +408,7 @@ export const translations = {
     cat_self_care: 'Teacher Self Care Strategies',
 
     // Auth
-    auth_signin: 'Sign in',
+    auth_signin: 'Parent / Student Login',
     auth_register: 'Register',
     auth_username: 'Username',
     auth_email: 'Email',
@@ -416,7 +416,7 @@ export const translations = {
     auth_confirm_password: 'Confirm Password',
     auth_forgot: 'Forgot Password',
     auth_signup_link: 'Signup',
-    auth_student_reg: 'Student Register',
+    auth_student_reg: 'Parent Account Registration',
     auth_already_account: 'Already have account?',
     auth_create_account: 'Create Account',
     auth_or: 'or',
@@ -829,7 +829,7 @@ export const translations = {
     cat_study_tips: 'படிப்பு குறிப்புகள்',
     cat_self_care: 'ஆசிரியருக்கான சுய கவனிப்பு உத்திகள்',
 
-    auth_signin: 'உள்நுழைய',
+    auth_signin: 'பெற்றோர் / மாணவர் உள்நுழைவு',
     auth_register: 'பதிவு',
     auth_username: 'பயனர் பெயர்',
     auth_email: 'மின்னஞ்சல்',
@@ -837,7 +837,7 @@ export const translations = {
     auth_confirm_password: 'கடவுச்சொல்லை உறுதிப்படுத்தவும்',
     auth_forgot: 'கடவுச்சொல்லை மறந்துவிட்டீர்களா?',
     auth_signup_link: 'பதிவு செய்க',
-    auth_student_reg: 'மாணவர் பதிவு',
+    auth_student_reg: 'பெற்றோர் கணக்கு பதிவு',
     auth_already_account: 'ஏற்கனவே கணக்கு உள்ளதா?',
     auth_create_account: 'கணக்கை உருவாக்கு',
     auth_or: 'அல்லது',

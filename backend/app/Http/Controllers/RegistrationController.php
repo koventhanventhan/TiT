@@ -80,42 +80,17 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $category = $this->getSubjectCategoryForUser($user);
-
-        $subjectData = \App\Models\Subject::when($category, function($query) use ($category) {
-            return $query->where('category', $category);
-        })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
-
-        $total = $subjectData->sum('price');
-        $monthlyFee = $total;
-        $admissionFee = 0;
-        
-        $isFirstPayment = !$user->payments()->where('status', 'paid')->exists();
-        
-        if ($isFirstPayment && $user->current_grade) {
-            $gradeNum = 0;
-            if (preg_match('/(\d+)/', $user->current_grade, $m)) {
-                $gradeNum = (int)$m[1];
-            }
-            if ($gradeNum > 0) {
-                $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
-                $config = json_decode($configStr, true) ?? [];
-                
-                if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
-                    $admissionFee = (float)$config[$gradeNum]['amount'];
-                    $total += $admissionFee;
-                }
-            }
-        }
+        $breakdown = $user->getMonthlyFeeBreakdown();
 
         return response()->json([
-            'total' => $total > 0 ? (float)$total : 500.0,
-            'monthly_total' => (float)$monthlyFee,
-            'admission_fee' => $admissionFee,
-            'is_first_payment' => $isFirstPayment,
-            'subjects' => $subjectData,
-            'category' => $category,
-            'user_grade' => $user->current_grade
+            'total' => $breakdown['total'] > 0 ? (float)$breakdown['total'] : 500.0,
+            'monthly_total' => (float)$breakdown['total'],
+            'admission_fee' => 0, // Calculated inside fee breakdown now
+            'is_first_payment' => !$user->payments()->where('status', 'paid')->exists(),
+            'subjects' => [], // Deprecated: frontend should use breakdown
+            'category' => null,
+            'user_grade' => null,
+            'breakdown' => $breakdown['breakdown']
         ]);
     }
     /**
@@ -131,6 +106,77 @@ class RegistrationController extends Controller
             $user = null; // Ignore admin/teacher sessions for registration
         }
 
+        if ($request->mode === 'link') {
+            if (!$user) {
+                return response()->json(['message' => 'You must be logged in to link an account.'], 401);
+            }
+
+            $request->validate([
+                'email' => 'required|string',
+                'password' => 'required|string',
+            ]);
+
+            // Link Sibling Account Logic
+            $oldUser = \App\Models\User::where('email', $request->email)
+                ->orWhere('name', $request->email)
+                ->first();
+
+            if (!$oldUser || !Hash::check($request->password, $oldUser->password)) {
+                return response()->json([
+                    'message' => 'Invalid sibling login credentials.',
+                    'errors' => ['email' => ['Invalid sibling credentials.']]
+                ], 422);
+            }
+
+            // Move students
+            \App\Models\Student::where('user_id', $oldUser->id)->update(['user_id' => $user->id]);
+
+            // Migrate parent-level records from old user to new parent user
+            if (\Illuminate\Support\Facades\Schema::hasTable('payments')) {
+                \Illuminate\Support\Facades\DB::table('payments')->where('user_id', $oldUser->id)->update(['user_id' => $user->id]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('messages')) {
+                \Illuminate\Support\Facades\DB::table('messages')->where('receiver_id', $oldUser->id)->update(['receiver_id' => $user->id]);
+                \Illuminate\Support\Facades\DB::table('messages')->where('sender_id', $oldUser->id)->update(['sender_id' => $user->id]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('message_reads')) {
+                \Illuminate\Support\Facades\DB::table('message_reads')->where('user_id', $oldUser->id)->update(['user_id' => $user->id]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                \Illuminate\Support\Facades\DB::table('activity_logs')->where('user_id', $oldUser->id)->update(['user_id' => $user->id]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('admin_message_user')) {
+                \Illuminate\Support\Facades\DB::table('admin_message_user')->where('user_id', $oldUser->id)->update(['user_id' => $user->id]);
+            }
+
+            // Disable old login
+            $oldUser->email = 'disabled_' . time() . '_' . $oldUser->email;
+            $oldUser->phone_number = 'disabled_' . time() . '_' . $oldUser->phone_number;
+            $oldUser->password = Hash::make(bin2hex(random_bytes(16)));
+            $oldUser->deactivated_at = now();
+            $oldUser->save();
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            $user->load('students');
+
+            $responseData = [
+                'id' => $user->id,
+                'username' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'full_name' => $user->full_name,
+                'phone_number' => $user->phone_number,
+                'children' => $user->students,
+            ];
+
+            return response()->json([
+                'message' => 'Registration step 1 completed successfully',
+                'user' => $responseData,
+                'token' => $token,
+            ], 201);
+        }
+
         // --- PRE-VALIDATION FIXES for Same Name & Phone Number normalization ---
         if ($request->has('phone_number')) {
             $phone = preg_replace('/\D/', '', $request->phone_number);
@@ -140,6 +186,13 @@ class RegistrationController extends Controller
                 $phone = '94' . $phone;
             }
             $request->merge(['phone_number' => $phone]);
+        }
+
+        if (!$request->has('username') || empty($request->username)) {
+            $fallbackUsername = $request->email ?: ($request->parent_name ?: ($request->full_name ?: null));
+            if ($fallbackUsername) {
+                $request->merge(['username' => $fallbackUsername]);
+            }
         }
 
         if ($request->has('username') && !filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
@@ -197,7 +250,7 @@ class RegistrationController extends Controller
             $label = \App\Models\SiteSetting::get($settingKey);
             if (!empty($label)) {
                 if ($field === 'phone_number') {
-                    $rules[$field] = 'required|digits_between:9,15|unique:users,phone_number,' . ($user ? $user->id : 'NULL');
+                    $rules[$field] = $user ? 'nullable' : 'required|digits_between:9,15|unique:users,phone_number,NULL';
                 } elseif ($field === 'date_of_birth') {
                     $rules[$field] = 'required|date';
                 } elseif ($field === 'gender') {
@@ -258,9 +311,6 @@ class RegistrationController extends Controller
             'device_used' => is_array($request->device_used)
                 ? json_encode($request->device_used)
                 : $request->device_used,
-            'current_grade' => $request->current_grade,
-            'stream' => $request->stream ?? null,
-            'selected_subjects' => $request->selected_subjects,
             'custom_fields' => !empty($customFieldsData) ? $customFieldsData : null,
             'registration_status' => 'pending_payment',
             'institute_id' => $request->header('X-Institute-Id') ?: 1,
@@ -269,47 +319,52 @@ class RegistrationController extends Controller
         \Log::info('RegistrationController@step1 - Start', ['request' => $request->except(['_token', 'password'])]);
 
         if ($user) {
-            // Update existing user
-            if ($request->username) {
-                $userData['name'] = $request->username;
-            }
-            $user->update($userData);
+            // Update existing user (Parent adding a child)
             \Log::info('RegistrationController@step1 - Updated existing user', ['id' => $user->id]);
         } else {
-            // Create new user
-            $userData['name'] = $request->username;
-            // If username looks like email, use it directly
-            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
-                $userData['email'] = $request->username;
-            } else {
-                $userData['email'] = $request->username . '@student.local';
-            }
-            $userData['password'] = Hash::make('student123');
+            // Create new user (Parent Account)
+            $userData['name'] = $request->parent_name ?? $request->username;
+            $userData['email'] = $request->email;
+            $userData['password'] = Hash::make($request->password ?? 'student123');
             $userData['role'] = 'user';
             $userData['admin_confirmed_at'] = null;
+            $userData['full_name'] = $request->parent_name; // Parent's full name
             
-            \Log::info('RegistrationController@step1 - Creating new student', ['data' => array_diff_key($userData, ['password' => 1])]);
-            
+            \Log::info('RegistrationController@step1 - Creating new parent', ['data' => array_diff_key($userData, ['password' => 1])]);
             $user = User::create($userData);
+        }
 
-            // Notify All Admins of new registration
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                \Log::info('RegistrationController@step1 - Notifying admin: ' . $admin->id);
-                try {
-                    $admin->notify(new AdminNotification(
-                        "New Student Registered: " . ($user->full_name ?? $user->name),
-                        'info',
-                        route('admin.students.show', $user->id),
-                        'admission_new'
-                    ));
-                } catch (\Exception $e) {
-                    \Log::error('RegistrationController@step1 - Notification failed for admin ' . $admin->id . ': ' . $e->getMessage());
-                }
+        // Create the Student Record
+        $user->students()->create([
+            'full_name' => $request->full_name,
+            'first_name' => $request->first_name ?? null,
+            'last_name' => $request->last_name ?? null,
+            'date_of_birth' => $request->date_of_birth ?? null,
+            'gender' => $request->gender ?? null,
+            'school_name' => $request->school_name ?? null,
+            'medium' => $request->medium ?? null,
+            'current_grade' => $request->current_grade ?? null,
+            'stream' => $request->stream ?? null,
+            'selected_subjects' => $request->selected_subjects ?? null,
+        ]);
+
+        // Notify All Admins of new registration
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            \Log::info('RegistrationController@step1 - Notifying admin: ' . $admin->id);
+            try {
+                $admin->notify(new AdminNotification(
+                    "New Student Registered: " . ($user->full_name ?? $user->name),
+                    'info',
+                    route('admin.students.show', $user->id),
+                    'admission_new'
+                ));
+            } catch (\Exception $e) {
+                \Log::error('RegistrationController@step1 - Notification failed for admin ' . $admin->id . ': ' . $e->getMessage());
             }
-            if ($admins->isEmpty()) {
-                \Log::error('RegistrationController@step1 - Admin users not found for notification');
-            }
+        }
+        if ($admins->isEmpty()) {
+            \Log::error('RegistrationController@step1 - Admin users not found for notification');
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -374,7 +429,7 @@ class RegistrationController extends Controller
             'has_full_name' => !empty($user->full_name)
         ]);
         
-        if ($user->role !== 'user' || empty($user->full_name)) {
+        if ($user->role !== 'user') {
             Log::warning('RegistrationController@step2 - Invalid user check failed', [
                 'id' => $user->id,
                 'role' => $user->role,
@@ -642,10 +697,12 @@ class RegistrationController extends Controller
             ->first();
 
         $amount = $this->calculateUserAmount($user);
+        $breakdown = $user->getMonthlyFeeBreakdown();
 
         return response()->json([
             'is_paid'    => $payment && $payment->status === 'paid',
             'amount'     => $amount,
+            'breakdown'  => $breakdown['breakdown'],
             'year_month' => $yearMonth,
             'payment'    => $payment ? [
                 'id'         => $payment->id,

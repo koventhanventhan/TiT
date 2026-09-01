@@ -3,6 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const selectedChild = JSON.parse(localStorage.getItem('selectedChild') || '{}')
 
   const headers = {
     'Content-Type': 'application/json',
@@ -15,6 +16,11 @@ const getAuthHeaders = () => {
 
   if (user?.institute_id) {
     headers['X-Institute-Id'] = user.institute_id
+  }
+
+  if (selectedChild?.id) {
+    headers['X-Selected-Child-Id'] = selectedChild.id
+    headers['X-Student-Id'] = selectedChild.id
   }
 
   return headers

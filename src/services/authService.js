@@ -645,8 +645,10 @@ export const logout = async () => {
 
   localStorage.removeItem('authToken')
   localStorage.removeItem('user')
+  localStorage.removeItem('selectedChild')
   sessionStorage.removeItem('authToken')
   sessionStorage.removeItem('user')
+  sessionStorage.removeItem('student_reg_form_draft')
   window.location.href = '/'
 }
 

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import { getStudentPaymentStatus, initializeMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
+import { SelectedChildContext } from '../../context/SelectedChildContext';
 import './StudentPaymentModule.css';
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
+    const { selectedChild } = React.useContext(SelectedChildContext);
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
@@ -25,8 +27,10 @@ const StudentPaymentModule = () => {
     };
 
     useEffect(() => {
-        fetchStatus();
-    }, []);
+        if (selectedChild) {
+            fetchStatus();
+        }
+    }, [selectedChild]);
 
     const handlePayment = async () => {
         try {

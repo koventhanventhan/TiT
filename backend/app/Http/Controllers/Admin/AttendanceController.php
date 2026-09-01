@@ -16,7 +16,7 @@ class AttendanceController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $schedules = ZoomSchedule::with(['attendances.user', 'teachers'])->latest('scheduled_at')->paginate(15);
+        $schedules = ZoomSchedule::with(['attendances.student', 'teachers'])->latest('scheduled_at')->paginate(15);
         return view('admin.attendance.index', compact('schedules'));
     }
 

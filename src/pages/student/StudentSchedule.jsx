@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { FiCalendar, FiClock, FiVideo, FiMapPin } from 'react-icons/fi'
 import { getStudentUpcomingSchedules } from '../../services/dashboardService'
+import { SelectedChildContext } from '../../context/SelectedChildContext'
 
 export default function StudentSchedule() {
+    const { selectedChild } = React.useContext(SelectedChildContext)
     const [schedules, setSchedules] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -26,8 +28,11 @@ export default function StudentSchedule() {
                 setLoading(false)
             }
         }
-        load()
-    }, [])
+        if (selectedChild) {
+            setLoading(true)
+            load()
+        }
+    }, [selectedChild])
 
     const grouped = schedules.reduce((acc, cls) => {
         const date = new Date(cls.scheduled_at || cls.start_time).toLocaleDateString('en-US', {
@@ -37,6 +42,12 @@ export default function StudentSchedule() {
         acc[date].push(cls)
         return acc
     }, {})
+
+    if (loading || !selectedChild) return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+            <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+    )
 
     return (
         <div style={{ paddingBottom: 40 }}>
@@ -51,11 +62,7 @@ export default function StudentSchedule() {
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-                    <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                </div>
-            ) : Object.keys(grouped).length === 0 ? (
+            {Object.keys(grouped).length === 0 ? (
                 <div style={{
                     background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1',
                     padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center'

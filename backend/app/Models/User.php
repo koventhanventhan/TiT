@@ -109,6 +109,11 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function students()
+    {
+        return $this->hasMany(\App\Models\Student::class);
+    }
+
     public function payments()
     {
         return $this->hasMany(\App\Models\Payment::class);
@@ -164,6 +169,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function getSubjectCategory()
     {
+        // Legacy fallback (in case students table is empty)
         $grade = $this->current_grade;
         $stream = strtolower($this->stream ?? '');
         $gradeNum = 0;
@@ -192,6 +198,16 @@ class User extends Authenticatable implements FilamentUser
 
     public function calculateMonthlyFee(?float $fallbackAmount = null): float
     {
+        // If the user has students linked, sum their fees
+        if ($this->students()->exists()) {
+            $total = 0;
+            foreach ($this->students as $student) {
+                $total += $student->calculateMonthlyFee($fallbackAmount);
+            }
+            return $total;
+        }
+
+        // --- LEGACY LOGIC BELOW (fallback during migration) ---
         $amount = 0;
 
         if ($this->selected_subjects) {
@@ -270,5 +286,38 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return $amount;
+    }
+
+    public function getMonthlyFeeBreakdown(?float $fallbackAmount = null): array
+    {
+        $breakdown = [];
+        $total = 0;
+
+        if ($this->students()->exists()) {
+            foreach ($this->students as $student) {
+                $fee = $student->calculateMonthlyFee($fallbackAmount);
+                $name = $student->first_name ?? $student->full_name ?? 'Student';
+                $breakdown[] = [
+                    'name' => $name,
+                    'amount' => $fee,
+                    'grade' => $student->current_grade
+                ];
+                $total += $fee;
+            }
+        } else {
+            // Legacy
+            $fee = $this->calculateMonthlyFee($fallbackAmount);
+            $breakdown[] = [
+                'name' => $this->first_name ?? $this->full_name ?? 'Student',
+                'amount' => $fee,
+                'grade' => $this->current_grade
+            ];
+            $total = $fee;
+        }
+
+        return [
+            'total' => $total,
+            'breakdown' => $breakdown
+        ];
     }
 }

@@ -10,22 +10,40 @@ class StudentMaterialController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $parent = $request->user();
+        if (!$parent || $parent->role !== 'user' || $parent->deactivated_at) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $studentId = $request->header('X-Selected-Child-Id') ?: $request->header('X-Student-Id');
+        if ($studentId) {
+            $student = $parent->students()->where('id', $studentId)->first();
+            if (!$student) {
+                return response()->json(['message' => 'Forbidden: You do not have access to this student profile.'], 403);
+            }
+        } else {
+            $student = $parent->students()->first();
+        }
+
+        if (!$student) {
+            return response()->json([]);
+        }
+
         $query = LearningMaterial::orderBy('created_at', 'desc');
 
         // Filter materials based on the student's grade
-        if ($user && $user->current_grade) {
-            $query->where(function($q) use ($user) {
-                $q->where('grade', $user->current_grade)
+        if ($student->current_grade) {
+            $query->where(function($q) use ($student) {
+                $q->where('grade', $student->current_grade)
                   ->orWhereNull('grade')
                   ->orWhere('grade', ''); // Also include materials specifically not assigned to a grade (Global use)
             });
         }
 
         // Filter by student's medium (English/Tamil)
-        if ($user && $user->medium) {
-            $query->where(function($q) use ($user) {
-                $q->where('medium', $user->medium)
+        if ($student->medium) {
+            $query->where(function($q) use ($student) {
+                $q->where('medium', $student->medium)
                   ->orWhere('medium', 'both');
             });
         }

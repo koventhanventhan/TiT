@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { FiArrowRight, FiCheckCircle } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useNavigate } from 'react-router-dom'
 import { useAuthModal } from '../context/AuthModalContext'
 import './Onboarding.css'
 
 const Onboarding = () => {
   const { getSetting } = useSettings();
   const { t, translate, language } = useLanguage()
+  const navigate = useNavigate()
   const { openRegister } = useAuthModal()
 
   const [onboardingTitle, setOnboardingTitle] = useState(getSetting('onboarding_title', t('onboarding_title')))
@@ -124,7 +126,7 @@ const Onboarding = () => {
         </div>
 
         <div className="po-footer">
-          <button onClick={openRegister} className="po-cta-btn">{t('btn_register_now')}</button>
+          <button onClick={() => navigate('/register')} className="po-cta-btn">{t('btn_register_now')}</button>
         </div>
       </div>
     </section>

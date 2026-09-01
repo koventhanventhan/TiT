@@ -74,18 +74,24 @@ class SendZoomReminders extends Command
 
             // 2. Notify Students in the same grade
             if ($schedule->grade) {
-                $students = User::where('role', 'user')
-                    ->whereNull('deactivated_at')
+                // Get all students and load their parent user
+                $students = \App\Models\Student::with('user')
+                    ->whereHas('user', function($query) {
+                        $query->whereNull('deactivated_at');
+                    })
                     ->get();
 
                 preg_match('/(\d+)/', $schedule->grade, $classMatch);
                 $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
 
                 foreach ($students as $student) {
+                    $parent = $student->user;
+                    if (!$parent) continue;
+
                     // 1. Grade Match
                     $userGrade = $student->current_grade;
                     if (!$userGrade) {
-                        $this->line("Skipping student {$student->name} (No grade set)");
+                        $this->line("Skipping student {$student->full_name} (No grade set)");
                         continue;
                     }
 
@@ -93,17 +99,16 @@ class SendZoomReminders extends Command
                     $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
 
                     if ($userRef !== $classRef) {
-                        // Silent skip for grade mismatch is fine as there are many students
                         continue;
                     }
 
-                    // 2. Filter by medium (skip if student's medium doesn't match)
+                    // 2. Filter by medium
                     $classMedium = $schedule->medium;
                     if ($classMedium && $classMedium !== 'both' && $student->medium && $student->medium !== $classMedium) {
                         continue;
                     }
 
-                    // 2. Filter by selected subjects (Robust substring match)
+                    // 3. Filter by selected subjects
                     $selected = $student->selected_subjects;
                     $classSubject = trim($schedule->subject);
                     
@@ -112,7 +117,6 @@ class SendZoomReminders extends Command
                         $selectedArr = array_filter(array_map('trim', (array)$selectedArr));
                         
                         if (empty($selectedArr)) {
-                            $this->line("Skipping student {$student->name} (No subjects selected)");
                             continue;
                         }
 
@@ -127,17 +131,19 @@ class SendZoomReminders extends Command
                             }
                         }
                         if (!$subjectMatch) {
-                            $this->line("Skipping student {$student->name} (Subject mismatch: expected '{$classSubject}')");
                             continue;
                         }
                     }
 
-                    if ($student->phone_number || ($student->email && $this->isValidEmailForSending($student->email))) {
-                        $this->info("Sending message to {$student->name}");
+                    if ($parent->phone_number || ($parent->email && $this->isValidEmailForSending($parent->email))) {
+                        $this->info("Sending message to parent of {$student->full_name}");
+                        $studentFirstName = $student->first_name ?? $student->full_name ?? 'Student';
+                        $customTitle = "{$studentFirstName} - {$schedule->title}";
+
                         $notifier->notifyUser(
-                            $student, 'zoom_reminder', 'tit_zoom_reminder',
-                            [$schedule->title, $time],
-                            ['class_title' => $schedule->title, 'class_time' => $time]
+                            $parent, 'zoom_reminder', 'tit_zoom_reminder',
+                            [$customTitle, $time], // WhatsApp array
+                            ['class_title' => $customTitle, 'class_time' => $time] // Email map
                         );
                         $emailsSent++;
 
@@ -145,7 +151,7 @@ class SendZoomReminders extends Command
                             sleep(2);
                         }
                     } else {
-                        $this->warn("Skipping student {$student->name} (No valid phone number or email)");
+                        $this->warn("Skipping parent of {$student->full_name} (No valid contact)");
                     }
                 }
             }

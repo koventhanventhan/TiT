@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
 import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword } from '../services/authService'
-import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
-import { useToast } from '../components/shared/ToastContext';
-
+import { useToast } from '../components/shared/ToastContext'
 
 const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
-  const toast = useToast();
+  const toast = useToast()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const { t } = useLanguage()
   const [isLogin, setIsLogin] = useState(defaultTab === 'login')
@@ -23,18 +24,24 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showStudentForm, setShowStudentForm] = useState(false)
   const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
 
+  // Reset modal state on open, close, or route changes
   useEffect(() => {
     if (isOpen) {
       setIsLogin(defaultTab === 'login')
       setError('')
+      setSuccessMessage('')
+      setIsForgotPassword(false)
+    } else {
+      setIsForgotPassword(false)
+      setError('')
+      setSuccessMessage('')
     }
-  }, [isOpen, defaultTab])
+  }, [isOpen, defaultTab, location.pathname])
 
   const handleLoginChange = (e) => {
     setLoginData({
@@ -48,7 +55,6 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     const { name, value, type, checked } = e.target
 
     if (type === 'checkbox') {
-      // Handle other checkboxes if needed in the future
       setSignupData({
         ...signupData,
         [name]: checked
@@ -70,12 +76,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     try {
       const result = await loginWithEmail(loginData.username, loginData.password, rememberMe)
 
-      // Log the result for debugging
       console.log('Login result:', result)
       console.log('User role:', result?.user?.role)
       console.log('Is admin redirect?', result?._isAdminRedirect)
 
-      // Check if user is admin or super_admin FIRST - before any alerts or other logic
       if (result && result.user && result.token) {
         const userRole = result.user.role
         const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
@@ -83,8 +87,6 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
         if (isSuperAdmin) {
           console.log('✅ Super Admin detected - redirecting to super admin dashboard...')
-          console.log('   User:', result.user.email)
-          console.log('   Role:', result.user.role)
           setIsLoading(false)
           onClose()
           window.location.href = '/super-admin/dashboard'
@@ -93,32 +95,23 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
         if (isAdmin) {
           console.log('✅ Admin detected - redirecting to dashboard immediately...')
-          console.log('   User:', result.user.email)
-          console.log('   Role:', result.user.role)
-          console.log('   Token:', result.token ? 'Present' : 'Missing')
           setIsLoading(false)
           onClose()
-          // Redirect immediately - NO ALERT, NO DELAY
           const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
           const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin
           const redirectUrl = `${BASE_URL}/admin/login?token=${encodeURIComponent(result.token)}`
-          console.log('🚀 ADMIN REDIRECT TO:', redirectUrl)
-          // Immediate redirect - no setTimeout delay
           window.location.href = redirectUrl
           return
         }
       }
 
-      // Check if this is an admin redirect (redirect already happened in authService)
       if (result && result._isAdminRedirect) {
         console.log('✅ Admin redirect in progress (from authService)...')
         setIsLoading(false)
         onClose()
-        // Redirect already happened, just return
         return
       }
 
-      // Check role and redirect accordingly
       const userRole = result?.user?.role ? String(result.user.role).toLowerCase() : 'user'
       console.log('ℹ️ User role detected:', userRole)
 
@@ -126,15 +119,12 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       onClose()
 
       if (userRole === 'teacher') {
-        // Teacher - redirect to teacher dashboard
         console.log('🎓 Teacher detected - redirecting to /teacher/dashboard')
         window.location.href = '/teacher/dashboard'
       } else if (userRole === 'user') {
-        // Student - redirect to student dashboard
         console.log('📚 Student detected - redirecting to /student/dashboard')
         window.location.href = '/student/dashboard'
       } else {
-        // Unknown role - just reload
         console.log('❓ Unknown role - reloading page')
         toast.info(`Welcome back, ${result?.user?.username || result?.user?.email || 'User'}!`)
         window.location.reload()
@@ -150,11 +140,9 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         fullError: err
       })
 
-      // Show more helpful error messages
       if (errorMessage.includes('Unable to connect') || errorMessage.includes('Cannot connect') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
         setError('Unable to connect to server. Please check your internet connection or try again later')
       } else if (errorMessage.includes('credentials') || errorMessage.includes('incorrect')) {
-        // Keep the original error message for credential errors
         setError(errorMessage)
       }
     }
@@ -202,12 +190,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       return
     }
 
-    // Confirm password match
     if (signupData.password !== signupData.confirmPassword) {
       setError('Passwords do not match!')
       return
     }
-
 
     setIsLoading(true)
 
@@ -221,12 +207,11 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       const result = await registerWithEmail(userData)
       setIsLoading(false)
 
-      // Show success message
       toast.success(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
-      // After successful admin registration, show student entry form
-      setShowStudentForm(true)
-      onClose() // Close the admin registration form
+      // Close the modal and navigate to /register to complete student details
+      onClose()
+      navigate('/register')
     } catch (err) {
       setIsLoading(false)
       setError(err.message || 'Registration failed. Please try again.')
@@ -240,15 +225,15 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       const result = await loginWithGoogle()
       setIsLoading(false)
       
-      // If it's a new student with pending registration, show the details form
+      // If it's a new student with pending registration, redirect to registration form
       if (result.user?.role === 'user' && result.user?.registration_status === 'pending') {
-        console.log('✨ New Google student! Showing registration form for details...')
-        setShowStudentForm(true)
+        console.log('✨ New Google student! Redirecting to registration form for details...')
+        onClose()
+        navigate('/register')
         return
       }
 
       onClose()
-      // Redirection is handled inside loginWithGoogle in authService.js
     } catch (err) {
       setError(err.message || 'Login failed')
       setIsLoading(false)
@@ -269,17 +254,6 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     } finally {
       setIsLoading(false)
     }
-  }
-
-
-  // Show student registration form if needed
-  if (showStudentForm) {
-    return (
-      <StudentRegistrationForm
-        isOpen={true}
-        onClose={() => setShowStudentForm(false)}
-      />
-    )
   }
 
   if (!isOpen) return null
@@ -435,8 +409,19 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
               <form onSubmit={handleSignupSubmit}>
                 <h2>{t('auth_student_reg')}</h2>
 
-
-                {/* Admin Registration Form */}
+                <div className="existing-parent-notice" style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  padding: '12px 15px',
+                  borderRadius: '8px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '5px'
+                }}>
+                  <strong style={{ color: '#3b82f6', fontSize: '0.9rem' }}>Already have a Parent Account?</strong>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>If you want to add another child, please <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true); setError(''); }} style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline' }}>Login here</a> instead of creating a new account.</span>
+                </div>
 
                 {/* Email */}
                 <div className="inputbox">
@@ -532,9 +517,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         </div>
       </div>
     </div>
-
   )
 }
 
 export default AnimatedAuth
-

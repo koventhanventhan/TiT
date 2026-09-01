@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import { FaCalendarAlt, FaGraduationCap, FaChalkboardTeacher, FaYoutube, FaArrowRight } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 import { useAuthModal } from '../context/AuthModalContext'
 import './Hero.css'
 
 const Hero = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage()
-  const { openRegister } = useAuthModal()
+  const navigate = useNavigate()
 
   const [yearsCount, setYearsCount] = useState(0)
   const [studentsCount, setStudentsCount] = useState(0)
@@ -247,7 +248,7 @@ const Hero = () => {
               {heroDescription}
             </p>
             <div className="hero-actions">
-              <button onClick={openRegister} className="btn-register hero-btn">
+              <button onClick={() => navigate('/register')} className="btn-register hero-btn">
                 {t('hero_cta')}
                 <FaArrowRight style={{ fontSize: '1rem', marginLeft: '0.5rem', color: '#ffffff' }} />
               </button>

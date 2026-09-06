@@ -758,7 +758,7 @@ const AboutPage = () => {
                 </h2>
                 <p className="cta-banner-description">{ctaDesc}</p>
                 <div className="cta-banner-buttons">
-                  <button onClick={() => navigate('/register')} className="cta-btn-primary-blue">
+                  <button onClick={openRegister} className="cta-btn-primary-blue">
                     {ctaBtn1}
                   </button>
                   <a href={getSetting('about_cta_btn2_link', '/contact')} className="cta-btn-outline">

@@ -226,7 +226,7 @@
                          <tbody>
                              @forelse($students as $student)
                              @php
-                                 $latestPayment = $student->payments()->where('year_month', now()->format('Y-m'))->where('status', 'paid')->first();
+                                 $latestPayment = $student->user ? $student->user->payments()->where('year_month', now()->format('Y-m'))->where('status', 'paid')->first() : null;
                                  $paidThisMonth = $latestPayment !== null;
                                  
                                  $subjectsArray = [];
@@ -255,8 +255,8 @@
                                        <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
                                    </td>
                                   <td style="max-width: 7.5rem;">
-                                      <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
-                                      <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->email }}">{{ $student->email }}</div>
+                                      <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name }}</div>
+                                      <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->user ? $student->user->email : 'N/A' }}">{{ $student->user ? $student->user->email : 'N/A' }}</div>
                                   </td>
                                  <td class="nowrap-column text-center">
                                      <span style="color:#a78bfa; font-weight:800;">G{{ $student->current_grade ?: '?' }}</span>
@@ -267,8 +267,8 @@
                                  </td>
                                  <td class="nowrap-column">
                                      <div style="font-weight: 500; font-size: 0.7rem;">
-                                         @if($student->phone_number)
-                                             {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}
+                                         @if($student->user && $student->user->phone_number)
+                                             {{ str_starts_with($student->user->phone_number, '94') ? '+' . $student->user->phone_number : $student->user->phone_number }}
                                          @else
                                              N/A
                                          @endif
@@ -276,12 +276,12 @@
                                  </td>
                                  <td class="nowrap-column">
                                      <div style="margin-bottom: 0.125rem;">
-                                         @if($student->deactivated_at)
+                                         @if($student->user && $student->user->deactivated_at)
                                              <span class="badge badge-xs badge-danger" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Deactivated</span>
-                                         @elseif($student->admin_confirmed_at)
+                                         @elseif($student->user && $student->user->admin_confirmed_at)
                                              <span class="badge badge-xs badge-success" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Confirmed</span>
                                          @else
-                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">{{ $student->registration_status ?? 'pending' }}</span>
+                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">{{ $student->user ? $student->user->registration_status : 'pending' }}</span>
                                          @endif
                                      </div>
                                      <div style="display: flex; align-items: center; gap: 0.25rem;">
@@ -306,14 +306,14 @@
                                              <svg width="0.625rem" height="0.625rem" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="12" cy="5" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="12" cy="19" r="2"/></g></svg>
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
-                                              @if(!$student->admin_confirmed_at)
+                                              @if(!$student->user || !$student->user->admin_confirmed_at)
                                                  <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">Confirm Registration</button>
                                                 </form>
                                             @endif
                                             <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
-                                            @if($student->deactivated_at)
+                                            @if($student->user && $student->user->deactivated_at)
                                                 <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" id="activate-form-{{ $student->id }}">
                                                     @csrf
                                                     <button type="button" class="dropdown-item text-success swal-confirm-btn"

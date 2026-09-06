@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Student;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\Subject;
-use App\Notifications\AdminNotification;
-use App\Services\NotificationService;
 use App\Traits\ValidatesEmail;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Services\NotificationService;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -23,21 +24,18 @@ class StudentController extends Controller
     {
         $this->notifier = $notifier;
     }
+
     /**
      * Display a listing of all students
      */
     public function index()
     {
-        // Check if user is admin
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         
-        // Get all students (users with role 'user' and have student fields); include deactivated
-        $students = User::where('role', 'user')
-            ->whereNotNull('full_name')
-            ->latest()
-            ->paginate(15);
+        // Include deactivated students and their parent user info
+        $students = Student::with('user')->latest()->paginate(15);
         
         return view('admin.students.index', compact('students'));
     }
@@ -47,25 +45,16 @@ class StudentController extends Controller
      */
     public function show($id)
     {
-        // Check if user is admin
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         
-        $student = User::where('role', 'user')
-            ->where('id', $id)
-            ->first();
+        $student = Student::with('user')->findOrFail($id);
 
-        if (!$student) {
-            return redirect()->route('admin.students.index')
-                ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
-        }
-
-        $payments = \App\Models\Payment::where('user_id', $student->id)
+        $payments = Payment::where('user_id', $student->user_id)
             ->orderBy('paid_at', 'desc')
             ->get();
         
-        // Use edit view as show view is not implemented separately
         return view('admin.students.edit', compact('student', 'payments'));
     }
 
@@ -74,21 +63,13 @@ class StudentController extends Controller
      */
     public function edit($id)
     {
-        // Check if user is admin
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         
-        $student = User::where('role', 'user')
-            ->where('id', $id)
-            ->first();
+        $student = Student::with('user')->findOrFail($id);
 
-        if (!$student) {
-            return redirect()->route('admin.students.index')
-                ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
-        }
-
-        $payments = Payment::where('user_id', $student->id)
+        $payments = Payment::where('user_id', $student->user_id)
             ->orderBy('paid_at', 'desc')
             ->get();
         
@@ -111,15 +92,12 @@ class StudentController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Check if user is admin
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         
-        $student = User::where('role', 'user')
-            ->where('id', $id)
-            ->whereNotNull('full_name')
-            ->firstOrFail();
+        $student = Student::with('user')->findOrFail($id);
+        $user = $student->user;
         
         // Normalize phone number
         if ($request->has('phone_number')) {
@@ -135,7 +113,7 @@ class StudentController extends Controller
         // Validate the request
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number,' . $student->id,
+            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number,' . $user->id,
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
@@ -145,7 +123,7 @@ class StudentController extends Controller
             'current_grade' => 'required|string|max:100',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
             'selected_subjects' => 'nullable|array',
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
             'custom_fields' => 'nullable|array',
         ]);
@@ -156,29 +134,30 @@ class StudentController extends Controller
             $subjects = json_encode(array_values(array_unique($validated['selected_subjects'])), JSON_UNESCAPED_UNICODE);
         }
 
-        $updateData = [
+        $student->update([
             'full_name' => $validated['full_name'],
-            'phone_number' => $validated['phone_number'],
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
             'school_name' => $validated['school_name'],
             'medium' => $validated['medium'],
-            'online_experience' => $request->has('online_experience') ? (bool) $validated['online_experience'] : $student->online_experience,
-            'device_used' => $validated['device_used'],
             'current_grade' => $validated['current_grade'],
             'stream' => $validated['stream'] ?? null,
             'selected_subjects' => $subjects,
-            'email' => $validated['email'],
             'custom_fields' => $request->custom_fields,
+        ]);
+
+        $userData = [
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'],
+            'online_experience' => $request->has('online_experience') ? (bool) $validated['online_experience'] : $user->online_experience,
+            'device_used' => $validated['device_used'],
         ];
 
         if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
-        } else {
-            unset($updateData['password']);
+            $userData['password'] = Hash::make($request->password);
         }
 
-        $student->update($updateData);
+        $user->update($userData);
         
         return redirect()->route('admin.students.index')
             ->with('success', 'Student information updated successfully!');
@@ -193,28 +172,26 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $student = User::where('role', 'user')
-            ->where('id', $id)
-            ->whereNotNull('full_name')
-            ->firstOrFail();
+        $student = Student::with('user')->findOrFail($id);
+        $user = $student->user;
 
-        $student->update([
+        $user->update([
             'admin_confirmed_at' => now(),
             'registration_status' => 'confirmed',
         ]);
 
         // Notify student (WhatsApp with email fallback)
         $this->notifier->notifyUser(
-            $student, 'admin_approved', 'tit_admin_approved',
-            [$student->full_name ?? $student->name, 'admin'],
-            ['student_name' => $student->full_name ?? $student->name]
+            $user, 'admin_approved', 'tit_admin_approved',
+            [$student->full_name ?? $user->name, 'admin'],
+            ['student_name' => $student->full_name ?? $user->name]
         );
 
         // Notify Admin
         $this->notifier->notifyAdmin(
             'admin_alert', 'tit_admin_approved',
-            ["ADMIN ALERT: Approved student " . ($student->full_name ?? $student->name), "admin"],
-            ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
+            ["ADMIN ALERT: Approved student " . ($student->full_name ?? $user->name), "admin"],
+            ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $user->name)]
         );
 
         return redirect()->route('admin.students.index')
@@ -248,8 +225,8 @@ class StudentController extends Controller
 
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number',
-            'email' => 'required|email|unique:users,email',
+            'phone_number' => 'required|digits_between:9,15',
+            'email' => 'required|email',
             'password' => 'required|string|min:8',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
@@ -264,80 +241,61 @@ class StudentController extends Controller
             'custom_payment_month' => 'nullable|date',
         ]);
 
-        // JSON-encode selected subjects array
         $subjects = null;
         if (isset($validated['selected_subjects']) && is_array($validated['selected_subjects'])) {
             $subjects = json_encode(array_values(array_unique($validated['selected_subjects'])), JSON_UNESCAPED_UNICODE);
         }
 
-        // Auto-generate username from email prefix
-        $emailPrefix = explode('@', $validated['email'])[0];
-        $username = $emailPrefix;
-        $counter = 1;
-        while (User::where('name', $username)->exists()) {
-            $username = $emailPrefix . $counter;
-            $counter++;
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            $emailPrefix = explode('@', $validated['email'])[0];
+            $username = $emailPrefix;
+            $counter = 1;
+            while (User::where('name', $username)->exists()) {
+                $username = $emailPrefix . $counter;
+                $counter++;
+            }
+
+            $user = User::create([
+                'name' => $username,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'user',
+                'phone_number' => $validated['phone_number'],
+                'registration_status' => 'confirmed',
+                'admin_confirmed_at' => now(),
+                'online_experience' => $validated['online_experience'],
+                'device_used' => $validated['device_used'],
+            ]);
         }
 
-        // Use admin-entered password
-        $user = User::create([
-            'name' => $username,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'user',
+        $student = Student::create([
+            'user_id' => $user->id,
             'full_name' => $validated['full_name'],
-            'phone_number' => $validated['phone_number'] ?? null,
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
             'school_name' => $validated['school_name'],
             'medium' => $validated['medium'],
-            'online_experience' => $request->boolean('online_experience'),
-            'device_used' => $validated['device_used'],
             'current_grade' => $validated['current_grade'],
             'stream' => $validated['stream'] ?? null,
             'selected_subjects' => $subjects,
-            'registration_status' => 'approved',
-            'admin_confirmed_at' => now(),
         ]);
 
-        // Notify Admin of manual student entry
-        $admin = User::where('role', 'admin')->first();
-        if ($admin) {
-            $admin->notify(new AdminNotification(
-                "Manual Student Entry: " . ($user->full_name ?? $user->name),
-                'info',
-                route('admin.students.show', $user->id),
-                'admission_new'
-            ));
-        }
-
-        // Handle Quick Payment (current month)
-        if ($request->boolean('quick_payment')) {
-            $amount = $this->calculateUserAmount($user);
+        if ($request->quick_payment) {
+            $month = $request->custom_payment_month 
+                ? \Carbon\Carbon::parse($request->custom_payment_month)->format('Y-m') 
+                : now()->format('Y-m');
             Payment::create([
                 'user_id' => $user->id,
-                'year_month' => now()->format('Y-m'),
-                'amount' => $amount,
+                'year_month' => $month,
+                'amount' => $student->calculateMonthlyFee(),
                 'status' => 'paid',
                 'paid_at' => now(),
             ]);
         }
 
-        // Handle Custom Payment Date
-        if (!empty($validated['custom_payment_month'])) {
-            $amount = $this->calculateUserAmount($user);
-            $customDate = $validated['custom_payment_month'];
-            $yearMonth = substr($customDate, 0, 7); // Extract YYYY-MM from YYYY-MM-DD
-            Payment::create([
-                'user_id' => $user->id,
-                'year_month' => $yearMonth,
-                'amount' => $amount,
-                'status' => 'paid',
-                'paid_at' => $customDate,
-            ]);
-        }
-
-        return redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
+        return redirect()->route('admin.students.index')->with('success', 'Student added successfully.');
     }
 
     public function deactivate($id)
@@ -345,47 +303,60 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
-        $student->update(['deactivated_at' => now()]);
 
-        // Send deactivation notification (WhatsApp with email fallback)
-        $this->notifier->notifyUser(
-            $student, 'account_deactivated', 'tit_account_deactivated',
-            [$student->full_name ?? $student->name, 'admin'],
-            ['student_name' => $student->full_name ?? $student->name]
-        );
+        $student = Student::with('user')->findOrFail($id);
+        $user = $student->user;
+        
+        // Check if user has other active students before deactivating parent account
+        $otherActiveStudents = Student::where('user_id', $user->id)->where('id', '!=', $id)->count();
+        if ($otherActiveStudents === 0) {
+            $user->update(['deactivated_at' => now()]);
+        } else {
+            // Can't deactivate parent account if they have other active children, 
+            // So we just return success but explain this in the message.
+            return redirect()->route('admin.students.index')->with('success', 'Student is linked to a parent with other active children. Parent account remains active.');
+        }
 
-        return redirect()->route('admin.students.index')->with('success', 'Student deactivated and notification sent.');
+        return redirect()->route('admin.students.index')->with('success', 'Student (and parent account) deactivated.');
     }
 
-    /**
-     * Activate a student account
-     */
     public function activate($id)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
-        $student->update(['deactivated_at' => null]);
-        
-        return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully.');
+
+        $student = Student::with('user')->findOrFail($id);
+        $user = $student->user;
+
+        if ($user->deactivated_at) {
+            $user->update(['deactivated_at' => null]);
+        }
+
+        return redirect()->route('admin.students.index')->with('success', 'Student activated successfully.');
     }
 
-    /**
-     * Delete a student account
-     */
     public function destroy($id)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
         
-        // Delete the student (this will also trigger cascades if defined in migration)
+        $student = Student::findOrFail($id);
+        $userId = $student->user_id;
+        
+        // Delete the specific student record
         $student->delete();
-        
-        return redirect()->route('admin.students.index')->with('success', 'Student account deleted permanently.');
+
+        // If no more children, we could delete the user, but maybe safer to leave it.
+        // The user specifically requested: "ஒரு Parent-க்கு 2+ Children இருக்கும்போது, ஒரு Child-ஐ Delete பண்ணா, மற்ற Children-ஓட Parent Account Affect ஆகக் கூடாது."
+        $remainingStudents = Student::where('user_id', $userId)->count();
+        if ($remainingStudents === 0) {
+            User::where('id', $userId)->delete();
+            return redirect()->route('admin.students.index')->with('success', 'Student and Parent account deleted permanently.');
+        }
+
+        return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully. Parent account kept active for remaining children.');
     }
 
     public function resetPasswordAndNotify($id)
@@ -393,33 +364,23 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Admin access required'], 403);
         }
-        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
-        
-        $newPassword = \Illuminate\Support\Str::random(10);
-        $student->update([
-            'password' => Hash::make($newPassword)
-        ]);
-        
-        try {
-            \Illuminate\Support\Facades\Log::info('Initiating password reset email for ID: ' . $id . ' with Email: ' . $student->email);
-            
-            $mail = new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true);
-            \Illuminate\Support\Facades\Log::info('Mail body preview', ['html_length' => strlen($mail->render())]);
-            
-            if (!$this->isValidEmailForSending($student->email)) {
-                \Illuminate\Support\Facades\Log::warning('StudentController: Skipped password reset email — invalid address: ' . $student->email);
-                return response()->json(['success' => true, 'message' => 'New password generated, but email could not be sent (invalid email address). Please share the password manually.', 'password' => $newPassword]);
-            }
 
-            \Illuminate\Support\Facades\Mail::to($student->email)->send($mail);
-            \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $student->email);
+        $student = Student::with('user')->findOrFail($id);
+        $user = $student->user;
+
+        $newPassword = Str::random(10);
+        $user->update(['password' => Hash::make($newPassword)]);
+
+        try {
+            $this->notifier->notifyUser(
+                $user, 'admin_password_reset', 'tit_password_reset',
+                [$student->full_name, $newPassword, 'https://titjaffna.com/login'],
+                ['student_name' => $student->full_name, 'new_password' => $newPassword]
+            );
+            return response()->json(['success' => true, 'message' => 'Password reset successfully. Notification sent.']);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $student->email . '. Error: ' . $e->getMessage());
-            $this->markEmailAsBounced($student->email);
-            return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
+            return response()->json(['success' => true, 'message' => 'Password reset to: ' . $newPassword . ' but notification failed: ' . $e->getMessage()]);
         }
-        
-        return response()->json(['success' => true, 'message' => 'New password generated and emailed to the student.']);
     }
 
     public function markPaid(Request $request, $id)
@@ -427,24 +388,18 @@ class StudentController extends Controller
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
 
-        // Accept either a full date (YYYY-MM-DD) or year_month (YYYY-MM)
-        $request->validate(['year_month' => 'required|string']);
+        $student = Student::with('user')->findOrFail($id);
 
-        $inputValue = $request->year_month;
+        $request->validate([
+            'year_month' => 'required|date_format:Y-m',
+            'amount' => 'nullable|numeric|min:0'
+        ]);
 
-        // If full date given (YYYY-MM-DD), extract YYYY-MM
-        if (strlen($inputValue) === 10) {
-            $yearMonth = substr($inputValue, 0, 7);
-            $paidAt = $inputValue;
-        } else {
-            $yearMonth = $inputValue;
-            $paidAt = $inputValue . '-01'; // default to 1st of month
-        }
+        $yearMonth = $request->year_month;
+        $paidAt = now();
 
-        // Prevent duplicate payments for the same month
-        $existingPayment = Payment::where('user_id', $student->id)
+        $existingPayment = Payment::where('user_id', $student->user_id)
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
             ->first();
@@ -453,10 +408,10 @@ class StudentController extends Controller
             return redirect()->back()->with('error', 'Payment for ' . $yearMonth . ' is already marked as paid!');
         }
 
-        $amount = $request->amount ?? $this->calculateUserAmount($student);
+        $amount = $request->amount ?? $student->calculateMonthlyFee();
 
         Payment::create([
-            'user_id' => $student->id,
+            'user_id' => $student->user_id,
             'year_month' => $yearMonth,
             'amount' => $amount,
             'status' => 'paid',
@@ -476,26 +431,20 @@ class StudentController extends Controller
         ]);
 
         $ids = explode(',', $request->ids);
-        User::where('role', 'user')->whereIn('id', $ids)->delete();
+        
+        foreach ($ids as $id) {
+            $student = Student::find($id);
+            if ($student) {
+                $userId = $student->user_id;
+                $student->delete();
+                
+                $remainingStudents = Student::where('user_id', $userId)->count();
+                if ($remainingStudents === 0) {
+                    User::where('id', $userId)->delete();
+                }
+            }
+        }
 
         return redirect()->back()->with('success', count($ids) . ' students deleted successfully.');
     }
-
-    /**
-     * Helper to get subject category based on user's grade and stream
-     */
-    private function getSubjectCategoryForUser(User $user)
-    {
-        return $user->getSubjectCategory();
-    }
-
-    /**
-     * Calculate the amount the user needs to pay based on selected subjects.
-     */
-    private function calculateUserAmount(User $user, ?float $fallbackAmount = null): float
-    {
-        return $user->calculateMonthlyFee($fallbackAmount);
-    }
-
 }
-

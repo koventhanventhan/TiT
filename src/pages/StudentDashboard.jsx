@@ -5,11 +5,13 @@ import StudentDashboardLayout from '../components/student/StudentDashboardLayout
 import DeactivatedDashboard from '../components/student/DeactivatedDashboard'
 import PendingApprovalDashboard from '../components/student/PendingApprovalDashboard'
 import PaymentRequiredDashboard from '../components/student/PaymentRequiredDashboard'
+import StudentRegistrationForm from '../components/StudentRegistrationForm'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [incompleteStep, setIncompleteStep] = useState(null)
 
   useEffect(() => {
     async function checkAuth() {
@@ -31,15 +33,11 @@ export default function StudentDashboard() {
 
       const regStatus = (u.registration_status || '').toLowerCase()
       if (!u.full_name) {
-        console.log('📝 Student has incomplete profile, redirecting to registration flow step 1...')
-        setLoading(false)
-        navigate('/register?step=1')
-        return
+        console.log('📝 Student has incomplete profile, showing registration flow step 1...')
+        setIncompleteStep(1)
       } else if (regStatus === 'pending_payment') {
-        console.log('📝 Student has pending payment, redirecting to registration flow step 2...')
-        setLoading(false)
-        navigate('/register?step=2')
-        return
+        console.log('📝 Student has pending payment, showing registration flow step 2...')
+        setIncompleteStep(2)
       }
 
       setUser(u)
@@ -55,6 +53,16 @@ export default function StudentDashboard() {
   )
   
   if (!user) return null;
+
+  if (incompleteStep) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div style={{ maxWidth: '800px', width: '100%', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+          <StudentRegistrationForm inline={true} />
+        </div>
+      </div>
+    )
+  }
 
   if (user.is_deactivated) {
     return <DeactivatedDashboard user={user} />

@@ -126,7 +126,7 @@ const Onboarding = () => {
         </div>
 
         <div className="po-footer">
-          <button onClick={() => navigate('/register')} className="po-cta-btn">{t('btn_register_now')}</button>
+          <button onClick={openRegister} className="po-cta-btn">{t('btn_register_now')}</button>
         </div>
       </div>
     </section>

@@ -103,6 +103,7 @@ const StudentToolkit = () => {
 const Footer = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
+  const { openRegister } = useAuthModal()
   const navigate = useNavigate()
 
   const footer_email = getSetting('footer_email', 'admin@titjaffna.lk')
@@ -253,7 +254,7 @@ const Footer = () => {
               <li><Link to="/classes">{t('nav_classes') || 'Classes'}</Link></li>
               <li><Link to="/contact">{t('nav_contact') || 'Contact'}</Link></li>
               <li><Link to="/tutor-apply">{tutorLabel}</Link></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }}>{studentLabel}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); openRegister(); }}>{studentLabel}</a></li>
             </ul>
           </div>
 

@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess } from '../services/authService'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { FiX } from 'react-icons/fi'
+import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
@@ -24,7 +24,7 @@ const getSavedDraft = () => {
 const MONTHLY_AMOUNT = 500
 const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
-const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
+const StudentRegistrationForm = ({ isOpen = true, onClose, inline = false, onSwitchToLogin, defaultMode = null, onStepChange }) => {
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -32,14 +32,29 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const { t, translate, language } = useLanguage()
   const location = useLocation()
   
-  // Read step from URL
+  // Read step from URL (fallback)
   const initialStep = React.useMemo(() => {
     const searchParams = new window.URLSearchParams(location.search)
     const stepParam = searchParams.get('step')
     return stepParam ? parseInt(stepParam, 10) : 1
   }, [location.search])
 
-  const [step, setStep] = useState(initialStep)
+  const isAuthenticated = !!(localStorage.getItem('authToken') || sessionStorage.getItem('authToken'))
+  
+  const [formMode, setFormMode] = useState(() => defaultMode || getSavedDraft()?.formMode || 'new') // 'new' or 'link'
+
+  useEffect(() => {
+    if (defaultMode) {
+      setFormMode(defaultMode)
+      if (isAuthenticated && defaultMode === 'new') setStep(2)
+      else setStep(1)
+    }
+  }, [defaultMode, isAuthenticated])
+
+  const [step, setStep] = useState(() => {
+    if (isAuthenticated && formMode === 'new') return 3; // Skip parent step if already logged in and adding a NEW child
+    return initialStep;
+  })
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
 
   // Fetch subjects grouped by category from backend
@@ -88,10 +103,20 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     const saved = getSavedDraft()
     return saved?.formData ? { ...defaultData, ...saved.formData } : defaultData
   })
-  const [formMode, setFormMode] = useState(() => getSavedDraft()?.formMode || 'new') // 'new' or 'link'
   const [linkData, setLinkData] = useState(() => getSavedDraft()?.linkData || { email: '', password: '' })
+  const [pendingUserData, setPendingUserData] = useState(null)
   const [selectedStream, setSelectedStream] = useState(() => getSavedDraft()?.selectedStream || '')
   const [selectedSubjects, setSelectedSubjects] = useState(() => getSavedDraft()?.selectedSubjects || [])
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const subjectsRef = useRef(null)
+  const errorRef = useRef(null)
+  const [highlightSubjects, setHighlightSubjects] = useState(false)
+
+  // Expose step changes to parent
+  useEffect(() => {
+    if (onStepChange) onStepChange(step)
+  }, [step, onStepChange])
 
   // Save form draft to sessionStorage
   React.useEffect(() => {
@@ -145,7 +170,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     }
   }, [])
   
-  const isAuthenticated = !!(localStorage.getItem('authToken') || sessionStorage.getItem('authToken'))
+
   const [regTitle, setRegTitle] = useState('')
   const [regSubtitle, setRegSubtitle] = useState('')
   const [labelFullname, setLabelFullname] = useState('')
@@ -278,18 +303,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     if (!gradeNum) return []
 
     let subs = []
-    if (gradeNum >= 1 && gradeNum <= 2) {
-      subs = subjectsByCategory['grade_1_to_2'] || []
-    } else if (gradeNum === 3) {
-      subs = subjectsByCategory['grade_3'] || []
-    } else if (gradeNum === 4) {
-      subs = subjectsByCategory['grade_4'] || []
-    } else if (gradeNum === 5) {
-      subs = subjectsByCategory['grade_5'] || []
-    } else if (gradeNum >= 6 && gradeNum <= 9) {
-      subs = subjectsByCategory['grade_6_to_9'] || []
-    } else if (gradeNum >= 10 && gradeNum <= 11) {
-      subs = subjectsByCategory['grade_10_to_11'] || []
+    if (gradeNum >= 1 && gradeNum <= 5) {
+      subs = subjectsByCategory['grade_1_to_5'] || []
+    } else if (gradeNum >= 6 && gradeNum <= 11) {
+      subs = subjectsByCategory['grade_6_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
       subs = subjectsByCategory[selectedStream] || []
     }
@@ -467,6 +484,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     if (name === 'currentGrade') {
       setSelectedStream('')
       setSelectedSubjects([])
+      setHighlightSubjects(false)
     }
 
     setFormData(prev => ({
@@ -480,6 +498,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setSelectedStream(e.target.value)
     setSelectedSubjects([]) // Reset subjects when stream changes
     setError('')
+    setHighlightSubjects(false)
   }
 
   const handleSubjectToggle = (subject) => {
@@ -491,18 +510,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       }
     })
     setError('')
+    setHighlightSubjects(false)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleNextStep = (e) => {
+    if (e) e.preventDefault()
     setError('')
-
-    // Validation
-    if (!isAuthenticated && formMode === 'new') {
-      if (!formData.parentName || formData.parentName.length < 2) {
-        setError('Parent name must be at least 2 characters')
-        return
-      }
+    if (step === 1) {
       if (!formData.email) {
         setError('Email is required')
         return
@@ -515,8 +529,26 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         setError('Passwords do not match')
         return
       }
+      setStep(2)
+    } else if (step === 2) {
+      if (!formData.parentName || formData.parentName.length < 2) {
+        setError('Parent name must be at least 2 characters')
+        return
+      }
+      const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+      if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
+        setError('Phone number must be valid (9-15 digits)')
+        return
+      }
+      setStep(3)
     }
+  }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    // Validation
     if (formMode === 'new') {
       if (!formData.fullName || formData.fullName.length < 2) {
         setError('Full name must be at least 2 characters')
@@ -558,12 +590,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         return
       }
 
-      const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
-      if (!isAuthenticated && (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15)) {
-        setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
-        return
-      }
-
       const gradeNum = getGradeNumber(formData.currentGrade)
 
       // For grades 12-13, stream is required
@@ -577,6 +603,15 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       // At least one subject must be selected
       if (selectedSubjects.length === 0) {
         setError('Please select at least one subject')
+        setHighlightSubjects(true)
+        // Scroll to subjects field if visible, otherwise scroll to error
+        setTimeout(() => {
+          if (subjectsRef.current) {
+            subjectsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          } else if (errorRef.current) {
+            errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 50)
         return
       }
     } else {
@@ -627,9 +662,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         }
       }
 
-      await registerStep1(userData)
-      setIsLoading(false)
-      setStep(2)
+      if (formMode === 'link') {
+        await registerStep1(userData)
+        setIsLoading(false)
+        toast.success('Sibling account linked successfully!')
+        if (onClose) onClose()
+        window.location.reload() // Reload dashboard to fetch updated children list
+      } else {
+        setPendingUserData(userData)
+        setIsLoading(false)
+        setStep(4)
+      }
       setError('')
     } catch (err) {
       setIsLoading(false)
@@ -642,6 +685,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setError('')
     setIsLoading(true)
     try {
+      if (pendingUserData) {
+        await registerStep1(pendingUserData)
+        setPendingUserData(null)
+      }
       await registerStep2('offline', amount)
       try { sessionStorage.removeItem(DRAFT_STORAGE_KEY) } catch (_) {}
       toast.success(t('pay_offline_success'))
@@ -674,6 +721,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setError('')
     setIsLoading(true)
     try {
+      if (pendingUserData) {
+        await registerStep1(pendingUserData)
+        setPendingUserData(null)
+      }
       const resp = await registerStep2('online', amount)
       setIsLoading(false)
 
@@ -702,7 +753,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
           window.location.href = '/student/dashboard'
         }
       }
-
       window.payhere.onDismissed = function onDismissed() {
         console.log("Payment dismissed")
       }
@@ -737,17 +787,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
   if (!isOpen) return null
 
-  return (
-    <div className="tit-reg-overlay">
-      <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
-        <button className="tit-reg-close" onClick={handleClose}>
-          <FiX />
-        </button>
-
-        {step === 1 && (
-          <div className="tit-reg-container">
+  const content = (
+    <>
+        {step < 4 && (
+          <div className="tit-reg-container" style={inline ? { padding: 0 } : {}}>
             {isAuthenticated ? (
-              <div className="form-mode-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <div className="tit-reg-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '25px', width: '100%' }}>
                 <button 
                   type="button"
                   className={`tab-btn ${formMode === 'new' ? 'active' : ''}`}
@@ -765,14 +810,21 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   Link Existing Sibling
                 </button>
               </div>
-            ) : null}
+            ) : (
+              formMode === 'link' && (
+                <div style={{ marginBottom: '20px', padding: '15px', background: '#eef2ff', color: '#4338ca', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
+                  <strong>Link Sibling:</strong> Enter the login credentials of the sibling you want to link to your account.
+                </div>
+              )
+            )}
 
-            <h2 className="tit-reg-title">{formMode === 'link' ? 'Link Sibling Account' : regTitle}</h2>
-            <p className="tit-reg-subtitle">{formMode === 'link' ? 'Enter the sibling\'s old email and password to link them to your parent account.' : regSubtitle}</p>
+            <h2 className={step === 1 ? '' : 'tit-reg-title'}>{formMode === 'link' ? 'Link Sibling Account' : (step === 1 ? 'Student Register' : regTitle)}</h2>
+            {!(step === 1 && formMode !== 'link') && (
+              <p className="tit-reg-subtitle">{formMode === 'link' ? 'Enter the sibling\'s old email and password to link them to your parent account.' : regSubtitle}</p>
+            )}
+            {error && <div className="tit-reg-error" ref={errorRef}>{error}</div>}
 
-            {error && <div className="tit-reg-error">{error}</div>}
-
-            <form onSubmit={handleSubmit} className="tit-reg-form">
+            <form onSubmit={step === 3 || formMode === 'link' ? handleSubmit : handleNextStep} className={step === 1 ? 'animated-form-override' : 'tit-reg-form'} style={step === 1 ? { display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '380px', margin: '0 auto' } : {}}>
               {formMode === 'link' ? (
                 <>
                   <div className="tit-reg-group">
@@ -798,50 +850,126 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 </>
               ) : (
                 <>
-                  {!isAuthenticated && (
-                    <div className="parent-info-section" style={{ padding: '15px', background: '#f8fafc', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-                      <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b' }}>Parent Information</h3>
-                      
-                      <div className="tit-reg-group">
-                        <label className="tit-reg-label">Parent's Full Name <span className="tit-reg-required">*</span></label>
-                        <input type="text" name="parentName" className="tit-reg-input" value={formData.parentName} onChange={handleChange} required />
-                      </div>
-                      
-                      <div className="tit-reg-group">
-                        <label className="tit-reg-label">Parent's Email <span className="tit-reg-required">*</span></label>
-                        <input type="email" name="email" className="tit-reg-input" value={formData.email} onChange={handleChange} required />
-                      </div>
-                      
-                      {labelPhone && (
-                        <div className="tit-reg-group">
-                          <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
-                          <input
-                            type="tel"
-                            id="phoneNumber"
-                            name="phoneNumber"
-                            className="tit-reg-input"
-                            value={formData.phoneNumber}
-                            onChange={handleChange}
-                            required
-                            placeholder="e.g. 07XXXXXXXX"
-                          />
-                        </div>
-                      )}
-
-                      <div className="tit-reg-group">
-                        <label className="tit-reg-label">Password <span className="tit-reg-required">*</span></label>
-                        <input type="password" name="password" className="tit-reg-input" value={formData.password} onChange={handleChange} required />
+                  {/* STEP 1: Account Credentials */}
+                  {step === 1 && !isAuthenticated && (
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                      {/* Email */}
+                      <div className="inputbox">
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder=" "
+                          required
+                        />
+                        <span>Email Address</span>
+                        <i></i>
                       </div>
 
-                      <div className="tit-reg-group">
-                        <label className="tit-reg-label">Confirm Password <span className="tit-reg-required">*</span></label>
-                        <input type="password" name="confirmPassword" className="tit-reg-input" value={formData.confirmPassword} onChange={handleChange} required />
+                      {/* Password */}
+                      <div className="inputbox">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder=" "
+                          required
+                          minLength="8"
+                        />
+                        <span>Password</span>
+                        <i></i>
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div className="inputbox">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          placeholder=" "
+                          required
+                          minLength="8"
+                        />
+                        <span>Confirm Password</span>
+                        <i></i>
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+
+                      <div className="links">
+                        <span></span>
+                        <a href="#" onClick={(e) => { e.preventDefault(); if (onSwitchToLogin) onSwitchToLogin(); }}>
+                          Already have account?
+                        </a>
+                      </div>
+
+                      {/* Submit Button */}
+                      <input
+                        type="submit"
+                        value={isLoading ? 'Loading...' : 'Create Account'}
+                        disabled={isLoading}
+                        className="register-submit-input"
+                        style={{ marginTop: '15px' }}
+                      />
+
+                      <div className="divider-auth">
+                        <span>or</span>
+                      </div>
+
+                      <div className="social-auth-buttons">
+                        <button type="button" className="google-auth-btn" onClick={() => window.location.href='/api/auth/google'} disabled={isLoading}>
+                          <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                          </svg>
+                          Google
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  <div className="student-info-section">
-                    {!isAuthenticated && <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b' }}>Student Information</h3>}
+                  {/* STEP 2: Parent Details */}
+                  {step === 2 && !isAuthenticated && (
+                    <div className="step-2-section" style={{ padding: '15px', background: 'rgba(30,27,75,0.4)', borderRadius: '8px', marginBottom: '20px', border: '1px solid rgba(139,92,246,0.3)', gridColumn: '1 / -1' }}>
+                      <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#c7d2fe' }}>Parent Information</h3>
+                      <div className="tit-reg-group">
+                        <label className="tit-reg-label">Parent's Full Name <span className="tit-reg-required">*</span></label>
+                        <input type="text" name="parentName" className="tit-reg-input" value={formData.parentName} onChange={handleChange} required />
+                      </div>
+                      {labelPhone && (
+                        <div className="tit-reg-group">
+                          <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
+                          <input type="tel" id="phoneNumber" name="phoneNumber" className="tit-reg-input" value={formData.phoneNumber} onChange={handleChange} required placeholder="e.g. 07XXXXXXXX" />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '20px', gridColumn: '1 / -1' }}>
+                        <button type="button" className="tit-reg-back-btn" onClick={() => setStep(1)}>Back</button>
+                        <button type="submit" className="tit-reg-submit-btn">Next</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 3: Student Details */}
+                  {step === 3 && (
+                    <div className="student-info-section" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                      {!isAuthenticated && <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#c7d2fe', gridColumn: '1 / -1' }}>Student Information</h3>}
 
               {/* Full Name */}
               {labelFullname && (
@@ -966,15 +1094,14 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                     required
                   >
                     <option value="">{t('reg_device_select')}</option>
-                    <option value="Mobile">{t('reg_device_mobile')}</option>
-                    <option value="Tablet">{t('reg_device_tablet')}</option>
-                    <option value="Laptop">{t('reg_device_laptop')}</option>
-                    <option value="Desktop">{t('reg_device_desktop')}</option>
+                    <option value="mobile">Mobile Phone</option>
+                    <option value="laptop">Laptop / PC</option>
+                    <option value="tablet">Tablet</option>
                   </select>
                 </div>
               )}
 
-              {/* Current Grade (2026) */}
+              {/* Current Grade */}
               {labelGrade && (
                 <div className="tit-reg-group">
                   <label htmlFor="currentGrade" className="tit-reg-label">{labelGrade} <span className="tit-reg-required">*</span></label>
@@ -987,16 +1114,16 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                     required
                   >
                     <option value="">{t('reg_grade_select')}</option>
-                    {gradeLevels.map((grade) => (
-                      <option key={grade} value={grade}>
-                        {language === 'ta' ? `தரம் ${grade}` : (language === 'si' ? `ශ්‍රේණිය ${grade}` : `Grade ${grade}`)}
+                    {gradeLevels.map(grade => (
+                      <option key={grade} value={`Grade ${grade}`}>
+                        {language === 'ta' ? `தரம் ${grade}` : `Grade ${grade}`}
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
-              {/* Stream Selection for Grades 12-13 */}
+              {/* Stream (Only for Grades 12 & 13) */}
               {(() => {
                 const gradeNum = getGradeNumber(formData.currentGrade)
                 if (gradeNum && gradeNum >= 12 && gradeNum <= 13 && labelStream) {
@@ -1045,11 +1172,18 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
               {/* Subject Selection */}
               {availableSubjects.length > 0 && (
-                <div className="tit-reg-group">
+                <div 
+                  className="tit-reg-group" 
+                  style={{ 
+                    gridColumn: '1 / -1',
+                    ...(highlightSubjects ? { border: '2px solid red', padding: '10px', borderRadius: '8px', transition: 'all 0.3s' } : { padding: '10px', transition: 'all 0.3s' })
+                  }}
+                  ref={subjectsRef}
+                >
                   <label className="tit-reg-label">{t('reg_subjects')} <span className="tit-reg-required">*</span></label>
                   
                   {/* Dynamic Fee Info Message */}
-                  <div style={{ backgroundColor: '#e0e7ff', color: '#3730a3', padding: '10px 15px', borderRadius: '6px', fontSize: '13px', marginBottom: '12px', borderLeft: '4px solid #4f46e5' }}>
+                  <div style={{ backgroundColor: 'rgba(79, 70, 229, 0.1)', color: '#c7d2fe', padding: '10px 15px', borderRadius: '6px', fontSize: '13px', marginBottom: '12px', borderLeft: '4px solid #8b5cf6' }}>
                     <strong>{dynamicFeeMessage}</strong>
                   </div>
                   <div className="tit-reg-checkbox-group">
@@ -1073,25 +1207,33 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   </div>
                 </div>
               )}
-              </div>
-              </>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                    <button type="button" className="tit-reg-back-btn" onClick={() => setStep(2)}>Back</button>
+                    <button type="submit" className="tit-reg-submit-btn" disabled={isLoading}>
+                      {isLoading ? t('reg_submitting') : 'Register Account'}
+                    </button>
+                  </div>
+                  </div>
+                  )}
+                </>
               )}
-
-              <button
-                type="submit"
-                className="tit-reg-submit-btn"
-                disabled={isLoading}
-              >
-                {isLoading ? t('reg_submitting') : btnNext}
-              </button>
             </form>
           </div>
         )}
 
-        {step === 2 && (
-          <div className="tit-reg-container">
-            <h2 className="tit-reg-title">{t('pay_title')}</h2>
-            <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
+        {step === 4 && (
+          <div className="tit-reg-container" style={inline ? { padding: 0 } : {}}>
+            {!inline && (
+              <>
+                <h2 className="tit-reg-title">{t('pay_title')}</h2>
+                <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
+              </>
+            )}
+            
+            {inline && (
+               <h3 style={{ margin: '0 0 15px 0', fontSize: '1.25rem', color: '#fff', textAlign: 'center' }}>Step 3: Payment</h3>
+            )}
+            
             {error && <div className="tit-reg-error">{error}</div>}
             <div className="tit-reg-payment-options">
               {totalAmount > 0 && (
@@ -1099,38 +1241,38 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                   
                   {appliedPackage ? (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', marginBottom: '0.5rem' }}>
                         <span>Subjects Total:</span>
                         <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                         <span>Package Discount ({appliedPackage.name}):</span>
                         <span>Rs. {monthlyAmount.toFixed(2)}</span>
                       </div>
                     </>
                   ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', marginBottom: '0.5rem' }}>
                       <span>Monthly Fee:</span>
                       <span>Rs. {monthlyAmount.toFixed(2)}</span>
                     </div>
                   )}
 
                   {admissionFee > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', marginBottom: '0.5rem' }}>
                       <span>Admission Fee (First Time):</span>
                       <span>Rs. {admissionFee.toFixed(2)}</span>
                     </div>
                   )}
 
                   <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '0.5rem 0' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#818cf8', fontWeight: 'bold', fontSize: '1.25rem' }}>
                     <span>Total Amount:</span>
                     <span>Rs. {totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               )}
               {totalAmount === 0 && (
-                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#818cf8', marginBottom: '1.25rem' }}>
                   {t('pay_total')}: Rs. {MONTHLY_AMOUNT} (Monthly)
                 </p>
               )}
@@ -1143,11 +1285,27 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 {isLoading ? t('pay_processing') : t('pay_online')}
               </button>
             </div>
-            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
-              {t('pay_back')}
-            </button>
+            {!inline && (
+              <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
+                {t('pay_back')}
+              </button>
+            )}
           </div>
         )}
+    </>
+  )
+
+  if (inline) {
+    return content;
+  }
+
+  return (
+    <div className="tit-reg-overlay">
+      <div className={`tit-reg-wrapper ${step === 4 ? 'tit-reg-step-payment-active' : ''}`}>
+        <button className="tit-reg-close" onClick={handleClose}>
+          <FiX />
+        </button>
+        {content}
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ import './Hero.css'
 const Hero = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage()
+  const { openRegister } = useAuthModal()
   const navigate = useNavigate()
 
   const [yearsCount, setYearsCount] = useState(0)
@@ -248,7 +249,7 @@ const Hero = () => {
               {heroDescription}
             </p>
             <div className="hero-actions">
-              <button onClick={() => navigate('/register')} className="btn-register hero-btn">
+              <button onClick={openRegister} className="btn-register hero-btn">
                 {t('hero_cta')}
                 <FaArrowRight style={{ fontSize: '1rem', marginLeft: '0.5rem', color: '#ffffff' }} />
               </button>

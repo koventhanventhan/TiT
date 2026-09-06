@@ -158,7 +158,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label>Phone / WhatsApp <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->phone_number) }}" required>
+                                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->user ? $student->user->phone_number : '') }}" required>
                             </div>
                         </div>
 
@@ -166,7 +166,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label>Email Address <span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email', $student->email) }}" required>
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $student->user ? $student->user->email : '') }}" required>
                             </div>
                         </div>
 
@@ -234,8 +234,8 @@
                                 <label>Online Experience  <span class="text-danger">*</span></label>
                                 <select name="online_experience" class="form-control" required>
                                     <option value="">Select Experience</option>
-                                    <option value="1" {{ old('online_experience', $student->online_experience) == 1 ? 'selected' : '' }}>Yes </option>
-                                    <option value="0" {{ old('online_experience', $student->online_experience) == 0 ? 'selected' : '' }}>No </option>
+                                    <option value="1" {{ old('online_experience', $student->user ? $student->user->online_experience : null) == 1 ? 'selected' : '' }}>Yes </option>
+                                    <option value="0" {{ old('online_experience', $student->user ? $student->user->online_experience : null) == 0 ? 'selected' : '' }}>No </option>
                                 </select>
                             </div>
                         </div>
@@ -265,7 +265,7 @@
                                 <select name="device_used" class="form-control" required>
                                     <option value="">Select Device</option>
                                     @foreach(['Mobile', 'Tablet', 'Laptop', 'Desktop'] as $device)
-                                        <option value="{{ $device }}" {{ old('device_used', $student->device_used) == $device ? 'selected' : '' }}>{{ $device }}</option>
+                                        <option value="{{ $device }}" {{ old('device_used', $student->user ? $student->user->device_used : null) == $device ? 'selected' : '' }}>{{ $device }}</option>
                                     @endforeach
                                 </select>
                             </div>

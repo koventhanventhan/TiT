@@ -3,10 +3,13 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
     FiBarChart2, FiMessageSquare, FiSettings, FiLogOut,
-    FiMenu, FiX, FiSearch, FiBell, FiChevronRight
+    FiMenu, FiX, FiSearch, FiBell, FiChevronRight,
+    FiUsers, FiPlus, FiLink
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
+import { SelectedChildContext } from '../../context/SelectedChildContext'
+import StudentRegistrationForm from '../StudentRegistrationForm'
 
 
 const menuItems = [
@@ -26,6 +29,12 @@ export default function StudentDashboardLayout({ children, user }) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [showProfileMenu, setShowProfileMenu] = useState(false)
+    const [showChildMenu, setShowChildMenu] = useState(false)
+    const [showAddChildModal, setShowAddChildModal] = useState(false)
+    const [addChildMode, setAddChildMode] = useState('new') // 'new' or 'link'
+    
+    const { childrenList, selectedChild, changeSelectedChild } = React.useContext(SelectedChildContext) || {}
+    
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
     const fileInputRef = React.useRef(null)
@@ -298,6 +307,70 @@ export default function StudentDashboardLayout({ children, user }) {
                         {/* Notification Bell */}
                         <NotificationBell />
 
+                        {/* Child Selector */}
+                        {user?.role === 'user' && childrenList?.length > 0 && (
+                            <div style={{ position: 'relative' }}>
+                                <button 
+                                    onClick={() => setShowChildMenu(!showChildMenu)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+                                        borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc',
+                                        cursor: 'pointer', color: '#1e293b', fontWeight: 600, fontSize: 14
+                                    }}
+                                >
+                                    <FiUsers />
+                                    {selectedChild?.first_name || 'Select Child'}
+                                    <FiChevronRight style={{ transform: showChildMenu ? 'rotate(90deg)' : 'rotate(0)', transition: '0.2s' }} />
+                                </button>
+
+                                {showChildMenu && (
+                                    <div style={{
+                                        position: 'absolute', top: '100%', right: 0, marginTop: 12,
+                                        width: 240, background: '#fff', borderRadius: 12,
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0',
+                                        zIndex: 100, overflow: 'hidden'
+                                    }}>
+                                        <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                                            Your Children
+                                        </div>
+                                        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                                            {childrenList?.map(child => (
+                                                <div 
+                                                    key={child.id}
+                                                    onClick={() => { if(changeSelectedChild) changeSelectedChild(child); setShowChildMenu(false) }}
+                                                    style={{
+                                                        padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                                                        cursor: 'pointer', background: selectedChild?.id === child.id ? '#eef2ff' : 'transparent',
+                                                        color: selectedChild?.id === child.id ? '#4338ca' : '#334155', fontWeight: 500, fontSize: 14,
+                                                        transition: '0.2s'
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = selectedChild?.id === child.id ? '#eef2ff' : '#f8fafc'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = selectedChild?.id === child.id ? '#eef2ff' : 'transparent'}
+                                                >
+                                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: selectedChild?.id === child.id ? '#4338ca' : 'transparent' }} />
+                                                    {child.full_name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div style={{ padding: '8px', borderTop: '1px solid #e2e8f0' }}>
+                                            <button 
+                                                onClick={() => { setAddChildMode('new'); setShowAddChildModal(true); setShowChildMenu(false); }}
+                                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px', background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 600, cursor: 'pointer', borderRadius: 6 }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#eff6ff'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            ><FiPlus /> Add New Child</button>
+                                            <button 
+                                                onClick={() => { setAddChildMode('link'); setShowAddChildModal(true); setShowChildMenu(false); }}
+                                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px', background: 'transparent', border: 'none', color: '#8b5cf6', fontWeight: 600, cursor: 'pointer', borderRadius: 6, marginTop: 4 }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f5f3ff'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            ><FiLink /> Link Sibling</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
                             paddingLeft: 16, borderLeft: '1px solid #e2e8f0', position: 'relative'
@@ -394,6 +467,38 @@ export default function StudentDashboardLayout({ children, user }) {
                     </div>
                 </div>
             </main>
+            {/* Add Child Modal */}
+            {showAddChildModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.8)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(8px)', padding: 20
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: 24, width: '100%', maxWidth: 800,
+                        maxHeight: '90vh', overflowY: 'auto', position: 'relative',
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+                    }}>
+                        <button 
+                            onClick={() => setShowAddChildModal(false)}
+                            style={{
+                                position: 'absolute', top: 20, right: 20, width: 40, height: 40,
+                                borderRadius: '50%', background: '#f1f5f9', border: 'none',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', color: '#64748b', fontSize: 20, zIndex: 10
+                            }}
+                        ><FiX /></button>
+                        
+                        <div style={{ padding: '40px 20px 20px' }}>
+                            <StudentRegistrationForm 
+                                inline={true} 
+                                defaultMode={addChildMode} 
+                                onClose={() => setShowAddChildModal(false)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

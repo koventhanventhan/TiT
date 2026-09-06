@@ -8,6 +8,7 @@ import './About.css'
 const About = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage()
+  const { openRegister } = useAuthModal()
   const navigate = useNavigate()
 
   const [aboutTitle, setAboutTitle] = useState('')
@@ -304,7 +305,7 @@ const About = () => {
         </div>
 
         <div className="about-cta">
-          <button onClick={() => navigate('/register')} className="btn btn-primary">
+          <button onClick={openRegister} className="btn btn-primary">
             {t('btn_register_now')}
           </button>
         </div>

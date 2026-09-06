@@ -30,13 +30,18 @@
 
 .animated-auth-wrapper {
   position: relative;
-  max-width: 37.5rem;
+  max-width: 37.5rem; /* 600px */
   width: 100%;
   margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: max-width 0.3s ease;
+}
+
+.animated-auth-wrapper.wide-wrapper {
+  max-width: 50rem; /* 800px */
 }
 
 .animated-auth-close {
@@ -101,7 +106,6 @@
   position: relative;
   width: 100%;
   min-height: 37.5rem;
-  max-height: 95vh;
   display: flex;
   flex-direction: column;
   background: #1c1c1c;
@@ -112,7 +116,6 @@
 
 .animated-box.register-mode {
   min-height: 39rem;
-  max-height: 95vh;
 }
 
 .animated-box::before {
@@ -141,11 +144,11 @@
 }
 
 .animated-box.register-mode::before {
-  background: linear-gradient(0deg, transparent, #7c3aed, transparent, #8b5cf6);
+  background: linear-gradient(0deg, transparent, #ec4899, transparent, #be185d);
 }
 
 .animated-box.register-mode::after {
-  background: linear-gradient(0deg, transparent, #8b5cf6, transparent, #8b5cf6);
+  background: linear-gradient(0deg, transparent, #be185d, transparent, #be185d);
 }
 
 .animated-box.register-mode {

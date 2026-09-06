@@ -27,9 +27,9 @@ export function AuthModalProvider({ children }) {
   }, [])
 
   const openRegister = useCallback(() => {
-    setIsAuthOpen(false)
-    navigate('/register')
-  }, [navigate])
+    setAuthTab('register')
+    setIsAuthOpen(true)
+  }, [])
 
   const closeAuth = useCallback(() => {
     setIsAuthOpen(false)

@@ -26,6 +26,7 @@ const ICON_MAP = {
 const ClassesPage = () => {
   const { getSetting } = useSettings()
   const { t, translate, language } = useLanguage()
+  const { openRegister } = useAuthModal()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const type = searchParams.get('type') || 'online' // Default to online if missing
@@ -210,7 +211,7 @@ const ClassesPage = () => {
                   </React.Fragment>
                 ))}
               </div>
-              <button onClick={() => navigate('/register')} className="ocl-cta-btn">
+              <button onClick={openRegister} className="ocl-cta-btn">
                 <FiCheckCircle /> {currentText.ctaText} <FiArrowRight />
               </button>
             </div>

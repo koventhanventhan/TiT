@@ -5,6 +5,7 @@ import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword } fr
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
 import { useToast } from '../components/shared/ToastContext'
+import StudentRegistrationForm from './StudentRegistrationForm'
 
 const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const toast = useToast()
@@ -26,6 +27,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [error, setError] = useState('')
   const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
+  const [registerStep, setRegisterStep] = useState(1)
   const [successMessage, setSuccessMessage] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
 
@@ -209,9 +211,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
       toast.success(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
-      // Close the modal and navigate to /register to complete student details
+      // Close the modal
       onClose()
-      navigate('/register')
     } catch (err) {
       setIsLoading(false)
       setError(err.message || 'Registration failed. Please try again.')
@@ -228,8 +229,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       // If it's a new student with pending registration, redirect to registration form
       if (result.user?.role === 'user' && result.user?.registration_status === 'pending') {
         console.log('✨ New Google student! Redirecting to registration form for details...')
-        onClose()
-        navigate('/register')
+        setIsLogin(false)
         return
       }
 
@@ -260,7 +260,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
   return (
     <div className="animated-auth-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="animated-auth-wrapper" onClick={(e) => e.stopPropagation()}>
+      <div className={`animated-auth-wrapper ${!isLogin && registerStep > 1 ? 'wide-wrapper' : ''}`} onClick={(e) => e.stopPropagation()}>
         <button className="animated-auth-close" onClick={onClose}>
           <FiX />
         </button>
@@ -406,112 +406,15 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleSignupSubmit}>
-                <h2>{t('auth_student_reg')}</h2>
-
-                <div className="existing-parent-notice" style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  padding: '12px 15px',
-                  borderRadius: '8px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '5px'
-                }}>
-                  <strong style={{ color: '#3b82f6', fontSize: '0.9rem' }}>Already have a Parent Account?</strong>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>If you want to add another child, please <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true); setError(''); }} style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline' }}>Login here</a> instead of creating a new account.</span>
-                </div>
-
-                {/* Email */}
-                <div className="inputbox">
-                  <input
-                    type="email"
-                    name="email"
-                    value={signupData.email}
-                    onChange={handleSignupChange}
-                    placeholder=" "
-                    required
-                  />
-                  <span>{t('auth_email')}</span>
-                  <i></i>
-                </div>
-
-                {/* Password */}
-                <div className="inputbox">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={signupData.password}
-                    onChange={handleSignupChange}
-                    placeholder=" "
-                    required
-                    minLength="8"
-                  />
-                  <span>{t('auth_password')}</span>
-                  <i></i>
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-
-                {/* Confirm Password */}
-                <div className="inputbox">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={signupData.confirmPassword}
-                    onChange={handleSignupChange}
-                    placeholder=" "
-                    required
-                    minLength="8"
-                  />
-                  <span>{t('auth_confirm_password')}</span>
-                  <i></i>
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-
-                <div className="links">
-                  <span></span>
-                  <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true) }}>
-                    {t('auth_already_account')}
-                  </a>
-                </div>
-
-                {/* Submit Button */}
-                <input
-                  type="submit"
-                  value={isLoading ? t('loading') : t('auth_create_account')}
-                  disabled={isLoading}
-                  className="register-submit-input"
+              <div style={{ maxHeight: '80vh', overflowY: 'auto', padding: '10px 5px' }}>
+                <StudentRegistrationForm 
+                  inline={true} 
+                  onSwitchToLogin={() => setIsLogin(true)} 
+                  onClose={onClose} 
+                  isOpen={isOpen}
+                  onStepChange={setRegisterStep}
                 />
-
-                <div className="divider-auth">
-                  <span>{t('auth_or')}</span>
-                </div>
-
-                <div className="social-auth-buttons">
-                  <button type="button" className="google-auth-btn" onClick={handleGoogleLogin} disabled={isLoading}>
-                    <svg width="20" height="20" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    {t('auth_google')}
-                  </button>
-                </div>
-              </form>
+              </div>
             )}
           </div>
         </div>

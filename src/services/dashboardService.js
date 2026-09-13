@@ -17,6 +17,11 @@ const getAuthHeaders = () => {
     headers['X-Institute-Id'] = user.institute_id
   }
 
+  // Multi-Student Support: Always send the currently selected profile ID
+  if (user?.id) {
+    headers['X-Profile-Id'] = user.id
+  }
+
   return headers
 }
 

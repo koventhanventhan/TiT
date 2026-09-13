@@ -18,6 +18,7 @@ import RegisterPage from './pages/RegisterPage'
 import PolicyPage from './pages/PolicyPage'
 import ExamResultsPage from './pages/ExamResultsPage'
 import TutorApplyPage from './pages/TutorApplyPage'
+import SelectProfile from './pages/SelectProfile'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentOverview from './pages/student/StudentOverview'
 import StudentZoom from './pages/student/StudentZoom'
@@ -98,6 +99,7 @@ function AppContent() {
         <Route path="/recordings" element={<PageWrapper><RecordingsPage /></PageWrapper>} />
         <Route path="/exam-results" element={<PageWrapper><ExamResultsPage /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><RegisterPage /></PageWrapper>} />
+        <Route path="/select-profile" element={<PageWrapper><SelectProfile /></PageWrapper>} />
 
         {/* Policy Routes */}
         <Route path="/privacy" element={<PageWrapper><PolicyPage type="privacy" /></PageWrapper>} />

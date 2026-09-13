@@ -145,6 +145,11 @@ export const loginWithEmail = async (usernameOrEmail, password, remember = false
       const storage = remember ? localStorage : sessionStorage
       storage.setItem('authToken', data.token)
       storage.setItem('user', JSON.stringify(data.user))
+      
+      if (data.profiles && data.profiles.length > 0) {
+        storage.setItem('availableProfiles', JSON.stringify(data.profiles))
+      }
+      
       console.log(`💾 Token and user data saved to ${remember ? 'localStorage' : 'sessionStorage'}`)
 
       // Check if user is admin and redirect to admin dashboard
@@ -182,8 +187,13 @@ export const loginWithEmail = async (usernameOrEmail, password, remember = false
       } else if (data.user && data.token) {
         const isStudent = userRole && String(userRole).toLowerCase() === 'user'
         const isTeacher = userRole && String(userRole).toLowerCase() === 'teacher'
+        
         if (isStudent) {
-          window.location.href = '/student/dashboard'
+          if (data.profiles && data.profiles.length > 1) {
+             window.location.href = '/select-profile'
+          } else {
+             window.location.href = '/student/dashboard'
+          }
           return data
         }
         if (isTeacher) {

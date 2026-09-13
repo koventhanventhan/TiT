@@ -215,6 +215,65 @@ class AuthController extends Controller
     }
 
     /**
+     * Add a sibling (sub-profile) for an authenticated parent
+     */
+    public function addSibling(Request $request)
+    {
+        $parent = $request->user();
+
+        $validationRules = [
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'full_name' => 'required|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female',
+            'school_name' => 'nullable|string|max:255',
+            'medium' => 'nullable|in:english,tamil',
+            'current_grade' => 'required|string|max:50',
+            'stream' => 'nullable|string|max:50|in:arts,bio_maths',
+            'selected_subjects' => 'required|string',
+        ];
+
+        $request->validate($validationRules);
+
+        $userData = $request->only([
+            'first_name', 'last_name', 'full_name', 'date_of_birth', 'gender',
+            'school_name', 'medium', 'current_grade', 'stream', 'selected_subjects'
+        ]);
+
+        $userData['parent_id'] = $parent->id;
+        $userData['name'] = strtolower(str_replace(' ', '_', $request->full_name)) . rand(1000, 9999);
+        $userData['email'] = 'sibling_' . $parent->id . '_' . time() . '@child.local';
+        $userData['password'] = $parent->password; // Inherit parent's password
+        $userData['role'] = 'user';
+        $userData['registration_status'] = $parent->registration_status; // Inherit parent's status
+        $userData['admin_confirmed_at'] = $parent->admin_confirmed_at; // Inherit parent's confirmation
+        $userData['institute_id'] = $parent->institute_id;
+        
+        $sibling = User::create($userData);
+
+        return response()->json([
+            'message' => 'Sibling profile added successfully',
+            'profile' => [
+                'id' => $sibling->id,
+                'username' => $sibling->name,
+                'email' => $sibling->email,
+                'role' => $sibling->role,
+                'full_name' => $sibling->full_name,
+                'medium' => $sibling->medium,
+                'current_grade' => $sibling->current_grade,
+                'selected_subjects' => $sibling->selected_subjects,
+                'institute_id' => $sibling->institute_id,
+                'is_deactivated' => !$sibling->isActive(),
+                'deactivated_at' => $sibling->deactivated_at,
+                'admin_confirmed_at' => $sibling->admin_confirmed_at,
+                'registration_status' => $sibling->registration_status,
+                'is_paid' => false,
+            ]
+        ], 201);
+    }
+
+    /**
      * Login user
      */
     public function login(Request $request)
@@ -288,23 +347,29 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Auth::guard('web')->login($user, $request->boolean('remember'));
         }
 
+        $profiles = collect([$user])->merge($user->children)->map(function ($profile) {
+            return [
+                'id' => $profile->id,
+                'username' => $profile->name,
+                'email' => $profile->email,
+                'role' => $profile->role,
+                'full_name' => $profile->full_name,
+                'medium' => $profile->medium,
+                'current_grade' => $profile->current_grade,
+                'selected_subjects' => $profile->selected_subjects,
+                'institute_id' => $profile->institute_id,
+                'is_deactivated' => !$profile->isActive(),
+                'deactivated_at' => $profile->deactivated_at,
+                'admin_confirmed_at' => $profile->admin_confirmed_at,
+                'registration_status' => $profile->registration_status,
+                'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+            ];
+        });
+
         return response()->json([
             'message' => 'Login successful',
-            'user' => [
-                'id' => $user->id,
-                'username' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'full_name' => $user->full_name,
-                'medium' => $user->medium,
-                'selected_subjects' => $user->selected_subjects,
-                'institute_id' => $user->institute_id,
-                'is_deactivated' => !$user->isActive(),
-                'deactivated_at' => $user->deactivated_at,
-                'admin_confirmed_at' => $user->admin_confirmed_at,
-                'registration_status' => $user->registration_status,
-                'is_paid' => $user->hasPaidForMonth(now()->format('Y-m')),
-            ],
+            'user' => $profiles->first(), // Maintain backwards compatibility for single accounts
+            'profiles' => $profiles,
             'token' => $token,
         ]);
     }

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
     FiBarChart2, FiMessageSquare, FiSettings, FiLogOut,
-    FiMenu, FiX, FiSearch, FiBell, FiChevronRight
+    FiMenu, FiX, FiSearch, FiBell, FiChevronRight, FiUser
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
@@ -17,6 +17,7 @@ const menuItems = [
     { name: 'Materials', icon: FiBookOpen, path: '/student/materials' },
     { name: 'Performance', icon: FiBarChart2, path: '/student/performance' },
     { name: 'Messages', icon: FiMessageSquare, path: '/student/messages' },
+    { name: 'Settings', icon: FiSettings, path: '/student/settings' },
 ]
 
 export default function StudentDashboardLayout({ children, user }) {
@@ -364,6 +365,23 @@ export default function StudentDashboardLayout({ children, user }) {
                                         >
                                             <FiSettings style={{ fontSize: 15 }} /> Upload Photo
                                         </button>
+
+                                        {JSON.parse(localStorage.getItem('availableProfiles') || '[]').length > 1 && (
+                                        <button 
+                                            onClick={() => window.location.href = '/select-profile'}
+                                            style={{
+                                            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                            padding: '10px 12px', background: 'transparent', border: 'none',
+                                            color: '#6366f1', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#e0e7ff'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <FiUser style={{ fontSize: 15 }} /> Switch Profile
+                                        </button>
+                                        )}
+
                                         <button 
                                             onClick={() => window.location.href = '/?logout=1'}
                                             style={{

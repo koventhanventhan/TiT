@@ -49,10 +49,11 @@ Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])
 Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWhatsApp']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/update-avatar', [AuthController::class, 'updateAvatar']);
+    Route::post('/auth/add-sibling', [AuthController::class, 'addSibling']);
     
     // Route to create web session from API token (for admin dashboard access)
     Route::post('/auth/create-session', [AuthController::class, 'createWebSession']);

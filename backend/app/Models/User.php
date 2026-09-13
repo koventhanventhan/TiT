@@ -79,6 +79,7 @@ class User extends Authenticatable implements FilamentUser
         'location',
         'profile_settings',
         'custom_fields',
+        'parent_id',
     ];
 
     /**
@@ -138,6 +139,16 @@ class User extends Authenticatable implements FilamentUser
     public function isActive(): bool
     {
         return $this->deactivated_at === null;
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(User::class, 'parent_id');
     }
 
     public function hasPaidForMonth(string $yearMonth): bool

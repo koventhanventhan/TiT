@@ -67,6 +67,15 @@ export default function StudentSettings() {
                     }} onMouseEnter={e => { if (activeTab !== 'notifications') e.currentTarget.style.background = '#f8fafc' }} onMouseLeave={e => { if (activeTab !== 'notifications') e.currentTarget.style.background = 'transparent' }}>
                         <FiBell style={{ fontSize: 18 }} /> Notifications
                     </button>
+                    
+                    <button onClick={() => setActiveTab('siblings')} style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10,
+                        border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, textAlign: 'left',
+                        background: activeTab === 'siblings' ? '#eef2ff' : 'transparent',
+                        color: activeTab === 'siblings' ? '#6366f1' : '#64748b', transition: 'all 0.2s'
+                    }} onMouseEnter={e => { if (activeTab !== 'siblings') e.currentTarget.style.background = '#f8fafc' }} onMouseLeave={e => { if (activeTab !== 'siblings') e.currentTarget.style.background = 'transparent' }}>
+                        <FiUser style={{ fontSize: 18 }} /> Family / Siblings
+                    </button>
                 </div>
 
                 {/* Content Area */}
@@ -253,6 +262,108 @@ export default function StudentSettings() {
                                         </label>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'siblings' && (
+                        <div>
+                            <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Manage Siblings</h3>
+                            <div style={{ marginBottom: 24 }}>
+                                <p style={{ fontSize: 14, color: '#64748b' }}>
+                                    If you have siblings studying with us, you can add them to this same account. This avoids needing separate emails and passwords. Each sibling will have their own dashboard and payment portal.
+                                </p>
+                            </div>
+                            
+                            <div style={{ background: '#f8fafc', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                                <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: '#334155' }}>Add New Sibling</h4>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.target);
+                                    const data = Object.fromEntries(formData.entries());
+                                    
+                                    try {
+                                        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                                        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+                                        
+                                        // Selected subjects needs to be stringified array for the API
+                                        const subjects = formData.getAll('selected_subjects');
+                                        data.selected_subjects = JSON.stringify(subjects);
+                                        
+                                        const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                ...(token && { 'Authorization': `Bearer ${token}` })
+                                            },
+                                            body: JSON.stringify(data)
+                                        });
+                                        
+                                        if (!res.ok) throw new Error('Failed to add sibling');
+                                        
+                                        const responseData = await res.json();
+                                        alert('Sibling added successfully! They will appear in the Switch Profile menu.');
+                                        
+                                        // Update available profiles
+                                        let profiles = JSON.parse(localStorage.getItem('availableProfiles') || '[]');
+                                        if (profiles.length === 0) {
+                                            const user = JSON.parse(localStorage.getItem('user') || '{}');
+                                            profiles.push(user);
+                                        }
+                                        profiles.push(responseData.profile);
+                                        localStorage.setItem('availableProfiles', JSON.stringify(profiles));
+                                        
+                                        e.target.reset();
+                                        window.location.reload();
+                                    } catch (err) {
+                                        alert('Error adding sibling: ' + err.message);
+                                    }
+                                }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Full Name</label>
+                                            <input name="full_name" required type="text" placeholder="Sibling's Full Name" style={{
+                                                width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #cbd5e1',
+                                                background: '#fff', fontSize: 14, outline: 'none'
+                                            }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Grade</label>
+                                            <select name="current_grade" required style={{
+                                                width: '100%', padding: '10px 16px', borderRadius: 10, border: '1px solid #cbd5e1',
+                                                background: '#fff', fontSize: 14, outline: 'none'
+                                            }}>
+                                                <option value="">Select Grade</option>
+                                                <option value="A/L 2026">A/L 2026</option>
+                                                <option value="A/L 2025">A/L 2025</option>
+                                                <option value="O/L 2024">O/L 2024</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ marginBottom: 20 }}>
+                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Select Subjects</label>
+                                        <div style={{ display: 'flex', gap: 16 }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155' }}>
+                                                <input type="checkbox" name="selected_subjects" value="Maths" /> Maths
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155' }}>
+                                                <input type="checkbox" name="selected_subjects" value="Science" /> Science
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155' }}>
+                                                <input type="checkbox" name="selected_subjects" value="English" /> English
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" style={{
+                                        padding: '10px 24px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10,
+                                        fontWeight: 600, fontSize: 14, cursor: 'pointer'
+                                    }}>
+                                        Add Sibling
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     )}

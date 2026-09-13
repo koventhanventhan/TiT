@@ -4,14 +4,7 @@
  */
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  }
-}
+import { getAuthHeaders } from './apiClient';
 
 /**
  * Call backend Gemini translate API for dynamic text.

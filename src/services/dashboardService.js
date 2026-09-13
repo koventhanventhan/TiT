@@ -1,29 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken')
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-
-  const headers = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id
-  }
-
-  // Multi-Student Support: Always send the currently selected profile ID
-  if (user?.id) {
-    headers['X-Profile-Id'] = user.id
-  }
-
-  return headers
-}
+import { getAuthHeaders } from './apiClient';
 
 export const getStudentZoomClasses = async () => {
   const res = await fetch(`${API_BASE_URL}/student/zoom-classes`, {
@@ -94,10 +71,7 @@ export const getStudentAssignments = async () => {
 export const submitStudentAssignment = async (assignmentId, formData) => {
   const res = await fetch(`${API_BASE_URL}/student/assignments/${assignmentId}/submit`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      Accept: 'application/json',
-    },
+    headers: getAuthHeaders(true),
     credentials: 'include',
     body: formData,
   })
@@ -195,19 +169,9 @@ export const getTeacherAssignments = async () => {
 }
 
 export const createTeacherAssignment = async (formData) => {
-  const token = localStorage.getItem('authToken')
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/json',
-  }
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id
-  }
-
   const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
     method: 'POST',
-    headers,
+    headers: getAuthHeaders(true),
     credentials: 'include',
     body: formData,
   })
@@ -229,19 +193,9 @@ export const getTeacherMaterials = async () => {
 }
 
 export const uploadTeacherMaterial = async (formData) => {
-  const token = localStorage.getItem('authToken')
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/json',
-  }
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id
-  }
-
   const res = await fetch(`${API_BASE_URL}/teacher/materials`, {
     method: 'POST',
-    headers,
+    headers: getAuthHeaders(true),
     credentials: 'include',
     body: formData,
   })

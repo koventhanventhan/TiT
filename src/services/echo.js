@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { getAuthHeaders } from './apiClient';
 
 window.Pusher = Pusher;
 
@@ -10,10 +11,7 @@ const echo = new Echo({
     forceTLS: true,
     authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
     auth: {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            Accept: 'application/json',
-        },
+        headers: getAuthHeaders(),
     },
 });
 

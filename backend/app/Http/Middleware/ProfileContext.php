@@ -28,6 +28,9 @@ class ProfileContext
                     $profileUser = User::find($profileId);
                     if ($profileUser) {
                         Auth::setUser($profileUser);
+                        $request->setUserResolver(function () use ($profileUser) {
+                            return $profileUser;
+                        });
                     }
                 }
             }

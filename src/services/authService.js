@@ -14,15 +14,7 @@ if (import.meta.env.PROD && (API_BASE_URL.includes('localhost') || API_BASE_URL.
 console.log('🔧 API Base URL:', API_BASE_URL)
 console.log('🔧 Context:', import.meta.env.MODE)
 
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
-  return {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-  }
-}
+import { getAuthHeaders, getActiveStorage } from './apiClient';
 
 // Helper function to format Laravel validation errors
 const formatLaravelErrors = (error) => {

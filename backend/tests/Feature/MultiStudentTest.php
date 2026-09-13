@@ -7,83 +7,64 @@ use App\Models\User;
 
 class MultiStudentTest extends TestCase
 {
-    /**
-     * Test 1: User model has parent() relationship defined.
-     */
-    public function test_user_model_has_parent_relationship(): void
+    use \Illuminate\Foundation\Testing\RefreshDatabase;
+
+    public function test_profile_context_middleware_switches_user()
     {
-        $user = new User();
-        $this->assertTrue(method_exists($user, 'parent'), 'User model should have parent() relationship');
+        // 1. Create parent and sibling
+        $parent = clone User::factory()->create(['role' => 'user']);
+        $sibling = clone User::factory()->create([
+            'role' => 'user',
+            'parent_id' => $parent->id
+        ]);
+
+        // 2. Authenticate as parent
+        $this->actingAs($parent);
+
+        // 3. Request without X-Profile-Id should return parent data
+        $responseParent = $this->getJson('/api/auth/user');
+        $responseParent->assertStatus(200);
+        $this->assertEquals($parent->id, $responseParent->json('user.id'));
+
+        // 4. Request with X-Profile-Id should return sibling data
+        $responseSibling = $this->getJson('/api/auth/user', [
+            'X-Profile-Id' => $sibling->id
+        ]);
+        $responseSibling->assertStatus(200);
+        $this->assertEquals($sibling->id, $responseSibling->json('user.id'));
     }
 
-    /**
-     * Test 2: User model has children() relationship defined.
-     */
-    public function test_user_model_has_children_relationship(): void
+    public function test_payment_status_is_scoped_to_active_profile()
     {
-        $user = new User();
-        $this->assertTrue(method_exists($user, 'children'), 'User model should have children() relationship');
-    }
+        $parent = clone User::factory()->create(['role' => 'user']);
+        $sibling = clone User::factory()->create([
+            'role' => 'user',
+            'parent_id' => $parent->id
+        ]);
 
-    /**
-     * Test 3: parent_id is in the fillable array.
-     */
-    public function test_parent_id_is_fillable(): void
-    {
-        $user = new User();
-        $this->assertContains('parent_id', $user->getFillable(), 'parent_id should be in the fillable array');
-    }
+        // Create a payment for sibling only
+        \App\Models\Payment::create([
+            'user_id' => $sibling->id,
+            'amount' => 500,
+            'status' => 'paid',
+            'payment_method' => 'online',
+            'year_month' => now()->format('Y-m'),
+            'gateway_ref' => 'PH_TEST_123',
+            'institute_id' => 1,
+        ]);
 
-    /**
-     * Test 4: ProfileContext middleware class exists.
-     */
-    public function test_profile_context_middleware_exists(): void
-    {
-        $this->assertTrue(
-            class_exists(\App\Http\Middleware\ProfileContext::class),
-            'ProfileContext middleware should exist'
-        );
-    }
+        $this->actingAs($parent);
 
-    /**
-     * Test 5: ProfileContext middleware has a handle method.
-     */
-    public function test_profile_context_has_handle_method(): void
-    {
-        $this->assertTrue(
-            method_exists(\App\Http\Middleware\ProfileContext::class, 'handle'),
-            'ProfileContext middleware should have a handle() method'
-        );
-    }
+        // Parent should not be paid
+        $responseParent = $this->getJson('/api/student/payment-status');
+        $responseParent->assertStatus(200);
+        $this->assertFalse($responseParent->json('is_paid'));
 
-    /**
-     * Test 6: AuthController has addSibling method.
-     */
-    public function test_auth_controller_has_add_sibling_method(): void
-    {
-        $this->assertTrue(
-            method_exists(\App\Http\Controllers\AuthController::class, 'addSibling'),
-            'AuthController should have addSibling() method'
-        );
-    }
-
-    /**
-     * Test 7: parent() returns a BelongsTo relationship.
-     */
-    public function test_parent_relationship_is_belongs_to(): void
-    {
-        $user = new User();
-        $relation = $user->parent();
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $relation);
-    }
-
-    /**
-     * Test 8: children() returns a HasMany relationship.
-     */
-    public function test_children_relationship_is_has_many(): void
-    {
-        $user = new User();
-        $relation = $user->children();
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $relation);
+        // Sibling should be paid
+        $responseSibling = $this->getJson('/api/student/payment-status', [
+            'X-Profile-Id' => $sibling->id
+        ]);
+        $responseSibling->assertStatus(200);
+        $this->assertTrue($responseSibling->json('is_paid'));
     }
 }

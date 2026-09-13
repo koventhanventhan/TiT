@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAuthHeaders } from './apiClient';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -9,9 +10,7 @@ const settingsService = {
   getSettings: async () => {
     try {
       const response = await axios.get(`${API_URL}/settings`, {
-        headers: {
-          'X-Institute-Id': import.meta.env.VITE_INSTITUTE_ID || '1'
-        }
+        headers: getAuthHeaders()
       });
       return response.data;
     } catch (error) {

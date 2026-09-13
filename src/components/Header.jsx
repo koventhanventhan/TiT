@@ -43,6 +43,15 @@ const Header = () => {
     return null;
   };
 
+  const hasMultipleProfiles = () => {
+    try {
+      const profiles = JSON.parse(localStorage.getItem('availableProfiles') || sessionStorage.getItem('availableProfiles') || '[]');
+      return profiles.length > 1;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Measure top bar height dynamically
   useEffect(() => {
     const measureTopBar = () => {
@@ -321,6 +330,12 @@ const Header = () => {
                         )
                       )}
 
+                      {hasMultipleProfiles() && (
+                        <Link to="/select-profile" className="user-dropdown-item" onClick={() => setIsUserDropdownOpen(false)}>
+                          Switch Profile
+                        </Link>
+                      )}
+
                       <button
                         className="user-dropdown-item"
                         onClick={async () => {
@@ -543,6 +558,15 @@ const Header = () => {
                               {t('nav_dashboard')}
                             </Link>
                           )
+                        )}
+                        {hasMultipleProfiles() && (
+                          <Link
+                            to="/select-profile"
+                            className="mobile-nav-link-item secondary"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Switch Profile
+                          </Link>
                         )}
                         <button className="mobile-nav-link-item logout-btn" onClick={async () => { await logout(); setCurrentUser(null); setIsMobileMenuOpen(false); }}>
                           {t('nav_logout')}

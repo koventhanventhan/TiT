@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiPlus } from 'react-icons/fi';
 import '../components/AnimatedAuth.css'; // Reuse auth styles or define custom
+import { getActiveStorage } from '../services/apiClient';
 
 const SelectProfile = () => {
   const navigate = useNavigate();
@@ -24,7 +25,8 @@ const SelectProfile = () => {
   }, [navigate]);
 
   const handleSelectProfile = (profile) => {
-    localStorage.setItem('user', JSON.stringify(profile));
+    const storage = getActiveStorage();
+    storage.setItem('user', JSON.stringify(profile));
     
     // We should probably inform the backend that we're switching profile to get a profile-specific token?
     // Actually we decided to use the same token for now, and the token identifies the parent.

@@ -42,6 +42,7 @@ return [
     ],
 
     'whatsapp' => [
+        'enabled' => env('WHATSAPP_ENABLED', false),
         'driver' => env('WHATSAPP_DRIVER', 'meta'),
         'other_url' => env('WHATSAPP_OTHER_URL'),
         'other_method' => env('WHATSAPP_OTHER_METHOD', 'POST'),

@@ -865,7 +865,7 @@ class RegistrationController extends Controller
         \Illuminate\Support\Facades\Cache::forget('merge_otp_attempts_' . $parentId);
 
         $sentWhatsApp = false;
-        if ($parent->phone_number) {
+        if ($parent->phone_number && config('services.whatsapp.enabled', false)) {
             $whatsappService = app(\App\Services\WhatsAppService::class);
             $sentWhatsApp = $whatsappService->sendTemplate($parent->phone_number, 'tit_otp_verification', 'en', [$otp]);
         }

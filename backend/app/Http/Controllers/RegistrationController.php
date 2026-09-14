@@ -191,9 +191,12 @@ class RegistrationController extends Controller
                 ? '+' . substr($matchedParent->phone_number, 0, 4) . ' *** *** ' . substr($matchedParent->phone_number, -4)
                 : substr($matchedParent->email, 0, 1) . '****@' . explode('@', $matchedParent->email)[1];
                 
+            $mergeToken = (string) \Illuminate\Support\Str::uuid();
+            \Illuminate\Support\Facades\Cache::put('merge_token_' . $mergeToken, $matchedParent->id, now()->addMinutes(10));
+
             return response()->json([
                 'status' => 'existing_account_found',
-                'parent_id' => $matchedParent->id,
+                'merge_token' => $mergeToken,
                 'masked_contact' => $maskedContact,
                 'message' => 'An account with this contact already exists. Please verify to add this student to that family account.'
             ], 409);
@@ -811,10 +814,21 @@ class RegistrationController extends Controller
     public function sendMergeOtp(Request $request)
     {
         $request->validate([
-            'parent_id' => 'required|integer|exists:users,id',
+            'merge_token' => 'required|string',
         ]);
 
-        $parentId = $request->parent_id;
+        $ipLimitKey = 'merge_otp_ip_' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ipLimitKey, 5)) {
+            return response()->json([
+                'message' => 'Too many OTP requests from this IP. Please try again later.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($ipLimitKey, 3600); // 1 hour IP limit
+
+        $parentId = \Illuminate\Support\Facades\Cache::get('merge_token_' . $request->merge_token);
+        if (!$parentId) {
+            return response()->json(['message' => 'Invalid or expired session. Please try registering again.'], 400);
+        }
 
         // Rate limiting: max 3 requests per 10 minutes
         $rateLimitKey = 'merge_otp_requests_' . $parentId;
@@ -862,11 +876,14 @@ class RegistrationController extends Controller
     public function verifyMergeOtp(Request $request)
     {
         $request->validate([
-            'parent_id' => 'required|integer|exists:users,id',
+            'merge_token' => 'required|string',
             'otp' => 'required|string|size:6',
         ]);
 
-        $parentId = $request->parent_id;
+        $parentId = \Illuminate\Support\Facades\Cache::get('merge_token_' . $request->merge_token);
+        if (!$parentId) {
+            return response()->json(['message' => 'Invalid or expired session. Please try registering again.'], 400);
+        }
 
         // Rate limiting verify endpoint: max 10 requests per 10 minutes
         $rateLimitKey = 'merge_verify_requests_' . $parentId;

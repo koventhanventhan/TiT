@@ -56,10 +56,10 @@ class RegistrationMergeTest extends TestCase
         $response = $this->postJson('/api/register/step1', $payload, ['X-Institute-Id' => $this->institute->id]);
 
         $response->assertStatus(409)
-                 ->assertJson([
-                     'status' => 'existing_account_found',
-                     'parent_id' => $parent->id
-                 ]);
+                 ->assertJsonStructure(['status', 'merge_token', 'masked_contact']);
+        
+        $mergeToken = $response->json('merge_token');
+        $this->assertNotNull($mergeToken);
     }
 
     public function test_send_merge_otp_caches_otp_and_respects_rate_limit()
@@ -72,19 +72,48 @@ class RegistrationMergeTest extends TestCase
             'institute_id' => $this->institute->id
         ]);
 
+        $mergeToken = 'test-merge-token-1';
+        Cache::put('merge_token_' . $mergeToken, $parent->id, now()->addMinutes(10));
+
         RateLimiter::clear('merge_otp_requests_' . $parent->id);
 
         for ($i = 0; $i < 3; $i++) {
-            $response = $this->postJson('/api/register/send-merge-otp', ['parent_id' => $parent->id]);
+            $response = $this->postJson('/api/register/send-merge-otp', ['merge_token' => $mergeToken]);
             $response->assertStatus(200);
         }
 
         // 4th request should fail due to rate limit
-        $response = $this->postJson('/api/register/send-merge-otp', ['parent_id' => $parent->id]);
+        $response = $this->postJson('/api/register/send-merge-otp', ['merge_token' => $mergeToken]);
         $response->assertStatus(429);
 
         // Assert OTP is in cache
         $this->assertTrue(Cache::has('merge_otp_' . $parent->id));
+    }
+
+    public function test_send_merge_otp_respects_ip_rate_limit()
+    {
+        $parent = User::factory()->create([
+            'email' => 'parent2@example.com',
+            'phone_number' => '94771234568',
+            'role' => 'user',
+            'parent_id' => null,
+            'institute_id' => $this->institute->id
+        ]);
+
+        $ipLimitKey = 'merge_otp_ip_127.0.0.1';
+        RateLimiter::clear($ipLimitKey);
+
+        for ($i = 0; $i < 5; $i++) {
+            // We can just use an invalid token because the IP check happens before the token lookup
+            $response = $this->postJson('/api/register/send-merge-otp', ['merge_token' => 'invalid-token-here'], ['REMOTE_ADDR' => '127.0.0.1']);
+            // The token is invalid, so it returns 400 (not 429)
+            $response->assertStatus(400);
+        }
+
+        // 6th request should fail due to IP rate limit
+        $response = $this->postJson('/api/register/send-merge-otp', ['merge_token' => 'invalid-token-here'], ['REMOTE_ADDR' => '127.0.0.1']);
+        $response->assertStatus(429)
+                 ->assertJson(['message' => 'Too many OTP requests from this IP. Please try again later.']);
     }
 
     public function test_verify_merge_otp_creates_sibling()
@@ -97,11 +126,13 @@ class RegistrationMergeTest extends TestCase
             'institute_id' => $this->institute->id
         ]);
 
+        $mergeToken = 'test-merge-token-2';
+        Cache::put('merge_token_' . $mergeToken, $parent->id, now()->addMinutes(10));
         Cache::put('merge_otp_' . $parent->id, '123456', now()->addMinutes(10));
         RateLimiter::clear('merge_verify_requests_' . $parent->id);
 
         $payload = [
-            'parent_id' => $parent->id,
+            'merge_token' => $mergeToken,
             'otp' => '123456',
             'full_name' => 'Sibling Student',
             'date_of_birth' => '2012-05-05',
@@ -138,12 +169,14 @@ class RegistrationMergeTest extends TestCase
             'institute_id' => $this->institute->id
         ]);
 
+        $mergeToken = 'test-merge-token-3';
+        Cache::put('merge_token_' . $mergeToken, $parent->id, now()->addMinutes(10));
         Cache::put('merge_otp_' . $parent->id, '123456', now()->addMinutes(10));
         RateLimiter::clear('merge_verify_requests_' . $parent->id);
         Cache::forget('merge_otp_attempts_' . $parent->id);
 
         $payload = [
-            'parent_id' => $parent->id,
+            'merge_token' => $mergeToken,
             'otp' => '654321', // Incorrect OTP
             'full_name' => 'Sibling Student'
         ];

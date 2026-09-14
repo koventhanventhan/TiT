@@ -555,12 +555,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       
       if (res && res.status === 'existing_account_found') {
         setParentData({
-          parentId: res.parent_id,
+          mergeToken: res.merge_token,
           maskedContact: res.masked_contact,
           userData: userData
         })
         import('../services/authService').then(({ sendMergeOtp }) => {
-           sendMergeOtp(res.parent_id).catch(e => console.error("OTP send err", e));
+           sendMergeOtp(res.merge_token).catch(e => console.error("OTP send err", e));
         });
         setStep(1.5)
         setIsLoading(false)
@@ -587,7 +587,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setIsLoading(true)
     try {
       const { verifyMergeOtp } = await import('../services/authService')
-      await verifyMergeOtp(parentData.parentId, otp, parentData.userData)
+      await verifyMergeOtp(parentData.mergeToken, otp, parentData.userData)
       toast.success('Account verified and merged successfully!')
       if (onClose) onClose()
       window.location.href = '/select-profile'
@@ -602,7 +602,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
     setIsLoading(true)
     try {
       const { sendMergeOtp } = await import('../services/authService')
-      await sendMergeOtp(parentData.parentId)
+      await sendMergeOtp(parentData.mergeToken)
       toast.success('OTP resent successfully!')
     } catch (err) {
       setError(err.message || 'Failed to resend OTP.')

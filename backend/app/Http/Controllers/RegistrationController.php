@@ -164,6 +164,42 @@ class RegistrationController extends Controller
             }
         }
 
+        // --- CHECK FOR PARENT MERGE ---
+        $instituteId = $request->header('X-Institute-Id') ?: 1;
+        
+        $matchedParent = null;
+        if ($request->has('phone_number')) {
+            $matchedParent = User::where('phone_number', $request->phone_number)
+                ->where('role', 'user')
+                ->whereNull('parent_id')
+                ->where('institute_id', $instituteId)
+                ->where('id', '!=', $user?->id ?? 0)
+                ->first();
+        }
+        
+        if (!$matchedParent && $request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+            $matchedParent = User::where('email', $request->username)
+                ->where('role', 'user')
+                ->whereNull('parent_id')
+                ->where('institute_id', $instituteId)
+                ->where('id', '!=', $user?->id ?? 0)
+                ->first();
+        }
+
+        if ($matchedParent) {
+            $maskedContact = $matchedParent->phone_number 
+                ? '+' . substr($matchedParent->phone_number, 0, 4) . ' *** *** ' . substr($matchedParent->phone_number, -4)
+                : substr($matchedParent->email, 0, 1) . '****@' . explode('@', $matchedParent->email)[1];
+                
+            return response()->json([
+                'status' => 'existing_account_found',
+                'parent_id' => $matchedParent->id,
+                'masked_contact' => $maskedContact,
+                'message' => 'An account with this contact already exists. Please verify to add this student to that family account.'
+            ], 409);
+        }
+        // ------------------------------
+
         $usernameRules = [
             $user ? 'nullable' : 'required',
             'string',
@@ -767,5 +803,189 @@ class RegistrationController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Send OTP to parent to authorize merging a new sibling account.
+     */
+    public function sendMergeOtp(Request $request)
+    {
+        $request->validate([
+            'parent_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $parentId = $request->parent_id;
+
+        // Rate limiting: max 3 requests per 10 minutes
+        $rateLimitKey = 'merge_otp_requests_' . $parentId;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($rateLimitKey);
+            return response()->json([
+                'message' => 'Too many OTP requests. Please try again in ' . ceil($seconds / 60) . ' minutes.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($rateLimitKey, 600); // 10 minutes
+
+        $parent = User::find($parentId);
+        if (!$parent || $parent->parent_id !== null || $parent->role !== 'user') {
+            return response()->json(['message' => 'Invalid parent account.'], 400);
+        }
+
+        $otp = (string) rand(100000, 999999);
+        
+        // Cache OTP for 10 minutes
+        \Illuminate\Support\Facades\Cache::put('merge_otp_' . $parentId, $otp, now()->addMinutes(10));
+        // Reset the attempt counter for verify
+        \Illuminate\Support\Facades\Cache::forget('merge_otp_attempts_' . $parentId);
+
+        $sentWhatsApp = false;
+        if ($parent->phone_number) {
+            $whatsappService = app(\App\Services\WhatsAppService::class);
+            $sentWhatsApp = $whatsappService->sendTemplate($parent->phone_number, 'tit_otp_verification', 'en', [$otp]);
+        }
+
+        if (!$sentWhatsApp && $parent->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($parent->email)->send(new \App\Mail\MergeAccountOtpMail($parent, $otp));
+            } catch (\Exception $e) {
+                Log::error('MergeAccountOtpMail failed: ' . $e->getMessage());
+                // Don't fail the request if email fallback fails, just log it.
+            }
+        }
+
+        return response()->json(['message' => 'OTP sent successfully.']);
+    }
+
+    /**
+     * Verify OTP and merge the new sibling account into the parent account.
+     */
+    public function verifyMergeOtp(Request $request)
+    {
+        $request->validate([
+            'parent_id' => 'required|integer|exists:users,id',
+            'otp' => 'required|string|size:6',
+        ]);
+
+        $parentId = $request->parent_id;
+
+        // Rate limiting verify endpoint: max 10 requests per 10 minutes
+        $rateLimitKey = 'merge_verify_requests_' . $parentId;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($rateLimitKey);
+            return response()->json([
+                'message' => 'Too many verification attempts. Please try again in ' . ceil($seconds / 60) . ' minutes.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($rateLimitKey, 600);
+
+        // Attempt limiting (5 incorrect OTPs invalidates the current OTP)
+        $attemptsKey = 'merge_otp_attempts_' . $parentId;
+        $attempts = \Illuminate\Support\Facades\Cache::get($attemptsKey, 0);
+
+        if ($attempts >= 5) {
+            \Illuminate\Support\Facades\Cache::forget('merge_otp_' . $parentId);
+            return response()->json([
+                'message' => 'Too many incorrect attempts. The OTP has been invalidated. Please request a new one.'
+            ], 400);
+        }
+
+        $cachedOtp = \Illuminate\Support\Facades\Cache::get('merge_otp_' . $parentId);
+        
+        if (!$cachedOtp) {
+            return response()->json(['message' => 'OTP expired or not found. Please request a new one.'], 400);
+        }
+
+        if ($cachedOtp !== $request->otp) {
+            \Illuminate\Support\Facades\Cache::increment($attemptsKey);
+            if (\Illuminate\Support\Facades\Cache::get($attemptsKey) >= 5) {
+                \Illuminate\Support\Facades\Cache::forget('merge_otp_' . $parentId);
+                return response()->json([
+                    'message' => 'Too many incorrect attempts. The OTP has been invalidated. Please request a new one.'
+                ], 400);
+            }
+            return response()->json(['message' => 'Invalid OTP.'], 400);
+        }
+
+        // OTP Valid. Clear it.
+        \Illuminate\Support\Facades\Cache::forget('merge_otp_' . $parentId);
+        \Illuminate\Support\Facades\Cache::forget($attemptsKey);
+
+        $parent = User::find($parentId);
+
+        // Extract student data similar to addSibling method
+        $userData = [
+            'first_name' => $request->first_name ?? explode(' ', $request->full_name)[0],
+            'last_name' => $request->last_name ?? null,
+            'full_name' => $request->full_name,
+            'date_of_birth' => $request->date_of_birth,
+            'gender' => $request->gender,
+            'school_name' => $request->school_name,
+            'medium' => $request->medium,
+            'current_grade' => $request->current_grade,
+            'stream' => $request->stream ?? null,
+            'selected_subjects' => is_array($request->selected_subjects) ? json_encode($request->selected_subjects) : $request->selected_subjects,
+        ];
+
+        // Ensure array device_used is handled
+        if ($request->has('device_used')) {
+            $userData['device_used'] = is_array($request->device_used) ? json_encode($request->device_used) : $request->device_used;
+        }
+        if ($request->has('online_experience')) {
+            $userData['online_experience'] = $request->online_experience === 'yes' ? 1 : 0;
+        }
+        
+        // Handle custom fields
+        $internalKeys = [
+            'parent_id', 'otp', 'username', 'full_name', 'phone_number', 'email', 'date_of_birth', 
+            'gender', 'school_name', 'medium', 'online_experience', 
+            'device_used', 'current_grade', 'stream', 'selected_subjects', 
+            '_token'
+        ];
+        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
+        if (!empty($customFieldsData)) {
+            $userData['custom_fields'] = $customFieldsData;
+        }
+
+        $userData['parent_id'] = $parent->id;
+        $userData['name'] = strtolower(str_replace(' ', '_', $request->full_name)) . rand(1000, 9999);
+        $userData['email'] = 'sibling_' . $parent->id . '_' . time() . '@child.local';
+        $userData['password'] = $parent->password; // Inherit password
+        $userData['role'] = 'user';
+        $userData['registration_status'] = 'pending_payment'; // Sibling needs own payment
+        $userData['admin_confirmed_at'] = null; // Sibling needs admin confirmation if applicable, or inherit
+        $userData['institute_id'] = $parent->institute_id;
+        
+        $sibling = User::create($userData);
+
+        Log::info('New sibling account created via OTP merge', ['parent_id' => $parent->id, 'sibling_id' => $sibling->id]);
+
+        // Login the parent
+        $token = $parent->createToken('auth_token')->plainTextToken;
+
+        $profiles = collect([$parent])->merge($parent->children)->map(function ($profile) {
+            return [
+                'id' => $profile->id,
+                'username' => $profile->name,
+                'email' => $profile->email,
+                'role' => $profile->role,
+                'full_name' => $profile->full_name,
+                'medium' => $profile->medium,
+                'current_grade' => $profile->current_grade,
+                'selected_subjects' => $profile->selected_subjects,
+                'institute_id' => $profile->institute_id,
+                'is_deactivated' => !$profile->isActive(),
+                'deactivated_at' => $profile->deactivated_at,
+                'admin_confirmed_at' => $profile->admin_confirmed_at,
+                'registration_status' => $profile->registration_status,
+                'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Account merged successfully. You are now logged in.',
+            'user' => $profiles->first(),
+            'profiles' => $profiles,
+            'token' => $token,
+        ]);
     }
 }

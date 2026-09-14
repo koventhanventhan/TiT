@@ -30,6 +30,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
 
   const [step, setStep] = useState(initialStep)
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
+  
+  // OTP state
+  const [otp, setOtp] = useState('')
+  const [parentData, setParentData] = useState(null)
 
   // Fetch subjects grouped by category from backend
   const [packages, setPackages] = useState([])
@@ -547,7 +551,22 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         )
       }
 
-      await registerStep1(userData)
+      const res = await registerStep1(userData)
+      
+      if (res && res.status === 'existing_account_found') {
+        setParentData({
+          parentId: res.parent_id,
+          maskedContact: res.masked_contact,
+          userData: userData
+        })
+        import('../services/authService').then(({ sendMergeOtp }) => {
+           sendMergeOtp(res.parent_id).catch(e => console.error("OTP send err", e));
+        });
+        setStep(1.5)
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(false)
       setStep(2)
       setError('')
@@ -556,6 +575,39 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
       setError(err.message || 'Registration failed. Please try again.')
       console.error('Registration error:', err)
     }
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    if (!otp || otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP.')
+      return
+    }
+    setError('')
+    setIsLoading(true)
+    try {
+      const { verifyMergeOtp } = await import('../services/authService')
+      await verifyMergeOtp(parentData.parentId, otp, parentData.userData)
+      toast.success('Account verified and merged successfully!')
+      if (onClose) onClose()
+      window.location.href = '/select-profile'
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'Invalid OTP.')
+    }
+  }
+
+  const handleResendOtp = async () => {
+    setError('')
+    setIsLoading(true)
+    try {
+      const { sendMergeOtp } = await import('../services/authService')
+      await sendMergeOtp(parentData.parentId)
+      toast.success('OTP resent successfully!')
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP.')
+    }
+    setIsLoading(false)
   }
 
   const handlePaymentOffline = async (amount) => {
@@ -918,6 +970,57 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
                 {isLoading ? t('reg_submitting') : btnNext}
               </button>
             </form>
+          </div>
+        )}
+
+        {step === 1.5 && (
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">Verify Account</h2>
+            <p className="tit-reg-subtitle">An account exists with this contact.</p>
+            {error && <div className="tit-reg-error">{error}</div>}
+            <div className="registration-step step-otp animate-fade-in">
+              <div className="auth-alert info" style={{ marginBottom: '20px' }}>
+                <p>We found an existing account using this contact number/email.</p>
+                <p>To add this student to that family account, please enter the 6-digit code we just sent to <strong>{parentData?.maskedContact}</strong>.</p>
+              </div>
+
+              <form onSubmit={handleVerifyOtp} className="auth-form" style={{ marginTop: '20px' }}>
+                <div className="form-group">
+                  <label>Verification Code (OTP)</label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Enter 6-digit code"
+                    required
+                    style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem' }}
+                  />
+                </div>
+
+                <div className="form-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    className={`btn-primary submit-btn ${isLoading ? 'loading' : ''}`}
+                    disabled={isLoading || otp.length !== 6}
+                    style={{ width: '100%' }}
+                  >
+                    {isLoading ? <span className="spinner"></span> : 'Verify & Link Account'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-text"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    style={{ width: '100%', textAlign: 'center', color: 'var(--primary-color)' }}
+                  >
+                    Resend Code
+                  </button>
+                </div>
+              </form>
+            </div>
+            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }} style={{ marginTop: '1rem', background: 'none', border: 'none', cursor: 'pointer' }}>
+              {t('pay_back') || 'Back'}
+            </button>
           </div>
         )}
 

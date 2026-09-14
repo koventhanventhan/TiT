@@ -35,7 +35,8 @@ class RegistrationMergeTest extends TestCase
             'phone_number' => '94771234567',
             'role' => 'user',
             'parent_id' => null,
-            'institute_id' => $this->institute->id
+            'institute_id' => $this->institute->id,
+            'full_name' => 'Existing Parent'
         ]);
 
         $payload = [
@@ -193,5 +194,117 @@ class RegistrationMergeTest extends TestCase
 
         // OTP should be deleted after 5 attempts
         $this->assertFalse(Cache::has('merge_otp_' . $parent->id));
+    }
+
+    public function test_two_phase_merge_flow_defers_sibling_creation()
+    {
+        $parent = User::factory()->create([
+            'email' => 'parent4@example.com',
+            'phone_number' => '94774444444',
+            'role' => 'user',
+            'parent_id' => null,
+            'institute_id' => $this->institute->id,
+            'full_name' => 'Parent Four'
+        ]);
+
+        // Phase 1: Call AuthController::register
+        $response = $this->postJson('/api/auth/register', [
+            'email' => 'parent4@example.com',
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertStatus(409)
+                 ->assertJsonStructure(['status', 'merge_token', 'masked_contact', 'message']);
+        
+        $mergeToken = $response->json('merge_token');
+
+        // Setup OTP
+        Cache::put('merge_otp_' . $parent->id, '123456', now()->addMinutes(10));
+        RateLimiter::clear('merge_verify_requests_' . $parent->id);
+
+        // Phase 2: Call verifyMergeOtp WITHOUT student details
+        $verifyResponse = $this->postJson('/api/register/verify-merge-otp', [
+            'merge_token' => $mergeToken,
+            'otp' => '123456'
+        ]);
+
+        $verifyResponse->assertStatus(200)
+                       ->assertJson(['message' => 'Account verified. Please complete student details.', 'is_deferred' => true]);
+
+        // Assert no sibling was created yet
+        $this->assertDatabaseMissing('users', [
+            'parent_id' => $parent->id,
+            'role' => 'user'
+        ]);
+
+        // Assert token is marked as verified
+        $this->assertEquals($parent->id, Cache::get('merge_verified_' . $mergeToken));
+
+        // Phase 3: Call step1 with the verified token
+        $step1Response = $this->postJson('/api/register/step1', [
+            'merge_token' => $mergeToken,
+            'username' => 'parent4@example.com', // Match parent
+            'phone_number' => '94774444444',
+            'full_name' => 'Deferred Sibling',
+            'date_of_birth' => '2010-05-15',
+            'gender' => 'female',
+            'school_name' => 'Deferred School',
+            'medium' => 'english',
+            'current_grade' => 'Grade 10',
+            'selected_subjects' => 'Math, Science'
+        ], [
+            'X-Institute-Id' => (string) $this->institute->id
+        ]);
+
+        $step1Response->assertStatus(201);
+
+        // Assert sibling is NOW in database
+        $this->assertDatabaseHas('users', [
+            'parent_id' => $parent->id,
+            'role' => 'user',
+            'full_name' => 'Deferred Sibling'
+        ]);
+
+        // Assert the verified token was consumed
+        $this->assertFalse(Cache::has('merge_verified_' . $mergeToken));
+    }
+
+    public function test_two_phase_merge_flow_prevents_double_submission()
+    {
+        $parent = User::factory()->create([
+            'email' => 'parent5@example.com',
+            'phone_number' => '94775555555',
+            'role' => 'user',
+            'parent_id' => null,
+            'institute_id' => $this->institute->id,
+            'full_name' => 'Parent Five'
+        ]);
+
+        $mergeToken = 'test-double-submit-token';
+        Cache::put('merge_verified_' . $mergeToken, $parent->id, now()->addMinutes(30));
+
+        $payload = [
+            'merge_token' => $mergeToken,
+            'username' => 'parent5@example.com',
+            'phone_number' => '94775555555',
+            'full_name' => 'Double Submit Sibling',
+            'date_of_birth' => '2010-05-15',
+            'gender' => 'male',
+            'school_name' => 'Test School',
+            'medium' => 'english',
+            'current_grade' => 'Grade 9',
+            'selected_subjects' => 'Math'
+        ];
+
+        // First submission - should succeed
+        $response1 = $this->postJson('/api/register/step1', $payload, ['X-Institute-Id' => $this->institute->id]);
+        $response1->assertStatus(201);
+
+        // Second submission - token is gone, so it will fall back to duplicate check or validation failure
+        $response2 = $this->postJson('/api/register/step1', $payload, ['X-Institute-Id' => $this->institute->id]);
+        
+        // It shouldn't create a second sibling with the same details
+        $siblingCount = User::where('parent_id', $parent->id)->count();
+        $this->assertEquals(1, $siblingCount);
     }
 }

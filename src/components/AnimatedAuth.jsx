@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
-import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword } from '../services/authService'
+import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp } from '../services/authService'
 import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
@@ -28,6 +28,12 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [forgotEmail, setForgotEmail] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
+
+  // Merge Flow State
+  const [isMergeFlow, setIsMergeFlow] = useState(false)
+  const [mergeToken, setMergeToken] = useState(null)
+  const [maskedContact, setMaskedContact] = useState('')
+  const [mergeOtp, setMergeOtp] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -229,7 +235,40 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       onClose() // Close the admin registration form
     } catch (err) {
       setIsLoading(false)
+      if (err.isMergeFlow) {
+        setIsMergeFlow(true)
+        setMergeToken(err.mergeToken)
+        setMaskedContact(err.maskedContact)
+        return
+      }
       setError(err.message || 'Registration failed. Please try again.')
+    }
+  }
+
+  const handleMergeOtpSubmit = async (e) => {
+    e.preventDefault()
+    if (!mergeOtp) {
+      setError('Please enter the OTP.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const data = await verifyMergeOtp(mergeToken, mergeOtp)
+      setIsLoading(false)
+      
+      if (data.is_deferred) {
+        setShowStudentForm(true)
+        setIsMergeFlow(false)
+        onClose() 
+      } else {
+        window.location.reload()
+      }
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'OTP Verification failed.')
     }
   }
 
@@ -278,6 +317,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       <StudentRegistrationForm
         isOpen={true}
         onClose={() => setShowStudentForm(false)}
+        mergeToken={mergeToken}
       />
     )
   }
@@ -320,7 +360,39 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
         <div className={`animated-box ${isLogin ? '' : 'register-mode'}`}>
           <div className="animated-form">
-            {isForgotPassword ? (
+            {isMergeFlow ? (
+              <form onSubmit={handleMergeOtpSubmit}>
+                <h2>Verify Account</h2>
+                
+                <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '15px', textAlign: 'center', lineHeight: '1.5' }}>
+                  An account with this contact already exists.<br/>
+                  We've sent a 6-digit code to <strong>{maskedContact}</strong> to verify you're the parent.
+                </p>
+
+                <div className="inputbox">
+                  <input
+                    type="text"
+                    value={mergeOtp}
+                    onChange={(e) => setMergeOtp(e.target.value)}
+                    placeholder=" "
+                    required
+                    maxLength="6"
+                    pattern="\d{6}"
+                  />
+                  <span>6-Digit Code</span>
+                  <i></i>
+                </div>
+
+                <div className="links">
+                  <span></span>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setIsMergeFlow(false); setError(''); }}>
+                    Cancel
+                  </a>
+                </div>
+
+                <input type="submit" value={isLoading ? t('loading') : 'Verify'} disabled={isLoading} />
+              </form>
+            ) : isForgotPassword ? (
               <form onSubmit={handleForgotSubmit}>
                 <h2>{t('auth_forgot')}</h2>
 

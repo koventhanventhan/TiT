@@ -43,6 +43,10 @@ Route::get('/materials/download', [\App\Http\Controllers\Api\TeacherMaterialCont
 // Student registration step 1 (public - creates user with pending_payment)
 Route::post('/register/step1', [RegistrationController::class, 'step1']);
 
+// Sibling merge OTP endpoints (public but rate limited)
+Route::post('/register/send-merge-otp', [RegistrationController::class, 'sendMergeOtp']);
+Route::post('/register/verify-merge-otp', [RegistrationController::class, 'verifyMergeOtp']);
+
 // PayHere notification (public - called by PayHere servers)
 Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])->name('payhere.notify');
 

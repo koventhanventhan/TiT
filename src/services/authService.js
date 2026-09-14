@@ -239,6 +239,12 @@ export const registerStep1 = async (userData) => {
     })
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Registration failed' }))
+      
+      // Handle the existing_account_found special case gracefully
+      if (response.status === 409 && error.status === 'existing_account_found') {
+        return error; // Return it so the component can handle the OTP UI transition
+      }
+
       throw new Error(formatLaravelErrors(error) || `Registration failed (${response.status})`)
     }
     const data = await response.json()
@@ -283,6 +289,65 @@ export const registerStep2 = async (paymentMethod, amount = null) => {
   }
 
   return data
+}
+
+// Send OTP to merge account (sibling registration)
+export const sendMergeOtp = async (parentId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/register/send-merge-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ parent_id: parentId }),
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.message || 'Failed to send OTP')
+    }
+    
+    return await response.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+// Verify OTP to merge account
+export const verifyMergeOtp = async (parentId, otp, registrationData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/register/verify-merge-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ parent_id: parentId, otp, ...registrationData }),
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.message || 'OTP Verification failed')
+    }
+    
+    const data = await response.json()
+    
+    // On success, store token and user to log them in
+    if (data.token) {
+      localStorage.setItem('authToken', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      if (data.profiles && data.profiles.length > 0) {
+        localStorage.setItem('availableProfiles', JSON.stringify(data.profiles))
+      }
+    }
+    
+    return data
+  } catch (error) {
+    throw error
+  }
 }
 
 // Report payment success after gateway (e.g. Razorpay)

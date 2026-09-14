@@ -146,6 +146,9 @@ class NotificationService
      */
     protected function shouldTryWhatsApp(): bool
     {
+        if (!config('services.whatsapp.enabled', false)) {
+            return false;
+        }
         return in_array($this->channel, ['auto', 'whatsapp']);
     }
 

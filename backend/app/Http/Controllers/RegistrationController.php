@@ -874,8 +874,11 @@ class RegistrationController extends Controller
             try {
                 \Illuminate\Support\Facades\Mail::to($parent->email)->send(new \App\Mail\MergeAccountOtpMail($parent, $otp));
             } catch (\Exception $e) {
-                Log::error('MergeAccountOtpMail failed: ' . $e->getMessage());
-                // Don't fail the request if email fallback fails, just log it.
+                \Illuminate\Support\Facades\Log::error('MergeAccountOtpMail failed: ' . $e->getMessage());
+                return response()->json([
+                    'message' => 'Could not send verification code, please try again.',
+                    'error' => $e->getMessage()
+                ], 500);
             }
         }
 

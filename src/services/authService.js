@@ -292,7 +292,7 @@ export const registerStep2 = async (paymentMethod, amount = null) => {
 }
 
 // Send OTP to merge account (sibling registration)
-export const sendMergeOtp = async (parentId) => {
+export const sendMergeOtp = async (mergeToken) => {
   try {
     const response = await fetch(`${API_BASE_URL}/register/send-merge-otp`, {
       method: 'POST',
@@ -301,7 +301,7 @@ export const sendMergeOtp = async (parentId) => {
         'Accept': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ parent_id: parentId }),
+      body: JSON.stringify({ merge_token: mergeToken }),
     })
     
     if (!response.ok) {
@@ -316,7 +316,7 @@ export const sendMergeOtp = async (parentId) => {
 }
 
 // Verify OTP to merge account
-export const verifyMergeOtp = async (parentId, otp, registrationData) => {
+export const verifyMergeOtp = async (mergeToken, otp, registrationData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/register/verify-merge-otp`, {
       method: 'POST',
@@ -325,7 +325,7 @@ export const verifyMergeOtp = async (parentId, otp, registrationData) => {
         'Accept': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ parent_id: parentId, otp, ...registrationData }),
+      body: JSON.stringify({ merge_token: mergeToken, otp, ...registrationData }),
     })
     
     if (!response.ok) {

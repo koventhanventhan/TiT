@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { registerStep1, registerStep2, registerPaymentSuccess } from '../services/authService'
+import { registerStep1, registerStep2, registerPaymentSuccess, verifyMergeOtp } from '../services/authService'
 import { useLocation } from 'react-router-dom'
 import { FiX } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
@@ -14,7 +14,7 @@ import { useToast } from '../components/shared/ToastContext';
 const MONTHLY_AMOUNT = 500
 const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
-const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
+const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) => {
   const toast = useToast();
 
   const { getSetting } = useSettings()
@@ -229,6 +229,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
   const [paymentChoice, setPaymentChoice] = useState(null)
   const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
   const [isFlipped, setIsFlipped] = useState(false)
+
+  // Merge Flow State (for Step 1 duplicate check)
+  const [isMergeFlow, setIsMergeFlow] = useState(false)
+  const [localMergeToken, setLocalMergeToken] = useState(mergeToken || null)
+  const [maskedContact, setMaskedContact] = useState('')
+  const [mergeOtp, setMergeOtp] = useState('')
 
   // Helper function to extract grade number from any format (தரம் X, Grade X, or just X)
   const getGradeNumber = (gradeValue) => {
@@ -549,6 +555,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose }) => {
         ...Object.fromEntries(
           customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
         )
+      }
+
+      if (mergeToken) {
+        userData.merge_token = mergeToken
       }
 
       const res = await registerStep1(userData)

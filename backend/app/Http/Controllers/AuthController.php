@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     use ValidatesEmail;
+    use \App\Traits\HandlesDuplicateAccounts;
 
     /**
      * Register a new user
@@ -104,7 +105,15 @@ class AuthController extends Controller
                 ], 200);
             }
 
-            // Registration is complete — block duplicate email
+            // Check if it's a parent account eligible for sibling merge
+            $instituteId = $request->header('X-Institute-Id') ?: 1;
+            $mergeResponse = $this->checkAndHandleDuplicateParent(null, $request->email, $instituteId);
+            
+            if ($mergeResponse) {
+                return $mergeResponse;
+            }
+
+            // Registration is complete, and it's not a parent account eligible for merge
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => [

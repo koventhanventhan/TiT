@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 class RegistrationController extends Controller
 {
     use \App\Traits\ValidatesEmail;
+    use \App\Traits\HandlesDuplicateAccounts;
 
     protected NotificationService $notifier;
     protected PayHereService $payHere;
@@ -166,40 +167,23 @@ class RegistrationController extends Controller
 
         // --- CHECK FOR PARENT MERGE ---
         $instituteId = $request->header('X-Institute-Id') ?: 1;
-        
-        $matchedParent = null;
-        if ($request->has('phone_number')) {
-            $matchedParent = User::where('phone_number', $request->phone_number)
-                ->where('role', 'user')
-                ->whereNull('parent_id')
-                ->where('institute_id', $instituteId)
-                ->where('id', '!=', $user?->id ?? 0)
-                ->first();
-        }
-        
-        if (!$matchedParent && $request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
-            $matchedParent = User::where('email', $request->username)
-                ->where('role', 'user')
-                ->whereNull('parent_id')
-                ->where('institute_id', $instituteId)
-                ->where('id', '!=', $user?->id ?? 0)
-                ->first();
+        $verifiedParentId = null;
+
+        if ($request->has('merge_token')) {
+            $verifiedParentId = \Illuminate\Support\Facades\Cache::pull('merge_verified_' . $request->merge_token);
         }
 
-        if ($matchedParent) {
-            $maskedContact = $matchedParent->phone_number 
-                ? '+' . substr($matchedParent->phone_number, 0, 4) . ' *** *** ' . substr($matchedParent->phone_number, -4)
-                : substr($matchedParent->email, 0, 1) . '****@' . explode('@', $matchedParent->email)[1];
-                
-            $mergeToken = (string) \Illuminate\Support\Str::uuid();
-            \Illuminate\Support\Facades\Cache::put('merge_token_' . $mergeToken, $matchedParent->id, now()->addMinutes(10));
-
-            return response()->json([
-                'status' => 'existing_account_found',
-                'merge_token' => $mergeToken,
-                'masked_contact' => $maskedContact,
-                'message' => 'An account with this contact already exists. Please verify to add this student to that family account.'
-            ], 409);
+        if (!$verifiedParentId) {
+            $mergeResponse = $this->checkAndHandleDuplicateParent(
+                $request->phone_number, 
+                $request->username, 
+                $instituteId, 
+                $user?->id ?? 0
+            );
+            
+            if ($mergeResponse) {
+                return $mergeResponse;
+            }
         }
         // ------------------------------
 
@@ -257,6 +241,24 @@ class RegistrationController extends Controller
         $streamLabel = \App\Models\SiteSetting::get('register_stream_label');
         if (!empty($streamLabel)) {
             $rules['stream'] = 'nullable|string|max:50';
+        }
+
+        if ($verifiedParentId) {
+            // Remove the unique rules for siblings since they reuse the parent contact
+            foreach (['username', 'phone_number'] as $field) {
+                if (isset($rules[$field])) {
+                    if (is_array($rules[$field])) {
+                        $rules[$field] = array_filter($rules[$field], function($rule) {
+                            return !is_string($rule) || !str_contains($rule, 'unique:users,email');
+                        });
+                        $rules[$field] = array_filter($rules[$field], function($rule) {
+                            return !($rule instanceof \Illuminate\Validation\Rules\Unique);
+                        });
+                    } else {
+                        $rules[$field] = preg_replace('/\|unique:[^\|]+/', '', $rules[$field]);
+                    }
+                }
+            }
         }
 
         $request->validate($rules, [
@@ -317,13 +319,23 @@ class RegistrationController extends Controller
         } else {
             // Create new user
             $userData['name'] = $request->username;
-            // If username looks like email, use it directly
-            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
-                $userData['email'] = $request->username;
+            
+            if ($verifiedParentId) {
+                $parent = User::find($verifiedParentId);
+                $userData['email'] = 'sibling_' . $verifiedParentId . '_' . time() . '@child.local';
+                $userData['phone_number'] = null; // Siblings don't have their own phone number
+                $userData['parent_id'] = $verifiedParentId;
+                $userData['password'] = $parent->password; // Inherit parent's password
             } else {
-                $userData['email'] = $request->username . '@student.local';
+                // If username looks like email, use it directly
+                if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                    $userData['email'] = $request->username;
+                } else {
+                    $userData['email'] = $request->username . '@student.local';
+                }
+                $userData['password'] = Hash::make('student123');
             }
-            $userData['password'] = Hash::make('student123');
+            
             $userData['role'] = 'user';
             $userData['admin_confirmed_at'] = null;
             
@@ -929,7 +941,42 @@ class RegistrationController extends Controller
 
         $parent = User::find($parentId);
 
-        // Extract student data similar to addSibling method
+        // Extract student data
+        // If full_name is missing, we are in Phase 1 (early AuthController flow)
+        if (!$request->has('full_name') || empty($request->full_name)) {
+            // Phase 1: Mark as verified and log the parent in. Defer sibling creation to step 1.
+            \Illuminate\Support\Facades\Cache::put('merge_verified_' . $request->merge_token, $parent->id, now()->addMinutes(30));
+            
+            $token = $parent->createToken('auth_token')->plainTextToken;
+            $profiles = collect([$parent])->merge($parent->children)->map(function ($profile) {
+                return [
+                    'id' => $profile->id,
+                    'username' => $profile->name,
+                    'email' => $profile->email,
+                    'role' => $profile->role,
+                    'full_name' => $profile->full_name,
+                    'medium' => $profile->medium,
+                    'current_grade' => $profile->current_grade,
+                    'selected_subjects' => $profile->selected_subjects,
+                    'institute_id' => $profile->institute_id,
+                    'is_deactivated' => !$profile->isActive(),
+                    'deactivated_at' => $profile->deactivated_at,
+                    'admin_confirmed_at' => $profile->admin_confirmed_at,
+                    'registration_status' => $profile->registration_status,
+                    'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                ];
+            });
+
+            return response()->json([
+                'message' => 'Account verified. Please complete student details.',
+                'user' => $profiles->first(),
+                'profiles' => $profiles,
+                'token' => $token,
+                'is_deferred' => true
+            ]);
+        }
+
+        // Phase 2: Create sibling immediately (existing RegistrationController step 1 flow)
         $userData = [
             'first_name' => $request->first_name ?? explode(' ', $request->full_name)[0],
             'last_name' => $request->last_name ?? null,

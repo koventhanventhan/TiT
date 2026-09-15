@@ -78,7 +78,8 @@ class UserResource extends Resource
 
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn (User $record): string => $record->parent_id && $record->parent ? 'Contact via: ' . $record->parent->name . ' (' . $record->parent->email . ')' : ''),
 
                 Tables\Columns\TextColumn::make('role')
                     ->badge()
@@ -158,7 +159,7 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withoutGlobalScopes();
+        return parent::getEloquentQuery()->withoutGlobalScopes()->with('parent');
     }
 
     public static function getRelations(): array

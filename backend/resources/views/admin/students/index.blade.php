@@ -256,7 +256,11 @@
                                    </td>
                                   <td style="max-width: 7.5rem;">
                                       <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
-                                      <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->email }}">{{ $student->email }}</div>
+                                      @if(empty($student->phone_number) && $student->parent_id && $student->parent)
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="Contact via: {{ $student->parent->name }} ({{ $student->parent->email }})">Contact via: {{ $student->parent->name }}</div>
+                                      @else
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->email }}">{{ $student->email }}</div>
+                                      @endif
                                   </td>
                                  <td class="nowrap-column text-center">
                                      <span style="color:#a78bfa; font-weight:800;">G{{ $student->current_grade ?: '?' }}</span>
@@ -269,6 +273,9 @@
                                      <div style="font-weight: 500; font-size: 0.7rem;">
                                          @if($student->phone_number)
                                              {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}
+                                         @elseif($student->parent_id && $student->parent && $student->parent->phone_number)
+                                             {{ str_starts_with($student->parent->phone_number, '94') ? '+' . $student->parent->phone_number : $student->parent->phone_number }}
+                                             <span style="font-size: 0.55rem; color: #9ca3af; font-style: italic;">(via parent)</span>
                                          @else
                                              N/A
                                          @endif

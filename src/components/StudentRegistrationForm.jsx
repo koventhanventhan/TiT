@@ -14,7 +14,7 @@ import { useToast } from '../components/shared/ToastContext';
 const MONTHLY_AMOUNT = 500
 const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
-const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) => {
+const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, isAddSiblingMode = false }) => {
   const toast = useToast();
 
   const { getSetting } = useSettings()
@@ -64,7 +64,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
   // Auto-initialize email from currently authenticated user
   React.useEffect(() => {
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
-    if (userStr) {
+    if (userStr && !isAddSiblingMode) {
       try {
         const u = JSON.parse(userStr)
         if (u && u.email) {
@@ -510,10 +510,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
       return
     }
 
-    const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
-    if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
-      setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
-      return
+    if (!isAddSiblingMode) {
+      const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+      if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
+        setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
+        return
+      }
     }
 
     const gradeNum = getGradeNumber(formData.currentGrade)
@@ -557,6 +559,41 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
         )
       }
 
+      if (isAddSiblingMode) {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+        const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || 'Failed to add sibling');
+        }
+        
+        const responseData = await res.json();
+        toast.success('Sibling added successfully!');
+        
+        // Update available profiles
+        let profiles = JSON.parse(localStorage.getItem('availableProfiles') || '[]');
+        if (profiles.length === 0) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            profiles.push(user);
+        }
+        profiles.push(responseData.profile);
+        localStorage.setItem('availableProfiles', JSON.stringify(profiles));
+        
+        if (onClose) onClose();
+        window.location.reload();
+        return;
+      }
+
       if (mergeToken) {
         userData.merge_token = mergeToken
       }
@@ -569,10 +606,14 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
           maskedContact: res.masked_contact,
           userData: userData
         })
-        import('../services/authService').then(({ sendMergeOtp }) => {
-           sendMergeOtp(res.merge_token).catch(e => console.error("OTP send err", e));
-        });
-        setStep(1.5)
+        try {
+          const { sendMergeOtp } = await import('../services/authService');
+          await sendMergeOtp(res.merge_token);
+          setStep(1.5)
+        } catch (e) {
+          console.error("OTP send err", e);
+          setError(e.message || 'Failed to send OTP. Please try again.');
+        }
         setIsLoading(false)
         return
       }
@@ -742,7 +783,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
               )}
 
               {/* Phone (for WhatsApp) */}
-              {labelPhone && (
+              {labelPhone && !isAddSiblingMode && (
                 <div className="tit-reg-group">
                   <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
                   <input
@@ -752,7 +793,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
                     className="tit-reg-input"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    required
+                    required={!isAddSiblingMode}
                     placeholder="e.g. 07XXXXXXXX"
                   />
                 </div>

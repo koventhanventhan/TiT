@@ -262,12 +262,16 @@ export const registerStep1 = async (userData) => {
 }
 
 // Student registration step 2 (payment: offline or online)
-export const registerStep2 = async (paymentMethod, amount = null) => {
+export const registerStep2 = async (paymentMethod, amount = null, profileId = null) => {
   const token = localStorage.getItem('authToken')
   if (!token) throw new Error('Not authenticated')
+  const headers = getAuthHeaders()
+  if (profileId) {
+    headers['X-Profile-Id'] = profileId
+  }
   const response = await fetch(`${API_BASE_URL}/register/step2`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers,
     credentials: 'include',
     body: JSON.stringify({ payment_method: paymentMethod, amount: amount || undefined }),
   })
@@ -351,12 +355,16 @@ export const verifyMergeOtp = async (mergeToken, otp, registrationData) => {
 }
 
 // Report payment success after gateway (e.g. Razorpay)
-export const registerPaymentSuccess = async (orderId, paymentId = null) => {
+export const registerPaymentSuccess = async (orderId, paymentId = null, profileId = null) => {
   const token = localStorage.getItem('authToken')
   if (!token) throw new Error('Not authenticated')
+  const headers = getAuthHeaders()
+  if (profileId) {
+    headers['X-Profile-Id'] = profileId
+  }
   const response = await fetch(`${API_BASE_URL}/register/payment-success`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers,
     credentials: 'include',
     body: JSON.stringify({ order_id: orderId, payment_id: paymentId }),
   })

@@ -34,6 +34,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   // OTP state
   const [otp, setOtp] = useState('')
   const [parentData, setParentData] = useState(null)
+  const [newSiblingId, setNewSiblingId] = useState(null)
 
   // Fetch subjects grouped by category from backend
   const [packages, setPackages] = useState([])
@@ -589,8 +590,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
         profiles.push(responseData.profile);
         localStorage.setItem('availableProfiles', JSON.stringify(profiles));
         
-        if (onClose) onClose();
-        window.location.reload();
+        setNewSiblingId(responseData.profile.id);
+        setIsLoading(false);
+        setStep(2);
+        setError('');
         return;
       }
 
@@ -665,10 +668,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
     setError('')
     setIsLoading(true)
     try {
-      await registerStep2('offline', amount)
+      await registerStep2('offline', amount, newSiblingId)
       toast.success(t('pay_offline_success'))
       if (onClose) onClose()
-      window.location.href = '/student/dashboard'
+      if (isAddSiblingMode) window.location.reload()
+      else window.location.href = '/student/dashboard'
     } catch (err) {
       setIsLoading(false)
       setError(err.message || 'Failed.')
@@ -696,7 +700,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
     setError('')
     setIsLoading(true)
     try {
-      const resp = await registerStep2('online', amount)
+      const resp = await registerStep2('online', amount, newSiblingId)
       setIsLoading(false)
 
       if (!window.payhere) {
@@ -711,15 +715,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
       window.payhere.onCompleted = async function onCompleted(orderId) {
         console.log("Payment completed. OrderID:" + orderId)
         try {
-          await registerPaymentSuccess(resp.params.order_id, orderId)
+          await registerPaymentSuccess(resp.params.order_id, orderId, newSiblingId)
           toast.success(t('pay_online_success'))
           if (onClose) onClose()
-          window.location.href = '/student/dashboard'
+          if (isAddSiblingMode) window.location.reload()
+          else window.location.href = '/student/dashboard'
         } catch (err) {
           console.error('Failed to notify backend of payment success:', err)
           toast.info('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
           if (onClose) onClose()
-          window.location.href = '/student/dashboard'
+          if (isAddSiblingMode) window.location.reload()
+          else window.location.href = '/student/dashboard'
         }
       }
 
@@ -1130,8 +1136,15 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                 {isLoading ? t('pay_processing') : t('pay_online')}
               </button>
             </div>
-            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
-              {t('pay_back')}
+            <button type="button" className="tit-reg-back-link" onClick={() => { 
+              if (isAddSiblingMode) {
+                if (onClose) onClose();
+                window.location.reload();
+              } else {
+                setStep(1); setError(''); 
+              }
+            }}>
+              {isAddSiblingMode ? 'Pay Later' : t('pay_back')}
             </button>
           </div>
         )}

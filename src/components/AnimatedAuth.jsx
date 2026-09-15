@@ -234,14 +234,22 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       setShowStudentForm(true)
       onClose() // Close the admin registration form
     } catch (err) {
-      setIsLoading(false)
       if (err.isMergeFlow) {
-        setIsMergeFlow(true)
-        setMergeToken(err.mergeToken)
-        setMaskedContact(err.maskedContact)
-        return
+        try {
+          const { sendMergeOtp } = await import('../services/authService');
+          await sendMergeOtp(err.mergeToken);
+          setIsMergeFlow(true);
+          setMergeToken(err.mergeToken);
+          setMaskedContact(err.maskedContact);
+        } catch (otpErr) {
+          console.error("OTP send err", otpErr);
+          setError(otpErr.message || 'Failed to send OTP. Please try again.');
+        }
+        setIsLoading(false);
+        return;
       }
-      setError(err.message || 'Registration failed. Please try again.')
+      setIsLoading(false);
+      setError(err.message || 'Registration failed. Please try again.');
     }
   }
 

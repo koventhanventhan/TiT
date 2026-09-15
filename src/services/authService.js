@@ -667,40 +667,6 @@ const performFacebookLogin = (appId, resolve, reject) => {
   }, { scope: 'email,public_profile' })
 }
 
-// Verify merge OTP for 409 existing_account_found flow
-export const verifyMergeOtp = async (mergeToken, otp) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/register/verify-merge-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ merge_token: mergeToken, otp }),
-    })
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Verification failed' }))
-      throw new Error(formatLaravelErrors(error) || error.message || 'Verification failed')
-    }
-    
-    const data = await response.json()
-    
-    if (data.token) {
-      localStorage.setItem('authToken', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-    }
-    
-    return data
-  } catch (error) {
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error(`Cannot connect to server at ${API_BASE_URL}.`)
-    }
-    throw error
-  }
-}
-
 // Get current user from API
 export const getCurrentUser = async () => {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')

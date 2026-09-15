@@ -165,27 +165,7 @@ class RegistrationController extends Controller
             }
         }
 
-        // --- CHECK FOR PARENT MERGE ---
-        $instituteId = $request->header('X-Institute-Id') ?: 1;
-        $verifiedParentId = null;
-
-        if ($request->has('merge_token')) {
-            $verifiedParentId = \Illuminate\Support\Facades\Cache::pull('merge_verified_' . $request->merge_token);
-        }
-
-        if (!$verifiedParentId) {
-            $mergeResponse = $this->checkAndHandleDuplicateParent(
-                $request->phone_number, 
-                $request->username, 
-                $instituteId, 
-                $user?->id ?? 0
-            );
-            
-            if ($mergeResponse) {
-                return $mergeResponse;
-            }
-        }
-        // ------------------------------
+        // No parent merge logic needed here
 
         $usernameRules = [
             $user ? 'nullable' : 'required',
@@ -243,23 +223,7 @@ class RegistrationController extends Controller
             $rules['stream'] = 'nullable|string|max:50';
         }
 
-        if ($verifiedParentId) {
-            // Remove the unique rules for siblings since they reuse the parent contact
-            foreach (['username', 'phone_number'] as $field) {
-                if (isset($rules[$field])) {
-                    if (is_array($rules[$field])) {
-                        $rules[$field] = array_filter($rules[$field], function($rule) {
-                            return !is_string($rule) || !str_contains($rule, 'unique:users,email');
-                        });
-                        $rules[$field] = array_filter($rules[$field], function($rule) {
-                            return !($rule instanceof \Illuminate\Validation\Rules\Unique);
-                        });
-                    } else {
-                        $rules[$field] = preg_replace('/\|unique:[^\|]+/', '', $rules[$field]);
-                    }
-                }
-            }
-        }
+        // Unique rules already set up in $rules
 
         $request->validate($rules, [
             'phone_number.unique' => 'This phone number is already registered / இந்த தொலைபேசி எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
@@ -320,21 +284,13 @@ class RegistrationController extends Controller
             // Create new user
             $userData['name'] = $request->username;
             
-            if ($verifiedParentId) {
-                $parent = User::find($verifiedParentId);
-                $userData['email'] = 'sibling_' . $verifiedParentId . '_' . time() . '@child.local';
-                $userData['phone_number'] = null; // Siblings don't have their own phone number
-                $userData['parent_id'] = $verifiedParentId;
-                $userData['password'] = $parent->password; // Inherit parent's password
+            // If username looks like email, use it directly
+            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                $userData['email'] = $request->username;
             } else {
-                // If username looks like email, use it directly
-                if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
-                    $userData['email'] = $request->username;
-                } else {
-                    $userData['email'] = $request->username . '@student.local';
-                }
-                $userData['password'] = Hash::make('student123');
+                $userData['email'] = $request->username . '@student.local';
             }
+            $userData['password'] = Hash::make('student123');
             
             $userData['role'] = 'user';
             $userData['admin_confirmed_at'] = null;

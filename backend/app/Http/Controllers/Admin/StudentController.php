@@ -36,6 +36,7 @@ class StudentController extends Controller
         // Get all students (users with role 'user' and have student fields); include deactivated
         $students = User::where('role', 'user')
             ->whereNotNull('full_name')
+            ->with('parent')
             ->latest()
             ->paginate(15);
         

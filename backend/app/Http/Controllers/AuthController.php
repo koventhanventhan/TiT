@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Traits\ValidatesEmail;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +15,13 @@ class AuthController extends Controller
 {
     use ValidatesEmail;
     use \App\Traits\HandlesDuplicateAccounts;
+
+    protected NotificationService $notifier;
+
+    public function __construct(NotificationService $notifier)
+    {
+        $this->notifier = $notifier;
+    }
 
     /**
      * Register a new user
@@ -243,7 +251,7 @@ class AuthController extends Controller
             'first_name', 'last_name', 'full_name', 'date_of_birth', 
             'gender', 'school_name', 'medium', 'online_experience', 
             'device_used', 'current_grade', 'stream', 'selected_subjects', 
-            '_token'
+            'username', 'phone_number', '_token'
         ];
         $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
 
@@ -266,6 +274,28 @@ class AuthController extends Controller
         $userData['institute_id'] = $parent->institute_id;
         
         $sibling = User::create($userData);
+
+        try {
+            $this->notifier->notifyUser(
+                $sibling, 'welcome', 'tit_welcome',
+                [$sibling->full_name ?? $sibling->name, $sibling->name],
+                ['student_name' => $sibling->full_name ?? $sibling->name, 'username' => $sibling->name]
+            );
+        
+            $this->notifier->notifyUser(
+                $sibling, 'payment_reminder', 'tit_payment_reminder',
+                [$sibling->full_name ?? $sibling->name, now()->format('F Y')],
+                ['student_name' => $sibling->full_name ?? $sibling->name, 'month' => now()->format('F Y')]
+            );
+        
+            $this->notifier->notifyAdmin(
+                'admin_alert', 'tit_welcome',
+                ["Admin Notification", "New Sibling Added: " . ($sibling->full_name ?? $sibling->name)],
+                ['alert_title' => 'New Sibling Registration', 'alert_message' => 'New Sibling: ' . ($sibling->full_name ?? $sibling->name) . ' (Parent: ' . ($parent->full_name ?? $parent->name) . ')']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send sibling registration notifications: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Sibling profile added successfully',

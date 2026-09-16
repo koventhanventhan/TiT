@@ -41,8 +41,16 @@ class NotificationService
         array $emailData = [],
         string $langCode = 'en'
     ): bool {
-        $phone = $user->phone_number;
-        $email = $user->email;
+        $targetUser = $user;
+        if ($user->parent_id) {
+            $parent = User::find($user->parent_id);
+            if ($parent) {
+                $targetUser = $parent;
+            }
+        }
+        
+        $phone = $targetUser->phone_number;
+        $email = $targetUser->email;
         $sent = false;
 
         // Try WhatsApp first (if channel allows)

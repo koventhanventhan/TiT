@@ -565,6 +565,9 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
       }
 
       if (isAddSiblingMode) {
+        // Strip out username and phone_number as they are not needed for siblings
+        delete userData.username;
+        delete userData.phone_number;
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
         const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {

@@ -136,7 +136,7 @@ class StudentController extends Controller
         // Validate the request
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|digits_between:9,15|unique:users,phone_number,' . $student->id,
+            'phone_number' => ($student->parent_id ? 'nullable|' : 'required|') . 'digits_between:9,15|unique:users,phone_number,' . $student->id,
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
@@ -402,21 +402,29 @@ class StudentController extends Controller
         ]);
         
         try {
-            \Illuminate\Support\Facades\Log::info('Initiating password reset email for ID: ' . $id . ' with Email: ' . $student->email);
+            $targetEmail = $student->email;
+            if ($student->parent_id) {
+                $parent = \App\Models\User::find($student->parent_id);
+                if ($parent && $parent->email) {
+                    $targetEmail = $parent->email;
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::info('Initiating password reset email for ID: ' . $id . ' with Target Email: ' . $targetEmail);
             
             $mail = new \App\Mail\GoogleAutoPasswordMail($student, $newPassword, true);
             \Illuminate\Support\Facades\Log::info('Mail body preview', ['html_length' => strlen($mail->render())]);
             
-            if (!$this->isValidEmailForSending($student->email)) {
-                \Illuminate\Support\Facades\Log::warning('StudentController: Skipped password reset email — invalid address: ' . $student->email);
+            if (!$this->isValidEmailForSending($targetEmail)) {
+                \Illuminate\Support\Facades\Log::warning('StudentController: Skipped password reset email — invalid address: ' . $targetEmail);
                 return response()->json(['success' => true, 'message' => 'New password generated, but email could not be sent (invalid email address). Please share the password manually.', 'password' => $newPassword]);
             }
 
-            \Illuminate\Support\Facades\Mail::to($student->email)->send($mail);
-            \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $student->email);
+            \Illuminate\Support\Facades\Mail::to($targetEmail)->send($mail);
+            \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $targetEmail);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $student->email . '. Error: ' . $e->getMessage());
-            $this->markEmailAsBounced($student->email);
+            \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $targetEmail . '. Error: ' . $e->getMessage());
+            $this->markEmailAsBounced($targetEmail);
             return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
         }
         

@@ -157,8 +157,8 @@
                         <!-- Phone Number -->
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
-                                <label>Phone / WhatsApp <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->phone_number) }}" required>
+                                <label>Phone / WhatsApp @if(!$student->parent_id)<span class="text-danger">*</span>@endif</label>
+                                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->phone_number) }}" @if(!$student->parent_id) required @endif>
                             </div>
                         </div>
 

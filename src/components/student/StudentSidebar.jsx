@@ -10,7 +10,8 @@ import {
     FiMessageSquare,
     FiSettings,
     FiLogOut,
-    FiCreditCard
+    FiCreditCard,
+    FiUsers
 } from 'react-icons/fi'
 import './StudentSidebar.css'
 
@@ -24,7 +25,7 @@ export default function StudentSidebar() {
         { name: 'Materials', icon: <FiBookOpen />, path: '/student/materials' },
         // { name: 'Performance', icon: <FiBarChart2 />, path: '/student/performance' }, // Hidden temporarily
         { name: 'Messages', icon: <FiMessageSquare />, path: '/student/messages' },
-        { name: 'Settings', icon: <FiSettings />, path: '/student/settings' },
+        { name: 'Family / Siblings', icon: <FiUsers />, path: '/student/settings' },
     ]
 
     return (

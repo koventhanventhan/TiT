@@ -315,6 +315,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $sibling->admin_confirmed_at,
                 'registration_status' => $sibling->registration_status,
                 'is_paid' => false,
+                'avatar' => $sibling->avatar,
             ]
         ], 201);
     }
@@ -409,6 +410,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'avatar' => $profile->avatar,
             ];
         });
 

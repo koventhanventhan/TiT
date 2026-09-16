@@ -24,6 +24,13 @@ const SelectProfile = () => {
     }
   }, [navigate]);
 
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return null;
+    if (avatar.startsWith('http')) return avatar;
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
+    return baseUrl ? `${baseUrl}${avatar}` : avatar;
+  };
+
   const handleSelectProfile = (profile) => {
     const storage = getActiveStorage();
     storage.setItem('user', JSON.stringify(profile));
@@ -73,12 +80,21 @@ const SelectProfile = () => {
               justifyContent: 'center',
               boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
               border: '3px solid transparent',
-              transition: 'border-color 0.3s'
+              transition: 'border-color 0.3s',
+              overflow: 'hidden'
             }}
             onMouseOver={(e) => e.currentTarget.style.borderColor = 'white'}
             onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
-              <FiUser size={60} color="white" />
+              {profile.avatar ? (
+                <img 
+                  src={getAvatarUrl(profile.avatar)} 
+                  alt="Avatar" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : (
+                <FiUser size={60} color="white" />
+              )}
             </div>
             <h3 style={{ color: 'white', marginTop: '15px', fontSize: '1.2rem', fontWeight: '500', textAlign: 'center' }}>
               {profile.full_name || profile.username}

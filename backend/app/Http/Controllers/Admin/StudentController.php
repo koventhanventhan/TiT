@@ -134,9 +134,8 @@ class StudentController extends Controller
         }
         
         // Validate the request
-        $validated = $request->validate([
+        $validationRules = [
             'full_name' => 'required|string|max:255',
-            'phone_number' => ($student->parent_id ? 'nullable|' : 'required|') . 'digits_between:9,15|unique:users,phone_number,' . $student->id,
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female',
             'school_name' => 'required|string|max:255',
@@ -146,10 +145,16 @@ class StudentController extends Controller
             'current_grade' => 'required|string|max:100',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
             'selected_subjects' => 'nullable|array',
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)],
             'password' => 'nullable|string|min:8',
             'custom_fields' => 'nullable|array',
-        ]);
+        ];
+
+        if (!$student->parent_id) {
+            $validationRules['phone_number'] = 'required|digits_between:9,15|unique:users,phone_number,' . $student->id;
+            $validationRules['email'] = ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)];
+        }
+
+        $validated = $request->validate($validationRules);
         
         // Update student data
         $subjects = null;
@@ -159,7 +164,6 @@ class StudentController extends Controller
 
         $updateData = [
             'full_name' => $validated['full_name'],
-            'phone_number' => $validated['phone_number'],
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
             'school_name' => $validated['school_name'],
@@ -169,9 +173,13 @@ class StudentController extends Controller
             'current_grade' => $validated['current_grade'],
             'stream' => $validated['stream'] ?? null,
             'selected_subjects' => $subjects,
-            'email' => $validated['email'],
             'custom_fields' => $request->custom_fields,
         ];
+
+        if (!$student->parent_id) {
+            $updateData['phone_number'] = $validated['phone_number'];
+            $updateData['email'] = $validated['email'];
+        }
 
         if ($request->filled('password')) {
             $updateData['password'] = Hash::make($request->password);

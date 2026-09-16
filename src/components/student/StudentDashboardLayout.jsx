@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
     FiBarChart2, FiMessageSquare, FiSettings, FiLogOut,
-    FiMenu, FiX, FiSearch, FiBell, FiChevronRight, FiUser
+    FiMenu, FiX, FiSearch, FiBell, FiChevronRight, FiUser, FiUsers
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
@@ -17,7 +17,7 @@ const menuItems = [
     { name: 'Materials', icon: FiBookOpen, path: '/student/materials' },
     { name: 'Performance', icon: FiBarChart2, path: '/student/performance' },
     { name: 'Messages', icon: FiMessageSquare, path: '/student/messages' },
-    { name: 'Settings', icon: FiSettings, path: '/student/settings' },
+    { name: 'Family / Siblings', icon: FiUsers, path: '/student/settings' },
 ]
 
 export default function StudentDashboardLayout({ children, user }) {
@@ -51,6 +51,19 @@ export default function StudentDashboardLayout({ children, user }) {
         return null;
     }
     const avatarUrl = getAvatarUrl();
+
+    let displayEmail = user?.email || ''
+    if (user?.parent_id) {
+        try {
+            const availableProfiles = JSON.parse(localStorage.getItem('availableProfiles') || '[]')
+            const parentProfile = availableProfiles.find(p => !p.parent_id)
+            if (parentProfile && parentProfile.email) {
+                displayEmail = parentProfile.email
+            }
+        } catch (e) {
+            console.error('Failed to parse availableProfiles', e)
+        }
+    }
 
     const handleAvatarChange = async (e) => {
         const file = e.target.files[0];
@@ -349,7 +362,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                 }}>
                                     <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
                                         <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
-                                        <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || ''}</div>
+                                        <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayEmail}</div>
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 

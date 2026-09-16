@@ -128,6 +128,11 @@
                 <h4 class="card-title">Student Information</h4>
             </div>
             <div class="card-body">
+                @if($student->parent_id && $student->parent)
+                    <div class="alert alert-info mb-4" style="background-color: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; color: #e0e0e0; border-radius: 4px;">
+                        <i class="flaticon-381-info text-info mr-2"></i> This student is a sibling. Parent Account: <a href="{{ route('admin.students.show', $student->parent_id) }}" class="text-info font-weight-bold" style="text-decoration: underline;">{{ $student->parent->full_name ?? $student->parent->name }}</a>
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('admin.students.update', $student->id) }}" id="studentEditForm">
                     @csrf
                     @method('PUT')
@@ -158,7 +163,12 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label>Phone / WhatsApp @if(!$student->parent_id)<span class="text-danger">*</span>@endif</label>
-                                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->phone_number) }}" @if(!$student->parent_id) required @endif>
+                                @if($student->parent_id && $student->parent)
+                                    <input type="text" class="form-control" value="{{ $student->parent->phone_number }}" readonly disabled>
+                                    <small class="text-muted d-block mt-1">Inherited from parent account</small>
+                                @else
+                                    <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $student->phone_number) }}" required>
+                                @endif
                             </div>
                         </div>
 
@@ -166,7 +176,12 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label>Email Address <span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email', $student->email) }}" required>
+                                @if($student->parent_id && $student->parent)
+                                    <input type="email" class="form-control" value="{{ $student->parent->email }}" readonly disabled>
+                                    <small class="text-muted d-block mt-1">Inherited from parent account</small>
+                                @else
+                                    <input type="email" name="email" class="form-control" value="{{ old('email', $student->email) }}" required>
+                                @endif
                             </div>
                         </div>
 

@@ -251,7 +251,7 @@ class AuthController extends Controller
             'first_name', 'last_name', 'full_name', 'date_of_birth', 
             'gender', 'school_name', 'medium', 'online_experience', 
             'device_used', 'current_grade', 'stream', 'selected_subjects', 
-            'username', 'phone_number', '_token'
+            'username', 'phone_number', '_token', 'current_institute'
         ];
         $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
 

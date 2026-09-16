@@ -412,7 +412,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
-                'avatar' => $profile->avatar,
+                'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
             ];
         });
 

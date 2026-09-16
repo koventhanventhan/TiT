@@ -87,6 +87,26 @@ export default function StudentDashboardLayout({ children, user }) {
             const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
             const newAvatar = data.avatar.startsWith('http') ? data.avatar : `${baseUrl}${data.avatar}`;
             setLocalAvatar(newAvatar);
+            
+            const storage = getActiveStorage();
+            
+            // Update active user in storage
+            const currentUser = JSON.parse(storage.getItem('user') || '{}');
+            if (currentUser.id) {
+                currentUser.avatar = data.avatar;
+                storage.setItem('user', JSON.stringify(currentUser));
+            }
+            
+            // Update the specific profile in availableProfiles
+            const profiles = JSON.parse(storage.getItem('availableProfiles') || '[]');
+            const updatedProfiles = profiles.map(profile => {
+                if (profile.id === currentUser.id) {
+                    return { ...profile, avatar: data.avatar };
+                }
+                return profile;
+            });
+            storage.setItem('availableProfiles', JSON.stringify(updatedProfiles));
+            
         } catch (err) {
             toast.error('Failed to update profile picture.');
         } finally {

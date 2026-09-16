@@ -911,6 +911,7 @@ class RegistrationController extends Controller
                     'id' => $profile->id,
                     'username' => $profile->name,
                     'email' => $profile->email,
+                    'parent_id' => $profile->parent_id,
                     'role' => $profile->role,
                     'full_name' => $profile->full_name,
                     'medium' => $profile->medium,
@@ -922,6 +923,7 @@ class RegistrationController extends Controller
                     'admin_confirmed_at' => $profile->admin_confirmed_at,
                     'registration_status' => $profile->registration_status,
                     'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                    'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
                 ];
             });
 
@@ -991,6 +993,7 @@ class RegistrationController extends Controller
                 'id' => $profile->id,
                 'username' => $profile->name,
                 'email' => $profile->email,
+                'parent_id' => $profile->parent_id,
                 'role' => $profile->role,
                 'full_name' => $profile->full_name,
                 'medium' => $profile->medium,
@@ -1002,6 +1005,7 @@ class RegistrationController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
             ];
         });
 

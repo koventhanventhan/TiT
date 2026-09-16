@@ -388,6 +388,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                                     </div>
                                 </div>
                             )}
+                            </div>
                         </div>
                     </div>
                 </header>

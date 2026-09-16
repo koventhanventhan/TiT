@@ -442,6 +442,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                     </div>
                                 </div>
                             )}
+                            </div>
                         </div>
                     </div>
                 </header>

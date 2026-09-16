@@ -304,6 +304,7 @@ class AuthController extends Controller
                 'id' => $sibling->id,
                 'username' => $sibling->name,
                 'email' => $sibling->email,
+                'parent_id' => $sibling->parent_id,
                 'role' => $sibling->role,
                 'full_name' => $sibling->full_name,
                 'medium' => $sibling->medium,
@@ -399,6 +400,7 @@ class AuthController extends Controller
                 'id' => $profile->id,
                 'username' => $profile->name,
                 'email' => $profile->email,
+                'parent_id' => $profile->parent_id,
                 'role' => $profile->role,
                 'full_name' => $profile->full_name,
                 'medium' => $profile->medium,
@@ -480,6 +482,7 @@ class AuthController extends Controller
             'id' => $u->id,
             'username' => $u->name,
             'email' => $u->email,
+            'parent_id' => $u->parent_id,
             'role' => $u->role,
             'institute_id' => $u->institute_id, // Added institute_id to user data
         ];

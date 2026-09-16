@@ -40,6 +40,13 @@ Route::post('/translate', [TranslateController::class, 'translate']);
 // Public download route for materials (circumvents symlink issues)
 Route::get('/materials/download', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'download']);
 
+// Public download route for avatars (circumvents symlink issues)
+Route::get('/avatars/{filename}', function ($filename) {
+    $path = storage_path('app/public/avatars/' . $filename);
+    if (!file_exists($path)) abort(404);
+    return response()->file($path);
+});
+
 // Student registration step 1 (public - creates user with pending_payment)
 Route::post('/register/step1', [RegistrationController::class, 'step1']);
 

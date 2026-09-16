@@ -449,7 +449,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Avatar updated successfully',
-                'avatar' => '/storage/' . $path
+                'avatar' => '/api/' . $path
             ]);
         }
 
@@ -487,10 +487,10 @@ class AuthController extends Controller
             'institute_id' => $u->institute_id, // Added institute_id to user data
         ];
         if ($u->avatar) {
-            // Check if it's already a full URL or starts with /storage/
-            $data['avatar'] = (str_starts_with($u->avatar, 'http') || str_starts_with($u->avatar, '/storage/')) 
+            // Check if it's already a full URL or starts with /api/
+            $data['avatar'] = (str_starts_with($u->avatar, 'http') || str_starts_with($u->avatar, '/api/')) 
                 ? $u->avatar 
-                : '/storage/' . $u->avatar;
+                : '/api/' . $u->avatar;
         }
         if ($u->full_name) {
             $data['full_name'] = $u->full_name;

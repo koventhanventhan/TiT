@@ -7,8 +7,10 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiSave,
-  FiLink
+  FiLink,
+  FiUploadCloud
 } from 'react-icons/fi'
+import { getAuthHeaders } from '../../services/apiClient'
 import FirebaseUploader from './FirebaseUploader'
 import './LearningSuiteUploadModal.css'
 
@@ -103,11 +105,7 @@ const LearningSuiteUploadModal = ({
       // Try teacher or admin endpoint based on available token
       const response = await fetch(`${API_BASE_URL}/teacher/materials`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
+        headers: getAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify(payload),
       })
@@ -116,11 +114,7 @@ const LearningSuiteUploadModal = ({
         // Fallback to admin route if teacher fails
         const adminResponse = await fetch(`${API_BASE_URL}/admin/materials`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
+          headers: getAuthHeaders(),
           credentials: 'include',
           body: JSON.stringify(payload),
         })

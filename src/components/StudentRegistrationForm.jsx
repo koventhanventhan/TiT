@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
-import { registerStep1, registerStep2, registerPaymentSuccess, verifyMergeOtp } from '../services/authService'
+import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
+import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
 import { FiX } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
@@ -568,15 +569,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
         // Strip out username and phone_number as they are not needed for siblings
         delete userData.username;
         delete userData.phone_number;
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
         const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                ...(token && { 'Authorization': `Bearer ${token}` })
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(userData)
         });
         

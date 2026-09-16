@@ -3,14 +3,7 @@ import { FiBell, FiX, FiCheckCircle, FiMessageSquare, FiRefreshCw } from 'react-
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
-  return {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-  }
-}
+import { getAuthHeaders } from '../../services/apiClient'
 
 function timeAgo(dateStr) {
   const now = new Date()

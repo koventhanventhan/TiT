@@ -208,19 +208,9 @@ export const uploadTeacherMaterial = async (formData) => {
 }
 
 export const deleteTeacherMaterial = async (id) => {
-  const token = localStorage.getItem('authToken')
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/json',
-  }
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id
-  }
-
   const res = await fetch(`${API_BASE_URL}/teacher/materials/${id}`, {
     method: 'DELETE',
-    headers,
+    headers: getAuthHeaders(),
     credentials: 'include',
   })
   
@@ -356,10 +346,7 @@ export const getAdminAttendance = async () => {
 export const updateAdminBranding = async (formData) => {
   const res = await fetch(`${API_BASE_URL}/admin/branding`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      Accept: 'application/json',
-    },
+    headers: getAuthHeaders(true),
     credentials: 'include',
     body: formData,
   })
@@ -534,19 +521,9 @@ export const bulkDeleteExamResults = async (ids) => {
 
 // Admin: Import file
 export const importExamResults = async (formData) => {
-  const token = localStorage.getItem('authToken')
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/json',
-  }
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id
-  }
-
   const res = await fetch(`${API_BASE_URL}/admin/exam-results/import`, {
     method: 'POST',
-    headers,
+    headers: getAuthHeaders(true),
     credentials: 'include',
     body: formData,
   })

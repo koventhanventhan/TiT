@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
+import { getAuthHeaders } from '../../services/apiClient';
 
 
 const menuItems = [
@@ -59,15 +60,11 @@ export default function TeacherDashboardLayout({ children, user }) {
         const formData = new FormData();
         formData.append('avatar', file);
 
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        
         try {
             const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
             const res = await fetch(`${API_BASE_URL}/auth/update-avatar`, {
                 method: 'POST',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
+                headers: getAuthHeaders(true),
                 body: formData
             });
             if (!res.ok) throw new Error('Upload failed');

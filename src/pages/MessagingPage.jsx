@@ -10,9 +10,10 @@ import { useToast } from '../components/shared/ToastContext';
 
 const API = import.meta.env.VITE_API_URL || '/api'
 
+import { getAuthHeaders } from '../services/apiClient'
+
 function getAuth() {
-    const token = localStorage.getItem('authToken')
-    return { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
+    return { headers: getAuthHeaders() }
 }
 
 export default function MessagingPage() {

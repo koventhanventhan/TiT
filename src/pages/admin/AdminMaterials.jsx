@@ -11,6 +11,7 @@ import {
     FiExternalLink
 } from 'react-icons/fi'
 import { getAdminMaterials } from '../../services/dashboardService'
+import { getAuthHeaders } from '../../services/apiClient'
 import LearningSuiteUploadModal from '../../components/shared/LearningSuiteUploadModal'
 import { deleteFileFromFirebase } from '../../services/firebaseStorageService'
 import './AdminMaterials.css'
@@ -48,15 +49,10 @@ export default function AdminMaterials() {
         if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) return
 
         try {
-            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
-            
             // Delete from database
             const res = await fetch(`${API_BASE_URL}/admin/materials/${item.id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` }),
-                },
+                headers: getAuthHeaders(),
                 credentials: 'include',
             })
 

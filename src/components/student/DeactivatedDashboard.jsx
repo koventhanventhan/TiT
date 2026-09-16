@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiLock, FiCreditCard, FiX } from 'react-icons/fi';
 import { logout, registerStep2 } from '../../services/authService';
+import { getAuthHeaders } from '../../services/apiClient';
 import '../StudentRegistrationForm.css';
 import { useToast } from '../../components/shared/ToastContext';
 
@@ -18,10 +19,7 @@ const DeactivatedDashboard = () => {
       try {
         const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
         const response = await fetch(`${API_BASE_URL}/student/payment-details`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Accept': 'application/json'
-          }
+          headers: getAuthHeaders()
         });
         if (response.ok) {
           const data = await response.json();

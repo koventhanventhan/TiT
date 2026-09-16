@@ -6,7 +6,7 @@ node_modules/
 .pnp.js
 /coverage
 /build
-# /dist  ← dist is now tracked so cPanel gets updated via git pull
+/dist
 .vite/
 npm-debug.log*
 yarn-debug.log*
@@ -52,6 +52,7 @@ backend/storage/logs/*.log
 # ========================
 backend/check-*.php
 backend/debug-*.php
+backend/test_*.php
 backend/debug_*.php
 backend/create-admin.php
 backend/diag.php

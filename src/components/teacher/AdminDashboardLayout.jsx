@@ -17,6 +17,7 @@ export default function AdminDashboardLayout({ children, user }) {
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
     const fileInputRef = React.useRef(null)
+    const profileMenuRef = React.useRef(null)
     
     const instituteName = getSetting('site_name', 'Campus Governance')
 
@@ -63,6 +64,18 @@ export default function AdminDashboardLayout({ children, user }) {
         }
     }
 
+    React.useEffect(() => {
+        function handleClickOutside(event) {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+                setShowProfileDropdown(false)
+            }
+        }
+        if (showProfileDropdown) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showProfileDropdown])
+
     return (
         <div className={`admin-console-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
              <div className="mobile-sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
@@ -92,7 +105,7 @@ export default function AdminDashboardLayout({ children, user }) {
 
                             <GlobalNotificationBell />
 
-                            <div className="admin-profile-trigger" onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
+                            <div className="admin-profile-trigger" ref={profileMenuRef} onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
                                 <div className="admin-avatar" style={{ opacity: uploadingAvatar ? 0.6 : 1, position: 'relative' }}>
                                     {avatarUrl && !uploadingAvatar ? (
                                         <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
@@ -124,7 +137,7 @@ export default function AdminDashboardLayout({ children, user }) {
                                         </div>
                                         <div className="dropdown-divider"></div>
                                         <button 
-                                            onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                                            onClick={(e) => { e.stopPropagation(); setShowProfileDropdown(false); fileInputRef.current?.click(); }}
                                             className="dropdown-item" style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                                         >
                                             <FiSettings /> Upload Photo

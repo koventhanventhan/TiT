@@ -30,6 +30,7 @@ export default function TeacherDashboardLayout({ children, user }) {
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
     const fileInputRef = React.useRef(null)
+    const profileMenuRef = React.useRef(null)
     const location = useLocation()
     const navigate = useNavigate()
 
@@ -80,6 +81,18 @@ export default function TeacherDashboardLayout({ children, user }) {
             setShowProfileMenu(false);
         }
     }
+
+    React.useEffect(() => {
+        function handleClickOutside(event) {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+                setShowProfileMenu(false)
+            }
+        }
+        if (showProfileMenu) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showProfileMenu])
 
     return (
         <div style={{ display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
@@ -300,7 +313,8 @@ export default function TeacherDashboardLayout({ children, user }) {
                                 <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{displayName} </div>
                                 <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Instructor</div>
                             </div>
-                            
+                            {/* User Profile Dropdown */}
+                            <div style={{ position: 'relative' }} ref={profileMenuRef}>
                             {/* Profile Dropdown Trigger */}
                             <div 
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -346,7 +360,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() => { setShowProfileMenu(false); fileInputRef.current?.click(); }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
@@ -359,7 +373,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                                             <FiSettings style={{ fontSize: 15 }} /> Upload Photo
                                         </button>
                                         <button 
-                                            onClick={() => window.location.href = '/?logout=1'}
+                                            onClick={() => { setShowProfileMenu(false); window.location.href = '/?logout=1'; }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',

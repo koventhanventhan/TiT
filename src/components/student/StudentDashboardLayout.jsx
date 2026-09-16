@@ -30,6 +30,7 @@ export default function StudentDashboardLayout({ children, user }) {
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
     const fileInputRef = React.useRef(null)
+    const profileMenuRef = React.useRef(null)
     
     const location = useLocation()
     const navigate = useNavigate()
@@ -114,6 +115,18 @@ export default function StudentDashboardLayout({ children, user }) {
             setShowProfileMenu(false);
         }
     }
+
+    React.useEffect(() => {
+        function handleClickOutside(event) {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+                setShowProfileMenu(false)
+            }
+        }
+        if (showProfileMenu) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showProfileMenu])
 
     return (
         <div style={{ display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
@@ -338,7 +351,8 @@ export default function StudentDashboardLayout({ children, user }) {
                                 <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Student Portal</div>
                             </div>
                             
-                            {/* Profile Dropdown Trigger */}
+                            {/* User Profile Dropdown */}
+                            <div style={{ position: 'relative' }} ref={profileMenuRef}>
                             <div 
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                                 style={{
@@ -383,7 +397,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() => { setShowProfileMenu(false); fileInputRef.current?.click(); }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
@@ -398,7 +412,7 @@ export default function StudentDashboardLayout({ children, user }) {
 
                                         {JSON.parse(getActiveStorage().getItem('availableProfiles') || '[]').length > 1 && (
                                         <button 
-                                            onClick={() => window.location.href = '/select-profile'}
+                                            onClick={() => { setShowProfileMenu(false); window.location.href = '/select-profile'; }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
@@ -413,7 +427,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                         )}
 
                                         <button 
-                                            onClick={() => window.location.href = '/?logout=1'}
+                                            onClick={() => { setShowProfileMenu(false); window.location.href = '/?logout=1'; }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',

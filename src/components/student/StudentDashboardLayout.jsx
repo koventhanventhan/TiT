@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
-
+import { getActiveStorage } from '../../services/apiClient';
 
 const menuItems = [
     { name: 'Dashboard', icon: FiHome, path: '/student/dashboard' },
@@ -55,7 +55,8 @@ export default function StudentDashboardLayout({ children, user }) {
     let displayEmail = user?.email || ''
     if (user?.parent_id) {
         try {
-            const availableProfiles = JSON.parse(localStorage.getItem('availableProfiles') || '[]')
+            const storage = getActiveStorage()
+            const availableProfiles = JSON.parse(storage.getItem('availableProfiles') || '[]')
             const parentProfile = availableProfiles.find(p => !p.parent_id)
             if (parentProfile && parentProfile.email) {
                 displayEmail = parentProfile.email
@@ -379,7 +380,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                             <FiSettings style={{ fontSize: 15 }} /> Upload Photo
                                         </button>
 
-                                        {JSON.parse(localStorage.getItem('availableProfiles') || '[]').length > 1 && (
+                                        {JSON.parse(getActiveStorage().getItem('availableProfiles') || '[]').length > 1 && (
                                         <button 
                                             onClick={() => window.location.href = '/select-profile'}
                                             style={{

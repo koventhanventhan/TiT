@@ -10,7 +10,8 @@ const SelectProfile = () => {
   const [profiles, setProfiles] = useState([]);
 
   useEffect(() => {
-    const savedProfiles = localStorage.getItem('availableProfiles');
+    const storage = getActiveStorage();
+    const savedProfiles = storage.getItem('availableProfiles');
     if (savedProfiles) {
       try {
         setProfiles(JSON.parse(savedProfiles));

@@ -242,15 +242,14 @@ class RegistrationController extends Controller
             }
         }
 
-        // Identify custom fields (everything else in request except fixed keys and internal ones)
-        $internalKeys = [
-            'username', 'full_name', 'phone_number', 'date_of_birth', 
-            'gender', 'school_name', 'medium', 'online_experience', 
-            'device_used', 'current_grade', 'stream', 'selected_subjects', 
-            '_token', 'current_institute'
-        ];
+        $customFieldLabels = json_decode(\App\Models\SiteSetting::get('register_custom_fields', '[]'), true) ?: [];
+        $allowedCustomKeys = array_map(function($label) {
+            return preg_replace('/\s+/', '_', strtolower($label));
+        }, $customFieldLabels);
         
-        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
+        $customFieldsData = array_filter($request->only($allowedCustomKeys), function($value) {
+            return $value !== null;
+        });
 
         $userData = [
             'full_name' => $request->full_name,
@@ -958,13 +957,15 @@ class RegistrationController extends Controller
         }
         
         // Handle custom fields
-        $internalKeys = [
-            'parent_id', 'otp', 'username', 'full_name', 'phone_number', 'email', 'date_of_birth', 
-            'gender', 'school_name', 'medium', 'online_experience', 
-            'device_used', 'current_grade', 'stream', 'selected_subjects', 
-            '_token'
-        ];
-        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
+        $customFieldLabels = json_decode(\App\Models\SiteSetting::get('register_custom_fields', '[]'), true) ?: [];
+        $allowedCustomKeys = array_map(function($label) {
+            return preg_replace('/\s+/', '_', strtolower($label));
+        }, $customFieldLabels);
+        
+        $customFieldsData = array_filter($request->only($allowedCustomKeys), function($value) {
+            return $value !== null;
+        });
+        
         if (!empty($customFieldsData)) {
             $userData['custom_fields'] = $customFieldsData;
         }

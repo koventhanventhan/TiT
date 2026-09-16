@@ -247,13 +247,14 @@ class AuthController extends Controller
 
         $request->validate($validationRules);
 
-        $internalKeys = [
-            'first_name', 'last_name', 'full_name', 'date_of_birth', 
-            'gender', 'school_name', 'medium', 'online_experience', 
-            'device_used', 'current_grade', 'stream', 'selected_subjects', 
-            'username', 'phone_number', '_token', 'current_institute'
-        ];
-        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
+        $customFieldLabels = json_decode(\App\Models\SiteSetting::get('register_custom_fields', '[]'), true) ?: [];
+        $allowedCustomKeys = array_map(function($label) {
+            return preg_replace('/\s+/', '_', strtolower($label));
+        }, $customFieldLabels);
+        
+        $customFieldsData = array_filter($request->only($allowedCustomKeys), function($value) {
+            return $value !== null;
+        });
 
         $userData = $request->only([
             'first_name', 'last_name', 'full_name', 'date_of_birth', 'gender',

@@ -233,14 +233,28 @@ class AuthController extends Controller
             'current_grade' => 'required|string|max:50',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
             'selected_subjects' => 'required|string',
+            'online_experience' => 'nullable',
+            'device_used' => 'nullable',
         ];
 
         $request->validate($validationRules);
+
+        $internalKeys = [
+            'first_name', 'last_name', 'full_name', 'date_of_birth', 
+            'gender', 'school_name', 'medium', 'online_experience', 
+            'device_used', 'current_grade', 'stream', 'selected_subjects', 
+            '_token'
+        ];
+        $customFieldsData = array_diff_key($request->all(), array_flip($internalKeys));
 
         $userData = $request->only([
             'first_name', 'last_name', 'full_name', 'date_of_birth', 'gender',
             'school_name', 'medium', 'current_grade', 'stream', 'selected_subjects'
         ]);
+
+        $userData['online_experience'] = $request->has('online_experience') ? $request->boolean('online_experience') : null;
+        $userData['device_used'] = is_array($request->device_used) ? json_encode($request->device_used) : $request->device_used;
+        $userData['custom_fields'] = !empty($customFieldsData) ? $customFieldsData : null;
 
         $userData['parent_id'] = $parent->id;
         $userData['name'] = strtolower(str_replace(' ', '_', $request->full_name)) . rand(1000, 9999);

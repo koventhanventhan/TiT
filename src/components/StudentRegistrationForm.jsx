@@ -17,7 +17,7 @@ const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, isAddSiblingMode = false }) => {
   const toast = useToast();
 
-  const { getSetting } = useSettings()
+  const { getSetting, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
   
@@ -38,8 +38,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
 
   // Fetch subjects grouped by category from backend
   const [packages, setPackages] = useState([])
+  const [packagesLoading, setPackagesLoading] = useState(true)
   React.useEffect(() => {
     const fetchData = async () => {
+      setPackagesLoading(true)
       try {
         const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
         const [subRes, pkgRes] = await Promise.all([
@@ -57,6 +59,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
         }
       } catch (err) {
         console.error('Failed to fetch data:', err)
+      } finally {
+        setPackagesLoading(false)
       }
     }
     fetchData()
@@ -1022,9 +1026,9 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
               <button
                 type="submit"
                 className="tit-reg-submit-btn"
-                disabled={isLoading}
+                disabled={isLoading || settingsLoading || packagesLoading}
               >
-                {isLoading ? t('reg_submitting') : btnNext}
+                {isLoading ? t('reg_submitting') : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
               </button>
             </form>
           </div>
@@ -1086,7 +1090,13 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
             <h2 className="tit-reg-title">{t('pay_title')}</h2>
             <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="tit-reg-error">{error}</div>}
-            <div className="tit-reg-payment-options">
+            
+            {(settingsLoading || packagesLoading) ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#4f46e5' }}>
+                Calculating payment details...
+              </div>
+            ) : (
+              <div className="tit-reg-payment-options">
               {totalAmount > 0 && (
                 <div style={{ marginBottom: '1rem', background: 'rgba(235, 129, 83, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(235, 129, 83, 0.3)' }}>
                   
@@ -1136,6 +1146,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                 {isLoading ? t('pay_processing') : t('pay_online')}
               </button>
             </div>
+            )}
             <button type="button" className="tit-reg-back-link" onClick={() => { 
               if (isAddSiblingMode) {
                 if (onClose) onClose();

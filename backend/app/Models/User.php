@@ -80,6 +80,9 @@ class User extends Authenticatable implements FilamentUser
         'profile_settings',
         'custom_fields',
         'parent_id',
+        'needs_subject_review',
+        'is_graduated',
+        'last_promoted_at',
     ];
 
     /**
@@ -103,6 +106,9 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'admin_confirmed_at' => 'datetime',
             'deactivated_at' => 'datetime',
+            'last_promoted_at' => 'datetime',
+            'needs_subject_review' => 'boolean',
+            'is_graduated' => 'boolean',
             'password' => 'hashed',
             'profile_settings' => 'array',
             'selected_subjects' => 'array',
@@ -173,17 +179,24 @@ class User extends Authenticatable implements FilamentUser
         return false;
     }
 
-    public function getSubjectCategory()
+    public function getNumericGrade(): ?int
     {
         $grade = $this->current_grade;
-        $stream = strtolower($this->stream ?? '');
-        $gradeNum = 0;
+        if (!$grade) return null;
 
         if (preg_match('/Grade\s*(\d+)/i', $grade, $m)) {
-            $gradeNum = (int)$m[1];
+            return (int)$m[1];
         } elseif (preg_match('/(\d+)/', $grade, $m)) {
-            $gradeNum = (int)$m[1];
+            return (int)$m[1];
         }
+
+        return null;
+    }
+
+    public function getSubjectCategory()
+    {
+        $stream = strtolower($this->stream ?? '');
+        $gradeNum = $this->getNumericGrade() ?? 0;
 
         if ($gradeNum >= 1 && $gradeNum <= 2) return 'grade_1_to_2';
         if ($gradeNum == 3) return 'grade_3';

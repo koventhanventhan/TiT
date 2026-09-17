@@ -176,6 +176,10 @@ class StudentDashboardController extends Controller
             'user' => [
                 'name' => $user->name,
                 'full_name' => $user->full_name,
+                'needs_subject_review' => $user->needs_subject_review,
+                'current_grade' => $user->current_grade,
+                'medium' => $user->medium,
+                'selected_subjects' => $user->selected_subjects,
             ],
             'today_classes' => $todayClasses,
             'upcoming_classes' => $upcomingClasses,

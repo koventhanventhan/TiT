@@ -59,6 +59,20 @@ export const getStudentStats = async () => {
   return res.json()
 }
 
+export const updateStudentSubjects = async (subjects) => {
+  const res = await fetch(`${API_BASE_URL}/student/update-subjects`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ subjects }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to update subjects')
+  }
+  return res.json()
+}
+
 export const getStudentAssignments = async () => {
   const res = await fetch(`${API_BASE_URL}/student/assignments`, {
     headers: getAuthHeaders(),
@@ -234,6 +248,20 @@ export const getAdminStudents = async (params = {}) => {
     credentials: 'include',
   })
   if (!res.ok) throw new Error('Failed to load students')
+  return res.json()
+}
+
+export const promoteAdminStudents = async (studentIds, force = false) => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/promote`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ student_ids: studentIds, force }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to promote students')
+  }
   return res.json()
 }
 

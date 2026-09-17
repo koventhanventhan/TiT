@@ -90,10 +90,12 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
             Route::get('/messages', [StudentMessageController::class, 'index']);
             Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
             
-            Route::get('/stats', [\App\Http\Controllers\Api\StudentDashboardController::class, 'stats']);
+            Route::get('/overview', [\App\Http\Controllers\Api\StudentDashboardController::class, 'overview']);
             Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
             Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
             Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
+            Route::get('/zoom-schedules', [\App\Http\Controllers\Api\StudentZoomController::class, 'schedules']);
+            Route::post('/update-subjects', [\App\Http\Controllers\StudentSubjectController::class, 'updateSubjects']);
         });
     });
 
@@ -120,6 +122,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
     // Admin Master Control Routes (Tenant Aware + Role: admin)
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
+        Route::post('/students/promote', [\App\Http\Controllers\AdminPromotionController::class, 'promoteStudents']);
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
         Route::post('/students/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteStudents']);

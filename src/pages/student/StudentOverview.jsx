@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi'
 import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
+import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
 
 // Reusable Stat Card
 function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
@@ -41,6 +42,7 @@ export default function StudentOverview() {
     const [stats, setStats] = useState(null)
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [showSubjectModal, setShowSubjectModal] = useState(false)
 
     const hour = new Date().getHours()
     const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
@@ -104,6 +106,56 @@ export default function StudentOverview() {
                     </p>
                 </div>
             </div>
+
+            {/* Subject Review Banner */}
+            {stats?.user?.needs_subject_review && (
+                <div style={{
+                    background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                    borderRadius: 16, padding: '20px 24px', marginBottom: 24,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    border: '1px solid #fca5a5'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{
+                            width: 44, height: 44, borderRadius: '50%', background: '#f87171',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                        }}>
+                            <FiAlertCircle size={24} />
+                        </div>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#991b1b' }}>Action Required: Update Subjects</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: 14, color: '#b91c1c' }}>
+                                You've been promoted to <strong>{stats?.user?.current_grade}</strong>. Some subjects may have changed. Please select your subjects for the new academic year.
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowSubjectModal(true)} style={{
+                        padding: '10px 20px', borderRadius: 8, border: 'none', background: '#ef4444',
+                        color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                        boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.2)'
+                    }}>
+                        Review Subjects
+                    </button>
+                </div>
+            )}
+
+            <SubjectUpdateModal 
+                isOpen={showSubjectModal} 
+                onClose={() => setShowSubjectModal(false)}
+                currentGrade={stats?.user?.current_grade}
+                medium={stats?.user?.medium}
+                initialSubjects={stats?.user?.selected_subjects}
+                onUpdateSuccess={(newSubjects) => {
+                    setStats(prev => ({
+                        ...prev,
+                        user: {
+                            ...prev.user,
+                            needs_subject_review: false,
+                            selected_subjects: newSubjects
+                        }
+                    }))
+                }}
+            />
 
             {/* Payment Module */}
             <StudentPaymentModule />

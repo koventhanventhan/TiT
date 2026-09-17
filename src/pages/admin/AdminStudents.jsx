@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
+import {
     FiSearch,
     FiFilter,
     FiCheckCircle,
@@ -7,9 +8,10 @@ import {
     FiEye,
     FiMoreVertical,
     FiUser,
-    FiTrash2
+    FiTrash2,
+    FiTrendingUp
 } from 'react-icons/fi'
-import { getAdminStudents, bulkDeleteAdminStudents } from '../../services/dashboardService'
+import { getAdminStudents, bulkDeleteAdminStudents, promoteAdminStudents } from '../../services/dashboardService'
 import './AdminStudents.css'
 import { useToast } from '../../components/shared/ToastContext';
 
@@ -22,6 +24,8 @@ export default function AdminStudents() {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedStudents, setSelectedStudents] = useState([])
     const [isDeleting, setIsDeleting] = useState(false)
+    const [isPromoting, setIsPromoting] = useState(false)
+    const [reviewFilter, setReviewFilter] = useState('all')
 
     useEffect(() => {
         async function loadStudents() {
@@ -37,10 +41,11 @@ export default function AdminStudents() {
         loadStudents()
     }, [])
 
-    const filteredStudents = students.filter(s =>
-        s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const filteredStudents = students.filter(s => {
+        const matchesSearch = s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesReview = reviewFilter === 'all' || (reviewFilter === 'review' && s.needs_subject_review) || (reviewFilter === 'ok' && !s.needs_subject_review)
+        return matchesSearch && matchesReview
+    })
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
@@ -65,11 +70,35 @@ export default function AdminStudents() {
             await bulkDeleteAdminStudents(selectedStudents)
             setStudents(students.filter(s => !selectedStudents.includes(s.id)))
             setSelectedStudents([])
+            toast.success('Students deleted successfully')
         } catch (error) {
             console.error('Failed to delete students:', error)
             toast.error('Error deleting students')
         } finally {
             setIsDeleting(false)
+        }
+    }
+
+    const handlePromoteSelected = async () => {
+        const confirmMsg = `Are you sure you want to promote ${selectedStudents.length} students to the next grade? This action cannot be easily undone.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setIsPromoting(true);
+        try {
+            const result = await promoteAdminStudents(selectedStudents);
+            
+            // Reload students to reflect changes
+            const updatedData = await getAdminStudents();
+            setStudents(updatedData.data || []);
+            
+            setSelectedStudents([]);
+            
+            toast.success(`Promoted ${result.summary.promoted} students. ${result.summary.flagged} need subject review. ${result.summary.skipped > 0 ? result.summary.skipped + ' skipped.' : ''}`);
+        } catch (error) {
+            console.error('Failed to promote students:', error)
+            toast.error(error.message || 'Error promoting students')
+        } finally {
+            setIsPromoting(false)
         }
     }
 
@@ -84,9 +113,14 @@ export default function AdminStudents() {
                 </div>
                 <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
                     {selectedStudents.length > 0 && (
-                        <button className="delete-btn" onClick={handleDeleteSelected} disabled={isDeleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                            <FiTrash2 /> Delete Selected ({selectedStudents.length})
-                        </button>
+                        <>
+                            <button className="delete-btn" onClick={handlePromoteSelected} disabled={isPromoting || isDeleting} style={{ backgroundColor: '#6366f1', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <FiTrendingUp /> Promote Selected ({selectedStudents.length})
+                            </button>
+                            <button className="delete-btn" onClick={handleDeleteSelected} disabled={isPromoting || isDeleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <FiTrash2 /> Delete Selected
+                            </button>
+                        </>
                     )}
                     <button className="add-btn" onClick={() => toast.info("Registration feature coming soon")}>+ Register New Student</button>
                 </div>
@@ -103,6 +137,15 @@ export default function AdminStudents() {
                     />
                 </div>
                 <div className="filter-group">
+                    <select 
+                        value={reviewFilter} 
+                        onChange={(e) => setReviewFilter(e.target.value)} 
+                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#475569', outline: 'none' }}
+                    >
+                        <option value="all">All Subjects Status</option>
+                        <option value="review">Needs Review</option>
+                        <option value="ok">Subjects OK</option>
+                    </select>
                     <button className="filter-btn" onClick={() => toast.info("Grade filter coming soon")}><FiFilter /> Grade</button>
                     <button className="filter-btn" onClick={() => toast.info("Status filter coming soon")}><FiFilter /> Status</button>
                 </div>
@@ -154,9 +197,14 @@ export default function AdminStudents() {
                                 </td>
                                 <td>{new Date(student.created_at).toLocaleDateString()}</td>
                                 <td>
-                                    <span className={`status-pill ${student.registration_status}`}>
-                                        {student.registration_status.replace('_', ' ')}
+                                    <span className={`status-pill ${student.is_graduated ? 'graduated' : student.registration_status}`} style={student.is_graduated ? {background: '#f3e8ff', color: '#7e22ce'} : {}}>
+                                        {student.is_graduated ? 'Graduated' : student.registration_status.replace('_', ' ')}
                                     </span>
+                                    {student.needs_subject_review && (
+                                        <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px', fontWeight: '600' }}>
+                                            ⚠️ Needs Subject Review
+                                        </div>
+                                    )}
                                 </td>
                                 <td>
                                     <span className={`payment-pill ${student.has_paid ? 'paid' : 'unpaid'}`}>

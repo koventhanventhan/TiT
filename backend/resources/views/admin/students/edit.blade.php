@@ -454,10 +454,18 @@
                         <button type="submit" class="btn btn-primary" style="background: #ffab2d; border-color: #ffab2d; color: #000; font-weight: 700;">
                             <i class="flaticon-381-save"></i> UPDATE STUDENT DETAILS
                         </button>
+                        <button type="button" class="btn btn-warning ml-2" style="font-weight: 700;" onclick="submitPromoteForm()">
+                            <i class="flaticon-381-upload"></i> PROMOTE STUDENT
+                        </button>
                         <a href="{{ route('admin.students.index') }}" class="btn btn-dark ml-2">
                             CANCEL
                         </a>
                     </div>
+                </form>
+
+                <form id="promoteStudentForm" action="{{ route('admin.students.promote') }}" method="POST" style="display: none;">
+                    @csrf
+                    <input type="hidden" name="ids" value="{{ $student->id }}">
                 </form>
 
                 <div class="payment-management-section mt-5 border-top pt-4">
@@ -684,6 +692,13 @@
             btn.disabled = false;
             alert('A network error occurred.');
         });
+    }
+
+    function submitPromoteForm() {
+        if (!confirm("Are you sure you want to promote this student to the next grade? This will carry forward subjects automatically and may flag them for subject review.")) {
+            return;
+        }
+        document.getElementById('promoteStudentForm').submit();
     }
 </script>
 @endpush

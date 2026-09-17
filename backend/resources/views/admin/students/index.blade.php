@@ -173,6 +173,9 @@
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
             <div>
+                <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">
+                    <i class="flaticon-381-upload"></i> Promote Selected (<span id="promoteSelectedCount">0</span>)
+                </button>
                 <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
                     <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
                 </button>
@@ -187,6 +190,11 @@
 <form id="bulkDeleteForm" action="{{ route('admin.students.bulk-delete') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="ids" id="bulkDeleteIds">
+</form>
+
+<form id="bulkPromoteForm" action="{{ route('admin.students.promote') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="ids" id="bulkPromoteIds">
 </form>
 
 @if (session('success'))
@@ -394,17 +402,24 @@
         const selectAll = document.getElementById('checkAll');
         const checkboxes = document.querySelectorAll('.student-checkbox');
         const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkPromoteBtn = document.getElementById('bulkPromoteBtn');
         const selectedCountSpan = document.getElementById('selectedCount');
+        const promoteSelectedCountSpan = document.getElementById('promoteSelectedCount');
         const bulkDeleteIdsInput = document.getElementById('bulkDeleteIds');
+        const bulkPromoteIdsInput = document.getElementById('bulkPromoteIds');
 
         function updateBulkDeleteBtn() {
             const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
             if (selected.length > 0) {
                 bulkDeleteBtn.style.display = 'inline-block';
+                bulkPromoteBtn.style.display = 'inline-block';
                 selectedCountSpan.textContent = selected.length;
+                promoteSelectedCountSpan.textContent = selected.length;
                 bulkDeleteIdsInput.value = selected.join(',');
+                bulkPromoteIdsInput.value = selected.join(',');
             } else {
                 bulkDeleteBtn.style.display = 'none';
+                bulkPromoteBtn.style.display = 'none';
             }
         }
 
@@ -432,6 +447,24 @@
         }).then(function(result) {
             if (result.value) {
                 document.getElementById('bulkDeleteForm').submit();
+            }
+        });
+    }
+
+    function submitBulkPromote() {
+        Swal.fire({
+            title: 'Promote Students?',
+            text: "You are about to promote the selected students to their next grade. This will carry forward their subjects and may flag them for subject review.",
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#ffab2d',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, promote them!',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup'
+        }).then(function(result) {
+            if (result.value) {
+                document.getElementById('bulkPromoteForm').submit();
             }
         });
     }

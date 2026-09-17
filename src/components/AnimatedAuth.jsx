@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
-import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp } from '../services/authService'
+import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp, sendVerificationOtp, verifyEmailOtp } from '../services/authService'
 import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
@@ -34,6 +34,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [mergeToken, setMergeToken] = useState(null)
   const [maskedContact, setMaskedContact] = useState('')
   const [mergeOtp, setMergeOtp] = useState('')
+
+  // Email Verification Flow State
+  const [isVerificationFlow, setIsVerificationFlow] = useState(false)
+  const [verificationOtp, setVerificationOtp] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -214,10 +218,33 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       return
     }
 
-
     setIsLoading(true)
 
     try {
+      await sendVerificationOtp(signupData.email)
+      setIsLoading(false)
+      setIsVerificationFlow(true)
+      setVerificationOtp('')
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'Failed to send verification code. Please check your email and try again.')
+    }
+  }
+
+  const handleVerificationSubmit = async (e) => {
+    e.preventDefault()
+    if (!verificationOtp) {
+      setError('Please enter the OTP.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      await verifyEmailOtp(signupData.email, verificationOtp)
+      
+      // OTP verified successfully, now proceed with actual registration
       let userData = {
         email: signupData.email,
         password: signupData.password,
@@ -230,26 +257,28 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       // Show success message
       toast.success(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
-      // After successful admin registration, show student entry form
+      // After successful registration, show student entry form
       setShowStudentForm(true)
-      onClose() // Close the admin registration form
+      setIsVerificationFlow(false)
+      onClose() 
     } catch (err) {
+      setIsLoading(false)
       if (err.isMergeFlow) {
+        // This shouldn't typically happen here since we check for duplicates at the OTP send stage,
+        // but just in case, handle it.
         try {
           const { sendMergeOtp } = await import('../services/authService');
           await sendMergeOtp(err.mergeToken);
+          setIsVerificationFlow(false);
           setIsMergeFlow(true);
           setMergeToken(err.mergeToken);
           setMaskedContact(err.maskedContact);
         } catch (otpErr) {
-          console.error("OTP send err", otpErr);
           setError(otpErr.message || 'Failed to send OTP. Please try again.');
         }
-        setIsLoading(false);
         return;
       }
-      setIsLoading(false);
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'Verification failed. Please try again.')
     }
   }
 
@@ -399,6 +428,38 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 </div>
 
                 <input type="submit" value={isLoading ? t('loading') : 'Verify'} disabled={isLoading} />
+              </form>
+            ) : isVerificationFlow ? (
+              <form onSubmit={handleVerificationSubmit}>
+                <h2>Verify Email</h2>
+                
+                <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '15px', textAlign: 'center', lineHeight: '1.5' }}>
+                  We've sent a 6-digit code to <strong>{signupData.email}</strong>.<br/>
+                  Please enter it below to verify your email.
+                </p>
+
+                <div className="inputbox">
+                  <input
+                    type="text"
+                    value={verificationOtp}
+                    onChange={(e) => setVerificationOtp(e.target.value)}
+                    placeholder=" "
+                    required
+                    maxLength="6"
+                    pattern="\d{6}"
+                  />
+                  <span>6-Digit Code</span>
+                  <i></i>
+                </div>
+
+                <div className="links">
+                  <span></span>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setIsVerificationFlow(false); setError(''); }}>
+                    Cancel
+                  </a>
+                </div>
+
+                <input type="submit" value={isLoading ? t('loading') : 'Verify & Register'} disabled={isLoading} />
               </form>
             ) : isForgotPassword ? (
               <form onSubmit={handleForgotSubmit}>

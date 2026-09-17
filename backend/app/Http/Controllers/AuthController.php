@@ -67,6 +67,16 @@ class AuthController extends Controller
 
         $request->validate($validationRules, $customMessages);
 
+        // --- Check if email was verified via OTP ---
+        if (!\Illuminate\Support\Facades\Cache::get('email_verified_' . $request->email)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'email' => ['Please verify your email address first. / முதலில் உங்கள் மின்னஞ்சல் முகவரியை சரிபார்க்கவும்.']
+                ]
+            ], 422);
+        }
+
         // --- DNS/MX email domain validation ---
         // Reject emails with unreachable/non-existent domains BEFORE any DB operations
         if (!$this->isValidEmailForSending($request->email)) {
@@ -187,6 +197,8 @@ class AuthController extends Controller
         $userData['institute_id'] = $institute->id;
 
         $user = User::create($userData);
+
+        \Illuminate\Support\Facades\Cache::forget('email_verified_' . $request->email);
 
         // NOTE: Admin notification is NOT sent here (basic signup).
         // It is sent in RegistrationController@step1 after the student completes
@@ -703,6 +715,135 @@ class AuthController extends Controller
                 </script>
             ");
         }
+    }
+
+    /**
+     * Send email verification OTP
+     */
+    public function sendVerificationOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $email = $request->email;
+
+        // Rate limit by IP (max 5 per hour)
+        $ipLimitKey = 'email_otp_ip_' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ipLimitKey, 5)) {
+            return response()->json([
+                'message' => 'Too many requests from this IP. Please try again later.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($ipLimitKey, 3600); // 1 hour
+
+        // Rate limit by Email (max 3 per 10 minutes)
+        $emailLimitKey = 'email_otp_requests_' . $email;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($emailLimitKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($emailLimitKey);
+            return response()->json([
+                'message' => 'Too many OTP requests. Please try again in ' . ceil($seconds / 60) . ' minutes.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($emailLimitKey, 600); // 10 minutes
+
+        // Check if email domain is valid
+        if (!$this->isValidEmailForSending($email)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'email' => ['This email address appears to be invalid or cannot receive emails. Please use a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
+                ]
+            ], 422);
+        }
+
+        // Check if already registered
+        $existingUser = User::where('email', $email)->first();
+        if ($existingUser && $existingUser->full_name !== null) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.']
+                ]
+            ], 422);
+        }
+
+        $otp = (string) rand(100000, 999999);
+        
+        \Illuminate\Support\Facades\Cache::put('email_verify_' . $email, $otp, now()->addMinutes(10));
+        \Illuminate\Support\Facades\Cache::forget('email_verify_attempts_' . $email);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\EmailVerificationOtpMail($email, $otp));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('EmailVerificationOtpMail failed: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Could not send verification code, please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json(['message' => 'OTP sent successfully.']);
+    }
+
+    /**
+     * Verify email OTP
+     */
+    public function verifyEmailOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6'
+        ]);
+
+        $email = $request->email;
+
+        // Rate limiting for verify endpoint
+        $rateLimitKey = 'email_verify_requests_' . $email;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($rateLimitKey);
+            return response()->json([
+                'message' => 'Too many verification attempts. Please try again in ' . ceil($seconds / 60) . ' minutes.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($rateLimitKey, 600);
+
+        // Attempt limiting (5 incorrect OTPs invalidates the current OTP)
+        $attemptsKey = 'email_verify_attempts_' . $email;
+        $attempts = \Illuminate\Support\Facades\Cache::get($attemptsKey, 0);
+
+        if ($attempts >= 5) {
+            \Illuminate\Support\Facades\Cache::forget('email_verify_' . $email);
+            return response()->json([
+                'message' => 'Too many incorrect attempts. The OTP has been invalidated. Please request a new one.'
+            ], 400);
+        }
+
+        $cachedOtp = \Illuminate\Support\Facades\Cache::get('email_verify_' . $email);
+        
+        if (!$cachedOtp) {
+            return response()->json(['message' => 'OTP expired or not found. Please request a new one.'], 400);
+        }
+
+        if ($cachedOtp !== $request->otp) {
+            \Illuminate\Support\Facades\Cache::increment($attemptsKey);
+            if (\Illuminate\Support\Facades\Cache::get($attemptsKey) >= 5) {
+                \Illuminate\Support\Facades\Cache::forget('email_verify_' . $email);
+                return response()->json([
+                    'message' => 'Too many incorrect attempts. The OTP has been invalidated. Please request a new one.'
+                ], 400);
+            }
+            return response()->json(['message' => 'Invalid OTP.'], 400);
+        }
+
+        // Success
+        \Illuminate\Support\Facades\Cache::forget('email_verify_' . $email);
+        \Illuminate\Support\Facades\Cache::forget($attemptsKey);
+        
+        // Mark as verified for 30 minutes
+        \Illuminate\Support\Facades\Cache::put('email_verified_' . $email, true, now()->addMinutes(30));
+
+        return response()->json(['message' => 'Email verified successfully.']);
     }
 }
 

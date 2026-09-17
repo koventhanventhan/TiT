@@ -388,6 +388,56 @@ export const registerPaymentSuccess = async (orderId, paymentId = null, profileI
   return data
 }
 
+// Send OTP for email verification
+export const sendVerificationOtp = async (email) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/send-verification-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      const errorMessage = formatLaravelErrors(error) || error.message || 'Failed to send verification code'
+      throw new Error(errorMessage)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+// Verify OTP for email verification
+export const verifyEmailOtp = async (email, otp) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email, otp }),
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      const errorMessage = formatLaravelErrors(error) || error.message || 'OTP Verification failed'
+      throw new Error(errorMessage)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    throw error
+  }
+}
+
 // Email/Password Registration
 export const registerWithEmail = async (userData) => {
   try {

@@ -240,6 +240,16 @@ class RegistrationController extends Controller
                     ]
                 ], 422);
             }
+            
+            // If creating a new user, check if email was verified via OTP
+            if (!$user && !\Illuminate\Support\Facades\Cache::get('email_verified_' . $request->username)) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => [
+                        'username' => ['Please verify your email address first. / முதலில் உங்கள் மின்னஞ்சல் முகவரியை சரிபார்க்கவும்.']
+                    ]
+                ], 422);
+            }
         }
 
         $customFieldLabels = json_decode(\App\Models\SiteSetting::get('register_custom_fields', '[]'), true) ?: [];
@@ -297,6 +307,10 @@ class RegistrationController extends Controller
             \Log::info('RegistrationController@step1 - Creating new student', ['data' => array_diff_key($userData, ['password' => 1])]);
             
             $user = User::create($userData);
+
+            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                \Illuminate\Support\Facades\Cache::forget('email_verified_' . $request->username);
+            }
 
             // Notify All Admins of new registration
             $admins = User::where('role', 'admin')->get();

@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\TranslateController;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/send-verification-otp', [AuthController::class, 'sendVerificationOtp']);
+Route::post('/auth/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
 
 // Google Auth Routes
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);

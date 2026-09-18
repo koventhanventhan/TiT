@@ -291,7 +291,9 @@
                                  </td>
                                  <td class="nowrap-column">
                                      <div style="margin-bottom: 0.125rem;">
-                                         @if($student->deactivated_at)
+                                         @if($student->is_graduated)
+                                             <span class="badge badge-xs badge-info" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Graduated</span>
+                                         @elseif($student->deactivated_at)
                                              <span class="badge badge-xs badge-danger" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Deactivated</span>
                                          @elseif($student->admin_confirmed_at)
                                              <span class="badge badge-xs badge-success" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Confirmed</span>
@@ -454,14 +456,23 @@
     function submitBulkPromote() {
         Swal.fire({
             title: 'Promote Students?',
-            text: "You are about to promote the selected students to their next grade. This will carry forward their subjects and may flag them for subject review.",
+            html: "You are about to promote the selected students to their next grade. This will carry forward their subjects and may flag them for subject review.<br><br><label style='color:#fff;'><input type='checkbox' id='forcePromote'> Force promote (bypass 6-month safeguard)</label>",
             type: 'info',
             showCancelButton: true,
             confirmButtonColor: '#ffab2d',
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Yes, promote them!',
             cancelButtonText: 'Cancel',
-            customClass: 'swal-dark-popup'
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                if (document.getElementById('forcePromote') && document.getElementById('forcePromote').checked) {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'force';
+                    input.value = '1';
+                    document.getElementById('bulkPromoteForm').appendChild(input);
+                }
+            }
         }).then(function(result) {
             if (result.value) {
                 document.getElementById('bulkPromoteForm').submit();

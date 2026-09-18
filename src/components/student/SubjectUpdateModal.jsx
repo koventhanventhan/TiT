@@ -63,9 +63,14 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
         else if (gradeNum === 5) subs = data['grade_5'] || [];
         else if (gradeNum >= 6 && gradeNum <= 9) subs = data['grade_6_to_9'] || [];
         else if (gradeNum >= 10 && gradeNum <= 11) subs = data['grade_10_to_11'] || [];
-        else if (gradeNum >= 12 && gradeNum <= 13) subs = data['grade_12_to_13'] || []; 
-        // Note: For A/L students, the backend/frontend uses stream names ('arts_stream', 'bio_maths_stream') 
-        // If they need to change stream, that's more complex, but we'll load everything for 12/13 as fallback
+        else if (gradeNum >= 12 && gradeNum <= 13) {
+            subs = [
+                ...(data['arts_stream'] || []),
+                ...(data['bio_maths_stream'] || []),
+                ...(data['commerce_stream'] || []),
+                ...(data['tech_stream'] || [])
+            ];
+        }
 
         if (medium) {
           subs = subs.filter(s => s.medium === medium || s.medium === 'both');

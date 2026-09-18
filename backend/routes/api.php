@@ -90,7 +90,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
             Route::get('/messages', [StudentMessageController::class, 'index']);
             Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
             
-            Route::get('/overview', [\App\Http\Controllers\Api\StudentDashboardController::class, 'overview']);
+            Route::get('/stats', [\App\Http\Controllers\Api\StudentDashboardController::class, 'stats']);
             Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
             Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
             Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);

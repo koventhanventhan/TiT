@@ -167,7 +167,7 @@ class StudentDashboardController extends Controller
                     'id' => $a->id,
                     'title' => $a->title,
                     'message' => $a->message,
-                    'date' => $a->created_at->diffForHumans(),
+                    'date' => $a->created_at ? \Carbon\Carbon::parse($a->created_at)->diffForHumans() : 'Recently',
                     'type' => $type
                 ];
             });

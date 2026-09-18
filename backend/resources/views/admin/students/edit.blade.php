@@ -695,10 +695,20 @@
     }
 
     function submitPromoteForm() {
-        if (!confirm("Are you sure you want to promote this student to the next grade? This will carry forward subjects automatically and may flag them for subject review.")) {
+        const force = confirm("Do you want to FORCE promote this student? (Bypass 6-month safeguard)\n\nClick OK to Force, or Cancel for Normal Promotion.");
+        if (!confirm(`Are you sure you want to promote this student to the next grade?${force ? ' (FORCE enabled)' : ''}\nThis will carry forward subjects automatically and may flag them for subject review.`)) {
             return;
         }
-        document.getElementById('promoteStudentForm').submit();
+        
+        const form = document.getElementById('promoteStudentForm');
+        if (force) {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'force';
+            input.value = '1';
+            form.appendChild(input);
+        }
+        form.submit();
     }
 </script>
 @endpush

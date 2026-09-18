@@ -173,10 +173,16 @@
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
             <div class="d-flex align-items-center">
-                <form action="{{ route('admin.students.index') }}" method="GET" class="mr-3 mb-0">
+                <form action="{{ route('admin.students.index') }}" method="GET" class="mr-3 mb-0 d-flex align-items-center">
+                    <select name="grade" class="form-control form-control-sm mr-3" onchange="this.form.submit()" style="width: 120px; border-color: #374151; background-color: #1f2937; color: #fff;">
+                        <option value="">All Grades</option>
+                        @for($i = 1; $i <= 13; $i++)
+                            <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                        @endfor
+                    </select>
                     <div class="custom-control custom-switch" style="margin-top: 4px;">
                         <input type="checkbox" class="custom-control-input" id="needsReviewFilter" name="needs_review" value="1" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
-                        <label class="custom-control-label" for="needsReviewFilter" style="color: #ef4444; font-weight: 600; padding-top: 2px; cursor: pointer;">Needs Subject Review</label>
+                        <label class="custom-control-label" for="needsReviewFilter" style="color: #ef4444; font-weight: 600; padding-top: 2px; cursor: pointer; white-space: nowrap;">Needs Subject Review</label>
                     </div>
                 </form>
                 <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">

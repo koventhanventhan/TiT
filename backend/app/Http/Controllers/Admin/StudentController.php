@@ -46,6 +46,13 @@ class StudentController extends Controller
         if ($request->has('needs_review') && $request->needs_review == '1') {
             $query->where('needs_subject_review', true);
         }
+
+        if ($request->filled('grade')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('current_grade', $request->grade)
+                  ->orWhere('current_grade', 'Grade ' . $request->grade);
+            });
+        }
             
         $students = $query->latest()->paginate(15)->appends($request->query());
         

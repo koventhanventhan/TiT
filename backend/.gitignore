@@ -26,5 +26,6 @@ error_log
 FETCH_HEAD
 public/uploads/
 storage/app/public/avatars/
-storage/app/public/materials//test.php
+storage/app/public/materials/
+/test.php
 /test_*.php

@@ -99,6 +99,43 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Display the Grade Promotion Schedule settings page.
+     */
+    public function gradePromotionSchedule()
+    {
+        return view('admin.settings.grade_promotion_schedule');
+    }
+
+    /**
+     * Store grade promotion schedule settings.
+     */
+    public function storeGradePromotionSchedule(Request $request)
+    {
+        $schedule = $request->input('schedule', []);
+
+        $formattedSchedule = [];
+        foreach (range(1, 13) as $grade) {
+            $data = $schedule[$grade] ?? [];
+            $enabled = isset($data['enabled']) && $data['enabled'] == '1';
+            $date = !empty($data['date']) ? $data['date'] : null;
+
+            // If toggle is ON but no date is set, turn it off
+            if ($enabled && !$date) {
+                $enabled = false;
+            }
+
+            $formattedSchedule[(string)$grade] = [
+                'enabled' => $enabled,
+                'date' => $date,
+            ];
+        }
+
+        SiteSetting::set('grade_promotion_schedule', json_encode($formattedSchedule), 'general');
+
+        return redirect()->back()->with('success', 'Grade promotion schedule updated successfully.');
+    }
+
+    /**
      * Store site settings.
      */
     public function store(Request $request)

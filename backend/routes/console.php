@@ -45,6 +45,8 @@ Schedule::call(function () {
     \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(2))->delete();
 })->dailyAt('01:00');
 
+Schedule::command('promotions:auto-run')->dailyAt('01:30');
+
 // Clean up zoom recordings older than 1 week from the database
 Schedule::call(function () {
     \App\Models\LearningMaterial::where('type', 'recording')

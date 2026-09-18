@@ -172,7 +172,13 @@
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
-            <div>
+            <div class="d-flex align-items-center">
+                <form action="{{ route('admin.students.index') }}" method="GET" class="mr-3 mb-0">
+                    <div class="custom-control custom-switch" style="margin-top: 4px;">
+                        <input type="checkbox" class="custom-control-input" id="needsReviewFilter" name="needs_review" value="1" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
+                        <label class="custom-control-label" for="needsReviewFilter" style="color: #ef4444; font-weight: 600; padding-top: 2px; cursor: pointer;">Needs Subject Review</label>
+                    </div>
+                </form>
                 <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">
                     <i class="flaticon-381-upload"></i> Promote Selected (<span id="promoteSelectedCount">0</span>)
                 </button>

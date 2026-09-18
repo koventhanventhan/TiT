@@ -221,9 +221,11 @@ class User extends Authenticatable implements FilamentUser
         if ($this->selected_subjects) {
             $category = $this->getSubjectCategory();
 
-            // Parse selected subjects (could be JSON array or comma-separated)
+            // Parse selected subjects (could be JSON array or comma-separated or already an array)
             $subjectsRaw = $this->selected_subjects;
-            if (is_string($subjectsRaw) && str_starts_with(trim($subjectsRaw), '[')) {
+            if (is_array($subjectsRaw)) {
+                $selectedSubjects = $subjectsRaw;
+            } elseif (is_string($subjectsRaw) && str_starts_with(trim($subjectsRaw), '[')) {
                 $selectedSubjects = json_decode($subjectsRaw, true) ?? [];
             } else {
                 $selectedSubjects = array_filter(array_map('trim', explode(',', (string) $subjectsRaw)));

@@ -45,6 +45,14 @@ class PromotionTest extends TestCase
             'last_promoted_at' => now()->subMonths(7)
         ]);
 
+        $this->mock(\App\Services\NotificationService::class, function ($mock) {
+            $mock->shouldReceive('notifyUser')
+                 ->once()
+                 ->withArgs(function ($user, $type) {
+                     return $type === 'subject_review_required';
+                 });
+        });
+
         $response = $this->actingAs($this->admin)->postJson('/api/admin/students/promote', [
             'student_ids' => [$student->id]
         ]);
@@ -57,10 +65,6 @@ class PromotionTest extends TestCase
 
         $student->refresh();
         $this->assertEquals('8', $student->current_grade);
-        
-        // Since we didn't populate Subject perfectly for getAvailableSubjects() due to how getAvailableSubjects 
-        // gets it from the API / DB, let's just assert that needs_subject_review is handled.
-        // It should be true because the subjects are not precisely matching what is fetched in test.
         $this->assertTrue($student->needs_subject_review);
 
         // Check Activity Log
@@ -120,6 +124,14 @@ class PromotionTest extends TestCase
             'last_promoted_at' => now()->subMonths(7)
         ]);
 
+        $this->mock(\App\Services\NotificationService::class, function ($mock) {
+            $mock->shouldReceive('notifyUser')
+                 ->once()
+                 ->withArgs(function ($user, $type) {
+                     return $type === 'student_graduated';
+                 });
+        });
+
         $response = $this->actingAs($this->admin)->postJson('/api/admin/students/promote', [
             'student_ids' => [$student->id]
         ]);
@@ -168,5 +180,43 @@ class PromotionTest extends TestCase
             
         $this->assertContains('New Math', $subjects);
         $this->assertContains('New Science', $subjects);
+    }
+
+    public function test_students_can_be_promoted_cleanly()
+    {
+        Subject::firstOrCreate(['name' => 'Maths', 'category' => 'grade_6_to_9', 'medium' => 'english']);
+        Subject::firstOrCreate(['name' => 'Science', 'category' => 'grade_6_to_9', 'medium' => 'english']);
+        Subject::firstOrCreate(['name' => 'English', 'category' => 'grade_6_to_9', 'medium' => 'english']);
+
+        $student = User::factory()->create([
+            'role' => 'user',
+            'current_grade' => '7',
+            'medium' => 'english',
+            'institute_id' => 1,
+            'selected_subjects' => json_encode(['Maths', 'Science', 'English']),
+            'last_promoted_at' => now()->subMonths(7)
+        ]);
+
+        $this->mock(\App\Services\NotificationService::class, function ($mock) {
+            $mock->shouldReceive('notifyUser')
+                 ->once()
+                 ->withArgs(function ($user, $type) {
+                     return $type === 'student_promoted_clean';
+                 });
+        });
+
+        $response = $this->actingAs($this->admin)->postJson('/api/admin/students/promote', [
+            'student_ids' => [$student->id]
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'summary' => ['promoted' => 1]
+        ]);
+
+        $student->refresh();
+        $this->assertEquals('8', $student->current_grade);
+        $this->assertFalse((bool)$student->needs_subject_review);
     }
 }

@@ -62,12 +62,31 @@ class StudentPromotionService
                 }
 
                 $oldGrade = $student->current_grade;
+                $oldFee = $student->calculateMonthlyFee();
 
                 if ($numericGrade >= 13) {
                     $student->is_graduated = true;
                     $student->last_promoted_at = now();
                     $student->save();
                     
+                    $recipient = $student->parent_id ? User::find($student->parent_id) : $student;
+                    if ($recipient) {
+                        try {
+                            $this->notifier->notifyUser(
+                                $recipient,
+                                'student_graduated',
+                                'student_graduated',
+                                ['student_name' => $student->full_name],
+                                [
+                                    'subject' => "Congratulations, {$student->full_name} has completed their final year!",
+                                    'body' => "We are thrilled to congratulate {$student->full_name} on successfully graduating from our institute! We wish them the best of luck in their future endeavors."
+                                ]
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send graduation notification: ' . $e->getMessage());
+                        }
+                    }
+
                     if ($actingAdminId) {
                         ActivityLog::create([
                             'institute_id' => $student->institute_id,
@@ -126,14 +145,23 @@ class StudentPromotionService
                 }
 
                 $student->selected_subjects = array_values(array_unique($carriedSubjects));
+                $newFee = $student->calculateMonthlyFee();
+                
+                $feeNote = '';
+                if ($newFee !== $oldFee && $newFee > 0) {
+                    $feeNote = "\nPlease note the monthly fee for this grade is Rs. {$newFee}.";
+                } elseif ($newFee !== $oldFee) {
+                    $feeNote = "\nPlease note that fees may have changed — check your dashboard for the current amount.";
+                }
+
                 $needsReview = false;
+                $recipient = $student->parent_id ? User::find($student->parent_id) : $student;
 
                 if (count($droppedSubjects) > 0 || (count($currentSubjects) > 0 && empty($carriedSubjects))) {
                     $student->needs_subject_review = true;
                     $needsReview = true;
                     $flaggedCount++;
 
-                    $recipient = $student->parent_id ? User::find($student->parent_id) : $student;
                     if ($recipient) {
                         try {
                             $this->notifier->notifyUser(
@@ -143,11 +171,29 @@ class StudentPromotionService
                                 ['student_name' => $student->full_name, 'new_grade' => $newGradeStr],
                                 [
                                     'subject' => 'Action Required: Update Subjects for New Academic Year',
-                                    'body' => "{$student->full_name} has been promoted to {$newGradeStr}. Some previous subjects are not available in this grade. Please review and update the subjects."
+                                    'body' => "{$student->full_name} has been promoted to Grade {$newGradeStr}. Some previous subjects are not available in this grade. Please review and update the subjects." . $feeNote
                                 ]
                             );
                         } catch (\Exception $e) {
                             Log::error('Failed to send promotion notification: ' . $e->getMessage());
+                        }
+                    }
+                } else {
+                    // Clean carry-forward
+                    if ($recipient) {
+                        try {
+                            $this->notifier->notifyUser(
+                                $recipient,
+                                'student_promoted_clean',
+                                'student_promoted_clean',
+                                ['student_name' => $student->full_name, 'new_grade' => $newGradeStr],
+                                [
+                                    'subject' => "{$student->full_name} has been promoted to Grade {$newGradeStr}",
+                                    'body' => "Good news! {$student->full_name} has moved up to Grade {$newGradeStr} for the new academic year. Their subjects have been carried forward automatically — no action needed from you." . $feeNote
+                                ]
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send clean promotion notification: ' . $e->getMessage());
                         }
                     }
                 }

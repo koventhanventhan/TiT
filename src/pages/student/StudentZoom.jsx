@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch } from 'react-icons/fi'
 import { getStudentZoomClasses, studentAttend } from '../../services/dashboardService'
 
 export default function StudentZoom() {
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(true)
+    const [paymentRequired, setPaymentRequired] = useState(false)
 
     useEffect(() => {
         async function load() {
             try {
-                let data = await getStudentZoomClasses().catch(() => null)
-                if (!data || data.length === 0) {
-                    data = [
-                        { id: 1, title: 'Calculus Advanced', subject: 'Mathematics', teacher: 'Prof. Kumara', duration: 120, scheduled_at: new Date().setHours(9, 0, 0, 0), zoom_link: '#' },
-                        { id: 2, title: 'Quantum Physics', subject: 'Physics', teacher: 'Prof. Silva', duration: 90, scheduled_at: new Date().setHours(14, 0, 0, 0), zoom_link: '#' },
-                        { id: 3, title: 'Organic Chemistry', subject: 'Chemistry', teacher: 'Dr. Perera', duration: 120, scheduled_at: new Date(new Date().getTime() + 86400000).setHours(10, 0, 0, 0), zoom_link: '#' }
-                    ]
+                const response = await getStudentZoomClasses().catch(() => null)
+                
+                if (response && (response.message === "Complete payment to access classes." || response.has_paid === false)) {
+                    setPaymentRequired(true)
                 }
-                const arr = Array.isArray(data) ? data : data.data || []
+                
+                const arr = response ? (Array.isArray(response) ? response : response.data || []) : []
                 arr.sort((a, b) => new Date(a.scheduled_at || a.start_time) - new Date(b.scheduled_at || b.start_time))
                 setClasses(arr)
             } catch (e) {
@@ -55,6 +55,13 @@ export default function StudentZoom() {
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
                     <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                </div>
+            ) : paymentRequired ? (
+                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}>🔒</div>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#991b1b' }}>Payment Required</h3>
+                    <p style={{ margin: '0 0 24px 0', color: '#64748b', fontSize: 15, maxWidth: 400 }}>Complete this month's payment to unlock your live classes.</p>
+                    <Link to="/student" style={{ padding: '12px 24px', background: '#ef4444', color: '#fff', textDecoration: 'none', borderRadius: 8, fontWeight: 600, boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>Go to Payment Section</Link>
                 </div>
             ) : classes.length === 0 ? (
                 <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>

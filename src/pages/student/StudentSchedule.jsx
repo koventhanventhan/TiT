@@ -11,11 +11,7 @@ export default function StudentSchedule() {
             try {
                 let data = await getStudentUpcomingSchedules().catch(() => null)
                 if (!data || data.length === 0) {
-                    data = [
-                        { id: 1, title: 'Advanced Calculus', subject: 'Mathematics', teacher: 'Prof. Kumara', duration: 120, scheduled_at: new Date().setHours(9, 0, 0, 0), type: 'online' },
-                        { id: 2, title: 'Physics Revision', subject: 'Physics', teacher: 'Prof. Silva', duration: 90, scheduled_at: new Date().setHours(14, 0, 0, 0), type: 'physical', location: 'Hall A' },
-                        { id: 3, title: 'Organic Chemistry Lab', subject: 'Chemistry', teacher: 'Dr. Perera', duration: 120, scheduled_at: new Date(new Date().getTime() + 86400000).setHours(10, 0, 0, 0), type: 'online' },
-                    ]
+                    data = []
                 }
                 const arr = Array.isArray(data) ? data : data.data || []
                 arr.sort((a, b) => new Date(a.scheduled_at || a.start_time) - new Date(b.scheduled_at || b.start_time))

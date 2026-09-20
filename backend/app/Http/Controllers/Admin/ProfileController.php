@@ -39,6 +39,7 @@ class ProfileController extends Controller
             'website' => 'nullable|url|max:255',
             'location' => 'nullable|string|max:255',
             'remove_avatar' => 'nullable|boolean',
+            'admin_notification_email' => 'nullable|email|max:255',
         ]);
 
         $data = $request->only(['first_name', 'last_name', 'email', 'username', 'bio', 'website', 'location']);
@@ -73,6 +74,10 @@ class ProfileController extends Controller
         }
 
         $user->update($data);
+
+        if ($request->has('admin_notification_email')) {
+            \App\Models\SiteSetting::set('admin_notification_email', $request->admin_notification_email);
+        }
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }

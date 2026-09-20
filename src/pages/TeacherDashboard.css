@@ -1,8 +1,9 @@
-/* Teacher Dashboard - Premium Purple Design */
+﻿/* Teacher Dashboard - Premium Purple Design */
 
 .teacher-dashboard-wrapper {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--primary-dark);
   background-image:
     radial-gradient(circle at 0% 0%, rgba(79, 11, 217, 0.12) 0%, transparent 40%),

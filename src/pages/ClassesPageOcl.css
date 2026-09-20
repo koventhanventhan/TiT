@@ -1,16 +1,17 @@
-/* ═══════════════════════════════════════════════════════════
-   ONLINE CLASSES — EXPERT LAYOUT (ocl-)
-   ═══════════════════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ONLINE CLASSES â€” EXPERT LAYOUT (ocl-)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .ocl {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f8f9fc;
   padding-top: 9rem;
   font-family: 'Inter', 'Outfit', sans-serif;
   overflow-x: hidden;
 }
 
-/* ════ HERO SECTION ════ */
+/* â•â•â•â• HERO SECTION â•â•â•â• */
 .ocl-hero {
   background: #ffffff;
   padding: 3rem 0;
@@ -240,7 +241,7 @@
   }
 }
 
-/* ════ GRADE SELECTOR ════ */
+/* â•â•â•â• GRADE SELECTOR â•â•â•â• */
 .ocl-grades-section {
   padding: 2rem 0;
   background: #f8f9fc;
@@ -306,7 +307,7 @@
   box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
 }
 
-/* ════ FEATURES GRID ════ */
+/* â•â•â•â• FEATURES GRID â•â•â•â• */
 .ocl-features-section {
   padding: 3rem 0;
   background: #f8f9fc;
@@ -369,7 +370,7 @@
   margin: 0;
 }
 
-/* ════ STATS BANNER ════ */
+/* â•â•â•â• STATS BANNER â•â•â•â• */
 .ocl-stats-section {
   padding: 1rem 0;
 }
@@ -427,7 +428,7 @@
   margin-top: 0.25rem;
 }
 
-/* ════ SUBJECTS ROW ════ */
+/* â•â•â•â• SUBJECTS ROW â•â•â•â• */
 .ocl-subjects-section {
   padding: 3rem 0 5rem;
   background: #f8f9fc;
@@ -512,7 +513,7 @@
   color: #fff;
 }
 
-/* ════ RESPONSIVE ════ */
+/* â•â•â•â• RESPONSIVE â•â•â•â• */
 @media (max-width: 1024px) {
   .ocl-title {
     font-size: 2.75rem;

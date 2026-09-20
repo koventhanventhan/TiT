@@ -1,5 +1,6 @@
-.about-page {
+﻿.about-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #ffffff;
   padding-top: 5rem;
 }

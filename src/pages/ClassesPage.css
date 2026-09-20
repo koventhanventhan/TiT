@@ -4,6 +4,7 @@
 
 .clp {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-light);
   padding-top: 5rem;
 }
@@ -727,6 +728,7 @@
 
 .ol-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #ffffff;
   padding-top: 4.5rem;
   font-family: 'Inter', 'Outfit', sans-serif;

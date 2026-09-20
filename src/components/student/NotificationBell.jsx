@@ -349,7 +349,6 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
             left: 12px !important;
             right: 12px !important;
             width: auto !important;
-            max-width: calc(100vw - 24px) !important;
             max-height: calc(100vh - 90px) !important;
             border-radius: 14px;
           }

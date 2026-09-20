@@ -779,16 +779,17 @@
 /* Mobile responsive for nested menu */
 @media (max-width: 60.5rem) {
   .learning-suite-menu {
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
+    width: auto;
+    min-width: 0;
+    max-width: none;
     flex-direction: column;
-    left: 0;
+    left: 1.25rem;
+    right: 1.25rem;
     transform: none;
     animation: slideDownFade 0.3s ease;
     position: fixed;
-    top: auto;
-    margin-top: 0.625rem;
+    top: 5rem; /* adjust based on header height, or use margin */
+    margin-top: 0;
   }
 
   .grade-submenu-top {
@@ -948,6 +949,7 @@
     width: 17.5rem !important;
     max-width: 80vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
     background: white !important;
     flex-direction: column !important;
     padding: 0 !important;

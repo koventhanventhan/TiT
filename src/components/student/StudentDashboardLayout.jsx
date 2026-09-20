@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
@@ -129,7 +129,7 @@ export default function StudentDashboardLayout({ children, user }) {
     }, [showProfileMenu])
 
     return (
-        <div style={{ display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ display: 'flex', height: '100dvh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -141,7 +141,7 @@ export default function StudentDashboardLayout({ children, user }) {
                 />
             )}
 
-            {/* ═══════════ SIDEBAR ═══════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â•â• */}
             <aside style={{
                 width: 260,
                 background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
@@ -246,7 +246,7 @@ export default function StudentDashboardLayout({ children, user }) {
                 </div>
             </aside>
 
-            {/* ═══════════ MAIN CONTENT ═══════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â• */}
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'visible' }}>
                 {/* Header */}
                 <header style={{

@@ -1,5 +1,6 @@
-.policy-page {
+﻿.policy-page {
     min-height: 100vh;
+  min-height: 100dvh;
     background-color: #f1f5f9;
     padding-bottom: 5rem;
 }
@@ -84,6 +85,7 @@
 
 .policy-loading {
     min-height: 100vh;
+  min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -1,7 +1,8 @@
-/* ── Premium Blue Student Dashboard Layout ── */
+﻿/* â”€â”€ Premium Blue Student Dashboard Layout â”€â”€ */
 .student-console-layout {
     display: flex;
     min-height: 100vh;
+  min-height: 100dvh;
     background: #f0f4ff;
 }
 

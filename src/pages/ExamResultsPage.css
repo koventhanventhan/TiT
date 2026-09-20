@@ -1,10 +1,11 @@
-/* ═══════════════════════════════════════════
-   EXAM RESULTS PAGE — Premium Purple Theme
-   ═══════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   EXAM RESULTS PAGE â€” Premium Purple Theme
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Hero Section ── */
+/* â”€â”€ Hero Section â”€â”€ */
 .exam-results-page {
     min-height: 100vh;
+  min-height: 100dvh;
     background: #f8f9fc;
 }
 
@@ -100,7 +101,7 @@
     line-height: 1.6;
 }
 
-/* ── Search Section ── */
+/* â”€â”€ Search Section â”€â”€ */
 .exam-search-section {
     max-width: 900px;
     margin: -40px auto 0;
@@ -258,7 +259,7 @@
     to { transform: rotate(360deg); }
 }
 
-/* ── Results Section ── */
+/* â”€â”€ Results Section â”€â”€ */
 .exam-results-section {
     max-width: 900px;
     margin: 0 auto;
@@ -578,7 +579,7 @@
     color: #1e1b4b;
 }
 
-/* ── Print Styles ── */
+/* â”€â”€ Print Styles â”€â”€ */
 @media print {
     .exam-hero,
     .exam-search-section,
@@ -626,7 +627,7 @@
     }
 }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 768px) {
     .exam-hero {
         padding: 100px 16px 60px;

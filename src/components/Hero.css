@@ -1,10 +1,12 @@
-.hero {
+﻿.hero {
   min-height: 100vh;
+  min-height: 100dvh;
   min-height: 100dvh;
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
+  overflow-x: clip;
   padding-top: 6.25rem;
   padding-top: calc(6.25rem + env(safe-area-inset-top, 0px));
 }
@@ -670,8 +672,8 @@
     gap: 0.75rem;
     overflow-x: auto;
     white-space: nowrap;
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
+    width: calc(100% + 2.5rem);
+    margin-left: -1.25rem;
     padding: 1.25rem;
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
@@ -712,6 +714,7 @@
 
   .hero-btn {
     width: 100% !important;
+    min-width: 0 !important;
     justify-content: center !important;
     padding: 0.875rem 1.5rem !important;
     font-size: 1rem !important;

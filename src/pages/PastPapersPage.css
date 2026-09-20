@@ -1,14 +1,15 @@
-/* ═══════════════════════════════════════════════
-   Past Papers Page — Pixel Perfect Purple Design
-   ═══════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Past Papers Page â€” Pixel Perfect Purple Design
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .past-papers-page {
   padding-top: 5rem;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #F8FAFC;
 }
 
-/* ── Hero Section ── */
+/* â”€â”€ Hero Section â”€â”€ */
 .past-papers-page-hero {
   background: var(--gradient-1);
   padding: 4.5rem 0 7rem;
@@ -136,7 +137,7 @@
   height: 8rem;
 }
 
-/* ── Grade Badge & Header ── */
+/* â”€â”€ Grade Badge & Header â”€â”€ */
 .past-papers-content {
   padding: 1rem 0 4rem;
   max-width: 1150px;
@@ -206,7 +207,7 @@
 }
 
 
-/* ── Paper Card (Multi-column Grid Layout exactly like new design) ── */
+/* â”€â”€ Paper Card (Multi-column Grid Layout exactly like new design) â”€â”€ */
 .past-papers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -324,7 +325,7 @@
   background: var(--primary-color);
 }
 
-/* ── CTA Banner ── */
+/* â”€â”€ CTA Banner â”€â”€ */
 .past-papers-cta-banner {
   background: var(--bg-light);
   border-radius: 12px;
@@ -451,17 +452,17 @@
   box-shadow: 0 4px 14px rgba(80, 19, 175, 0.2);
 }
 
-/* WhatsApp — green pulse */
+/* WhatsApp â€” green pulse */
 .icon-whatsapp { border-color: #22c55e; color: #22c55e; }
 .icon-whatsapp:hover { border-color: #16a34a; background: rgba(34, 197, 94, 0.08); }
 .icon-whatsapp:hover .animated-icon { animation: iconPulse 0.6s ease; }
 
-/* Email — purple wiggle */
+/* Email â€” purple wiggle */
 .icon-email { border-color: #a78bfa; color: #7c3aed; }
 .icon-email:hover { border-color: #7c3aed; background: rgba(124, 58, 237, 0.06); }
 .icon-email:hover .animated-icon { animation: iconWiggle 0.5s ease; }
 
-/* Location — purple bounce */
+/* Location â€” purple bounce */
 .icon-location { border-color: #a78bfa; color: #7c3aed; }
 .icon-location:hover { border-color: #7c3aed; background: rgba(124, 58, 237, 0.06); }
 .icon-location:hover .animated-icon { animation: iconBounce 0.5s ease; }
@@ -531,7 +532,7 @@
 }
 
 
-/* ── Responsive adjustments ── */
+/* â”€â”€ Responsive adjustments â”€â”€ */
 @media (max-width: 64rem) {
   .pp-hero-inner {
     flex-direction: column;

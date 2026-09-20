@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import settingsService from '../services/settingsService';
 
 const SettingsContext = createContext();
@@ -53,7 +53,7 @@ export const SettingsProvider = ({ children }) => {
           textAlign: 'center', 
           fontFamily: 'Inter, sans-serif',
           background: '#f8fafc',
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

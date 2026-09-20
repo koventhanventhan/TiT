@@ -7,14 +7,15 @@
   box-sizing: border-box;
 }
 
-/* ── Animated Icons Global Fix ── */
+/* â”€â”€ Animated Icons Global Fix â”€â”€ */
 lord-icon {
   display: inline-block;
   vertical-align: middle;
 }
 
 :root {
-  /* ── Premium Purple Palette ── */
+  color-scheme: only light;
+  /* â”€â”€ Premium Purple Palette â”€â”€ */
   --primary-color: #4f0bd9;
   --primary-dark: #1a103c;
   --primary-light: #6d28d9;
@@ -22,49 +23,49 @@ lord-icon {
   --accent-color: #8b5cf6;
   --accent-glow: rgba(79, 11, 217, 0.35);
 
-  /* ── Text ── */
+  /* â”€â”€ Text â”€â”€ */
   --text-dark: #0f172a;
   --text-medium: #334155;
   --text-light: #64748b;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
 
-  /* ── Backgrounds ── */
+  /* â”€â”€ Backgrounds â”€â”€ */
   --bg-light: #f5f3ff;
   --bg-white: #ffffff;
   --bg-dark: #0c0a09;
   --bg-navy: #1a103c;
 
-  /* ── Borders ── */
+  /* â”€â”€ Borders â”€â”€ */
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
 
-  /* ── Premium Gradients ── */
+  /* â”€â”€ Premium Gradients â”€â”€ */
   --gradient-1: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
   --gradient-2: linear-gradient(135deg, #4f0bd9 0%, #8b5cf6 100%);
   --gradient-3: linear-gradient(135deg, #4f0bd9 0%, #4f0bd9 100%);
   --gradient-hero: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
   --gradient-glass: linear-gradient(135deg, rgba(79, 11, 217, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
 
-  /* ── Glassmorphism ── */
+  /* â”€â”€ Glassmorphism â”€â”€ */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(79, 11, 217, 0.12);
   --glass-shadow: 0 0.5rem 2rem rgba(79, 11, 217, 0.08);
 
-  /* ── Premium Shadows ── */
+  /* â”€â”€ Premium Shadows â”€â”€ */
   --shadow-sm: 0 0.0625rem 0.1875rem rgba(15, 23, 42, 0.06);
   --shadow-md: 0 0.25rem 1rem rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 0.75rem 2.5rem rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 1.25rem 3.75rem rgba(15, 23, 42, 0.15);
   --shadow-glow: 0 0 1.875rem rgba(79, 11, 217, 0.2);
 
-  /* ── Radii ── */
+  /* â”€â”€ Radii â”€â”€ */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
 
-  /* ── Safe Area Insets ── */
+  /* â”€â”€ Safe Area Insets â”€â”€ */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -83,14 +84,20 @@ body {
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background: var(--bg-white);
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100dvh;
   margin: 0;
   padding: 0;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100dvh;
   width: 100%;
   display: block;
 }
@@ -106,7 +113,7 @@ code {
   padding: 0 1.25rem;
 }
 
-/* ── Premium Buttons ── */
+/* â”€â”€ Premium Buttons â”€â”€ */
 .btn {
   padding: 0.75rem 2rem;
   border: none;
@@ -140,7 +147,7 @@ code {
   outline: none !important;
 }
 
-/* ── Extreme Fix: Register Now Button ── */
+/* â”€â”€ Extreme Fix: Register Now Button â”€â”€ */
 .btn-register {
   /* background: #1a103c !important; */
   color: white !important;
@@ -214,7 +221,7 @@ button.btn-register {
   font-size: 1.375rem;
 }
 
-/* ── Section Styles ── */
+/* â”€â”€ Section Styles â”€â”€ */
 .section {
   padding: 5rem 0;
 }
@@ -240,7 +247,7 @@ button.btn-register {
   margin: 0 auto 3rem;
 }
 
-/* ── Premium Loading Shimmer ── */
+/* â”€â”€ Premium Loading Shimmer â”€â”€ */
 .loading-shimmer {
   background: var(--gradient-glass);
   border-radius: var(--radius-lg);
@@ -263,7 +270,7 @@ button.btn-register {
   }
 }
 
-/* ── Smooth Page Transitions ── */
+/* â”€â”€ Smooth Page Transitions â”€â”€ */
 .page-enter {
   opacity: 0;
   transform: translateY(0.625rem);
@@ -289,7 +296,7 @@ button.btn-register {
   }
 }
 
-/* ── Hide Scrollbar Utility ── */
+/* â”€â”€ Hide Scrollbar Utility â”€â”€ */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }

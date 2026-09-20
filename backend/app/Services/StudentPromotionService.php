@@ -107,6 +107,15 @@ class StudentPromotionService
                 // Preserve the string format, e.g. "7" -> "8"
                 $newGradeStr = str_replace((string)$numericGrade, (string)$newGradeNum, $oldGrade);
 
+                Log::info('PROMOTION DEBUG', [
+                    'student_id' => $student->id,
+                    'raw_current_grade_before' => $student->current_grade,
+                    'numericGrade' => $numericGrade,
+                    'newGradeNum' => $newGradeNum,
+                    'oldGrade_variable' => $oldGrade,
+                    'newGradeStr_computed' => $newGradeStr,
+                ]);
+
                 $student->current_grade = $newGradeStr;
 
                 // Carry forward subjects

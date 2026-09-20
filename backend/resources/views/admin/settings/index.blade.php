@@ -488,6 +488,11 @@
                                                 <input type="text" name="admin_company_name" class="form-control" placeholder="e.g. TiT Dashboard" value="{{ \App\Models\SiteSetting::get('admin_company_name', 'Zenix') }}">
                                                 <small class="text-muted">This name appears in the top-left corner of the admin panel.</small>
                                             </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label>Admin Notification Email</label>
+                                                <input type="email" name="admin_notification_email" class="form-control" placeholder="e.g. admin@titjaffna.lk" value="{{ \App\Models\SiteSetting::get('admin_notification_email', 'koventhanventhan153@gmail.com') }}">
+                                                <small class="text-muted">Primary email address to receive system alerts, payment notifications, and registration alerts.</small>
+                                            </div>
                                             <!-- <div class="col-md-6 mb-3">
                                                 <label class="d-block">Admin Dashboard Logo</label>
                                                 <div class="clickable-logo-preview mb-2" id="admin-logo-preview-container">

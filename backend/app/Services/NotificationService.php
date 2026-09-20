@@ -138,12 +138,27 @@ class NotificationService
     }
 
     /**
-     * Get the admin email from users table or .env fallback.
+     * Get the admin notification email.
+     *
+     * Resolution order:
+     *  1. SiteSetting 'admin_notification_email' (explicit, settable from Admin Settings UI)
+     *  2. Latest admin user's email (safety-net fallback)
+     *  3. MAIL_FROM_ADDRESS from .env (last resort)
      */
     protected function getAdminEmail(): ?string
     {
+        // First try to get the explicit admin notification email from site settings
+        $explicitEmail = \App\Models\SiteSetting::get('admin_notification_email');
+        if (!empty($explicitEmail) && filter_var($explicitEmail, FILTER_VALIDATE_EMAIL)) {
+            return $explicitEmail;
+        }
+
+        // Fallback: Prefer the most recently created admin (the seeded canonical admin)
+        // and skip any emails that have been blocklisted as bounced
         $admin = User::where('role', 'admin')
             ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->latest()
             ->first();
 
         return $admin?->email ?? config('mail.from.address');

@@ -141,6 +141,8 @@ desktop.ini
 # Misc
 # ========================
 *.bat
+*.jar
+push_log.txt
 Homestead.json
 Homestead.yaml
 .phpactor.json

@@ -381,6 +381,15 @@
                             <div class="form-group col-md-12"><label class="text-white font-w600">Email Address</label><input type="email" name="email" class="form-control bg-transparent text-white border-dark" value="{{ $user->email }}"></div>
                         </div>
 
+                        <h5 class="text-white mt-4 mb-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px;">System Notifications</h5>
+                        <div class="row">
+                            <div class="form-group col-md-12">
+                                <label class="text-white font-w600">Admin Notification Email</label>
+                                <input type="email" name="admin_notification_email" class="form-control bg-transparent text-white border-dark" value="{{ \App\Models\SiteSetting::get('admin_notification_email', 'koventhanventhan153@gmail.com') }}">
+                                <small class="text-white-50 mt-1 d-block">Primary email address to receive system alerts, payment notifications, and registration alerts.</small>
+                            </div>
+                        </div>
+
                         <div class="text-right mt-4 pt-4 border-top">
                             <button type="submit" class="btn btn-blue btn-sm px-4">Save Profile</button>
                         </div>

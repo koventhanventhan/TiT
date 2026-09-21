@@ -87,6 +87,13 @@ class ProfileController extends Controller
         \Log::info('ProfileController@updateSettings hit', $request->except(['_token']));
         $user = auth()->user();
         
+        if ($request->has('admin_notification_email')) {
+            $request->validate([
+                'admin_notification_email' => 'nullable|email|max:255',
+            ]);
+            \App\Models\SiteSetting::set('admin_notification_email', $request->admin_notification_email);
+        }
+
         // Merge current settings with new inputs
         $currentSettings = $user->profile_settings ?? [];
         $newSettings = $request->except(['_token']);

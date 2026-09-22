@@ -36,16 +36,16 @@ Artisan::command('reminders:month-end-payment', function () {
     $this->info("Month-end payment reminder sent to {$sent} students.");
 })->purpose('Send month-end payment reminder to confirmed students via WhatsApp');
 
-Schedule::command('app:check-payments')->dailyAt('09:00');
-Schedule::command('zoom:sync-timetable')->dailyAt('00:00');
-Schedule::command('zoom:send-reminders')->everyMinute();
-Schedule::command('zoom:fetch-recordings')->hourly();
+Schedule::call(fn() => Artisan::call('app:check-payments'))->dailyAt('09:00');
+Schedule::call(fn() => Artisan::call('zoom:sync-timetable'))->dailyAt('00:00');
+Schedule::call(fn() => Artisan::call('zoom:send-reminders'))->everyMinute();
+Schedule::call(fn() => Artisan::call('zoom:fetch-recordings'))->hourly();
 
 Schedule::call(function () {
     \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(2))->delete();
 })->dailyAt('01:00');
 
-Schedule::command('promotions:auto-run')->dailyAt('01:30');
+Schedule::call(fn() => Artisan::call('promotions:auto-run'))->dailyAt('01:30');
 
 // Clean up zoom recordings older than 1 week from the database
 Schedule::call(function () {

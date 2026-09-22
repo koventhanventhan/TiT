@@ -30,11 +30,12 @@ class StudentMaterialController extends Controller
             });
         }
 
-        // Apply 2-day limit for automated recordings
-        $query->where(function ($q) {
+        // Apply configurable day-limit for automated recordings
+        $visibilityDays = (int) \App\Models\SiteSetting::get('recording_visibility_days', 2);
+        $query->where(function ($q) use ($visibilityDays) {
             $q->where('type', '!=', 'recording')
               ->orWhereNull('zoom_schedule_id')
-              ->orWhere('created_at', '>=', now()->subDays(2));
+              ->orWhere('created_at', '>=', now()->subDays($visibilityDays));
         });
 
         // Skip disabled grades for recordings

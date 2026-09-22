@@ -262,6 +262,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mt-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label for="recording_visibility_days">Recording Visibility Window (days)</label>
+                                <input type="number" name="recording_visibility_days" id="recording_visibility_days" class="form-control" min="1" max="365" value="{{ \App\Models\SiteSetting::get('recording_visibility_days', 2) }}">
+                                <small class="text-muted">Automated Zoom recordings older than this many days will be hidden from students. Default: 2 days.</small>
+                            </div>
+                        </div>
+                    </div>
                     <hr>
                     <h5 class="mb-3 text-primary mt-3">Call to Action (CTA) Section - Bottom of All Pages</h5>
                     <div class="row">

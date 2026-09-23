@@ -39,6 +39,33 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [isVerificationFlow, setIsVerificationFlow] = useState(false)
   const [verificationOtp, setVerificationOtp] = useState('')
 
+  // reCAPTCHA v3 Site Key
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+  // Load reCAPTCHA v3 script once
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) return
+
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }, [RECAPTCHA_SITE_KEY])
+
+  // Execute reCAPTCHA v3 and return token (returns null if not configured)
+  const executeRecaptcha = async (action = 'submit') => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null
+    try {
+      await new Promise((resolve) => window.grecaptcha.ready(resolve))
+      return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+    } catch (err) {
+      console.warn('reCAPTCHA execution failed:', err)
+      return null
+    }
+  }
+
   useEffect(() => {
     if (isOpen) {
       setIsLogin(defaultTab === 'login')
@@ -221,7 +248,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     setIsLoading(true)
 
     try {
-      await sendVerificationOtp(signupData.email)
+      const recaptchaToken = await executeRecaptcha('send_otp')
+      await sendVerificationOtp(signupData.email, recaptchaToken)
       setIsLoading(false)
       setIsVerificationFlow(true)
       setVerificationOtp('')
@@ -250,6 +278,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         password: signupData.password,
         role: 'user', // Registering as a student
       }
+
+      // Get a fresh reCAPTCHA token for the register call
+      const recaptchaToken = await executeRecaptcha('register')
+      if (recaptchaToken) userData.recaptcha_token = recaptchaToken
 
       const result = await registerWithEmail(userData)
       setIsLoading(false)
@@ -338,7 +370,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     setIsLoading(true)
 
     try {
-      const response = await forgotPassword(forgotEmail)
+      const recaptchaToken = await executeRecaptcha('forgot_password')
+      const response = await forgotPassword(forgotEmail, recaptchaToken)
       setSuccessMessage(response.message || 'Reset link sent!')
     } catch (err) {
       setError(err.message || 'Failed to send reset link')

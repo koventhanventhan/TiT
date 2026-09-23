@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
 
 .animated-auth-overlay {
   position: fixed;
@@ -185,7 +185,7 @@
     min-height: 39rem;
   }
   .animated-form {
-    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+    padding: 1rem 0.8rem;
   }
   .animated-form h2 {
     font-size: 1.35rem;
@@ -199,6 +199,17 @@
   }
   .remember-me-container {
     margin: 0.5rem 0;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .form-row .inputbox, 
+  .form-row .form-field-group {
+    margin-top: 1.5rem !important;
+  }
+  .checkbox-options-group {
+    grid-template-columns: 1fr;
   }
 }
 

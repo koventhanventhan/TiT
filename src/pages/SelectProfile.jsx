@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiPlus } from 'react-icons/fi';
@@ -53,7 +53,7 @@ const SelectProfile = () => {
         <h1 style={{ color: 'white', fontSize: '2.5rem', fontWeight: 'bold' }}>Who's learning today?</h1>
       </motion.div>
 
-      <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {profiles.map((profile, index) => (
           <motion.div
             key={profile.id}
@@ -68,12 +68,12 @@ const SelectProfile = () => {
               flexDirection: 'column',
               alignItems: 'center',
               cursor: 'pointer',
-              width: '150px'
+              width: '130px'
             }}
           >
             <div style={{
-              width: '120px',
-              height: '120px',
+              width: '100px',
+              height: '100px',
               borderRadius: '20px',
               background: `linear-gradient(135deg, ${profile.id % 2 === 0 ? '#3b82f6, #1d4ed8' : '#8b5cf6, #6d28d9'})`,
               display: 'flex',
@@ -117,12 +117,12 @@ const SelectProfile = () => {
               flexDirection: 'column',
               alignItems: 'center',
               cursor: 'pointer',
-              width: '150px'
+              width: '130px'
             }}
           >
             <div style={{
-              width: '120px',
-              height: '120px',
+              width: '100px',
+              height: '100px',
               borderRadius: '20px',
               border: '2px dashed #475569',
               background: 'transparent',

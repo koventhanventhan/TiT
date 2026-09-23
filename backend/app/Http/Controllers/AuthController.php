@@ -728,6 +728,17 @@ class AuthController extends Controller
 
         $email = $request->email;
 
+        // Global rate limit (max 50 OTP emails per hour across all users)
+        // Prevents distributed bot attacks from overwhelming the mail server (Ticket #370951)
+        $globalLimitKey = 'email_otp_global';
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($globalLimitKey, 50)) {
+            \Illuminate\Support\Facades\Log::warning('Global OTP rate limit reached', ['ip' => $request->ip(), 'email' => $email]);
+            return response()->json([
+                'message' => 'Service is temporarily busy. Please try again in a few minutes.'
+            ], 429);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($globalLimitKey, 3600); // 1 hour
+
         // Rate limit by IP (max 5 per hour)
         $ipLimitKey = 'email_otp_ip_' . $request->ip();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ipLimitKey, 5)) {

@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'reg_status' => \App\Http\Middleware\CheckRegistrationStatus::class,
             'profile.context' => \App\Http\Middleware\ProfileContext::class,
+            'recaptcha' => \App\Http\Middleware\VerifyRecaptcha::class,
         ]);
         
         // Custom session timeout middleware

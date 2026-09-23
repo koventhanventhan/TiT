@@ -170,10 +170,10 @@
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
-        <div class="page-title d-flex justify-content-between align-items-center">
+        <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
-            <div class="d-flex align-items-center">
-                <form action="{{ route('admin.students.index') }}" method="GET" class="mr-3 mb-0 d-flex align-items-center">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 d-flex flex-wrap align-items-center gap-2 mr-3">
                     <select name="grade" class="form-control form-control-sm mr-3" onchange="this.form.submit()" style="width: 120px; border-color: #374151; background-color: #1f2937; color: #fff;">
                         <option value="">All Grades</option>
                         @for($i = 1; $i <= 13; $i++)

@@ -23,11 +23,18 @@ use App\Http\Controllers\Api\StudentMessageController;
 use App\Http\Controllers\Api\TranslateController;
 
 // Public routes
-Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/auth/send-verification-otp', [AuthController::class, 'sendVerificationOtp']);
 Route::post('/auth/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
+
+// Public routes protected by reCAPTCHA v3 (Ticket #370951 — prevent bot email spam)
+Route::middleware(['recaptcha'])->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/send-verification-otp', [AuthController::class, 'sendVerificationOtp']);
+
+    // Student registration step 1 (creates user with pending_payment + sends welcome emails)
+    Route::post('/register/step1', [RegistrationController::class, 'step1']);
+});
 
 // Google Auth Routes
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
@@ -48,9 +55,6 @@ Route::get('/avatars/{filename}', function ($filename) {
     if (!file_exists($path)) abort(404);
     return response()->file($path);
 });
-
-// Student registration step 1 (public - creates user with pending_payment)
-Route::post('/register/step1', [RegistrationController::class, 'step1']);
 
 // Sibling merge OTP endpoints (public but rate limited)
 Route::post('/register/send-merge-otp', [RegistrationController::class, 'sendMergeOtp']);

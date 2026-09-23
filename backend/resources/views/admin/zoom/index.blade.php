@@ -16,13 +16,13 @@
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
-        <div class="page-title d-flex justify-content-between align-items-center">
+        <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Zoom Classes</h4>
-            <div>
-                <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
-                    <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-danger btn-sm mb-0" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
+                    <i class="flaticon-381-trash-1"></i> Delete (<span id="selectedCount">0</span>)
                 </button>
-                <a href="{{ route('admin.timetables.index') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('admin.timetables.index') }}" class="btn btn-primary btn-sm mb-0">
                     <i class="flaticon-381-add-1"></i> New Class
                 </a>
             </div>

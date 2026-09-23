@@ -57,7 +57,7 @@ export default function StudentZoom() {
                     <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 </div>
             ) : paymentRequired ? (
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                     <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}>🔒</div>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#991b1b' }}>Payment Required</h3>
                     <p style={{ margin: '0 0 24px 0', color: '#64748b', fontSize: 15, maxWidth: 400 }}>Complete this month's payment to unlock your live classes.</p>

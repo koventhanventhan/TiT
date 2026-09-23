@@ -235,7 +235,10 @@ export const registerStep1 = async (userData) => {
       method: 'POST',
       headers: getAuthHeaders(),
       credentials: 'include',
-      body: JSON.stringify(userData),
+      body: JSON.stringify({
+        ...userData,
+        recaptcha_token: userData.recaptcha_token || undefined,
+      }),
     })
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Registration failed' }))
@@ -389,8 +392,11 @@ export const registerPaymentSuccess = async (orderId, paymentId = null, profileI
 }
 
 // Send OTP for email verification
-export const sendVerificationOtp = async (email) => {
+export const sendVerificationOtp = async (email, recaptchaToken = null) => {
   try {
+    const body = { email }
+    if (recaptchaToken) body.recaptcha_token = recaptchaToken
+
     const response = await fetch(`${API_BASE_URL}/auth/send-verification-otp`, {
       method: 'POST',
       headers: {
@@ -398,7 +404,7 @@ export const sendVerificationOtp = async (email) => {
         'Accept': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(body),
     })
     
     if (!response.ok) {
@@ -466,7 +472,10 @@ export const registerWithEmail = async (userData) => {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include',
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          ...userData,
+          recaptcha_token: userData.recaptcha_token || undefined,
+        }),
       })
     } catch (fetchError) {
       console.error('❌ Network error during registration:', {
@@ -784,15 +793,18 @@ export const logout = async () => {
 }
 
 // Forgot Password
-export const forgotPassword = async (email) => {
+export const forgotPassword = async (email, recaptchaToken = null) => {
   try {
+    const body = { email }
+    if (recaptchaToken) body.recaptcha_token = recaptchaToken
+
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {

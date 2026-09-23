@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
 import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
@@ -21,6 +21,31 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const { getSetting, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
+
+  // reCAPTCHA v3
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) return
+
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }, [RECAPTCHA_SITE_KEY])
+
+  const executeRecaptcha = async (action = 'submit') => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null
+    try {
+      await new Promise((resolve) => window.grecaptcha.ready(resolve))
+      return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+    } catch (err) {
+      console.warn('reCAPTCHA execution failed:', err)
+      return null
+    }
+  }
   
   // Read step from URL
   const initialStep = React.useMemo(() => {
@@ -603,6 +628,10 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
       if (mergeToken) {
         userData.merge_token = mergeToken
       }
+
+      // Get reCAPTCHA token before submitting step 1
+      const recaptchaToken = await executeRecaptcha('registration_step1')
+      if (recaptchaToken) userData.recaptcha_token = recaptchaToken
 
       const res = await registerStep1(userData)
       

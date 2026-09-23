@@ -9,7 +9,11 @@ class EmailBounce extends Model
     /**
      * The number of bounces after which an email is permanently blocklisted.
      */
-    public const BOUNCE_BLOCK_THRESHOLD = 3;
+    /**
+     * Block after the very first bounce to prevent repeated sends to
+     * non-existent mailboxes (Ticket #370951 — shared-hosting IP reputation).
+     */
+    public const BOUNCE_BLOCK_THRESHOLD = 1;
 
     protected $fillable = [
         'email',

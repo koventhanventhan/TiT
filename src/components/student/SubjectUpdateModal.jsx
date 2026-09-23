@@ -123,10 +123,11 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       <div style={{
         background: '#fff', borderRadius: 24, width: '100%', maxWidth: 500,
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', maxHeight: '90vh'
+        display: 'flex', flexDirection: 'column', maxHeight: '90vh',
+        margin: '16px'
       }}>
         <div style={{
-          padding: '24px 32px', borderBottom: '1px solid #f1f5f9',
+          padding: '20px', borderBottom: '1px solid #f1f5f9',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
           <div>
@@ -143,7 +144,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           </button>
         </div>
 
-        <div style={{ padding: '32px', overflowY: 'auto' }}>
+        <div style={{ padding: '20px', overflowY: 'auto' }}>
           {error && (
             <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
               {error}
@@ -191,7 +192,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           </div>
         </div>
 
-        <div style={{ padding: '24px 32px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+        <div style={{ padding: '20px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
           <button onClick={onClose} style={{
             padding: '12px 24px', borderRadius: 12, border: '1px solid #cbd5e1',
             background: '#fff', color: '#475569', fontSize: 15, fontWeight: 600, cursor: 'pointer'

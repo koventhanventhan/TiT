@@ -140,37 +140,48 @@
     }
 
     function generateAndSendPassword(id, type) {
-        if (!confirm('Are you sure you want to generate a new password and email it to this ' + type + '?')) return;
-        
-        let btn = document.getElementById('generatePasswordBtn');
-        let originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
-        btn.disabled = true;
+        Swal.fire({
+            title: 'Generate Password?',
+            text: 'Are you sure you want to generate a new password and email it to this ' + type + '?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffab2d',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, generate it!',
+            customClass: 'swal-dark-popup'
+        }).then((result) => {
+            if (result.value) {
+                let btn = document.getElementById('generatePasswordBtn');
+                let originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+                btn.disabled = true;
 
-        fetch(`/admin/${type}s/${id}/reset-password`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
+                fetch(`/admin/${type}s/${id}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    
+                    if (data.success) {
+                        Swal.fire({ title: 'Success', text: data.message, type: 'success', customClass: 'swal-dark-popup' });
+                        document.getElementById('editTeacherPassword').value = '';
+                    } else {
+                        Swal.fire({ title: 'Error', text: data.message || 'An error occurred.', type: 'error', customClass: 'swal-dark-popup' });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    Swal.fire({ title: 'Error', text: 'A network error occurred.', type: 'error', customClass: 'swal-dark-popup' });
+                });
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            if (data.success) {
-                alert(data.message);
-                document.getElementById('editTeacherPassword').value = '';
-            } else {
-                alert(data.message || 'An error occurred.');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert('A network error occurred.');
         });
     }
 

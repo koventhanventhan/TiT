@@ -881,7 +881,7 @@
                 editable: true,
                 selectable: true,
                 eventClick: function(info) {
-                    alert('Event: ' + info.event.title);
+                    Swal.fire({title: 'Event', text: info.event.title, type: 'info', customClass: 'swal-dark-popup'});
                 }
             });
             calendar.render();
@@ -1096,30 +1096,23 @@
     }
 
     function confirmDeleteAdmin(id) {
-        const swalPlugin = window.Swal;
-        
         const submitForm = () => {
             const form = document.getElementById('delete-admin-form-' + id);
             if (form) form.submit();
         };
 
-        if (swalPlugin) {
-            swalPlugin.fire({
-                title: 'Are you sure?',
-                text: "This administrator account will be permanently deleted!",
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#EB8153',
-                cancelButtonColor: '#3b3363',
-                confirmButtonText: 'Yes, delete it!',
-                background: '#3b3363',
-                color: '#fff'
-            }).then(function(result) {
-                if (result.value) submitForm();
-            });
-        } else {
-            if (confirm('Are you sure you want to delete this administrator?')) submitForm();
-        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This administrator account will be permanently deleted!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            customClass: 'swal-dark-popup'
+        }).then(function(result) {
+            if (result.value) submitForm();
+        });
     }
 </script>
 <script>

@@ -444,9 +444,20 @@
     const allTeachers = @json($teachersJson);
 
     function runSync() {
-        if(confirm('This will generate Zoom links for the next 90 days based on this timetable. Continue?')) {
-            window.location.href = "{{ route('admin.timetables.sync') }}";
-        }
+        Swal.fire({
+            title: 'Generate Zoom Links?',
+            text: 'This will generate Zoom links for the next 90 days based on this timetable. Continue?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffab2d',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, generate them!',
+            customClass: 'swal-dark-popup'
+        }).then((result) => {
+            if (result.value) {
+                window.location.href = "{{ route('admin.timetables.sync') }}";
+            }
+        });
     }
 
     function openEditModal(slot) {

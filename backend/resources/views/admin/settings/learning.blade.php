@@ -713,11 +713,11 @@
                 const removeBtn = container.parentElement.querySelector('.btn-danger');
                 if (removeBtn) removeBtn.style.display = '';
             } else {
-                alert(data.message || 'Upload failed');
+                Swal.fire({title: 'Error', text: data.message || 'Upload failed', type: 'error', customClass: 'swal-dark-popup'});
             }
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('An error occurred during upload');
+            Swal.fire({title: 'Error', text: 'An error occurred during upload', type: 'error', customClass: 'swal-dark-popup'});
         } finally {
             loader.style.display = 'none';
         }

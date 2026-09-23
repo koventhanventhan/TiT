@@ -660,55 +660,80 @@
     }
 
     function generateAndSendPassword(id, type) {
-        if (!confirm('Are you sure you want to generate a new password and email it to this ' + type + '?')) return;
-        
-        let btn = document.getElementById('generatePasswordBtn');
-        let originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
-        btn.disabled = true;
+        Swal.fire({
+            title: 'Generate Password?',
+            text: 'Are you sure you want to generate a new password and email it to this ' + type + '?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffab2d',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, generate it!',
+            customClass: 'swal-dark-popup'
+        }).then((result) => {
+            if (result.value) {
+                let btn = document.getElementById('generatePasswordBtn');
+                let originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+                btn.disabled = true;
 
-        fetch(`/admin/${type}s/${id}/reset-password`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
+                fetch(`/admin/${type}s/${id}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    
+                    if (data.success) {
+                        Swal.fire({ title: 'Success', text: data.message, type: 'success', customClass: 'swal-dark-popup' });
+                        document.getElementById('editPassword').value = '';
+                    } else {
+                        Swal.fire({ title: 'Error', text: data.message || 'An error occurred.', type: 'error', customClass: 'swal-dark-popup' });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    Swal.fire({ title: 'Error', text: 'A network error occurred.', type: 'error', customClass: 'swal-dark-popup' });
+                });
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            if (data.success) {
-                alert(data.message);
-                document.getElementById('editPassword').value = '';
-            } else {
-                alert(data.message || 'An error occurred.');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert('A network error occurred.');
         });
     }
 
     function submitPromoteForm() {
-        const force = confirm("Do you want to FORCE promote this student? (Bypass 6-month safeguard)\n\nClick OK to Force, or Cancel for Normal Promotion.");
-        if (!confirm(`Are you sure you want to promote this student to the next grade?${force ? ' (FORCE enabled)' : ''}\nThis will carry forward subjects automatically and may flag them for subject review.`)) {
-            return;
-        }
-        
-        const form = document.getElementById('promoteStudentForm');
-        if (force) {
-            let input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'force';
-            input.value = '1';
-            form.appendChild(input);
-        }
-        form.submit();
+        Swal.fire({
+            title: 'Promote Student?',
+            html: "This will move the student to the next grade and carry forward matching subjects automatically.<br><br><label style='color:#fff;'><input type='checkbox' id='forceCheckbox'> Force promote (bypass 6-month safeguard)</label>",
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#ffab2d',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, promote!',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                return {
+                    force: document.getElementById('forceCheckbox').checked
+                };
+            }
+        }).then((result) => {
+            if (result.value) {
+                const form = document.getElementById('promoteStudentForm');
+                if (result.value.force) {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'force';
+                    input.value = '1';
+                    form.appendChild(input);
+                }
+                form.submit();
+            }
+        });
     }
 </script>
 @endpush

@@ -226,9 +226,20 @@
     });
 
     function submitBulkDelete() {
-        if (confirm('Are you sure you want to delete the selected zoom classes?')) {
-            document.getElementById('bulkDeleteForm').submit();
-        }
+        Swal.fire({
+            title: 'Delete Zoom Classes?',
+            text: 'Are you sure you want to delete the selected zoom classes?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete them!',
+            customClass: 'swal-dark-popup'
+        }).then((result) => {
+            if (result.value) {
+                document.getElementById('bulkDeleteForm').submit();
+            }
+        });
     }
 </script>
 @endpush

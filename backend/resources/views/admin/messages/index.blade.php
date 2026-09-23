@@ -860,7 +860,7 @@
         const body = document.getElementById('quickBody').value.trim();
         if (!body) {
             if (typeof toastr !== 'undefined') toastr.warning("Please enter a message!");
-            else alert("Please enter a message!");
+            else Swal.fire({ title: 'Warning', text: "Please enter a message!", type: 'warning', customClass: 'swal-dark-popup' });
             return;
         }
 
@@ -890,7 +890,7 @@
             } else {
                 const err = await res.json().catch(() => ({}));
                 if (typeof toastr !== 'undefined') toastr.error(err.message || "Failed to send message");
-                else alert("Failed to send message");
+                else Swal.fire({ title: 'Error', text: "Failed to send message", type: 'error', customClass: 'swal-dark-popup' });
             }
         } catch(e) {
             console.error("quickSend error:", e);
@@ -903,7 +903,7 @@
         const body = document.getElementById('composeBody').value.trim();
         if (!body) {
             if (typeof toastr !== 'undefined') toastr.warning('Please enter a message!');
-            else alert('Please enter a message!');
+            else Swal.fire({ title: 'Warning', text: 'Please enter a message!', type: 'warning', customClass: 'swal-dark-popup' });
             return;
         }
         
@@ -912,14 +912,14 @@
             payload.recipient_id = document.getElementById('recipientId').value;
             if (!payload.recipient_id) {
                 if (typeof toastr !== 'undefined') toastr.warning('Select a recipient.');
-                else alert('Select a recipient.');
+                else Swal.fire({ title: 'Warning', text: 'Select a recipient.', type: 'warning', customClass: 'swal-dark-popup' });
                 return;
             }
         } else if (composeType === 'grade') {
             payload.grade = document.getElementById('gradeId').value;
             if (!payload.grade) {
                 if (typeof toastr !== 'undefined') toastr.warning('Select a grade.');
-                else alert('Select a grade.');
+                else Swal.fire({ title: 'Warning', text: 'Select a grade.', type: 'warning', customClass: 'swal-dark-popup' });
                 return;
             }
         }
@@ -937,7 +937,7 @@
             } else {
                 const err = await res.json().catch(() => ({}));
                 if (typeof toastr !== 'undefined') toastr.error(err.message || "Failed to send");
-                else alert(err.message || "Failed to send");
+                else Swal.fire({ title: 'Error', text: err.message || "Failed to send", type: 'error', customClass: 'swal-dark-popup' });
             }
         } catch(e) {
             console.error("sendCompose error:", e);

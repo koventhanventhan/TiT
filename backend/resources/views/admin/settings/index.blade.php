@@ -1452,7 +1452,7 @@
                     overlay.style.opacity = '0';
                     statusEl.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Uploaded</span>';
                     window.syncClasses();
-                } else { alert(data.message || 'Upload failed'); statusEl.innerHTML = ''; }
+                } else { Swal.fire({title: 'Error', text: data.message || 'Upload failed', type: 'error', customClass: 'swal-dark-popup'}); statusEl.innerHTML = ''; }
             }).catch(e => { console.error(e); statusEl.innerHTML = ''; });
         };
 
@@ -1462,20 +1462,31 @@
         window.syncClasses = syncClasses;
 
         window.removeClassType = function(id) {
-            if(confirm('Delete this class type?')){
-                const el = document.getElementById('cls-' + id);
-                const imgPath = el.querySelector('.c-image').value;
-                if (imgPath && imgPath.includes('uploads/settings/')) {
-                    const fd = new FormData();
-                    fd.append('_token', '{{ csrf_token() }}');
-                    fd.append('image_path', imgPath);
-                    fetch('{{ route("admin.settings.delete-image") }}', {
-                        method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    }).catch(e => console.error(e));
+            Swal.fire({
+                title: 'Delete Class Type?',
+                text: 'Are you sure you want to delete this class type?',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                customClass: 'swal-dark-popup'
+            }).then((result) => {
+                if(result.value){
+                    const el = document.getElementById('cls-' + id);
+                    const imgPath = el.querySelector('.c-image').value;
+                    if (imgPath && imgPath.includes('uploads/settings/')) {
+                        const fd = new FormData();
+                        fd.append('_token', '{{ csrf_token() }}');
+                        fd.append('image_path', imgPath);
+                        fetch('{{ route("admin.settings.delete-image") }}', {
+                            method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).catch(e => console.error(e));
+                    }
+                    el.remove(); 
+                    window.syncClasses();
                 }
-                el.remove(); 
-                window.syncClasses();
-            }
+            });
         };
 
         window.uploadTestimonialImage = function(input, id) {
@@ -1496,7 +1507,7 @@
                     previewEl.src = data.path; hiddenInput.value = data.path;
                     statusEl.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Uploaded</span>';
                     window.syncTestimonials();
-                } else { alert(data.message || 'Upload failed'); }
+                } else { Swal.fire({title: 'Error', text: data.message || 'Upload failed', type: 'error', customClass: 'swal-dark-popup'}); }
             }).catch(e => console.error(e));
         };
 
@@ -1757,11 +1768,11 @@
                         if (removeBtn) removeBtn.style.display = 'inline-block';
                     }
                 } else {
-                    alert(data.message || 'Upload failed');
+                    Swal.fire({title: 'Error', text: data.message || 'Upload failed', type: 'error', customClass: 'swal-dark-popup'});
                 }
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('An error occurred during upload');
+                Swal.fire({title: 'Error', text: 'An error occurred during upload', type: 'error', customClass: 'swal-dark-popup'});
             } finally {
                 if (loader) loader.style.display = 'none';
                 input.value = '';

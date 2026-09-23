@@ -220,7 +220,7 @@
             if(!subject) missing.push('Subject');
 
             if(missing.length > 0) {
-                alert('Please fill out the following required fields:\n\n- ' + missing.join('\n- '));
+                Swal.fire({ title: 'Missing Fields', html: 'Please fill out the following required fields:<br>- ' + missing.join('<br>- '), type: 'warning', customClass: 'swal-dark-popup' });
                 return;
             }
 
@@ -245,7 +245,7 @@
                 success: function(res) {
                     $('#addResultModal').modal('hide');
                     $('#addResultForm')[0].reset();
-                    alert('Exam result saved successfully!');
+                    Swal.fire({ title: 'Success', text: 'Exam result saved successfully!', type: 'success', customClass: 'swal-dark-popup' });
                     fetchResults();
                 },
                 error: function(err) {
@@ -264,7 +264,7 @@
                     } else {
                         backendError = err.responseText || err.statusText;
                     }
-                    alert("FAILED TO SAVE! \n\n" + backendError);
+                    Swal.fire({ title: 'Failed to Save', html: backendError.replace(/\n/g, '<br>'), type: 'error', customClass: 'swal-dark-popup' });
                 },
                 complete: function() {
                     // btn.prop('disabled', false).text('Save changes'); (handled in success/error)
@@ -281,7 +281,7 @@
             let gradeInput = $('#importForm input[name="import_grade"]').val();
 
             if(!fileInput || !termInput || !gradeInput){
-                alert('Please fill all required fields.');
+                Swal.fire({ title: 'Missing Fields', text: 'Please fill all required fields.', type: 'warning', customClass: 'swal-dark-popup' });
                 return;
             }
 
@@ -300,14 +300,14 @@
                 success: function(res) {
                     $('#importModal').modal('hide');
                     $('#importForm')[0].reset();
-                    alert(res.message || 'Import successful!');
+                    Swal.fire({ title: 'Success', text: res.message || 'Import successful!', type: 'success', customClass: 'swal-dark-popup' });
                     fetchResults();
                 },
                 error: function(err) {
                     if (err.responseJSON && err.responseJSON.error) {
-                        alert('Error: ' + err.responseJSON.error);
+                        Swal.fire({ title: 'Error', text: err.responseJSON.error, type: 'error', customClass: 'swal-dark-popup' });
                     } else {
-                        alert('Error importing file. Please check format.');
+                        Swal.fire({ title: 'Error', text: 'Error importing file. Please check format.', type: 'error', customClass: 'swal-dark-popup' });
                     }
                 },
                 complete: function() {
@@ -370,18 +370,29 @@
     }
 
     window.deleteResult = function(id) {
-        if(confirm('Are you sure you want to delete this result?')) {
-            $.ajax({
-                url: API_URL + '/' + id,
-                type: 'DELETE',
-                success: function() {
-                    fetchResults();
-                },
-                error: function() {
-                    alert('Failed to delete result.');
-                }
-            });
-        }
+        Swal.fire({
+            title: 'Delete Result?',
+            text: 'Are you sure you want to delete this result?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            customClass: 'swal-dark-popup'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: API_URL + '/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        fetchResults();
+                    },
+                    error: function() {
+                        Swal.fire({ title: 'Error', text: 'Failed to delete result.', type: 'error', customClass: 'swal-dark-popup' });
+                    }
+                });
+            }
+        });
     }
 </script>
 @endpush

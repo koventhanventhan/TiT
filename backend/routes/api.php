@@ -131,6 +131,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
         Route::post('/students/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteStudents']);
         Route::get('/teachers', [\App\Http\Controllers\Api\MasterAdminController::class, 'teachers']);
+        Route::patch('/students/{id}/subject-review', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateSubjectReview']);
         Route::post('/teachers/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteTeachers']);
         Route::get('/finance', [\App\Http\Controllers\Api\MasterAdminController::class, 'finance']);
         Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);

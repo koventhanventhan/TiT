@@ -10,7 +10,7 @@ import {
     FiTrash2,
     FiTrendingUp
 } from 'react-icons/fi'
-import { getAdminStudents, bulkDeleteAdminStudents, promoteAdminStudents } from '../../services/dashboardService'
+import { getAdminStudents, bulkDeleteAdminStudents, promoteAdminStudents, updateSubjectReviewStatus } from '../../services/dashboardService'
 import './AdminStudents.css'
 import { useToast } from '../../components/shared/ToastContext';
 
@@ -39,6 +39,18 @@ export default function AdminStudents() {
         }
         loadStudents()
     }, [])
+
+    const handleToggleSubjectReview = async (id, currentStatus) => {
+        const newStatus = !currentStatus;
+        try {
+            await updateSubjectReviewStatus(id, newStatus);
+            setStudents(students.map(s => s.id === id ? { ...s, needs_subject_review: newStatus } : s));
+            toast.success(`Subject review status updated to ${newStatus ? 'Needs Review' : 'OK'}`);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            toast.error('Failed to update status');
+        }
+    };
 
     const filteredStudents = students.filter(s => {
         const matchesSearch = s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || s.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -200,9 +212,24 @@ export default function AdminStudents() {
                                         {student.is_graduated ? 'Graduated' : student.registration_status.replace('_', ' ')}
                                     </span>
                                     {student.needs_subject_review && (
-                                        <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px', fontWeight: '600' }}>
+                                        <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             ⚠️ Needs Subject Review
+                                            <button 
+                                                onClick={() => handleToggleSubjectReview(student.id, student.needs_subject_review)}
+                                                title="Mark as Reviewed"
+                                                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '0', display: 'flex' }}
+                                            >
+                                                <FiCheckCircle size={14} />
+                                            </button>
                                         </div>
+                                    )}
+                                    {!student.needs_subject_review && (
+                                        <button 
+                                            onClick={() => handleToggleSubjectReview(student.id, student.needs_subject_review)}
+                                            style={{ fontSize: '11px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', marginTop: '4px', textDecoration: 'underline' }}
+                                        >
+                                            Mark needs review
+                                        </button>
                                     )}
                                 </td>
                                 <td>

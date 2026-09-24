@@ -251,6 +251,17 @@ export const getAdminStudents = async (params = {}) => {
   return res.json()
 }
 
+export const updateSubjectReviewStatus = async (id, needsReview) => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/${id}/subject-review`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ needs_subject_review: needsReview }),
+  })
+  if (!res.ok) throw new Error('Failed to update subject review status')
+  return res.json()
+}
+
 export const promoteAdminStudents = async (studentIds, force = false) => {
   const res = await fetch(`${API_BASE_URL}/admin/students/promote`, {
     method: 'POST',

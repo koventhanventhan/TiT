@@ -144,6 +144,15 @@ class MasterAdminController extends Controller
         return response()->json(['success' => true, 'message' => 'Students deleted successfully']);
     }
 
+    public function updateSubjectReview(Request $request, $id)
+    {
+        $request->validate(['needs_subject_review' => 'required|boolean']);
+        $student = User::where('role', 'user')->findOrFail($id);
+        $student->needs_subject_review = $request->needs_subject_review;
+        $student->save();
+        return response()->json(['success' => true, 'message' => 'Subject review status updated']);
+    }
+
     public function bulkDeleteTeachers(Request $request)
     {
         $request->validate(['ids' => 'required|array']);

@@ -45,12 +45,73 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   }, [isOpen, currentGrade, localMedium]);
 
   // Live pricing via shared hook
-  const { monthlyAmount, originalAmount, appliedPackage } = useSubjectPricing(
+  const { monthlyAmount, originalAmount, appliedPackage, packages } = useSubjectPricing(
     selectedSubjects,
     availableSubjects,
     currentGrade,
     localMedium
   );
+
+  // Dynamic Fee Info Message based on available subjects and packages
+  const dynamicFeeMessage = useMemo(() => {
+    if (availableSubjects.length === 0) return null;
+
+    const gradeNum = getNumericGrade(currentGrade);
+    
+    // Calculate total price
+    let totalIndividualPrice = 0;
+    
+    const subjectPartsEn = availableSubjects.map(s => {
+      const price = parseFloat(s.price || 0);
+      totalIndividualPrice += price;
+      return `${s.name} = Rs. ${price.toFixed(0)}`;
+    });
+    
+    const subjectPartsTa = availableSubjects.map(s => {
+      const price = parseFloat(s.price || 0);
+      return `${s.name_ta || s.name} = Rs. ${price.toFixed(0)}`;
+    });
+
+    let msgEn = subjectPartsEn.join(', ') + ` (Total: Rs. ${totalIndividualPrice.toFixed(0)}). `;
+    let msgTa = subjectPartsTa.join(', ') + ` (மொத்தம்: Rs. ${totalIndividualPrice.toFixed(0)}). `;
+
+    // Find if there's a package for this grade and medium
+    let applicablePkgs = [];
+    if (gradeNum && packages && packages.length > 0) {
+      applicablePkgs = packages.filter(p => {
+        let grades = p.applicable_grades;
+        if (typeof grades === 'string') {
+          try { grades = JSON.parse(grades); } catch(e) { grades = []; }
+        }
+        const hasGrade = Array.isArray(grades) && grades.some(g => parseInt(g, 10) === gradeNum);
+        const hasMedium = p.medium === 'both' || p.medium === localMedium;
+        return hasGrade && hasMedium;
+      });
+    }
+
+    const allSubjPkg = applicablePkgs.find(p => p.type === 'all_subjects');
+    const mainSubjPkg = applicablePkgs.find(p => p.type === 'main_subjects');
+
+    if (allSubjPkg) {
+      const pkgPrice = parseFloat(allSubjPkg.package_price).toFixed(0);
+      msgEn += `But if you select all subjects, your package price is only Rs. ${pkgPrice}!`;
+      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான Package கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
+    } else if (mainSubjPkg) {
+       const pkgPrice = parseFloat(mainSubjPkg.package_price).toFixed(0);
+       msgEn += `But if you select 2 or more subjects, your package price will be reduced to Rs. ${pkgPrice}!`;
+       msgTa += `ஆனால், நீங்கள் 2 அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
+    } else {
+       msgEn = `Note: Your monthly fee is calculated based on the subjects you select. ` + msgEn;
+       msgTa = `குறிப்பு: உங்கள் மாதக் கட்டணம் நீங்கள் தேர்ந்தெடுக்கும் பாடங்களின் அடிப்படையில் கணக்கிடப்படும். ` + msgTa;
+    }
+
+    return (
+      <div style={{ backgroundColor: '#e0e7ff', color: '#3730a3', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', borderLeft: '4px solid #4f46e5' }}>
+        <div style={{ marginBottom: '6px' }}><strong>{msgEn}</strong></div>
+        <div><strong>{msgTa}</strong></div>
+      </div>
+    );
+  }, [availableSubjects, currentGrade, localMedium, packages]);
 
   const handleToggle = (subjectName) => {
     setSelectedSubjects(prev => {
@@ -264,6 +325,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
               <p style={{ fontSize: 15, color: '#475569', marginBottom: 20, lineHeight: 1.5 }}>
                 Please review and select the subjects you will be taking in your new grade.
               </p>
+
+              {dynamicFeeMessage}
 
               <div style={{ display: 'grid', gap: 12 }}>
                 {availableSubjects.length > 0 ? availableSubjects.map((sub, idx) => {

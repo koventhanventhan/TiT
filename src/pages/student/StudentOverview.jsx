@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
     FiVideo, FiCalendar, FiCheckCircle, FiFileText,
@@ -8,6 +8,7 @@ import {
 import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
+
 
 // Reusable Stat Card
 function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
@@ -43,6 +44,8 @@ export default function StudentOverview() {
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
     const [showSubjectModal, setShowSubjectModal] = useState(false)
+    const [paymentRefreshKey, setPaymentRefreshKey] = useState(0)
+    const paymentRef = useRef(null)
 
     const hour = new Date().getHours()
     const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
@@ -154,11 +157,20 @@ export default function StudentOverview() {
                             selected_subjects: newSubjects
                         }
                     }))
+                    setShowSubjectModal(false)
+                    // Re-render payment module to fetch the new amount
+                    setPaymentRefreshKey(k => k + 1)
+                    // Auto-scroll to payment section after a brief delay
+                    setTimeout(() => {
+                        paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 300)
                 }}
             />
 
             {/* Payment Module */}
-            <StudentPaymentModule />
+            <div ref={paymentRef}>
+                <StudentPaymentModule key={paymentRefreshKey} />
+            </div>
 
             {/* Stats Grid */}
             <div style={{

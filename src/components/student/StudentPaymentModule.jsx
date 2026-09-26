@@ -85,8 +85,9 @@ const StudentPaymentModule = () => {
 
     if (!status) return null;
 
-    const { is_paid, amount, year_month } = status;
+    const { is_paid, amount, year_month, payment } = status;
     const monthName = new Date(year_month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' });
+    const isPendingOffline = payment && payment.status === 'pending' && payment.payment_method === 'offline';
 
     return (
         <section className="dashboard-payment-section">
@@ -97,7 +98,8 @@ const StudentPaymentModule = () => {
                 </div>
                 <div className="payment-card-content">
                     <div className="payment-status-label">
-                        {is_paid ? t('payment_status_paid') || 'Payment Completed' : t('payment_status_pending') || 'Monthly Fee Due'}
+                        {is_paid ? (t('payment_status_paid') || 'Payment Completed') : 
+                         (isPendingOffline ? 'Offline Payment Pending Admin Confirmation' : (t('payment_status_pending') || 'Monthly Fee Due'))}
                     </div>
                     <div className="payment-period">{monthName}</div>
                     {!is_paid && (
@@ -105,7 +107,7 @@ const StudentPaymentModule = () => {
                     )}
                 </div>
                 
-                {!is_paid && (
+                {!is_paid && !isPendingOffline && (
                     <button 
                         className="pay-now-btn" 
                         onClick={handlePayment}

@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         // Monthly Payment Routes (Must be accessible even if reg_status check fails)
         Route::get('/payment-status', [RegistrationController::class, 'checkMonthlyPaymentStatus']);
         Route::post('/pay-monthly', [RegistrationController::class, 'initializeMonthlyPayment']);
+        Route::post('/pay-monthly-offline', [RegistrationController::class, 'offlineMonthlyPayment']);
         Route::get('/payment-details', [RegistrationController::class, 'getPaymentDetails']);
 
         // Restricted Dashboard Routes

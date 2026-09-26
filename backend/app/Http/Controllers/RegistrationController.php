@@ -673,6 +673,7 @@ class RegistrationController extends Controller
                 'amount'     => $payment->amount,
                 'paid_at'    => $payment->paid_at,
                 'gateway_ref' => $payment->gateway_ref,
+                'payment_method' => $payment->payment_method,
             ] : null,
         ]);
     }
@@ -735,6 +736,63 @@ class RegistrationController extends Controller
             'message'     => 'Monthly payment initialized.',
             'payhere_url' => $checkoutUrl,
             'params'      => $params,
+        ]);
+    }
+
+    /**
+     * Initiate an offline monthly payment.
+     */
+    public function offlineMonthlyPayment(Request $request)
+    {
+        $user = $request->user();
+        $yearMonth = now()->format('Y-m');
+
+        // Check if already paid
+        $existingPaid = Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('status', 'paid')
+            ->exists();
+
+        if ($existingPaid) {
+            return response()->json([
+                'message' => 'You have already paid for this month.',
+            ], 400);
+        }
+
+        // Cancel any pending payments for this month
+        Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'cancelled']);
+
+        $amount = $this->calculateUserAmount($user);
+
+        $payment = Payment::create([
+            'user_id'        => $user->id,
+            'amount'         => $amount,
+            'status'         => 'pending',
+            'payment_method' => 'offline',
+            'year_month'     => $yearMonth,
+            'gateway_ref'    => 'OFFLINE_' . strtoupper(uniqid()),
+            'institute_id'   => $user->institute_id ?? 1,
+        ]);
+
+        // Notify user about offline payment submission (using the same notification pattern)
+        $this->notifier->notifyUser(
+            $user, 'payment_reminder', 'tit_payment_reminder',
+            [$user->full_name ?? $user->name, now()->format('F Y')],
+            ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+        );
+
+        Log::info('Offline monthly payment initialized', [
+            'user_id'    => $user->id,
+            'order_id'   => $payment->gateway_ref,
+            'amount'     => $amount,
+            'year_month' => $yearMonth,
+        ]);
+
+        return response()->json([
+            'message' => 'Offline payment initiated. Please pay offline. Admin will confirm and you will receive a WhatsApp message.',
         ]);
     }
 

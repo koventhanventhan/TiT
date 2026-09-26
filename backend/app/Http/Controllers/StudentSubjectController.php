@@ -11,13 +11,18 @@ class StudentSubjectController extends Controller
     {
         $request->validate([
             'subjects' => 'required|array',
-            'subjects.*' => 'string'
+            'subjects.*' => 'string',
+            'medium' => 'nullable|in:tamil,english',
         ]);
 
         $user = Auth::user();
 
         if ($user->role !== 'user') {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->has('medium') && in_array($request->medium, ['tamil', 'english'])) {
+            $user->medium = $request->medium;
         }
 
         $user->selected_subjects = json_encode(array_values(array_unique($request->subjects)));

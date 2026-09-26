@@ -59,12 +59,15 @@ export const getStudentStats = async () => {
   return res.json()
 }
 
-export const updateStudentSubjects = async (subjects) => {
+export const updateStudentSubjects = async (subjects, medium) => {
+  const payload = { subjects };
+  if (medium) payload.medium = medium;
+
   const res = await fetch(`${API_BASE_URL}/student/update-subjects`, {
     method: 'POST',
     headers: getAuthHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ subjects }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))
@@ -121,6 +124,21 @@ export const initializeMonthlyPayment = async () => {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))
     throw new Error(errorData.message || 'Failed to initialize monthly payment')
+  }
+  
+  return res.json()
+}
+
+export const initializeOfflineMonthlyPayment = async () => {
+  const res = await fetch(`${API_BASE_URL}/student/pay-monthly-offline`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to initialize offline monthly payment')
   }
   
   return res.json()

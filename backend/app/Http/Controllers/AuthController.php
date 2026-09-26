@@ -334,6 +334,49 @@ class AuthController extends Controller
     }
 
     /**
+     * Helper to build the standard array of profiles for a user and their children.
+     */
+    public function buildProfilesList(User $user)
+    {
+        return collect([$user])->merge($user->children)->map(function ($profile) {
+            return [
+                'id' => $profile->id,
+                'username' => $profile->name,
+                'email' => $profile->email,
+                'parent_id' => $profile->parent_id,
+                'role' => $profile->role,
+                'full_name' => $profile->full_name,
+                'medium' => $profile->medium,
+                'current_grade' => $profile->current_grade,
+                'selected_subjects' => $profile->selected_subjects,
+                'institute_id' => $profile->institute_id,
+                'is_deactivated' => !$profile->isActive(),
+                'deactivated_at' => $profile->deactivated_at,
+                'admin_confirmed_at' => $profile->admin_confirmed_at,
+                'registration_status' => $profile->registration_status,
+                'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
+            ];
+        });
+    }
+
+    /**
+     * Get profiles list (Authenticated)
+     */
+    public function getProfiles(Request $request)
+    {
+        $user = $request->user();
+        if ($user->parent_id) {
+            $user = User::find($user->parent_id) ?? $user;
+        }
+        $profiles = $this->buildProfilesList($user);
+
+        return response()->json([
+            'profiles' => $profiles,
+        ]);
+    }
+
+    /**
      * Login user
      */
     public function login(Request $request)
@@ -407,26 +450,9 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Auth::guard('web')->login($user, $request->boolean('remember'));
         }
 
-        $profiles = collect([$user])->merge($user->children)->map(function ($profile) {
-            return [
-                'id' => $profile->id,
-                'username' => $profile->name,
-                'email' => $profile->email,
-                'parent_id' => $profile->parent_id,
-                'role' => $profile->role,
-                'full_name' => $profile->full_name,
-                'medium' => $profile->medium,
-                'current_grade' => $profile->current_grade,
-                'selected_subjects' => $profile->selected_subjects,
-                'institute_id' => $profile->institute_id,
-                'is_deactivated' => !$profile->isActive(),
-                'deactivated_at' => $profile->deactivated_at,
-                'admin_confirmed_at' => $profile->admin_confirmed_at,
-                'registration_status' => $profile->registration_status,
-                'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
-                'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
-            ];
-        });
+        // If logging in as a child, we need to load parent and all siblings for profiles list
+        $rootUser = $user->parent_id ? (User::find($user->parent_id) ?? $user) : $user;
+        $profiles = $this->buildProfilesList($rootUser);
 
         return response()->json([
             'message' => 'Login successful',

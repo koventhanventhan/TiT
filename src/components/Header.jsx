@@ -314,7 +314,7 @@ const Header = () => {
                   ref={userDropdownRef}
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                 >
-                  <span className="user-greeting">{t('hi_user')}, {currentUser.name || currentUser.username || 'User'}</span>
+                  <span className="user-greeting">{t('hi_user')}, {currentUser.full_name || currentUser.name || currentUser.username || 'User'}</span>
                   <FiChevronDownIcon className={`user-dropdown-icon ${isUserDropdownOpen ? 'open' : ''}`} />
                   {isUserDropdownOpen && (
                     <div className="user-dropdown-menu">
@@ -538,7 +538,7 @@ const Header = () => {
                   {/* 1. User Info / Auth Section */}
                   {currentUser ? (
                     <div className="mobile-section-group">
-                      <div className="mobile-section-header">{t('hi_user')}, {currentUser.name || currentUser.username}</div>
+                      <div className="mobile-section-header">{t('hi_user')}, {currentUser.full_name || currentUser.name || currentUser.username}</div>
                       <div className="mobile-nav-list">
                         {getDashboardLink() && (
                           currentUser?.role?.toLowerCase() === 'admin' ? (

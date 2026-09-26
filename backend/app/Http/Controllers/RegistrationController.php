@@ -920,26 +920,7 @@ class RegistrationController extends Controller
             \Illuminate\Support\Facades\Cache::put('merge_verified_' . $request->merge_token, $parent->id, now()->addMinutes(30));
             
             $token = $parent->createToken('auth_token')->plainTextToken;
-            $profiles = collect([$parent])->merge($parent->children)->map(function ($profile) {
-                return [
-                    'id' => $profile->id,
-                    'username' => $profile->name,
-                    'email' => $profile->email,
-                    'parent_id' => $profile->parent_id,
-                    'role' => $profile->role,
-                    'full_name' => $profile->full_name,
-                    'medium' => $profile->medium,
-                    'current_grade' => $profile->current_grade,
-                    'selected_subjects' => $profile->selected_subjects,
-                    'institute_id' => $profile->institute_id,
-                    'is_deactivated' => !$profile->isActive(),
-                    'deactivated_at' => $profile->deactivated_at,
-                    'admin_confirmed_at' => $profile->admin_confirmed_at,
-                    'registration_status' => $profile->registration_status,
-                    'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
-                    'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
-                ];
-            });
+            $profiles = app(\App\Http\Controllers\AuthController::class)->buildProfilesList($parent);
 
             return response()->json([
                 'message' => 'Account verified. Please complete student details.',
@@ -1002,26 +983,7 @@ class RegistrationController extends Controller
         // Login the parent
         $token = $parent->createToken('auth_token')->plainTextToken;
 
-        $profiles = collect([$parent])->merge($parent->children)->map(function ($profile) {
-            return [
-                'id' => $profile->id,
-                'username' => $profile->name,
-                'email' => $profile->email,
-                'parent_id' => $profile->parent_id,
-                'role' => $profile->role,
-                'full_name' => $profile->full_name,
-                'medium' => $profile->medium,
-                'current_grade' => $profile->current_grade,
-                'selected_subjects' => $profile->selected_subjects,
-                'institute_id' => $profile->institute_id,
-                'is_deactivated' => !$profile->isActive(),
-                'deactivated_at' => $profile->deactivated_at,
-                'admin_confirmed_at' => $profile->admin_confirmed_at,
-                'registration_status' => $profile->registration_status,
-                'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
-                'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
-            ];
-        });
+        $profiles = app(\App\Http\Controllers\AuthController::class)->buildProfilesList($parent);
 
         return response()->json([
             'message' => 'Account merged successfully. You are now logged in.',

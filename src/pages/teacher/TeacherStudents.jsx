@@ -123,9 +123,9 @@ export default function TeacherStudents() {
                                                 background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0
-                                            }}>{student.name.charAt(0)}</div>
+                                            }}>{(student.full_name || student.name).charAt(0)}</div>
                                             <div>
-                                                <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 2 }}>{student.name}</div>
+                                                <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 2 }}>{student.full_name || student.name}</div>
                                                 <div style={{ fontSize: 13, color: '#64748b' }}>STU-{student.id} • {student.email}</div>
                                             </div>
                                         </div>

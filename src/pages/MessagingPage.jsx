@@ -130,13 +130,13 @@ export default function MessagingPage() {
             const p = msg.sender;
             if (!p) return;
             pId = String(p.id);
-            pName = p.name;
+            pName = p.full_name || p.name;
             pRole = p.role;
         } else {
             const p = dir === 'in' ? msg.sender : msg.receiver;
             if (!p) return;
             pId = String(p.id);
-            pName = p.name;
+            pName = p.full_name || p.name;
             pRole = p.role;
         }
 
@@ -345,7 +345,7 @@ export default function MessagingPage() {
                                         <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 8 }}>Select Recipient</label>
                                         <select value={composeId} onChange={e => setComposeId(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
                                             <option value="">-- Select --</option>
-                                            {individualList.map(r => <option key={r.id} value={r.id}>{r.name} ({r.role}) — {r.email}</option>)}
+                                            {individualList.map(r => <option key={r.id} value={r.id}>{r.full_name || r.name} ({r.role}) — {r.email}</option>)}
                                         </select>
                                     </div>
                                 )}

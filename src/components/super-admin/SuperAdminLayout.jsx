@@ -14,7 +14,7 @@ export default function SuperAdminLayout({ children, user }) {
                     <div className="header-right">
                         <div className="super-user-info">
                             <div className="text-right mr-3">
-                                <p className="super-name">{user?.name || 'System Owner'}</p>
+                                <p className="super-name">{user?.full_name || user?.name || 'System Owner'}</p>
                                 <p className="super-role">Full Authorization</p>
                             </div>
                             <div className="super-avatar">S</div>

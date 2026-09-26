@@ -65,8 +65,8 @@ export default function AdminAssignments() {
                                 </td>
                                 <td>
                                     <div className="teacher-ref">
-                                        <div className="t-avatar">{asm.teacher?.name?.charAt(0)}</div>
-                                        <span>{asm.teacher?.name}</span>
+                                        <div className="t-avatar">{(asm.teacher?.full_name || asm.teacher?.name || 'T').charAt(0)}</div>
+                                        <span>{asm.teacher?.full_name || asm.teacher?.name}</span>
                                     </div>
                                 </td>
                                 <td>{new Date(asm.due_date).toLocaleDateString()}</td>

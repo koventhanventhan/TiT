@@ -97,9 +97,9 @@ export default function AdminTeachers() {
                                 style={{ position: 'absolute', top: 0, left: 0 }}
                             />
                             <div className="teacher-main">
-                                <div className="avatar">{teacher.name?.charAt(0)}</div>
+                                <div className="avatar">{(teacher.full_name || teacher.name || 'T').charAt(0)}</div>
                                 <div className="info">
-                                    <h3>{teacher.name}</h3>
+                                    <h3>{teacher.full_name || teacher.name}</h3>
                                     <span>Senior Instructor</span>
                                 </div>
                             </div>

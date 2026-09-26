@@ -82,7 +82,7 @@ export default function SuperAdminOverview() {
                                     <div className={`act-dot ${act.action.includes('error') ? 'system' : act.action.includes('payment') ? 'payment' : 'new_tenant'}`}></div>
                                     <div className="act-details">
                                         <p>
-                                            <strong>{act.user?.name || 'System'}:</strong> {act.description}
+                                            <strong>{act.user?.full_name || act.user?.name || 'System'}:</strong> {act.description}
                                             {act.institute && <span className="inst-tag"> @ {act.institute.name}</span>}
                                         </p>
                                         <span>{new Date(act.created_at).toLocaleString()}</span>

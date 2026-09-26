@@ -116,7 +116,7 @@ export default function AdminZoom() {
                         <div className="teacher-info">
                             <div className="t-avatar">{cls.teachers?.[0]?.name?.charAt(0) || 'T'}</div>
                             <div className="t-details">
-                                <p>{cls.teachers?.[0]?.name || 'No Teacher Assigned'}</p>
+                                <p>{cls.teachers?.[0]?.full_name || cls.teachers?.[0]?.name || 'No Teacher Assigned'}</p>
                                 <span>Main Instructor</span>
                             </div>
                         </div>

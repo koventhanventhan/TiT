@@ -25,6 +25,8 @@ export default function AdminStudents() {
     const [isDeleting, setIsDeleting] = useState(false)
     const [isPromoting, setIsPromoting] = useState(false)
     const [reviewFilter, setReviewFilter] = useState('all')
+    const [showPromoteModal, setShowPromoteModal] = useState(false)
+    const [forcePromote, setForcePromote] = useState(false)
 
     useEffect(() => {
         async function loadStudents() {
@@ -90,13 +92,16 @@ export default function AdminStudents() {
         }
     }
 
-    const handlePromoteSelected = async () => {
-        const confirmMsg = `Are you sure you want to promote ${selectedStudents.length} students to the next grade? This action cannot be easily undone.`;
-        if (!window.confirm(confirmMsg)) return;
+    const handlePromoteClick = () => {
+        setForcePromote(false);
+        setShowPromoteModal(true);
+    }
 
+    const executePromote = async () => {
+        setShowPromoteModal(false);
         setIsPromoting(true);
         try {
-            const result = await promoteAdminStudents(selectedStudents);
+            const result = await promoteAdminStudents(selectedStudents, forcePromote);
             
             // Reload students to reflect changes
             const updatedData = await getAdminStudents();
@@ -104,12 +109,19 @@ export default function AdminStudents() {
             
             setSelectedStudents([]);
             
-            toast.success(`Promoted ${result.summary.promoted} students. ${result.summary.flagged} need subject review. ${result.summary.skipped > 0 ? result.summary.skipped + ' skipped.' : ''}`);
+            let msg = `Promoted ${result.summary.promoted} students. ${result.summary.flagged} flagged for subject review.`;
+            if (result.summary.skipped > 0) {
+                msg += ` ${result.summary.skipped} skipped (promoted within last 6 months — check 'Force promote' to override).`;
+                if (result.summary.skipped_student_ids && result.summary.skipped_student_ids.length > 0) {
+                    msg += ` Skipped IDs: ${result.summary.skipped_student_ids.join(', ')}.`;
+                }
+            }
+            toast.success(msg);
         } catch (error) {
             console.error('Failed to promote students:', error)
             toast.error(error.message || 'Error promoting students')
         } finally {
-            setIsPromoting(false)
+            setIsPromoting(false);
         }
     }
 
@@ -125,7 +137,7 @@ export default function AdminStudents() {
                 <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
                     {selectedStudents.length > 0 && (
                         <>
-                            <button className="delete-btn" onClick={handlePromoteSelected} disabled={isPromoting || isDeleting} style={{ backgroundColor: '#6366f1', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button className="delete-btn" onClick={handlePromoteClick} disabled={isPromoting || isDeleting} style={{ backgroundColor: '#6366f1', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <FiTrendingUp /> Promote Selected ({selectedStudents.length})
                             </button>
                             <button className="delete-btn" onClick={handleDeleteSelected} disabled={isPromoting || isDeleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -251,6 +263,38 @@ export default function AdminStudents() {
                     </tbody>
                 </table>
             </div>
+            {showPromoteModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '100%' }}>
+                        <h3 style={{ marginTop: 0 }}>Promote Students</h3>
+                        <p style={{ color: '#475569', marginBottom: '20px' }}>
+                            Are you sure you want to promote {selectedStudents.length} student(s) to the next grade? This action cannot be easily undone.
+                        </p>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={forcePromote} 
+                                onChange={(e) => setForcePromote(e.target.checked)} 
+                            />
+                            Force promote (override 6-month safeguard)
+                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button 
+                                onClick={() => setShowPromoteModal(false)}
+                                style={{ padding: '8px 16px', border: '1px solid #cbd5e1', background: 'white', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={executePromote}
+                                style={{ padding: '8px 16px', border: 'none', background: '#6366f1', color: 'white', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                Confirm Promote
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -40,6 +40,7 @@ class StudentPromotionService
         $flaggedCount = 0;
         $graduatedCount = 0;
         $skippedCount = 0;
+        $skippedStudentIds = [];
 
         DB::beginTransaction();
         try {
@@ -47,6 +48,7 @@ class StudentPromotionService
                 // Safeguard against double promotion
                 if (!$force && $student->last_promoted_at && Carbon::parse($student->last_promoted_at)->diffInMonths(now()) < 6) {
                     $skippedCount++;
+                    $skippedStudentIds[] = $student->id;
                     continue;
                 }
 
@@ -228,7 +230,8 @@ class StudentPromotionService
                 'promoted' => $promotedCount,
                 'flagged' => $flaggedCount,
                 'graduated' => $graduatedCount,
-                'skipped' => $skippedCount
+                'skipped' => $skippedCount,
+                'skipped_student_ids' => $skippedStudentIds
             ];
         } catch (\Exception $e) {
             DB::rollBack();

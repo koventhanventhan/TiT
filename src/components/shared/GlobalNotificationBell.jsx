@@ -314,7 +314,7 @@ export default function GlobalNotificationBell() {
                         </span>
                       )}
                       {notif.sender && (
-                        <span>From: {notif.sender.name}</span>
+                        <span>From: {notif.sender.full_name || notif.sender.name}</span>
                       )}
                     </div>
                   </div>

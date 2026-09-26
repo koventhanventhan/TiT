@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FiUser, FiPlus } from 'react-icons/fi';
 import '../components/AnimatedAuth.css'; // Reuse auth styles or define custom
 import { getActiveStorage } from '../services/apiClient';
+import { fetchProfiles } from '../services/authService';
 
 const SelectProfile = () => {
   const navigate = useNavigate();
@@ -17,12 +18,23 @@ const SelectProfile = () => {
         setProfiles(JSON.parse(savedProfiles));
       } catch (e) {
         console.error('Failed to parse availableProfiles', e);
-        navigate('/');
       }
-    } else {
-      // If no profiles found, something went wrong or user only has one profile
-      navigate('/student/dashboard');
     }
+
+    const loadLiveProfiles = async () => {
+      try {
+        const liveProfiles = await fetchProfiles();
+        setProfiles(liveProfiles);
+      } catch (e) {
+        console.error('Failed to fetch live profiles, using cache', e);
+        if (!savedProfiles) {
+          // If no profiles found at all, navigate away
+          navigate('/student/dashboard');
+        }
+      }
+    };
+
+    loadLiveProfiles();
   }, [navigate]);
 
   const getAvatarUrl = (avatar) => {

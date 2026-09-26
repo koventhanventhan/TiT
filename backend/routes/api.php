@@ -68,6 +68,7 @@ Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWha
 // Protected routes
 Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::get('/auth/profiles', [AuthController::class, 'getProfiles']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/update-avatar', [AuthController::class, 'updateAvatar']);
     Route::post('/auth/add-sibling', [AuthController::class, 'addSibling']);

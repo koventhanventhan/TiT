@@ -818,3 +818,30 @@ export const forgotPassword = async (email, recaptchaToken = null) => {
     throw error
   }
 }
+
+// Fetch Profiles (used to refresh profiles list after login)
+export const fetchProfiles = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/profiles`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch profiles (${response.status})`)
+    }
+
+    const data = await response.json()
+    if (data.profiles && data.profiles.length > 0) {
+      // Update cache in whichever storage the user chose at login
+      const storage = localStorage.getItem('authToken') ? localStorage : sessionStorage
+      storage.setItem('availableProfiles', JSON.stringify(data.profiles))
+      console.log('🔄 Local profiles data synchronized with API')
+    }
+    return data.profiles
+  } catch (error) {
+    console.error('Fetch profiles error:', error)
+    throw error
+  }
+}

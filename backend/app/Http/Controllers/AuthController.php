@@ -240,7 +240,19 @@ class AuthController extends Controller
      */
     public function addSibling(Request $request)
     {
-        $parent = $request->user();
+        $activeUser = $request->user();
+        $parent = $activeUser;
+
+        // Traverse up to find the true top-level parent
+        $visited = [$parent->id];
+        while ($parent->parent_id) {
+            $nextParent = $parent->parent()->first();
+            if (!$nextParent || in_array($nextParent->id, $visited)) {
+                break; // Break on missing parent or cycle
+            }
+            $parent = $nextParent;
+            $visited[] = $parent->id;
+        }
 
         $validationRules = [
             'first_name' => 'nullable|string|max:255',

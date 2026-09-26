@@ -52,6 +52,13 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     localMedium
   );
 
+  const getNumericGrade = (gradeValue) => {
+    if (!gradeValue) return null;
+    if (typeof gradeValue === 'number') return gradeValue;
+    const match = gradeValue.toString().match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+  };
+
   // Dynamic Fee Info Message based on available subjects and packages
   const dynamicFeeMessage = useMemo(() => {
     if (availableSubjects.length === 0) return null;
@@ -124,12 +131,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     setError('');
   };
 
-  const getNumericGrade = (gradeValue) => {
-    if (!gradeValue) return null;
-    if (typeof gradeValue === 'number') return gradeValue;
-    const match = gradeValue.toString().match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : null;
-  };
+
 
   const fetchSubjects = async () => {
     try {
@@ -172,6 +174,14 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       }
     } catch (err) {
       console.error('Failed to fetch subjects:', err);
+    }
+  };
+
+  const handleClose = () => {
+    if (successMessage) {
+      onUpdateSuccess(selectedSubjects);
+    } else {
+      onClose();
     }
   };
 
@@ -279,7 +289,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 14, color: '#64748b' }}>For {currentGrade}</p>
           </div>
-          <button onClick={onClose} style={{
+          <button onClick={handleClose} style={{
             background: '#f1f5f9', border: 'none', width: 36, height: 36,
             borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#64748b', cursor: 'pointer', transition: 'all 0.2s'

@@ -441,7 +441,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '8px' }}>
                       <span>Package Discount:</span>
-                      <span>Rs. {monthlyAmount.toFixed(2)}</span>
+                      <span>Rs. {savings.toFixed(2)}</span>
                     </div>
                   </>
                 ) : (

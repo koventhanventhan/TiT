@@ -277,7 +277,7 @@
                                   <td style="max-width: 7.5rem;">
                                       <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
                                       @if(empty($student->phone_number) && $student->parent_id && $student->parent)
-                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="Contact via: {{ $student->parent->name }} ({{ $student->parent->email }})">Contact via: {{ $student->parent->name }}</div>
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="Contact via: {{ $student->parent->full_name ?? $student->parent->name }} ({{ $student->parent->email }})">Contact via: {{ $student->parent->full_name ?? $student->parent->name }}</div>
                                       @else
                                           <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->email }}">{{ $student->email }}</div>
                                       @endif

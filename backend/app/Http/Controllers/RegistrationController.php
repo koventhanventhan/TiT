@@ -261,6 +261,21 @@ class RegistrationController extends Controller
             return $value !== null;
         });
 
+        $instituteId = $request->header('X-Institute-Id') ?: 1;
+
+        if (!$user) {
+            $institute = \App\Models\Institute::with('plan')->find($instituteId);
+            if ($institute && $institute->plan) {
+                $currentStudents = $institute->students()->count();
+                if ($currentStudents >= $institute->plan->max_students) {
+                    return response()->json([
+                        'message' => 'Student limit reached for your current plan. Please contact support to upgrade.',
+                        'errors' => ['username' => ['Student limit reached for your current plan. Please contact support to upgrade.']]
+                    ], 403);
+                }
+            }
+        }
+
         $userData = [
             'full_name' => $request->full_name,
             'phone_number' => $request->phone_number,
@@ -277,7 +292,7 @@ class RegistrationController extends Controller
             'selected_subjects' => $request->selected_subjects,
             'custom_fields' => !empty($customFieldsData) ? $customFieldsData : null,
             'registration_status' => 'pending_payment',
-            'institute_id' => $request->header('X-Institute-Id') ?: 1,
+            'institute_id' => $instituteId,
         ];
 
         \Log::info('RegistrationController@step1 - Start', ['request' => $request->except(['_token', 'password'])]);

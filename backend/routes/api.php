@@ -173,7 +173,16 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         Route::post('/plans', [\App\Http\Controllers\Api\SuperAdminController::class, 'storePlan']);
         Route::patch('/plans/{plan}', [\App\Http\Controllers\Api\SuperAdminController::class, 'updatePlan']);
         Route::get('/activity-logs', [\App\Http\Controllers\Api\SuperAdminController::class, 'activityLogs']);
+        Route::post('/institutes/{institute}/impersonate', [\App\Http\Controllers\Api\SuperAdminController::class, 'impersonate']);
+        Route::get('/institutes/{institute}/payments', [\App\Http\Controllers\Api\SuperAdminController::class, 'payments']);
+        Route::get('/institutes/{institute}/export', [\App\Http\Controllers\Api\SuperAdminController::class, 'export']);
+        Route::get('/search', [\App\Http\Controllers\Api\SuperAdminController::class, 'search']);
+        Route::get('/announcements', [\App\Http\Controllers\Api\SuperAdminController::class, 'announcements']);
+        Route::post('/announcements', [\App\Http\Controllers\Api\SuperAdminController::class, 'storeAnnouncement']);
     });
+
+    // Announcements (Any authenticated user)
+    Route::get('/announcements/active', [\App\Http\Controllers\Api\SuperAdminController::class, 'activeAnnouncement']);
 
     // ── Messaging System (all authenticated roles) ──
     Route::prefix('messages')->group(function () {

@@ -42,6 +42,14 @@ class TeacherController extends Controller
             'teacher_class' => 'nullable|string|max:255',
         ]);
 
+        $institute = \App\Models\Institute::with('plan')->find(auth()->user()->institute_id);
+        if ($institute && $institute->plan) {
+            $currentTeachers = $institute->teachers()->count();
+            if ($currentTeachers >= $institute->plan->max_teachers) {
+                return redirect()->back()->with('error', 'Teacher limit reached for your current plan. Please contact support to upgrade.');
+            }
+        }
+
         // Auto-generate simple Teacher ID (1, 2, 3...)
         $lastTeacher = User::where('role', 'teacher')
             ->whereNotNull('teacher_unique_id')

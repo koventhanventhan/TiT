@@ -4,9 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 class StudentSubjectController extends Controller
 {
+    protected NotificationService $notifier;
+
+    public function __construct(NotificationService $notifier)
+    {
+        $this->notifier = $notifier;
+    }
+
     public function updateSubjects(Request $request)
     {
         $request->validate([
@@ -35,9 +43,11 @@ class StudentSubjectController extends Controller
 
                 // Notify admin about the pending medium change request
                 try {
-                    $whatsappService = app(\App\Services\WhatsAppService::class);
-                    $adminPhone = config('services.whatsapp.admin_phone', '94770000000');
-                    $whatsappService->sendMessage($adminPhone, "New Medium Change Request from {$user->name} ({$user->phone}). Requested: {$request->medium}.");
+                    $this->notifier->notifyAdmin(
+                        'admin_alert', 'tit_general_update',
+                        ['Medium Change Request', "New medium change request from {$user->full_name ?? $user->name} ({$user->phone_number}). Requested: {$request->medium}."],
+                        ['alert_title' => 'Medium Change Request', 'alert_message' => "{$user->full_name ?? $user->name} ({$user->phone_number}) requested a medium change to {$request->medium}."]
+                    );
                 } catch (\Exception $e) {
                     \Log::error('Failed to notify admin about medium change: ' . $e->getMessage());
                 }

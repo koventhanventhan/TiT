@@ -59,6 +59,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
         Route::post('/students/promote', [StudentController::class, 'promote'])->name('admin.students.promote');
         Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password');
+        
+        Route::get('/students-requests/medium-changes', [StudentController::class, 'pendingMediumChanges'])->name('admin.students.medium-changes');
+        Route::post('/students-requests/medium-changes/{id}/approve', [StudentController::class, 'approveMediumChange'])->name('admin.students.medium-changes.approve');
+        Route::post('/students-requests/medium-changes/{id}/reject', [StudentController::class, 'rejectMediumChange'])->name('admin.students.medium-changes.reject');
+
         // Teachers
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');
         Route::post('/teachers/bulk-delete', [TeacherController::class, 'bulkDelete'])->name('admin.teachers.bulk-delete');

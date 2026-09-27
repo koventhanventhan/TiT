@@ -564,5 +564,62 @@ class StudentController extends Controller
             return redirect()->back()->with('error', 'An error occurred during promotion: ' . $e->getMessage());
         }
     }
+
+    public function pendingMediumChanges()
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $requests = \App\Models\MediumChangeRequest::with('user')->where('status', 'pending')->latest()->paginate(15);
+        return view('admin.students.medium-changes', compact('requests'));
+    }
+
+    public function approveMediumChange($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request = \App\Models\MediumChangeRequest::findOrFail($id);
+        $request->status = 'approved';
+        $request->save();
+
+        if ($request->user) {
+            $request->user->medium = $request->requested_medium;
+            $request->user->save();
+
+            // Notify user
+            $this->notifier->notifyUser(
+                $request->user, 'general_update', 'tit_general_update',
+                [$request->user->full_name ?? $request->user->name, 'admin'],
+                ['update_details' => 'Your request to change medium to ' . $request->requested_medium . ' has been approved.']
+            );
+        }
+
+        return redirect()->back()->with('success', 'Medium change approved.');
+    }
+
+    public function rejectMediumChange($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request = \App\Models\MediumChangeRequest::findOrFail($id);
+        $request->status = 'rejected';
+        $request->save();
+
+        if ($request->user) {
+            // Notify user
+            $this->notifier->notifyUser(
+                $request->user, 'general_update', 'tit_general_update',
+                [$request->user->full_name ?? $request->user->name, 'admin'],
+                ['update_details' => 'Your request to change medium to ' . $request->requested_medium . ' has been rejected.']
+            );
+        }
+
+        return redirect()->back()->with('success', 'Medium change rejected.');
+    }
 }
 

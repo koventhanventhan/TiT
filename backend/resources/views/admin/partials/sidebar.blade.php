@@ -27,6 +27,9 @@
                     <li class="{{ request()->routeIs('admin.students.create') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.students.create') }}">Add Student</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.students.medium-changes') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.students.medium-changes') }}">Medium Changes</a>
+                    </li>
                 </ul>
             </li>
 

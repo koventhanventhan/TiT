@@ -199,7 +199,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     setLoading(true);
     setError('');
     try {
-      await updateStudentSubjects(selectedSubjects, localMedium);
+      const resp = await updateStudentSubjects(selectedSubjects, localMedium);
+      if (resp && resp.mediumChangeRequested) {
+        setSuccessMessage('Subjects updated. Your medium change request is pending admin approval.');
+      }
       setStep(2); // Move to payment step
     } catch (err) {
       setError(err.message || 'Failed to update subjects.');

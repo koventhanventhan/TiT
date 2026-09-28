@@ -479,7 +479,9 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                     placeholder=" "
                     required
                     maxLength="6"
-                    pattern="\d{6}"
+                    pattern="[0-9]{6}"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                   />
                   <span>6-Digit Code</span>
                   <i></i>

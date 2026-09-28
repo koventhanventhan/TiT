@@ -230,16 +230,16 @@ class RegistrationController extends Controller
             'username.unique' => 'This username/email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.',
         ]);
 
-        // Email domain validation (DNS/MX)
+        // Email domain validation (DNS/MX) — DISABLED on live server
+        // OTP verification (below) already confirms the email is real and owned by the user.
+        // DNS checks cause false rejections on cPanel shared hosting.
+        // if ($request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+        //     if (!$this->isValidEmailForSending($request->username)) {
+        //         return response()->json([...], 422);
+        //     }
+        // }
+
         if ($request->has('username') && filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
-            if (!$this->isValidEmailForSending($request->username)) {
-                return response()->json([
-                    'message' => 'The given data was invalid.',
-                    'errors' => [
-                        'username' => ['This email address appears to be invalid or cannot receive emails. Please provide a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
-                    ]
-                ], 422);
-            }
             
             // If creating a new user, check if email was verified via OTP
             if (!$user && !\Illuminate\Support\Facades\Cache::get('email_verified_' . $request->username)) {

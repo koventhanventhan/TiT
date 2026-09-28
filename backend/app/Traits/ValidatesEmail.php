@@ -79,21 +79,55 @@ trait ValidatesEmail
             return $cache[$domain];
         }
 
+        // Well-known email providers — always allow (skip DNS entirely)
+        $trustedDomains = [
+            'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in',
+            'hotmail.com', 'outlook.com', 'live.com', 'msn.com',
+            'icloud.com', 'me.com', 'mac.com',
+            'aol.com', 'protonmail.com', 'proton.me', 'zoho.com',
+            'yandex.com', 'mail.com', 'gmx.com', 'gmx.net',
+        ];
+
+        if (in_array(strtolower($domain), $trustedDomains, true)) {
+            $cache[$domain] = true;
+            return true;
+        }
+
         try {
             // Check MX records first (preferred for email)
-            if (checkdnsrr($domain, 'MX')) {
+            if (function_exists('checkdnsrr') && @checkdnsrr($domain, 'MX')) {
                 $cache[$domain] = true;
                 return true;
             }
 
             // Fallback: check A record (some domains accept email without MX)
-            if (checkdnsrr($domain, 'A')) {
+            if (function_exists('checkdnsrr') && @checkdnsrr($domain, 'A')) {
                 $cache[$domain] = true;
                 return true;
             }
 
-            $cache[$domain] = false;
-            return false;
+            // Fallback 2: dns_get_record (works on some hosts where checkdnsrr doesn't)
+            if (function_exists('dns_get_record')) {
+                $records = @dns_get_record($domain, DNS_MX | DNS_A);
+                if (!empty($records)) {
+                    $cache[$domain] = true;
+                    return true;
+                }
+            }
+
+            // Fallback 3: gethostbyname (most basic check — does the domain resolve at all?)
+            $ip = @gethostbyname($domain);
+            if ($ip !== $domain) {
+                // Domain resolved to an IP — it exists
+                $cache[$domain] = true;
+                return true;
+            }
+
+            // If ALL methods failed, still allow through on shared hosting
+            // because DNS restrictions on cPanel can cause false negatives
+            Log::info("ValidatesEmail: All DNS checks returned no records for {$domain}, allowing through to avoid false rejection");
+            $cache[$domain] = true;
+            return true;
         } catch (\Throwable $e) {
             // If DNS check fails (e.g., network issue), allow the email through
             // to avoid blocking legitimate emails due to transient DNS failures

@@ -77,16 +77,12 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // --- DNS/MX email domain validation ---
-        // Reject emails with unreachable/non-existent domains BEFORE any DB operations
-        if (!$this->isValidEmailForSending($request->email)) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => [
-                    'email' => ['This email address appears to be invalid or cannot receive emails. Please use a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
-                ]
-            ], 422);
-        }
+        // --- DNS/MX email domain validation --- DISABLED
+        // Causes false rejections on cPanel shared hosting.
+        // OTP verification already confirms email is real.
+        // if (!$this->isValidEmailForSending($request->email)) {
+        //     return response()->json([...], 422);
+        // }
 
         // --- Manual email uniqueness check ---
         // Allow re-registration if the user hasn't completed Step 1 (full_name is still NULL).
@@ -796,15 +792,12 @@ class AuthController extends Controller
         }
         \Illuminate\Support\Facades\RateLimiter::hit($emailLimitKey, 600); // 10 minutes
 
-        // Check if email domain is valid
-        if (!$this->isValidEmailForSending($email)) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => [
-                    'email' => ['This email address appears to be invalid or cannot receive emails. Please use a real, working email address. / இந்த மின்னஞ்சல் முகவரி தவறானது அல்லது வேலை செய்யவில்லை. சரியான மின்னஞ்சலை உள்ளிடவும்.']
-                ]
-            ], 422);
-        }
+        // Check if email domain is valid — DISABLED
+        // Causes false rejections on cPanel shared hosting.
+        // OTP verification already confirms email is real.
+        // if (!$this->isValidEmailForSending($email)) {
+        //     return response()->json([...], 422);
+        // }
 
         // Check if already registered
         $existingUser = User::where('email', $email)->first();

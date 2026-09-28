@@ -248,14 +248,17 @@ class User extends Authenticatable implements FilamentUser
                 $uniqueSubjects = $subjectData->unique('name');
                 $sumAmount = (float) $uniqueSubjects->sum('price');
                 
-                // Check for a package bundle
-                $package = \App\Models\Package::where('category', $category)
+                // Check for package bundles
+                $packages = \App\Models\Package::where('category', $category)
                     ->where(function ($q) use ($medium) {
                         $q->where('medium', $medium)->orWhere('medium', 'both');
                     })
-                    ->first();
+                    ->get();
                 
-                if ($package) {
+                if ($packages->isNotEmpty()) {
+                    $allSubjPkg = $packages->firstWhere('type', 'all_subjects');
+                    $mainSubjPkg = $packages->firstWhere('type', 'main_subjects');
+
                     // Count total available subjects for this category and medium
                     $totalSubjectsForCategory = \App\Models\Subject::where('category', $category)
                         ->where(function ($q) use ($medium) {
@@ -264,9 +267,25 @@ class User extends Authenticatable implements FilamentUser
                         ->get()
                         ->unique('name')
                         ->count();
-                    
-                    if ($totalSubjectsForCategory > 0 && count($uniqueSubjects) >= $totalSubjectsForCategory) {
-                        $sumAmount = (float) $package->package_price;
+
+                    if ($allSubjPkg && $totalSubjectsForCategory > 0 && count($uniqueSubjects) >= $totalSubjectsForCategory) {
+                        $sumAmount = (float) $allSubjPkg->package_price;
+                    } elseif ($mainSubjPkg && count($uniqueSubjects) >= 5) {
+                        $pkgBasePrice = (float) $mainSubjPkg->package_price;
+                        $price = $pkgBasePrice;
+                        
+                        if ($mainSubjPkg->addon_price && (float) $mainSubjPkg->addon_price > 0) {
+                            $addonPrice = (float) $mainSubjPkg->addon_price;
+                            $baseCount = 5;
+                            if (count($uniqueSubjects) > $baseCount) {
+                                $extraCount = count($uniqueSubjects) - $baseCount;
+                                $price += $extraCount * $addonPrice;
+                            }
+                        }
+                        
+                        if ($price < $sumAmount) {
+                            $sumAmount = $price;
+                        }
                     }
                 }
 

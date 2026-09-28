@@ -75,18 +75,14 @@ export default function useSubjectPricing(selectedSubjects, availableSubjects, c
         appliedPkg = allSubjPkg;
       } else {
         const mainSubjPkg = applicablePkgs.find(p => p.type === 'main_subjects');
-        // Apply main_subjects package when student selects 2+ subjects
-        // and their total would exceed the package price
-        if (mainSubjPkg && selectedSubjects.length >= 2) {
+        // Apply main_subjects package when student selects 5 or more subjects
+        if (mainSubjPkg && selectedSubjects.length >= 5) {
           const pkgBasePrice = parseFloat(mainSubjPkg.package_price);
           let price = pkgBasePrice;
-          // If addon_price exists and they selected more than base subjects count,
-          // calculate: how many subjects fit in the base package price?
-          // Extra subjects beyond base count get addon pricing
+          
           if (mainSubjPkg.addon_price && parseFloat(mainSubjPkg.addon_price) > 0) {
             const addonPrice = parseFloat(mainSubjPkg.addon_price);
-            // Determine base subject count from the package
-            const baseCount = Math.max(2, Math.floor(pkgBasePrice / (originalMonthly / selectedSubjects.length)));
+            const baseCount = 5; // As per the rules for Grade 10-11
             if (selectedSubjects.length > baseCount) {
               const extraCount = selectedSubjects.length - baseCount;
               price += extraCount * addonPrice;

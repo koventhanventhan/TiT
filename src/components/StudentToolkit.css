@@ -1,0 +1,172 @@
+/* ═══════════════════════════════════════════════════════════
+   Premium Student Toolkit Section
+   ═══════════════════════════════════════════════════════════ */
+
+.premium-toolkit {
+  background: #ffffff;
+  padding: 7.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.st-header {
+  text-align: center;
+  margin-bottom: 4.375rem;
+}
+
+.st-tag {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary-color);
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.5rem 1.125rem;
+  border-radius: 3.125rem;
+  letter-spacing: 1.0px;
+  margin-bottom: 1.25rem;
+}
+
+.st-title {
+  font-size: 2.625rem;
+  font-weight: 800;
+  color: #0c1631;
+  margin-bottom: 0.9375rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.st-subtitle {
+  font-size: 1.125rem;
+  color: #64748b;
+  max-width: 43.75rem;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── Tools Grid ── */
+.st-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.875rem;
+}
+
+/* Tool Card */
+.st-card {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  border: 1.0px solid #f1f5f9;
+  box-shadow: 0 0.625rem 1.875rem rgba(12, 22, 49, 0.03);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.st-card-glow {
+  position: absolute;
+  top: -1.25rem;
+  right: -1.25rem;
+  width: 7.5rem;
+  height: 7.5rem;
+  background: radial-gradient(circle, var(--tool-color) 0%, transparent 70%);
+  opacity: 0.05;
+  transition: opacity 0.4s ease;
+}
+
+.st-card:hover {
+  transform: translateY(-0.625rem);
+  box-shadow: 0 1.25rem 3.125rem rgba(12, 22, 49, 0.08);
+  border-color: rgba(var(--tool-color-rgb), 0.2);
+}
+
+.st-card:hover .st-card-glow {
+  opacity: 0.15;
+}
+
+.st-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.st-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5625rem;
+}
+
+.st-icon-box {
+  width: 4rem;
+  height: 4rem;
+  background: #f8fafc;
+  border-radius: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+}
+
+.st-card:hover .st-icon-box {
+  background: var(--tool-color);
+  color: #ffffff;
+  transform: scale(1.05) rotate(5deg);
+}
+
+.st-category-tag {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.st-card-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0c1631;
+  margin-bottom: 0.75rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.st-card-desc {
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 1.5625rem;
+  flex: 1;
+}
+
+/* Footer Section */
+.st-card-footer {
+  padding-top: 1.25rem;
+  border-top: 1.0px solid #f8fafc;
+}
+
+.st-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.st-link:hover {
+  gap: 0.9375rem;
+  color: #1d4ed8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 37.5rem) {
+  .st-title {
+    font-size: 2rem;
+  }
+
+  .st-card {
+    padding: 1.875rem;
+  }
+}

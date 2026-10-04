@@ -1,0 +1,901 @@
+import React, { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { registerStep1, registerStep2, registerPaymentSuccess, verifyMergeOtp } from '../services/authService'
+import { FiX } from 'react-icons/fi'
+import { useSettings } from '../context/SettingsContext'
+import { useLanguage } from '../context/LanguageContext'
+import './StudentRegistrationForm.css'
+
+// Subject data structures
+// (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
+
+const MONTHLY_AMOUNT = 500
+const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
+const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) => {
+  const { getSetting } = useSettings()
+  const { t, translate, language } = useLanguage()
+  const location = useLocation()
+  const [step, setStep] = useState(1)
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    if (searchParams.get('step') === '2') {
+      setStep(2)
+    }
+  }, [location.search])
+  const [subjectsByCategory, setSubjectsByCategory] = useState({})
+
+  // Fetch subjects grouped by category from backend
+  React.useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+        const response = await fetch(`${API_BASE_URL}/subjects/prices`)
+        if (response.ok) {
+          const data = await response.json()
+          setSubjectsByCategory(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch subjects:', err)
+      }
+    }
+    fetchSubjects()
+  }, [])
+
+  // Auto-initialize email from currently authenticated user
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr)
+        if (u && u.email) {
+          setFormData(prev => ({ ...prev, email: u.email }))
+        }
+      } catch (e) {
+        console.error('Failed to parse user for email initialization:', e)
+      }
+    }
+  }, [])
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    dateOfBirth: '',
+    gender: '',
+    schoolName: '',
+    medium: '',
+    onlineExperience: '',
+    deviceUsed: '',
+    currentGrade: '',
+    username: '',
+    phoneNumber: '',
+    email: ''
+  })
+  const [selectedStream, setSelectedStream] = useState('')
+  const [selectedSubjects, setSelectedSubjects] = useState([])
+
+  // Re-hydrate state from localStorage
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        if (u) {
+          setFormData(prev => ({
+            ...prev,
+            fullName: u.full_name || prev.fullName,
+            dateOfBirth: u.date_of_birth || prev.dateOfBirth,
+            gender: u.gender || prev.gender,
+            schoolName: u.school_name || prev.schoolName,
+            medium: u.medium || prev.medium,
+            onlineExperience: u.online_experience !== undefined ? (u.online_experience ? 'yes' : 'no') : prev.onlineExperience,
+            deviceUsed: u.device_used || prev.deviceUsed,
+            currentGrade: u.current_grade || prev.currentGrade,
+            username: u.username || prev.username,
+            phoneNumber: u.phone_number || prev.phoneNumber,
+            email: u.email || prev.email
+          }));
+          if (u.stream) setSelectedStream(u.stream);
+          if (u.selected_subjects) {
+            const parsed = typeof u.selected_subjects === 'string' ? JSON.parse(u.selected_subjects) : u.selected_subjects;
+            if (Array.isArray(parsed)) setSelectedSubjects(parsed);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse user data from storage:', e);
+    }
+  }, [step]); // Run this when step changes or component mounts
+  const [regTitle, setRegTitle] = useState('')
+  const [regSubtitle, setRegSubtitle] = useState('')
+  const [labelFullname, setLabelFullname] = useState('')
+  const [labelPhone, setLabelPhone] = useState('')
+  const [labelDob, setLabelDob] = useState('')
+  const [labelGender, setLabelGender] = useState('')
+  const [labelSchool, setLabelSchool] = useState('')
+  const [labelMedium, setLabelMedium] = useState('')
+  const [labelExperience, setLabelExperience] = useState('')
+  const [labelDevice, setLabelDevice] = useState('')
+  const [labelGrade, setLabelGrade] = useState('')
+  const [labelStream, setLabelStream] = useState('')
+  const [customFieldLabels, setCustomFieldLabels] = useState([])
+  const [btnNext, setBtnNext] = useState('')
+
+  React.useEffect(() => {
+    const defaultEn = {
+      reg_title: 'Student Details',
+      reg_subtitle: 'Please fill in all the required information',
+      reg_fullname: 'Full Name',
+      reg_phone: 'Phone Number (WhatsApp)',
+      reg_dob: 'Date of Birth',
+      reg_gender: 'Gender',
+      reg_school: 'School Name',
+      reg_medium: 'Medium of Learning',
+      reg_experience: 'Do you have online class experience?',
+      reg_device: 'Device Used for Online Classes',
+      reg_grade: 'Current Grade (2026)',
+      reg_stream: 'Stream / Section',
+      reg_next_payment: 'Next: Payment'
+    }
+
+    if (language !== 'en') {
+      const translateForm = async () => {
+        const valTitle = getSetting('register_title', defaultEn.reg_title)
+        if (valTitle === defaultEn.reg_title) setRegTitle(t('reg_title'))
+        else setRegTitle(await translate(valTitle))
+
+        const valSub = getSetting('register_subtitle', defaultEn.reg_subtitle)
+        if (valSub === defaultEn.reg_subtitle) setRegSubtitle(t('reg_subtitle'))
+        else setRegSubtitle(await translate(valSub))
+
+        const valFullname = getSetting('register_fullname_label', defaultEn.reg_fullname)
+        if (valFullname === defaultEn.reg_fullname) setLabelFullname(t('reg_fullname'))
+        else setLabelFullname(await translate(valFullname))
+
+        const valPhone = getSetting('register_phone_label', defaultEn.reg_phone)
+        if (valPhone === defaultEn.reg_phone) setLabelPhone(t('reg_phone'))
+        else setLabelPhone(await translate(valPhone))
+
+        const valDob = getSetting('register_dob_label', defaultEn.reg_dob)
+        if (valDob === defaultEn.reg_dob) setLabelDob(t('reg_dob'))
+        else setLabelDob(await translate(valDob))
+
+        const valGender = getSetting('register_gender_label', defaultEn.reg_gender)
+        if (valGender === defaultEn.reg_gender) setLabelGender(t('reg_gender'))
+        else setLabelGender(await translate(valGender))
+
+        const valSchool = getSetting('register_school_label', defaultEn.reg_school)
+        if (valSchool === defaultEn.reg_school) setLabelSchool(t('reg_school'))
+        else setLabelSchool(await translate(valSchool))
+
+        const valMedium = getSetting('register_medium_label', defaultEn.reg_medium)
+        if (valMedium === defaultEn.reg_medium) setLabelMedium(t('reg_medium'))
+        else setLabelMedium(await translate(valMedium))
+
+        const valExp = getSetting('register_experience_label', defaultEn.reg_experience)
+        if (valExp === defaultEn.reg_experience) setLabelExperience(t('reg_experience'))
+        else setLabelExperience(await translate(valExp))
+
+        const valDevice = getSetting('register_device_label', defaultEn.reg_device)
+        if (valDevice === defaultEn.reg_device) setLabelDevice(t('reg_device'))
+        else setLabelDevice(await translate(valDevice))
+
+        const valGrade = getSetting('register_grade_label', defaultEn.reg_grade)
+        if (valGrade === defaultEn.reg_grade) setLabelGrade(t('reg_grade'))
+        else setLabelGrade(await translate(valGrade))
+
+        const valStream = getSetting('register_stream_label', defaultEn.reg_stream)
+        if (valStream === defaultEn.reg_stream) setLabelStream(t('reg_stream'))
+        else setLabelStream(await translate(valStream))
+
+        const valNext = getSetting('register_next_btn', defaultEn.reg_next_payment)
+        if (valNext === defaultEn.reg_next_payment) setBtnNext(t('reg_next_payment'))
+        else setBtnNext(await translate(valNext))
+      }
+      translateForm()
+    } else {
+      setRegTitle(getSetting('register_title', t('reg_title')))
+      setRegSubtitle(getSetting('register_subtitle', t('reg_subtitle')))
+      setLabelFullname(getSetting('register_fullname_label', t('reg_fullname')))
+      setLabelPhone(getSetting('register_phone_label', t('reg_phone')))
+      setLabelDob(getSetting('register_dob_label', t('reg_dob')))
+      setLabelGender(getSetting('register_gender_label', t('reg_gender')))
+      setLabelSchool(getSetting('register_school_label', t('reg_school')))
+      setLabelMedium(getSetting('register_medium_label', t('reg_medium')))
+      setLabelExperience(getSetting('register_experience_label', t('reg_experience')))
+      setLabelDevice(getSetting('register_device_label', t('reg_device')))
+      setLabelGrade(getSetting('register_grade_label', t('reg_grade')))
+      setLabelStream(getSetting('register_stream_label', t('reg_stream')))
+
+      const customVal = getSetting('register_custom_fields', '[]')
+      try {
+        setCustomFieldLabels(typeof customVal === 'string' ? JSON.parse(customVal) : (Array.isArray(customVal) ? customVal : []))
+      } catch (e) {
+        setCustomFieldLabels([])
+      }
+
+      setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
+    }
+  }, [language, getSetting, t, translate])
+  // (selectedStream and selectedSubjects are now initialized in the useEffect above)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [paymentChoice, setPaymentChoice] = useState(null)
+  const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  // Merge Flow State (for Step 1 duplicate check)
+  const [isMergeFlow, setIsMergeFlow] = useState(false)
+  const [localMergeToken, setLocalMergeToken] = useState(mergeToken || null)
+  const [maskedContact, setMaskedContact] = useState('')
+  const [mergeOtp, setMergeOtp] = useState('')
+
+  // Helper function to extract grade number from any format (தரம் X, Grade X, or just X)
+  const getGradeNumber = (gradeValue) => {
+    if (!gradeValue) return null
+    if (typeof gradeValue === 'number') return gradeValue
+    const match = gradeValue.toString().match(/(\d+)/)
+    return match ? parseInt(match[1], 10) : null
+  }
+
+  // Get available subjects based on grade and stream (from API data)
+  const getAvailableSubjects = () => {
+    const gradeNum = getGradeNumber(formData.currentGrade)
+    if (!gradeNum) return []
+
+    if (gradeNum >= 1 && gradeNum <= 5) {
+      return subjectsByCategory['grade_1_to_5'] || []
+    } else if (gradeNum >= 6 && gradeNum <= 11) {
+      return subjectsByCategory['grade_6_to_11'] || []
+    } else if (gradeNum >= 12 && gradeNum <= 13) {
+      return subjectsByCategory[selectedStream] || []
+    }
+    return []
+  }
+
+  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream, subjectsByCategory])
+
+  // Calculate total amount based on selected subjects
+  const totalAmount = useMemo(() => {
+    if (selectedSubjects.length === 0) return 0
+    return selectedSubjects.reduce((sum, subjectName) => {
+      // Find the subject's price from the available subjects array
+      const subjectObj = availableSubjects.find(s => s.name === subjectName)
+      return sum + (subjectObj ? parseFloat(subjectObj.price) : 0)
+    }, 0)
+  }, [selectedSubjects, availableSubjects])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    // If currentGrade changes, reset stream and subjects
+    if (name === 'currentGrade') {
+      setSelectedStream('')
+      setSelectedSubjects([])
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    setError('')
+  }
+
+  const handleStreamChange = (e) => {
+    setSelectedStream(e.target.value)
+    setSelectedSubjects([]) // Reset subjects when stream changes
+    setError('')
+  }
+
+  const handleSubjectToggle = (subject) => {
+    setSelectedSubjects(prev => {
+      if (prev.includes(subject)) {
+        return prev.filter(s => s !== subject)
+      } else {
+        return [...prev, subject]
+      }
+    })
+    setError('')
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    // Validation
+    if (!formData.fullName || formData.fullName.length < 2) {
+      setError('Full name must be at least 2 characters')
+      return
+    }
+
+    if (!formData.dateOfBirth) {
+      setError('Date of birth is required')
+      return
+    }
+
+    if (!formData.gender) {
+      setError('Gender is required')
+      return
+    }
+
+    if (!formData.schoolName) {
+      setError('School name is required')
+      return
+    }
+
+    if (!formData.medium) {
+      setError('Medium of learning is required')
+      return
+    }
+
+    if (!formData.onlineExperience) {
+      setError('Please specify if you have online class experience')
+      return
+    }
+
+    if (!formData.deviceUsed) {
+      setError('Please select a device')
+      return
+    }
+
+    if (!formData.currentGrade) {
+      setError('Current grade is required')
+      return
+    }
+
+    const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+    if (!formData.phoneNumber || phoneDigits.length < 10 || phoneDigits.length > 15) {
+      setError('Phone number must be 10-15 digits / தொலைபேசி எண் 10-15 இலக்கங்களாக இருக்க வேண்டும்')
+      return
+    }
+
+    const gradeNum = getGradeNumber(formData.currentGrade)
+
+    // For grades 12-13, stream is required
+    if (gradeNum && gradeNum >= 12 && gradeNum <= 13) {
+      if (!selectedStream) {
+        setError('Please select a stream (A/L – ARTS or A/L – BIO & MATHS)')
+        return
+      }
+    }
+
+    // At least one subject must be selected
+    if (selectedSubjects.length === 0) {
+      setError('Please select at least one subject')
+      return
+    }
+
+    // Generate username if not provided (use full name or default)
+    const username = formData.username || formData.fullName.toLowerCase().replace(/\s+/g, '') || 'student'
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const userData = {
+        username: formData.email || username, // Use email as priority for username
+        full_name: formData.fullName,
+        phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
+        date_of_birth: formData.dateOfBirth,
+        gender: formData.gender,
+        school_name: formData.schoolName,
+        medium: formData.medium,
+        online_experience: formData.onlineExperience === 'yes',
+        device_used: formData.deviceUsed,
+        current_grade: formData.currentGrade,
+        stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
+        selected_subjects: JSON.stringify(selectedSubjects),
+        ...Object.fromEntries(
+          customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
+        )
+      }
+
+      if (localMergeToken) {
+        userData.merge_token = localMergeToken
+      }
+
+      await registerStep1(userData)
+      setIsLoading(false)
+      setStep(2)
+      setError('')
+    } catch (err) {
+      setIsLoading(false)
+      if (err.isMergeFlow) {
+        setIsMergeFlow(true)
+        setLocalMergeToken(err.mergeToken)
+        setMaskedContact(err.maskedContact)
+        return
+      }
+      setError(err.message || 'Registration failed. Please try again.')
+      console.error('Registration error:', err)
+    }
+  }
+
+  const handleMergeOtpSubmit = async (e) => {
+    e.preventDefault()
+    if (!mergeOtp) {
+      setError('Please enter the OTP.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      // In step 1, verifyMergeOtp will actually create the sibling right away
+      // because we already submitted the full form data in step 1, but wait!
+      // Wait, verifyMergeOtp only takes token and otp.
+      // But we ALREADY sent the form data in step1, and it failed with 409.
+      // So the backend DOES NOT have the form data saved! It returned 409 and discarded it.
+      // Ah! Phase 2: verifyMergeOtp just validates the OTP and creates the token.
+      // Then we must RESUBMIT step1 with the verified localMergeToken!
+      
+      const data = await verifyMergeOtp(localMergeToken, mergeOtp)
+      
+      // If verification succeeds, we resubmit handleStep1Submit with the localMergeToken!
+      // Wait, we can just call registerStep1 again.
+      
+      const gradeNum = getGradeNumber(formData.currentGrade)
+      const username = formData.username || formData.fullName.toLowerCase().replace(/\s+/g, '') || 'student'
+      const userData = {
+        username: formData.email || username,
+        full_name: formData.fullName,
+        phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
+        date_of_birth: formData.dateOfBirth,
+        gender: formData.gender,
+        school_name: formData.schoolName,
+        medium: formData.medium,
+        online_experience: formData.onlineExperience === 'yes',
+        device_used: formData.deviceUsed,
+        current_grade: formData.currentGrade,
+        stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
+        selected_subjects: JSON.stringify(selectedSubjects),
+        merge_token: localMergeToken,
+        ...Object.fromEntries(
+          customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
+        )
+      }
+
+      await registerStep1(userData)
+      setIsLoading(false)
+      setIsMergeFlow(false)
+      setStep(2)
+      setError('')
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'OTP Verification failed.')
+    }
+  }
+
+  const handlePaymentOffline = async (amount) => {
+    setError('')
+    setIsLoading(true)
+    try {
+      await registerStep2('offline', amount)
+      setIsLoading(false)
+      alert(t('pay_offline_success'))
+      setStep(1)
+      setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
+      setSelectedStream('')
+      setSelectedSubjects([])
+      if (onClose) onClose()
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'Failed.')
+    }
+  }
+
+  const handleCardInput = (e) => {
+    const { name, value } = e.target
+    if (name === 'number') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 16)
+      const formatted = cleaned.replace(/(.{4})/g, '$1 ').trim()
+      setCardData(prev => ({ ...prev, number: formatted }))
+    } else if (name === 'expiry') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 4)
+      const formatted = cleaned.length > 2 ? cleaned.slice(0, 2) + '/' + cleaned.slice(2) : cleaned
+      setCardData(prev => ({ ...prev, expiry: formatted }))
+    } else if (name === 'cvv') {
+      setCardData(prev => ({ ...prev, cvv: value.replace(/\D/g, '').slice(0, 3) }))
+    } else {
+      setCardData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handlePaymentOnline = async (amount) => {
+    setError('')
+    setIsLoading(true)
+    try {
+      const resp = await registerStep2('online', amount)
+      setIsLoading(false)
+
+      if (!window.payhere) {
+        throw new Error('PayHere SDK not loaded. Please check your internet connection.')
+      }
+
+      const payment = {
+        sandbox: resp.payhere_url.includes('sandbox'),
+        ...resp.params
+      }
+
+      window.payhere.onCompleted = async function onCompleted(orderId) {
+        console.log("Payment completed. OrderID:" + orderId)
+        try {
+          await registerPaymentSuccess(resp.params.order_id, orderId)
+          alert(t('pay_online_success'))
+          setStep(1)
+          setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
+          setCardData({ number: '', holder: '', expiry: '', cvv: '' })
+          setSelectedStream('')
+          setSelectedSubjects([])
+          if (onClose) onClose()
+          window.location.href = '/student/dashboard'
+        } catch (err) {
+          console.error('Failed to notify backend of payment success:', err)
+          alert('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
+          if (onClose) onClose()
+          window.location.href = '/student/dashboard'
+        }
+      }
+
+      window.payhere.onDismissed = function onDismissed() {
+        console.log("Payment dismissed")
+      }
+
+      window.payhere.onError = function onError(error) {
+        console.log("PayHere Error:" + error)
+        setError("Payment Error: " + error)
+      }
+
+      window.payhere.startPayment(payment)
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'Failed to initialize payment.')
+      console.error('PayHere Init Error:', err)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="tit-reg-overlay">
+      <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
+        {onClose && (
+          <button className="tit-reg-close" onClick={onClose}>
+            <FiX />
+          </button>
+        )}
+
+        {step === 1 && (
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">{isMergeFlow ? 'Verify Account' : regTitle}</h2>
+            <p className="tit-reg-subtitle">
+              {isMergeFlow 
+                ? `An account with this contact already exists. We've sent a 6-digit code to ${maskedContact} to verify you're the parent.`
+                : regSubtitle}
+            </p>
+
+            {error && <div className="tit-reg-error">{error}</div>}
+
+            {isMergeFlow ? (
+              <form onSubmit={handleMergeOtpSubmit} className="tit-reg-form">
+                <div className="tit-reg-group">
+                  <label htmlFor="mergeOtp" className="tit-reg-label">6-Digit Code <span className="tit-reg-required">*</span></label>
+                  <input
+                    type="text"
+                    id="mergeOtp"
+                    name="mergeOtp"
+                    value={mergeOtp}
+                    onChange={(e) => setMergeOtp(e.target.value)}
+                    className="tit-reg-input"
+                    required
+                    maxLength="6"
+                    pattern="\d{6}"
+                    placeholder="Enter 6-digit code"
+                  />
+                </div>
+                <div className="tit-reg-actions">
+                  <button
+                    type="button"
+                    className="tit-reg-btn tit-reg-btn-secondary"
+                    onClick={() => {
+                      setIsMergeFlow(false)
+                      setError('')
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="tit-reg-btn tit-reg-btn-primary"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? t('loading') : 'Verify & Continue'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="tit-reg-form">
+                {/* Full Name */}
+              {labelFullname && (
+                <div className="tit-reg-group">
+                  <label htmlFor="fullName" className="tit-reg-label">{labelFullname} <span className="tit-reg-required">*</span></label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    className="tit-reg-input"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    placeholder={t('reg_fullname_placeholder')}
+                  />
+                </div>
+              )}
+
+              {/* Phone (for WhatsApp) */}
+              {labelPhone && (
+                <div className="tit-reg-group">
+                  <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    className="tit-reg-input"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g. 07XXXXXXXX"
+                  />
+                </div>
+              )}
+
+
+              {/* Date of Birth */}
+              {labelDob && (
+                <div className="tit-reg-group">
+                  <label htmlFor="dateOfBirth" className="tit-reg-label">{labelDob} <span className="tit-reg-required">*</span></label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    className="tit-reg-input"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    required
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              )}
+
+              {/* Gender */}
+              {labelGender && (
+                <div className="tit-reg-group">
+                  <label htmlFor="gender" className="tit-reg-label">{labelGender} <span className="tit-reg-required">*</span></label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    className="tit-reg-select"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_gender_select')}</option>
+                    <option value="male">{t('reg_male')}</option>
+                    <option value="female">{t('reg_female')}</option>
+                  </select>
+                </div>
+              )}
+
+
+              {/* School Name */}
+              {labelSchool && (
+                <div className="tit-reg-group">
+                  <label htmlFor="schoolName" className="tit-reg-label">{labelSchool} <span className="tit-reg-required">*</span></label>
+                  <input
+                    type="text"
+                    id="schoolName"
+                    name="schoolName"
+                    className="tit-reg-input"
+                    value={formData.schoolName}
+                    onChange={handleChange}
+                    required
+                    placeholder={t('reg_school_placeholder')}
+                  />
+                </div>
+              )}
+
+              {/* Medium of Learning */}
+              {labelMedium && (
+                <div className="tit-reg-group">
+                  <label htmlFor="medium" className="tit-reg-label">{labelMedium} <span className="tit-reg-required">*</span></label>
+                  <select
+                    id="medium"
+                    name="medium"
+                    className="tit-reg-select"
+                    value={formData.medium}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_medium_select')}</option>
+                    <option value="tamil">{t('reg_medium_tamil')}</option>
+                    <option value="english">{t('reg_medium_english')}</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Online Class Experience */}
+              {labelExperience && (
+                <div className="tit-reg-group">
+                  <label htmlFor="onlineExperience" className="tit-reg-label">{labelExperience} <span className="tit-reg-required">*</span></label>
+                  <select
+                    id="onlineExperience"
+                    name="onlineExperience"
+                    className="tit-reg-select"
+                    value={formData.onlineExperience}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_experience_select')}</option>
+                    <option value="yes">{t('reg_exp_yes')}</option>
+                    <option value="no">{t('reg_exp_no')}</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Device Used */}
+              {labelDevice && (
+                <div className="tit-reg-group">
+                  <label htmlFor="deviceUsed" className="tit-reg-label">{labelDevice} <span className="tit-reg-required">*</span></label>
+                  <select
+                    id="deviceUsed"
+                    name="deviceUsed"
+                    className="tit-reg-select"
+                    value={formData.deviceUsed}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_device_select')}</option>
+                    <option value="Mobile">{t('reg_device_mobile')}</option>
+                    <option value="Tablet">{t('reg_device_tablet')}</option>
+                    <option value="Laptop">{t('reg_device_laptop')}</option>
+                    <option value="Desktop">{t('reg_device_desktop')}</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Current Grade (2026) */}
+              {labelGrade && (
+                <div className="tit-reg-group">
+                  <label htmlFor="currentGrade" className="tit-reg-label">{labelGrade} <span className="tit-reg-required">*</span></label>
+                  <select
+                    id="currentGrade"
+                    name="currentGrade"
+                    className="tit-reg-select"
+                    value={formData.currentGrade}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">{t('reg_grade_select')}</option>
+                    {gradeLevels.map((grade) => (
+                      <option key={grade} value={grade}>
+                        {language === 'ta' ? `தரம் ${grade}` : (language === 'si' ? `ශ්‍රේණිය ${grade}` : `Grade ${grade}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Stream Selection for Grades 12-13 */}
+              {(() => {
+                const gradeNum = getGradeNumber(formData.currentGrade)
+                if (gradeNum && gradeNum >= 12 && gradeNum <= 13 && labelStream) {
+                  return (
+                    <div className="tit-reg-group">
+                      <label htmlFor="stream" className="tit-reg-label">{labelStream} <span className="tit-reg-required">*</span></label>
+                      <select
+                        id="stream"
+                        name="stream"
+                        className="tit-reg-select"
+                        value={selectedStream}
+                        onChange={handleStreamChange}
+                        required
+                      >
+                        <option value="">{t('reg_stream_select')}</option>
+                        <option value="commerce_stream">{t('reg_stream_commerce') || 'Commerce'}</option>
+                        <option value="arts_stream">{t('reg_stream_art') || 'Arts'}</option>
+                        <option value="bio_maths_stream">{t('reg_stream_science') || 'Bio & Maths'}</option>
+                        <option value="tech_stream">{t('reg_stream_tech') || 'Technology'}</option>
+                      </select>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
+              {/* Custom Dynamic Fields */}
+              {customFieldLabels.map((customLabel, idx) => {
+                const fieldName = customLabel.toLowerCase().replace(/\s+/g, '_')
+                return (
+                  <div className="tit-reg-group" key={idx}>
+                    <label htmlFor={fieldName} className="tit-reg-label">{customLabel} <span className="tit-reg-required">*</span></label>
+                    <input
+                      type="text"
+                      id={fieldName}
+                      name={fieldName}
+                      className="tit-reg-input"
+                      value={formData[fieldName] || ''}
+                      onChange={handleChange}
+                      required
+                      placeholder={`Enter ${customLabel}`}
+                    />
+                  </div>
+                )
+              })}
+
+              {/* Subject Selection */}
+              {availableSubjects.length > 0 && (
+                <div className="tit-reg-group">
+                  <label className="tit-reg-label">{t('reg_subjects')} <span className="tit-reg-required">*</span></label>
+                  <div className="tit-reg-checkbox-group">
+                    {availableSubjects.map((subjectObj) => (
+                      <label
+                        key={subjectObj.name}
+                        className={`tit-reg-checkbox-label ${selectedSubjects.includes(subjectObj.name) ? 'tit-reg-checked' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjects.includes(subjectObj.name)}
+                          onChange={() => handleSubjectToggle(subjectObj.name)}
+                        />
+                        <span>
+                          {language === 'ta' ? (subjectObj.name_ta || subjectObj.name) :
+                            (language === 'si' ? (subjectObj.name_si || subjectObj.name) : subjectObj.name)}
+                          {subjectObj.price ? ` (Rs. ${parseFloat(subjectObj.price).toFixed(0)})` : ''}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="tit-reg-submit-btn"
+                disabled={isLoading}
+              >
+                {isLoading ? t('reg_submitting') : btnNext}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">{t('pay_title')}</h2>
+            <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
+            {error && <div className="tit-reg-error">{error}</div>}
+            <div className="tit-reg-payment-options">
+              <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
+                {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
+              </p>
+              <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
+                {t('pay_offline')}
+              </button>
+              <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
+                onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
+                disabled={isLoading}>
+                {isLoading ? t('pay_processing') : t('pay_online')}
+              </button>
+            </div>
+            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
+              {t('pay_back')}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default StudentRegistrationForm

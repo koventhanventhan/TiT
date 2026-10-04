@@ -1,0 +1,227 @@
+.recordings-page {
+  padding-top: 7.5rem;
+  min-height: 100vh;
+  background: var(--bg-light);
+}
+
+.recordings-page-hero {
+  background: var(--gradient-3);
+  padding: 3.75rem 0;
+  color: white;
+  text-align: center;
+}
+
+.recordings-page-title {
+  font-size: 2.625rem;
+  font-weight: 800;
+  margin-bottom: 0.9375rem;
+  color: white;
+}
+
+.recordings-page-subtitle {
+  font-size: 1.125rem;
+  opacity: 0.95;
+  max-width: 37.5rem;
+  margin: 0 auto;
+}
+
+.recordings-content {
+  padding: 2.5rem 0;
+}
+
+.recordings-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--gradient-3);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1.875rem;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.recordings-description {
+  font-size: 1rem;
+  color: var(--text-light);
+  max-width: 43.75rem;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+.recordings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1.5625rem;
+  margin-bottom: 3.125rem;
+}
+
+.recording-card {
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.recording-card:hover {
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+
+.recording-card.highlight {
+  border: 0.125rem solid var(--primary-color);
+  background: linear-gradient(to bottom right, #ffffff, #f5f7ff);
+}
+
+.recording-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 12.5rem;
+  background: var(--gradient-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.recording-icon {
+  font-size: 4rem;
+  color: white;
+  opacity: 0.8;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3.75rem;
+  height: 3.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.recording-thumbnail:hover .play-overlay {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: white;
+}
+
+.recording-content {
+  padding: 1.25rem;
+}
+
+.recording-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.75rem;
+}
+
+.recording-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9375rem;
+  margin-bottom: 0.9375rem;
+  font-size: 0.875rem;
+}
+
+.recording-subject {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.recording-duration {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  color: var(--text-light);
+}
+
+.recording-views {
+  color: var(--text-light);
+}
+
+.btn-watch {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--gradient-3);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-watch:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(79, 172, 254, 0.3);
+}
+
+.recordings-cta {
+  text-align: center;
+  padding: 3.125rem 1.25rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+}
+
+.recordings-cta h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.9375rem;
+}
+
+.recordings-cta p {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-bottom: 1.875rem;
+}
+
+.btn-primary-large {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--gradient-3);
+  color: white;
+  padding: 0.875rem 2rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-large:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.375rem 1.25rem rgba(79, 172, 254, 0.3);
+}
+
+@media (max-width: 48rem) {
+  .recordings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recordings-page-title {
+    font-size: 2rem;
+  }
+}

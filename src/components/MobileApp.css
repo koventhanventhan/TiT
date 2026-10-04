@@ -1,0 +1,383 @@
+/* ═══════════════════════════════════════════════════════════
+   Premium Mobile App Section
+   ═══════════════════════════════════════════════════════════ */
+
+.premium-mobile {
+  background: #ffffff;
+  padding: 7.5rem 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.pm-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6.25rem;
+}
+
+/* Visual Side */
+.pm-visual-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.pm-circle-glow {
+  position: absolute;
+  width: 28.125rem;
+  height: 28.125rem;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+.pm-phone-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Phone Mockup */
+.phone-mockup {
+  width: 17.5rem;
+  height: 35rem;
+  background: #1e293b;
+  border-radius: 2.5rem;
+  padding: 0.75rem;
+  box-shadow: 0 1.5625rem 3.75rem rgba(12, 22, 49, 0.2);
+  border: 0.25rem solid #334155;
+  position: relative;
+}
+
+.phone-bezel {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 1.875rem;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-speaker {
+  position: absolute;
+  top: 0.625rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3.125rem;
+  height: 0.25rem;
+  background: #f1f5f9;
+  border-radius: 0.125rem;
+  z-index: 10;
+}
+
+.phone-screen {
+  flex: 1;
+  background: #f8fafc;
+  overflow: hidden;
+  position: relative;
+}
+
+.screen-carousel {
+  display: flex;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.screen-page {
+  min-width: 100%;
+  height: 100%;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 2.5rem;
+}
+
+.screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.s-app-icon {
+  font-size: 3rem;
+  margin-bottom: 1.25rem;
+  filter: drop-shadow(0 0.625rem 0.9375rem rgba(0, 0, 0, 0.1));
+}
+
+.s-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0c1631;
+  margin-bottom: 1.25rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.s-dummy-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.s-line {
+  height: 0.375rem;
+  width: 80%;
+  background: #e2e8f0;
+  border-radius: 0.25rem;
+}
+
+.s-line.short {
+  width: 50%;
+}
+
+.s-rect {
+  width: 80%;
+  height: 5rem;
+  background: #f1f5f9;
+  border-radius: 0.75rem;
+  margin-top: 0.625rem;
+}
+
+.phone-home-line {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.5rem;
+  height: 0.25rem;
+  background: #334155;
+  border-radius: 0.125rem;
+}
+
+/* Floating Elements */
+.pm-floating-card {
+  position: absolute;
+  background: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.9375rem;
+  box-shadow: 0 0.9375rem 2.1875rem rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  z-index: 5;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: #0c1631;
+}
+
+.pm-floating-card.top {
+  top: 2.5rem;
+  right: -3.125rem;
+  animation: floatUp 3s ease-in-out infinite;
+}
+
+.pm-floating-card.bottom {
+  bottom: 5rem;
+  left: -3.125rem;
+  animation: floatDown 3s ease-in-out infinite;
+}
+
+.f-icon {
+  color: #10b981;
+  font-size: 1.125rem;
+}
+
+.f-icon-play {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: #fee2e2;
+  color: #ef4444;
+  border-radius: 50%;
+  padding: 0.3125rem;
+}
+
+@keyframes floatUp {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.625rem);
+  }
+}
+
+@keyframes floatDown {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(0.625rem);
+  }
+}
+
+/* Text Side */
+.pm-text-side {
+  flex: 1.2;
+}
+
+.pm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #4f0ad9;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.5rem 1.125rem;
+  border-radius: 3.125rem;
+  letter-spacing: 1.0px;
+  margin-bottom: 1.5625rem;
+}
+
+.pm-title {
+  font-size: 2.625rem;
+  font-weight: 800;
+  color: #0c1631;
+  line-height: 1.2;
+  margin-bottom: 0.9375rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.pm-subtitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #4f0ad9;
+  margin-bottom: 1.25rem;
+}
+
+.pm-description {
+  font-size: 1.0625rem;
+  color: #64748b;
+  line-height: 1.7;
+  margin-bottom: 1.875rem;
+}
+
+.pm-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9375rem;
+  margin-bottom: 2.1875rem;
+}
+
+.pm-f-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: #0c1631;
+  font-size: 0.9375rem;
+}
+
+.check-v {
+  color: #10b981;
+}
+
+.pm-download-area {
+  display: flex;
+  gap: 0.9375rem;
+}
+
+.pm-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1.0px solid transparent;
+}
+
+.pm-store-btn:hover {
+  background: #1e293b;
+  transform: translateY(-0.1875rem);
+  box-shadow: 0 0.625rem 1.25rem rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.store-icon {
+  font-size: 1.5rem;
+}
+
+.store-text small {
+  display: block;
+  font-size: 0.625rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.store-text strong {
+  display: block;
+  font-size: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 62rem) {
+  .pm-wrapper {
+    flex-direction: column-reverse;
+    gap: 5rem;
+    text-align: center;
+  }
+
+  .pm-text-side {
+    max-width: 37.5rem;
+  }
+
+  .pm-features {
+    align-items: center;
+  }
+
+  .pm-download-area {
+    justify-content: center;
+  }
+
+  .pm-floating-card.right {
+    right: -1.25rem;
+  }
+
+  .pm-floating-card.left {
+    left: -1.25rem;
+  }
+}
+
+@media (max-width: 35.5rem) {
+  .pm-title {
+    font-size: 2rem;
+  }
+
+  .pm-download-area {
+    flex-direction: column;
+  }
+
+  .pm-store-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .phone-mockup {
+    width: 16.25rem;
+    height: 32.5rem;
+  }
+}

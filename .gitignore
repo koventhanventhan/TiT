@@ -1,0 +1,13 @@
+node_modules/
+vendor/
+.env
+*.log
+laravel_api_git_backup/
+clean_clone_1.git/
+fresh_purge/
+laravel_api.bfg-report/
+**/node_modules/
+**/vendor/
+
+*.zip
+bfg.jar

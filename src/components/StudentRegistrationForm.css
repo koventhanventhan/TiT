@@ -1,0 +1,235 @@
+/* Prefixed CSS for Student Registration Form: tit-reg- */
+
+.tit-reg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(139, 92, 246, 0.8) 100%);
+  backdrop-filter: blur(0.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.tit-reg-wrapper {
+  background: #0f172a;
+  border-radius: 1.5rem;
+  padding: 0;
+  max-width: 98%; /* Reverted to original width */
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.tit-reg-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.tit-reg-container {
+  padding: 3rem 2.5rem; /* Reverted to original padding */
+}
+
+.tit-reg-title {
+  font-size: 2rem; /* Reverted to original */
+  font-weight: 800;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.tit-reg-subtitle {
+  color: rgba(199, 210, 254, 0.8);
+  text-align: center;
+  margin-bottom: 2.25rem;
+  font-size: 0.9rem;
+}
+
+.tit-reg-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.tit-reg-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.tit-reg-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.tit-reg-group:has(.tit-reg-checkbox-group) {
+  grid-column: 1 / -1;
+}
+
+.tit-reg-label {
+  color: #c7d2fe;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.tit-reg-required {
+  color: #f87171;
+}
+
+/* Option styling - Matching requested dark theme */
+.tit-reg-select option {
+  background-color: #1e1b4b !important; /* Dark navy background */
+  color: #ffffff !important; /* White text */
+}
+
+/* INPUT BOX FIX: Neat and proper size */
+.tit-reg-input,
+.tit-reg-select {
+  background: rgba(37, 99, 235, 0.1);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.125rem; /* Neat padding */
+  height: 3.25rem; /* Balanced height */
+  color: #e0e7ff;
+  font-size: 0.9375rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tit-reg-input:focus,
+.tit-reg-select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.tit-reg-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c7d2fe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.125rem center;
+}
+
+/* Checkbox and other styles maintained */
+.tit-reg-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.875rem;
+}
+
+.tit-reg-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: rgba(37, 99, 235, 0.1);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tit-reg-checkbox-label.tit-reg-checked {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.2);
+}
+
+.tit-reg-checkbox-label span {
+  color: #c7d2fe;
+  font-size: 0.875rem;
+}
+
+.tit-reg-submit-btn {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #ff4d4d 0%, #cc0000 100%);
+  color: white;
+  border: none;
+  padding: 1.125rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  margin-top: 1rem;
+}
+
+.tit-reg-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.tit-reg-submit-btn.tit-reg-secondary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.tit-reg-payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: stretch;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.tit-reg-payment-options .tit-reg-submit-btn {
+  width: 100%;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tit-reg-payment-options .tit-reg-submit-btn {
+  box-shadow: 0 0.5rem 1.5rem rgba(239, 68, 68, 0.4);
+}
+
+.tit-reg-payment-options .tit-reg-submit-btn.tit-reg-secondary {
+  box-shadow: 0 0.5rem 1.5rem rgba(16, 185, 129, 0.4);
+}
+
+.tit-reg-back-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+  margin: 1rem auto 0;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 48rem) {
+  .tit-reg-form { grid-template-columns: 1fr; }
+  .tit-reg-container { padding: 2.25rem 1.25rem; }
+  .tit-reg-title { font-size: 1.625rem; }
+}

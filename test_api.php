@@ -1,0 +1,2 @@
+<?php
+echo "API PATH REACHED: " . $_SERVER['REQUEST_URI'];

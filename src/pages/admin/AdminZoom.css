@@ -1,0 +1,163 @@
+.admin-zoom {
+    animation: fadeIn 0.5s ease;
+}
+
+.zoom-schedules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(21.875rem, 1fr));
+    gap: 1.5625rem;
+}
+
+.zoom-class-card {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 1.5625rem;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
+    border: 1.0px solid #f1f5f9;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.zoom-class-card:hover {
+    transform: translateY(-0.3125rem);
+}
+
+.card-badge {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: #fdf2f8;
+    color: #db2777;
+    padding: 0.3125rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.card-top h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+    width: 80%;
+}
+
+.class-meta {
+    display: flex;
+    gap: 0.9375rem;
+    color: #64748b;
+    font-size: 0.8125rem;
+    margin-bottom: 1.5625rem;
+}
+
+.class-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.teacher-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f8fafc;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5625rem;
+}
+
+.t-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.t-details p {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.t-details span {
+    font-size: 0.6875rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.zoom-link-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    background: #f1f5f9;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.625rem;
+    margin-bottom: 1.5625rem;
+}
+
+.zoom-link-row input {
+    flex: 1;
+    background: none;
+    border: none;
+    font-size: 0.75rem;
+    color: #64748b;
+    outline: none;
+}
+
+.zoom-link-row button {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.625rem;
+    border-top: 1.0px solid #f1f5f9;
+    padding-top: 1.25rem;
+}
+
+.card-actions button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-btn {
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1.0px solid #e2e8f0;
+}
+
+.edit-btn:hover {
+    background: #f1f5f9;
+}
+
+.delete-btn {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1.0px solid #fee2e2;
+}
+
+.delete-btn:hover {
+    background: #fee2e2;
+}

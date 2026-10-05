@@ -40,8 +40,7 @@ const DeactivatedDashboard = () => {
     setProcessing(true);
     try {
       await registerStep2('offline', paymentData.total);
-      toast.info('உங்கள் விண்ணப்பம் சமர்ப்பிக்கப்பட்டது. Admin உறுதிசெய்த பிறகு கணக்கு செயல்படுத்தப்படும். (Registration submitted. Account will be activated after admin confirms.)');
-      setTimeout(() => window.location.reload(), 2000);
+      setPaymentStep('submitted');
     } catch (err) {
       toast.error('Error: ' + err.message);
       setProcessing(false);
@@ -109,6 +108,21 @@ const DeactivatedDashboard = () => {
                   </button>
                 </>
               )}
+            </div>
+          ) : paymentStep === 'submitted' ? (
+            <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'center', padding: '2rem 1rem' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
+              <h2 className="tit-reg-title" style={{ color: '#4ade80' }}>Payment Submitted!</h2>
+              <p style={{ color: '#c7d2fe', fontSize: '1.1rem', lineHeight: '1.8', marginBottom: '1.5rem' }}>
+                உங்கள் Offline Payment பதிவு செய்யப்பட்டது.<br/>
+                Admin உறுதிசெய்த பிறகு உங்கள் கணக்கு மீண்டும் செயல்படுத்தப்படும்.
+              </p>
+              <p style={{ color: 'rgba(199,210,254,0.7)', fontSize: '0.95rem', marginBottom: '2rem' }}>
+                Your offline payment has been recorded. Your account will be reactivated after admin confirms the payment.
+              </p>
+              <button className="tit-reg-submit-btn" style={{ width: '100%' }} onClick={handleLogout}>
+                OK / சரி
+              </button>
             </div>
           ) : (
             <div className="tit-reg-payment-options" style={{ animation: 'fadeIn 0.3s ease' }}>

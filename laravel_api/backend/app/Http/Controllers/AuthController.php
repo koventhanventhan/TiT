@@ -90,9 +90,9 @@ class AuthController extends Controller
         $existingUser = User::where('email', $request->email)->first();
 
         if ($existingUser) {
-            // If registration is incomplete (full_name is NULL), allow re-try
+            // If registration is incomplete (full_name is NULL) AND it is a student account, allow re-try
             // by updating their password and returning a fresh token
-            if ($existingUser->full_name === null) {
+            if ($existingUser->full_name === null && $existingUser->role === 'user') {
                 \Log::info('AuthController@register - Allowing re-registration for incomplete user', [
                     'id' => $existingUser->id,
                     'email' => $existingUser->email,
@@ -819,13 +819,16 @@ class AuthController extends Controller
 
         // Check if already registered
         $existingUser = User::where('email', $email)->first();
-        if ($existingUser && $existingUser->full_name !== null) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => [
-                    'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.']
-                ]
-            ], 422);
+        if ($existingUser) {
+            // Only allow incomplete student registrations to proceed
+            if ($existingUser->full_name !== null || $existingUser->role !== 'user') {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'email' => ['This email is already registered / இந்த மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.']
+                    ]
+                ], 422);
+            }
         }
 
         $otp = (string) rand(100000, 999999);

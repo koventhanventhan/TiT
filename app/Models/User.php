@@ -236,6 +236,9 @@ class User extends Authenticatable implements FilamentUser
             if (!empty($selectedSubjects)) {
                 $medium = strtolower($this->medium ?? '');
                 $subjectData = \App\Models\Subject::when($category, function ($query) use ($category) {
+                    if ($category === 'grade_12_to_13') {
+                        return $query->whereIn('category', ['arts_stream', 'commerce_stream', 'tech_stream', 'bio_maths_stream', 'grade_12_to_13']);
+                    }
                     return $query->where('category', $category);
                 })
                 ->whereIn('name', $selectedSubjects)

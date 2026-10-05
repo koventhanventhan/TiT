@@ -62,14 +62,17 @@ class RegistrationController extends Controller
         if (is_array($subjects)) {
             $selectedSubjects = $subjects;
         } elseif (is_string($subjects)) {
-            $trimmedSubjects = trim($subjects);
-            try {
-                if (str_starts_with($trimmedSubjects, '[')) {
-                    $selectedSubjects = json_decode($trimmedSubjects, true) ?? [];
+            $decoded = json_decode($subjects, true);
+            if (is_array($decoded)) {
+                $selectedSubjects = $decoded;
+            } elseif (is_string($decoded)) {
+                $decoded2 = json_decode($decoded, true);
+                if (is_array($decoded2)) {
+                    $selectedSubjects = $decoded2;
                 } else {
-                    $selectedSubjects = array_map('trim', explode(',', $trimmedSubjects));
+                    $selectedSubjects = array_map('trim', explode(',', $decoded));
                 }
-            } catch (\Exception $e) {
+            } else {
                 $selectedSubjects = array_map('trim', explode(',', $subjects));
             }
         }

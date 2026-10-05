@@ -40,10 +40,10 @@ const DeactivatedDashboard = () => {
     setProcessing(true);
     try {
       await registerStep2('offline', paymentData.total);
-      toast.info('உங்கள் விண்ணப்பம் சமர்ப்பிக்கப்பட்டது. (Registration submitted.)');
+      toast.info('உங்கள் விண்ணப்பம் சமர்ப்பிக்கப்பட்டது. Admin உறுதிசெய்த பிறகு கணக்கு செயல்படுத்தப்படும். (Registration submitted. Account will be activated after admin confirms.)');
+      setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
       toast.error('Error: ' + err.message);
-    } finally {
       setProcessing(false);
     }
   };

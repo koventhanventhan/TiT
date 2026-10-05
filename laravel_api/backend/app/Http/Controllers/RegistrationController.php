@@ -48,7 +48,7 @@ class RegistrationController extends Controller
         }
 
         $subjects = $user->selected_subjects;
-        \Illuminate\Support\Facades\Log::info("Payment details request for User ID: {$user->id}, Email: {$user->email}, Raw Subjects: '{$subjects}'");
+        \Illuminate\Support\Facades\Log::info("Payment details request for User ID: {$user->id}, Email: {$user->email}, Raw Subjects: " . (is_array($subjects) ? json_encode($subjects) : $subjects));
 
         if (empty($subjects)) {
             return response()->json([

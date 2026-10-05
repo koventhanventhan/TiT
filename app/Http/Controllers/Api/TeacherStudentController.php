@@ -20,7 +20,7 @@ class TeacherStudentController extends Controller
 
     public function show(User $student)
     {
-        if ($student->role !== 'student') {
+        if ($student->role !== 'user') {
             abort(404);
         }
 

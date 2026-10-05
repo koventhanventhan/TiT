@@ -41,7 +41,7 @@ class TeacherDashboardController extends Controller
         // Note: Students are not explicitly linked to schedules in the current schema beyond attendance.
         // For now, we count unique students who are in any class this teacher is assigned to (hardcoded logic or based on grade/subject match)
         // Simplification: Count all students for now if teacher is generic, or filtering can be added.
-        $totalStudents = User::where('role', 'student')->count();
+        $totalStudents = User::where('role', 'user')->count();
 
         // Pending assignments (not graded)
         $pendingAssignments = AssignmentSubmission::whereHas('assignment', function($q) use ($user) {

@@ -1,0 +1,108 @@
+.custom-cursor {
+  position: fixed;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  transform: translate(0.125rem, 0.125rem);
+  z-index: 9999;
+  will-change: transform;
+}
+
+.custom-cursor::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 0.5rem solid white;
+  border-top: 0.25rem solid transparent;
+  border-bottom: 0.25rem solid transparent;
+  filter: drop-shadow(1.0px 1.0px 1.0px rgba(0, 0, 0, 0.5));
+}
+
+.custom-cursor-dot {
+  position: fixed;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-0.1875rem, -0.1875rem);
+  z-index: 10001;
+  transition: width 0.3s ease, height 0.3s ease, background 0.3s ease;
+  will-change: transform;
+  box-shadow: 0 0 0 0.125rem rgba(37, 99, 235, 0.3);
+}
+
+.custom-cursor-ring {
+  position: fixed;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.125rem solid var(--primary-color);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-1.25rem, -1.25rem);
+  z-index: 10000;
+  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
+  animation: ringPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% {
+    transform: translate(-1.25rem, -1.25rem) scale(1);
+    opacity: 0.8;
+    border-color: var(--primary-color);
+  }
+  50% {
+    transform: translate(-1.25rem, -1.25rem) scale(1.1);
+    opacity: 0.5;
+    border-color: var(--secondary-color);
+  }
+}
+
+.custom-cursor-wrapper.cursor-hover .custom-cursor-ring {
+  width: 3.125rem;
+  height: 3.125rem;
+  border-color: var(--accent-color);
+  border-width: 0.15625rem;
+  transform: translate(-1.5625rem, -1.5625rem);
+  animation: ringPulseHover 1s ease-in-out infinite;
+}
+
+.custom-cursor-wrapper.cursor-hover .custom-cursor-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--accent-color);
+  transform: translate(-0.25rem, -0.25rem);
+  box-shadow: 0 0 0 0.1875rem rgba(236, 72, 153, 0.4);
+}
+
+@keyframes ringPulseHover {
+  0%, 100% {
+    transform: translate(-1.5625rem, -1.5625rem) scale(1);
+    opacity: 0.9;
+    border-color: var(--accent-color);
+  }
+  50% {
+    transform: translate(-1.5625rem, -1.5625rem) scale(1.15);
+    opacity: 0.6;
+    border-color: var(--secondary-color);
+  }
+}
+
+/* Show default cursor arrow - keep original mouse cursor */
+/* Custom dot and ring will follow the default cursor */
+
+/* Mobile devices - show default cursor */
+@media (pointer: coarse) {
+  .custom-cursor-wrapper {
+    display: none;
+  }
+}
+
+@media (max-width: 48rem) {
+  .custom-cursor-wrapper {
+    display: none;
+  }
+}
+

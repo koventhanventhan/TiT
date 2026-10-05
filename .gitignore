@@ -11,3 +11,7 @@ laravel_api.bfg-report/
 
 *.zip
 bfg.jar
+
+*.pack
+verify_clone_2/
+.env

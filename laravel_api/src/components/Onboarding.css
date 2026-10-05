@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════════════
+   Premium Onboarding Section
+   ═══════════════════════════════════════════════════════════ */
+
+.premium-onboarding {
+  background: #f8fafc;
+  padding: 7.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+
+.po-header {
+  text-align: center;
+  margin-bottom: 5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.po-badge {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary-color);
+  background: rgba(79, 11, 217, 0.08);
+  padding: 0.5rem 1.125rem;
+  border-radius: 3.125rem;
+  letter-spacing: 0.09375rem;
+  margin-bottom: 1.5rem;
+}
+
+.po-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0c1631;
+  margin-bottom: 1.25rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.po-subtitle {
+  font-size: 1.1875rem;
+  color: #64748b;
+  max-width: 40.625rem;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+/* ── Steps Wrapper ── */
+.po-steps-wrapper {
+  position: relative;
+  max-width: 68.75rem;
+  margin: 0 auto 5rem;
+  z-index: 2;
+}
+
+.po-timeline-line {
+  position: absolute;
+  top: 3.75rem;
+  left: 3.125rem;
+  right: 3.125rem;
+  height: 0.125rem;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.po-steps-grid {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  gap: 1.875rem;
+}
+
+/* Step Card */
+.po-step-card {
+  flex: 1;
+  background: #250d56;
+  padding: 2.5rem 1.875rem;
+  border-radius: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: all 0.4s ease;
+  box-shadow: 0 0.625rem 1.5625rem rgba(79, 11, 217, 0.15);
+}
+
+.po-step-card:hover {
+  transform: translateY(-0.625rem);
+  box-shadow: 0 1.25rem 2.5rem rgba(79, 11, 217, 0.25);
+}
+
+.po-step-visual {
+  width: 6.875rem;
+  height: 6.875rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.1875rem;
+  position: relative;
+  border: 1.0px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.po-step-card:hover .po-step-visual {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.po-step-number {
+  position: absolute;
+  top: -0.3125rem;
+  right: -0.3125rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: #ffffff;
+  color: var(--primary-color);
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.po-step-icon-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content */
+.po-step-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.9375rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.po-step-desc {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.7;
+}
+
+/* Connector */
+.po-step-connector {
+  position: absolute;
+  top: 2.5rem;
+  right: -2.8125rem;
+  z-index: 2;
+  opacity: 0.6;
+}
+
+/* Footer Section */
+.po-footer {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.po-cta-btn {
+  display: inline-block;
+  background: var(--primary-color);
+  color: #ffffff;
+  padding: 1.125rem 3rem;
+  border-radius: 3.125rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0.625rem 1.875rem rgba(79, 11, 217, 0.2);
+}
+
+.po-cta-btn:hover {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 0.9375rem 2.5rem rgba(79, 11, 217, 0.3);
+}
+
+/* ── Responsive ── */
+@media (max-width: 62.5rem) {
+  .po-step-connector {
+    display: none;
+  }
+}
+
+@media (max-width: 56.25rem) {
+  .po-timeline-line {
+    display: none;
+  }
+
+  .po-steps-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .po-step-card {
+    max-width: 28.125rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 37.5rem) {
+  .po-title {
+    font-size: 2.25rem;
+  }
+
+  .po-subtitle {
+    font-size: 1.0625rem;
+  }
+
+  .premium-onboarding {
+    padding: 5rem 0;
+  }
+}

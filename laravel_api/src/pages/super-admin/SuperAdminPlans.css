@@ -1,0 +1,144 @@
+.super-plans {
+    animation: fadeIn 0.5s ease;
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+    gap: 1.875rem;
+}
+
+.plan-card {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 2.5rem 1.875rem;
+    box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.05);
+    border: 1.0px solid #f1f5f9;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s;
+}
+
+.plan-card:hover {
+    transform: translateY(-0.3125rem);
+}
+
+.plan-icon {
+    width: 3.75rem;
+    height: 3.75rem;
+    background: #f1f5f9;
+    color: #10b981;
+    border-radius: 0.9375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.875rem;
+    margin: 0 auto 1.5625rem;
+}
+
+.plan-card h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1.25rem;
+}
+
+.price-tag {
+    margin-bottom: 1.875rem;
+}
+
+.price-tag .currency {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #64748b;
+    vertical-align: top;
+}
+
+.price-tag .amount {
+    font-size: 2.625rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.125rem;
+}
+
+.price-tag .period {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.plan-limits {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.875rem 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.plan-limits li {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.plan-limits li svg {
+    color: #10b981;
+    font-size: 1.125rem;
+}
+
+.plan-actions {
+    margin-top: auto;
+}
+
+.edit-plan-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1.0px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.edit-plan-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.plan-card.ghost {
+    border: 0.125rem dashed #e2e8f0;
+    background: none;
+    box-shadow: none;
+    justify-content: center;
+    align-items: center;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.plan-card.ghost svg {
+    font-size: 2.5rem;
+    margin-bottom: 0.9375rem;
+}
+
+.plan-card.ghost p {
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.plan-card.ghost:hover {
+    border-color: #10b981;
+    color: #10b981;
+    background: #f0fdf4;
+}

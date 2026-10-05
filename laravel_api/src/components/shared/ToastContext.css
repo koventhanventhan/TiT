@@ -1,0 +1,115 @@
+/* tit-toast-container placement */
+.tit-toast-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Desktop & Tablet: Top Right */
+@media (min-width: 768px) {
+  .tit-toast-container {
+    top: 24px;
+    right: 24px;
+    align-items: flex-end;
+  }
+}
+
+/* Mobile: Bottom Center */
+@media (max-width: 767px) {
+  .tit-toast-container {
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+    width: calc(100% - 40px);
+  }
+}
+
+/* tit-toast styling */
+.tit-toast {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 16px 20px;
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 400px;
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid transparent;
+}
+
+@media (max-width: 767px) {
+  .tit-toast {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Brand/Semantic Colors */
+.tit-toast-success { border-left-color: #10b981; }
+.tit-toast-error { border-left-color: #ef4444; }
+.tit-toast-info { border-left-color: #4f46e5; }
+.tit-toast-warning { border-left-color: #f59e0b; }
+
+.tit-toast-icon {
+  font-size: 1.25rem;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.tit-toast-success .tit-toast-icon { color: #10b981; }
+.tit-toast-error .tit-toast-icon { color: #ef4444; }
+.tit-toast-info .tit-toast-icon { color: #4f46e5; }
+.tit-toast-warning .tit-toast-icon { color: #f59e0b; }
+
+.tit-toast-message {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #334155;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-right: 12px;
+}
+
+.tit-toast-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  font-size: 1.1rem;
+}
+
+.tit-toast-close:hover {
+  color: #475569;
+}
+
+/* Animations */
+.animate-toast {
+  animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@media (min-width: 768px) {
+  @keyframes slideIn {
+    0% { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+}
+
+@media (max-width: 767px) {
+  @keyframes slideIn {
+    0% { transform: translateY(100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+}

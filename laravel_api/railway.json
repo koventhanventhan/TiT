@@ -1,0 +1,31 @@
+{
+    "$schema": "https://railway.app/railway.schema.json",
+    "services": {
+        "backend": {
+            "source": {
+                "root": "backend"
+            },
+            "build": {
+                "builder": "DOCKERFILE",
+                "dockerfilePath": "Dockerfile"
+            },
+            "deploy": {
+                "numReplicas": 1,
+                "sleep": false
+            }
+        },
+        "TiT": {
+            "source": {
+                "root": "."
+            },
+            "build": {
+                "builder": "DOCKERFILE",
+                "dockerfilePath": "Dockerfile"
+            },
+            "deploy": {
+                "numReplicas": 1,
+                "sleep": false
+            }
+        }
+    }
+}

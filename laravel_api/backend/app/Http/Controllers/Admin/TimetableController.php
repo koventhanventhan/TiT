@@ -1,0 +1,321 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Timetable;
+use App\Models\Subject;
+use App\Models\User;
+use App\Services\NotificationService;
+use App\Services\ZoomService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
+
+class TimetableController extends Controller
+{
+    protected ?ZoomService $zoom = null;
+
+    public function __construct()
+    {
+        try {
+            $this->zoom = app(ZoomService::class);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('ZoomService could not be initialized: ' . $e->getMessage());
+        }
+    }
+    public function index()
+    {
+        $timetables = Timetable::with(['subject', 'teacher'])->orderBy('day_of_week')->orderBy('start_time')->get();
+        
+        // Get unique subject names (no duplicates across categories)
+        $subjects = Subject::select('id', 'name')->orderBy('name')->get()->unique('name')->values();
+        $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
+        $teachersJson = $teachers->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'teacher_class' => $t->teacher_class, 'email' => $t->email])->values();
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
+
+        // Group by day for the grid view
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        $groupedTimetables = [];
+        foreach ($days as $day) {
+            $groupedTimetables[$day] = $timetables->where('day_of_week', $day);
+        }
+
+        // Predefined grades list
+        $grades = [
+            'Grade 1 / தரம் 1',
+            'Grade 2 / தரம் 2',
+            'Grade 3 / தரம் 3',
+            'Grade 4 / தரம் 4',
+            'Grade 5 / தரம் 5',
+            'Grade 6 / தரம் 6',
+            'Grade 7 / தரம் 7',
+            'Grade 8 / தரம் 8',
+            'Grade 9 / தரம் 9',
+            'Grade 10 / தரம் 10',
+            'Grade 11 / தரம் 11',
+            'Grade 12 / தரம் 12',
+            'Grade 13 / தரம் 13',
+        ];
+
+        return view('admin.timetable.index', compact('groupedTimetables', 'days', 'subjects', 'teachers', 'teachersJson', 'zoomUsers', 'grades'));
+    }
+
+    public function create()
+    {
+        $subjects = Subject::orderBy('name')->get();
+        $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
+        
+        return view('admin.timetable.create', compact('subjects', 'teachers', 'days', 'zoomUsers'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'day_of_week' => 'required|string',
+            'start_time' => 'required',
+            'duration' => 'required|integer|min:1',
+            'grade' => 'required|string',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:users,id',
+            'zoom_host_email' => 'nullable|email',
+            'is_active' => 'nullable',
+            'medium' => 'required|in:english,tamil,both',
+        ]);
+
+        $startTime = $request->start_time;
+        $endTime = date('H:i:s', strtotime($startTime) + ($request->duration * 60));
+
+        // Conflict check for same grade and medium at same time (overlap check)
+        $conflict = Timetable::where('day_of_week', $request->day_of_week)
+            ->where('grade', $request->grade)
+            ->where('medium', $request->medium)
+            ->where('is_active', true)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where(function ($q) use ($startTime, $endTime) {
+                    $q->where('start_time', '<', $endTime)
+                      ->whereRaw('ADDTIME(start_time, SEC_TO_TIME(duration * 60)) > ?', [$startTime]);
+                });
+            })
+            ->exists();
+
+        if ($conflict) {
+            return back()->withInput()->withErrors(['start_time' => 'Time Conflict! This grade already has a class scheduled at this time on ' . $request->day_of_week]);
+        }
+
+        $data = $request->except('is_active');
+        $data['is_active'] = $request->has('is_active');
+        $data['institute_id'] = auth()->user()->institute_id;
+
+        $timetableEntry = Timetable::create($data);
+
+        // Immediate sync to create ZoomSchedule records (works even without Zoom credentials)
+        try {
+            Artisan::call('zoom:sync-timetable');
+        } catch (\Exception $e) {
+            Log::error('Auto-sync failed: ' . $e->getMessage());
+        }
+
+        // No immediate notification on timetable creation.
+        // The cron job (zoom:send-reminders) will automatically notify
+        // teachers and students before the class starts.
+
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
+    }
+
+    public function edit(Timetable $timetable)
+    {
+        $subjects = Subject::orderBy('name')->get();
+        $teachers = User::where('role', 'teacher')->whereNull('deactivated_at')->orderBy('name')->get();
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        $zoomUsers = [];
+        try {
+            if ($this->zoom) {
+                $zoomUsers = $this->zoom->listUsers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to list Zoom users: ' . $e->getMessage());
+        }
+        
+        return view('admin.timetable.edit', compact('timetable', 'subjects', 'teachers', 'days', 'zoomUsers'));
+    }
+
+    public function update(Request $request, Timetable $timetable)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'day_of_week' => 'required|string',
+            'start_time' => 'required',
+            'duration' => 'required|integer|min:1',
+            'grade' => 'required|string',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:users,id',
+            'zoom_host_email' => 'nullable|email',
+            'is_active' => 'nullable',
+            'medium' => 'required|in:english,tamil,both',
+        ]);
+
+        $startTime = $request->start_time;
+        $endTime = date('H:i:s', strtotime($startTime) + ($request->duration * 60));
+
+        // Conflict check for same grade and medium at same time
+        $conflict = Timetable::where('id', '!=', $timetable->id)
+            ->where('day_of_week', $request->day_of_week)
+            ->where('grade', $request->grade)
+            ->where('medium', $request->medium)
+            ->where('is_active', true)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where(function ($q) use ($startTime, $endTime) {
+                    $q->where('start_time', '<', $endTime)
+                      ->whereRaw('ADDTIME(start_time, SEC_TO_TIME(duration * 60)) > ?', [$startTime]);
+                });
+            })
+            ->exists();
+
+        if ($conflict) {
+            return back()->withInput()->withErrors(['grade' => 'This grade already has another class scheduled at this time on ' . $request->day_of_week]);
+        }
+
+        $data = $request->except('is_active');
+        $data['is_active'] = $request->has('is_active');
+
+        $timetable->update($data);
+
+        // Immediate sync to update ZoomSchedule records with new time
+        try {
+            Artisan::call('zoom:sync-timetable');
+        } catch (\Exception $e) {
+            Log::error('Auto-sync failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot updated successfully.');
+    }
+
+    public function destroy(Timetable $timetable)
+    {
+        $timetable->delete();
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot deleted successfully.');
+    }
+
+    public function toggle(Timetable $timetable)
+    {
+        $timetable->update(['is_active' => !$timetable->is_active]);
+        return back()->with('success', 'Timetable slot status updated.');
+    }
+
+    public function sync()
+    {
+        try {
+            Artisan::call('zoom:sync-timetable');
+            $output = Artisan::output();
+            return redirect()->route('admin.timetables.index')->with('success', 'Zoom sync completed: ' . $output);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.timetables.index')->with('error', 'Sync failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notifications to teacher and matching students when a timetable slot is created.
+     */
+    private function sendClassNotifications(Timetable $timetable): void
+    {
+        try {
+            $notifier = app(NotificationService::class);
+        } catch (\Exception $e) {
+            Log::warning('NotificationService not available for timetable notifications: ' . $e->getMessage());
+            return;
+        }
+
+        $timetable->load('subject');
+        $subjectName = $timetable->subject->name ?? 'General';
+        $dayTime = $timetable->day_of_week . ' @ ' . date('H:i', strtotime($timetable->start_time));
+        $classTitle = $timetable->title . ' (' . $subjectName . ')';
+
+        // 1. Notify the assigned teacher
+        try {
+            $teacher = User::find($timetable->teacher_id);
+            if ($teacher) {
+                $notifier->notifyUser(
+                    $teacher, 'zoom_reminder', 'tit_zoom_reminder',
+                    [$classTitle, $dayTime],
+                    ['class_title' => $classTitle, 'class_time' => $dayTime]
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Teacher notification failed: ' . $e->getMessage());
+        }
+
+        // 2. Notify students of the matching grade
+        try {
+            if (!$timetable->grade) return;
+
+            preg_match('/(\d+)/', $timetable->grade, $classMatch);
+            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($timetable->grade));
+
+            $students = User::where('role', 'user')
+                ->whereNull('deactivated_at')
+                ->get();
+
+            foreach ($students as $student) {
+                $userGrade = $student->current_grade;
+                if (!$userGrade) continue;
+
+                preg_match('/(\d+)/', $userGrade, $userMatch);
+                $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
+
+                if ($userRef !== $classRef) continue;
+
+                // Filter by medium
+                if ($timetable->medium !== 'both' && $student->medium && $student->medium !== $timetable->medium) continue;
+
+                // Filter by selected subjects
+                $selected = $student->selected_subjects;
+                if (!empty($subjectName) && $subjectName !== 'General') {
+                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                    $selectedArr = array_map('trim', (array)$selectedArr);
+
+                    $subjectMatch = false;
+                    foreach ($selectedArr as $studentSub) {
+                        $studentSub = trim($studentSub);
+                        if ($studentSub === $subjectName ||
+                            stripos($studentSub, $subjectName) !== false ||
+                            stripos($subjectName, $studentSub) !== false) {
+                            $subjectMatch = true;
+                            break;
+                        }
+                    }
+                    if (!$subjectMatch) continue;
+                }
+
+                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
+                    $notifier->notifyUser(
+                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$classTitle, $dayTime],
+                        ['class_title' => $classTitle, 'class_time' => $dayTime]
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Student notification failed: ' . $e->getMessage());
+        }
+    }
+}

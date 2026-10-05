@@ -1,0 +1,36 @@
+<?php
+// FINAL INDEX.HTML ASSET SYNC
+$indexPath = '../../../index.html';
+
+$content = <<<EOT
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>TiT - Online Education Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.lordicon.com/lordicon.js"></script>
+  <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
+<meta name="google-site-verification" content="4AJ5_F9Ho4pVFdEAUc7DCuGu9ZGnPYW03Rgm674osVk" />
+  <script type="module" crossorigin src="/assets/index-C1DpLfW1.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BMCsdN-L.css">
+</head>
+
+<body>
+  <div id="root"></div>
+
+</body>
+
+</html>
+EOT;
+
+if (file_put_contents($indexPath, $content)) {
+    echo "SUCCESS: index.html assets synced! Dashboard will work now.";
+} else {
+    echo "ERROR: Could not update index.html";
+}

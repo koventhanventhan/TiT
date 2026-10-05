@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* â”€â”€ Animated Icons Global Fix â”€â”€ */
+lord-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+:root {
+  color-scheme: only light;
+  /* â”€â”€ Premium Purple Palette â”€â”€ */
+  --primary-color: #4f0bd9;
+  --primary-dark: #1a103c;
+  --primary-light: #6d28d9;
+  --secondary-color: #7c3aed;
+  --accent-color: #8b5cf6;
+  --accent-glow: rgba(79, 11, 217, 0.35);
+
+  /* â”€â”€ Text â”€â”€ */
+  --text-dark: #0f172a;
+  --text-medium: #334155;
+  --text-light: #64748b;
+  --text-muted: #64748b;
+
+  /* â”€â”€ Backgrounds â”€â”€ */
+  --bg-light: #f5f3ff;
+  --bg-white: #ffffff;
+  --bg-dark: #0c0a09;
+  --bg-navy: #1a103c;
+
+  /* â”€â”€ Borders â”€â”€ */
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* â”€â”€ Premium Gradients â”€â”€ */
+  --gradient-1: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
+  --gradient-2: linear-gradient(135deg, #4f0bd9 0%, #8b5cf6 100%);
+  --gradient-3: linear-gradient(135deg, #4f0bd9 0%, #4f0bd9 100%);
+  --gradient-hero: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(79, 11, 217, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+
+  /* â”€â”€ Glassmorphism â”€â”€ */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(79, 11, 217, 0.12);
+  --glass-shadow: 0 0.5rem 2rem rgba(79, 11, 217, 0.08);
+
+  /* â”€â”€ Premium Shadows â”€â”€ */
+  --shadow-sm: 0 0.0625rem 0.1875rem rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 0.25rem 1rem rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 0.75rem 2.5rem rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 1.25rem 3.75rem rgba(15, 23, 42, 0.15);
+  --shadow-glow: 0 0 1.875rem rgba(79, 11, 217, 0.2);
+
+  /* â”€â”€ Radii â”€â”€ */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  /* â”€â”€ Safe Area Insets â”€â”€ */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  font-size: 1rem;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--bg-white);
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100dvh;
+  width: 100%;
+  display: block;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.container {
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* â”€â”€ Premium Buttons â”€â”€ */
+.btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--gradient-1);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.625rem 1.875rem rgba(79, 11, 217, 0.35);
+}
+
+.btn-primary:active,
+.btn-primary:focus {
+  background: var(--primary-dark) !important;
+  color: white !important;
+  transform: translateY(0);
+  box-shadow: inset 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2) !important;
+  outline: none !important;
+}
+
+/* â”€â”€ Extreme Fix: Register Now Button â”€â”€ */
+.btn-register {
+  /* background: #1a103c !important; */
+  color: white !important;
+  padding: 0.75rem 2rem !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  text-decoration: none !important;
+  box-shadow: 0 0.5rem 1.5rem rgba(26, 16, 60, 0.4) !important;
+  transition: none !important;
+  /* Remove transitions to prevent white flash */
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.btn-register:hover,
+.btn-register:active,
+.btn-register:focus,
+.btn-register:visited {
+  background: var(--gradient-1) !important;
+  color: white !important;
+  box-shadow: 0 0.25rem 0.75rem rgba(26, 16, 60, 0.6) !important;
+  outline: none !important;
+  border: none !important;
+  transform: translateY(0.0625rem) !important;
+}
+
+/* Clear any inherited styles */
+button.btn-register {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.btn-secondary {
+  background: var(--bg-white);
+  color: var(--primary-color);
+  border: 0.125rem solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 0.625rem 1.875rem rgba(79, 11, 217, 0.25);
+}
+
+.btn-youtube {
+  background: #FF0000;
+  color: white;
+  border: 0.125rem solid #FF0000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-youtube:hover {
+  background: #CC0000;
+  border-color: #CC0000;
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.625rem 1.5625rem rgba(255, 0, 0, 0.3);
+}
+
+
+
+.btn-youtube .youtube-icon {
+  font-size: 1.375rem;
+}
+
+/* â”€â”€ Section Styles â”€â”€ */
+.section {
+  padding: 5rem 0;
+}
+
+.section-title {
+  font-size: 2.625rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 1rem;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: -0.0625rem;
+}
+
+.section-subtitle {
+  font-size: 1.125rem;
+  color: var(--text-light);
+  text-align: center;
+  max-width: 37.5rem;
+  margin: 0 auto 3rem;
+}
+
+/* â”€â”€ Premium Loading Shimmer â”€â”€ */
+.loading-shimmer {
+  background: var(--gradient-glass);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--text-light);
+  font-weight: 500;
+  animation: shimmerPulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmerPulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* â”€â”€ Smooth Page Transitions â”€â”€ */
+.page-enter {
+  opacity: 0;
+  transform: translateY(0.625rem);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.4s ease;
+}
+
+@media (max-width: 48rem) {
+  .section {
+    padding: 3.75rem 0;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+  }
+}
+
+/* â”€â”€ Hide Scrollbar Utility â”€â”€ */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

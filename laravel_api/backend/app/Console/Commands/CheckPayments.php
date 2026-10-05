@@ -40,6 +40,7 @@ class CheckPayments extends Command
 
         $unpaidStudents = \App\Models\User::where('role', 'user')
             ->whereNotNull('full_name')
+            ->where('registration_status', 'approved')
             ->whereNull('deactivated_at')
             ->get()
             ->filter(function ($user) use ($yearMonth) {

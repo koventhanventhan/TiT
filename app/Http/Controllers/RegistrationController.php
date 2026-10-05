@@ -58,26 +58,30 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $trimmedSubjects = trim($subjects);
-        $selectedSubjectsRaw = [];
-        try {
-            if (str_starts_with($trimmedSubjects, '[')) {
-                $selectedSubjectsRaw = json_decode($trimmedSubjects, true);
-            } else {
-                $selectedSubjectsRaw = array_map('trim', explode(',', $trimmedSubjects));
+        $selectedSubjects = [];
+        if (is_array($subjects)) {
+            $selectedSubjects = $subjects;
+        } elseif (is_string($subjects)) {
+            $trimmedSubjects = trim($subjects);
+            try {
+                if (str_starts_with($trimmedSubjects, '[')) {
+                    $selectedSubjects = json_decode($trimmedSubjects, true) ?? [];
+                } else {
+                    $selectedSubjects = array_map('trim', explode(',', $trimmedSubjects));
+                }
+            } catch (\Exception $e) {
+                $selectedSubjects = array_map('trim', explode(',', $subjects));
             }
-        } catch (\Exception $e) {
-            $selectedSubjectsRaw = array_map('trim', explode(',', $subjects));
         }
 
-        $selectedSubjects = array_unique(array_filter($selectedSubjectsRaw));
+        $selectedSubjects = array_unique(array_filter($selectedSubjects));
 
         if (empty($selectedSubjects)) {
             \Illuminate\Support\Facades\Log::warning("No subjects parsed for User ID: {$user->id}");
             return response()->json([
                 'total' => 500.0,
                 'subjects' => [],
-                'debug' => 'No subjects parsed from string: ' . $subjects
+                'debug' => 'No subjects parsed from string/array'
             ]);
         }
 
@@ -87,7 +91,7 @@ class RegistrationController extends Controller
             return $query->where('category', $category);
         })->whereIn('name', $selectedSubjects)->get(['name', 'price']);
 
-        $total = $subjectData->sum('price');
+        $total = $user->calculateMonthlyFee();
         $monthlyFee = $total;
         $admissionFee = 0;
         
@@ -104,14 +108,17 @@ class RegistrationController extends Controller
                 
                 if (isset($config[$gradeNum]) && $config[$gradeNum]['enabled']) {
                     $admissionFee = (float)$config[$gradeNum]['amount'];
-                    $total += $admissionFee;
+                    // Admission fee is already added inside calculateMonthlyFee if first payment.
+                    // To prevent double adding, we just record what it is, but wait, calculateMonthlyFee returns the FULL amount including admission fee!
+                    // Let's check calculateMonthlyFee again. It DOES add admissionFee if first payment.
+                    // So we shouldn't add it again here. $total already has it.
                 }
             }
         }
 
         return response()->json([
             'total' => $total > 0 ? (float)$total : 500.0,
-            'monthly_total' => (float)$monthlyFee,
+            'monthly_total' => (float)($total - $admissionFee),
             'admission_fee' => $admissionFee,
             'is_first_payment' => $isFirstPayment,
             'subjects' => $subjectData,

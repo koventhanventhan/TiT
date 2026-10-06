@@ -50,11 +50,11 @@
    Hero Custom Background Modes (Single Image & Slider)
    ========================================================= */
 .hero.has-custom-bg {
-  color: #f8fafc;
+  color: #555555;
 }
 
 .hero.has-custom-bg .hero-title {
-  color: #ffffff;
+  color: #555555;
 }
 
 .hero.has-custom-bg .hero-description {
@@ -62,11 +62,11 @@
 }
 
 .hero.has-custom-bg .stat-label {
-  color: #94a3b8;
+  color: #555555;
 }
 
 .hero.has-custom-bg .stat-number {
-  color: #ffffff;
+  color: #555555;
 }
 
 .hero-slider-bg {

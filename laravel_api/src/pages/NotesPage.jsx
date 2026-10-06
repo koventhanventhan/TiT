@@ -116,7 +116,7 @@ const NotesPage = () => {
             </div>
 
             <div className="notes-hero-image">
-              <img src={resolveImage(heroImage)} alt="Exam Papers" />
+              <img width="800" height="600" src={resolveImage(heroImage)} alt="Exam Papers" />
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@ const NotesPage = () => {
           <div className="notes-cta-banner">
             <div className="cta-left">
               <div className="cta-headset-img">
-                <img src={resolveImage(ctaImage)} alt="Headset" />
+                <img width="800" height="600" src={resolveImage(ctaImage)} alt="Headset" />
               </div>
               <div className="cta-text">
                 <div className="cta-subtitle">{missionTitle}</div>

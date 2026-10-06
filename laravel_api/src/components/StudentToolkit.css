@@ -110,7 +110,7 @@
 
 .st-card:hover .st-icon-box {
   background: var(--tool-color);
-  color: #ffffff;
+  color: #555555;
   transform: scale(1.05) rotate(5deg);
 }
 
@@ -118,7 +118,7 @@
   font-size: 0.6875rem;
   font-weight: 800;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #555555;
   letter-spacing: 0.5px;
 }
 

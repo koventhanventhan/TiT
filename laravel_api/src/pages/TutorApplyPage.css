@@ -3,7 +3,7 @@
     min-height: 100vh;
   min-height: 100dvh;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #f8fafc;
+    color: #555555;
 }
 
 .tutor-apply-page .container {
@@ -36,7 +36,7 @@
 }
 
 .form-header p {
-    color: #94a3b8;
+    color: #555555;
     font-size: 1.1rem;
 }
 
@@ -104,7 +104,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 12px 14px 12px 42px;
-    color: #fff;
+    color: #555555;
     font-size: 0.95rem;
     transition: all 0.3s ease;
 }
@@ -118,7 +118,7 @@
     display: block;
     margin-top: 6px;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: #555555;
 }
 
 .input-with-icon input:focus,
@@ -201,7 +201,7 @@
 }
 
 .success-container p {
-    color: #94a3b8;
+    color: #555555;
     margin-bottom: 32px;
 }
 
@@ -210,7 +210,7 @@
     height: 24px;
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: #fff;
+    border-top-color: #555555;
     animation: spin 1s linear infinite;
 }
 

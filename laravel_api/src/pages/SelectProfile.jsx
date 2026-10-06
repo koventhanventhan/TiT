@@ -100,7 +100,7 @@ const SelectProfile = () => {
             onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
               {profile.avatar ? (
-                <img 
+                <img width="800" height="600" 
                   src={getAvatarUrl(profile.avatar)} 
                   alt="Avatar" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 

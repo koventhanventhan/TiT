@@ -209,27 +209,27 @@ const Footer = () => {
             <p className="footer-info-text">{footerInfo}</p>
             <div className="social-links-v2">
               {social_facebook && social_facebook !== '#' && (
-                <a href={social_facebook} target="_blank" rel="noopener noreferrer" className="social-icon">
+                <a href={social_facebook} target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
                   <FiFacebook />
                 </a>
               )}
               {social_instagram && social_instagram !== '#' && (
-                <a href={social_instagram} target="_blank" rel="noopener noreferrer" className="social-icon-v2">
+                <a href={social_instagram} target="_blank" rel="noopener noreferrer" className="social-icon-v2" aria-label="Instagram">
                   <FiInstagram />
                 </a>
               )}
               {social_twitter && social_twitter !== '#' && (
-                <a href={social_twitter} target="_blank" rel="noopener noreferrer" className="social-icon">
+                <a href={social_twitter} target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Twitter">
                   <FiTwitter />
                 </a>
               )}
               {social_linkedin && social_linkedin !== '#' && (
-                <a href={social_linkedin} target="_blank" rel="noopener noreferrer" className="social-icon">
+                <a href={social_linkedin} target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="LinkedIn">
                   <FiLinkedin />
                 </a>
               )}
               {social_youtube && social_youtube !== '#' && (
-                <a href={social_youtube} target="_blank" rel="noopener noreferrer" className="social-icon-v2">
+                <a href={social_youtube} target="_blank" rel="noopener noreferrer" className="social-icon-v2" aria-label="YouTube">
                   <FiYoutube />
                 </a>
               )}

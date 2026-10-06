@@ -258,7 +258,7 @@ const About = () => {
                 {teachers.map((teacher, index) => (
                   <div key={index} className="teacher-card">
                     <div className="teacher-image">
-                      <img src={teacher.image} alt={teacher.name} />
+                      <img width="800" height="600" src={teacher.image} alt={teacher.name} />
                     </div>
                     <div className="teacher-info">
                       <h4 className="teacher-name">{teacher.name}</h4>
@@ -279,7 +279,7 @@ const About = () => {
                 {images.map((item, index) => (
                   <div key={index} className="image-card">
                     <div className="image-wrapper">
-                      <img src={item.image} alt={item.title} />
+                      <img width="800" height="600" src={item.image} alt={item.title} />
                     </div>
                     <div className="image-info">
                       <h4 className="image-title">{item.title}</h4>

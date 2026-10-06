@@ -116,7 +116,7 @@ const RecordingsPage = () => {
             </div>
 
             <div className="rec-hero-image">
-              <img src={resolveImage(heroImage)} alt="Class Recordings" />
+              <img width="800" height="600" src={resolveImage(heroImage)} alt="Class Recordings" />
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ const RecordingsPage = () => {
           <div className="recordings-cta-banner">
             <div className="cta-left">
               <div className="cta-headset-img">
-                <img src={resolveImage(ctaImage)} alt="Headset" />
+                <img width="800" height="600" src={resolveImage(ctaImage)} alt="Headset" />
               </div>
               <div className="cta-text">
                 <div className="cta-subtitle">{missionTitle}</div>

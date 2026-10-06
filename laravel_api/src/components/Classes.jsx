@@ -32,7 +32,7 @@ const Classes = () => {
             description: getSetting('classes_direct_description', 'High-impact face-to-face sessions in a dedicated learning environment.'),
             color: '#EB8153',
             stars: 5,
-            image: '/venthan1.jpg',
+            image: '/venthan1.webp',
             format: 'Physical',
             duration: 'Weekly',
             students: 'Group'
@@ -42,7 +42,7 @@ const Classes = () => {
             description: getSetting('classes_online_description', 'Interactive digital classrooms with full access to recordings and resources.'),
             color: '#667eea',
             stars: 5,
-            image: '/venthan2.jpg',
+            image: '/venthan2.webp',
             format: 'Online',
             duration: 'Flexible',
             students: 'Group/1-on-1'
@@ -107,7 +107,7 @@ const Classes = () => {
               style={{ '--accent-color': course.accent }}
             >
               <div className="pc-card-media">
-                <img 
+                <img width="800" height="600" 
                   src={course.image?.startsWith('http') ? course.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + course.image} 
                   alt={course.title} 
                   className="pc-card-img" 

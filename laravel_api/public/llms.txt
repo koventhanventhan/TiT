@@ -1,0 +1,22 @@
+# TiT Online Education Platform
+
+> TiT is a comprehensive online education platform providing live Zoom classes, recorded lessons, and study materials for Sri Lankan Tamil-medium students from Grade 1 to 13.
+
+## Overview
+This platform offers students a seamless way to join live classes, access lecture notes, view past papers, and manage their tuition payments. Teachers can manage students, assign materials, and conduct live sessions.
+
+## Key Sections
+- [Home](https://titjaffna.lk/)
+- [About Us](https://titjaffna.lk/about)
+- [Classes](https://titjaffna.lk/classes)
+- [Contact](https://titjaffna.lk/contact)
+- [Student Registration](https://titjaffna.lk/register)
+- [Privacy Policy](https://titjaffna.lk/privacy)
+- [Terms & Conditions](https://titjaffna.lk/terms)
+
+## Features
+- Secure student & teacher dashboards
+- PayHere payment gateway integration
+- Automatic Zoom recording fetch and sync
+- Comprehensive resource library (Notes, Past Papers, Recordings)
+- Multi-language support (English, Tamil, Sinhala)

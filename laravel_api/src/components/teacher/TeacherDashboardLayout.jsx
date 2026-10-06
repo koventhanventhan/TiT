@@ -190,7 +190,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: '#fff', fontWeight: 700, fontSize: 14, overflow: 'hidden'
                         }}>
-                            {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
+                            {avatarUrl ? <img width="800" height="600" src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
                         </div>
                         <div>
                             <div style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 600 }}>Sir. {displayName}</div>
@@ -328,7 +328,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                                 opacity: uploadingAvatar ? 0.6 : 1
                             }}>
                                 {avatarUrl && !uploadingAvatar ? (
-                                    <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img width="800" height="600" src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : uploadingAvatar ? (
                                     <div style={{ width: 14, height: 14, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                                 ) : (

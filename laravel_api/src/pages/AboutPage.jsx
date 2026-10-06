@@ -28,7 +28,7 @@ const AboutPage = () => {
   const about_mission_image = getSetting('about_mission_image', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop')
 
   // Hero section images & badges (admin-editable)
-  const heroLeftImage = getSetting('about_hero_left_image', '') || '/asian-student-with-laptop-smiles-cut-out-transparent-png.png'
+  const heroLeftImage = getSetting('about_hero_left_image', '') || '/asian-student.webp'
   const heroRightImage = getSetting('about_hero_right_image', '') || '/cute-freelance-girl-using-laptop-sitting-floor-smiling_176420-20221.avif'
   const heroLeftBadge = getSetting('about_hero_left_badge', '500+ Courses')
   const heroRightBadge = getSetting('about_hero_right_badge', '98% Success')
@@ -473,7 +473,7 @@ const AboutPage = () => {
             {/* Left student image */}
             <div className="about-hero-image about-hero-image-left">
               <div className="hero-image-blob">
-                <img
+                <img width="800" height="600"
                   src={heroLeftImage}
                   alt="Student"
                   className="hero-student-img"
@@ -498,7 +498,7 @@ const AboutPage = () => {
             {/* Right student image */}
             <div className="about-hero-image about-hero-image-right">
               <div className="hero-image-blob hero-image-blob-right">
-                <img
+                <img width="800" height="600"
                   src={heroRightImage}
                   alt="Student"
                   className="hero-student-img"
@@ -567,7 +567,7 @@ const AboutPage = () => {
                   className={`teacher-card-tab ${activeTeacherIndex === index ? 'active' : ''}`}
                   onClick={() => setActiveTeacherIndex(activeTeacherIndex === index ? null : index)}
                 >
-                  <img src={teacher.photo || teacher.image} alt={teacher.name} />
+                  <img width="800" height="600" src={teacher.photo || teacher.image} alt={teacher.name} />
                   <div className="teacher-info-tab content">
                     <span className="content-span">
                       <h2 className="teacher-name-tab">{teacher.name}</h2>
@@ -600,7 +600,7 @@ const AboutPage = () => {
                         onClick={() => handleImageClick(containerIndex, imgIndex)}
                       >
                         <div className="gallery-image-wrapper">
-                          <img src={img.image} alt={img.title} />
+                          <img width="800" height="600" src={img.image} alt={img.title} />
                         </div>
                         <p className="gallery-image-title">{img.title}</p>
                       </div>
@@ -649,7 +649,7 @@ const AboutPage = () => {
                 {finalFeatures.map((feature, index) => (
                   <div key={index} className="diff-card">
                     <div className="diff-image-wrapper">
-                      <img src={feature.image} alt={feature.title} className="diff-image" />
+                      <img width="800" height="600" src={feature.image} alt={feature.title} className="diff-image" />
                       <div className="diff-icon-badge">
                         {feature.icon}
                       </div>
@@ -732,7 +732,7 @@ const AboutPage = () => {
                   </p>
                 </div>
                 <div className="mission-image-wrapper">
-                  <img
+                  <img width="800" height="600"
                     src={about_mission_image}
                     alt="Mission"
                     className="mission-image"
@@ -799,7 +799,7 @@ const AboutPage = () => {
               <FiChevronRight />
             </button>
             <div className="gallery-main-image">
-              <img
+              <img width="800" height="600"
                 src={activeGalleryItems[activeGalleryIndex].image.replace('w=400&h=300', 'w=1200&h=800')}
                 alt={activeGalleryItems[activeGalleryIndex].title}
               />
@@ -815,7 +815,7 @@ const AboutPage = () => {
                   className={`gallery-thumbnail ${index === activeGalleryIndex ? 'active' : ''}`}
                   onClick={() => setActiveGalleryIndex(index)}
                 >
-                  <img src={img.image} alt={img.title} />
+                  <img width="800" height="600" src={img.image} alt={img.title} />
                 </div>
               ))}
             </div>

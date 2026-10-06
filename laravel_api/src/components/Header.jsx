@@ -393,7 +393,7 @@ const Header = () => {
           <div className="header-content">
             <Link to="/" className="logo" style={{ textDecoration: 'none' }}>
               {getSetting('logo_url') ? (
-                <img src={getSetting('logo_url')} alt="Logo" className="site-logo" />
+                <img width="800" height="600" src={getSetting('logo_url')} alt="Logo" className="site-logo" />
               ) : (
                 <span className="logo-text">{getSetting('site_name', 'TiT')}</span>
               )}
@@ -683,9 +683,9 @@ const Header = () => {
                   {/* 4. Social Links */}
                   <div className="mobile-section-group contact-group">
                     <div className="mobile-social-row">
-                      <a href={getSetting('social_facebook', '#')} className="mobile-social-link fb"><FaFacebook /></a>
-                      <a href={getSetting('social_instagram', '#')} className="mobile-social-link insta"><FaInstagram /></a>
-                      <a href={getSetting('social_youtube', '#')} className="mobile-social-link yt"><FaYoutube /></a>
+                      <a href={getSetting('social_facebook', '#')} className="mobile-social-link fb" aria-label="Facebook"><FaFacebook /></a>
+                      <a href={getSetting('social_instagram', '#')} className="mobile-social-link insta" aria-label="Instagram"><FaInstagram /></a>
+                      <a href={getSetting('social_youtube', '#')} className="mobile-social-link yt" aria-label="YouTube"><FaYoutube /></a>
                     </div>
                   </div>
                 </div>

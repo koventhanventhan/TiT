@@ -1,0 +1,19 @@
+{
+  "name": "TiT Online Education Platform",
+  "description": "Educational platform providing live classes, notes, and recordings for Tamil-medium students in Sri Lanka.",
+  "language": "ta, en, si",
+  "domain": "titjaffna.lk",
+  "routes": {
+    "home": "https://titjaffna.lk/",
+    "about": "https://titjaffna.lk/about",
+    "classes": "https://titjaffna.lk/classes",
+    "contact": "https://titjaffna.lk/contact",
+    "register": "https://titjaffna.lk/register"
+  },
+  "capabilities": [
+    "live_classes",
+    "video_recordings",
+    "study_materials",
+    "online_payments"
+  ]
+}

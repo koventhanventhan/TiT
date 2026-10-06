@@ -302,7 +302,7 @@ const Hero = () => {
           </div>
 
           <div className="hero-visual-side">
-            <img src="/Thesis.gif" alt="Hero Illustration" className="hero-mobile-img" />
+            <img width="800" height="600" src="/Thesis.gif" alt="Hero Illustration" className="hero-mobile-img" />
             <lord-icon
               src="https://cdn.lordicon.com/jtihyjyw.json"
               trigger="loop"

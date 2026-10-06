@@ -51,6 +51,18 @@ const DeactivatedDashboard = () => {
     setProcessing(true);
     try {
       const resp = await registerStep2('online', paymentData.total);
+      
+      if (!window.payhere) {
+          await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://www.payhere.lk/lib/payhere.js';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load PayHere'));
+              document.body.appendChild(script);
+          });
+      }
+
       if (!window.payhere) { toast.info('PayHere SDK not loaded.'); return; }
       const payment = { sandbox: resp.payhere_url.includes('sandbox'), ...resp.params };
       window.payhere.onCompleted = () => { toast.success('Success!'); window.location.reload(); };

@@ -3,7 +3,7 @@
   width: 16.25rem;
   height: 100vh;
   background: linear-gradient(180deg, #0c1631 0%, #0f1d3d 50%, #0c1631 100%);
-  color: #ffffff;
+  color: #555555;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -65,7 +65,7 @@
   gap: 0.75rem;
   padding: 0.6875rem 0.9375rem;
   text-decoration: none;
-  color: #94a3b8;
+  color: #555555;
   border-radius: 0.625rem;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
@@ -74,7 +74,7 @@
 
 .sidebar-link:hover {
   background: rgba(37, 99, 235, 0.08);
-  color: #bfdbfe;
+  color: #555555;
   transform: translateX(0.1875rem);
 }
 
@@ -120,7 +120,7 @@
 
 .logout-btn:hover {
   background: #ef4444;
-  color: #ffffff;
+  color: #555555;
   border-color: #ef4444;
   box-shadow: 0 0.25rem 0.9375rem rgba(239, 68, 68, 0.3);
 }

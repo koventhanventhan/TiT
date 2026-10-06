@@ -203,7 +203,7 @@ const FirebaseUploader = ({
           {/* Image Preview */}
           {showPreview && previewUrl && (
             <div className="uploader-image-preview">
-              <img src={previewUrl} alt="Upload preview" />
+              <img width="800" height="600" src={previewUrl} alt="Upload preview" />
             </div>
           )}
 

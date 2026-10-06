@@ -157,7 +157,7 @@ const StudentsParentsLoveUs = () => {
               </p>
               <div className="pr-user">
                 <div className="pr-avatar">
-                  <img src={t.image} alt={t.name} />
+                  <img width="800" height="600" src={t.image} alt={t.name} />
                 </div>
                 <div className="pr-details">
                   <h4>{t.name}</h4>

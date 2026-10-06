@@ -222,7 +222,7 @@ const ClassesPage = () => {
                 {isOnline ? 'LIVE' : 'IN-PERSON'}
               </div>
               {currentHeroImage ? (
-                <img src={getImageUrl(currentHeroImage)} alt={`${currentText.titleLine1} Classes`} className="ocl-laptop-img" />
+                <img width="800" height="600" src={getImageUrl(currentHeroImage)} alt={`${currentText.titleLine1} Classes`} className="ocl-laptop-img" />
               ) : (
                 <div className="ocl-hero-placeholder">
                   {isOnline ? <FiMonitor /> : <FiUsers />}
@@ -230,7 +230,7 @@ const ClassesPage = () => {
                 </div>
               )}
               {currentBadgeImage && (
-                <img src={getImageUrl(currentBadgeImage)} alt="Quality Badge" className="ocl-badge-img" />
+                <img width="800" height="600" src={getImageUrl(currentBadgeImage)} alt="Quality Badge" className="ocl-badge-img" />
               )}
             </div>
           </div>

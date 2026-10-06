@@ -741,6 +741,18 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
     setIsLoading(true)
     try {
       const resp = await registerStep2('online', amount, newSiblingId)
+      
+      if (!window.payhere) {
+          await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://www.payhere.lk/lib/payhere.js';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load PayHere'));
+              document.body.appendChild(script);
+          });
+      }
+
       setIsLoading(false)
 
       if (!window.payhere) {

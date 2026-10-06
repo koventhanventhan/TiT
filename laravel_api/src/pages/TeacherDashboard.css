@@ -18,7 +18,7 @@
   margin: 0 auto;
   padding: 2.5rem 1.25rem;
   font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
-  color: #f8fafc;
+  color: #555555;
 }
 
 .teacher-dashboard-header {
@@ -54,7 +54,7 @@
 
 .teacher-dashboard-header p {
   font-size: 1.1rem;
-  color: #94a3b8;
+  color: #555555;
   font-weight: 400;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -99,7 +99,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1.75rem;
-  color: #fff;
+  color: #555555;
   display: flex;
   align-items: center;
   gap: 0.9375rem;
@@ -177,14 +177,14 @@
 
 .zoom-class-info strong {
   font-size: 1.3rem;
-  color: #fff;
+  color: #555555;
   letter-spacing: -0.01em;
 }
 
 .zoom-class-meta {
   display: flex;
   gap: 1.25rem;
-  color: #94a3b8;
+  color: #555555;
   font-size: 0.95rem;
 }
 
@@ -222,7 +222,7 @@
 
 .btn-join {
   background: var(--gradient-1);
-  color: #fff;
+  color: #555555;
   border: none;
   padding: 0.875rem 2rem;
   border-radius: 1.125rem;

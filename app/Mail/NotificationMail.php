@@ -18,7 +18,8 @@ class NotificationMail extends Mailable
     /**
      * Supported types:
      * welcome, payment_reminder, payment_success, admin_approved,
-     * account_deactivated, account_suspended, zoom_reminder, admin_alert
+     * account_deactivated, account_suspended, zoom_reminder, admin_alert,
+     * class_created
      */
     public function __construct(string $type, array $data = [])
     {
@@ -37,6 +38,7 @@ class NotificationMail extends Mailable
             'account_suspended'    => 'Account Suspended - TiT Education',
             'zoom_reminder'        => 'Zoom Class Reminder 📹 - TiT Education',
             'admin_alert'          => 'Admin Alert - TiT Education',
+            'class_created'        => 'New Class Scheduled - TiT Education',
         ];
 
         return new Envelope(

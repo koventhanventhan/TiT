@@ -7,6 +7,7 @@ use App\Models\ZoomSchedule;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\ZoomService;
+use App\Services\ClassNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -116,11 +117,36 @@ class ZoomScheduleController extends Controller
             $schedule->teachers()->sync($request->teacher_ids);
         }
 
-        // No immediate notification on class creation.
-        // The cron job (zoom:send-reminders) will automatically notify
-        // teachers and students ~45 minutes before the class starts.
+        // Email-only notification on class creation
+        $teacherIds = $request->teacher_ids ?? [];
+        $classGrade = $schedule->grade;
+        $classMedium = $schedule->medium;
+        $classSubject = $schedule->subject;
+        $classTitle = $schedule->title;
+        $classTime = date('M d, Y @ H:i', strtotime($schedule->scheduled_at));
+        $joinUrl = $schedule->join_url;
 
-        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created successfully. Reminders will be sent automatically before the class starts.');
+        dispatch(function () use ($teacherIds, $classGrade, $classMedium, $classSubject, $classTitle, $classTime, $joinUrl) {
+            try {
+                $notifier = app(\App\Services\ClassNotifier::class);
+                $students = $notifier->getMatchingStudents($classGrade, $classMedium, $classSubject);
+                $studentIds = $students->pluck('id')->toArray();
+
+                $notifier->sendClassCreatedEmails(
+                    $classTitle,
+                    $classTime,
+                    $classSubject,
+                    $classGrade,
+                    $joinUrl,
+                    $teacherIds,
+                    $studentIds
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send class creation emails: ' . $e->getMessage());
+            }
+        })->afterResponse();
+
+        return redirect()->route('admin.zoom.index')->with('success', 'Zoom class created successfully. Email notifications are being sent.');
     }
 
     public function edit($id)
@@ -230,64 +256,22 @@ class ZoomScheduleController extends Controller
             $sentCount++;
         }
 
-        // 2. Notify Students of the relevant grade
+        // 2. Notify Students using shared logic
         if ($schedule->grade) {
-            $students = User::where('role', 'user')
-                ->whereNull('deactivated_at')
-                ->get();
-
-            preg_match('/(\d+)/', $schedule->grade, $classMatch);
-            $classNum = $classMatch[1] ?? null;
+            $classNotifier = app(\App\Services\ClassNotifier::class);
+            $students = $classNotifier->getMatchingStudents(
+                $schedule->grade,
+                $schedule->medium,
+                $schedule->subject
+            );
 
             foreach ($students as $student) {
-                // 1. Grade Match
-                $userGrade = $student->current_grade;
-                if (!$userGrade) continue;
-
-                preg_match('/(\d+)/', $userGrade, $userMatch);
-                $userNum = $userMatch[1] ?? null;
-
-                if ($userNum === null || $classNum === null || $userNum !== $classNum) {
-                    continue;
-                }
-
-                // 2. Filter by medium (skip if student's medium doesn't match)
-                $classMedium = $schedule->medium;
-                if ($classMedium && $classMedium !== 'both' && $student->medium && $student->medium !== $classMedium) {
-                    continue;
-                }
-
-                // 2. Filter by selected subjects (Robust substring match)
-                $selected = $student->selected_subjects;
-                $classSubject = trim($schedule->subject);
-                
-                if (!empty($classSubject)) {
-                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-                    $selectedArr = array_map('trim', (array)$selectedArr);
-                    
-                    $subjectMatch = false;
-                    foreach ($selectedArr as $studentSub) {
-                        $studentSub = trim($studentSub);
-                        if ($studentSub === $classSubject || 
-                            stripos($studentSub, $classSubject) !== false || 
-                            stripos($classSubject, $studentSub) !== false) {
-                            $subjectMatch = true;
-                            break;
-                        }
-                    }
-                    if (!$subjectMatch) {
-                        continue;
-                    }
-                }
-
-                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
-                    $this->notifier->notifyUser(
-                        $student, 'zoom_reminder', 'tit_zoom_reminder',
-                        [$schedule->title, $time],
-                        ['class_title' => $schedule->title, 'class_time' => $time]
-                    );
-                    $sentCount++;
-                }
+                $this->notifier->notifyUser(
+                    $student, 'zoom_reminder', 'tit_zoom_reminder',
+                    [$schedule->title, $time],
+                    ['class_title' => $schedule->title, 'class_time' => $time]
+                );
+                $sentCount++;
             }
         }
 

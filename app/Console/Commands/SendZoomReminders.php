@@ -29,13 +29,13 @@ class SendZoomReminders extends Command
     /**
      * Execute the console command.
      */
-    public function handle(NotificationService $notifier)
+    public function handle(NotificationService $notifier, \App\Services\ClassNotifier $classNotifier)
     {
         $this->info('Checking for Zoom schedules starting in 15 minutes...');
 
-        // Find schedules starting in the next 0-45 minutes (and up to 20 mins in the past) that haven't been reminded
-        $startTime = Carbon::now()->subMinutes(20);
-        $endTime = Carbon::now()->addMinutes(45);
+        // Find schedules starting in the next 15 minutes (with grace period for cron jitter) that haven't been reminded
+        $startTime = Carbon::now()->subMinutes(5);
+        $endTime = Carbon::now()->addMinutes(16);
 
         $schedules = ZoomSchedule::with(['teachers'])
             ->whereBetween('scheduled_at', [$startTime, $endTime])
@@ -72,80 +72,25 @@ class SendZoomReminders extends Command
                 );
             }
 
-            // 2. Notify Students in the same grade
+            // 2. Notify Students using shared logic
             if ($schedule->grade) {
-                $students = User::where('role', 'user')
-                    ->whereNull('deactivated_at')
-                    ->get();
-
-                preg_match('/(\d+)/', $schedule->grade, $classMatch);
-                $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($schedule->grade));
+                $students = $classNotifier->getMatchingStudents(
+                    $schedule->grade,
+                    $schedule->medium,
+                    $schedule->subject
+                );
 
                 foreach ($students as $student) {
-                    // 1. Grade Match
-                    $userGrade = $student->current_grade;
-                    if (!$userGrade) {
-                        $this->line("Skipping student {$student->name} (No grade set)");
-                        continue;
-                    }
+                    $this->info("Sending message to {$student->name}");
+                    $notifier->notifyUser(
+                        $student, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$schedule->title, $time],
+                        ['class_title' => $schedule->title, 'class_time' => $time]
+                    );
+                    $emailsSent++;
 
-                    preg_match('/(\d+)/', $userGrade, $userMatch);
-                    $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-                    if ($userRef !== $classRef) {
-                        // Silent skip for grade mismatch is fine as there are many students
-                        continue;
-                    }
-
-                    // 2. Filter by medium (skip if student's medium doesn't match)
-                    $classMedium = $schedule->medium;
-                    if ($classMedium && $classMedium !== 'both' && $student->medium && $student->medium !== $classMedium) {
-                        continue;
-                    }
-
-                    // 2. Filter by selected subjects (Robust substring match)
-                    $selected = $student->selected_subjects;
-                    $classSubject = trim($schedule->subject);
-                    
-                    if (!empty($classSubject)) {
-                        $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-                        $selectedArr = array_filter(array_map('trim', (array)$selectedArr));
-                        
-                        if (empty($selectedArr)) {
-                            $this->line("Skipping student {$student->name} (No subjects selected)");
-                            continue;
-                        }
-
-                        $subjectMatch = false;
-                        foreach ($selectedArr as $studentSub) {
-                            $studentSub = trim($studentSub);
-                            if ($studentSub === $classSubject || 
-                                stripos($studentSub, $classSubject) !== false || 
-                                stripos($classSubject, $studentSub) !== false) {
-                                $subjectMatch = true;
-                                break;
-                            }
-                        }
-                        if (!$subjectMatch) {
-                            $this->line("Skipping student {$student->name} (Subject mismatch: expected '{$classSubject}')");
-                            continue;
-                        }
-                    }
-
-                    if ($student->phone_number || ($student->email && $this->isValidEmailForSending($student->email))) {
-                        $this->info("Sending message to {$student->name}");
-                        $notifier->notifyUser(
-                            $student, 'zoom_reminder', 'tit_zoom_reminder',
-                            [$schedule->title, $time],
-                            ['class_title' => $schedule->title, 'class_time' => $time]
-                        );
-                        $emailsSent++;
-
-                        if ($emailsSent % 5 === 0) {
-                            sleep(2);
-                        }
-                    } else {
-                        $this->warn("Skipping student {$student->name} (No valid phone number or email)");
+                    if ($emailsSent % 5 === 0) {
+                        sleep(2);
                     }
                 }
             }

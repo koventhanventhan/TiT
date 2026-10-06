@@ -466,7 +466,7 @@
         
         // Change title and action
         modal.find('.modal-title').text('Edit Recurring Timetable Slot');
-        form.attr('action', `/admin/timetables/${slot.id}`);
+        form.attr('action', '{{ route('admin.timetables.index') }}/' + slot.id);
         form.append('<input type="hidden" name="_method" value="PUT">');
         
         // Fill fields

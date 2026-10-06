@@ -27,19 +27,8 @@ import StudentMaterials from './pages/student/StudentMaterials'
 import StudentSchedule from './pages/student/StudentSchedule'
 import StudentPerformance from './pages/student/StudentPerformance'
 import StudentSettings from './pages/student/StudentSettings'
-import AdminDashboard from './pages/AdminDashboard'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
-import AdminOverview from './pages/admin/AdminOverview'
-import AdminStudents from './pages/admin/AdminStudents'
-import AdminTeachers from './pages/admin/AdminTeachers'
-import AdminFinance from './pages/admin/AdminFinance'
-import AdminZoom from './pages/admin/AdminZoom'
-import AdminMaterials from './pages/admin/AdminMaterials'
 import MessagingPage from './pages/MessagingPage'
-import AdminSettings from './pages/admin/AdminSettings'
-import AdminAssignments from './pages/admin/AdminAssignments'
-import AdminAttendance from './pages/admin/AdminAttendance'
-import AdminCalendar from './pages/admin/AdminCalendar'
 import TeacherDashboard from './pages/TeacherDashboard'
 import TeacherOverview from './pages/teacher/TeacherOverview'
 import TeacherStudents from './pages/teacher/TeacherStudents'
@@ -119,23 +108,6 @@ function AppContent() {
           <Route path="performance" element={<StudentPerformance />} />
           <Route path="messages" element={<MessagingPage />} />
           <Route path="settings" element={<StudentSettings />} />
-        </Route>
-
-        {/* Admin Master Control Routes */}
-        <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>}>
-          <Route index element={<AdminOverview />} />
-          <Route path="dashboard" element={<AdminOverview />} />
-          <Route path="analytics" element={<AdminOverview />} />
-          <Route path="students" element={<AdminStudents />} />
-          <Route path="teachers" element={<AdminTeachers />} />
-          <Route path="calendar" element={<AdminCalendar />} />
-          <Route path="zoom" element={<AdminZoom />} />
-          <Route path="attendance" element={<AdminAttendance />} />
-          <Route path="materials" element={<AdminMaterials />} />
-          <Route path="assignments" element={<AdminAssignments />} />
-          <Route path="messages" element={<MessagingPage />} />
-          <Route path="payments" element={<AdminFinance />} />
-          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         <Route path="/super-admin/*" element={<SuperAdminDashboard />} />

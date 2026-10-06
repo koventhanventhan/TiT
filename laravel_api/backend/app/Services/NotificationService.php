@@ -118,6 +118,34 @@ class NotificationService
     }
 
     /**
+     * Send an email-only notification (no WhatsApp).
+     *
+     * @param User   $user
+     * @param string $type
+     * @param array  $emailData
+     */
+    public function notifyUserByEmail(User $user, string $type, array $emailData = []): bool
+    {
+        $targetUser = $user;
+        if ($user->parent_id) {
+            $parent = User::find($user->parent_id);
+            if ($parent) {
+                $targetUser = $parent;
+            }
+        }
+        
+        $email = $targetUser->email;
+
+        // Verify we only send to contactable/valid emails
+        if ($email && $this->isValidEmailForSending($email)) {
+            return $this->sendEmail($email, $type, $emailData);
+        }
+
+        Log::info("NotificationService: [{$type}] could not be sent — no valid email for user #{$user->id} (email: {$email})");
+        return false;
+    }
+
+    /**
      * Send email using the NotificationMail Mailable.
      * Records bounces on failure for future blocklisting.
      */

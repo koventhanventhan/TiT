@@ -134,11 +134,10 @@ class TimetableController extends Controller
             Log::error('Auto-sync failed: ' . $e->getMessage());
         }
 
-        // No immediate notification on timetable creation.
-        // The cron job (zoom:send-reminders) will automatically notify
-        // teachers and students before the class starts.
+        // Send email notification on class creation
+        $this->sendClassNotifications($timetableEntry);
 
-        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully.');
+        return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot created successfully. Email notifications are being sent.');
     }
 
     public function edit(Timetable $timetable)
@@ -234,88 +233,45 @@ class TimetableController extends Controller
     }
 
     /**
-     * Send notifications to teacher and matching students when a timetable slot is created.
+     * Send email-only notifications to teacher and matching students when a timetable slot is created.
      */
     private function sendClassNotifications(Timetable $timetable): void
     {
-        try {
-            $notifier = app(NotificationService::class);
-        } catch (\Exception $e) {
-            Log::warning('NotificationService not available for timetable notifications: ' . $e->getMessage());
-            return;
-        }
-
         $timetable->load('subject');
         $subjectName = $timetable->subject->name ?? 'General';
         $dayTime = $timetable->day_of_week . ' @ ' . date('H:i', strtotime($timetable->start_time));
-        $classTitle = $timetable->title . ' (' . $subjectName . ')';
+        $classTitle = $timetable->title;
 
-        // 1. Notify the assigned teacher
-        try {
-            $teacher = User::find($timetable->teacher_id);
-            if ($teacher) {
-                $notifier->notifyUser(
-                    $teacher, 'zoom_reminder', 'tit_zoom_reminder',
-                    [$classTitle, $dayTime],
-                    ['class_title' => $classTitle, 'class_time' => $dayTime]
+        $teacherId = $timetable->teacher_id;
+        $classGrade = $timetable->grade;
+        $classMedium = $timetable->medium;
+
+        dispatch(function () use ($teacherId, $classGrade, $classMedium, $subjectName, $classTitle, $dayTime) {
+            try {
+                $notifier = app(\App\Services\ClassNotifier::class);
+                
+                // Get matching students
+                $students = $notifier->getMatchingStudents(
+                    $classGrade,
+                    $classMedium,
+                    $subjectName !== 'General' ? $subjectName : null
                 );
+                
+                $studentIds = $students->pluck('id')->toArray();
+                $teacherIds = $teacherId ? [$teacherId] : [];
+
+                $notifier->sendClassCreatedEmails(
+                    $classTitle,
+                    $dayTime,
+                    $subjectName !== 'General' ? $subjectName : null,
+                    $classGrade,
+                    null, // no join_url
+                    $teacherIds,
+                    $studentIds
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Timetable class creation notification failed: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            Log::error('Teacher notification failed: ' . $e->getMessage());
-        }
-
-        // 2. Notify students of the matching grade
-        try {
-            if (!$timetable->grade) return;
-
-            preg_match('/(\d+)/', $timetable->grade, $classMatch);
-            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($timetable->grade));
-
-            $students = User::where('role', 'user')
-                ->whereNull('deactivated_at')
-                ->get();
-
-            foreach ($students as $student) {
-                $userGrade = $student->current_grade;
-                if (!$userGrade) continue;
-
-                preg_match('/(\d+)/', $userGrade, $userMatch);
-                $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-                if ($userRef !== $classRef) continue;
-
-                // Filter by medium
-                if ($timetable->medium !== 'both' && $student->medium && $student->medium !== $timetable->medium) continue;
-
-                // Filter by selected subjects
-                $selected = $student->selected_subjects;
-                if (!empty($subjectName) && $subjectName !== 'General') {
-                    $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-                    $selectedArr = array_map('trim', (array)$selectedArr);
-
-                    $subjectMatch = false;
-                    foreach ($selectedArr as $studentSub) {
-                        $studentSub = trim($studentSub);
-                        if ($studentSub === $subjectName ||
-                            stripos($studentSub, $subjectName) !== false ||
-                            stripos($subjectName, $studentSub) !== false) {
-                            $subjectMatch = true;
-                            break;
-                        }
-                    }
-                    if (!$subjectMatch) continue;
-                }
-
-                if ($student->phone_number || ($student->email && !str_ends_with($student->email, '@student.local'))) {
-                    $notifier->notifyUser(
-                        $student, 'zoom_reminder', 'tit_zoom_reminder',
-                        [$classTitle, $dayTime],
-                        ['class_title' => $classTitle, 'class_time' => $dayTime]
-                    );
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Student notification failed: ' . $e->getMessage());
-        }
+        })->afterResponse();
     }
 }

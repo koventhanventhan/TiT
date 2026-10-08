@@ -18,3 +18,9 @@ verify_clone_2/
 /laravel_api/backend/vendor/
 /laravel_api/tit_website/vendor/
 /laravel_api/teste_herd/vendor/
+
+# Ignore debug, test, and migration files
+debug_*.php
+test_*.php
+test-*.html
+cpanel_migrate.php

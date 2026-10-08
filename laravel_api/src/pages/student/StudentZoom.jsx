@@ -3,8 +3,12 @@ import { Link } from 'react-router-dom'
 import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch } from 'react-icons/fi'
 import { getStudentZoomClasses, studentAttend } from '../../services/dashboardService'
 
+const UPCOMING_DAYS = 2
+
 export default function StudentZoom() {
-    const [classes, setClasses] = useState([])
+    const [todayList, setTodayList] = useState([])
+    const [upcomingList, setUpcomingList] = useState([])
+    const [hasAny, setHasAny] = useState(false)
     const [loading, setLoading] = useState(true)
     const [paymentRequired, setPaymentRequired] = useState(false)
 
@@ -18,8 +22,51 @@ export default function StudentZoom() {
                 }
                 
                 const arr = response ? (Array.isArray(response) ? response : response.data || []) : []
-                arr.sort((a, b) => new Date(a.scheduled_at || a.start_time) - new Date(b.scheduled_at || b.start_time))
-                setClasses(arr)
+                setHasAny(arr.length > 0)
+
+                const now = new Date()
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+                const windowEnd = new Date(todayStart.getTime() + (UPCOMING_DAYS + 1) * 24 * 60 * 60 * 1000)
+
+                const todayArr = []
+                const upcomingArr = []
+
+                arr.forEach(cls => {
+                    const time = new Date(cls.scheduled_at || cls.start_time)
+                    if (time.getTime() >= todayStart.getTime() && time.getTime() < windowEnd.getTime()) {
+                        if (time.getTime() < todayStart.getTime() + 24 * 60 * 60 * 1000) {
+                            todayArr.push(cls)
+                        } else {
+                            upcomingArr.push(cls)
+                        }
+                    }
+                })
+
+                todayArr.sort((a, b) => {
+                    const timeA = new Date(a.scheduled_at || a.start_time).getTime()
+                    const timeB = new Date(b.scheduled_at || b.start_time).getTime()
+                    const endA = timeA + (a.duration || 60) * 60000
+                    const endB = timeB + (b.duration || 60) * 60000
+                    const nowTime = now.getTime()
+
+                    const isLiveA = timeA <= nowTime && nowTime < endA
+                    const isLiveB = timeB <= nowTime && nowTime < endB
+                    const isEndedA = endA <= nowTime
+                    const isEndedB = endB <= nowTime
+
+                    if (isLiveA && !isLiveB) return -1
+                    if (!isLiveA && isLiveB) return 1
+
+                    if (!isEndedA && !isLiveA && isEndedB) return -1
+                    if (isEndedA && !isEndedB && !isLiveB) return 1
+
+                    return timeA - timeB
+                })
+
+                upcomingArr.sort((a, b) => new Date(a.scheduled_at || a.start_time).getTime() - new Date(b.scheduled_at || b.start_time).getTime())
+
+                setTodayList(todayArr)
+                setUpcomingList(upcomingArr)
             } catch (e) {
                 console.error(e)
             } finally {
@@ -39,6 +86,69 @@ export default function StudentZoom() {
             const link = cls.join_url || cls.zoom_link;
             if (link) window.open(link, '_blank')
         }
+    }
+
+    const renderClassCard = (cls) => {
+        const time = new Date(cls.scheduled_at || cls.start_time)
+        const now = new Date()
+        const end = time.getTime() + (cls.duration || 60)*60000
+        const isEnded = end <= now.getTime()
+        const isLive = time.getTime() <= now.getTime() && !isEnded
+
+        return (
+            <div key={cls.id} style={{
+                background: '#fff', borderRadius: 16, padding: 24,
+                border: isLive ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
+                boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.02)',
+                transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default',
+                opacity: isEnded ? 0.6 : 1
+            }}
+            onMouseEnter={e => { if (!isEnded) { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.08)' } }}
+            onMouseLeave={e => { if (!isEnded) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.02)' } }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                    <div style={{
+                        background: isLive ? '#ef4444' : '#f1f5f9',
+                        color: isLive ? '#fff' : '#64748b',
+                        padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'
+                    }}>
+                        {isEnded ? 'Ended' : (isLive ? '● Live Now' : cls.subject)}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6366f1', fontSize: 13, fontWeight: 700, background: '#eef2ff', padding: '4px 10px', borderRadius: 8 }}>
+                        <FiCalendar /> {time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </div>
+                </div>
+
+                <h3 style={{ margin: '0 0 6px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{cls.title}</h3>
+                <div style={{ color: '#64748b', fontSize: 14, fontWeight: 500, marginBottom: 20 }}>{cls.teacher || 'Instructor'}</div>
+
+                <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#475569', fontSize: 13, fontWeight: 600 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><FiClock /></div>
+                        <div>
+                            <div style={{ color: '#1e293b' }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{cls.duration || 60} mins</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => handleJoin(cls)}
+                    disabled={isEnded || (!cls.zoom_link && !cls.join_url)}
+                    style={{
+                        width: '100%', padding: '12px', borderRadius: 12,
+                        background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
+                        color: isLive ? '#fff' : '#475569', fontSize: 14, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        cursor: (isEnded || (!cls.zoom_link && !cls.join_url)) ? 'not-allowed' : 'pointer',
+                        boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
+                        transition: 'all 0.2s', border: isLive ? 'none' : '1px solid #e2e8f0'
+                    }}
+                >
+                    <FiExternalLink /> {isEnded ? 'Class ended' : (isLive ? 'Join Class Now' : 'Join Link (Available at start time)')}
+                </button>
+            </div>
+        )
     }
 
     return (
@@ -63,73 +173,39 @@ export default function StudentZoom() {
                     <p style={{ margin: '0 0 24px 0', color: '#64748b', fontSize: 15, maxWidth: 400 }}>Complete this month's payment to unlock your live classes.</p>
                     <Link to="/student" style={{ padding: '12px 24px', background: '#ef4444', color: '#fff', textDecoration: 'none', borderRadius: 8, fontWeight: 600, boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>Go to Payment Section</Link>
                 </div>
-            ) : classes.length === 0 ? (
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 16, background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiVideo /></div>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#334155' }}>No upcoming classes</h3>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>There are no live classes scheduled for you right now.</p>
-                </div>
+            ) : todayList.length === 0 && upcomingList.length === 0 ? (
+                hasAny ? (
+                    <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                        <div style={{ width: 64, height: 64, borderRadius: 16, background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiVideo /></div>
+                        <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#334155' }}>No classes in the next 2 days</h3>
+                        <p style={{ margin: '0 0 24px 0', color: '#64748b', fontSize: 14 }}>There are no live classes scheduled for you right now.</p>
+                        <Link to="/student/schedule" style={{ padding: '10px 20px', background: '#f8fafc', color: '#475569', textDecoration: 'none', borderRadius: 8, fontWeight: 600, border: '1px solid #e2e8f0' }}>View full schedule</Link>
+                    </div>
+                ) : (
+                    <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed #cbd5e1', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                        <div style={{ width: 64, height: 64, borderRadius: 16, background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiVideo /></div>
+                        <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#334155' }}>No upcoming classes</h3>
+                        <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>There are no live classes scheduled for you right now.</p>
+                    </div>
+                )
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
-                    {classes.map(cls => {
-                        const time = new Date(cls.scheduled_at || cls.start_time)
-                        const now = new Date()
-                        const isLive = time.getTime() <= now.getTime() && time.getTime() + (cls.duration || 60)*60000 > now.getTime()
-
-                        return (
-                            <div key={cls.id} style={{
-                                background: '#fff', borderRadius: 16, padding: 24,
-                                border: isLive ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
-                                boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.02)',
-                                transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default'
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.08)' }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.02)' }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                                    <div style={{
-                                        background: isLive ? '#ef4444' : '#f1f5f9',
-                                        color: isLive ? '#fff' : '#64748b',
-                                        padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'
-                                    }}>
-                                        {isLive ? '● Live Now' : cls.subject}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6366f1', fontSize: 13, fontWeight: 700, background: '#eef2ff', padding: '4px 10px', borderRadius: 8 }}>
-                                        <FiCalendar /> {time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    </div>
-                                </div>
-
-                                <h3 style={{ margin: '0 0 6px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{cls.title}</h3>
-                                <div style={{ color: '#64748b', fontSize: 14, fontWeight: 500, marginBottom: 20 }}>{cls.teacher || 'Instructor'}</div>
-
-                                <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#475569', fontSize: 13, fontWeight: 600 }}>
-                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><FiClock /></div>
-                                        <div>
-                                            <div style={{ color: '#1e293b' }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
-                                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{cls.duration || 60} mins</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => handleJoin(cls)}
-                                    disabled={!cls.zoom_link && !cls.join_url}
-                                    style={{
-                                        width: '100%', padding: '12px', borderRadius: 12,
-                                        background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
-                                        color: isLive ? '#fff' : '#475569', fontSize: 14, fontWeight: 700,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                        cursor: (!cls.zoom_link && !cls.join_url) ? 'not-allowed' : 'pointer',
-                                        boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
-                                        transition: 'all 0.2s', border: isLive ? 'none' : '1px solid #e2e8f0'
-                                    }}
-                                >
-                                    <FiExternalLink /> {isLive ? 'Join Class Now' : 'Join Link (Available at start time)'}
-                                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+                    {todayList.length > 0 && (
+                        <div>
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#334155', marginBottom: 16 }}>Today</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
+                                {todayList.map(cls => renderClassCard(cls))}
                             </div>
-                        )
-                    })}
+                        </div>
+                    )}
+                    {upcomingList.length > 0 && (
+                        <div>
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#334155', marginBottom: 16 }}>Coming up (next 2 days)</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
+                                {upcomingList.map(cls => renderClassCard(cls))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

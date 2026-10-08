@@ -62,7 +62,7 @@
 
 .animated-auth-close:hover {
   background: var(--gradient-1);
-  color: #555555;
+  color: #fff;
   transform: rotate(90deg);
   box-shadow: 0 0 1.25rem rgba(79, 11, 217, 0.5);
   border-color: transparent;
@@ -80,7 +80,7 @@
   background: rgba(79, 11, 217, 0.1);
   border: 0.125rem solid transparent;
   border-radius: 0.5rem;
-  color: #555555;
+  color: #8f8f8f;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -291,7 +291,7 @@
 
 .registration-type-label {
   display: block;
-  color: #555555;
+  color: #8f8f8f;
   font-size: 0.9em;
   margin-bottom: 0.75rem;
   font-weight: 500;
@@ -308,7 +308,7 @@
   background: rgba(79, 11, 217, 0.1);
   border: 0.125rem solid transparent;
   border-radius: 0.375rem;
-  color: #555555;
+  color: #8f8f8f;
   font-size: 0.9375rem;
   font-weight: 500;
   cursor: pointer;
@@ -323,7 +323,7 @@
 }
 
 .registration-type-btn.active {
-  color: #555555;
+  color: #fff;
   background: var(--gradient-1);
   border-color: var(--primary-dark);
   box-shadow: 0 0.25rem 0.75rem rgba(79, 11, 217, 0.3);
@@ -366,7 +366,7 @@
 }
 
 .register-mode .form-field-label {
-  color: #555555;
+  color: #fff;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -550,7 +550,7 @@
 
 .grade-select option {
   background: #28292d;
-  color: #555555;
+  color: #fff;
   padding: 0.625rem;
 }
 
@@ -559,7 +559,7 @@
   right: 0.9375rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #555555;
+  color: #8f8f8f;
   pointer-events: none;
   font-size: 0.75rem;
   z-index: 1;
@@ -614,7 +614,7 @@
   top: 50%;
   transform: translateY(-40%);
   font-size: 1em;
-  color: #555555;
+  color: #8f8f8f;
   pointer-events: none;
   letter-spacing: 0.05em;
   transition: 0.5s;
@@ -652,7 +652,7 @@
 }
 
 .inputbox input:not(:focus):not(:placeholder-shown)~span {
-  color: #555555;
+  color: #8f8f8f;
   transform: translateX(0.0px) translateY(-2.625rem);
   font-size: 0.75em;
   left: 0.625rem;
@@ -710,7 +710,7 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #555555;
+  color: #fff;
   font-size: 1em;
   letter-spacing: 0.05em;
   z-index: 10;
@@ -741,7 +741,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #555555;
+  color: #8f8f8f;
   cursor: pointer;
   font-size: 1.125rem;
   z-index: 15;
@@ -793,7 +793,7 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: #555555;
+  color: #8f8f8f;
   font-size: 0.9em;
   cursor: pointer;
   transition: color 0.3s ease;
@@ -834,7 +834,7 @@ input[type="submit"],
 .register-mode input[type="submit"],
 .register-mode .register-submit-input {
   background: linear-gradient(135deg, #8a3863 0%, #452e3d 100%);
-  color: #555555;
+  color: #fff;
   box-shadow: 0 0.25rem 0.9375rem rgba(255, 0, 0, 0.4);
 }
 
@@ -892,7 +892,7 @@ input[type="submit"]:disabled,
   align-items: center;
   text-align: center;
   margin: 0.9375rem 0;
-  color: #555555;
+  color: #8f8f8f;
   font-size: 0.875rem;
 }
 

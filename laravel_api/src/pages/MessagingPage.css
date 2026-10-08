@@ -133,7 +133,7 @@
   color: #374151;
 }
 .msg-search svg {
-  color: #555555;
+  color: #9ca3af;
   font-size: 1rem;
   flex-shrink: 0;
 }
@@ -239,7 +239,7 @@
 }
 .msg-preview {
   font-size: 0.8125rem;
-  color: #555555;
+  color: #9ca3af;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -254,7 +254,7 @@
 }
 .msg-time {
   font-size: 0.75rem;
-  color: #555555;
+  color: #9ca3af;
   white-space: nowrap;
 }
 .msg-dot {
@@ -271,7 +271,7 @@
   align-items: center;
   justify-content: center;
   padding: 3.75rem 1.25rem;
-  color: #555555;
+  color: #9ca3af;
 }
 .empty-icon {
   font-size: 3rem;
@@ -457,7 +457,7 @@
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: #555555;
+  color: #9ca3af;
   margin-top: 0.375rem;
 }
 .msg-detail-body {

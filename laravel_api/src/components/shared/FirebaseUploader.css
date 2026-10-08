@@ -54,13 +54,13 @@
 
 .dropzone-hint {
   font-size: 0.8rem;
-  color: #555555;
+  color: #94a3b8;
   margin-bottom: 1.25rem;
 }
 
 .btn-browse-file {
   background: linear-gradient(135deg, #ff6b00, #ea580c);
-  color: #555555;
+  color: #ffffff;
   border: none;
   padding: 0.55rem 1.35rem;
   border-radius: 0.6rem;
@@ -117,7 +117,7 @@
 .file-name {
   font-size: 0.925rem;
   font-weight: 600;
-  color: #555555;
+  color: #f8fafc;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,7 +125,7 @@
 
 .file-meta {
   font-size: 0.775rem;
-  color: #555555;
+  color: #94a3b8;
   margin-top: 0.15rem;
 }
 
@@ -244,7 +244,7 @@
 
 .btn-copy-url:hover {
   background: rgba(255, 255, 255, 0.15);
-  color: #555555;
+  color: #ffffff;
 }
 
 /* Error Message */

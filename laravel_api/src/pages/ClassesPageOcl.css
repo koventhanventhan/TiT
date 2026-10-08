@@ -120,7 +120,7 @@
   align-items: center;
   gap: 0.5rem;
   background: #1e3a8a;
-  color: #555555;
+  color: #fff;
   padding: 0.875rem 1.75rem;
   border-radius: 0.5rem;
   font-weight: 700;
@@ -207,7 +207,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #555555;
+  color: #94a3b8;
   font-weight: 600;
   gap: 1rem;
 }
@@ -303,7 +303,7 @@
 
 .ocl-grade-pill.active {
   background: #0077B6;
-  color: #555555;
+  color: #fff;
   box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
 }
 
@@ -353,7 +353,7 @@
 .ocl-feature-card:hover .ocl-feature-icon {
   border-color: #1e3a8a;
   background: #1e3a8a;
-  color: #555555;
+  color: #fff;
 }
 
 .ocl-feature-title {
@@ -510,7 +510,7 @@
 .ocl-subject-chip:hover .ocl-subject-icon {
   background: #1e3a8a;
   border-color: #1e3a8a;
-  color: #555555;
+  color: #fff;
 }
 
 /* â•â•â•â• RESPONSIVE â•â•â•â• */

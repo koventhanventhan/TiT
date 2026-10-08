@@ -7,7 +7,7 @@
   position: relative;
   padding: 0;
   font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
-  color: #555555;
+  color: #f8fafc;
   overflow-x: hidden;
   background-color: var(--primary-dark);
 }
@@ -132,7 +132,7 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: #555555;
+  color: #94a3b8;
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -238,7 +238,7 @@
   font-size: 2.2rem;
   font-weight: 900;
   margin: 0;
-  color: #555555;
+  color: #fff;
   letter-spacing: -0.02em;
   font-family: 'Outfit', 'Inter', sans-serif;
 }
@@ -247,7 +247,7 @@
   display: flex;
   align-items: center;
   gap: 0.9375rem;
-  color: #555555;
+  color: #94a3b8;
   font-size: 1rem;
   margin-top: 0.625rem;
 }
@@ -363,14 +363,14 @@
 .stat-number {
   font-size: 2rem;
   font-weight: 900;
-  color: #555555;
+  color: #fff;
   line-height: 1;
   font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #555555;
+  color: #94a3b8;
   font-weight: 600;
   margin-top: 0.25rem;
 }

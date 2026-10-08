@@ -35,7 +35,7 @@
   right: 1.25rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #555555;
+  color: #fff;
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.75rem;
@@ -54,7 +54,7 @@
   font-size: 2rem; /* Reverted to original */
   font-weight: 800;
   text-align: center;
-  color: #555555;
+  color: #fff;
   margin-bottom: 0.5rem;
 }
 
@@ -105,7 +105,7 @@
 /* Option styling - Matching requested dark theme */
 .tit-reg-select option {
   background-color: #1e1b4b !important; /* Dark navy background */
-  color: #555555 !important; /* White text */
+  color: #ffffff !important; /* White text */
 }
 
 /* INPUT BOX FIX: Neat and proper size */

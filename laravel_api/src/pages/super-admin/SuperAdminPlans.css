@@ -64,7 +64,7 @@
 
 .price-tag .period {
     font-size: 0.875rem;
-    color: #555555;
+    color: #94a3b8;
     font-weight: 600;
 }
 
@@ -123,7 +123,7 @@
     box-shadow: none;
     justify-content: center;
     align-items: center;
-    color: #555555;
+    color: #94a3b8;
     cursor: pointer;
 }
 

@@ -84,7 +84,7 @@
 
 /* â”€â”€ HERO LEFT â”€â”€ */
 .cp-hero-left {
-  color: #555555;
+  color: #f8fafc;
 }
 
 .cp-badge {
@@ -108,7 +108,7 @@
   font-weight: 900;
   line-height: 1.1;
   margin: 0 0 1.25rem;
-  color: #555555;
+  color: #f8fafc;
   letter-spacing: -0.03em;
   font-family: 'Outfit', 'Inter', sans-serif;
 }
@@ -122,7 +122,7 @@
 
 .cp-desc {
   font-size: 1rem;
-  color: #555555;
+  color: #94a3b8;
   line-height: 1.7;
   max-width: 28.75rem;
   margin: 0 0 2.25rem;
@@ -163,7 +163,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.125rem;
-  color: #555555;
+  color: #fff;
   box-shadow: 0 0.25rem 1rem rgba(79, 11, 217, 0.35);
   flex-shrink: 0;
 }
@@ -351,7 +351,7 @@
 .cp-form-top h2 {
   font-size: 1.375rem;
   font-weight: 800;
-  color: #555555;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -406,7 +406,7 @@
 
 .cp-input-group label svg {
   font-size: 0.875rem;
-  color: #555555;
+  color: #94a3b8;
   transition: color 0.2s;
 }
 
@@ -442,7 +442,7 @@
 
 .cp-input-group input::placeholder,
 .cp-input-group textarea::placeholder {
-  color: #555555;
+  color: #94a3b8;
 }
 
 .cp-input-group textarea {
@@ -457,7 +457,7 @@
   gap: 0.625rem;
   padding: 0.875rem 2rem;
   background: var(--gradient-1);
-  color: #555555;
+  color: #fff;
   border: none;
   border-radius: 0.875rem;
   font-size: 0.9375rem;
@@ -524,7 +524,7 @@
 
 .cp-done-circle svg {
   font-size: 2rem;
-  color: #555555;
+  color: #fff;
 }
 
 .cp-done h3 {
@@ -566,7 +566,7 @@
 .cp-side-card h3 {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: #555555;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -689,7 +689,7 @@
 
 .cp-soc-link:hover svg:first-child {
   background: var(--gradient-1);
-  color: #555555;
+  color: #fff;
   transform: scale(1.05);
 }
 
@@ -718,7 +718,7 @@
 }
 
 .cp-side-cta h3 {
-  color: #555555 !important;
+  color: #f8fafc !important;
   background: transparent !important;
   padding: 1.5rem 1.5rem 0.75rem !important;
 }
@@ -728,7 +728,7 @@
 }
 
 .cp-side-cta p {
-  color: #555555;
+  color: #94a3b8;
   font-size: 0.8125rem;
   line-height: 1.6;
   margin: 0 0 1.125rem;
@@ -744,7 +744,7 @@
   gap: 0.5rem;
   padding: 0.6875rem 1.375rem;
   background: var(--gradient-1);
-  color: #555555;
+  color: #fff;
   border-radius: 0.75rem;
   text-decoration: none;
   font-weight: 700;

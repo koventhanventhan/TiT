@@ -361,7 +361,7 @@
 
 .hero-stat-label {
   font-size: 0.75rem;
-  color: #555555;
+  color: #94a3b8;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -594,7 +594,7 @@
   right: 0;
   bottom: 0;
   z-index: 1;
-  color: #555555;
+  color: #fff;
   padding: 15px;
   background: linear-gradient(0deg,
       rgb(0 0 0 / 70%) 10%,
@@ -628,13 +628,13 @@
   border-bottom: 2px solid #fff;
   margin: 0 auto 10px;
   white-space: nowrap;
-  color: #555555;
+  color: #fff;
   width: fit-content;
 }
 
 .teacher-subject-tab {
   font-size: 16px;
-  color: #555555;
+  color: #fff;
   margin: 0;
 }
 
@@ -1124,11 +1124,11 @@
 }
 
 .about-features-section .section-title {
-  color: #555555;
+  color: #ffffff;
 }
 
 .about-features-section .section-subtitle {
-  color: #555555;
+  color: #94a3b8;
 }
 
 .about-features-section::before {
@@ -1253,7 +1253,7 @@
 .diff-title {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #555555;
+  color: #ffffff;
   margin: 0 0 4px;
   line-height: 1.3;
 }
@@ -1551,7 +1551,7 @@
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: 1rem;
-  color: #555555;
+  color: #ffffff;
   font-family: 'Outfit', 'Inter', sans-serif;
   letter-spacing: -0.02em;
 }
@@ -1708,7 +1708,7 @@
 }
 
 .cta-box-text h4 {
-  color: #555555;
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
   margin: 0 0 2px;
@@ -1717,7 +1717,7 @@
 }
 
 .cta-box-text p {
-  color: #555555;
+  color: #94a3b8;
   font-size: 0.8rem;
   font-weight: 500;
   margin: 0;

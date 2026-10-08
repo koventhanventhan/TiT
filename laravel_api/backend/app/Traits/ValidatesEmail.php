@@ -181,4 +181,25 @@ trait ValidatesEmail
             Log::warning("ValidatesEmail: Failed to record bounce for {$email}: " . $e->getMessage());
         }
     }
+
+    protected function isPermanentMailFailure(\Throwable $e): bool
+    {
+        $msg = strtolower($e->getMessage());
+
+        // Temporary / infrastructure problems: never blocklist
+        $temporary = ['timed out', 'timeout', 'connection', 'could not be established',
+                      'authenticat', 'rate limit', 'too many', 'try again', 'temporar',
+                      'quota', 'exceeded', '421', '450', '451', '452'];
+        foreach ($temporary as $t) {
+            if (str_contains($msg, $t)) {
+                return false;
+            }
+        }
+
+        // Permanent recipient errors (SMTP 5xx about the mailbox/address)
+        return (bool) preg_match(
+            '/(550|551|553|554|5\.1\.1|5\.1\.10).*(user unknown|no such user|mailbox|recipient|address|does not exist|not exist|invalid)/s',
+            $msg
+        );
+    }
 }

@@ -159,7 +159,9 @@ class NotificationService
             Log::error("NotificationService: Email failed for [{$type}] to {$to}: " . $e->getMessage());
 
             // Track the bounce — after 2 bounces the address will be blocklisted
-            $this->markEmailAsBounced($to);
+            if ($this->isPermanentMailFailure($e)) {
+                $this->markEmailAsBounced($to);
+            }
 
             return false;
         }

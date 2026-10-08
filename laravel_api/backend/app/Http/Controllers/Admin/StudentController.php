@@ -448,7 +448,9 @@ class StudentController extends Controller
             \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $targetEmail);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $targetEmail . '. Error: ' . $e->getMessage());
-            $this->markEmailAsBounced($targetEmail);
+            if ($this->isPermanentMailFailure($e)) {
+                $this->markEmailAsBounced($targetEmail);
+            }
             return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
         }
         

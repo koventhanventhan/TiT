@@ -76,7 +76,14 @@ class ClassNotifier
             }
 
             // 4. Contactable check
-            if ($student->phone_number || ($student->email && $this->isValidEmailForSending($student->email))) {
+            $contactEmail = $student->email;
+            if ($student->parent_id) {
+                $parentEmail = User::where('id', $student->parent_id)->value('email');
+                if ($parentEmail) {
+                    $contactEmail = $parentEmail;
+                }
+            }
+            if ($student->phone_number || ($contactEmail && $this->isValidEmailForSending($contactEmail))) {
                 $matched->push($student);
             }
         }

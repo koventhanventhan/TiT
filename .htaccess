@@ -16,7 +16,7 @@
     RewriteRule ^ - [L]
 
     # 2. Route Laravel Backend ONLY (Admin Blade, API, Super-Panel, Livewire)
-    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire) [NC]
+    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|sitemap\.xml) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
     # 3. Everything else (Frontend, Student Dashboard, Teacher Dashboard) goes to React

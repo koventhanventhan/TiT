@@ -105,6 +105,7 @@ class StudentZoomController extends Controller
                 'join_url' => $s->join_url,
                 'password' => $s->password,
                 'scheduled_at' => $s->scheduled_at->toIso8601String(),
+                'duration' => $s->duration,
                 'subject' => $s->subject,
                 'grade' => $s->grade,
                 'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',

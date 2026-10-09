@@ -211,6 +211,7 @@ class TimetableController extends Controller
 
     public function destroy(Timetable $timetable)
     {
+        $this->removeUpcomingZoomSchedules($timetable);
         $timetable->delete();
         return redirect()->route('admin.timetables.index')->with('success', 'Timetable slot deleted successfully.');
     }
@@ -218,6 +219,9 @@ class TimetableController extends Controller
     public function toggle(Timetable $timetable)
     {
         $timetable->update(['is_active' => !$timetable->is_active]);
+        if (!$timetable->is_active) {
+            $this->removeUpcomingZoomSchedules($timetable);
+        }
         return back()->with('success', 'Timetable slot status updated.');
     }
 
@@ -273,5 +277,21 @@ class TimetableController extends Controller
                 \Illuminate\Support\Facades\Log::error('Timetable class creation notification failed: ' . $e->getMessage());
             }
         })->afterResponse();
+    }
+
+    private function removeUpcomingZoomSchedules(Timetable $timetable): void
+    {
+        $schedules = \App\Models\ZoomSchedule::where('timetable_id', $timetable->id)
+            ->where('scheduled_at', '>=', now())->get();
+        if ($schedules->isEmpty()) return;
+        $zoom = null;
+        try { $zoom = app(\App\Services\ZoomService::class); } catch (\Throwable $e) {}
+        foreach ($schedules as $s) {
+            if ($s->meeting_id && $zoom) {
+                try { $zoom->deleteMeeting($s->meeting_id); }
+                catch (\Throwable $e) { \Illuminate\Support\Facades\Log::warning('Zoom meeting delete failed: ' . $e->getMessage()); }
+            }
+            $s->delete();
+        }
     }
 }

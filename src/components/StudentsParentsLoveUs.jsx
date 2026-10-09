@@ -97,7 +97,7 @@ const StudentsParentsLoveUs = () => {
           label: t(s.enLabel.toLowerCase().replace(/\s+/g, '_')) || await translate(s.label)
         })))
         setStats(translatedStats)
-        
+
         // 3. Translate testimonials in background (slow)
         const translatedTestimonials = await Promise.all(baseTestimonials.map(async (test) => {
           return {
@@ -134,8 +134,8 @@ const StudentsParentsLoveUs = () => {
         </div>
 
         <div className="pr-header">
-          <span className="pr-tag">{t('social_proof')}</span>
-          <h2 className="pr-title">{title}</h2>
+
+
           <p className="pr-subtitle">
             {subtitle}
           </p>
@@ -151,8 +151,8 @@ const StudentsParentsLoveUs = () => {
                 ))}
               </div>
               <p className="pr-comment">
-                {t.comment && (t.comment.startsWith('"') && t.comment.endsWith('"')) 
-                  ? t.comment 
+                {t.comment && (t.comment.startsWith('"') && t.comment.endsWith('"'))
+                  ? t.comment
                   : `"${t.comment}"`}
               </p>
               <div className="pr-user">

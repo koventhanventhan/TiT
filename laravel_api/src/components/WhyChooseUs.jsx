@@ -56,7 +56,7 @@ const WhyChooseUs = () => {
       const translateAll = async () => {
         setWhyTitle(await translate(getSetting('why_title', t('why_title'))))
         setWhySubtitle(await translate(getSetting('why_subtitle', t('why_subtitle'))))
-        
+
         const translatedReasons = await Promise.all(rawReasons.map(async (r) => ({
           ...r,
           title: await translate(r.title),
@@ -85,7 +85,7 @@ const WhyChooseUs = () => {
       <div className="container">
         <div className="pw-content-wrapper">
           <div className="pw-text-side">
-            <span className="pw-badge">{t('why_badge')}</span>
+
             <h2 className="pw-title">{whyTitle}</h2>
             <p className="pw-description">{whySubtitle}</p>
 

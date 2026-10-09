@@ -52,7 +52,7 @@ const MobileApp = () => {
         setCardSessions(await translate(getSetting('mobile_card_sessions', t('mobile_live_sessions'))))
         setAppStoreShow(getSetting('mobile_app_store_show', 'on'))
         setPlayStoreShow(getSetting('mobile_play_store_show', 'on'))
-        
+
         const translatedScreens = await Promise.all(rawScreens.map(async (s) => ({
           ...s,
           title: await translate(s.title)
@@ -139,7 +139,7 @@ const MobileApp = () => {
 
           {/* Text Side */}
           <div className="pm-text-side">
-            <span className="pm-badge"><FiSmartphone /> {t('mobile_badge')}</span>
+
             <h2 className="pm-title">
               {mobileTitle}
             </h2>

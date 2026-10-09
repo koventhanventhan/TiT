@@ -51,7 +51,7 @@ const Onboarding = () => {
     const updateContent = async () => {
       const rawTitle = getSetting('onboarding_title', 'How It Works')
       const rawSubtitle = getSetting('onboarding_subtitle', 'Simple steps to start your education.')
-      
+
       if (language !== 'en') {
         setOnboardingTitle(await translate(rawTitle))
         setOnboardingSubtitle(await translate(rawSubtitle))
@@ -75,7 +75,7 @@ const Onboarding = () => {
     <section className="premium-onboarding section">
       <div className="container">
         <div className="po-header">
-          <span className="po-badge">{t('onboarding_title')}</span>
+
           <h2 className="po-title">{onboardingTitle}</h2>
           <p className="po-subtitle">
             {onboardingSubtitle}

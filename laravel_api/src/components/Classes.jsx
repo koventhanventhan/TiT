@@ -71,7 +71,7 @@ const Classes = () => {
       const translateAll = async () => {
         setClassesTitle(await translate(getSetting('classes_title', t('classes_title'))))
         setClassesSubtitle(await translate(getSetting('classes_subtitle', t('classes_subtitle'))))
-        
+
         const translatedCards = await Promise.all(initialCards.map(async (c) => ({
           ...c,
           title: await translate(c.title),
@@ -94,23 +94,23 @@ const Classes = () => {
     <section id="classes" className="premium-classes section">
       <div className="container">
         <div className="pc-header">
-          <span className="pc-tag">{t('our_expertise')}</span>
+
           <h2 className="pc-title">{classesTitle}</h2>
           <p className="pc-subtitle">{classesSubtitle}</p>
         </div>
 
         <div className="pc-grid">
           {classData.map((course, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="pc-card"
               style={{ '--accent-color': course.accent }}
             >
               <div className="pc-card-media">
-                <img width="800" height="600" 
-                  src={course.image?.startsWith('http') ? course.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + course.image} 
-                  alt={course.title} 
-                  className="pc-card-img" 
+                <img width="800" height="600"
+                  src={course.image?.startsWith('http') ? course.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + course.image}
+                  alt={course.title}
+                  className="pc-card-img"
                 />
                 <div className="pc-card-category" style={{ background: course.accent, boxShadow: `0 4px 12px ${course.accent}4d` }}>
                   {course.category}
@@ -138,7 +138,7 @@ const Classes = () => {
                     <FiStar className="star-fill" />
                     <span>{course.rating}</span>
                   </div>
-                   <Link to={`/classes`} className="pc-enroll-btn" style={{ color: course.accent }}>
+                  <Link to={`/classes`} className="pc-enroll-btn" style={{ color: course.accent }}>
                     {t('details') || 'Details'} <FiArrowRight />
                   </Link>
                 </div>

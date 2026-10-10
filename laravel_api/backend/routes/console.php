@@ -42,7 +42,7 @@ Schedule::call(fn() => Artisan::call('zoom:send-reminders'))->everyMinute();
 Schedule::call(fn() => Artisan::call('zoom:fetch-recordings'))->hourly();
 
 Schedule::call(function () {
-    \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(2))->delete();
+    \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(10))->delete();
 })->dailyAt('01:00');
 
 Schedule::call(fn() => Artisan::call('promotions:auto-run'))->dailyAt('01:30');

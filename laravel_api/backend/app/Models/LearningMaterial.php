@@ -23,5 +23,6 @@ class LearningMaterial extends Model
         'file_size',
         'url',
         'teacher_id',
+        'zoom_schedule_id',
     ];
 }

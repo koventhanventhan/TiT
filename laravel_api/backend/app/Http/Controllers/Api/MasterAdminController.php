@@ -36,6 +36,30 @@ class MasterAdminController extends Controller
             ->groupBy('month')
             ->get();
 
+        // Real Recent Activity (Registrations & Payments)
+        $recentUsers = User::where('role', 'user')->latest()->take(3)->get()->map(function($u) {
+            return [
+                'type' => 'user_registered',
+                'message' => 'New student joined: ' . ($u->full_name ?: $u->name),
+                'time' => $u->created_at->diffForHumans(),
+                'timestamp' => $u->created_at
+            ];
+        });
+
+        $recentPayments = Payment::with('user')->latest()->take(3)->get()->map(function($p) {
+            return [
+                'type' => 'payment_received',
+                'message' => 'Payment received from ' . ($p->user ? $p->user->full_name : 'unknown') . ' (' . $p->amount . ')',
+                'time' => $p->created_at->diffForHumans(),
+                'timestamp' => $p->created_at
+            ];
+        });
+
+        $recentActivity = $recentUsers->concat($recentPayments)->sortByDesc('timestamp')->take(5)->values()->map(function($item) {
+            unset($item['timestamp']);
+            return $item;
+        });
+
         return response()->json([
             'stats' => [
                 'total_students' => $totalStudents,
@@ -45,11 +69,7 @@ class MasterAdminController extends Controller
                 'pending_registrations' => $pendingRegistrations,
             ],
             'growth_data' => $growthData,
-            'recent_activity' => [
-                 // Add logic for activity logs if a table exists, otherwise mock or use latest users
-                 ['type' => 'user_registered', 'message' => 'New student joined', 'time' => now()->diffForHumans()],
-                 ['type' => 'payment_received', 'message' => 'Monthly fee paid by student', 'time' => now()->subMinutes(15)->diffForHumans()],
-            ]
+            'recent_activity' => $recentActivity
         ]);
     }
 

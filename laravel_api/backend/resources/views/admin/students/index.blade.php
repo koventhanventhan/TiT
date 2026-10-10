@@ -164,6 +164,129 @@
     [data-theme-version="dark"] .form-control::placeholder {
         color: #938787;
     }
+    
+    /* Premium Filter Styles */
+    .premium-filter-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(31, 41, 55, 0.4);
+        padding: 8px 16px;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .premium-select {
+        appearance: none;
+        background-color: rgba(17, 24, 39, 0.8) !important;
+        border: 1px solid rgba(235, 129, 83, 0.5) !important;
+        color: #fff !important;
+        padding: 6px 36px 6px 16px !important;
+        border-radius: 20px !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23EB8153'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+        min-width: 140px;
+    }
+    
+    .premium-select:hover, .premium-select:focus {
+        border-color: #eb8153 !important;
+        box-shadow: 0 0 0 3px rgba(235, 129, 83, 0.15);
+        outline: none;
+    }
+
+    .premium-toggle-wrapper {
+        display: flex;
+        align-items: center;
+    }
+    
+    .premium-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 18px;
+        border-radius: 20px;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+    }
+
+    .premium-toggle-input {
+        display: none;
+    }
+    
+    .premium-toggle-input:checked + .premium-toggle-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border-color: #ef4444;
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        transform: translateY(-1px);
+    }
+    
+    .premium-toggle-input:checked + .premium-toggle-btn svg {
+        animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+        0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,255,255,0.7)); }
+        50% { transform: scale(1.1); filter: drop-shadow(0 0 4px rgba(255,255,255,0.5)); }
+        100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
+    }
+    
+    /* Custom Dropdown Styling (Bootstrap Select) */
+    .premium-filter-group .bootstrap-select .dropdown-toggle {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Fix for placeholder text and selected text being too dark */
+    .premium-filter-group .bootstrap-select .dropdown-toggle,
+    .premium-filter-group .bootstrap-select .dropdown-toggle:hover,
+    .premium-filter-group .bootstrap-select .dropdown-toggle:focus,
+    .premium-filter-group .bootstrap-select .dropdown-toggle:active,
+    .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option,
+    .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option-inner,
+    .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+        color: #ffffff !important; 
+    }
+    
+    .premium-filter-group .bootstrap-select .dropdown-menu {
+        background-color: #1a152e !important;
+        border: 1px solid rgba(235, 129, 83, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        margin-top: 8px !important;
+        padding: 8px 0 !important;
+        overflow: hidden !important;
+    }
+    .premium-filter-group .bootstrap-select .dropdown-menu li a {
+        color: #e5e7eb !important;
+        padding: 8px 20px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease;
+    }
+    .premium-filter-group .bootstrap-select .dropdown-menu li a:hover,
+    .premium-filter-group .bootstrap-select .dropdown-menu li.active a,
+    .premium-filter-group .bootstrap-select .dropdown-menu li.selected a {
+        background-color: rgba(235, 129, 83, 0.15) !important;
+        color: #eb8153 !important;
+    }
+    
+    /* Hide the native caret since we added an SVG caret in premium-select */
+    .premium-filter-group .bootstrap-select .dropdown-toggle .bs-caret {
+        display: none !important;
+    }
 </style>
 @endpush
 
@@ -173,16 +296,22 @@
         <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 d-flex flex-wrap align-items-center gap-2 mr-3">
-                    <select name="grade" class="form-control form-control-sm mr-3" onchange="this.form.submit()" style="width: 120px; border-color: #374151; background-color: #1f2937; color: #fff;">
-                        <option value="">All Grades</option>
-                        @for($i = 1; $i <= 13; $i++)
-                            <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
-                        @endfor
-                    </select>
-                    <div class="custom-control custom-switch" style="margin-top: 4px;">
-                        <input type="checkbox" class="custom-control-input" id="needsReviewFilter" name="needs_review" value="1" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
-                        <label class="custom-control-label" for="needsReviewFilter" style="color: #ef4444; font-weight: 600; padding-top: 2px; cursor: pointer; white-space: nowrap;">Needs Subject Review</label>
+                <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 mr-3">
+                    <div class="premium-filter-group">
+                        <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                            <option value=""> All Grades</option>
+                            @for($i = 1; $i <= 13; $i++)
+                                <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                            @endfor
+                        </select>
+                        
+                        <div class="premium-toggle-wrapper">
+                            <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
+                            <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                Needs Subject Review
+                            </label>
+                        </div>
                     </div>
                 </form>
                 <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">

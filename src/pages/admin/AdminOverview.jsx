@@ -32,10 +32,10 @@ export default function AdminOverview() {
     if (loading) return <div className="loading-shimmer">Analyzing system data...</div>
 
     const statsCards = [
-        { label: 'Total Students', value: data?.stats?.total_students, icon: <FiUsers />, color: 'blue', growth: '+12%' },
-        { label: 'Total Teachers', value: data?.stats?.total_teachers, icon: <FiUserCheck />, color: 'purple', growth: '+2' },
-        { label: 'Classes Today', value: data?.stats?.active_classes, icon: <FiCalendar />, color: 'green', growth: '4 Live' },
-        { label: 'Monthly Revenue', value: `LKR ${data?.stats?.monthly_revenue || 0}`, icon: <FiDollarSign />, color: 'orange', growth: '+8.4%' },
+        { label: 'Total Students', value: data?.stats?.total_students, icon: <FiUsers />, color: 'blue' },
+        { label: 'Total Teachers', value: data?.stats?.total_teachers, icon: <FiUserCheck />, color: 'purple' },
+        { label: 'Classes Today', value: data?.stats?.active_classes, icon: <FiCalendar />, color: 'green' },
+        { label: 'Monthly Revenue', value: `LKR ${data?.stats?.monthly_revenue || 0}`, icon: <FiDollarSign />, color: 'orange' },
     ]
 
     return (
@@ -55,7 +55,6 @@ export default function AdminOverview() {
                     <div key={idx} className={`admin-stat-card ${card.color}`}>
                         <div className="stat-card-header">
                             <div className="stat-icon-box">{card.icon}</div>
-                            <span className="growth-indicator"><FiArrowUpRight /> {card.growth}</span>
                         </div>
                         <div className="stat-card-body">
                             <h3>{card.value}</h3>

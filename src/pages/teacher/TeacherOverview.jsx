@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { FiUsers, FiVideo, FiFileText, FiClock, FiCheckCircle } from 'react-icons/fi'
-import { getTeacherDashboardStats, getTeacherUpcomingSchedules } from '../../services/dashboardService'
+import { getTeacherDashboardStats, getTeacherUpcomingSchedules, getActiveAnnouncement } from '../../services/dashboardService'
 import './TeacherOverview.css'
 
 export default function TeacherOverview() {
     const [stats, setStats] = useState(null)
     const [upcoming, setUpcoming] = useState([])
+    const [announcement, setAnnouncement] = useState(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         async function loadData() {
             try {
-                const [s, u] = await Promise.all([
+                const [s, u, a] = await Promise.all([
                     getTeacherDashboardStats(),
-                    getTeacherUpcomingSchedules()
+                    getTeacherUpcomingSchedules(),
+                    getActiveAnnouncement()
                 ])
                 setStats(s)
                 setUpcoming(u)
+                setAnnouncement(a)
             } catch (e) {
                 console.error(e)
             } finally {
@@ -76,14 +79,15 @@ export default function TeacherOverview() {
                         <h2>Announcements</h2>
                     </div>
                     <div className="announcement-list">
-                        <div className="announcement-item">
-                            <div className="announcement-meta">Today, 09:00 AM</div>
-                            <p>System maintenance scheduled for Sunday at 2:00 AM.</p>
-                        </div>
-                        <div className="announcement-item">
-                            <div className="announcement-meta">Yesterday</div>
-                            <p>New physics teaching materials have been added to the library.</p>
-                        </div>
+                        {announcement ? (
+                            <div className="announcement-item">
+                                <div className="announcement-meta">{new Date(announcement.created_at).toLocaleString()}</div>
+                                <h4>{announcement.title}</h4>
+                                <p>{announcement.message}</p>
+                            </div>
+                        ) : (
+                            <p className="empty-msg text-sm py-4">No active announcements.</p>
+                        )}
                     </div>
                 </section>
             </div>

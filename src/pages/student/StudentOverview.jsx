@@ -10,19 +10,24 @@ import {
     FiBook,
     FiFileText
 } from 'react-icons/fi'
-import { getStudentStats } from '../../services/dashboardService'
+import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import './StudentOverview.css'
 
 export default function StudentOverview() {
     const [stats, setStats] = useState(null)
+    const [upcomingClasses, setUpcomingClasses] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         async function loadStats() {
             try {
-                const data = await getStudentStats()
+                const [data, upcoming] = await Promise.all([
+                    getStudentStats(),
+                    getStudentUpcomingSchedules()
+                ])
                 setStats(data)
+                setUpcomingClasses(upcoming)
             } catch (error) {
                 console.error('Error loading student stats:', error)
             } finally {
@@ -101,22 +106,26 @@ export default function StudentOverview() {
                         <Link to="/student/schedule" className="view-all">Schedule <FiArrowRight /></Link>
                     </div>
                     <div className="learning-path-list">
-                        <div className="path-item">
-                            <div className="path-time">09:00 AM</div>
-                            <div className="path-detail">
-                                <h4>Mathematics - Calculus Intro</h4>
-                                <span>Prof. Kumara • Grade 12</span>
-                            </div>
-                            <button className="join-tiny">Join Class</button>
-                        </div>
-                        <div className="path-item">
-                            <div className="path-time">11:30 AM</div>
-                            <div className="path-detail">
-                                <h4>Physics - Thermodynamics</h4>
-                                <span>Prof. Silva • Grade 12</span>
-                            </div>
-                            <button className="join-tiny disabled">Upcoming</button>
-                        </div>
+                        {upcomingClasses && upcomingClasses.length > 0 ? (
+                            upcomingClasses.map(cls => (
+                                <div key={cls.id} className="path-item">
+                                    <div className="path-time">
+                                        {new Date(cls.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                    <div className="path-detail">
+                                        <h4>{cls.subject} - {cls.title || cls.topic}</h4>
+                                        <span>{cls.teachers?.map(t => t.name).join(', ')} • Grade {cls.grade}</span>
+                                    </div>
+                                    {new Date(cls.scheduled_at) <= new Date() ? (
+                                        <a href={cls.join_url} target="_blank" rel="noreferrer" className="join-tiny">Join Class</a>
+                                    ) : (
+                                        <button className="join-tiny disabled">Upcoming</button>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-sm py-4">No upcoming classes scheduled.</p>
+                        )}
                     </div>
                 </section>
             </div>

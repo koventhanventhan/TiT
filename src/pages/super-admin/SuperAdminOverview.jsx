@@ -45,7 +45,6 @@ export default function SuperAdminOverview() {
                     <div className="card-info">
                         <span className="label">System Revenue</span>
                         <h3>₹{stats?.total_revenue?.toLocaleString() || 0}</h3>
-                        <span className="trend positive">+12% this month</span>
                     </div>
                     <div className="card-icon super-blue"><FiTrendingUp /></div>
                 </div>
@@ -60,8 +59,7 @@ export default function SuperAdminOverview() {
                 <div className="stat-card">
                     <div className="card-info">
                         <span className="label">System Health</span>
-                        <h3>99.9%</h3>
-                        <span className="trend positive">Optimal Performance</span>
+                        <h3>Optimal</h3>
                     </div>
                     <div className="card-icon super-purple"><FiActivity /></div>
                 </div>

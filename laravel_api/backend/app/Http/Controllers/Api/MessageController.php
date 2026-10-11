@@ -122,6 +122,14 @@ class MessageController extends Controller
             // Broadcast via Pusher
             try { event(new NewMessageEvent($message)); } catch (\Exception $e) {}
 
+            // Email alert when student sends message / complaint
+            if ($user->role === 'user') {
+                $receiver = User::find($request->recipient_id);
+                if ($receiver) {
+                    \App\Services\EventNotifier::studentMessage($message, $user, $receiver);
+                }
+            }
+
             return response()->json(['message' => 'Message sent.', 'id' => $message->id]);
         }
 
@@ -141,6 +149,14 @@ class MessageController extends Controller
 
         // Broadcast via Pusher
         try { event(new NewMessageEvent($message)); } catch (\Exception $e) {}
+
+        // Email alert if student sent broadcast to admin
+        if ($user->role === 'user' && $receiverRole === 'admin') {
+            $admin = User::where('role', 'admin')->first();
+            if ($admin) {
+                \App\Services\EventNotifier::studentMessage($message, $user, $admin);
+            }
+        }
 
         return response()->json(['message' => 'Broadcast sent.', 'id' => $message->id]);
     }

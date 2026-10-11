@@ -166,7 +166,10 @@ class ZoomScheduleController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $schedule = ZoomSchedule::findOrFail($id);
+        $schedule = ZoomSchedule::with('teachers')->findOrFail($id);
+        $oldScheduledAt = $schedule->scheduled_at;
+        $oldTeacherIds = $schedule->teachers->pluck('id')->sort()->values()->all();
+        $oldTeacherNames = $schedule->teachers->map(fn($t) => $t->full_name ?? $t->name)->all();
         $request->validate([
             'title' => 'required|string|max:255',
             'zoom_link' => 'nullable|string|url',
@@ -206,6 +209,25 @@ class ZoomScheduleController extends Controller
 
         $schedule->teachers()->sync($request->teacher_ids ?? []);
 
+        // Email alerts: reschedule / teacher change
+        try {
+            $schedule->load('teachers');
+            $newTeacherIds = $schedule->teachers->pluck('id')->sort()->values()->all();
+
+            if ($oldScheduledAt && $schedule->scheduled_at && !$schedule->scheduled_at->equalTo($oldScheduledAt)) {
+                \App\Services\EventNotifier::classRescheduled($schedule, $oldScheduledAt);
+            }
+            if ($oldTeacherIds !== $newTeacherIds) {
+                \App\Services\EventNotifier::teacherChanged(
+                    $schedule,
+                    $oldTeacherNames,
+                    $schedule->teachers->map(fn($t) => $t->full_name ?? $t->name)->all()
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error('Class change alert failed: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.zoom.index')->with('success', 'Zoom class updated.');
     }
 
@@ -215,8 +237,15 @@ class ZoomScheduleController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $schedule = ZoomSchedule::findOrFail($id);
+        $schedule = ZoomSchedule::with('teachers')->findOrFail($id);
         
+        // Email alert: class cancelled (only for upcoming classes)
+        try {
+            \App\Services\EventNotifier::classCancelled($schedule, $schedule->teachers);
+        } catch (\Throwable $e) {
+            Log::error('Class cancel alert failed: ' . $e->getMessage());
+        }
+
         // Delete Zoom meeting if it was auto-created
         if ($schedule->meeting_id && $this->zoom) {
             try {
@@ -287,8 +316,13 @@ class ZoomScheduleController extends Controller
         $request->validate(['ids' => 'required|string']);
         $ids = explode(',', $request->ids);
         
-        $schedules = ZoomSchedule::whereIn('id', $ids)->get();
+        $schedules = ZoomSchedule::with('teachers')->whereIn('id', $ids)->get();
         foreach ($schedules as $schedule) {
+            try {
+                \App\Services\EventNotifier::classCancelled($schedule, $schedule->teachers);
+            } catch (\Throwable $e) {
+                Log::error('Class cancel alert failed: ' . $e->getMessage());
+            }
             if ($schedule->meeting_id && $this->zoom) {
                 try {
                     $this->zoom->deleteMeeting($schedule->meeting_id);

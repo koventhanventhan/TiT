@@ -25,4 +25,16 @@ class LearningMaterial extends Model
         'teacher_id',
         'zoom_schedule_id',
     ];
+
+    protected static function booted()
+    {
+        // New study material / recording -> email matching students (deferred, never blocks uploads)
+        static::created(function (LearningMaterial $material) {
+            try {
+                \App\Services\EventNotifier::materialCreated($material);
+            } catch (\Throwable $e) {
+                \Log::error('Material notification failed: ' . $e->getMessage());
+            }
+        });
+    }
 }

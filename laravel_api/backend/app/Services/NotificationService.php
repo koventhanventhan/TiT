@@ -146,6 +146,21 @@ class NotificationService
     }
 
     /**
+     * Send an email-only notification to the admin (no WhatsApp).
+     */
+    public function notifyAdminByEmail(string $type, array $emailData = []): bool
+    {
+        $adminEmail = $this->getAdminEmail();
+
+        if ($adminEmail && $this->isValidEmailForSending($adminEmail)) {
+            return $this->sendEmail($adminEmail, $type, $emailData);
+        }
+
+        Log::info("NotificationService: Admin [{$type}] email could not be sent — no valid admin email");
+        return false;
+    }
+
+    /**
      * Send email using the NotificationMail Mailable.
      * Records bounces on failure for future blocklisting.
      */

@@ -30,6 +30,7 @@ Route::post('/auth/verify-email-otp', [AuthController::class, 'verifyEmailOtp'])
 Route::middleware(['recaptcha'])->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/send-verification-otp', [AuthController::class, 'sendVerificationOtp']);
 
     // Student registration step 1 (creates user with pending_payment + sends welcome emails)

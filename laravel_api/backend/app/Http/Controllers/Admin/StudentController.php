@@ -246,6 +246,30 @@ class StudentController extends Controller
             ->with('success', 'Student confirmed and notification sent.');
     }
 
+    /**
+     * Reject a pending registration and email the reason.
+     */
+    public function reject(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate(['reason' => 'nullable|string|max:500']);
+
+        $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
+
+        $student->update([
+            'registration_status' => 'rejected',
+            'admin_confirmed_at' => null,
+        ]);
+
+        \App\Services\EventNotifier::registrationRejected($student, $request->input('reason'));
+
+        return redirect()->route('admin.students.index')
+            ->with('success', 'Registration rejected and the student was notified by email.');
+    }
+
     public function create()
     {
         if (auth()->user()->role !== 'admin') {
@@ -394,7 +418,7 @@ class StudentController extends Controller
         $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
         $student->update(['deactivated_at' => null]);
         
-        return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully.');
+        return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully and notification sent.');
     }
 
     /**
@@ -497,6 +521,13 @@ class StudentController extends Controller
             'status' => 'paid',
             'paid_at' => $paidAt,
         ]);
+
+        // If student was deactivated, automatically reactivate them now that payment is made
+        if ($student->deactivated_at) {
+            $student->update(['deactivated_at' => null]);
+            return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . ' and student account reactivated.');
+        }
+
         return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . '.');
     }
 
@@ -683,6 +714,11 @@ class StudentController extends Controller
                         'gateway_ref' => 'ADVANCE_APP_' . $request->id . '_' . $i
                     ]
                 );
+            }
+
+            // If student was deactivated, automatically reactivate them now that payment is approved
+            if ($request->user && $request->user->deactivated_at) {
+                $request->user->update(['deactivated_at' => null]);
             }
 
             // Notify user

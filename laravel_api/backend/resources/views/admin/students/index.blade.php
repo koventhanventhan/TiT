@@ -469,6 +469,11 @@
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">Confirm Registration</button>
                                                 </form>
+                                                <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
+                                                    @csrf
+                                                    <input type="hidden" name="reason" id="reject-reason-{{ $student->id }}" value="">
+                                                    <button type="button" class="dropdown-item text-danger" onclick="promptReject({{ $student->id }})">Reject Registration</button>
+                                                </form>
                                             @endif
                                             <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
                                             @if($student->deactivated_at)
@@ -621,6 +626,26 @@
         });
     }
 
+    function promptReject(studentId) {
+        Swal.fire({
+            title: 'Reject Registration?',
+            text: 'Please enter the reason for rejection (this will be emailed to the student/parent):',
+            input: 'textarea',
+            inputPlaceholder: 'e.g., Incomplete information, grade full, etc.',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, reject & email',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup'
+        }).then(function(result) {
+            if (result.value !== undefined && result.value !== false) {
+                document.getElementById('reject-reason-' + studentId).value = result.value || '';
+                document.getElementById('reject-form-' + studentId).submit();
+            }
+        });
+    }
 
 </script>
 @endpush

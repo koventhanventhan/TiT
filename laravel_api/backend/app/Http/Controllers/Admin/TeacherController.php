@@ -180,6 +180,7 @@ class TeacherController extends Controller
         }
         $teacher = User::where('role', 'teacher')->findOrFail($id);
         $teacher->update(['deactivated_at' => now()]);
+        \App\Services\EventNotifier::teacherDeactivated($teacher);
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher deactivated.');
     }
 

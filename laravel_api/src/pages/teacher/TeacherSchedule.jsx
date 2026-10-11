@@ -54,6 +54,21 @@ export default function TeacherSchedule() {
 
     return (
         <div style={{ paddingBottom: 40 }}>
+            <style>{`
+                .ts-card { display: flex; align-items: stretch; }
+                .ts-time { width: 100px; padding: 20px; flex-shrink: 0; }
+                .ts-info { flex: 1; min-width: 0; padding: 20px; }
+                .ts-action { padding: 20px; flex-shrink: 0; border-left: 1px dashed #e2e8f0; }
+                .ts-btn { white-space: nowrap; }
+                @media (max-width: 640px) {
+                    .ts-card { flex-wrap: wrap; }
+                    .ts-time { width: 84px; padding: 14px 8px; }
+                    .ts-info { padding: 14px 16px; flex-basis: calc(100% - 84px); }
+                    .ts-info h4 { font-size: 16px !important; }
+                    .ts-action { width: 100%; flex-basis: 100%; border-left: none !important; border-top: 1px dashed #e2e8f0; padding: 12px 16px; }
+                    .ts-btn { width: 100%; justify-content: center; }
+                }
+            `}</style>
             {/* Header Section */}
             <div style={{
                 display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
@@ -113,8 +128,7 @@ export default function TeacherSchedule() {
                                     const isLive = time.getTime() <= now.getTime() && time.getTime() + (cls.duration || 60)*60000 > now.getTime()
 
                                     return (
-                                        <div key={cls.id} style={{
-                                            display: 'flex', alignItems: 'stretch',
+                                        <div key={cls.id} className="ts-card" style={{
                                             background: '#fff', borderRadius: 16,
                                             border: isLive ? '1px solid #bae6fd' : '1px solid #e2e8f0',
                                             boxShadow: isLive ? '0 4px 12px rgba(14,165,233,0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
@@ -124,8 +138,7 @@ export default function TeacherSchedule() {
                                         onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(14,165,233,0.1)' : '0 1px 3px rgba(0,0,0,0.02)' }}
                                         >
                                             {/* Time Block */}
-                                            <div style={{
-                                                width: 100, padding: 20,
+                                            <div className="ts-time" style={{
                                                 background: isLive ? 'linear-gradient(135deg, #0ea5e9, #06b6d4)' : '#f8fafc',
                                                 borderRight: '1px solid #e2e8f0',
                                                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -137,7 +150,7 @@ export default function TeacherSchedule() {
                                             </div>
 
                                             {/* Info Block */}
-                                            <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <div className="ts-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                                     <span style={{ padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{cls.subject || 'Subject'}</span>
                                                 </div>
@@ -151,9 +164,10 @@ export default function TeacherSchedule() {
                                             </div>
 
                                             {/* Action Block */}
-                                            <div style={{ padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', borderLeft: '1px dashed #e2e8f0' }}>
+                                            <div className="ts-action" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 {cls.zoom_link ? (
                                                     <button
+                                                        className="ts-btn"
                                                         onClick={() => handleJoin(cls)}
                                                         style={{
                                                             padding: '12px 24px', borderRadius: 12, border: 'none',

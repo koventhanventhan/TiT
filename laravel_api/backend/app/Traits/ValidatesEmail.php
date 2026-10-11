@@ -176,6 +176,11 @@ trait ValidatesEmail
 
             if ($bounce->bounce_count >= EmailBounce::BOUNCE_BLOCK_THRESHOLD) {
                 Log::error("ValidatesEmail: Email permanently blocklisted — {$email} (bounce count: {$bounce->bounce_count})");
+                try {
+                    \App\Services\EventNotifier::bounceBlocklisted($email, $bounce->bounce_count);
+                } catch (\Throwable $e2) {
+                    Log::error("Failed to notify admin of blocklisted email: " . $e2->getMessage());
+                }
             }
         } catch (\Throwable $e) {
             Log::warning("ValidatesEmail: Failed to record bounce for {$email}: " . $e->getMessage());

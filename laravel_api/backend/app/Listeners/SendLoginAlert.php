@@ -22,15 +22,26 @@ class SendLoginAlert
     {
         $user = $event->user;
         $profileSettings = $user->profile_settings ?? [];
+        $alertsEnabled = collect($profileSettings)->get('login_alerts') === 'on';
 
-        if (collect($profileSettings)->get('login_alerts') === 'on') {
-            // In a real application, you might send an email or a push notification.
-            // For now, we'll log it and we could also create a database notification.
-            
-            Log::info("Login alert for user: {$user->email} at " . now());
-            
-            // If there's a notification system, we can use it:
-            // $user->notify(new \App\Notifications\LoginAlertNotification());
+        $ip = request()->ip() ?? 'Unknown IP';
+        $agent = request()->userAgent() ?? 'Unknown Device';
+        $deviceKey = 'known_device:' . $user->id . ':' . md5($agent);
+
+        $isNewDevice = !\Illuminate\Support\Facades\Cache::has($deviceKey);
+
+        if ($isNewDevice) {
+            \Illuminate\Support\Facades\Cache::put($deviceKey, 1, now()->addDays(60));
+        }
+
+        // Send alert if user enabled login alerts OR if it's genuinely a new device
+        if ($alertsEnabled || $isNewDevice) {
+            Log::info("Login alert: Sending new device login email for {$user->email} from {$ip}");
+            try {
+                \App\Services\EventNotifier::newDeviceLogin($user, $ip, $agent);
+            } catch (\Throwable $e) {
+                Log::error("Login alert email failed for {$user->email}: " . $e->getMessage());
+            }
         }
     }
 }

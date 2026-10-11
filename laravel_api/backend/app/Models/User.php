@@ -29,6 +29,28 @@ class User extends Authenticatable implements FilamentUser
                 ]);
             }
         });
+
+        static::updated(function ($user) {
+            // Deactivated -> active again
+            if ($user->wasChanged('deactivated_at')
+                && is_null($user->deactivated_at)
+                && !is_null($user->getOriginal('deactivated_at'))) {
+                try {
+                    \App\Services\EventNotifier::accountReactivated($user);
+                } catch (\Throwable $e) {
+                    \Log::error('Reactivation email failed: ' . $e->getMessage());
+                }
+            }
+
+            // Password changed
+            if ($user->wasChanged('password')) {
+                try {
+                    \App\Services\EventNotifier::passwordChanged($user);
+                } catch (\Throwable $e) {
+                    \Log::error('Password changed email failed: ' . $e->getMessage());
+                }
+            }
+        });
     }
 
     public function canImpersonate(): bool

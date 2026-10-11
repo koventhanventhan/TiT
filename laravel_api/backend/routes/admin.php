@@ -52,6 +52,7 @@ Route::prefix('admin')->group(function () {
         Route::put('/students/{id}', [StudentController::class, 'update'])->name('admin.students.update');
         Route::patch('/students/{id}', [StudentController::class, 'update']);
         Route::post('/students/{id}/confirm', [StudentController::class, 'confirm'])->name('admin.students.confirm');
+        Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject');
         Route::post('/students/{id}/activate', [StudentController::class, 'activate'])->name('admin.students.activate');
         Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy');

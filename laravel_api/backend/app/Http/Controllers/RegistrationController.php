@@ -505,6 +505,11 @@ class RegistrationController extends Controller
         // Verify the notification hash
         if (!$this->payHere->verifyNotification($data)) {
             Log::error('PayHere notification hash verification FAILED', $data);
+            \App\Services\EventNotifier::webhookError(
+                'PayHere Hash Verification Failed',
+                'PayHere webhook received invalid signature hash. Possible tampering or misconfigured secret.',
+                ['order_id' => $data['order_id'] ?? 'unknown', 'status_code' => $data['status_code'] ?? 'unknown']
+            );
             return response('Hash verification failed', 403);
         }
 
@@ -516,6 +521,11 @@ class RegistrationController extends Controller
 
         if (!$payment) {
             Log::error('PayHere notification: Payment not found', ['order_id' => $orderId]);
+            \App\Services\EventNotifier::webhookError(
+                'PayHere Payment Not Found',
+                "Webhook received for order_id '{$orderId}' but no matching payment record exists.",
+                ['order_id' => $orderId, 'status_code' => $statusCode]
+            );
             return response('Payment not found', 404);
         }
 
@@ -584,6 +594,15 @@ class RegistrationController extends Controller
         } elseif (in_array($statusCode, ['-1', '-2', '-3'])) {
             // Payment failed/canceled/chargeback
             $payment->update(['status' => 'failed']);
+            $statusLabel = match ((string) $statusCode) {
+                '-1' => 'Canceled',
+                '-2' => 'Failed',
+                '-3' => 'Chargeback',
+                default => 'Failed',
+            };
+            if ($payment->user) {
+                \App\Services\EventNotifier::paymentFailed($payment->user, $payment, $statusLabel, $orderId);
+            }
             Log::warning('PayHere payment FAILED/CANCELED', [
                 'order_id'    => $orderId,
                 'status_code' => $statusCode,

@@ -183,6 +183,14 @@ class MasterAdminController extends Controller
     public function bulkDeleteZoomClasses(Request $request)
     {
         $request->validate(['ids' => 'required|array']);
+        $schedules = ZoomSchedule::with('teachers')->whereIn('id', $request->ids)->get();
+        foreach ($schedules as $schedule) {
+            try {
+                \App\Services\EventNotifier::classCancelled($schedule, $schedule->teachers);
+            } catch (\Throwable $e) {
+                \Log::error('Class cancel alert failed: ' . $e->getMessage());
+            }
+        }
         ZoomSchedule::whereIn('id', $request->ids)->delete();
         return response()->json(['success' => true, 'message' => 'Zoom classes deleted successfully']);
     }

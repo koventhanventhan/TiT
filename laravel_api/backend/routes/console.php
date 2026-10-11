@@ -39,7 +39,7 @@ Artisan::command('reminders:month-end-payment', function () {
 Schedule::call(fn() => Artisan::call('app:check-payments'))->dailyAt('09:00');
 Schedule::call(fn() => Artisan::call('zoom:sync-timetable'))->dailyAt('00:00');
 Schedule::call(fn() => Artisan::call('zoom:send-reminders'))->everyMinute();
-Schedule::call(fn() => Artisan::call('zoom:fetch-recordings'))->hourly();
+Schedule::call(fn() => Artisan::call('zoom:fetch-recordings'))->everyFifteenMinutes();
 
 Schedule::call(function () {
     \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(10))->delete();

@@ -133,24 +133,38 @@ class ZoomService
         $token = $this->getAccessToken();
         if (!$token) return null;
 
+        $payload = [
+            'topic' => $title,
+            'type' => 2, // Scheduled meeting
+            'start_time' => Carbon::parse($startTime)->toIso8601String(),
+            'duration' => $durationMinutes,
+            'timezone' => config('app.timezone', 'Asia/Colombo'),
+            'settings' => [
+                'host_video' => true,
+                'participant_video' => true,
+                'join_before_host' => false,
+                'mute_upon_entry' => true,
+                'waiting_room' => true,
+                'auto_recording' => 'cloud',
+            ],
+        ];
+
         $response = Http::withToken($token)
             ->timeout(30)
-            ->post("{$this->baseUrl}/users/{$userId}/meetings", [
-                'topic' => $title,
-                'type' => 2, // Scheduled meeting
-                'start_time' => Carbon::parse($startTime)->toIso8601String(),
-                'duration' => $durationMinutes,
-                'timezone' => config('app.timezone', 'Asia/Colombo'),
-                'settings' => [
-                    'host_video' => true,
-                    'participant_video' => true,
-                    'join_before_host' => false,
-                    'mute_upon_entry' => true,
-                    'waiting_room' => true,
-                ],
-            ]);
+            ->post("{$this->baseUrl}/users/{$userId}/meetings", $payload);
 
         if ($response->successful()) {
+            return $response->json();
+        }
+
+        // Retry once without auto_recording if cloud recording is not supported
+        unset($payload['settings']['auto_recording']);
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->post("{$this->baseUrl}/users/{$userId}/meetings", $payload);
+
+        if ($response->successful()) {
+            Log::warning('Zoom meeting created without auto cloud recording');
             return $response->json();
         }
 

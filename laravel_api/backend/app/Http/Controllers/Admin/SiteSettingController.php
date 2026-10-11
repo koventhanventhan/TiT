@@ -442,16 +442,11 @@ class SiteSettingController extends Controller
               ->orWhere('created_at', '>=', now()->subDays($visibilityDays));
         });
 
-        // Skip disabled grades for recordings
-        $disabledGrades = json_decode(\App\Models\SiteSetting::get('zoom_recordings_disabled_grades', '[]'), true);
-        if (is_array($disabledGrades) && count($disabledGrades) > 0) {
-            $query->where(function ($q) use ($disabledGrades) {
-                $q->where('type', '!=', 'recording')
-                  ->orWhereNotIn('grade', $disabledGrades);
-            });
-        }
+        $materials = $query->get()->reject(function ($m) {
+            return $m->type === 'recording' && \App\Models\SiteSetting::isRecordingGradeDisabled($m->grade);
+        });
 
-        return response()->json($query->get());
+        return response()->json($materials->values());
     }
 
     /**

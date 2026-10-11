@@ -31,11 +31,6 @@ class FetchZoomRecordings extends Command
      */
     public function handle(ZoomService $zoomService)
     {
-        // Get grades that are disabled for recordings
-        $disabledGrades = json_decode(SiteSetting::get('zoom_recordings_disabled_grades', '[]'), true);
-        if (!is_array($disabledGrades)) {
-            $disabledGrades = [];
-        }
 
         // Get past meetings within the last 48 hours
         $recentSchedules = ZoomSchedule::where('scheduled_at', '>=', now()->subHours(48))
@@ -50,7 +45,7 @@ class FetchZoomRecordings extends Command
 
         foreach ($recentSchedules as $schedule) {
             // Skip disabled grades
-            if (in_array($schedule->grade, $disabledGrades)) {
+            if (SiteSetting::isRecordingGradeDisabled($schedule->grade)) {
                 continue;
             }
 

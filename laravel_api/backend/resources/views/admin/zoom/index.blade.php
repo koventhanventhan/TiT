@@ -60,6 +60,7 @@
                         $allGrades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Grade 13'];
                     @endphp
                     <div class="d-flex flex-wrap" style="gap: 15px;">
+                        <input type="hidden" name="zoom_recordings_disabled_grades[]" value="">
                         @foreach($allGrades as $grade)
                         <div class="custom-control custom-checkbox custom-control-inline">
                             <input type="checkbox" class="custom-control-input" id="disable_{{ str_replace(' ', '', $grade) }}" name="zoom_recordings_disabled_grades[]" value="{{ $grade }}" {{ in_array($grade, $disabledGrades) ? 'checked' : '' }}>

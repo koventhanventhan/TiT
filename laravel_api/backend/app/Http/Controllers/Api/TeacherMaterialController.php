@@ -26,7 +26,15 @@ class TeacherMaterialController extends Controller
             'grade' => 'nullable|string',
             'medium' => 'nullable|string|in:tamil,english,all',
             'file' => 'nullable|file|max:51200',
-            'file_path' => 'nullable|string',
+            'file_path' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!\App\Services\FirebaseStorageUrlValidator::isValidFilePathOrUrl($value)) {
+                        $fail('The ' . $attribute . ' is invalid.');
+                    }
+                },
+            ],
             'file_size' => 'nullable|string',
             'url' => 'nullable|string',
             'description' => 'nullable|string',

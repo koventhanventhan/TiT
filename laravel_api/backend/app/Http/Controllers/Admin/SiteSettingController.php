@@ -321,7 +321,7 @@ class SiteSettingController extends Controller
             ])->header('Cache-Control', 'no-store');
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Firebase custom token minting failed: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to mint Firebase token: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Failed to mint Firebase token.'], 500);
         }
     }
 
@@ -346,11 +346,11 @@ class SiteSettingController extends Controller
 
         if ($request->type === 'recording') {
             if (!$hasFile && !$hasFileUrl && !$hasUrl) {
-                return redirect()->back()->withErrors(['file' => 'Please provide a file, a storage URL, or a video URL.'])->withInput();
+                return $this->manualValidationError($request, 'file', 'Please provide a file, a storage URL, or a video URL.');
             }
         } else {
             if (!$hasFile && !$hasFileUrl) {
-                return redirect()->back()->withErrors(['file' => 'Please select a file to upload.'])->withInput();
+                return $this->manualValidationError($request, 'file', 'Please select a file to upload.');
             }
         }
 
@@ -363,14 +363,10 @@ class SiteSettingController extends Controller
 
         if ($hasFileUrl) {
             $fileUrl = $request->input('file_url');
-            if (!str_starts_with($fileUrl, 'https://firebasestorage.googleapis.com/')) {
-                return redirect()->back()->withErrors(['file_url' => 'Invalid storage URL host.'])->withInput();
-            }
-
             $instituteId = (int) (auth()->user()->institute_id ?? 1);
-            $decodedUrl = urldecode($fileUrl);
-            if (!str_contains($decodedUrl, "learning-suite/i{$instituteId}/")) {
-                return redirect()->back()->withErrors(['file_url' => 'Unauthorized storage path for your institute.'])->withInput();
+
+            if (!$this->isValidFirebaseStorageUrl($fileUrl, $instituteId)) {
+                return $this->manualValidationError($request, 'file_url', 'Invalid or unauthorized storage URL.');
             }
 
             $data['file_path'] = $fileUrl;
@@ -398,6 +394,31 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Validate whether a storage URL is a legitimate Firebase storage URL for the given institute.
+     */
+    private function isValidFirebaseStorageUrl(string $url, int $instituteId): bool
+    {
+        return \App\Services\FirebaseStorageUrlValidator::isValidForInstitute($url, $instituteId);
+    }
+
+    /**
+     * Return a validation error response suitable for both JSON/AJAX and standard form submissions.
+     */
+    private function manualValidationError(Request $request, string $field, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => [
+                    $field => [$message],
+                ],
+            ], 422);
+        }
+
+        return redirect()->back()->withErrors([$field => $message])->withInput();
+    }
+
+    /**
      * Delete a learning material.
      */
     public function deleteMaterial($id)
@@ -406,9 +427,13 @@ class SiteSettingController extends Controller
         
         $filePath = $material->file_path;
         if ($filePath && !str_starts_with($filePath, 'http://') && !str_starts_with($filePath, 'https://')) {
-            $fullPath = public_path($filePath);
-            if (file_exists($fullPath) && is_file($fullPath)) {
-                @unlink($fullPath);
+            $uploadsDir = realpath(public_path('uploads'));
+            $realTarget = realpath(public_path($filePath));
+            if ($uploadsDir && $realTarget && is_file($realTarget)) {
+                $allowedPrefix = rtrim($uploadsDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                if (str_starts_with($realTarget, $allowedPrefix)) {
+                    @unlink($realTarget);
+                }
             }
         }
         

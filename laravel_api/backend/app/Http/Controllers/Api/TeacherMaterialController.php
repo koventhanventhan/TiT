@@ -11,6 +11,7 @@ class TeacherMaterialController extends Controller
     public function index(Request $request)
     {
         $materials = LearningMaterial::where('teacher_id', $request->user()->id)
+                        ->where(function ($q) { $q->where('type', '!=', 'recording')->orWhereNull('zoom_schedule_id'); })
                         ->orderBy('created_at', 'desc')
                         ->get();
         return response()->json($materials);

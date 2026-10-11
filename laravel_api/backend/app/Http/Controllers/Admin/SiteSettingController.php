@@ -360,6 +360,8 @@ class SiteSettingController extends Controller
             $query->where('type', $request->type);
         }
 
+        $query->where(function ($q) { $q->where('type', '!=', 'recording')->orWhereNull('zoom_schedule_id'); });
+
         // Apply configurable day-limit for automated recordings
         $visibilityDays = (int) SiteSetting::get('recording_visibility_days', 2);
         $query->where(function ($q) use ($visibilityDays) {

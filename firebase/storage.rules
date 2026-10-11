@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Learning library (notes, past papers, recordings).
+//   learning-suite/i{institute}/{notes|past-papers|recordings}/{grade}/{file}
+// - Anyone may READ (public pages link straight to these files).
+// - Only the signed-in admin of that institute may ADD or DELETE. The admin signs in with a
+//   custom token minted by Laravel (GET /admin/firebase-token) carrying  admin: true  and
+//   institute: "i{id}".
+// - Size/type limits must match the Blade upload form.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isInstituteAdmin(institute) {
+      return request.auth != null
+          && request.auth.token.admin == true
+          && request.auth.token.institute == institute;
+    }
+
+    function isAllowedUpload(folder) {
+      return (
+        (folder in ['notes', 'past-papers'])
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType in [
+             'application/pdf',
+             'application/msword',
+             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+           ]
+      ) || (
+        folder == 'recordings'
+        && request.resource.size < 500 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*')
+      );
+    }
+
+    match /learning-suite/{institute}/{folder}/{grade}/{file} {
+      allow read: if true;
+      allow create: if isInstituteAdmin(institute) && isAllowedUpload(folder);
+      allow update: if false;
+      allow delete: if isInstituteAdmin(institute);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

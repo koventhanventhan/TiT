@@ -31,3 +31,39 @@ npm run build -- --mode production
 ```
 
 Vite automatically uses `.env.production` when the `--mode production` flag is provided (or if `NODE_ENV=production` is set in the shell). This guarantees that the correct `VITE_API_URL` is baked into the production bundle, so you no longer need to manually edit the root path before every push or deploy!
+
+## Firebase Storage (admin uploads)
+
+To enable direct client-to-Firebase uploads for learning materials (Notes, Past Papers, Recordings) in the Admin panel:
+
+1. **Enable Firebase Authentication**:
+   - Go to Firebase Console (`https://console.firebase.google.com/`).
+   - Navigate to **Authentication** and click **Get started** (required so `signInWithCustomToken` works).
+
+2. **Publish Storage Security Rules**:
+   - Deploy `firebase/storage.rules` to Firebase Storage (via Firebase CLI with `firebase deploy --only storage` or paste into Firebase Console → Storage → Rules).
+
+3. **Generate Service Account Key**:
+   - In Firebase Console, go to **Project Settings** → **Service accounts**.
+   - Click **Generate new private key** and download the JSON file.
+
+4. **Configure Environment Variables**:
+   - In `backend/.env`, set:
+     ```env
+     FIREBASE_CLIENT_EMAIL="<client_email from service account JSON>"
+     FIREBASE_PRIVATE_KEY="<private_key from service account JSON - single line with literal \n escapes>"
+     FIREBASE_API_KEY="<web apiKey>"
+     FIREBASE_AUTH_DOMAIN="<projectId>.firebaseapp.com"
+     FIREBASE_PROJECT_ID="<projectId>"
+     FIREBASE_STORAGE_BUCKET="<projectId>.firebasestorage.app"
+     FIREBASE_MESSAGING_SENDER_ID="<messagingSenderId>"
+     FIREBASE_APP_ID="<appId>"
+     ```
+
+5. **Apply Configuration & Migrations**:
+   ```bash
+   php artisan config:clear
+   php artisan migrate
+   ```
+   *(Note: If `FIREBASE_*` variables are not set, the admin panel automatically falls back to local server disk uploads).*
+

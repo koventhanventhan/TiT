@@ -24,3 +24,5 @@ debug_*.php
 test_*.php
 test-*.html
 cpanel_migrate.php
+dist/
+

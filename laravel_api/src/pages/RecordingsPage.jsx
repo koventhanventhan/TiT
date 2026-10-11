@@ -188,7 +188,7 @@ const RecordingsPage = () => {
                     <video
                       className="recording-video-player"
                       controls
-                      preload="metadata"
+                      preload={(recording.file_path?.startsWith('https://firebasestorage.googleapis.com/') || recording.url?.startsWith('https://firebasestorage.googleapis.com/')) ? "none" : "metadata"}
                     >
                       <source src={resolveFileUrl(recording.file_path, recording.url)} />
                       Your browser does not support the video tag.

@@ -113,6 +113,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/settings/learning/{id}', [SiteSettingController::class, 'deleteMaterial'])->name('admin.settings.learning.material.delete');
         Route::post('/settings/upload', [SiteSettingController::class, 'uploadImage'])->name('admin.settings.upload');
         Route::post('/settings/delete-image', [SiteSettingController::class, 'deleteImage'])->name('admin.settings.delete-image');
+        Route::get('/firebase-token', [SiteSettingController::class, 'firebaseToken'])->name('admin.firebase-token');
 
         // Zoom classes
         Route::get('/zoom', [ZoomScheduleController::class, 'index'])->name('admin.zoom.index');

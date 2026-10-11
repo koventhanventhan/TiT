@@ -396,7 +396,7 @@
                 <div class="row">
                     <div class="col-md-4 border-right">
                         <h6 class="text-primary mb-3">Add New Note</h6>
-                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data" class="material-upload-form" data-material-type="note">
                             @csrf
                             <input type="hidden" name="type" value="note">
                             <div class="form-group">
@@ -425,11 +425,14 @@
                             <div class="form-group">
                                 <label>PDF File</label>
                                 <div class="custom-file">
-                                    <input type="file" name="file" class="custom-file-input" accept=".pdf" required>
-                                    <label class="custom-file-label">Choose PDF (500MB max)</label>
+                                    <input type="file" name="file" class="custom-file-input" accept=".pdf,.doc,.docx" required>
+                                    <label class="custom-file-label">Choose File (50MB max)</label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success btn-block">Add Note</button>
+                            <div class="progress mt-3 upload-progress" style="display:none; height: 1.25rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%; font-weight: bold; font-size: 11px;">0%</div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block mt-3">Add Note</button>
                         </form>
                     </div>
                     <div class="col-md-8">
@@ -455,7 +458,8 @@
                                         <td>
                                             <div class="d-flex">
                                                 <a href="{{ asset($note->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
-                                                <form action="{{ route('admin.settings.learning.material.delete', $note->id) }}" method="POST" id="note-del-{{ $note->id }}">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $note->id) }}" method="POST" id="note-del-{{ $note->id }}"
+                                                    @if(str_starts_with($note->file_path ?? '', 'https://firebasestorage.googleapis.com/')) data-firebase-url="{{ $note->file_path }}" @endif>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
@@ -486,7 +490,7 @@
                 <div class="row">
                     <div class="col-md-4 border-right">
                         <h6 class="text-primary mb-3">Add New Past Paper</h6>
-                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data" class="material-upload-form" data-material-type="past_paper">
                             @csrf
                             <input type="hidden" name="type" value="past_paper">
                             <div class="form-group">
@@ -515,11 +519,14 @@
                             <div class="form-group">
                                 <label>PDF File</label>
                                 <div class="custom-file">
-                                    <input type="file" name="file" class="custom-file-input" accept=".pdf" required>
-                                    <label class="custom-file-label">Choose PDF (500MB max)</label>
+                                    <input type="file" name="file" class="custom-file-input" accept=".pdf,.doc,.docx" required>
+                                    <label class="custom-file-label">Choose File (50MB max)</label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success btn-block">Add Past Paper</button>
+                            <div class="progress mt-3 upload-progress" style="display:none; height: 1.25rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%; font-weight: bold; font-size: 11px;">0%</div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block mt-3">Add Past Paper</button>
                         </form>
                     </div>
                     <div class="col-md-8">
@@ -545,7 +552,8 @@
                                         <td>
                                             <div class="d-flex">
                                                 <a href="{{ asset($paper->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
-                                                <form action="{{ route('admin.settings.learning.material.delete', $paper->id) }}" method="POST" id="paper-del-{{ $paper->id }}">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $paper->id) }}" method="POST" id="paper-del-{{ $paper->id }}"
+                                                    @if(str_starts_with($paper->file_path ?? '', 'https://firebasestorage.googleapis.com/')) data-firebase-url="{{ $paper->file_path }}" @endif>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
@@ -576,7 +584,7 @@
                 <div class="row">
                     <div class="col-md-4 border-right">
                         <h6 class="text-primary mb-3">Add New Recording</h6>
-                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('admin.settings.learning.material.store') }}" method="POST" enctype="multipart/form-data" class="material-upload-form" data-material-type="recording">
                             @csrf
                             <input type="hidden" name="type" value="recording">
                             <div class="form-group">
@@ -609,11 +617,14 @@
                             <div class="form-group">
                                 <label>OR Upload File</label>
                                 <div class="custom-file">
-                                    <input type="file" name="file" class="custom-file-input">
-                                     <label class="custom-file-label">Choose File (500MB max)</label>
+                                    <input type="file" name="file" class="custom-file-input" accept="video/mp4,video/webm,.mp4,.webm">
+                                     <label class="custom-file-label">Choose Video (500MB max)</label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success btn-block">Add Recording</button>
+                            <div class="progress mt-3 upload-progress" style="display:none; height: 1.25rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%; font-weight: bold; font-size: 11px;">0%</div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block mt-3">Add Recording</button>
                         </form>
                     </div>
                     <div class="col-md-8">
@@ -649,7 +660,8 @@
                                                 @else
                                                     <a href="{{ asset($recording->file_path) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1"><i class="fa fa-eye"></i></a>
                                                 @endif
-                                                <form action="{{ route('admin.settings.learning.material.delete', $recording->id) }}" method="POST" id="rec-del-{{ $recording->id }}">
+                                                <form action="{{ route('admin.settings.learning.material.delete', $recording->id) }}" method="POST" id="rec-del-{{ $recording->id }}"
+                                                    @if(str_starts_with($recording->file_path ?? '', 'https://firebasestorage.googleapis.com/')) data-firebase-url="{{ $recording->file_path }}" @endif>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" class="btn btn-danger shadow btn-xs sharp swal-confirm-btn"
@@ -741,5 +753,355 @@
 
         btn.style.display = 'none';
     }
+
+    // Update custom file label when file is chosen
+    document.querySelectorAll('.custom-file-input').forEach(function(input) {
+        input.addEventListener('change', function() {
+            var label = this.nextElementSibling;
+            if (label && this.files && this.files.length > 0) {
+                label.textContent = this.files[0].name;
+            }
+        });
+    });
+</script>
+
+<script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+    import { getAuth, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js';
+
+    let firebaseContext = null;
+
+    async function getFirebaseContext() {
+        if (firebaseContext && firebaseContext.auth.currentUser) {
+            return firebaseContext;
+        }
+
+        const res = await fetch("{{ route('admin.firebase-token') }}", {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!res.ok) {
+            const err = new Error('STATUS_' + res.status);
+            err.status = res.status;
+            throw err;
+        }
+
+        const data = await res.json();
+        const { token, institute_id, web_config } = data;
+
+        let app = getApps().length === 0 ? initializeApp(web_config) : getApp();
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+
+        if (!auth.currentUser) {
+            await signInWithCustomToken(auth, token);
+        }
+
+        firebaseContext = { app, auth, storage, institute_id };
+        return firebaseContext;
+    }
+
+    function getContentType(file) {
+        if (file.type && file.type !== '') return file.type;
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const map = {
+            'pdf': 'application/pdf',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'mp4': 'video/mp4',
+            'webm': 'video/webm'
+        };
+        return map[ext] || 'application/octet-stream';
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Wire up material upload forms
+    document.querySelectorAll('.material-upload-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            if (form._skipFirebase) {
+                return; // allow normal submission
+            }
+
+            const fileInput = form.querySelector('input[type="file"]');
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            const type = form.getAttribute('data-material-type');
+
+            // If no file selected (e.g. recording with URL only), allow normal submission
+            if (!file) {
+                return;
+            }
+
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const progressContainer = form.querySelector('.upload-progress');
+            const progressBar = progressContainer ? progressContainer.querySelector('.progress-bar') : null;
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Submit';
+
+            // Client-side validations matching storage rules
+            const contentType = getContentType(file);
+            if (type === 'note' || type === 'past_paper') {
+                if (file.size > 50 * 1024 * 1024) {
+                    Swal.fire({
+                        title: 'File Too Large',
+                        text: 'Notes and Past Papers must be 50MB or less.',
+                        type: 'error',
+                        customClass: 'swal-dark-popup'
+                    });
+                    return;
+                }
+                const allowed = [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ];
+                if (!allowed.includes(contentType)) {
+                    Swal.fire({
+                        title: 'Invalid File Type',
+                        text: 'Only PDF, DOC, or DOCX files are allowed for notes and past papers.',
+                        type: 'error',
+                        customClass: 'swal-dark-popup'
+                    });
+                    return;
+                }
+            } else if (type === 'recording') {
+                if (file.size > 500 * 1024 * 1024) {
+                    Swal.fire({
+                        title: 'File Too Large',
+                        text: 'Recordings must be 500MB or less.',
+                        type: 'error',
+                        customClass: 'swal-dark-popup'
+                    });
+                    return;
+                }
+                if (!contentType.startsWith('video/')) {
+                    Swal.fire({
+                        title: 'Invalid File Type',
+                        text: 'Only video files (MP4, WebM, etc.) are allowed for recordings.',
+                        type: 'error',
+                        customClass: 'swal-dark-popup'
+                    });
+                    return;
+                }
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Uploading...';
+            }
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                }
+            }
+
+            // Fetch token and auth context
+            let fbContext;
+            try {
+                fbContext = await getFirebaseContext();
+            } catch (tokenErr) {
+                console.warn('Firebase token endpoint failed:', tokenErr);
+                // Fallback to normal server upload
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+                form._skipFirebase = true;
+                Swal.fire({
+                    title: 'Notice',
+                    text: 'Firebase Storage not configured. Uploading via server disk fallback...',
+                    type: 'info',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    customClass: 'swal-dark-popup'
+                });
+                setTimeout(() => {
+                    HTMLFormElement.prototype.submit.call(form);
+                }, 600);
+                return;
+            }
+
+            // Build storage path
+            const folderMap = {
+                'note': 'notes',
+                'past_paper': 'past-papers',
+                'recording': 'recordings'
+            };
+            const folder = folderMap[type] || 'notes';
+            const grade = form.querySelector('[name="grade"]')?.value || 'all';
+            const sanitizedName = file.name.replace(/[^A-Za-z0-9._-]/g, '_');
+            const storagePath = `learning-suite/i${fbContext.institute_id}/${folder}/${grade}/${Date.now()}_${sanitizedName}`;
+            const fileRef = ref(fbContext.storage, storagePath);
+
+            let downloadUrl = null;
+            try {
+                const uploadTask = uploadBytesResumable(fileRef, file, { contentType: contentType });
+
+                await new Promise((resolve, reject) => {
+                    uploadTask.on(
+                        'state_changed',
+                        (snapshot) => {
+                            if (snapshot.totalBytes > 0 && progressBar) {
+                                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                                progressBar.style.width = `${percent}%`;
+                                progressBar.textContent = `${percent}%`;
+                            }
+                        },
+                        (error) => reject(error),
+                        () => resolve()
+                    );
+                });
+
+                downloadUrl = await getDownloadURL(fileRef);
+            } catch (uploadError) {
+                console.error('Firebase upload error:', uploadError);
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+                Swal.fire({
+                    title: 'Upload Failed',
+                    text: uploadError.message || 'Failed to upload file to Firebase Storage.',
+                    type: 'error',
+                    customClass: 'swal-dark-popup'
+                });
+                return;
+            }
+
+            // Put getDownloadURL into hidden file_url and human size into hidden file_size
+            let fileUrlInput = form.querySelector('input[name="file_url"]');
+            if (!fileUrlInput) {
+                fileUrlInput = document.createElement('input');
+                fileUrlInput.type = 'hidden';
+                fileUrlInput.name = 'file_url';
+                form.appendChild(fileUrlInput);
+            }
+            fileUrlInput.value = downloadUrl;
+
+            let fileSizeInput = form.querySelector('input[name="file_size"]');
+            if (!fileSizeInput) {
+                fileSizeInput = document.createElement('input');
+                fileSizeInput.type = 'hidden';
+                fileSizeInput.name = 'file_size';
+                form.appendChild(fileSizeInput);
+            }
+            fileSizeInput.value = formatBytes(file.size);
+
+            // Remove name from file input so binary is not posted to PHP
+            const originalInputName = fileInput.getAttribute('name');
+            fileInput.removeAttribute('name');
+
+            // Submit form via fetch to catch DB save failures for best-effort cleanup
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    // DB or validation error! Best effort delete uploaded object
+                    try {
+                        await deleteObject(fileRef);
+                    } catch (cleanupErr) {
+                        console.warn('Cleanup failed:', cleanupErr);
+                    }
+
+                    const errJson = await response.json().catch(() => ({}));
+                    const errMsg = errJson.message || (errJson.errors ? Object.values(errJson.errors).flat().join(', ') : 'Failed to save material to database.');
+                    
+                    // Restore file input name
+                    if (originalInputName) fileInput.setAttribute('name', originalInputName);
+                    if (progressContainer) progressContainer.style.display = 'none';
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+
+                    Swal.fire({
+                        title: 'Save Failed',
+                        text: errMsg,
+                        type: 'error',
+                        customClass: 'swal-dark-popup'
+                    });
+                    return;
+                }
+
+                // Successfully saved! Reload page to show new material
+                window.location.reload();
+            } catch (postErr) {
+                console.error('Error saving to DB:', postErr);
+                try {
+                    await deleteObject(fileRef);
+                } catch (cleanupErr) {
+                    console.warn('Cleanup failed:', cleanupErr);
+                }
+
+                if (originalInputName) fileInput.setAttribute('name', originalInputName);
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while saving the material.',
+                    type: 'error',
+                    customClass: 'swal-dark-popup'
+                });
+            }
+        });
+    });
+
+    // Wire up delete forms with data-firebase-url
+    document.querySelectorAll('form[data-firebase-url]').forEach(form => {
+        const executeFirebaseDelete = async () => {
+            const firebaseUrl = form.getAttribute('data-firebase-url');
+            if (firebaseUrl) {
+                try {
+                    const fb = await getFirebaseContext();
+                    if (fb && fb.storage) {
+                        const storageRef = ref(fb.storage, firebaseUrl);
+                        await deleteObject(storageRef).catch(err => {
+                            console.warn('Firebase deleteObject ignored error:', err.code || err.message);
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Firebase delete error ignored, submitting form:', err);
+                }
+            }
+        };
+
+        form.submit = async function() {
+            await executeFirebaseDelete();
+            HTMLFormElement.prototype.submit.call(form);
+        };
+
+        form.addEventListener('submit', async function(e) {
+            if (form._skipFirebaseDelete) return;
+            e.preventDefault();
+            await executeFirebaseDelete();
+            form._skipFirebaseDelete = true;
+            HTMLFormElement.prototype.submit.call(form);
+        });
+    });
 </script>
 @endpush

@@ -288,6 +288,44 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Issue a short-lived Firebase custom token for admin direct storage uploads.
+     */
+    public function firebaseToken(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
+            return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+        }
+
+        $tokenService = \App\Services\FirebaseTokenService::fromConfig();
+        if (!$tokenService->isConfigured()) {
+            return response()->json([
+                'message' => 'Firebase service account is not configured.'
+            ], 503);
+        }
+
+        try {
+            $instituteId = (int) ($user->institute_id ?? 1);
+            $token = $tokenService->createCustomToken(
+                'admin-' . $user->id,
+                [
+                    'admin' => true,
+                    'institute' => 'i' . $instituteId,
+                ]
+            );
+
+            return response()->json([
+                'token' => $token,
+                'institute_id' => $instituteId,
+                'web_config' => config('services.firebase.web'),
+            ])->header('Cache-Control', 'no-store');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Firebase custom token minting failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to mint Firebase token: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Store a learning material (Note, Past Paper, or Recording).
      */
     public function storeMaterial(Request $request)
@@ -297,8 +335,24 @@ class SiteSettingController extends Controller
             'grade' => 'required|string',
             'title' => 'required|string|max:255',
             'file' => 'nullable|file|max:512000', // 500MB max
+            'file_url' => 'nullable|url|max:2048',
+            'file_size' => 'nullable|string|max:50',
             'url' => 'nullable|string',
         ]);
+
+        $hasFile = $request->hasFile('file');
+        $hasFileUrl = $request->filled('file_url');
+        $hasUrl = $request->filled('url');
+
+        if ($request->type === 'recording') {
+            if (!$hasFile && !$hasFileUrl && !$hasUrl) {
+                return redirect()->back()->withErrors(['file' => 'Please provide a file, a storage URL, or a video URL.'])->withInput();
+            }
+        } else {
+            if (!$hasFile && !$hasFileUrl) {
+                return redirect()->back()->withErrors(['file' => 'Please select a file to upload.'])->withInput();
+            }
+        }
 
         $data = [
             'type' => $request->type,
@@ -307,7 +361,21 @@ class SiteSettingController extends Controller
             'url' => $request->url,
         ];
 
-        if ($request->hasFile('file')) {
+        if ($hasFileUrl) {
+            $fileUrl = $request->input('file_url');
+            if (!str_starts_with($fileUrl, 'https://firebasestorage.googleapis.com/')) {
+                return redirect()->back()->withErrors(['file_url' => 'Invalid storage URL host.'])->withInput();
+            }
+
+            $instituteId = (int) (auth()->user()->institute_id ?? 1);
+            $decodedUrl = urldecode($fileUrl);
+            if (!str_contains($decodedUrl, "learning-suite/i{$instituteId}/")) {
+                return redirect()->back()->withErrors(['file_url' => 'Unauthorized storage path for your institute.'])->withInput();
+            }
+
+            $data['file_path'] = $fileUrl;
+            $data['file_size'] = $request->input('file_size');
+        } elseif ($hasFile) {
             $file = $request->file('file');
             $folder = 'uploads/' . $request->type . 's';
             $name = $request->type . '_' . time() . '.' . $file->getClientOriginalExtension();
@@ -336,8 +404,12 @@ class SiteSettingController extends Controller
     {
         $material = \App\Models\LearningMaterial::findOrFail($id);
         
-        if ($material->file_path && file_exists(public_path($material->file_path))) {
-            unlink(public_path($material->file_path));
+        $filePath = $material->file_path;
+        if ($filePath && !str_starts_with($filePath, 'http://') && !str_starts_with($filePath, 'https://')) {
+            $fullPath = public_path($filePath);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
+            }
         }
         
         $material->delete();

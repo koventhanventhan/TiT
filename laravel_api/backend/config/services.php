@@ -84,4 +84,18 @@ return [
         'secret_key' => env('RECAPTCHA_SECRET_KEY'),
         'score_threshold' => env('RECAPTCHA_SCORE_THRESHOLD', 0.5),
     ],
+
+    'firebase' => [
+        'client_email' => env('FIREBASE_CLIENT_EMAIL'),
+        'private_key'  => env('FIREBASE_PRIVATE_KEY'),
+        // Public web config used by the Blade admin page (not secrets):
+        'web' => [
+            'apiKey'            => env('FIREBASE_API_KEY'),
+            'authDomain'        => env('FIREBASE_AUTH_DOMAIN'),
+            'projectId'         => env('FIREBASE_PROJECT_ID'),
+            'storageBucket'     => env('FIREBASE_STORAGE_BUCKET'),
+            'messagingSenderId' => env('FIREBASE_MESSAGING_SENDER_ID'),
+            'appId'             => env('FIREBASE_APP_ID'),
+        ],
+    ],
 ];

@@ -76,12 +76,17 @@ class FetchZoomRecordings extends Command
                 }
 
                 if ($videoFile && isset($videoFile['play_url'])) {
+                    $playUrl = $videoFile['play_url'];
+                    if (!empty($recordingsData['recording_play_passcode'])) {
+                        $playUrl .= (str_contains($playUrl, '?') ? '&' : '?') . 'pwd=' . $recordingsData['recording_play_passcode'];
+                    }
+
                     // Create Learning Material
                     LearningMaterial::create([
                         'title' => $schedule->title . ' - Recording',
                         'description' => 'Zoom class recording for ' . $schedule->subject . ' - ' . $schedule->grade,
                         'type' => 'recording',
-                        'url' => $videoFile['play_url'],
+                        'url' => $playUrl,
                         'grade' => $schedule->grade,
                         'medium' => $schedule->medium ?? 'english',
                         'institute_id' => $schedule->institute_id,

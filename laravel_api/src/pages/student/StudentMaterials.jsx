@@ -28,6 +28,7 @@ export default function StudentMaterials() {
     const getIcon = (type) => {
         switch (type?.toLowerCase()) {
             case 'video': return { icon: <FiVideo />, color: '#ec4899', bg: '#fdf2f8' }
+            case 'recording': return { icon: <FiVideo />, color: '#ec4899', bg: '#fdf2f8' }
             case 'pdf': return { icon: <FiFileText />, color: '#ef4444', bg: '#fef2f2' }
             case 'document': return { icon: <FiFileText />, color: '#3b82f6', bg: '#eff6ff' }
             case 'link': return { icon: <FiLink />, color: '#10b981', bg: '#ecfdf5' }
@@ -36,8 +37,8 @@ export default function StudentMaterials() {
     }
 
     const handleDownload = (item) => {
-        if (item.type?.toLowerCase() === 'link' && item.url) {
-            window.open(item.url, '_blank')
+        if (['link', 'recording'].includes(item.type?.toLowerCase()) && item.url) {
+            window.open(item.url, '_blank', 'noopener')
         } else if (item.file_path) {
             const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
             window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
@@ -50,6 +51,7 @@ export default function StudentMaterials() {
         { id: 'all', label: 'All Files' },
         { id: 'pdf', label: 'PDFs' },
         { id: 'video', label: 'Videos' },
+        { id: 'recording', label: 'Recordings' },
         { id: 'document', label: 'Documents' }
     ]
 
@@ -147,11 +149,13 @@ export default function StudentMaterials() {
                                         {new Date(item.created_at || item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         {item.file_size && item.file_size !== '--' && <><span style={{ margin: '0 6px' }}>•</span>{item.file_size}</>}
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} style={{
+                                    <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }}
+                                        title={item.type?.toLowerCase() === 'recording' ? 'Watch recording' : undefined}
+                                        style={{
                                         width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s'
                                     }} onMouseEnter={e => { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#6366f1' }} onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0' }}>
-                                        {item.type?.toLowerCase() === 'link' ? <FiExternalLink /> : <FiDownload />}
+                                        {['link', 'recording'].includes(item.type?.toLowerCase()) ? <FiExternalLink /> : <FiDownload />}
                                     </button>
                                 </div>
                             </div>

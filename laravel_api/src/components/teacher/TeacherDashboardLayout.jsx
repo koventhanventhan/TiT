@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
     FiHome, FiUsers, FiCalendar, FiBookOpen, FiFileText,
@@ -8,6 +8,7 @@ import {
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
 import { getAuthHeaders } from '../../services/apiClient';
+import './teacher-theme.css';
 
 
 const menuItems = [
@@ -95,7 +96,7 @@ export default function TeacherDashboardLayout({ children, user }) {
     }, [showProfileMenu])
 
     return (
-        <div style={{ display: 'flex', height: '100dvh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
+        <div className="teacher-console-layout" style={{ display: 'flex', height: '100dvh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -360,7 +361,7 @@ export default function TeacherDashboardLayout({ children, user }) {
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 
-                                            onClick={() => { setShowProfileMenu(false); fileInputRef.current?.click(); }}
+                                            onClick={() => { setShowProfileMenu(false); navigate('/teacher/settings'); }}
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
@@ -370,7 +371,20 @@ export default function TeacherDashboardLayout({ children, user }) {
                                         onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
-                                            <FiSettings style={{ fontSize: 15 }} /> Upload Photo
+                                            <FiSettings style={{ fontSize: 15 }} /> Settings
+                                        </button>
+                                        <button 
+                                            onClick={() => { setShowProfileMenu(false); fileInputRef.current?.click(); }}
+                                            style={{
+                                            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                            padding: '10px 12px', background: 'transparent', border: 'none',
+                                            color: '#475569', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 2
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <FiUser style={{ fontSize: 15 }} /> Upload Photo
                                         </button>
                                         <button 
                                             onClick={() => { setShowProfileMenu(false); window.location.href = '/?logout=1'; }}

@@ -207,12 +207,44 @@ export const getTeacherStudents = async () => {
   return res.json()
 }
 
+export const getTeacherStudent = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/teacher/students/${id}`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load student details')
+  return res.json()
+}
+
 export const getTeacherAssignments = async () => {
   const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
     headers: getAuthHeaders(),
     credentials: 'include',
   })
   if (!res.ok) throw new Error('Failed to load assignments')
+  return res.json()
+}
+
+export const getAssignmentSubmissions = async (assignmentId) => {
+  const res = await fetch(`${API_BASE_URL}/teacher/assignments/${assignmentId}/submissions`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Failed to load submissions')
+  return res.json()
+}
+
+export const gradeSubmission = async (submissionId, { marks, feedback }) => {
+  const res = await fetch(`${API_BASE_URL}/teacher/submissions/${submissionId}/grade`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ marks, feedback }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to grade submission')
+  }
   return res.json()
 }
 

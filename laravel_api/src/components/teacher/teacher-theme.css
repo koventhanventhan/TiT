@@ -1,0 +1,61 @@
+.teacher-console-layout {
+  /* Brand (reuses the site's existing purple tokens from index.css) */
+  --t-primary:        #4f0bd9;  /* = --primary-color; buttons, links, active nav, focus */
+  --t-primary-hover:  #4308b8;
+  --t-primary-soft:   #f5f3ff;  /* = --bg-light; tinted backgrounds, selected chips */
+  --t-primary-border: #ddd6fe;
+  --t-sidebar:        #1a103c;  /* = --primary-dark; sidebar + welcome banner */
+  --t-sidebar-text:   #cbd5e1;
+  --t-sidebar-active-bg: rgba(255,255,255,0.10);
+
+  /* Neutrals (slate, already used everywhere) */
+  --t-bg:        #f8fafc;
+  --t-surface:   #ffffff;
+  --t-border:    #e2e8f0;
+  --t-text:      #0f172a;
+  --t-text-2:    #475569;
+  --t-text-3:    #64748b;   /* lightest allowed TEXT colour (4.76:1 on white) */
+
+  /* Status (only for meaning) */
+  --t-success: #15803d;  --t-success-bg: #f0fdf4;
+  --t-warning: #b45309;  --t-warning-bg: #fffbeb;
+  --t-danger:  #b91c1c;  --t-danger-bg:  #fef2f2;
+}
+
+/* Page Header helper replacing invalid inline media queries */
+.teacher-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .teacher-page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.teacher-overview-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .teacher-overview-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Universal focus rings for inputs & buttons in teacher console */
+.teacher-console-layout button:focus-visible,
+.teacher-console-layout a:focus-visible,
+.teacher-console-layout input:focus-visible,
+.teacher-console-layout select:focus-visible,
+.teacher-console-layout textarea:focus-visible {
+  outline: 2px solid var(--t-primary);
+  outline-offset: 2px;
+}

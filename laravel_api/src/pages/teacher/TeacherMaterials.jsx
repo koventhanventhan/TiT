@@ -107,8 +107,12 @@ export default function TeacherMaterials() {
         if (item.type.toLowerCase() === 'link' && item.url) {
             window.open(item.url, '_blank')
         } else if (item.file_path) {
-            const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
-            window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
+            if (item.file_path.startsWith('https://') || item.file_path.startsWith('http://')) {
+                window.open(item.file_path, '_blank')
+            } else {
+                const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
+                window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
+            }
         } else {
             toast.info('File not available')
         }
@@ -137,10 +141,7 @@ export default function TeacherMaterials() {
     return (
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
-            <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-            }}>
+            <div className="teacher-page-header">
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Teaching Materials</h1>
                     <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage and share resources with your students</p>

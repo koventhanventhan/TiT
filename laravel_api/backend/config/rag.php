@@ -57,6 +57,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ingestion Limits & Cost Controls
+    |--------------------------------------------------------------------------
+    */
+    'ingestion' => [
+        'max_pages_per_material' => (int) env('RAG_MAX_PAGES_PER_MATERIAL', 50),
+        'max_file_size_mb' => (int) env('RAG_MAX_FILE_SIZE_MB', 50),
+        'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
+        'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
+        'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Data Privacy & Retention
     |--------------------------------------------------------------------------
     |

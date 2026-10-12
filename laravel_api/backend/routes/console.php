@@ -72,7 +72,7 @@ Schedule::call(function () {
 
 // ── Email alerts ──
 // Absent alerts + low attendance warnings (after classes finish)
-Schedule::call($guard('alerts:absent', fn() => Artisan::call('alerts:absent')))->everyFifteenMinutes();
+Schedule::call($guard('alerts:absent', fn() => Artisan::call('alerts:absent')))->everyFifteenMinutes()->when(fn () => filter_var(config('services.absent_alerts_enabled'), FILTER_VALIDATE_BOOLEAN));
 // Birthday wishes in the morning
 Schedule::call($guard('alerts:birthdays', fn() => Artisan::call('alerts:birthdays')))->dailyAt('07:00');
 // Pending approval digest/reminders

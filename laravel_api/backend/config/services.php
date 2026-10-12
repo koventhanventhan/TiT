@@ -98,4 +98,6 @@ return [
             'appId'             => env('FIREBASE_APP_ID'),
         ],
     ],
+
+    'absent_alerts_enabled' => env('ABSENT_ALERTS_ENABLED', false),
 ];

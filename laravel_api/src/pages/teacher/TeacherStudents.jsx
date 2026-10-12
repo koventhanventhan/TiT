@@ -8,17 +8,23 @@ export default function TeacherStudents() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        async function load() {
+        async function load(isInitial = false) {
             try {
                 const data = await getTeacherStudents().catch(() => null)
-                setStudents(data || [])
+                if (data !== null) {
+                    setStudents(data)
+                }
             } catch (e) {
                 console.error(e)
             } finally {
-                setLoading(false)
+                if (isInitial) {
+                    setLoading(false)
+                }
             }
         }
-        load()
+        load(true)
+        const interval = setInterval(() => load(false), 30000)
+        return () => clearInterval(interval)
     }, [])
 
     const filtered = students.filter(s =>
@@ -44,10 +50,10 @@ export default function TeacherStudents() {
                         color: '#ef4444', fontWeight: 700, fontSize: 13
                     }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-                        LIVE: Monitoring
+                        LIVE: updates every 30s
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 99, color: '#16a34a', fontWeight: 700, fontSize: 13 }}>
-                        <FiUsers /> Total Present: {filtered.filter(s => s.is_online).length}
+                        <FiUsers /> Present now: {filtered.filter(s => s.is_online).length}
                     </div>
                 </div>
             </div>

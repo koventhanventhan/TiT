@@ -18,6 +18,7 @@ class LearningMaterial extends Model
         'thumbnail_path',
         'grade',
         'medium',
+        'subject',
         'institute_id',
         'group',
         'file_size',
@@ -25,6 +26,14 @@ class LearningMaterial extends Model
         'teacher_id',
         'zoom_schedule_id',
     ];
+
+    /**
+     * Chunks extracted for RAG retrieval.
+     */
+    public function chunks()
+    {
+        return $this->hasMany(MaterialChunk::class, 'material_id');
+    }
 
     protected static function booted()
     {
@@ -38,3 +47,4 @@ class LearningMaterial extends Model
         });
     }
 }
+

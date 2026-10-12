@@ -25,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Bind VectorStoreInterface to current driver (DatabaseVectorStore)
+        $this->app->bind(
+            \App\Contracts\Rag\VectorStoreInterface::class,
+            \App\Services\Rag\DatabaseVectorStore::class
+        );
+
         // 100% Foolproof method for cPanel (Addon domains & public_html)
         if (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT'])) {
             $this->app->bind('path.public', function() {

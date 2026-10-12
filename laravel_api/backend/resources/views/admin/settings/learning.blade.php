@@ -419,6 +419,10 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label>Subject (Optional)</label>
+                                <input type="text" name="subject" class="form-control" placeholder="e.g. Science, Mathematics">
+                            </div>
+                            <div class="form-group">
                                 <label>Note Title</label>
                                 <input type="text" name="title" class="form-control" required placeholder="e.g. Pure Mathematics Unit 1">
                             </div>
@@ -511,6 +515,10 @@
                                     <option value="grade-12">Grade 12</option>
                                     <option value="grade-13">Grade 13</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject (Optional)</label>
+                                <input type="text" name="subject" class="form-control" placeholder="e.g. Science, Mathematics">
                             </div>
                             <div class="form-group">
                                 <label>Paper Title</label>

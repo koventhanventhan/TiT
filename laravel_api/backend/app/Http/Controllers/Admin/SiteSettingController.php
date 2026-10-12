@@ -333,6 +333,7 @@ class SiteSettingController extends Controller
         $request->validate([
             'type' => 'required|in:note,past_paper,recording',
             'grade' => 'required|string',
+            'subject' => 'nullable|string|max:100',
             'title' => 'required|string|max:255',
             'file' => 'nullable|file|max:512000', // 500MB max
             'file_url' => 'nullable|url|max:2048',
@@ -357,6 +358,7 @@ class SiteSettingController extends Controller
         $data = [
             'type' => $request->type,
             'grade' => $request->grade,
+            'subject' => $request->subject,
             'title' => $request->title,
             'url' => $request->url,
         ];

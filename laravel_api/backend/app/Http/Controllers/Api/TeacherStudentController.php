@@ -54,12 +54,38 @@ class TeacherStudentController extends Controller
         }
 
         $attendance = Attendance::where('user_id', $student->id)
-            ->with('zoomSchedule')
+            ->with(['zoomSchedule' => function($q) {
+                $q->select('id', 'title', 'subject');
+            }])
             ->orderBy('marked_at', 'desc')
-            ->get();
+            ->limit(20)
+            ->get(['id', 'zoom_schedule_id', 'status', 'marked_at'])
+            ->map(function ($att) {
+                $sched = $att->zoomSchedule ? [
+                    'id' => $att->zoomSchedule->id,
+                    'title' => $att->zoomSchedule->title,
+                    'subject' => $att->zoomSchedule->subject,
+                ] : null;
+
+                return [
+                    'id' => $att->id,
+                    'status' => $att->status,
+                    'marked_at' => $att->marked_at,
+                    'zoom_schedule' => $sched,
+                    'zoomSchedule' => $sched,
+                ];
+            });
 
         return response()->json([
-            'profile' => $student,
+            'profile' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'phone_number' => $student->phone_number,
+                'current_grade' => $student->current_grade,
+                'stream' => $student->stream,
+                'registration_status' => $student->registration_status,
+            ],
             'attendance' => $attendance
         ]);
     }

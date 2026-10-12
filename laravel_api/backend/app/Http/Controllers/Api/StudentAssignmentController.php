@@ -14,16 +14,23 @@ class StudentAssignmentController extends Controller
     {
         $user = $request->user();
         
-        $assignments = Assignment::where(function($query) use ($user) {
-                $query->where('grade', $user->current_grade)
-                      ->orWhereNull('grade')
-                      ->orWhere('grade', '');
-            })
-            ->with(['teacher', 'submissions' => function($q) use ($user) {
+        $assignments = Assignment::with(['teacher', 'submissions' => function($q) use ($user) {
                 $q->where('student_id', $user->id);
             }])
             ->orderBy('due_date', 'asc')
-            ->get();
+            ->get()
+            ->filter(function ($assignment) use ($user) {
+                $assignGrade = $assignment->grade;
+                if (empty($assignGrade)) {
+                    return true;
+                }
+                $userGrade = $user?->current_grade;
+                if (empty($userGrade)) {
+                    return false;
+                }
+                return \App\Support\GradeMatcher::normalize($assignGrade) === \App\Support\GradeMatcher::normalize($userGrade);
+            })
+            ->values();
             
         return response()->json($assignments);
     }

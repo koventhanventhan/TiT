@@ -16,7 +16,28 @@ class AssignmentSubmission extends Model
         'marks',
         'feedback',
         'status',
+        'submitted_at',
     ];
+
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'marks' => 'float',
+    ];
+
+    protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute(): ?string
+    {
+        if (!$this->file_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->file_path, 'http://') || str_starts_with($this->file_path, 'https://')) {
+            return $this->file_path;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->file_path);
+    }
 
     public function assignment()
     {

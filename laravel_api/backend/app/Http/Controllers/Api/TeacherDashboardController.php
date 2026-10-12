@@ -37,22 +37,61 @@ class TeacherDashboardController extends Controller
                     ->orWhereDoesntHave('teachers');
             })->count();
 
-        // Total students assigned to this teacher's classes
-        // Note: Students are not explicitly linked to schedules in the current schema beyond attendance.
-        // For now, we count unique students who are in any class this teacher is assigned to (hardcoded logic or based on grade/subject match)
-        // Simplification: Count all students for now if teacher is generic, or filtering can be added.
-        $totalStudents = User::where('role', 'user')->count();
+        // Classes from start to end of the current week for this teacher
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+        $weekClasses = ZoomSchedule::whereBetween('scheduled_at', [$startOfWeek, $endOfWeek])
+            ->where(function ($q) use ($user) {
+                $q->whereHas('teachers', fn ($t) => $t->where('users.id', $user->id))
+                    ->orWhereDoesntHave('teachers');
+            })->count();
 
-        // Pending assignments (not graded)
-        $pendingAssignments = AssignmentSubmission::whereHas('assignment', function($q) use ($user) {
+        // Total approved students only: role='user' and registration_status IN ('approved','payment_completed')
+        $totalStudents = User::where('role', 'user')
+            ->whereIn('registration_status', ['approved', 'payment_completed'])
+            ->count();
+
+        // Pending ungraded submissions on this teacher's assignments
+        $newSubmissions = AssignmentSubmission::whereHas('assignment', function($q) use ($user) {
             $q->where('teacher_id', $user->id);
         })->where('status', 'pending')->count();
+
+        // Total assignments and total submissions for this teacher
+        $totalAssignments = Assignment::where('teacher_id', $user->id)->count();
+        $totalSubmissions = AssignmentSubmission::whereHas('assignment', function($q) use ($user) {
+            $q->where('teacher_id', $user->id);
+        })->count();
+
+        // Latest 5 pending submissions: {id, assignment_id, assignment_title, student_name, submitted_at}
+        $recentSubmissions = AssignmentSubmission::whereHas('assignment', function($q) use ($user) {
+            $q->where('teacher_id', $user->id);
+        })
+        ->where('status', 'pending')
+        ->with(['assignment', 'student'])
+        ->orderByDesc('submitted_at')
+        ->orderByDesc('id')
+        ->limit(5)
+        ->get()
+        ->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'assignment_id' => $s->assignment_id,
+                'assignment_title' => $s->assignment?->title ?? '',
+                'student_name' => $s->student?->name ?? 'Unknown Student',
+                'submitted_at' => $s->submitted_at ? $s->submitted_at->toIso8601String() : $s->created_at?->toIso8601String(),
+            ];
+        });
 
         return response()->json([
             'today_classes' => $todayClasses,
             'upcoming_classes' => $upcomingClasses,
+            'week_classes' => $weekClasses,
             'total_students' => $totalStudents,
-            'pending_assignments' => $pendingAssignments,
+            'new_submissions' => $newSubmissions,
+            'pending_assignments' => $newSubmissions,
+            'total_assignments' => $totalAssignments,
+            'total_submissions' => $totalSubmissions,
+            'recent_submissions' => $recentSubmissions,
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,

@@ -19,6 +19,28 @@ class TeacherAssignmentController extends Controller
             }])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $approvedStudents = \App\Models\User::where('role', 'user')
+            ->whereIn('registration_status', ['approved', 'payment_completed'])
+            ->get(['id', 'current_grade']);
+
+        $totalApproved = $approvedStudents->count();
+
+        $studentsByGrade = [];
+        foreach ($approvedStudents as $student) {
+            $norm = \App\Support\GradeMatcher::normalize($student->current_grade);
+            if ($norm !== null) {
+                $studentsByGrade[$norm] = ($studentsByGrade[$norm] ?? 0) + 1;
+            }
+        }
+
+        foreach ($assignments as $assignment) {
+            $norm = \App\Support\GradeMatcher::normalize($assignment->grade);
+            $assignment->total_students = $norm !== null
+                ? ($studentsByGrade[$norm] ?? 0)
+                : $totalApproved;
+        }
+
         return response()->json($assignments);
     }
 
@@ -77,10 +99,8 @@ class TeacherAssignmentController extends Controller
         return response()->json($submission);
     }
 
-    private function authorizeTeacher(Assignment $assignment)
+    private function authorizeTeacher($assignment)
     {
-        if ($assignment->teacher_id !== auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        abort_unless($assignment && $assignment->teacher_id === auth()->id(), 403, 'Unauthorized');
     }
 }

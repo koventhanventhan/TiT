@@ -34,21 +34,7 @@ class StudentMaterialController extends Controller
         });
 
         $materials = $materials->filter(function ($m) use ($user) {
-            $userGrade = $user ? $user->current_grade : null;
-            $matGrade = $m->grade;
-
-            // Keep if student has no current_grade or material has no grade
-            if (empty($userGrade) || empty($matGrade)) {
-                return true;
-            }
-
-            preg_match('/(\d+)/', $userGrade, $userMatch);
-            $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-            preg_match('/(\d+)/', $matGrade, $matMatch);
-            $matRef = isset($matMatch[1]) ? $matMatch[1] : strtoupper(trim($matGrade));
-
-            return $userRef === $matRef;
+            return \App\Support\GradeMatcher::matches($user?->current_grade, $m->grade);
         });
 
         return response()->json($materials->values());

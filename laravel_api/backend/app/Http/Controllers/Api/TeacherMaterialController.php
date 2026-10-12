@@ -62,9 +62,15 @@ class TeacherMaterialController extends Controller
         return response()->json($material, 201);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $material = LearningMaterial::findOrFail($id);
+        $material = LearningMaterial::where('teacher_id', $request->user()->id)->find($id);
+        if (!$material) {
+            if (LearningMaterial::where('id', $id)->exists()) {
+                return response()->json(['message' => 'Unauthorized to delete this material.'], 403);
+            }
+            return response()->json(['message' => 'Material not found.'], 404);
+        }
         
         if ($material->file_path && \Storage::disk('public')->exists($material->file_path)) {
             \Storage::disk('public')->delete($material->file_path);
@@ -77,14 +83,25 @@ class TeacherMaterialController extends Controller
 
     public function download(Request $request)
     {
-        $path = $request->query('path');
-        if (!$path || str_contains($path, '..')) {
+        $rawUri = $request->getRequestUri();
+        if (str_contains($rawUri, '%00') || str_contains($rawUri, "\0")) {
             return response('Invalid path', 400);
         }
 
-        $fullPath = storage_path('app/public/' . $path);
+        $path = $request->query('path');
+        if (!$path || str_contains($path, '..') || str_contains($path, "\0")) {
+            return response('Invalid path', 400);
+        }
+
+        if (str_starts_with($path, '/') || str_starts_with($path, '\\') || preg_match('/^[a-zA-Z]:/', $path)) {
+            return response('Invalid path', 400);
+        }
+
+        $baseDir = realpath(storage_path('app/public'));
+        $targetFile = storage_path('app/public/' . $path);
+        $fullPath = realpath($targetFile);
         
-        if (file_exists($fullPath)) {
+        if ($fullPath && $baseDir && str_starts_with($fullPath, $baseDir) && file_exists($fullPath)) {
             return response()->download($fullPath);
         }
         

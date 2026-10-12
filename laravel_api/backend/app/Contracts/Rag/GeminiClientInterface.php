@@ -32,4 +32,13 @@ interface GeminiClientInterface
      * @return string Extracted text verbatim
      */
     public function ocrPage(string $binaryData, string $mimeType = 'image/jpeg'): string;
+
+    /**
+     * Generate grounded answer using Gemini LLM.
+     *
+     * @param string $prompt
+     * @param string|null $systemInstruction
+     * @return string
+     */
+    public function generateAnswer(string $prompt, ?string $systemInstruction = null): string;
 }

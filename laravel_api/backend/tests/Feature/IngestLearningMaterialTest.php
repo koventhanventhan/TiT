@@ -33,6 +33,11 @@ class FakeGeminiTestClient implements GeminiClientInterface
     {
         return 'Mock OCR text for scanned document page.';
     }
+
+    public function generateAnswer(string $prompt, ?string $systemInstruction = null): string
+    {
+        return 'Mock answer from notes [1].';
+    }
 }
 
 class IngestLearningMaterialTest extends TestCase

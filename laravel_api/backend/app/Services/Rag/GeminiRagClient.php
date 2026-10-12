@@ -191,4 +191,57 @@ class GeminiRagClient implements GeminiClientInterface
         $data = $response->json();
         return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
     }
+
+    /**
+     * Generate grounded answer using Gemini LLM.
+     *
+     * @param string $prompt
+     * @param string|null $systemInstruction
+     * @return string
+     */
+    public function generateAnswer(string $prompt, ?string $systemInstruction = null): string
+    {
+        if (empty($this->apiKey)) {
+            throw new RuntimeException('Gemini API key is not configured.');
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:generateContent?key={$this->apiKey}";
+
+        $payload = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $prompt],
+                    ],
+                ],
+            ],
+            'generationConfig' => [
+                'temperature' => 0.2,
+                'topP' => 0.8,
+                'maxOutputTokens' => 1500,
+            ],
+        ];
+
+        if (!empty($systemInstruction)) {
+            $payload['systemInstruction'] = [
+                'parts' => [
+                    ['text' => $systemInstruction],
+                ],
+            ];
+        }
+
+        $response = Http::timeout($this->timeout)->post($url, $payload);
+
+        if (!$response->successful()) {
+            Log::error('Gemini GenerateContent API Error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new RuntimeException("Gemini generation failed ({$response->status()}): " . $response->body());
+        }
+
+        $data = $response->json();
+        return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
+    }
 }

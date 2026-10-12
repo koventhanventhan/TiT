@@ -149,5 +149,6 @@ Homestead.yaml
 tmp/
 *.zip
 *.rar
-*.7z
 *.tar.gz
+e2e/screenshots/
+test-results/

@@ -50,6 +50,16 @@ class IngestLearningMaterialJob implements ShouldQueue
             return;
         }
 
+        // Fail-closed security rule: Material must have an explicit institute_id
+        if (empty($material->institute_id)) {
+            Log::error("IngestLearningMaterialJob: Material #{$material->id} has no institute_id assigned.");
+            $material->updateQuietly([
+                'rag_status' => 'failed',
+                'rag_error' => 'Material has no institute_id assigned.',
+            ]);
+            return;
+        }
+
         // 1. Skip non-document materials (recordings, external link-only)
         if ($material->type === 'recording' || empty($material->file_path)) {
             Log::info("IngestLearningMaterialJob: Material #{$material->id} is a recording or URL-only. Marking skipped.");
@@ -116,7 +126,7 @@ class IngestLearningMaterialJob implements ShouldQueue
 
                 foreach ($validChunks as $index => $chunkData) {
                     $vectorStore->saveChunk([
-                        'institute_id' => $material->institute_id ?? 1,
+                        'institute_id' => (int) $material->institute_id,
                         'material_id' => $material->id,
                         'grade' => $material->grade,
                         'medium' => $material->medium,
@@ -139,9 +149,9 @@ class IngestLearningMaterialJob implements ShouldQueue
 
             Log::info("IngestLearningMaterialJob: Successfully indexed material #{$material->id} (" . count($validChunks) . " chunks).");
 
-        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException $e) {
-            // Guardrail limit or unsupported format exceeded: mark failed/skipped without retrying
-            Log::warning("IngestLearningMaterialJob: Guardrail limit triggered for material #{$material->id}: " . $e->getMessage());
+        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException|\RuntimeException $e) {
+            // Guardrail limit, invalid/unreachable file, or unparseable format: mark failed without retrying
+            Log::warning("IngestLearningMaterialJob: Document processing failed for material #{$material->id}: " . $e->getMessage());
             $vectorStore->deleteByMaterial($material->id);
             $material->updateQuietly([
                 'rag_status' => 'failed',

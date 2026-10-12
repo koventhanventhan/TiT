@@ -24,6 +24,7 @@ import StudentMaterials from './pages/student/StudentMaterials'
 import StudentSchedule from './pages/student/StudentSchedule'
 import StudentPerformance from './pages/student/StudentPerformance'
 import StudentSettings from './pages/student/StudentSettings'
+import StudentStudyAssistant from './components/StudentStudyAssistant'
 import AdminDashboard from './pages/AdminDashboard'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import AdminOverview from './pages/admin/AdminOverview'
@@ -114,6 +115,7 @@ function AppContent() {
           <Route path="performance" element={<StudentPerformance />} />
           <Route path="messages" element={<MessagingPage />} />
           <Route path="settings" element={<StudentSettings />} />
+          <Route path="study-assistant" element={<StudentStudyAssistant />} />
         </Route>
 
         {/* Admin Master Control Routes */}

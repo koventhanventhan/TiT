@@ -36,10 +36,17 @@ class RetrievalService
      */
     public function getAllowedMaterialIds(User $student, ?string $subject = null): array
     {
-        $instituteId = (int) ($student->institute_id ?? 1);
+        // Fail closed: Student without an institute_id has zero access
+        if (empty($student->institute_id)) {
+            return [];
+        }
+
+        $instituteId = (int) $student->institute_id;
 
         // 1. Explicitly filter by student's institute to guarantee isolation across web & console
-        $query = LearningMaterial::where('institute_id', $instituteId)
+        // Select only the columns needed for access decisions
+        $query = LearningMaterial::select(['id', 'institute_id', 'grade', 'medium', 'subject'])
+            ->where('institute_id', $instituteId)
             ->where('type', '!=', 'recording')
             ->where('rag_status', 'ready');
 
@@ -60,15 +67,13 @@ class RetrievalService
             return GradeMatcher::matches($student->current_grade, $m->grade);
         });
 
-        // 4. Subject preference: If a subject is given, prefer materials with that subject OR null subject
-        if (!empty($subject)) {
-            $subjectFiltered = $matchedMaterials->filter(function ($m) use ($subject) {
+        // 4. Subject handling: "all subjects" is default.
+        // If a specific subject is chosen, search ONLY materials with that subject or null subject (NO FALLBACK).
+        $isAllSubjects = empty($subject) || strtolower($subject) === 'all' || strtolower($subject) === 'all subjects';
+        if (!$isAllSubjects) {
+            $matchedMaterials = $matchedMaterials->filter(function ($m) use ($subject) {
                 return $m->subject === $subject || is_null($m->subject);
             });
-
-            if ($subjectFiltered->isNotEmpty()) {
-                $matchedMaterials = $subjectFiltered;
-            }
         }
 
         return $matchedMaterials->pluck('id')->values()->all();
@@ -88,7 +93,7 @@ class RetrievalService
      *     chunk_id: int,
      *     material_id: int,
      *     material_title: string,
-     *     page_number: int,
+     *     page_number: int|null,
      *     content: string,
      *     similarity: float
      *   }>
@@ -98,8 +103,17 @@ class RetrievalService
     {
         $language = $this->languageDetector->detect($question);
         $k = $topK ?? $this->topK;
-        $instituteId = (int) ($student->institute_id ?? 1);
 
+        // Fail-closed rule: student must have an institute_id
+        if (empty($student->institute_id)) {
+            return [
+                'language' => $language,
+                'allowed_material_count' => 0,
+                'chunks' => [],
+            ];
+        }
+
+        $instituteId = (int) $student->institute_id;
         $allowedMaterialIds = $this->getAllowedMaterialIds($student, $subject);
 
         if (empty($allowedMaterialIds)) {

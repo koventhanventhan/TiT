@@ -38,6 +38,11 @@ class FakeGeminiTestClient implements GeminiClientInterface
     {
         return 'Mock answer from notes [1].';
     }
+
+    public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void
+    {
+        $onChunk('Mock answer from notes [1].');
+    }
 }
 
 class IngestLearningMaterialTest extends TestCase

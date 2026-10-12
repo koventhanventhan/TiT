@@ -15,11 +15,13 @@ class Institute extends Model
         'logo_path',
         'theme_settings',
         'status',
+        'rag_enabled',
         'subscription_plan_id',
         'expires_at',
     ];
 
     protected $casts = [
+        'rag_enabled' => 'boolean',
         'theme_settings' => 'array',
         'expires_at' => 'datetime',
     ];

@@ -41,4 +41,14 @@ interface GeminiClientInterface
      * @return string
      */
     public function generateAnswer(string $prompt, ?string $systemInstruction = null): string;
+
+    /**
+     * Stream grounded answer using Gemini streamGenerateContent SSE API.
+     *
+     * @param string $prompt
+     * @param string|null $systemInstruction
+     * @param callable(string): void $onChunk
+     * @return void
+     */
+    public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void;
 }

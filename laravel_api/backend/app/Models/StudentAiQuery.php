@@ -22,12 +22,15 @@ class StudentAiQuery extends Model
         'retrieved_chunk_ids',
         'top_similarity_score',
         'status',
+        'is_flagged',
+        'flag_reason',
         'feedback_rating',
         'feedback_comment',
         'feedback_at',
     ];
 
     protected $casts = [
+        'is_flagged' => 'boolean',
         'retrieved_material_ids' => 'array',
         'retrieved_chunk_ids' => 'array',
         'top_similarity_score' => 'float',

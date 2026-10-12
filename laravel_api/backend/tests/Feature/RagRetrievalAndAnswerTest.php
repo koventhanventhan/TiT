@@ -46,6 +46,15 @@ class FakeRetrievalGeminiClient implements GeminiClientInterface
 
         return "Based on the notes [1], photosynthesis produces glucose and oxygen.";
     }
+
+    public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void
+    {
+        $this->generateAnswerCalled = true;
+        $this->lastPrompt = $prompt;
+        $this->lastSystemInstruction = $systemInstruction;
+
+        $onChunk("Based on the notes [1], photosynthesis produces glucose and oxygen.");
+    }
 }
 
 class RagRetrievalAndAnswerTest extends TestCase
@@ -304,14 +313,23 @@ class RagRetrievalAndAnswerTest extends TestCase
             'embedding' => pack('f*', ...$chunkVector),
         ]);
 
-        // Write a temporary JSON test dataset
+        // Write a temporary JSON test dataset with both answerable and negative questions
         $testData = [
             [
                 'question' => 'State Newton second law of motion',
                 'grade' => 'grade-10',
                 'medium' => 'english',
                 'subject' => 'Physics',
+                'should_answer' => true,
                 'expected_material_id' => $material->id,
+            ],
+            [
+                'question' => 'Who was the king of Anuradhapura in 200 BC?',
+                'grade' => 'grade-10',
+                'medium' => 'english',
+                'subject' => 'History',
+                'should_answer' => false,
+                'expected_material_id' => null,
             ]
         ];
 
@@ -323,12 +341,78 @@ class RagRetrievalAndAnswerTest extends TestCase
                 'file' => $tempPath,
                 '--institute' => $this->instituteA->id,
             ])
-            ->expectsOutputToContain('RAG EVALUATION METRICS')
+            ->expectsOutputToContain('ANSWERABLE QUESTIONS METRICS')
+            ->expectsOutputToContain('NEGATIVE QUESTIONS (NO NOTES) METRICS')
+            ->expectsOutputToContain('THRESHOLD CALIBRATION SWEEP')
             ->assertExitCode(0);
         } finally {
             if (file_exists($tempPath)) {
                 @unlink($tempPath);
             }
         }
+    }
+
+    public function test_not_found_message_returns_actual_localized_text_and_never_key_string(): void
+    {
+        $answerService = app(AnswerService::class);
+
+        // Tamil
+        $taMsg = $answerService->getNotFoundMessage('ta');
+        $this->assertNotEquals('rag.not_found', $taMsg);
+        $this->assertStringContainsString('உங்கள் ஆசிரியரின் குறிப்புகள்', $taMsg);
+
+        // Sinhala
+        $siMsg = $answerService->getNotFoundMessage('si');
+        $this->assertNotEquals('rag.not_found', $siMsg);
+        $this->assertStringContainsString('ඔබගේ ගුරුවරයා විසින් ලබාදී ඇති සටහන්', $siMsg);
+
+        // English
+        $enMsg = $answerService->getNotFoundMessage('en');
+        $this->assertNotEquals('rag.not_found', $enMsg);
+        $this->assertStringContainsString('could not find an answer', $enMsg);
+    }
+
+    public function test_strict_subject_filtering_without_fallback(): void
+    {
+        // Create Science material
+        $scienceMaterial = LearningMaterial::create([
+            'title' => 'Grade 10 Biology',
+            'type' => 'note',
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'file_path' => 'materials/science.pdf',
+            'institute_id' => $this->instituteA->id,
+            'rag_status' => 'ready',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->instituteA->id,
+            'current_grade' => 'grade-10',
+            'medium' => 'english',
+            'role' => 'user',
+        ]);
+
+        $this->actingAs($student);
+
+        $retrievalService = app(RetrievalService::class);
+
+        // 1. When querying for Mathematics: zero materials allowed, strictly NO fallback to Science
+        $mathAllowedIds = $retrievalService->getAllowedMaterialIds($student, 'Mathematics');
+        $this->assertEmpty($mathAllowedIds, 'Failed strict subject isolation; fell back to other subjects');
+
+        // 2. When querying for Science: Science material is allowed
+        $scienceAllowedIds = $retrievalService->getAllowedMaterialIds($student, 'Science');
+        $this->assertContains($scienceMaterial->id, $scienceAllowedIds);
+
+        // 3. When querying with no subject (All subjects default): Science material is allowed
+        $allAllowedIds = $retrievalService->getAllowedMaterialIds($student, null);
+        $this->assertContains($scienceMaterial->id, $allAllowedIds);
+
+        // 4. AnswerService with unindexed subject returns static not-found message without calling LLM
+        $answerService = app(AnswerService::class);
+        $res = $answerService->answer($student, 'Solve quadratic formula', 'Mathematics');
+        $this->assertFalse($res['llm_called']);
+        $this->assertStringContainsString('could not find an answer', $res['answer']);
     }
 }

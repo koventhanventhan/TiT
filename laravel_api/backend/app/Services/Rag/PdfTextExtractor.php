@@ -92,9 +92,14 @@ class PdfTextExtractor
      */
     public function extractFromPdfFile(string $filePath): array
     {
-        $parser = new Parser();
-        $pdf = $parser->parseFile($filePath);
-        $pages = $pdf->getPages();
+        try {
+            $parser = new Parser();
+            $pdf = $parser->parseFile($filePath);
+            $pages = $pdf->getPages();
+        } catch (\Throwable $e) {
+            Log::warning("PdfTextExtractor: Failed to parse PDF ({$filePath}): " . $e->getMessage());
+            return [];
+        }
 
         $totalPages = count($pages);
         if ($totalPages > $this->maxPages) {

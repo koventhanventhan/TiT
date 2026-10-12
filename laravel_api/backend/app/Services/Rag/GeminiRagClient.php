@@ -244,4 +244,83 @@ class GeminiRagClient implements GeminiClientInterface
         $data = $response->json();
         return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
     }
+
+    /**
+     * Stream grounded answer using Gemini streamGenerateContent SSE API.
+     *
+     * @param string $prompt
+     * @param string|null $systemInstruction
+     * @param callable(string): void $onChunk
+     * @return void
+     */
+    public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void
+    {
+        if (empty($this->apiKey)) {
+            throw new RuntimeException('Gemini API key is not configured.');
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:streamGenerateContent?alt=sse&key={$this->apiKey}";
+
+        $payload = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $prompt],
+                    ],
+                ],
+            ],
+            'generationConfig' => [
+                'temperature' => 0.2,
+                'topP' => 0.8,
+                'maxOutputTokens' => 1500,
+            ],
+        ];
+
+        if (!empty($systemInstruction)) {
+            $payload['systemInstruction'] = [
+                'parts' => [
+                    ['text' => $systemInstruction],
+                ],
+            ];
+        }
+
+        $response = Http::withOptions(['stream' => true])
+            ->timeout($this->timeout)
+            ->post($url, $payload);
+
+        if (!$response->successful()) {
+            $status = $response->status();
+            $body = $response->body();
+            Log::error("Gemini streamGenerateContent Error ({$status}): {$body}");
+            throw new RuntimeException("Gemini streaming failed ({$status}): {$body}");
+        }
+
+        $body = $response->toPsrResponse()->getBody();
+        $buffer = '';
+
+        while (!$body->eof()) {
+            $chunk = $body->read(1024);
+            $buffer .= $chunk;
+
+            while (($pos = strpos($buffer, "\n")) !== false) {
+                $line = substr($buffer, 0, $pos);
+                $buffer = substr($buffer, $pos + 1);
+                $trimmed = trim($line);
+
+                if (str_starts_with($trimmed, 'data: ')) {
+                    $jsonStr = substr($trimmed, 6);
+                    if ($jsonStr === '[DONE]') {
+                        break;
+                    }
+
+                    $data = json_decode($jsonStr, true);
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    if ($text !== '') {
+                        $onChunk($text);
+                    }
+                }
+            }
+        }
+    }
 }

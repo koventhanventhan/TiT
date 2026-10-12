@@ -1,3 +1,12 @@
+.messaging-container {
+  --m-primary:      var(--t-primary, #0ea5e9);
+  --m-primary-soft: var(--t-primary-soft, #e0f2fe);
+  --m-border:       var(--t-border, #e2e8f0);
+  --m-text:         var(--t-text, #1e293b);
+  --m-text-3:       var(--t-text-3, #64748b);
+  --m-bg:           var(--t-bg, #f8fafc);
+}
+
 .messaging-page {
   padding: 1.5rem;
   max-width: 75rem;

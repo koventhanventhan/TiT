@@ -15,6 +15,7 @@ class Attendance extends Model
     protected $fillable = [
         'user_id',
         'zoom_schedule_id',
+        'role',
         'status',
         'attended_at',
         'institute_id',

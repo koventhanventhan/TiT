@@ -15,6 +15,16 @@ interface GeminiClientInterface
     public function embedContent(string $text, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array;
 
     /**
+     * Generate embedding vectors for multiple texts in batches with exponential backoff.
+     *
+     * @param array<int, string> $texts
+     * @param string $taskType
+     * @param string|null $title
+     * @return array<int, array<int, float>>
+     */
+    public function batchEmbedContents(array $texts, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array;
+
+    /**
      * Extract text from a page image using Gemini Vision OCR (supports Tamil, Sinhala, English).
      *
      * @param string $binaryData Raw image bytes

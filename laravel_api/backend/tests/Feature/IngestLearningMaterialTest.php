@@ -24,6 +24,11 @@ class FakeGeminiTestClient implements GeminiClientInterface
         return $vector;
     }
 
+    public function batchEmbedContents(array $texts, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array
+    {
+        return array_map(fn($t) => $this->embedContent($t, $taskType, $title), $texts);
+    }
+
     public function ocrPage(string $binaryData, string $mimeType = 'image/jpeg'): string
     {
         return 'Mock OCR text for scanned document page.';
@@ -40,6 +45,8 @@ class IngestLearningMaterialTest extends TestCase
     {
         parent::setUp();
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+
+        \Illuminate\Support\Facades\Mail::fake();
 
         $this->institute = Institute::create([
             'name' => 'Ingest Test Institute',
@@ -264,5 +271,89 @@ class IngestLearningMaterialTest extends TestCase
                 $this->assertNotEmpty($word);
             }
         }
+    }
+
+    public function test_repeated_words_are_never_lost_or_deduplicated(): void
+    {
+        // Repeating "the" and "மாணவர்" multiple times in a sentence
+        $text = "The மாணவர் is the diligent மாணவர் in the academy. The teacher praises the மாணவர் because the மாணவர் studies hard.";
+
+        // Split into words directly to count true word frequencies
+        $inputWords = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+        $theCountInput = count(array_filter($inputWords, fn($w) => strtolower($w) === 'the'));
+        $tamilWordCountInput = count(array_filter($inputWords, fn($w) => $w === 'மாணவர்'));
+
+        $this->assertGreaterThan(3, $theCountInput);
+        $this->assertGreaterThan(3, $tamilWordCountInput);
+
+        $chunker = new MultilingualTextChunker(targetWords: 300, overlapWords: 40);
+        $chunks = $chunker->chunkSinglePage($text, 1);
+
+        $this->assertCount(1, $chunks);
+        $chunkWords = preg_split('/\s+/u', trim($chunks[0]['content']), -1, PREG_SPLIT_NO_EMPTY);
+
+        $theCountOutput = count(array_filter($chunkWords, fn($w) => strtolower($w) === 'the'));
+        $tamilWordCountOutput = count(array_filter($chunkWords, fn($w) => $w === 'மாணவர்'));
+
+        $this->assertEquals($theCountInput, $theCountOutput, 'Repeated English word "the" was deleted or corrupted.');
+        $this->assertEquals($tamilWordCountInput, $tamilWordCountOutput, 'Repeated Tamil word "மாணவர்" was deleted or corrupted.');
+        $this->assertEquals(count($inputWords), count($chunkWords), 'Total word count mismatch; words were dropped.');
+    }
+
+    public function test_last_chunk_is_never_an_orphan(): void
+    {
+        $chunker = new MultilingualTextChunker(targetWords: 50, overlapWords: 15);
+
+        // Create a 58-word text where a naive chunker might create a 50-word chunk and an 8-word orphan
+        $sentence1 = "Sentence one contains exactly fifteen words here to build a realistic paragraph structure for testing.";
+        $sentence2 = "Sentence two adds another fifteen words right here in order to verify chunk sizes properly.";
+        $sentence3 = "Sentence three also provides fifteen words to test that trailing sentences are safely absorbed.";
+        $sentence4 = "Sentence four gives thirteen trailing words to prevent tiny orphan chunks from dangling.";
+
+        $fullText = "{$sentence1} {$sentence2}\n\n{$sentence3} {$sentence4}";
+
+        $chunks = $chunker->chunkSinglePage($fullText, 1);
+
+        $this->assertNotEmpty($chunks);
+
+        // Every chunk, including the last chunk, must never be an orphan (< 15 words)
+        foreach ($chunks as $index => $chunk) {
+            $this->assertGreaterThanOrEqual(
+                15,
+                $chunk['word_count'],
+                "Chunk index {$index} is an orphan with only {$chunk['word_count']} words: '{$chunk['content']}'"
+            );
+        }
+    }
+
+    public function test_guardrail_limits_mark_material_failed_without_retrying(): void
+    {
+        $mockExtractor = $this->createMock(PdfTextExtractor::class);
+        $mockExtractor->method('extract')->willThrowException(
+            new \App\Services\Rag\FileTooLargeException("File exceeds maximum allowed size of 50MB.")
+        );
+        $this->app->instance(PdfTextExtractor::class, $mockExtractor);
+
+        $material = LearningMaterial::create([
+            'title' => 'Oversized Note',
+            'type' => 'note',
+            'grade' => 'grade-10',
+            'medium' => 'tamil',
+            'subject' => 'Science',
+            'file_path' => 'materials/huge.pdf',
+            'institute_id' => $this->institute->id,
+        ]);
+
+        $job = new IngestLearningMaterialJob($material->id);
+        $job->handle(
+            app(\App\Contracts\Rag\VectorStoreInterface::class),
+            $mockExtractor,
+            app(MultilingualTextChunker::class),
+            new FakeGeminiTestClient()
+        );
+
+        $material->refresh();
+        $this->assertEquals('failed', $material->rag_status);
+        $this->assertStringContainsString('exceeds maximum allowed size', $material->rag_error);
     }
 }

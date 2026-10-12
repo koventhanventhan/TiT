@@ -32,47 +32,115 @@ class GeminiRagClient implements GeminiClientInterface
      * @param string|null $title Optional document title for retrieval context
      * @return array<int, float>
      */
+    /**
+     * Generate embedding vector using Gemini Embedding API.
+     */
     public function embedContent(string $text, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array
     {
+        $results = $this->batchEmbedContents([$text], $taskType, $title);
+        return $results[0] ?? [];
+    }
+
+    /**
+     * Generate embedding vectors for multiple texts in batches with exponential backoff on 429/5xx.
+     *
+     * @param array<int, string> $texts
+     * @param string $taskType
+     * @param string|null $title
+     * @return array<int, array<int, float>>
+     */
+    public function batchEmbedContents(array $texts, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array
+    {
+        if (empty($texts)) {
+            return [];
+        }
+
         if (empty($this->apiKey)) {
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->embeddingModel}:embedContent?key={$this->apiKey}";
+        $batchSize = (int) config('rag.chunking.embedding_batch_size', 25);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->embeddingModel}:batchEmbedContents?key={$this->apiKey}";
+        $textChunks = array_chunk($texts, $batchSize);
+        $allEmbeddings = [];
 
-        $payload = [
-            'model' => 'models/' . $this->embeddingModel,
-            'content' => [
-                'parts' => [
-                    ['text' => $text],
-                ],
-            ],
-            'taskType' => $taskType,
-            'outputDimensionality' => $this->dimensions,
-        ];
+        foreach ($textChunks as $chunk) {
+            $requests = [];
+            foreach ($chunk as $text) {
+                $req = [
+                    'model' => 'models/' . $this->embeddingModel,
+                    'content' => [
+                        'parts' => [
+                            ['text' => $text],
+                        ],
+                    ],
+                    'taskType' => $taskType,
+                    'outputDimensionality' => $this->dimensions,
+                ];
 
-        if (!empty($title) && $taskType === 'RETRIEVAL_DOCUMENT') {
-            $payload['title'] = $title;
+                if (!empty($title) && $taskType === 'RETRIEVAL_DOCUMENT') {
+                    $req['title'] = $title;
+                }
+
+                $requests[] = $req;
+            }
+
+            // Exponential backoff retry loop on 429 or 5xx
+            $maxAttempts = 3;
+            $delayMs = 1000;
+            $lastException = null;
+            $batchSuccess = false;
+
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                try {
+                    $response = Http::timeout($this->timeout)->post($url, [
+                        'requests' => $requests,
+                    ]);
+
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        $batchEmbeddings = $data['embeddings'] ?? [];
+
+                        if (count($batchEmbeddings) !== count($requests)) {
+                            throw new RuntimeException('Gemini batchEmbedContents returned mismatched count of embeddings.');
+                        }
+
+                        foreach ($batchEmbeddings as $emb) {
+                            $allEmbeddings[] = $emb['values'] ?? [];
+                        }
+
+                        $batchSuccess = true;
+                        break;
+                    }
+
+                    $status = $response->status();
+                    if ($attempt === $maxAttempts || !in_array($status, [429, 500, 502, 503, 504])) {
+                        Log::error("Gemini batchEmbedContents failed permanently with status {$status}", [
+                            'body' => $response->body(),
+                        ]);
+                        throw new RuntimeException("Gemini batchEmbedContents failed ({$status}): " . $response->body());
+                    }
+
+                    Log::warning("Gemini batchEmbedContents throttled/errored (status {$status}), retrying attempt {$attempt}/{$maxAttempts} in {$delayMs}ms...");
+                    usleep($delayMs * 1000);
+                    $delayMs *= 2;
+
+                } catch (\Throwable $e) {
+                    $lastException = $e;
+                    if ($attempt === $maxAttempts) {
+                        throw $e;
+                    }
+                    usleep($delayMs * 1000);
+                    $delayMs *= 2;
+                }
+            }
+
+            if (!$batchSuccess && $lastException) {
+                throw $lastException;
+            }
         }
 
-        $response = Http::timeout($this->timeout)->post($url, $payload);
-
-        if (!$response->successful()) {
-            Log::error('Gemini Embedding API Error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            throw new RuntimeException("Gemini embedding request failed ({$response->status()}): " . $response->body());
-        }
-
-        $data = $response->json();
-        $values = $data['embedding']['values'] ?? [];
-
-        if (empty($values) || !is_array($values)) {
-            throw new RuntimeException('Invalid or empty embedding values received from Gemini API.');
-        }
-
-        return $values;
+        return $allEmbeddings;
     }
 
     /**

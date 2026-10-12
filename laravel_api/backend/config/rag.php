@@ -51,8 +51,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'chunking' => [
-        'target_word_count' => (int) env('RAG_CHUNK_TARGET_WORDS', 400),
-        'overlap_words' => (int) env('RAG_CHUNK_OVERLAP_WORDS', 50),
+        'target_word_count' => (int) env('RAG_CHUNK_TARGET_WORDS', 300),
+        'overlap_words' => (int) env('RAG_CHUNK_OVERLAP_WORDS', 40),
+        'embedding_batch_size' => (int) env('RAG_EMBEDDING_BATCH_SIZE', 25),
     ],
 
     /*
@@ -63,6 +64,7 @@ return [
     'ingestion' => [
         'max_pages_per_material' => (int) env('RAG_MAX_PAGES_PER_MATERIAL', 50),
         'max_file_size_mb' => (int) env('RAG_MAX_FILE_SIZE_MB', 50),
+        'ocr_max_pages' => (int) env('RAG_OCR_MAX_PAGES', 20),
         'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
         'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
         'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),

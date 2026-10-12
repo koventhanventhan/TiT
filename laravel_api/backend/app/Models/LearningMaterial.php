@@ -49,7 +49,7 @@ class LearningMaterial extends Model
             }
 
             if ($material->type !== 'recording' && !empty($material->file_path)) {
-                \App\Jobs\IngestLearningMaterialJob::dispatch($material->id);
+                \App\Jobs\IngestLearningMaterialJob::dispatch($material->id)->afterCommit();
             } else {
                 $material->updateQuietly(['rag_status' => 'skipped']);
             }
@@ -60,7 +60,7 @@ class LearningMaterial extends Model
             if ($material->wasChanged('file_path')) {
                 if ($material->type !== 'recording' && !empty($material->file_path)) {
                     $material->updateQuietly(['rag_status' => 'pending']);
-                    \App\Jobs\IngestLearningMaterialJob::dispatch($material->id);
+                    \App\Jobs\IngestLearningMaterialJob::dispatch($material->id)->afterCommit();
                 } else {
                     \App\Models\MaterialChunk::withoutGlobalScopes()
                         ->where('material_id', $material->id)

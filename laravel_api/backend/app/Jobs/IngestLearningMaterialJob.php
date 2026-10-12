@@ -5,8 +5,12 @@ namespace App\Jobs;
 use App\Contracts\Rag\GeminiClientInterface;
 use App\Contracts\Rag\VectorStoreInterface;
 use App\Models\LearningMaterial;
+use App\Services\Rag\FileTooLargeException;
 use App\Services\Rag\MultilingualTextChunker;
+use App\Services\Rag\OcrPageLimitExceededException;
+use App\Services\Rag\PageLimitExceededException;
 use App\Services\Rag\PdfTextExtractor;
+use App\Services\Rag\UnsupportedFileTypeException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,6 +26,7 @@ class IngestLearningMaterialJob implements ShouldQueue
 
     public int $materialId;
     public int $tries = 3;
+    public int $timeout = 110;
     public array $backoff = [10, 30, 60];
 
     public function __construct(int $materialId)
@@ -49,37 +54,41 @@ class IngestLearningMaterialJob implements ShouldQueue
         if ($material->type === 'recording' || empty($material->file_path)) {
             Log::info("IngestLearningMaterialJob: Material #{$material->id} is a recording or URL-only. Marking skipped.");
             $vectorStore->deleteByMaterial($material->id);
-            $material->update([
+            $material->updateQuietly([
                 'rag_status' => 'skipped',
                 'rag_error' => null,
             ]);
             return;
         }
 
-        $material->update([
+        $material->updateQuietly([
             'rag_status' => 'processing',
             'rag_error' => null,
         ]);
 
         try {
-            // 2. Extract text from PDF document
+            // 2. Extract text from document (enforces max_pages, max_file_size, OCR limits)
             $pages = $extractor->extract($material);
 
             if (empty($pages)) {
                 $vectorStore->deleteByMaterial($material->id);
-                $material->update([
+                $material->updateQuietly([
                     'rag_status' => 'skipped',
                     'rag_error' => 'No extractable text found in file (empty or unsupported format).',
                 ]);
                 return;
             }
 
-            // 3. Chunk page text preserving Unicode words
+            // 3. Chunk page text preserving sentence and Unicode boundaries
             $chunks = $chunker->chunkPages($pages);
 
-            if (empty($chunks)) {
+            $validChunks = array_values(array_filter($chunks, function ($c) {
+                return !empty(trim($c['content'] ?? ''));
+            }));
+
+            if (empty($validChunks)) {
                 $vectorStore->deleteByMaterial($material->id);
-                $material->update([
+                $material->updateQuietly([
                     'rag_status' => 'skipped',
                     'rag_error' => 'Document generated 0 text chunks.',
                 ]);
@@ -89,24 +98,23 @@ class IngestLearningMaterialJob implements ShouldQueue
             $embeddingModel = (string) config('rag.models.embedding', 'gemini-embedding-2');
             $dimensions = (int) config('rag.models.embedding_dimensions', 768);
 
-            // 4. Generate embeddings and save chunks inside an idempotent database transaction
-            DB::transaction(function () use ($vectorStore, $geminiClient, $material, $chunks, $embeddingModel, $dimensions) {
-                // Idempotency: clean up any existing chunks for this material first
+            // 4. Generate ALL embeddings outside of database transactions using batchEmbedContents
+            $chunkTexts = array_column($validChunks, 'content');
+            $allEmbeddings = $geminiClient->batchEmbedContents(
+                $chunkTexts,
+                'RETRIEVAL_DOCUMENT',
+                $material->title
+            );
+
+            if (count($allEmbeddings) !== count($validChunks)) {
+                throw new \RuntimeException('Mismatch between chunk count and generated embeddings count.');
+            }
+
+            // 5. Short, atomic transaction: delete old chunks, insert new ones, and mark ready
+            DB::transaction(function () use ($vectorStore, $material, $validChunks, $allEmbeddings, $embeddingModel, $dimensions) {
                 $vectorStore->deleteByMaterial($material->id);
 
-                foreach ($chunks as $chunkData) {
-                    $content = $chunkData['content'];
-                    if (empty(trim($content))) {
-                        continue;
-                    }
-
-                    // Generate embedding for document chunk
-                    $floatVector = $geminiClient->embedContent(
-                        $content,
-                        'RETRIEVAL_DOCUMENT',
-                        $material->title
-                    );
-
+                foreach ($validChunks as $index => $chunkData) {
                     $vectorStore->saveChunk([
                         'institute_id' => $material->institute_id ?? 1,
                         'material_id' => $material->id,
@@ -115,28 +123,38 @@ class IngestLearningMaterialJob implements ShouldQueue
                         'subject' => $material->subject,
                         'chunk_type' => 'page',
                         'page_number' => $chunkData['page_number'] ?? 1,
-                        'content' => $content,
+                        'content' => $chunkData['content'],
                         'embedding_model' => $embeddingModel,
                         'dimensions' => $dimensions,
                         'word_count' => $chunkData['word_count'] ?? 0,
-                    ], $floatVector);
+                    ], $allEmbeddings[$index]);
                 }
 
-                $material->update([
+                $material->updateQuietly([
                     'rag_status' => 'ready',
                     'rag_error' => null,
                     'rag_indexed_at' => now(),
                 ]);
             });
 
-            Log::info("IngestLearningMaterialJob: Successfully indexed material #{$material->id} (" . count($chunks) . " chunks).");
+            Log::info("IngestLearningMaterialJob: Successfully indexed material #{$material->id} (" . count($validChunks) . " chunks).");
+
+        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException $e) {
+            // Guardrail limit or unsupported format exceeded: mark failed/skipped without retrying
+            Log::warning("IngestLearningMaterialJob: Guardrail limit triggered for material #{$material->id}: " . $e->getMessage());
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'failed',
+                'rag_error' => substr($e->getMessage(), 0, 1000),
+            ]);
+            return;
 
         } catch (Throwable $e) {
             Log::error("IngestLearningMaterialJob: Failed for material #{$material->id}: " . $e->getMessage(), [
                 'exception' => $e,
             ]);
 
-            // Re-throw so Laravel's queue retries with backoff up to $tries
+            // Re-throw so Laravel's queue retries transient errors with backoff up to $tries
             throw $e;
         }
     }
@@ -148,7 +166,7 @@ class IngestLearningMaterialJob implements ShouldQueue
     {
         $material = LearningMaterial::withoutGlobalScopes()->find($this->materialId);
         if ($material) {
-            $material->update([
+            $material->updateQuietly([
                 'rag_status' => 'failed',
                 'rag_error' => substr($exception ? $exception->getMessage() : 'Ingestion failed.', 0, 1000),
             ]);

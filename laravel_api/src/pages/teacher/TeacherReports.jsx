@@ -4,14 +4,10 @@ import { getTeacherDashboardStats, getTeacherAssignments } from '../../services/
 
 function ReportCard({ title, value, subtitle, icon: Icon }) {
     return (
-        <div style={{
+        <div className="t-card" style={{
             background: 'var(--t-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--t-border)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.02)', position: 'relative', overflow: 'hidden',
-            transition: 'all 0.3s'
-        }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.04)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)' }}
-        >
+            boxShadow: '0 1px 3px rgba(0,0,0,0.02)', position: 'relative', overflow: 'hidden'
+        }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{
                     width: 56, height: 56, borderRadius: 14,
@@ -78,20 +74,19 @@ export default function TeacherReports() {
                 </div>
                 <button
                     onClick={() => window.print()}
+                    className="t-btn"
                     style={{
-                        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', minHeight: 44,
                         background: 'var(--t-surface)', color: 'var(--t-primary)', border: '1px solid var(--t-border)',
-                        borderRadius: 12, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s'
+                        borderRadius: 12, fontWeight: 600, fontSize: 14, cursor: 'pointer'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-primary-soft)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--t-surface)'}
                 >
                     <FiPrinter /> Print Report
                 </button>
             </div>
 
             {/* Overview Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: 20, marginBottom: 24 }}>
                 <ReportCard
                     title="Total Students"
                     value={stats?.total_students || 0}

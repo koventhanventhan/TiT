@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FiSearch, FiMail, FiPhone, FiInfo, FiUsers, FiFilter, FiX, FiCalendar, FiClock } from 'react-icons/fi'
 import { getTeacherStudents, getTeacherStudent } from '../../services/dashboardService'
 import { useToast } from '../../components/shared/ToastContext'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 export default function TeacherStudents() {
     const toast = useToast()
@@ -9,6 +10,8 @@ export default function TeacherStudents() {
     const [search, setSearch] = useState('')
     const [selectedGrade, setSelectedGrade] = useState('all')
     const [loading, setLoading] = useState(true)
+
+    const isTabletOrDesktop = useMediaQuery('(min-width: 640px)')
 
     // Student Info Modal state
     const [infoModalOpen, setInfoModalOpen] = useState(false)
@@ -20,7 +23,11 @@ export default function TeacherStudents() {
             try {
                 const data = await getTeacherStudents().catch(() => null)
                 if (data !== null) {
-                    setStudents(data)
+                    setStudents(prev => {
+                        // Compare JSON before setStudents to prevent unnecessary re-renders
+                        if (JSON.stringify(prev) === JSON.stringify(data)) return prev
+                        return data
+                    })
                 }
             } catch (e) {
                 console.error(e)
@@ -145,9 +152,10 @@ export default function TeacherStudents() {
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>No students found</h3>
                     <p style={{ margin: 0, color: 'var(--t-text-3)', fontSize: 14 }}>Try adjusting your search or grade filter.</p>
                 </div>
-            ) : (
+            ) : isTabletOrDesktop ? (
+                /* Desktop & Tablet Table (>=640px) */
                 <div style={{ background: 'var(--t-surface)', borderRadius: 16, border: '1px solid var(--t-border)', overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 700 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 640 }}>
                         <thead>
                             <tr style={{ background: 'var(--t-bg)', borderBottom: '1px solid var(--t-border)' }}>
                                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Student Info</th>
@@ -158,9 +166,7 @@ export default function TeacherStudents() {
                         </thead>
                         <tbody>
                             {filtered.map((student, idx) => (
-                                <tr key={student.id} style={{ borderBottom: idx === filtered.length - 1 ? 'none' : '1px solid var(--t-border)', transition: 'background 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                >
+                                <tr key={student.id} style={{ borderBottom: idx === filtered.length - 1 ? 'none' : '1px solid var(--t-border)', transition: 'background 0.2s' }}>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                             <div style={{
@@ -203,14 +209,13 @@ export default function TeacherStudents() {
                                     <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                         <button
                                             onClick={() => handleViewInfo(student.id)}
+                                            className="t-btn"
                                             style={{
-                                                padding: '8px 14px', borderRadius: 10, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                                                display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--t-primary)', cursor: 'pointer', transition: 'all 0.2s',
+                                                minHeight: 44, padding: '8px 14px', borderRadius: 10, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
+                                                display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--t-primary)', cursor: 'pointer',
                                                 fontSize: 13, fontWeight: 600
                                             }}
                                             title="View Student Profile & Attendance"
-                                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--t-primary-soft)'; e.currentTarget.style.borderColor = 'var(--t-primary)' }}
-                                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--t-surface)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}
                                         >
                                             <FiInfo /> View Info
                                         </button>
@@ -220,26 +225,75 @@ export default function TeacherStudents() {
                         </tbody>
                     </table>
                 </div>
+            ) : (
+                /* Mobile Card View (<640px) */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {filtered.map(student => {
+                        const isJoined = Boolean(student.is_online)
+                        return (
+                            <div key={student.id} className="t-card" style={{
+                                background: 'var(--t-surface)', borderRadius: 14, border: '1px solid var(--t-border)',
+                                padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{
+                                        width: 44, height: 44, borderRadius: 12,
+                                        background: 'var(--t-primary)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0
+                                    }}>{(student.name || 'S').charAt(0).toUpperCase()}</div>
+                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>{student.name || 'Unnamed Student'}</div>
+                                        <div style={{ fontSize: 12, color: 'var(--t-text-3)' }}>STU-{student.id} • {student.email || 'No email'}</div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                                    <div style={{ fontSize: 13, color: 'var(--t-text-2)', fontWeight: 600 }}>
+                                        {student.current_grade ? `Grade ${student.current_grade}` : '—'} • {student.stream || 'General'}
+                                    </div>
+                                    <div style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                                        padding: '4px 10px', borderRadius: 99,
+                                        background: isJoined ? 'var(--t-success-bg)' : 'var(--t-bg)',
+                                        border: `1px solid ${isJoined ? 'var(--t-primary-border)' : 'var(--t-border)'}`,
+                                        color: isJoined ? 'var(--t-success)' : 'var(--t-text-3)',
+                                        fontSize: 12, fontWeight: 700
+                                    }}>
+                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: isJoined ? 'var(--t-success)' : 'var(--t-text-3)' }} />
+                                        {isJoined ? 'Joined Class' : 'Not Joined'}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleViewInfo(student.id)}
+                                    className="t-btn"
+                                    style={{
+                                        width: '100%', minHeight: 44, padding: '10px 14px', borderRadius: 10,
+                                        background: 'var(--t-surface)', border: '1px solid var(--t-border)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        color: 'var(--t-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 600
+                                    }}
+                                >
+                                    <FiInfo /> View Info
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
             )}
 
             {/* Student Info Modal */}
             {infoModalOpen && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)',
-                    backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', padding: 20
-                }}>
-                    <div style={{
-                        background: 'var(--t-surface)', width: '100%', maxWidth: 580,
-                        borderRadius: 20, padding: 28, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-                        maxHeight: '90vh', overflowY: 'auto'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid var(--t-border)', paddingBottom: 14 }}>
+                <div className="teacher-modal-overlay">
+                    <div className="teacher-modal-dialog" style={{ maxWidth: 580 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-surface)' }}>
                             <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--t-text)', margin: 0 }}>Student Profile</h2>
                             <button
                                 onClick={() => { setInfoModalOpen(false); setSelectedStudentData(null); }}
+                                className="t-icon-btn"
+                                aria-label="Close student info modal"
                                 style={{
-                                    width: 32, height: 32, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
+                                    width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer'
                                 }}
                             >
@@ -247,91 +301,84 @@ export default function TeacherStudents() {
                             </button>
                         </div>
 
-                        {loadingInfo || !selectedStudentData ? (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}>
-                                <div style={{ width: 36, height: 36, border: '3px solid var(--t-border)', borderTopColor: 'var(--t-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                            </div>
-                        ) : (
-                            <div>
-                                {/* Profile Summary */}
-                                <div style={{
-                                    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14,
-                                    background: 'var(--t-bg)', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid var(--t-border)'
-                                }}>
-                                    <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Full Name</div>
-                                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t-text)', marginTop: 2 }}>{selectedStudentData.profile?.name}</div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Email</div>
-                                        <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.email}</div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Phone</div>
-                                        <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.phone_number || 'N/A'}</div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Grade / Stream</div>
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-text)', marginTop: 2 }}>
-                                            Grade {selectedStudentData.profile?.current_grade || 'N/A'} {selectedStudentData.profile?.stream ? `(${selectedStudentData.profile.stream})` : ''}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Registration Status</div>
-                                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t-success)', textTransform: 'capitalize', marginTop: 2 }}>
-                                            {selectedStudentData.profile?.registration_status || 'Approved'}
-                                        </div>
-                                    </div>
+                        <div className="teacher-modal-body">
+                            {loadingInfo || !selectedStudentData ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}>
+                                    <div style={{ width: 36, height: 36, border: '3px solid var(--t-border)', borderTopColor: 'var(--t-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                                 </div>
-
-                                {/* Attendance History */}
-                                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)', margin: '0 0 12px 0' }}>Recent Attendance (Last 20 Sessions)</h3>
-                                {(!selectedStudentData.attendance || selectedStudentData.attendance.length === 0) ? (
-                                    <div style={{ padding: 20, textAlign: 'center', background: 'var(--t-bg)', borderRadius: 10, color: 'var(--t-text-3)', fontSize: 13 }}>
-                                        No recorded attendance rows yet.
+                            ) : (
+                                <div>
+                                    {/* Profile Summary */}
+                                    <div style={{
+                                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14,
+                                        background: 'var(--t-bg)', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid var(--t-border)'
+                                    }}>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Full Name</div>
+                                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t-text)', marginTop: 2 }}>{selectedStudentData.profile?.name}</div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Email</div>
+                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.email}</div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Phone</div>
+                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.phone_number || 'N/A'}</div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Grade / Stream</div>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-text)', marginTop: 2 }}>
+                                                Grade {selectedStudentData.profile?.current_grade || 'N/A'} {selectedStudentData.profile?.stream ? `(${selectedStudentData.profile.stream})` : ''}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Registration Status</div>
+                                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t-success)', textTransform: 'capitalize', marginTop: 2 }}>
+                                                {selectedStudentData.profile?.registration_status || 'Approved'}
+                                            </div>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <div style={{ border: '1px solid var(--t-border)', borderRadius: 10, overflow: 'hidden' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                                            <thead>
-                                                <tr style={{ background: 'var(--t-bg)', borderBottom: '1px solid var(--t-border)', textAlign: 'left' }}>
-                                                    <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600 }}>Class</th>
-                                                    <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600 }}>Date</th>
-                                                    <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600, textAlign: 'right' }}>Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {selectedStudentData.attendance.map((att, i) => {
-                                                    const schedule = att.zoomSchedule || att.zoom_schedule
-                                                    const isPresent = att.status === 'present'
-                                                    return (
-                                                        <tr key={att.id || i} style={{ borderBottom: i === selectedStudentData.attendance.length - 1 ? 'none' : '1px solid var(--t-border)' }}>
-                                                            <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--t-text)' }}>
-                                                                {schedule?.title || 'Class Session'}
-                                                                {schedule?.subject && <span style={{ fontSize: 11, color: 'var(--t-text-3)', display: 'block' }}>{schedule.subject}</span>}
-                                                            </td>
-                                                            <td style={{ padding: '10px 14px', color: 'var(--t-text-2)' }}>
-                                                                {att.marked_at ? new Date(att.marked_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                                                            </td>
+
+                                    {/* Attendance History */}
+                                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)', margin: '0 0 12px 0' }}>Recent Attendance (Last 20 Sessions)</h3>
+                                    {(!selectedStudentData.attendance || selectedStudentData.attendance.length === 0) ? (
+                                        <div style={{ padding: 20, textAlign: 'center', background: 'var(--t-bg)', borderRadius: 10, color: 'var(--t-text-3)', fontSize: 13 }}>
+                                            No recorded attendance rows yet.
+                                        </div>
+                                    ) : (
+                                        <div style={{ border: '1px solid var(--t-border)', borderRadius: 10, overflow: 'hidden' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                                <thead>
+                                                    <tr style={{ background: 'var(--t-bg)', borderBottom: '1px solid var(--t-border)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600 }}>Class</th>
+                                                        <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600 }}>Date</th>
+                                                        <th style={{ padding: '10px 14px', color: 'var(--t-text-3)', fontWeight: 600, textAlign: 'right' }}>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {selectedStudentData.attendance.map((row, i) => (
+                                                        <tr key={i} style={{ borderBottom: i === selectedStudentData.attendance.length - 1 ? 'none' : '1px solid var(--t-border)' }}>
+                                                            <td style={{ padding: '10px 14px', color: 'var(--t-text)', fontWeight: 600 }}>{row.zoom_class?.title || 'Class Session'}</td>
+                                                            <td style={{ padding: '10px 14px', color: 'var(--t-text-3)' }}>{row.attended_at ? new Date(row.attended_at).toLocaleDateString() : 'N/A'}</td>
                                                             <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                                                                 <span style={{
-                                                                    padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                                                                    background: isPresent ? 'var(--t-success-bg)' : 'var(--t-danger-bg)',
-                                                                    color: isPresent ? 'var(--t-success)' : 'var(--t-danger)',
+                                                                    padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                                    background: row.status === 'present' ? 'var(--t-success-bg)' : 'var(--t-danger-bg)',
+                                                                    color: row.status === 'present' ? 'var(--t-success)' : 'var(--t-danger)',
                                                                     textTransform: 'capitalize'
                                                                 }}>
-                                                                    {att.status}
+                                                                    {row.status}
                                                                 </span>
                                                             </td>
                                                         </tr>
-                                                    )
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

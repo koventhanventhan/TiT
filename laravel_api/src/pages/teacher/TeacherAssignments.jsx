@@ -63,6 +63,7 @@ export default function TeacherAssignments() {
 
     const handleCreateSubmit = async (e) => {
         e.preventDefault()
+        if (createLoading) return
         setCreateLoading(true)
         try {
             const formData = new FormData()
@@ -121,6 +122,7 @@ export default function TeacherAssignments() {
 
     // Save individual submission grade
     const handleSaveGrade = async (subId) => {
+        if (savingSubId) return
         const draft = gradeDrafts[subId] || {}
         if (draft.marks === '' || isNaN(draft.marks) || Number(draft.marks) < 0 || Number(draft.marks) > 100) {
             toast.error('Please enter a valid mark between 0 and 100')
@@ -163,14 +165,13 @@ export default function TeacherAssignments() {
                     <p style={{ color: 'var(--t-text-3)', margin: 0, fontSize: 14 }}>Manage homework, view submissions, and grade student papers</p>
                 </div>
                 <button
+                    className="t-btn"
                     style={{
                         display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
                         background: 'var(--t-primary)', color: '#fff',
                         border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 14,
-                        cursor: 'pointer', transition: 'all 0.2s', width: 'fit-content'
+                        cursor: 'pointer', width: 'fit-content'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-primary-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--t-primary)'}
                     onClick={() => setIsCreateModalOpen(true)}
                 >
                     <FiPlus style={{ fontSize: 18 }} /> Create Assignment
@@ -201,6 +202,7 @@ export default function TeacherAssignments() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
+                        className="t-btn"
                         onClick={() => setFilter('active')}
                         style={{
                             padding: '8px 16px', borderRadius: 8,
@@ -213,6 +215,7 @@ export default function TeacherAssignments() {
                         All Active
                     </button>
                     <button
+                        className="t-btn"
                         onClick={() => setFilter('needs_grading')}
                         style={{
                             padding: '8px 16px', borderRadius: 8,
@@ -225,6 +228,7 @@ export default function TeacherAssignments() {
                         Needs Grading
                     </button>
                     <button
+                        className="t-btn"
                         onClick={() => setFilter('closed')}
                         style={{
                             padding: '8px 16px', borderRadius: 8,
@@ -253,6 +257,7 @@ export default function TeacherAssignments() {
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-danger)' }}>Failed to load assignments</h3>
                     <p style={{ margin: '0 0 16px 0', color: 'var(--t-text-2)', fontSize: 14 }}>{error}</p>
                     <button
+                        className="t-btn"
                         onClick={loadAssignments}
                         style={{
                             padding: '8px 16px', background: 'var(--t-primary)', color: '#fff', border: 'none',
@@ -264,7 +269,7 @@ export default function TeacherAssignments() {
                 </div>
             ) : (
                 <div style={{
-                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 20
                 }}>
                     {filteredAssignments.map(assign => {
                         const totalStudents = assign.total_students || 0
@@ -274,15 +279,12 @@ export default function TeacherAssignments() {
                         const isClosed = hasValidDate ? dueDateObj < new Date() : false
 
                         return (
-                            <div key={assign.id} style={{
+                            <div key={assign.id} className="t-card" style={{
                                 background: 'var(--t-surface)', borderRadius: 16, border: '1px solid var(--t-border)',
                                 padding: 20, display: 'flex', flexDirection: 'column',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)', transition: 'transform 0.2s, box-shadow 0.2s',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                                 opacity: isClosed ? 0.75 : 1
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.08)' }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)' }}
-                            >
+                            }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                                     <div style={{
                                         background: 'var(--t-primary-soft)', color: 'var(--t-primary)',
@@ -301,7 +303,7 @@ export default function TeacherAssignments() {
                                 </div>
 
                                 <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)', lineHeight: 1.3 }}>{assign.title}</h3>
-                                <p style={{ margin: '0 0 16px 0', color: 'var(--t-text-3)', fontSize: 13, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                <p style={{ margin: '0 0 16px 0', color: 'var(--t-text-3)', fontSize: 13, lineHeight: 1.5, display: '-webkit-box', WebKitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {assign.description || 'No description provided.'}
                                 </p>
 
@@ -316,13 +318,12 @@ export default function TeacherAssignments() {
 
                                     <button
                                         onClick={() => handleOpenGrading(assign)}
+                                        className="t-btn"
                                         style={{
-                                            width: '100%', padding: '10px', background: 'var(--t-primary)', border: 'none',
-                                            borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background 0.2s',
+                                            width: '100%', minHeight: 44, padding: '10px', background: 'var(--t-primary)', border: 'none',
+                                            borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-primary-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'var(--t-primary)'}
                                     >
                                         <FiFileText /> Grade Papers {assign.ungraded_count > 0 ? `(${assign.ungraded_count})` : ''}
                                     </button>
@@ -342,9 +343,10 @@ export default function TeacherAssignments() {
                             <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>No assignments found</h3>
                             <p style={{ margin: '0 0 20px 0', color: 'var(--t-text-3)', fontSize: 14 }}>Create an assignment to get started.</p>
                             <button
+                                className="t-btn"
                                 onClick={() => setIsCreateModalOpen(true)}
                                 style={{
-                                    padding: '10px 20px', background: 'var(--t-primary)', color: '#fff', border: 'none',
+                                    padding: '10px 20px', minHeight: 44, background: 'var(--t-primary)', color: '#fff', border: 'none',
                                     borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
                                 }}
                             >
@@ -357,19 +359,11 @@ export default function TeacherAssignments() {
 
             {/* Grade Papers Drawer / Modal */}
             {gradingModalOpen && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)',
-                    backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', padding: 20
-                }}>
-                    <div style={{
-                        background: 'var(--t-surface)', width: '100%', maxWidth: 700,
-                        borderRadius: 20, padding: 28, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-                        maxHeight: '90vh', display: 'flex', flexDirection: 'column'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid var(--t-border)', paddingBottom: 16 }}>
+                <div className="teacher-modal-overlay">
+                    <div className="teacher-modal-dialog" style={{ maxWidth: 700 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-surface)' }}>
                             <div>
-                                <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0' }}>
+                                <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0' }}>
                                     Grade Papers: {selectedAssignment?.title}
                                 </h2>
                                 <p style={{ fontSize: 13, color: 'var(--t-text-3)', margin: 0 }}>
@@ -378,8 +372,10 @@ export default function TeacherAssignments() {
                             </div>
                             <button
                                 onClick={() => { setGradingModalOpen(false); setSelectedAssignment(null); }}
+                                className="t-icon-btn"
+                                aria-label="Close grading modal"
                                 style={{
-                                    width: 32, height: 32, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
+                                    width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer'
                                 }}
                             >
@@ -387,232 +383,232 @@ export default function TeacherAssignments() {
                             </button>
                         </div>
 
-                        {loadingSubmissions ? (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-                                <div style={{ width: 40, height: 40, border: '4px solid var(--t-border)', borderTopColor: 'var(--t-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                            </div>
-                        ) : submissions.length === 0 ? (
-                            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 14 }}>
-                                No student submissions received for this assignment yet.
-                            </div>
-                        ) : (
-                            <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
-                                {submissions.map(sub => {
-                                    const draft = gradeDrafts[sub.id] || { marks: '', feedback: '' }
-                                    const isSaving = savingSubId === sub.id
-                                    const isGraded = sub.status === 'graded'
+                        <div className="teacher-modal-body">
+                            {loadingSubmissions ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+                                    <div style={{ width: 40, height: 40, border: '4px solid var(--t-border)', borderTopColor: 'var(--t-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                </div>
+                            ) : submissions.length === 0 ? (
+                                <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 14 }}>
+                                    No student submissions received for this assignment yet.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                    {submissions.map(sub => {
+                                        const draft = gradeDrafts[sub.id] || { marks: '', feedback: '' }
+                                        const isSaving = savingSubId === sub.id
+                                        const isGraded = sub.status === 'graded'
 
-                                    return (
-                                        <div key={sub.id} style={{
-                                            border: '1px solid var(--t-border)', borderRadius: 12, padding: 18,
-                                            background: 'var(--t-bg)'
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-                                                <div>
-                                                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>
-                                                        {sub.student?.name || 'Student'}
+                                        return (
+                                            <div key={sub.id} style={{
+                                                border: '1px solid var(--t-border)', borderRadius: 12, padding: 18,
+                                                background: 'var(--t-bg)'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div>
+                                                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>
+                                                            {sub.student?.name || 'Student'}
+                                                        </div>
+                                                        <div style={{ fontSize: 12, color: 'var(--t-text-3)' }}>
+                                                            {sub.student?.email} • Submitted: {sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: 12, color: 'var(--t-text-3)' }}>
-                                                        {sub.student?.email} • Submitted: {sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span style={{
+                                                            padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
+                                                            background: isGraded ? 'var(--t-success-bg)' : 'var(--t-warning-bg)',
+                                                            color: isGraded ? 'var(--t-success)' : 'var(--t-warning)',
+                                                            textTransform: 'capitalize'
+                                                        }}>
+                                                            {isGraded ? `Graded: ${sub.marks}/100` : 'Pending'}
+                                                        </span>
+                                                        {sub.file_url ? (
+                                                            <a
+                                                                href={sub.file_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="t-tap"
+                                                                style={{
+                                                                    minHeight: 44, padding: '8px 12px', borderRadius: 8, background: 'var(--t-surface)',
+                                                                    border: '1px solid var(--t-border)', color: 'var(--t-primary)',
+                                                                    fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4
+                                                                }}
+                                                            >
+                                                                <FiDownload /> View File
+                                                            </a>
+                                                        ) : (
+                                                            <span style={{ fontSize: 12, color: 'var(--t-text-3)' }}>No attachment</span>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <span style={{
-                                                        padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-                                                        background: isGraded ? 'var(--t-success-bg)' : 'var(--t-warning-bg)',
-                                                        color: isGraded ? 'var(--t-success)' : 'var(--t-warning)',
-                                                        textTransform: 'capitalize'
-                                                    }}>
-                                                        {isGraded ? `Graded: ${sub.marks}/100` : 'Pending'}
-                                                    </span>
-                                                    {sub.file_url ? (
-                                                        <a
-                                                            href={sub.file_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
+
+                                                {/* Grading form */}
+                                                <div className="t-grading-row">
+                                                    <div>
+                                                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--t-text-3)', marginBottom: 4 }}>Marks (0-100)</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            value={draft.marks}
+                                                            onChange={e => setGradeDrafts({
+                                                                ...gradeDrafts,
+                                                                [sub.id]: { ...draft, marks: e.target.value }
+                                                            })}
+                                                            placeholder="e.g. 85"
                                                             style={{
-                                                                padding: '6px 12px', borderRadius: 8, background: 'var(--t-surface)',
-                                                                border: '1px solid var(--t-border)', color: 'var(--t-primary)',
-                                                                fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4
+                                                                width: '100%', padding: '8px 10px', borderRadius: 8,
+                                                                border: '1px solid var(--t-border)', background: 'var(--t-surface)',
+                                                                fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--t-text-3)', marginBottom: 4 }}>Feedback</label>
+                                                        <input
+                                                            type="text"
+                                                            value={draft.feedback}
+                                                            onChange={e => setGradeDrafts({
+                                                                ...gradeDrafts,
+                                                                [sub.id]: { ...draft, feedback: e.target.value }
+                                                            })}
+                                                            placeholder="Feedback comments..."
+                                                            style={{
+                                                                width: '100%', padding: '8px 10px', borderRadius: 8,
+                                                                border: '1px solid var(--t-border)', background: 'var(--t-surface)',
+                                                                fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ alignSelf: 'flex-end' }}>
+                                                        <button
+                                                            onClick={() => handleSaveGrade(sub.id)}
+                                                            disabled={isSaving}
+                                                            className="t-btn"
+                                                            style={{
+                                                                minHeight: 44, padding: '8px 16px', background: 'var(--t-primary)', color: '#fff',
+                                                                border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                                                                cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1
                                                             }}
                                                         >
-                                                            <FiDownload /> View File
-                                                        </a>
-                                                    ) : (
-                                                        <span style={{ fontSize: 12, color: 'var(--t-text-3)' }}>No attachment</span>
-                                                    )}
+                                                            {isSaving ? 'Saving...' : 'Save'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            {/* Grading form */}
-                                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr auto', gap: 10, alignItems: 'center' }}>
-                                                <div>
-                                                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--t-text-3)', marginBottom: 4 }}>Marks (0-100)</label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max="100"
-                                                        value={draft.marks}
-                                                        onChange={e => setGradeDrafts({
-                                                            ...gradeDrafts,
-                                                            [sub.id]: { ...draft, marks: e.target.value }
-                                                        })}
-                                                        placeholder="e.g. 85"
-                                                        style={{
-                                                            width: '100%', padding: '8px 10px', borderRadius: 8,
-                                                            border: '1px solid var(--t-border)', background: 'var(--t-surface)',
-                                                            fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--t-text-3)', marginBottom: 4 }}>Feedback</label>
-                                                    <input
-                                                        type="text"
-                                                        value={draft.feedback}
-                                                        onChange={e => setGradeDrafts({
-                                                            ...gradeDrafts,
-                                                            [sub.id]: { ...draft, feedback: e.target.value }
-                                                        })}
-                                                        placeholder="Feedback comments..."
-                                                        style={{
-                                                            width: '100%', padding: '8px 10px', borderRadius: 8,
-                                                            border: '1px solid var(--t-border)', background: 'var(--t-surface)',
-                                                            fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div style={{ alignSelf: 'flex-end' }}>
-                                                    <button
-                                                        onClick={() => handleSaveGrade(sub.id)}
-                                                        disabled={isSaving}
-                                                        style={{
-                                                            padding: '8px 16px', background: 'var(--t-primary)', color: '#fff',
-                                                            border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                                                            cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1
-                                                        }}
-                                                    >
-                                                        {isSaving ? 'Saving...' : 'Save'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Create Assignment Modal */}
             {isCreateModalOpen && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', 
-                    backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', 
-                    alignItems: 'center', justifyContent: 'center', padding: 20
-                }}>
-                    <div style={{
-                        background: 'var(--t-surface)', width: '100%', maxWidth: 500, 
-                        borderRadius: 24, padding: 32, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-                        maxHeight: '90vh', overflowY: 'auto'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--t-text)', margin: 0 }}>Create New Assignment</h2>
+                <div className="teacher-modal-overlay">
+                    <div className="teacher-modal-dialog" style={{ maxWidth: 500 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-surface)' }}>
+                            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--t-text)', margin: 0 }}>Create New Assignment</h2>
                             <button
                                 onClick={() => setIsCreateModalOpen(false)}
+                                className="t-icon-btn"
+                                aria-label="Close create assignment modal"
                                 style={{
-                                    width: 32, height: 32, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
+                                    width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: '50%', background: 'var(--t-bg)', border: 'none',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer'
                                 }}
                             >
                                 <FiX />
                             </button>
                         </div>
-                        <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Assignment Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newAssignment.title}
-                                    onChange={e => setNewAssignment({ ...newAssignment, title: e.target.value })}
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--t-border)', outline: 'none', fontSize: 14, boxSizing: 'border-box' }}
-                                    placeholder="e.g. Calculus Quiz 1"
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Subject</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newAssignment.subject}
-                                    onChange={e => setNewAssignment({ ...newAssignment, subject: e.target.value })}
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--t-border)', outline: 'none', fontSize: 14, boxSizing: 'border-box' }}
-                                    placeholder="e.g. Mathematics"
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Target Grade</label>
-                                <select
-                                    value={newAssignment.grade}
-                                    onChange={e => setNewAssignment({ ...newAssignment, grade: e.target.value })}
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--t-border)', outline: 'none', fontSize: 14, background: 'var(--t-surface)', boxSizing: 'border-box' }}
-                                >
-                                    <option value="">All Grades</option>
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(grade => (
-                                        <option key={grade} value={grade}>Grade {grade}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Due Date</label>
-                                <input
-                                    type="date"
-                                    value={newAssignment.due_date}
-                                    onChange={e => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--t-border)', outline: 'none', fontSize: 14, boxSizing: 'border-box' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Attachment (Optional, max 10MB)</label>
-                                <input
-                                    type="file"
-                                    accept=".pdf,.doc,.docx,.zip"
-                                    onChange={e => setAssignmentFile(e.target.files[0] || null)}
-                                    style={{ width: '100%', padding: '8px 10px', borderRadius: 10, border: '1px solid var(--t-border)', fontSize: 13, boxSizing: 'border-box' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Description / Instructions</label>
-                                <textarea
-                                    value={newAssignment.description}
-                                    onChange={e => setNewAssignment({ ...newAssignment, description: e.target.value })}
-                                    rows="4"
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--t-border)', outline: 'none', fontSize: 14, resize: 'none', boxSizing: 'border-box' }}
-                                    placeholder="Write assignment instructions here..."
-                                />
-                            </div>
-                            <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCreateModalOpen(false)}
-                                    style={{ flex: 1, padding: '12px', background: 'var(--t-bg)', border: '1px solid var(--t-border)', borderRadius: 12, color: 'var(--t-text-2)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={createLoading}
-                                    style={{
-                                        flex: 2, padding: '12px', background: 'var(--t-primary)', border: 'none', borderRadius: 12, color: '#fff',
-                                        fontWeight: 600, fontSize: 14, cursor: createLoading ? 'not-allowed' : 'pointer', opacity: createLoading ? 0.7 : 1
-                                    }}
-                                >
-                                    {createLoading ? 'Publishing...' : 'Publish Assignment'}
-                                </button>
-                            </div>
-                        </form>
+                        <div className="teacher-modal-body">
+                            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Title*</label>
+                                    <input
+                                        type="text" required
+                                        value={newAssignment.title}
+                                        onChange={e => setNewAssignment({ ...newAssignment, title: e.target.value })}
+                                        placeholder="e.g. Weekly Chemistry Homework"
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-bg)', color: 'var(--t-text)', boxSizing: 'border-box' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: 12 }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Subject*</label>
+                                        <input
+                                            type="text" required
+                                            value={newAssignment.subject}
+                                            onChange={e => setNewAssignment({ ...newAssignment, subject: e.target.value })}
+                                            placeholder="Chemistry"
+                                            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-bg)', color: 'var(--t-text)', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Grade</label>
+                                        <input
+                                            type="text"
+                                            value={newAssignment.grade}
+                                            onChange={e => setNewAssignment({ ...newAssignment, grade: e.target.value })}
+                                            placeholder="10"
+                                            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-bg)', color: 'var(--t-text)', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Due Date</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={newAssignment.due_date}
+                                        onChange={e => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-bg)', color: 'var(--t-text)', boxSizing: 'border-box' }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Description</label>
+                                    <textarea
+                                        rows="3"
+                                        value={newAssignment.description}
+                                        onChange={e => setNewAssignment({ ...newAssignment, description: e.target.value })}
+                                        placeholder="Detailed instructions for the students..."
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-bg)', color: 'var(--t-text)', resize: 'vertical', boxSizing: 'border-box' }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Attachment (Optional)</label>
+                                    <input
+                                        type="file"
+                                        onChange={e => setAssignmentFile(e.target.files[0])}
+                                        style={{ width: '100%', fontSize: 13, color: 'var(--t-text-2)' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                                    <button
+                                        type="button"
+                                        className="t-btn"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        style={{ padding: '10px 18px', minHeight: 44, borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-surface)', color: 'var(--t-text-2)', fontWeight: 600, cursor: 'pointer' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={createLoading}
+                                        className="t-btn"
+                                        style={{ padding: '10px 20px', minHeight: 44, borderRadius: 8, border: 'none', background: 'var(--t-primary)', color: '#fff', fontWeight: 600, cursor: createLoading ? 'not-allowed' : 'pointer', opacity: createLoading ? 0.7 : 1 }}
+                                    >
+                                        {createLoading ? 'Please wait...' : 'Create Assignment'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

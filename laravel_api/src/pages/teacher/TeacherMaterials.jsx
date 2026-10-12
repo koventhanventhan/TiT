@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { FiUpload, FiFolder, FiFileText, FiVideo, FiLink, FiDownload, FiSearch, FiGrid, FiList, FiX, FiExternalLink, FiTrash2 } from 'react-icons/fi'
 import { getTeacherMaterials, uploadTeacherMaterial, deleteTeacherMaterial } from '../../services/dashboardService'
-import { useToast } from '../../components/shared/ToastContext';
-
+import { useToast } from '../../components/shared/ToastContext'
 
 export default function TeacherMaterials() {
-  const toast = useToast();
+    const toast = useToast()
 
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
     const [viewMode, setViewMode] = useState('grid')
     const [activeTab, setActiveTab] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
-    
+
     // Upload Modal State
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
     const [uploadFormData, setUploadFormData] = useState({ title: '', type: 'pdf', subject: '', grade: '', url: '' })
     const [uploadFile, setUploadFile] = useState(null)
     const [uploading, setUploading] = useState(false)
+    const [deletingId, setDeletingId] = useState(null)
 
     const load = async () => {
         setLoading(true)
@@ -68,8 +68,9 @@ export default function TeacherMaterials() {
 
     const handleUpload = async (e) => {
         e.preventDefault()
+        if (uploading) return
         if (!uploadFormData.title) return toast.info('Title is required')
-        
+
         setUploading(true)
         try {
             const formData = new FormData()
@@ -77,7 +78,7 @@ export default function TeacherMaterials() {
             formData.append('type', uploadFormData.type)
             if (uploadFormData.subject) formData.append('subject', uploadFormData.subject)
             if (uploadFormData.grade) formData.append('grade', uploadFormData.grade)
-            
+
             if (uploadFormData.type.toLowerCase() === 'link') {
                 if (!uploadFormData.url) {
                     setUploading(false)
@@ -106,7 +107,7 @@ export default function TeacherMaterials() {
     }
 
     const handleDownload = (item) => {
-        if (item.type.toLowerCase() === 'link' && item.url) {
+        if (item.type?.toLowerCase() === 'link' && item.url) {
             window.open(item.url, '_blank')
         } else if (item.file_path) {
             if (item.file_path.startsWith('https://') || item.file_path.startsWith('http://')) {
@@ -121,19 +122,22 @@ export default function TeacherMaterials() {
     }
 
     const handleDelete = async (item) => {
-        if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) return;
-        
+        if (deletingId) return
+        if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) return
+
+        setDeletingId(item.id)
         try {
-            await deleteTeacherMaterial(item.id);
-            toast.success('Deleted successfully');
-            load();
+            await deleteTeacherMaterial(item.id)
+            toast.success('Deleted successfully')
+            load()
         } catch (err) {
-            console.error(err);
-            toast.error(err.message || 'Failed to delete material');
+            console.error(err)
+            toast.error(err.message || 'Failed to delete material')
+        } finally {
+            setDeletingId(null)
         }
     }
 
-    // Modal Helper
     const inputStyle = {
         width: '100%', padding: '10px 14px', borderRadius: 8,
         border: '1px solid var(--t-border)', outline: 'none', fontSize: 14,
@@ -148,16 +152,16 @@ export default function TeacherMaterials() {
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Teaching Materials</h1>
                     <p style={{ color: 'var(--t-text-3)', margin: 0, fontSize: 14 }}>Manage and share resources with your students</p>
                 </div>
-                <button style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
-                    background: 'var(--t-primary)', color: '#fff',
-                    border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 14,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s', width: 'fit-content'
-                }}
-                onClick={() => setIsUploadModalOpen(true)}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'var(--t-primary-hover)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'var(--t-primary)'; }}
+                <button
+                    className="t-btn"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
+                        minHeight: 44,
+                        background: 'var(--t-primary)', color: '#fff',
+                        border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 14,
+                        cursor: 'pointer', width: 'fit-content'
+                    }}
+                    onClick={() => setIsUploadModalOpen(true)}
                 >
                     <FiUpload style={{ fontSize: 18 }} /> Upload Material
                 </button>
@@ -165,51 +169,72 @@ export default function TeacherMaterials() {
 
             {/* Toolbar */}
             <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
+                display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24,
                 background: 'var(--t-surface)', padding: 16, borderRadius: 16,
-                border: '1px solid var(--t-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                border: '1px solid var(--t-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                alignItems: 'center', justifyContent: 'space-between'
             }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                                padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                border: activeTab === tab.id ? '1px solid var(--t-primary)' : '1px solid transparent',
-                                background: activeTab === tab.id ? 'var(--t-primary-soft)' : 'transparent',
-                                color: activeTab === tab.id ? 'var(--t-primary)' : 'var(--t-text-3)',
-                                transition: 'all 0.2s', whiteSpace: 'nowrap'
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', paddingBottom: 4 }}>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className="t-btn"
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                padding: '8px 16px', borderRadius: 8,
+                                border: activeTab === tab.id ? '1px solid var(--t-primary)' : '1px solid var(--t-border)',
+                                background: activeTab === tab.id ? 'var(--t-primary-soft)' : 'var(--t-bg)',
+                                color: activeTab === tab.id ? 'var(--t-primary)' : 'var(--t-text-2)',
+                                fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
                             }}
-                            onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'var(--t-bg)' }}
-                            onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent' }}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
 
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div style={{ position: 'relative' }}>
-                            <FiSearch style={{ position: 'absolute', left: 12, top: 10, color: 'var(--t-text-3)' }} />
-                            <input type="text" placeholder="Search files..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{
-                                width: 200, padding: '8px 12px 8px 36px', borderRadius: 8,
-                                border: '1px solid var(--t-border)', background: 'var(--t-bg)', fontSize: 13,
-                                outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', color: 'var(--t-text)'
-                            }} onFocus={e => e.target.style.borderColor = 'var(--t-primary)'} onBlur={e => e.target.style.borderColor = 'var(--t-border)'} />
-                        </div>
-                        <div style={{ display: 'flex', background: 'var(--t-bg)', borderRadius: 8, padding: 4, border: '1px solid var(--t-border)' }}>
-                            <button onClick={() => setViewMode('grid')} style={{
-                                padding: 6, borderRadius: 6, border: 'none', cursor: 'pointer',
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 250px', justifyContent: 'flex-end' }}>
+                    <div style={{ position: 'relative', width: '100%', maxWidth: 300 }}>
+                        <FiSearch style={{ position: 'absolute', left: 14, top: 12, color: 'var(--t-text-3)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search materials..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%', padding: '10px 16px 10px 40px', borderRadius: 10,
+                                border: '1px solid var(--t-border)', background: 'var(--t-bg)', fontSize: 14,
+                                outline: 'none', boxSizing: 'border-box', color: 'var(--t-text)'
+                            }}
+                        />
+                    </div>
+                    <div style={{ display: 'flex', background: 'var(--t-bg)', borderRadius: 10, padding: 4, border: '1px solid var(--t-border)' }}>
+                        <button
+                            className="t-icon-btn"
+                            onClick={() => setViewMode('grid')}
+                            aria-label="Grid view"
+                            style={{
+                                width: 36, height: 36, minWidth: 36, minHeight: 36, border: 'none', borderRadius: 6,
                                 background: viewMode === 'grid' ? 'var(--t-surface)' : 'transparent',
-                                color: viewMode === 'grid' ? 'var(--t-text)' : 'var(--t-text-3)',
-                                boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
-                            }}><FiGrid /></button>
-                            <button onClick={() => setViewMode('list')} style={{
-                                padding: 6, borderRadius: 6, border: 'none', cursor: 'pointer',
+                                color: viewMode === 'grid' ? 'var(--t-primary)' : 'var(--t-text-3)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
+                        >
+                            <FiGrid />
+                        </button>
+                        <button
+                            className="t-icon-btn"
+                            onClick={() => setViewMode('list')}
+                            aria-label="List view"
+                            style={{
+                                width: 36, height: 36, minWidth: 36, minHeight: 36, border: 'none', borderRadius: 6,
                                 background: viewMode === 'list' ? 'var(--t-surface)' : 'transparent',
-                                color: viewMode === 'list' ? 'var(--t-text)' : 'var(--t-text-3)',
-                                boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
-                            }}><FiList /></button>
-                        </div>
+                                color: viewMode === 'list' ? 'var(--t-primary)' : 'var(--t-text-3)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
+                        >
+                            <FiList />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -228,35 +253,27 @@ export default function TeacherMaterials() {
                         <FiFolder />
                     </div>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>No materials found</h3>
-                    <p style={{ margin: '0 0 20px 0', color: 'var(--t-text-3)', fontSize: 14 }}>You haven't uploaded any {activeTab !== 'all' ? activeTab : ''} materials yet.</p>
-                    <button style={{
-                        padding: '10px 20px', background: 'var(--t-primary)', color: '#fff', border: 'none',
-                        borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
-                    }} onClick={() => setIsUploadModalOpen(true)}>
-                        <FiUpload /> Upload Material
-                    </button>
+                    <p style={{ margin: 0, color: 'var(--t-text-3)', fontSize: 14 }}>Upload documents or add links for your students.</p>
                 </div>
             ) : viewMode === 'grid' ? (
                 /* Grid View */
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 20 }}>
                     {filteredMaterials.map(item => {
                         const style = getIcon(item.type)
                         const d = item.created_at || item.date || new Date();
+                        const isDeleting = deletingId === item.id;
                         return (
-                            <div key={item.id} style={{
+                            <div key={item.id} className="t-card" style={{
                                 background: 'var(--t-surface)', borderRadius: 16, border: '1px solid var(--t-border)',
                                 padding: 20, display: 'flex', flexDirection: 'column',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'all 0.2s', cursor: 'pointer'
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}
-                            >
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                            }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                                     <div style={{ width: 48, height: 48, borderRadius: 12, background: style.bg, color: style.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
                                         {style.icon}
                                     </div>
                                 </div>
-                                <h3 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)', lineHeight: 1.3, display: '-webkit-box', WebKitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                <h3 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)', lineHeight: 1.3, display: '-webkit-box', WebKitLineClamp: 2, WebKitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {item.title}
                                 </h3>
                                 <p style={{ margin: '0 0 16px 0', color: 'var(--t-text-3)', fontSize: 13, fontWeight: 500 }}>
@@ -267,17 +284,29 @@ export default function TeacherMaterials() {
                                         {new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         {item.size ? <span style={{ margin: '0 6px' }}>• {item.size}</span> : null}
                                     </div>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} style={{
-                                            width: 32, height: 32, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer', transition: 'all 0.2s'
-                                        }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--t-primary)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--t-primary)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--t-surface)'; e.currentTarget.style.color = 'var(--t-text-3)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        <button
+                                            onClick={() => handleDownload(item)}
+                                            className="t-icon-btn"
+                                            aria-label={item.type?.toLowerCase() === 'link' ? 'Open link' : 'Download file'}
+                                            style={{
+                                                width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer'
+                                            }}
+                                        >
                                             {item.type?.toLowerCase() === 'link' ? <FiExternalLink /> : <FiDownload />}
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(item); }} style={{
-                                            width: 32, height: 32, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-danger)', cursor: 'pointer', transition: 'all 0.2s'
-                                        }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--t-danger)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--t-danger)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--t-surface)'; e.currentTarget.style.color = 'var(--t-danger)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}>
+                                        <button
+                                            onClick={() => handleDelete(item)}
+                                            disabled={isDeleting}
+                                            className="t-icon-btn"
+                                            aria-label="Delete material"
+                                            style={{
+                                                width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-danger)', cursor: isDeleting ? 'not-allowed' : 'pointer',
+                                                opacity: isDeleting ? 0.5 : 1
+                                            }}
+                                        >
                                             <FiTrash2 />
                                         </button>
                                     </div>
@@ -302,10 +331,9 @@ export default function TeacherMaterials() {
                             {filteredMaterials.map(item => {
                                 const style = getIcon(item.type)
                                 const d = item.created_at || item.date || new Date();
+                                const isDeleting = deletingId === item.id;
                                 return (
-                                    <tr key={item.id} style={{ borderBottom: '1px solid var(--t-border)', transition: 'background 0.2s', cursor: 'pointer' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                    >
+                                    <tr key={item.id} style={{ borderBottom: '1px solid var(--t-border)', transition: 'background 0.2s' }}>
                                         <td style={{ padding: '16px 20px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                                 <div style={{ width: 40, height: 40, borderRadius: 10, background: style.bg, color: style.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
@@ -325,16 +353,30 @@ export default function TeacherMaterials() {
                                             {new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                                            <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} style={{
-                                                width: 32, height: 32, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer', transition: 'all 0.2s', marginRight: 8
-                                            }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--t-primary)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--t-primary)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--t-surface)'; e.currentTarget.style.color = 'var(--t-text-3)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}>
-                                                {item.type?.toLowerCase() === 'link' ? <FiExternalLink /> : <FiDownload />}
-                                            </button>
-                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(item); }} style={{
-                                                width: 32, height: 32, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-danger)', cursor: 'pointer', transition: 'all 0.2s'
-                                            }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--t-danger)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--t-danger)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--t-surface)'; e.currentTarget.style.color = 'var(--t-danger)'; e.currentTarget.style.borderColor = 'var(--t-border)' }}>
-                                                <FiTrash2 />
-                                            </button>
+                                            <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                                                <button
+                                                    onClick={() => handleDownload(item)}
+                                                    className="t-icon-btn"
+                                                    aria-label={item.type?.toLowerCase() === 'link' ? 'Open link' : 'Download file'}
+                                                    style={{
+                                                        width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {item.type?.toLowerCase() === 'link' ? <FiExternalLink /> : <FiDownload />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(item)}
+                                                    disabled={isDeleting}
+                                                    className="t-icon-btn"
+                                                    aria-label="Delete material"
+                                                    style={{
+                                                        width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 8, background: 'var(--t-surface)', border: '1px solid var(--t-border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-danger)', cursor: isDeleting ? 'not-allowed' : 'pointer',
+                                                        opacity: isDeleting ? 0.5 : 1
+                                                    }}
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -346,72 +388,91 @@ export default function TeacherMaterials() {
 
             {/* Upload Modal */}
             {isUploadModalOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.6)',
-                    backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-                }}>
-                    <div style={{
-                        background: 'var(--t-surface)', borderRadius: 20, width: '100%', maxWidth: 500,
-                        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-                        overflow: 'hidden' // for rounded corners with header
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-bg)' }}>
+                <div className="teacher-modal-overlay">
+                    <div className="teacher-modal-dialog" style={{ maxWidth: 500 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-surface)' }}>
                             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Upload Material</h2>
-                            <button onClick={() => setIsUploadModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--t-text-3)', cursor: 'pointer', padding: 4 }}><FiX size={20} /></button>
+                            <button
+                                onClick={() => setIsUploadModalOpen(false)}
+                                className="t-icon-btn"
+                                aria-label="Close upload modal"
+                                style={{
+                                    width: 44, height: 44, minWidth: 44, minHeight: 44, background: 'none', border: 'none', color: 'var(--t-text-3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
+                                <FiX size={20} />
+                            </button>
                         </div>
-                        
-                        <form onSubmit={handleUpload} style={{ padding: 24 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Title*</label>
-                                    <input type="text" required style={inputStyle} value={uploadFormData.title} onChange={e => setUploadFormData({...uploadFormData, title: e.target.value})} placeholder="e.g., Chapter 1 Physics Notes" />
-                                </div>
-                                
-                                <div style={{ display: 'flex', gap: 16 }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Type</label>
-                                        <select style={inputStyle} value={uploadFormData.type} onChange={e => setUploadFormData({...uploadFormData, type: e.target.value})}>
-                                            <option value="pdf">PDF Document</option>
-                                            <option value="document">Other Document (Word/PPT)</option>
-                                            <option value="video">Video</option>
-                                            <option value="link">Web Link</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Subject (Optional)</label>
-                                        <input type="text" style={inputStyle} value={uploadFormData.subject} onChange={e => setUploadFormData({...uploadFormData, subject: e.target.value})} placeholder="e.g., Mathematics" />
-                                    </div>
-                                </div>
 
-                                <div>
-                                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Grade/Class (Optional)</label>
-                                    <input type="text" style={inputStyle} value={uploadFormData.grade} onChange={e => setUploadFormData({...uploadFormData, grade: e.target.value})} placeholder="e.g., A/L 2026 or Group A" />
-                                </div>
-
-                                {uploadFormData.type === 'link' ? (
+                        <div className="teacher-modal-body">
+                            <form onSubmit={handleUpload}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>URL Link*</label>
-                                        <input type="url" required style={inputStyle} value={uploadFormData.url} onChange={e => setUploadFormData({...uploadFormData, url: e.target.value})} placeholder="https://..." />
+                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Title*</label>
+                                        <input type="text" required style={inputStyle} value={uploadFormData.title} onChange={e => setUploadFormData({ ...uploadFormData, title: e.target.value })} placeholder="e.g., Chapter 1 Physics Notes" />
                                     </div>
-                                ) : (
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>File*</label>
-                                        <input type="file" required style={inputStyle} onChange={e => setUploadFile(e.target.files[0])} />
-                                    </div>
-                                )}
-                            </div>
 
-                            <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                                <button type="button" onClick={() => setIsUploadModalOpen(false)} style={{
-                                    padding: '10px 16px', borderRadius: 10, background: 'var(--t-surface)', border: '1px solid var(--t-border)', color: 'var(--t-text-2)', fontWeight: 600, cursor: 'pointer', fontSize: 14
-                                }}>Cancel</button>
-                                <button type="submit" disabled={uploading} style={{
-                                    padding: '10px 20px', borderRadius: 10, background: 'var(--t-primary)', border: 'none', color: '#fff', fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, opacity: uploading ? 0.7 : 1
-                                }}>
-                                    {uploading ? 'Uploading...' : 'Upload Material'}
-                                </button>
-                            </div>
-                        </form>
+                                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                        <div style={{ flex: '1 1 200px' }}>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Type</label>
+                                            <select style={inputStyle} value={uploadFormData.type} onChange={e => setUploadFormData({ ...uploadFormData, type: e.target.value })}>
+                                                <option value="pdf">PDF Document</option>
+                                                <option value="document">Other Document (Word/PPT)</option>
+                                                <option value="video">Video</option>
+                                                <option value="link">Web Link</option>
+                                            </select>
+                                        </div>
+                                        <div style={{ flex: '1 1 200px' }}>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Grade</label>
+                                            <input type="text" style={inputStyle} value={uploadFormData.grade} onChange={e => setUploadFormData({ ...uploadFormData, grade: e.target.value })} placeholder="e.g., 10" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>Subject</label>
+                                        <input type="text" style={inputStyle} value={uploadFormData.subject} onChange={e => setUploadFormData({ ...uploadFormData, subject: e.target.value })} placeholder="e.g., Physics" />
+                                    </div>
+
+                                    {uploadFormData.type.toLowerCase() === 'link' ? (
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>URL*</label>
+                                            <input type="url" required style={inputStyle} value={uploadFormData.url} onChange={e => setUploadFormData({ ...uploadFormData, url: e.target.value })} placeholder="https://..." />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 6 }}>File*</label>
+                                            <input type="file" required onChange={e => setUploadFile(e.target.files[0])} style={{ ...inputStyle, padding: 8 }} />
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+                                        <button
+                                            type="button"
+                                            className="t-btn"
+                                            onClick={() => setIsUploadModalOpen(false)}
+                                            style={{
+                                                padding: '10px 18px', minHeight: 44, borderRadius: 8, border: '1px solid var(--t-border)', background: 'var(--t-surface)',
+                                                color: 'var(--t-text-2)', fontWeight: 600, cursor: 'pointer'
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={uploading}
+                                            className="t-btn"
+                                            style={{
+                                                padding: '10px 20px', minHeight: 44, borderRadius: 8, border: 'none', background: 'var(--t-primary)',
+                                                color: '#fff', fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
+                                                opacity: uploading ? 0.7 : 1
+                                            }}
+                                        >
+                                            {uploading ? 'Uploading...' : 'Upload Material'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

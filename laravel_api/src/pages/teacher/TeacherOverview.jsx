@@ -10,16 +10,12 @@ import { useToast } from '../../components/shared/ToastContext'
 
 function StatCard({ icon: Icon, label, value }) {
     return (
-        <div style={{
+        <div className="t-card" style={{
             background: 'var(--t-surface)', borderRadius: 16, padding: '22px 20px',
             border: '1px solid var(--t-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             display: 'flex', alignItems: 'center', gap: 16,
-            transition: 'all 0.3s ease', cursor: 'default',
-            position: 'relative', overflow: 'hidden'
-        }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
-        >
+            cursor: 'default', position: 'relative', overflow: 'hidden'
+        }}>
             <div style={{
                 width: 52, height: 52, borderRadius: 14,
                 background: 'var(--t-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -39,6 +35,7 @@ export default function TeacherOverview() {
     const [stats, setStats] = useState(null)
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [joiningId, setJoiningId] = useState(null)
 
     const hour = new Date().getHours()
     const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
@@ -62,11 +59,14 @@ export default function TeacherOverview() {
     }, [])
 
     const handleJoinClass = async (cls) => {
+        if (joiningId) return // ignore further taps immediately
         const link = cls.start_url || cls.zoom_link || cls.join_url
         if (!link) {
             toast.error('No Zoom link available')
             return
         }
+        setJoiningId(cls.id)
+        // Keep window.open synchronously before await
         const w = window.open('', '_blank')
         try {
             await teacherAttend(cls.id).catch(err => {
@@ -79,6 +79,8 @@ export default function TeacherOverview() {
             if (w) {
                 w.location.href = link
             }
+        } finally {
+            setJoiningId(null)
         }
     }
 
@@ -124,34 +126,32 @@ export default function TeacherOverview() {
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)',
-                            background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                            transition: 'all 0.2s'
-                        }}
-                        onClick={() => navigate('/teacher/schedule')}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        <button
+                            className="t-btn"
+                            style={{
+                                padding: '10px 20px', minHeight: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)',
+                                background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13,
+                                fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+                            }}
+                            onClick={() => navigate('/teacher/schedule')}
                         >
                             <FiCalendar /> Schedule
                         </button>
-                        <button style={{
-                            padding: '10px 20px', borderRadius: 12, border: 'none',
-                            background: nextClass ? 'var(--t-primary)' : 'rgba(255,255,255,0.2)',
-                            color: '#fff', fontSize: 13,
-                            fontWeight: 700, cursor: nextClass ? 'pointer' : 'not-allowed',
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            transition: 'all 0.2s',
-                            opacity: nextClass ? 1 : 0.6
-                        }}
-                        disabled={!nextClass}
-                        title={!nextClass ? 'No class right now' : `Start: ${nextClass.title}`}
-                        onClick={() => nextClass && handleJoinClass(nextClass)}
-                        onMouseEnter={e => { if (nextClass) e.currentTarget.style.background = 'var(--t-primary-hover)' }}
-                        onMouseLeave={e => { if (nextClass) e.currentTarget.style.background = 'var(--t-primary)' }}
+                        <button
+                            className="t-btn"
+                            style={{
+                                padding: '10px 20px', minHeight: 44, borderRadius: 12, border: 'none',
+                                background: nextClass ? 'var(--t-primary)' : 'rgba(255,255,255,0.2)',
+                                color: '#fff', fontSize: 13,
+                                fontWeight: 700, cursor: (nextClass && !joiningId) ? 'pointer' : 'not-allowed',
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                opacity: nextClass ? (joiningId ? 0.7 : 1) : 0.6
+                            }}
+                            disabled={!nextClass || Boolean(joiningId)}
+                            title={!nextClass ? 'No class right now' : `Start: ${nextClass.title}`}
+                            onClick={() => nextClass && handleJoinClass(nextClass)}
                         >
-                            <FiVideo /> Start Class
+                            <FiVideo /> {joiningId === nextClass?.id ? 'Please wait...' : 'Start Class'}
                         </button>
                     </div>
                 </div>
@@ -159,7 +159,7 @@ export default function TeacherOverview() {
 
             {/* Stats Grid */}
             <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
                 gap: 16, marginBottom: 24
             }}>
                 <StatCard icon={FiVideo} label="Today's Classes" value={stats?.today_classes || 0} />
@@ -180,9 +180,9 @@ export default function TeacherOverview() {
                         padding: '18px 22px', borderBottom: '1px solid var(--t-border)'
                     }}>
                         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Your Schedule Today</h3>
-                        <Link to="/teacher/schedule" style={{
+                        <Link to="/teacher/schedule" className="t-tap" style={{
                             color: 'var(--t-primary)', fontSize: 13, fontWeight: 600,
-                            textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4
+                            textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, minHeight: 44
                         }}>View All <FiArrowRight /></Link>
                     </div>
 
@@ -197,6 +197,7 @@ export default function TeacherOverview() {
                                 const durationMin = Number(cls.duration) || 60
                                 const isEnded = new Date(time.getTime() + durationMin * 60000) <= now
                                 const isLive = time <= now && !isEnded
+                                const isJoining = joiningId === cls.id
 
                                 return (
                                     <div key={cls.id} style={{
@@ -226,14 +227,17 @@ export default function TeacherOverview() {
                                             ) : (
                                                 <button
                                                     onClick={() => handleJoinClass(cls)}
+                                                    disabled={Boolean(joiningId)}
+                                                    className="t-btn"
                                                     style={{
-                                                        padding: '8px 16px', borderRadius: 8, border: 'none',
+                                                        minHeight: 44, padding: '8px 16px', borderRadius: 8, border: 'none',
                                                         background: isLive ? 'var(--t-success)' : 'var(--t-primary)',
-                                                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
+                                                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: joiningId ? 'not-allowed' : 'pointer',
+                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                        opacity: joiningId && !isJoining ? 0.6 : 1
                                                     }}
                                                 >
-                                                    <FiVideo /> {isLive ? 'Join Now' : 'Start'}
+                                                    <FiVideo /> {isJoining ? 'Please wait...' : (isLive ? 'Join Now' : 'Start')}
                                                 </button>
                                             )}
                                         </div>
@@ -244,112 +248,48 @@ export default function TeacherOverview() {
                     )}
                 </div>
 
-                {/* Recent Submissions */}
+                {/* Quick Actions */}
                 <div style={{
                     background: 'var(--t-surface)', borderRadius: 16, border: '1px solid var(--t-border)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden',
-                    display: 'flex', flexDirection: 'column'
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: 22, height: 'fit-content'
                 }}>
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '18px 22px', borderBottom: '1px solid var(--t-border)'
-                    }}>
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>📋 Recent Submissions</h3>
-                    </div>
-
-                    {(!stats?.recent_submissions || stats.recent_submissions.length === 0) ? (
-                        <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 13, flex: 1 }}>
-                            No recent submissions pending review.
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                            {stats.recent_submissions.map((sub, idx) => (
-                                <div key={sub.id} style={{
-                                    padding: '14px 20px', borderBottom: idx === stats.recent_submissions.length - 1 ? 'none' : '1px solid var(--t-border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
-                                }}>
-                                    <div>
-                                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-text)' }}>{sub.student_name}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--t-text-3)' }}>{sub.assignment_title}</div>
-                                    </div>
-                                    <div style={{ fontSize: 11, color: 'var(--t-text-3)', textAlign: 'right' }}>
-                                        {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Pending'}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Footer */}
-                    <div style={{ padding: '14px 22px', textAlign: 'center', borderTop: '1px solid var(--t-border)' }}>
-                        <Link to="/teacher/assignments" style={{
-                            color: 'var(--t-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'none'
-                        }}>View all submissions →</Link>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Quick Actions</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button
+                            onClick={() => navigate('/teacher/materials')}
+                            className="t-btn"
+                            style={{
+                                minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
+                                background: 'var(--t-bg)', color: 'var(--t-text)', fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left'
+                            }}
+                        >
+                            <FiPlus style={{ color: 'var(--t-primary)' }} /> Upload Materials
+                        </button>
+                        <button
+                            onClick={() => navigate('/teacher/assignments')}
+                            className="t-btn"
+                            style={{
+                                minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
+                                background: 'var(--t-bg)', color: 'var(--t-text)', fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left'
+                            }}
+                        >
+                            <FiFileText style={{ color: 'var(--t-primary)' }} /> Create Assignment
+                        </button>
+                        <button
+                            onClick={() => navigate('/teacher/students')}
+                            className="t-btn"
+                            style={{
+                                minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
+                                background: 'var(--t-bg)', color: 'var(--t-text)', fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left'
+                            }}
+                        >
+                            <FiUsers style={{ color: 'var(--t-primary)' }} /> View My Students
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}>
-                <Link to="/teacher/assignments" style={{
-                    textDecoration: 'none', padding: '22px 24px', borderRadius: 16,
-                    background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                    color: 'var(--t-text)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all 0.3s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
-                >
-                    <div>
-                        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: 'var(--t-text)' }}>Create Assignment</div>
-                        <div style={{ fontSize: 13, color: 'var(--t-text-3)', fontWeight: 500 }}>Post new tasks for students</div>
-                    </div>
-                    <div style={{
-                        width: 44, height: 44, borderRadius: 12, background: 'var(--t-primary-soft)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-                        color: 'var(--t-primary)'
-                    }}><FiPlus /></div>
-                </Link>
-
-                <Link to="/teacher/materials" style={{
-                    textDecoration: 'none', padding: '22px 24px', borderRadius: 16,
-                    background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                    color: 'var(--t-text)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all 0.3s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
-                >
-                    <div>
-                        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: 'var(--t-text)' }}>Upload Materials</div>
-                        <div style={{ fontSize: 13, color: 'var(--t-text-3)', fontWeight: 500 }}>Share notes & resources</div>
-                    </div>
-                    <div style={{
-                        width: 44, height: 44, borderRadius: 12, background: 'var(--t-primary-soft)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-                        color: 'var(--t-primary)'
-                    }}><FiArrowRight /></div>
-                </Link>
-
-                <Link to="/teacher/reports" style={{
-                    textDecoration: 'none', padding: '22px 24px', borderRadius: 16,
-                    background: 'var(--t-surface)', border: '1px solid var(--t-border)',
-                    color: 'var(--t-text)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all 0.3s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
-                >
-                    <div>
-                        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: 'var(--t-text)' }}>View Reports</div>
-                        <div style={{ fontSize: 13, color: 'var(--t-text-3)', fontWeight: 500 }}>Attendance & progress</div>
-                    </div>
-                    <div style={{
-                        width: 44, height: 44, borderRadius: 12, background: 'var(--t-primary-soft)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-                        color: 'var(--t-primary)'
-                    }}><FiArrowRight /></div>
-                </Link>
             </div>
         </div>
     )

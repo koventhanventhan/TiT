@@ -89,8 +89,10 @@ export default function TeacherSettings() {
                         <button 
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
+                            className="t-icon-btn"
+                            aria-label="Upload new avatar"
                             style={{
-                                position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, borderRadius: '50%',
+                                position: 'absolute', bottom: 0, right: 0, width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: '50%',
                                 background: 'var(--t-surface)', border: '1px solid var(--t-border)', color: 'var(--t-text-2)', display: 'flex',
                                 alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                             }}
@@ -113,8 +115,9 @@ export default function TeacherSettings() {
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploadingAvatar}
+                            className="t-btn"
                             style={{
-                                padding: '8px 16px', borderRadius: 8, background: 'var(--t-primary-soft)',
+                                padding: '8px 16px', minHeight: 44, borderRadius: 8, background: 'var(--t-primary-soft)',
                                 border: '1px solid var(--t-primary-border)', color: 'var(--t-primary)',
                                 fontSize: 13, fontWeight: 600, cursor: uploadingAvatar ? 'not-allowed' : 'pointer'
                             }}
@@ -125,7 +128,7 @@ export default function TeacherSettings() {
                 </div>
 
                 {/* Profile Fields (Read-Only) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 20 }}>
                     <div>
                         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 8 }}>Full Name</label>
                         <div style={{ position: 'relative' }}>
@@ -165,30 +168,30 @@ export default function TeacherSettings() {
                         <div style={{ position: 'relative' }}>
                             <FiPhone style={{ position: 'absolute', left: 14, top: 12, color: 'var(--t-text-3)' }} />
                             <input
-                                type="tel"
+                                type="text"
                                 readOnly
-                                value={user?.phone_number || user?.phone || 'Not provided'}
+                                value={user?.phone_number || 'N/A'}
                                 style={{
                                     width: '100%', padding: '10px 16px 10px 40px', borderRadius: 10,
                                     border: '1px solid var(--t-border)', background: 'var(--t-bg)',
-                                    fontSize: 14, color: 'var(--t-text)', boxSizing: 'border-box'
+                                    fontSize: 14, color: 'var(--t-text-2)', boxSizing: 'border-box'
                                 }}
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 8 }}>Role & Portal Access</label>
+                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 8 }}>Teaching Subject</label>
                         <div style={{ position: 'relative' }}>
                             <FiBookOpen style={{ position: 'absolute', left: 14, top: 12, color: 'var(--t-text-3)' }} />
                             <input
                                 type="text"
                                 readOnly
-                                value="Teacher / Instructor"
+                                value={user?.subject || 'All Subjects'}
                                 style={{
                                     width: '100%', padding: '10px 16px 10px 40px', borderRadius: 10,
                                     border: '1px solid var(--t-border)', background: 'var(--t-bg)',
-                                    fontSize: 14, color: 'var(--t-text)', boxSizing: 'border-box'
+                                    fontSize: 14, color: 'var(--t-text-2)', boxSizing: 'border-box'
                                 }}
                             />
                         </div>

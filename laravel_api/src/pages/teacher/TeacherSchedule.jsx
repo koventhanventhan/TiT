@@ -7,6 +7,7 @@ export default function TeacherSchedule() {
     const toast = useToast()
     const [schedules, setSchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [joiningId, setJoiningId] = useState(null)
 
     useEffect(() => {
         async function load() {
@@ -35,11 +36,14 @@ export default function TeacherSchedule() {
     }, {})
 
     const handleJoin = async (cls) => {
+        if (joiningId) return // ignore further taps immediately
         const link = cls.start_url || cls.zoom_link || cls.join_url
         if (!link) {
             toast.error('No Zoom link available')
             return
         }
+        setJoiningId(cls.id)
+        // Keep window.open synchronously before await
         const w = window.open('', '_blank')
         try {
             await teacherAttend(cls.id)
@@ -51,6 +55,8 @@ export default function TeacherSchedule() {
             if (w) {
                 w.location.href = link
             }
+        } finally {
+            setJoiningId(null)
         }
     }
 
@@ -110,7 +116,7 @@ export default function TeacherSchedule() {
                                 </span>
                                 {date}
                             </h3>
-                            
+
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 {items.map(cls => {
                                     const time = new Date(cls.scheduled_at)
@@ -120,18 +126,16 @@ export default function TeacherSchedule() {
                                     const isLive = time <= now && !isEnded
                                     const isAttended = cls.attendance_status === 'present'
                                     const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    const isJoining = joiningId === cls.id
 
                                     return (
-                                        <div key={cls.id} className="ts-card" style={{
+                                        <div key={cls.id} className="ts-card t-card" style={{
                                             background: 'var(--t-surface)', borderRadius: 16,
                                             border: isLive ? '1px solid var(--t-success)' : '1px solid var(--t-border)',
                                             boxShadow: isLive ? '0 4px 12px rgba(21,128,61,0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
-                                            overflow: 'hidden', transition: 'all 0.2s',
+                                            overflow: 'hidden',
                                             opacity: isEnded ? 0.75 : 1
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.04)' }}
-                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(21,128,61,0.1)' : '0 1px 3px rgba(0,0,0,0.02)' }}
-                                        >
+                                        }}>
                                             {/* Time Block */}
                                             <div className="ts-time" style={{
                                                 background: isLive ? 'var(--t-success-bg)' : 'var(--t-bg)',
@@ -190,20 +194,19 @@ export default function TeacherSchedule() {
                                                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-text-3)' }}>Class Ended</span>
                                                 ) : (
                                                     <button
-                                                        className="ts-btn"
+                                                        className="ts-btn t-btn"
                                                         onClick={() => handleJoin(cls)}
+                                                        disabled={Boolean(joiningId)}
                                                         style={{
-                                                            padding: '12px 20px', borderRadius: 12, border: 'none',
+                                                            minHeight: 44, padding: '12px 20px', borderRadius: 12, border: 'none',
                                                             background: isLive ? 'var(--t-success)' : 'var(--t-primary)',
-                                                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: joiningId ? 'not-allowed' : 'pointer',
                                                             display: 'flex', alignItems: 'center', gap: 8,
                                                             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                                            transition: 'all 0.2s'
+                                                            opacity: joiningId && !isJoining ? 0.6 : 1
                                                         }}
-                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = isLive ? 'var(--t-success)' : 'var(--t-primary-hover)' }}
-                                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = isLive ? 'var(--t-success)' : 'var(--t-primary)' }}
                                                     >
-                                                        <FiVideo /> {isLive ? 'Join Now' : `Starts at ${timeStr}`}
+                                                        <FiVideo /> {isJoining ? 'Please wait...' : (isLive ? 'Join Now' : `Starts at ${timeStr}`)}
                                                     </button>
                                                 )}
                                             </div>

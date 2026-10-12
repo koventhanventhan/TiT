@@ -7,6 +7,22 @@
   --m-bg:           var(--t-bg, #f8fafc);
 }
 
+/* iOS zoom prevention & fast touch response */
+@media (max-width: 768px), (pointer: coarse) {
+  .messaging-container input,
+  .messaging-container select,
+  .messaging-container textarea {
+    font-size: 16px !important;
+  }
+}
+
+.messaging-container button,
+.messaging-container a,
+.messaging-container [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 .messaging-page {
   padding: 1.5rem;
   max-width: 75rem;

@@ -282,7 +282,7 @@ class TimetableController extends Controller
     private function removeUpcomingZoomSchedules(Timetable $timetable): void
     {
         $schedules = \App\Models\ZoomSchedule::where('timetable_id', $timetable->id)
-            ->whereRaw('DATE_ADD(scheduled_at, INTERVAL COALESCE(duration, 60) MINUTE) > ?', [now()->toDateTimeString()])->get();
+            ->where('scheduled_at', '>=', now())->get();
         if ($schedules->isEmpty()) return;
         $zoom = null;
         try { $zoom = app(\App\Services\ZoomService::class); } catch (\Throwable $e) {}

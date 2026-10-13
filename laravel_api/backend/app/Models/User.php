@@ -200,6 +200,40 @@ class User extends Authenticatable implements FilamentUser
             ->exists();
     }
 
+    /**
+     * Determine student eligibility state in one centralized place.
+     * Returns one of:
+     * - 'deactivated'
+     * - 'pending_registration'
+     * - 'pending_approval'
+     * - 'payment_due'
+     * - 'ok'
+     *
+     * @param string|null $yearMonth Optional year-month to check payment for (defaults to current month Y-m)
+     * @return string
+     */
+    public function studentAccessState(?string $yearMonth = null): string
+    {
+        if (!empty($this->deactivated_at)) {
+            return 'deactivated';
+        }
+
+        if ($this->registration_status === 'pending_payment') {
+            return 'pending_registration';
+        }
+
+        if (!$this->admin_confirmed_at) {
+            return 'pending_approval';
+        }
+
+        $checkMonth = $yearMonth ?: now()->format('Y-m');
+        if (!$this->hasPaidForMonth($checkMonth)) {
+            return 'payment_due';
+        }
+
+        return 'ok';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'super-admin') {

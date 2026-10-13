@@ -75,10 +75,11 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Register login alert listener
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Login::class,
-            [\App\Listeners\SendLoginAlert::class, 'handle']
-        );
+        // Login alert listener is intentionally DISABLED (no email on login).
+        // To re-enable, uncomment the lines below.
+        // \Illuminate\Support\Facades\Event::listen(
+        //     \Illuminate\Auth\Events\Login::class,
+        //     [\App\Listeners\SendLoginAlert::class, 'handle']
+        // );
     }
 }

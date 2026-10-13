@@ -78,7 +78,7 @@ function SubmitModal({ assignment, isOpen, onClose, onSuccess }) {
             onClick={onClose}
         >
             <div
-                className="t-modal-container"
+                className="t-modal-container shared-modal-dialog"
                 style={{
                     background: '#fff', borderRadius: 16, width: 'calc(100% - 24px)', maxWidth: 500,
                     boxShadow: 'var(--t-shadow-lg)', overflow: 'hidden',
@@ -100,7 +100,7 @@ function SubmitModal({ assignment, isOpen, onClose, onSuccess }) {
                     </div>
                     <button
                         onClick={onClose}
-                        aria-label="Close"
+                        aria-label="Close submit modal"
                         style={{
                             background: 'var(--t-bg)', border: 'none', width: 44, height: 44,
                             borderRadius: '50%', display: 'flex', alignItems: 'center',
@@ -251,7 +251,7 @@ export default function StudentAssignments() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 20 }}>
                     {assignments.map(assign => {
-                        const submission = assign.submissions && assign.submissions.length > 0 ? assign.submissions[0] : null
+                        const submission = (assign.submissions && assign.submissions.length > 0) ? assign.submissions[0] : (assign.submission || null)
                         const hasSubmission = Boolean(submission)
                         const isGraded = hasSubmission && submission.status === 'graded'
                         const isAwaitingGrade = hasSubmission && !isGraded

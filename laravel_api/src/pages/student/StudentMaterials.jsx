@@ -108,7 +108,7 @@ export default function StudentMaterials() {
                     <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                         {tabs.map(tab => (
                             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                                minHeight: 40, padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                minHeight: 44, padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                                 border: activeTab === tab.id ? '1px solid var(--t-primary)' : '1px solid transparent',
                                 background: activeTab === tab.id ? 'var(--t-primary-soft)' : 'transparent',
                                 color: activeTab === tab.id ? 'var(--t-primary)' : 'var(--t-text-muted)',

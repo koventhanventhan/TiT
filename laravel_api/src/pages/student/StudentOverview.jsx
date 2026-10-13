@@ -61,8 +61,9 @@ export default function StudentOverview() {
             ])
             setStats(data)
             
+            const scheduleList = Array.isArray(schedules) ? schedules : (schedules?.data || [])
             const todayStr = new Date().toDateString()
-            const todays = (schedules || []).filter(s => new Date(s.scheduled_at).toDateString() === todayStr)
+            const todays = scheduleList.filter(s => new Date(s.scheduled_at).toDateString() === todayStr)
             setTodaySchedules(todays)
         } catch (err) {
             console.error('Failed to load student dashboard:', err)

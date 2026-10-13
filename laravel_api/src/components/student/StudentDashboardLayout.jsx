@@ -164,6 +164,7 @@ export default function StudentDashboardLayout({ children, user }) {
             {isSidebarOpen && !isDesktop && (
                 <div
                     onClick={toggleSidebar}
+                    aria-label="Close sidebar overlay"
                     style={{
                         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
                         zIndex: 998
@@ -204,7 +205,7 @@ export default function StudentDashboardLayout({ children, user }) {
                         <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student Portal</div>
                     </div>
                     {!isDesktop && isSidebarOpen && (
-                        <button onClick={toggleSidebar} aria-label="Close navigation" style={{
+                        <button onClick={toggleSidebar} aria-label="Close sidebar" style={{
                             marginLeft: 'auto', background: 'none', border: 'none',
                             color: 'var(--t-sidebar-text)', cursor: 'pointer', fontSize: 22,
                             minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -292,7 +293,7 @@ export default function StudentDashboardLayout({ children, user }) {
                         {!isDesktop && (
                             <button
                                 onClick={toggleSidebar}
-                                aria-label="Toggle navigation"
+                                aria-label="Toggle navigation menu"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center', justifyContent: 'center',

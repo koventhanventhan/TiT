@@ -25,7 +25,7 @@ class TeacherMaterialController extends Controller
             'subject' => 'nullable|string',
             'grade' => 'nullable|string',
             'medium' => 'nullable|string|in:tamil,english,all',
-            'file' => 'nullable|file|max:51200',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,jpg,jpeg,png,zip,mp4,mov,mp3|max:51200',
             'file_path' => [
                 'nullable',
                 'string',

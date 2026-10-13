@@ -38,11 +38,27 @@ class StudentAssignmentController extends Controller
     public function submit(Request $request, $assignmentId)
     {
         $request->validate([
-            'file' => 'required|file|max:10240', // 10MB
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:10240', // 10MB
         ]);
 
         $user = $request->user();
         $assignment = Assignment::findOrFail($assignmentId);
+
+        $assignGrade = $assignment->grade;
+        if (!empty($assignGrade)) {
+            $userGrade = $user?->current_grade;
+            if (empty($userGrade) || \App\Support\GradeMatcher::normalize($assignGrade) !== \App\Support\GradeMatcher::normalize($userGrade)) {
+                return response()->json(['message' => 'Unauthorized or assignment not visible.'], 403);
+            }
+        }
+
+        $existing = AssignmentSubmission::where('assignment_id', $assignmentId)
+            ->where('student_id', $user->id)
+            ->first();
+
+        if ($existing && $existing->status === 'graded') {
+            return response()->json(['message' => 'Already graded, resubmission is not allowed'], 422);
+        }
 
         $filePath = $request->file('file')->store('submissions', 'public');
 

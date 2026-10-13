@@ -19,47 +19,77 @@ class StudentDashboardController extends Controller
         $user = $request->user();
         $today = Carbon::today();
         
-        // Classes today (filtered by student's medium — also include 'both' medium classes)
+        // Classes today (filtered by StudentClassVisibility)
         $todayClassesQuery = ZoomSchedule::whereDate('scheduled_at', $today);
-        if ($user->medium) {
-            $todayClassesQuery->whereIn('medium', [$user->medium, 'both']);
-        }
-        $todayClasses = $todayClassesQuery->count();
+        $todayClasses = \App\Support\StudentClassVisibility::forStudent($user, $todayClassesQuery)->count();
         
-        // Upcoming classes (next 7 days, filtered by student's medium — also include 'both')
+        // Upcoming classes (next 7 days, filtered by StudentClassVisibility)
         $upcomingQuery = ZoomSchedule::where('scheduled_at', '>', now())
             ->where('scheduled_at', '<=', now()->addDays(7));
-        if ($user->medium) {
-            $upcomingQuery->whereIn('medium', [$user->medium, 'both']);
-        }
-        $upcomingClasses = $upcomingQuery->count();
+        $upcomingClasses = \App\Support\StudentClassVisibility::forStudent($user, $upcomingQuery)->count();
             
-        // Assignments (Total based on student's grade)
-        $assignmentsQuery = Assignment::where(function($query) use ($user) {
-                $query->where('grade', $user->current_grade)
-                      ->orWhereNull('grade')
-                      ->orWhere('grade', '');
-        });
-        $assignmentsTotal = $assignmentsQuery->count();
-
-        $pendingAssignments = (clone $assignmentsQuery)->whereDoesntHave('submissions', function($q) use ($user) {
+        // Assignments (Total based on student's grade using GradeMatcher)
+        $allAssignments = Assignment::with(['submissions' => function($q) use ($user) {
             $q->where('student_id', $user->id);
+        }])->get();
+
+        $visibleAssignments = $allAssignments->filter(function ($assignment) use ($user) {
+            $assignGrade = $assignment->grade;
+            if (empty($assignGrade)) {
+                return true;
+            }
+            $userGrade = $user?->current_grade;
+            if (empty($userGrade)) {
+                return false;
+            }
+            return \App\Support\GradeMatcher::normalize($assignGrade) === \App\Support\GradeMatcher::normalize($userGrade);
+        });
+
+        $assignmentsTotal = $visibleAssignments->count();
+
+        $pendingAssignments = $visibleAssignments->filter(function ($assignment) {
+            return $assignment->submissions->isEmpty();
         })->count();
         
         $completedAssignments = AssignmentSubmission::where('student_id', $user->id)
             ->where('status', 'graded')
             ->count();
             
-        // Attendance
-        $totalClasses = Attendance::where('user_id', $user->id)->count();
-        $presentClasses = Attendance::where('user_id', $user->id)
+        // Attendance & Study Hours (A4)
+        $thirtyDaysAgo = Carbon::now()->subDays(30);
+        $now = Carbon::now();
+
+        $pastSchedulesQuery = ZoomSchedule::where('scheduled_at', '>=', $thirtyDaysAgo)
+            ->where('scheduled_at', '<=', $now);
+        $pastVisibleSchedules = \App\Support\StudentClassVisibility::forStudent($user, $pastSchedulesQuery);
+
+        $endedVisibleSchedules = $pastVisibleSchedules->filter(function ($s) use ($now) {
+            $duration = $s->duration ?: 60;
+            $endTime = $s->scheduled_at->copy()->addMinutes($duration);
+            return $endTime->lte($now);
+        });
+
+        $heldClasses = $endedVisibleSchedules->count();
+        $endedScheduleIds = $endedVisibleSchedules->pluck('id');
+
+        $attendedClasses = Attendance::where('user_id', $user->id)
+            ->whereIn('zoom_schedule_id', $endedScheduleIds)
             ->where('status', 'present')
             ->count();
-            
-        $attendanceRate = $totalClasses > 0 ? round(($presentClasses / $totalClasses) * 100) : 0;
 
-        // Study Hours (assumed 2 hours per present class)
-        $studyHours = $presentClasses * 2;
+        $attendanceRateHasData = $heldClasses > 0;
+        $attendanceRate = $attendanceRateHasData ? round(($attendedClasses / $heldClasses) * 100) : 0;
+
+        // Study Hours (sum of duration (minutes) of attended classes / 60, rounded to 1 decimal)
+        $attendedRows = Attendance::with('zoomSchedule')
+            ->where('user_id', $user->id)
+            ->where('status', 'present')
+            ->get();
+
+        $totalAttendedMinutes = $attendedRows->sum(function ($att) {
+            return (float) ($att->zoomSchedule?->duration ?? 60);
+        });
+        $studyHours = round($totalAttendedMinutes / 60, 1);
 
         // Subject Mastery & Average Grade
         $submissions = AssignmentSubmission::with('assignment')->where('student_id', $user->id)->where('status', 'graded')->get();
@@ -107,7 +137,7 @@ class StudentDashboardController extends Controller
 
         // Recent Achievements
         $recentAchievements = [];
-        if ($attendanceRate == 100 && $totalClasses >= 5) {
+        if ($attendanceRate == 100 && $heldClasses >= 5 && $attendanceRateHasData) {
             $recentAchievements[] = [
                 'title' => 'Perfect Attendance',
                 'desc' => '100% attendance rate in your classes',
@@ -139,7 +169,7 @@ class StudentDashboardController extends Controller
         }
 
         // If no achievements, add a fallback one
-        if (empty($recentAchievements) && $totalClasses > 0) {
+        if (empty($recentAchievements) && $attendedClasses > 0) {
              $recentAchievements[] = [
                 'title' => 'Good Start',
                 'desc' => 'Attended your first learning sessions',
@@ -190,6 +220,9 @@ class StudentDashboardController extends Controller
             'completed_assignments' => $completedAssignments,
             'assignments_total' => $assignmentsTotal,
             'attendance_rate' => $attendanceRate,
+            'attendance_rate_has_data' => $attendanceRateHasData,
+            'attended_classes' => $attendedClasses,
+            'held_classes' => $heldClasses,
             'study_hours' => $studyHours,
             'average_grade' => $averageGrade,
             'subject_mastery' => $subjectMastery,

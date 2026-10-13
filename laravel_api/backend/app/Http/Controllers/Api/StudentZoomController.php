@@ -48,53 +48,10 @@ class StudentZoomController extends Controller
 
         $query = ZoomSchedule::with('teachers')
             ->where('scheduled_at', '>=', $startBuffer)
-            ->where('scheduled_at', '<=', $endBuffer);
+            ->where('scheduled_at', '<=', $endBuffer)
+            ->orderBy('scheduled_at');
 
-        // Filter by student's medium (English/Tamil) — also include 'both' medium classes
-        if ($user->medium) {
-            $query->whereIn('medium', [$user->medium, 'both']);
-        }
-
-        $schedules = $query->orderBy('scheduled_at')->get();
-
-        // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
-        $schedules = $schedules->filter(function($s) use ($user) {
-            $userGrade = $user->current_grade;
-            $classGrade = $s->grade;
-            
-            if (!$userGrade || !$classGrade) return false;
-
-            // Extract numeric values, fallback to normalized string for O/L, A/L etc.
-            preg_match('/(\d+)/', $userGrade, $userMatch);
-            $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-            preg_match('/(\d+)/', $classGrade, $classMatch);
-            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($classGrade));
-
-            return $userRef === $classRef;
-        });
-
-        // Filter by student's selected subjects (Robust substring match)
-        $selected = $user->selected_subjects;
-        if (!empty($selected)) {
-            $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-            $selectedArr = array_map('trim', (array)$selectedArr);
-            
-            $schedules = $schedules->filter(function($s) use ($selectedArr) {
-                $classSub = trim($s->subject);
-                if (empty($classSub)) return true; // Show general classes
-                
-                foreach ($selectedArr as $studentSub) {
-                    $studentSub = trim($studentSub);
-                    if ($studentSub === $classSub || 
-                        stripos($studentSub, $classSub) !== false || 
-                        stripos($classSub, $studentSub) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-        }
+        $schedules = \App\Support\StudentClassVisibility::forStudent($user, $query);
 
         $items = $schedules->values()->map(function ($s) use ($user) {
             $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
@@ -104,10 +61,11 @@ class StudentZoomController extends Controller
                 'zoom_link' => $s->zoom_link,
                 'join_url' => $s->join_url,
                 'password' => $s->password,
-                'scheduled_at' => $s->scheduled_at->toIso8601String(),
+                'scheduled_at' => $s->scheduled_at ? $s->scheduled_at->toIso8601String() : null,
                 'duration' => $s->duration,
                 'subject' => $s->subject,
                 'grade' => $s->grade,
+                'medium' => $s->medium,
                 'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
@@ -129,7 +87,7 @@ class StudentZoomController extends Controller
             'payment_info' => [
                 'has_paid' => $hasPaid,
                 'last_amount' => $lastPayment ? $lastPayment->amount : 0,
-                'last_paid_at' => $lastPayment ? $lastPayment->paid_at->toDateTimeString() : null,
+                'last_paid_at' => ($lastPayment && $lastPayment->paid_at) ? $lastPayment->paid_at->toDateTimeString() : null,
                 'next_due_date' => $nextPaymentDate,
             ]
         ]);
@@ -148,7 +106,13 @@ class StudentZoomController extends Controller
         $request->validate(['zoom_schedule_id' => 'required|exists:zoom_schedules,id']);
 
         $scheduleId = $request->zoom_schedule_id;
-        Attendance::updateOrCreate(
+        $schedule = ZoomSchedule::find($scheduleId);
+
+        if (!$schedule || !\App\Support\StudentClassVisibility::isVisible($user, $schedule)) {
+            return response()->json(['message' => 'Unauthorized or class not visible.'], 403);
+        }
+
+        $attendance = Attendance::updateOrCreate(
             [
                 'zoom_schedule_id' => $scheduleId,
                 'user_id' => $user->id,
@@ -162,17 +126,19 @@ class StudentZoomController extends Controller
         );
 
         // Send Attendance Message via NotificationService (WhatsApp with Email fallback)
-        try {
-            if ($this->notifier) {
-                $schedule = ZoomSchedule::find($scheduleId);
-                $this->notifier->notifyUser(
-                    $user, 'zoom_reminder', 'tit_zoom_reminder',
-                    [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at->format('H:i')],
-                    ['class_title' => $schedule->title ?? 'Zoom Class', 'class_time' => $schedule->scheduled_at->format('H:i')]
-                );
+        if ($attendance->wasRecentlyCreated) {
+            try {
+                $notifier = app(NotificationService::class);
+                if ($notifier) {
+                    $notifier->notifyUser(
+                        $user, 'zoom_reminder', 'tit_zoom_reminder',
+                        [$schedule->title ?? 'Zoom Class', $schedule->scheduled_at ? $schedule->scheduled_at->format('H:i') : ''],
+                        ['class_title' => $schedule->title ?? 'Zoom Class', 'class_time' => $schedule->scheduled_at ? $schedule->scheduled_at->format('H:i') : '']
+                    );
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Attendance notification failed: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Attendance notification failed: ' . $e->getMessage());
         }
 
         return response()->json(['message' => 'Attendance recorded.']);
@@ -197,58 +163,29 @@ class StudentZoomController extends Controller
         // Only show schedules from the last 2 days up to 90 days ahead
         $query = ZoomSchedule::with('teachers')
             ->where('scheduled_at', '>=', now()->subDays(2))
-            ->where('scheduled_at', '<=', now()->addDays(90));
+            ->where('scheduled_at', '<=', now()->addDays(90))
+            ->orderBy('scheduled_at');
 
-        // Filter by student's medium (English/Tamil) — also include 'both' medium classes
-        if ($user->medium) {
-            $query->whereIn('medium', [$user->medium, 'both']);
-        }
+        $schedules = \App\Support\StudentClassVisibility::forStudent($user, $query);
 
-        $schedules = $query->orderBy('scheduled_at')->get();
-
-        // 1. Filter by Grade (Normalize strings like "Grade 10" or "O/L" or "A/L")
-        $schedules = $schedules->filter(function($s) use ($user) {
-            $userGrade = $user->current_grade;
-            $classGrade = $s->grade;
-            
-            if (!$userGrade || !$classGrade) return false;
-
-            preg_match('/(\d+)/', $userGrade, $userMatch);
-            $userRef = isset($userMatch[1]) ? $userMatch[1] : strtoupper(trim($userGrade));
-
-            preg_match('/(\d+)/', $classGrade, $classMatch);
-            $classRef = isset($classMatch[1]) ? $classMatch[1] : strtoupper(trim($classGrade));
-
-            return $userRef === $classRef;
+        $items = $schedules->values()->map(function($s) use ($user) {
+            $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
+            return [
+                'id' => $s->id,
+                'title' => $s->title,
+                'zoom_link' => $s->zoom_link,
+                'join_url' => $s->join_url,
+                'password' => $s->password,
+                'scheduled_at' => $s->scheduled_at ? $s->scheduled_at->toIso8601String() : null,
+                'duration' => $s->duration,
+                'subject' => $s->subject,
+                'grade' => $s->grade,
+                'medium' => $s->medium,
+                'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'attendance_status' => $att ? $att->status : 'absent',
+            ];
         });
 
-        // Filter by student's selected subjects (Robust substring match)
-        $selected = $user->selected_subjects;
-        if (!empty($selected)) {
-            $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
-            $selectedArr = array_map('trim', (array)$selectedArr);
-            
-            $schedules = $schedules->filter(function($s) use ($selectedArr) {
-                $classSub = trim($s->subject);
-                if (empty($classSub)) return true;
-                
-                foreach ($selectedArr as $studentSub) {
-                    $studentSub = trim($studentSub);
-                    if ($studentSub === $classSub || 
-                        stripos($studentSub, $classSub) !== false || 
-                        stripos($classSub, $studentSub) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-        }
-
-        $mapped = $schedules->values()->map(function($s) {
-            $s->teacher = $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher';
-            return $s;
-        });
-
-        return response()->json($mapped->all());
+        return response()->json($items->all());
     }
 }

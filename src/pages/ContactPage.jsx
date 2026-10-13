@@ -68,8 +68,10 @@ const ContactPage = () => {
   const [location, setLocation] = useState(getSetting('contact_location', t('footer_location')))
   const [pinName, setPinName] = useState(getSetting('contact_map_pin_name', 'TiT Online Education'))
 
-  const footerPhone = getSetting('footer_phone', '+94 114 477 488')
-  const footerEmail = getSetting('footer_email', 'info@edulearn.lk')
+  const phone = getSetting('contact_phone') || getSetting('footer_phone') || ''
+  const email = getSetting('contact_email') || getSetting('footer_email') || ''
+  const footerPhone = phone
+  const footerEmail = email
 
   // Helper to extract src if full iframe tag is provided
   const extractMapSrc = (input) => {
@@ -84,9 +86,9 @@ const ContactPage = () => {
   const mapEmbedLink = extractMapSrc(getSetting('contact_map_embed_link'))
 
   const supportHours = [
-    { day: t('mon_fri'), time: getSetting('support_hours_mon_fri', '9:00 AM - 6:00 PM'), open: true },
-    { day: t('sat'), time: getSetting('support_hours_sat', '9:00 AM - 2:00 PM'), open: true },
-    { day: t('sun'), time: getSetting('support_hours_sun', t('closed') || 'Closed'), open: false }
+    { day: t('mon_fri'), time: getSetting('contact_hours_weekdays') || getSetting('support_hours_mon_fri') || '9:00 AM - 6:00 PM', open: true },
+    { day: t('sat'), time: getSetting('contact_hours_saturday') || getSetting('support_hours_sat') || '9:00 AM - 2:00 PM', open: true },
+    { day: t('sun'), time: getSetting('contact_hours_sunday') || getSetting('support_hours_sun') || t('closed') || 'Closed', open: false }
   ]
 
   useEffect(() => {

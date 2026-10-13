@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { FiCalendar, FiClock, FiVideo, FiMapPin } from 'react-icons/fi'
+import { FiCalendar, FiClock, FiVideo, FiMapPin, FiExternalLink } from 'react-icons/fi'
 import { getStudentUpcomingSchedules } from '../../services/dashboardService'
+import useJoinClass from '../../hooks/useJoinClass'
 
 export default function StudentSchedule() {
     const [schedules, setSchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const { joinClass, isJoining } = useJoinClass()
 
     useEffect(() => {
         async function load() {
@@ -80,8 +82,13 @@ export default function StudentSchedule() {
                                 {items.map(cls => {
                                     const time = new Date(cls.scheduled_at || cls.start_time)
                                     const now = new Date()
-                                    const isLive = time.getTime() <= now.getTime() && time.getTime() + (cls.duration || 60)*60000 > now.getTime()
-                                    const isOnline = cls.type === 'online' || cls.zoom_link;
+                                    const end = time.getTime() + (cls.duration || 60) * 60000
+                                    const isEnded = end <= now.getTime()
+                                    const isLive = time.getTime() <= now.getTime() && !isEnded
+                                    const canJoin = !isEnded && now.getTime() >= (time.getTime() - 10 * 60 * 1000)
+                                    const isOnline = cls.type === 'online' || Boolean(cls.zoom_link || cls.join_url)
+                                    const hasLink = Boolean(cls.zoom_link || cls.join_url)
+                                    const busy = isJoining(cls.id)
 
                                     return (
                                         <div key={cls.id} style={{
@@ -89,10 +96,11 @@ export default function StudentSchedule() {
                                             background: '#fff', borderRadius: 16,
                                             border: isLive ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
                                             boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
-                                            overflow: 'hidden', transition: 'all 0.2s'
+                                            overflow: 'hidden', transition: 'all 0.2s', flexWrap: 'wrap',
+                                            opacity: isEnded ? 0.65 : 1
                                         }}
-                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.04)' }}
-                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(99,102,241,0.1)' : '0 1px 3px rgba(0,0,0,0.02)' }}
+                                        onMouseEnter={e => { if (!isEnded) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.04)' } }}
+                                        onMouseLeave={e => { if (!isEnded) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isLive ? '0 4px 12px rgba(99,102,241,0.1)' : '0 1px 3px rgba(0,0,0,0.02)' } }}
                                         >
                                             {/* Time Block */}
                                             <div style={{
@@ -108,7 +116,7 @@ export default function StudentSchedule() {
                                             </div>
 
                                             {/* Info Block */}
-                                            <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 200 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                                                     <span style={{ padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{cls.subject || 'Subject'}</span>
                                                     <span style={{ padding: '2px 8px', borderRadius: 6, background: isOnline ? '#eff6ff' : '#ecfdf5', color: isOnline ? '#3b82f6' : '#10b981', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -120,11 +128,44 @@ export default function StudentSchedule() {
                                                 </h4>
                                                 <div style={{ color: '#64748b', fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{cls.teacher}</div>
                                                 
-                                                <div style={{ display: 'flex', gap: 16, color: '#64748b', fontSize: 13, fontWeight: 500 }}>
+                                                <div style={{ display: 'flex', gap: 16, color: '#64748b', fontSize: 13, fontWeight: 500, flexWrap: 'wrap' }}>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FiClock /> {cls.duration || 60} min duration</span>
                                                     {!isOnline && cls.location && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FiMapPin /> {cls.location}</span>}
                                                 </div>
                                             </div>
+
+                                            {/* Action Block */}
+                                            {isOnline && (
+                                                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderLeft: '1px solid #f1f5f9' }}>
+                                                    {isEnded ? (
+                                                        <span style={{ padding: '6px 14px', borderRadius: 8, background: '#f1f5f9', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                                                            Ended
+                                                        </span>
+                                                    ) : canJoin ? (
+                                                        <button
+                                                            onClick={() => joinClass(cls)}
+                                                            disabled={busy || !hasLink}
+                                                            style={{
+                                                                padding: '10px 18px', borderRadius: 10,
+                                                                background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
+                                                                color: isLive ? '#fff' : '#475569',
+                                                                border: isLive ? 'none' : '1px solid #e2e8f0',
+                                                                fontWeight: 700, fontSize: 13,
+                                                                cursor: (busy || !hasLink) ? 'not-allowed' : 'pointer',
+                                                                display: 'flex', alignItems: 'center', gap: 6,
+                                                                boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.25)' : 'none',
+                                                                opacity: busy ? 0.7 : 1
+                                                            }}
+                                                        >
+                                                            <FiExternalLink /> {busy ? 'Joining...' : (isLive ? 'Join Live Class' : 'Join Class')}
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ padding: '6px 12px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: 12, fontWeight: 600 }}>
+                                                            Starts at {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}
@@ -136,3 +177,4 @@ export default function StudentSchedule() {
         </div>
     )
 }
+

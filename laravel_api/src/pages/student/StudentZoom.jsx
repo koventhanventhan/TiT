@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch } from 'react-icons/fi'
-import { getStudentZoomClasses, studentAttend } from '../../services/dashboardService'
+import { getStudentZoomClasses } from '../../services/dashboardService'
+import useJoinClass from '../../hooks/useJoinClass'
 
 const UPCOMING_DAYS = 2
 
@@ -11,6 +12,7 @@ export default function StudentZoom() {
     const [hasAny, setHasAny] = useState(false)
     const [loading, setLoading] = useState(true)
     const [paymentRequired, setPaymentRequired] = useState(false)
+    const { joinClass, isJoining } = useJoinClass()
 
     useEffect(() => {
         async function load() {
@@ -76,24 +78,27 @@ export default function StudentZoom() {
         load()
     }, [])
 
-    const handleJoin = async (cls) => {
-        try {
-            await studentAttend(cls.id)
-            const link = cls.join_url || cls.zoom_link;
-            if (link) window.open(link, '_blank')
-        } catch (e) {
-            console.error('Error joining:', e)
-            const link = cls.join_url || cls.zoom_link;
-            if (link) window.open(link, '_blank')
-        }
-    }
-
     const renderClassCard = (cls) => {
         const time = new Date(cls.scheduled_at || cls.start_time)
         const now = new Date()
         const end = time.getTime() + (cls.duration || 60)*60000
         const isEnded = end <= now.getTime()
         const isLive = time.getTime() <= now.getTime() && !isEnded
+        const canJoin = !isEnded && now.getTime() >= (time.getTime() - 10 * 60 * 1000)
+        const hasLink = Boolean(cls.zoom_link || cls.join_url)
+        const busy = isJoining(cls.id)
+        const isDisabled = isEnded || !canJoin || !hasLink || busy
+
+        let buttonText = 'Join Class'
+        if (isEnded) {
+            buttonText = 'Class ended'
+        } else if (!canJoin) {
+            buttonText = `Starts at ${time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+        } else if (busy) {
+            buttonText = 'Joining...'
+        } else if (isLive) {
+            buttonText = 'Join Class Now'
+        }
 
         return (
             <div key={cls.id} style={{
@@ -133,19 +138,19 @@ export default function StudentZoom() {
                 </div>
 
                 <button
-                    onClick={() => handleJoin(cls)}
-                    disabled={isEnded || (!cls.zoom_link && !cls.join_url)}
+                    onClick={() => joinClass(cls)}
+                    disabled={isDisabled}
                     style={{
                         width: '100%', padding: '12px', borderRadius: 12,
                         background: isLive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#f8fafc',
                         color: isLive ? '#fff' : '#475569', fontSize: 14, fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        cursor: (isEnded || (!cls.zoom_link && !cls.join_url)) ? 'not-allowed' : 'pointer',
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
                         boxShadow: isLive ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
                         transition: 'all 0.2s', border: isLive ? 'none' : '1px solid #e2e8f0'
                     }}
                 >
-                    <FiExternalLink /> {isEnded ? 'Class ended' : (isLive ? 'Join Class Now' : 'Join Link (Available at start time)')}
+                    <FiExternalLink /> {buttonText}
                 </button>
             </div>
         )

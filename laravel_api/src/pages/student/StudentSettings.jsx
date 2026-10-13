@@ -85,9 +85,9 @@ export default function StudentSettings() {
                     </div>
                 </div>
 
-                {/* Family / Siblings */}
+                {/* Siblings */}
                 <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Manage Siblings</h3>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Siblings</h3>
                     <div style={{ marginBottom: 24 }}>
                         <p style={{ fontSize: 14, color: '#64748b' }}>
                             If you have siblings studying with us, you can add them to this same account. This avoids needing separate emails and passwords. Each sibling will have their own dashboard and payment portal.

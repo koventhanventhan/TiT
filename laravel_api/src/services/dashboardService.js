@@ -85,14 +85,23 @@ export const getStudentAssignments = async () => {
   return res.json()
 }
 
-export const submitStudentAssignment = async (assignmentId, formData) => {
+export const submitStudentAssignment = async (assignmentId, fileOrFormData) => {
+  let body = fileOrFormData;
+  if (typeof File !== 'undefined' && fileOrFormData instanceof File) {
+    const fd = new FormData();
+    fd.append('file', fileOrFormData);
+    body = fd;
+  }
   const res = await fetch(`${API_BASE_URL}/student/assignments/${assignmentId}/submit`, {
     method: 'POST',
     headers: getAuthHeaders(true),
     credentials: 'include',
-    body: formData,
+    body,
   })
-  if (!res.ok) throw new Error('Failed to submit assignment')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to submit assignment');
+  }
   return res.json()
 }
 

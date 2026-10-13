@@ -8,7 +8,8 @@ import {
 import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
-
+import useJoinClass from '../../hooks/useJoinClass'
+import useMediaQuery from '../../hooks/useMediaQuery'
 
 // Reusable Stat Card
 function StatCard({ icon: Icon, label, value, color, bgColor, iconBg }) {
@@ -43,36 +44,38 @@ export default function StudentOverview() {
     const [stats, setStats] = useState(null)
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
     const [showSubjectModal, setShowSubjectModal] = useState(false)
     const [paymentRefreshKey, setPaymentRefreshKey] = useState(0)
     const paymentRef = useRef(null)
+    const isDesktop = useMediaQuery('(min-width: 1024px)')
+    const { joinClass, isJoining } = useJoinClass()
 
     const hour = new Date().getHours()
     const greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening')
 
-    useEffect(() => {
-        async function loadStats() {
-            try {
-                const [data, schedules] = await Promise.all([
-                    getStudentStats().catch(() => null),
-                    getStudentUpcomingSchedules().catch(() => [])
-                ])
-                setStats(data || {
-                    user: { name: 'Student' },
-                    today_classes: 0,
-                    pending_assignments: 0,
-                    attendance_rate: 0,
-                    upcoming_classes: 0,
-                    recent_announcements: []
-                })
-                
-                const todayStr = new Date().toDateString()
-                const todays = (schedules || []).filter(s => new Date(s.scheduled_at).toDateString() === todayStr)
-                setTodaySchedules(todays)
-            } finally {
-                setLoading(false)
-            }
+    const loadStats = async () => {
+        setLoading(true)
+        setError(null)
+        try {
+            const [data, schedules] = await Promise.all([
+                getStudentStats(),
+                getStudentUpcomingSchedules().catch(() => [])
+            ])
+            setStats(data)
+            
+            const todayStr = new Date().toDateString()
+            const todays = (schedules || []).filter(s => new Date(s.scheduled_at).toDateString() === todayStr)
+            setTodaySchedules(todays)
+        } catch (err) {
+            console.error('Failed to load student dashboard:', err)
+            setError(err.message || 'Failed to load dashboard data')
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         loadStats()
     }, [])
 
@@ -85,6 +88,42 @@ export default function StudentOverview() {
             <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>
     )
+
+    if (error) {
+        return (
+            <div style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+                <div style={{
+                    maxWidth: 480, width: '100%', background: '#fff', borderRadius: 16,
+                    border: '1px solid #fee2e2', padding: '32px 24px', textAlign: 'center',
+                    boxShadow: '0 4px 12px rgba(239,68,68,0.08)'
+                }}>
+                    <div style={{
+                        width: 56, height: 56, borderRadius: '50%', background: '#fef2f2',
+                        color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 24, margin: '0 auto 16px'
+                    }}>
+                        <FiAlertCircle />
+                    </div>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, color: '#991b1b', margin: '0 0 8px' }}>
+                        Failed to load dashboard
+                    </h2>
+                    <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 20px' }}>
+                        {error}
+                    </p>
+                    <button
+                        onClick={loadStats}
+                        style={{
+                            padding: '10px 24px', borderRadius: 10, background: '#4f0bd9',
+                            color: '#fff', border: 'none', fontWeight: 600, fontSize: 14,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div>
@@ -184,7 +223,7 @@ export default function StudentOverview() {
             </div>
 
             {/* Main Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '2fr 1fr' : '1fr', gap: 24 }}>
                 {/* Today's Learning Path */}
                 <div style={{
                     background: '#fff', borderRadius: 16, border: '1px solid #f1f5f9',
@@ -210,8 +249,9 @@ export default function StudentOverview() {
                         hourStr = hourStr < 10 ? '0' + hourStr : hourStr
                         const ampm = hour >= 12 ? 'PM' : 'AM'
                         
-                        // Roughly consider class live if we are between start time and +2 hours
-                        const isLive = new Date() >= dateObj && new Date() <= new Date(dateObj.getTime() + 2 * 60 * 60 * 1000)
+                        const durationMs = (schedule.duration || 60) * 60 * 1000
+                        const isLive = new Date() >= dateObj && new Date() <= new Date(dateObj.getTime() + durationMs)
+                        const busy = isJoining(schedule.id)
                         
                         return (
                             <div key={i} style={{
@@ -232,7 +272,7 @@ export default function StudentOverview() {
                                 <div style={{ flex: 1, minWidth: 180 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                                         {isLive && (
-                                            <span style={{
+                                             <span style={{
                                                 padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
                                                 background: '#dcfce7', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px'
                                             }}>● Live Now</span>
@@ -245,15 +285,16 @@ export default function StudentOverview() {
                                     <button style={{
                                         padding: '10px 20px', borderRadius: 12, border: 'none',
                                         background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer',
                                         display: 'flex', alignItems: 'center', gap: 6,
                                         boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
-                                        transition: 'all 0.2s ease'
+                                        transition: 'all 0.2s ease', opacity: busy ? 0.7 : 1
                                     }}
-                                    onClick={() => { if (schedule.join_url) window.open(schedule.join_url, '_blank') }}
-                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,0.45)' }}
-                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35)' }}>
-                                        <FiPlay style={{ fill: 'currentColor' }} /> Join Class
+                                    disabled={busy}
+                                    onClick={() => joinClass(schedule)}
+                                    onMouseEnter={e => { if (!busy) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,0.45)' } }}
+                                    onMouseLeave={e => { if (!busy) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.35)' } }}>
+                                        <FiPlay style={{ fill: 'currentColor' }} /> {busy ? 'Joining...' : 'Join Class'}
                                     </button>
                                 ) : (
                                     <button style={{

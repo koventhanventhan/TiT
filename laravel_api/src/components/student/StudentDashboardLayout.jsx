@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
@@ -17,7 +17,7 @@ const menuItems = [
     { name: 'Materials', icon: FiBookOpen, path: '/student/materials' },
     { name: 'Performance', icon: FiBarChart2, path: '/student/performance' },
     { name: 'Messages', icon: FiMessageSquare, path: '/student/messages' },
-    { name: 'Family / Siblings', icon: FiUsers, path: '/student/settings' },
+    { name: 'Settings', icon: FiSettings, path: '/student/settings' },
 ]
 
 export default function StudentDashboardLayout({ children, user }) {

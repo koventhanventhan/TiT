@@ -71,8 +71,8 @@ export default function MessagingPage() {
     useEffect(() => {
         if (!user.id || !echo) return;
 
-        const channel = echo.private(`messages.user.${user.id}`);
-        channel.listen('.message.sent', (e) => {
+        const channel = echo?.private?.(`messages.user.${user.id}`);
+        channel?.listen?.('.message.sent', (e) => {
             fetchInbox();
             if (activeChatId) {
                 markRead(e.message.id);
@@ -86,19 +86,19 @@ export default function MessagingPage() {
         else if (user.role === 'user') roleKey = 'all_students';
 
         if (roleKey) {
-            echo.private(`messages.${roleKey}`).listen('.message.sent', () => fetchInbox());
+            echo?.private?.(`messages.${roleKey}`)?.listen?.('.message.sent', () => fetchInbox());
         }
 
         if (user.role === 'user' && user.current_grade) {
-            echo.private(`messages.grade_${user.current_grade}`).listen('.message.sent', () => fetchInbox());
+            echo?.private?.(`messages.grade_${user.current_grade}`)?.listen?.('.message.sent', () => fetchInbox());
         }
 
         return () => {
-            channel.stopListening('.message.sent');
-            echo.leave(`messages.user.${user.id}`);
+            channel?.stopListening?.('.message.sent');
+            echo?.leave?.(`messages.user.${user.id}`);
             if (roleKey) {
-                echo.leave(`messages.${roleKey}`);
-                if (user.role === 'user' && user.current_grade) echo.leave(`messages.grade_${user.current_grade}`);
+                echo?.leave?.(`messages.${roleKey}`);
+                if (user.role === 'user' && user.current_grade) echo?.leave?.(`messages.grade_${user.current_grade}`);
             }
         };
     }, [fetchInbox, fetchSent, fetchRecipients, user.id, user.role, user.current_grade, activeChatId])

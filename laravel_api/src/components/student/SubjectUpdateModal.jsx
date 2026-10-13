@@ -218,6 +218,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
   const handleSaveSubjects = async (e) => {
     e.preventDefault();
+    if (loading) return;
     if (selectedSubjects.length === 0) {
       setError('Please select at least one subject.');
       return;
@@ -332,17 +333,17 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const savings = originalAmount - monthlyAmount;
 
   return (
-    <div style={{
+    <div className="shared-modal-overlay" style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       background: 'rgba(15,23,42,0.6)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9999, padding: 20
+      zIndex: 9999, padding: 12
     }}>
-      <div style={{
-        background: '#fff', borderRadius: 24, width: '100%', maxWidth: 500,
+      <div className="shared-modal-dialog" style={{
+        background: '#fff', borderRadius: 24, width: 'calc(100% - 24px)', maxWidth: 500,
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', maxHeight: '90vh',
-        margin: '16px'
+        display: 'flex', flexDirection: 'column', maxHeight: '90dvh',
+        overscrollBehavior: 'contain'
       }}>
         <div style={{
           padding: '20px', borderBottom: '1px solid var(--t-border)',
@@ -355,7 +356,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
             <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--t-text-3)' }}>For {currentGrade}</p>
           </div>
           <button onClick={handleClose} aria-label="Close" style={{
-            background: 'var(--t-bg)', border: 'none', width: 36, height: 36,
+            background: 'var(--t-bg)', border: 'none', width: 44, height: 44, minWidth: 44, minHeight: 44,
             borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--t-text-3)', cursor: 'pointer', transition: 'all 0.2s'
           }}>
@@ -363,7 +364,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           </button>
         </div>
 
-        <div style={{ padding: '20px', overflowY: 'auto' }}>
+        <div className="shared-modal-body" style={{ padding: '20px', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           {error && (
             <div style={{ background: 'var(--t-danger-bg)', color: 'var(--t-danger)', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
               {error}
@@ -386,8 +387,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   onChange={(e) => setLocalMedium(e.target.value)}
                   style={{
                     width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
-                    fontSize: 15, color: 'var(--t-text)', outline: 'none', appearance: 'none',
-                    background: '#fff'
+                    fontSize: 16, color: 'var(--t-text)', outline: 'none', appearance: 'none',
+                    background: '#fff', minHeight: 44
                   }}
                 >
                   <option value="">Select Medium</option>
@@ -627,12 +628,12 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           {step === 1 && (
             <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
               <button onClick={onClose} style={{
-                padding: '12px 24px', borderRadius: 12, border: '1px solid var(--t-border)',
+                minHeight: 44, padding: '12px 24px', borderRadius: 12, border: '1px solid var(--t-border)',
                 background: '#fff', color: 'var(--t-text-2)', fontSize: 15, fontWeight: 600, cursor: 'pointer'
               }}>Cancel</button>
               
               <button onClick={handleSaveSubjects} disabled={loading} style={{
-                padding: '12px 28px', borderRadius: 12, border: 'none',
+                minHeight: 44, padding: '12px 28px', borderRadius: 12, border: 'none',
                 background: 'var(--t-primary)',
                 color: '#fff', fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8

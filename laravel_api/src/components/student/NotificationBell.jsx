@@ -19,6 +19,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(false)
+  const [markingRead, setMarkingRead] = useState(false)
   const [error, setError] = useState(null)
   const dropdownRef = useRef(null)
 
@@ -66,6 +67,8 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
   }
 
   const markAsRead = async (id) => {
+    if (markingRead) return
+    setMarkingRead(true)
     // Optimistically update UI
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
@@ -81,10 +84,14 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, read: false } : n)
       )
+    } finally {
+      setMarkingRead(false)
     }
   }
 
   const markAllAsRead = async () => {
+    if (markingRead) return
+    setMarkingRead(true)
     const unread = notifications.filter(n => !n.read)
     // Optimistic update
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -100,6 +107,8 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       )
     } catch (err) {
       fetchNotifications() // Re-fetch on error
+    } finally {
+      setMarkingRead(false)
     }
   }
 
@@ -163,42 +172,46 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
+                  disabled={markingRead}
                   title="Mark all as read"
                   style={{
                     background: 'var(--t-primary-soft)', border: 'none',
-                    borderRadius: 8, padding: '4px 10px',
-                    color: 'var(--t-primary)', fontSize: 11, fontWeight: 600,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    borderRadius: 8, padding: '6px 12px', minHeight: 44,
+                    color: 'var(--t-primary)', fontSize: 12, fontWeight: 600,
+                    cursor: markingRead ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
-                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark all read
+                  <FiCheckCircle style={{ fontSize: 13 }} /> Mark all read
                 </button>
               )}
               <button
                 onClick={fetchNotifications}
                 title="Refresh"
+                aria-label="Refresh notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: 'var(--t-muted)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: 'var(--t-muted)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiRefreshCw style={{ fontSize: 13, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                <FiRefreshCw style={{ fontSize: 14, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 aria-label="Close notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: 'var(--t-muted)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: 'var(--t-muted)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiX style={{ fontSize: 14 }} />
+                <FiX style={{ fontSize: 16 }} />
               </button>
             </div>
           </div>

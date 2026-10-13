@@ -42,15 +42,21 @@
 }
 
 /* Tap targets (minimum 44x44 CSS px on touch) */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 768px) {
   .teacher-console-layout button,
   .teacher-console-layout a.t-tap,
   .teacher-console-layout select,
-  .teacher-console-layout input[type="checkbox"],
+  .teacher-console-layout input:not([type="hidden"]),
+  .teacher-console-layout textarea,
   .student-console-layout button,
   .student-console-layout a.t-tap,
   .student-console-layout select,
-  .student-console-layout input[type="checkbox"] {
+  .student-console-layout input:not([type="hidden"]),
+  .student-console-layout textarea,
+  .messaging-container button,
+  .messaging-container a.t-tap,
+  .messaging-container select,
+  .messaging-container input:not([type="hidden"]) {
     min-height: 44px;
     min-width: 44px;
   }
@@ -110,9 +116,25 @@
 
 .t-btn:active,
 .t-card[role="button"]:active,
-.t-icon-btn:active {
+.t-icon-btn:active,
+.t-menu-item:active {
   transform: scale(0.98);
   transition-duration: 80ms;
+}
+
+.t-menu-item {
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+@media (hover: hover) {
+  .t-menu-item:hover {
+    background: var(--t-bg) !important;
+  }
+  .t-menu-item-primary:hover {
+    background: var(--t-primary-soft) !important;
+  }
+  .t-menu-item-danger:hover {
+    background: var(--t-danger-bg) !important;
+  }
 }
 
 /* Modals & bottom sheets */

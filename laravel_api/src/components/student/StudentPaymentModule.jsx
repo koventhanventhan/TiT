@@ -29,6 +29,7 @@ const StudentPaymentModule = () => {
     }, []);
 
     const handlePayment = async () => {
+        if (paying) return;
         try {
             setPaying(true);
             setError(null);

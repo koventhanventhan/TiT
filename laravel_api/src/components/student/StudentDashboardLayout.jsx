@@ -343,13 +343,12 @@ export default function StudentDashboardLayout({ children, user }) {
                                                 <div
                                                     key={item.path}
                                                     onClick={() => navigate(item.path)}
+                                                    className="t-menu-item"
                                                     style={{
                                                         padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
                                                         cursor: 'pointer', borderBottom: '1px solid var(--t-border)',
                                                         transition: 'background 0.2s'
                                                     }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = '#fff'}
                                                 >
                                                     <div style={{
                                                         width: 32, height: 32, borderRadius: 8, background: 'var(--t-primary-soft)',
@@ -431,20 +430,19 @@ export default function StudentDashboardLayout({ children, user }) {
                                     animation: 'slideDown 0.2s ease'
                                 }}>
                                     <div style={{ padding: '16px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-bg)' }}>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
-                                        <div style={{ fontSize: 11, color: 'var(--t-text-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayEmail}</div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', overflowWrap: 'anywhere' }}>{user?.full_name || 'Student'}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--t-text-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', overflowWrap: 'anywhere' }}>{displayEmail}</div>
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 
                                             onClick={() => { setShowProfileMenu(false); fileInputRef.current?.click(); }}
+                                            className="t-menu-item"
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
                                             color: 'var(--t-text-2)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', minHeight: 44
+                                            borderRadius: 8, textAlign: 'left', minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiSettings style={{ fontSize: 15 }} /> Upload Photo
                                         </button>
@@ -452,14 +450,13 @@ export default function StudentDashboardLayout({ children, user }) {
                                         {JSON.parse(getActiveStorage().getItem('availableProfiles') || '[]').length > 1 && (
                                         <button 
                                             onClick={() => { setShowProfileMenu(false); window.location.href = '/select-profile'; }}
+                                            className="t-menu-item t-menu-item-primary"
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
                                             color: 'var(--t-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4, minHeight: 44
+                                            borderRadius: 8, textAlign: 'left', marginTop: 4, minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-primary-soft)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiUser style={{ fontSize: 15 }} /> Switch Profile
                                         </button>
@@ -467,14 +464,13 @@ export default function StudentDashboardLayout({ children, user }) {
 
                                         <button 
                                             onClick={() => { setShowProfileMenu(false); window.location.href = '/?logout=1'; }}
+                                            className="t-menu-item t-menu-item-danger"
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
                                             color: 'var(--t-danger)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4, minHeight: 44
+                                            borderRadius: 8, textAlign: 'left', marginTop: 4, minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-danger-bg)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiLogOut style={{ fontSize: 15 }} /> Sign Out
                                         </button>

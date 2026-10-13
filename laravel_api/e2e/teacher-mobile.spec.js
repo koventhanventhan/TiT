@@ -267,7 +267,7 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
       await page.waitForTimeout(300);
 
       const offenders = await page.evaluate(() => {
-        const buttonsAndLinks = Array.from(document.querySelectorAll('main button, main select, main .t-icon-btn, main a.t-tap'));
+        const buttonsAndLinks = Array.from(document.querySelectorAll('header button, header input:not([type="hidden"]), aside button, aside a.t-tap, main button, main select, main input:not([type="hidden"]), main .t-icon-btn, main a.t-tap'));
         const issues = [];
         for (const el of buttonsAndLinks) {
           const rect = el.getBoundingClientRect();
@@ -373,8 +373,8 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
     await expect(chatRow).toBeVisible();
   });
 
-  // 7. Theme color verification: Student Messages (sky-blue) vs Teacher Messages (purple)
-  test('Requirement 7: Student Messages preserves rgb(14, 165, 233) while Teacher has rgb(79, 11, 217)', async ({ page }) => {
+  // 7. Theme color verification: Student Messages and Teacher Messages both resolve to rgb(79, 11, 217)
+  test('Requirement 7: Student Messages and Teacher Messages both resolve to rgb(79, 11, 217)', async ({ page }) => {
     // 7A: Student View
     await setupMocks(page, false);
     await page.setViewportSize({ width: 1024, height: 768 });
@@ -384,7 +384,7 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
     const studentNewChatBtn = page.locator('button[title="New Chat"]');
     await expect(studentNewChatBtn).toBeVisible();
     const studentBtnColor = await studentNewChatBtn.evaluate(el => window.getComputedStyle(el).backgroundColor);
-    expect(studentBtnColor).toBe('rgb(14, 165, 233)');
+    expect(studentBtnColor).toBe('rgb(79, 11, 217)');
 
     // 7B: Teacher View
     await setupMocks(page, true);

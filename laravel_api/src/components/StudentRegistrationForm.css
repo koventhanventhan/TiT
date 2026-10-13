@@ -237,4 +237,29 @@
   .tit-reg-form { grid-template-columns: 1fr; }
   .tit-reg-container { padding: 2.25rem 1.25rem; }
   .tit-reg-title { font-size: 1.625rem; }
+  .tit-reg-input,
+  .tit-reg-select {
+    font-size: 16px !important;
+  }
+  .tit-reg-close {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  .tit-reg-wrapper {
+    width: calc(100% - 24px) !important;
+    max-height: 90dvh !important;
+    overscroll-behavior: contain;
+  }
+}
+
+.student-console-layout .tit-reg-input,
+.student-console-layout .tit-reg-select {
+  font-size: 16px !important;
+}
+
+.student-console-layout .tit-reg-close {
+  min-width: 44px !important;
+  min-height: 44px !important;
 }

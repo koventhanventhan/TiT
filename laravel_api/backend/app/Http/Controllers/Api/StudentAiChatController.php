@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Institute;
 use App\Models\StudentAiQuery;
+use App\Models\User;
+use App\Services\EventNotifier;
 use App\Services\Rag\AnswerService;
 use App\Services\Rag\DistressDetector;
 use App\Services\Rag\LanguageDetector;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -44,14 +47,21 @@ class StudentAiChatController extends Controller
             ], 403);
         }
 
-        // 2. Global feature switch
+        // 2. Block deactivated users
+        if (!empty($user->deactivated_at)) {
+            return response()->json([
+                'message' => 'Your account has been deactivated.',
+            ], 403);
+        }
+
+        // 3. Global feature switch
         if (!config('rag.enabled', true)) {
             return response()->json([
                 'message' => 'The AI Study Assistant is temporarily disabled.',
             ], 503);
         }
 
-        // 3. Per-institute feature switch
+        // 4. Per-institute feature switch
         $institute = Institute::find($user->institute_id);
         if (!$institute || !$institute->rag_enabled) {
             return response()->json([
@@ -59,7 +69,7 @@ class StudentAiChatController extends Controller
             ], 403);
         }
 
-        // 4. Input validation
+        // 5. Input validation (MUST happen before rate limiter hit)
         $validated = $request->validate([
             'question' => 'required|string|min:3|max:500',
             'subject' => 'nullable|string|max:100',
@@ -67,8 +77,9 @@ class StudentAiChatController extends Controller
 
         $question = trim($validated['question']);
         $subject = !empty($validated['subject']) ? trim($validated['subject']) : null;
+        $language = $this->languageDetector->detect($question);
 
-        // 5. Per-minute rate limiting
+        // 6. Per-minute rate limiting (consistent config: rag.limits.per_minute)
         $throttleKey = 'rag_min_' . $user->id;
         $perMinuteLimit = (int) config('rag.limits.per_minute', 10);
         if (RateLimiter::tooManyAttempts($throttleKey, $perMinuteLimit)) {
@@ -79,37 +90,58 @@ class StudentAiChatController extends Controller
         }
         RateLimiter::hit($throttleKey, 60);
 
-        // 6. Daily question quota per student (counts only 'answered' and 'no_notes_found')
+        // 7. Daily question quota calculation & processing row creation
+        // Count processing, answered, no_notes_found, and aborted toward the daily limit.
         $dailyLimit = (int) config('rag.limits.daily_questions_per_student', 30);
-        $usedToday = StudentAiQuery::where('user_id', $user->id)
-            ->whereDate('created_at', now()->toDateString())
-            ->whereIn('status', ['answered', 'no_notes_found'])
-            ->count();
+        $tz = config('app.timezone', 'Asia/Colombo');
+        $startOfDay = now()->setTimezone($tz)->startOfDay()->setTimezone('UTC');
+        $endOfDay = now()->setTimezone($tz)->endOfDay()->setTimezone('UTC');
 
-        if ($usedToday >= $dailyLimit) {
-            return response()->json([
-                'message' => "You have reached your daily limit of {$dailyLimit} questions for today.",
-                'daily_limit' => $dailyLimit,
-                'used_today' => $usedToday,
-            ], 429);
-        }
+        // Atomically enforce daily limit and create 'processing' row at the start of request
+        // Uses User row-level lock (FOR UPDATE) to serialize concurrent check-and-create per student
+        $aiQuery = DB::transaction(function () use ($user, $startOfDay, $endOfDay, $dailyLimit, $question, $language, $subject) {
+            User::where('id', $user->id)->lockForUpdate()->first();
 
-        // 7. Personal Distress & Self-Harm Safety Guardrail
-        if ($this->distressDetector->isDistress($question)) {
-            $language = $this->languageDetector->detect($question);
-            $caringMessage = $this->distressDetector->getCaringMessage($language);
+            $usedToday = StudentAiQuery::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startOfDay, $endOfDay])
+                ->whereIn('status', ['processing', 'answered', 'no_notes_found', 'aborted'])
+                ->count();
 
-            $aiQuery = StudentAiQuery::create([
+            if ($usedToday >= $dailyLimit) {
+                return null;
+            }
+
+            return StudentAiQuery::create([
                 'institute_id' => $user->institute_id,
                 'user_id' => $user->id,
                 'subject' => $subject,
                 'question' => $question,
                 'question_language' => $language,
+                'status' => 'processing',
+            ]);
+        });
+
+        if (!$aiQuery) {
+            return response()->json([
+                'message' => "You have reached your daily limit of {$dailyLimit} questions for today.",
+                'daily_limit' => $dailyLimit,
+            ], 429);
+        }
+
+        // 8. Personal Distress & Self-Harm Safety Guardrail
+        if ($this->distressDetector->isDistress($question)) {
+            $instituteContact = $institute->phone_number ?? null;
+            $caringMessage = $this->distressDetector->getCaringMessage($language, $instituteContact);
+
+            $aiQuery->update([
                 'answer' => $caringMessage,
                 'status' => 'distress_blocked',
                 'is_flagged' => true,
                 'flag_reason' => 'Personal distress / self-harm detected',
             ]);
+
+            // Notify institute admin
+            EventNotifier::studentDistressAlert($aiQuery, $user);
 
             return response()->stream(function () use ($caringMessage, $aiQuery, $language) {
                 echo "event: message\ndata: " . json_encode(['text' => $caringMessage]) . "\n\n";
@@ -133,27 +165,41 @@ class StudentAiChatController extends Controller
             ]);
         }
 
-        // 8. Streamed Grounded RAG Answering
-        return response()->stream(function () use ($user, $question, $subject) {
-            $fullAnswer = '';
-            $queryRecord = null;
+        // 9. Streamed Grounded RAG Answering with ignore_user_abort and connection_aborted
+        return response()->stream(function () use ($user, $question, $subject, $aiQuery, $language) {
+            ignore_user_abort(true);
+            $accumulatedAnswer = '';
+            $isAborted = false;
 
             try {
-                $result = $this->answerService->streamAnswer($user, $question, $subject, function (string $textChunk) {
+                $result = $this->answerService->streamAnswer($user, $question, $subject, function (string $textChunk) use (&$accumulatedAnswer, &$isAborted, $aiQuery) {
+                    if (connection_aborted()) {
+                        $isAborted = true;
+                        return;
+                    }
+
+                    $accumulatedAnswer .= $textChunk;
                     echo "event: message\ndata: " . json_encode(['text' => $textChunk]) . "\n\n";
                     if (ob_get_level() > 0) ob_flush();
                     flush();
+
+                    if (connection_aborted()) {
+                        $isAborted = true;
+                    }
                 });
+
+                if ($isAborted || connection_aborted()) {
+                    $aiQuery->update([
+                        'status' => 'aborted',
+                        'answer' => $accumulatedAnswer ?: null,
+                    ]);
+                    return;
+                }
 
                 $status = $result['llm_called'] ? 'answered' : 'no_notes_found';
                 $retrievedMaterialIds = array_values(array_unique(array_column($result['sources'], 'material_id')));
 
-                $queryRecord = StudentAiQuery::create([
-                    'institute_id' => $user->institute_id,
-                    'user_id' => $user->id,
-                    'subject' => $subject,
-                    'question' => $question,
-                    'question_language' => $result['language'],
+                $aiQuery->update([
                     'answer' => $result['answer'],
                     'retrieved_material_ids' => $retrievedMaterialIds,
                     'top_similarity_score' => $result['top_similarity_score'],
@@ -161,7 +207,7 @@ class StudentAiChatController extends Controller
                 ]);
 
                 echo "event: end\ndata: " . json_encode([
-                    'query_id' => $queryRecord->id,
+                    'query_id' => $aiQuery->id,
                     'status' => $status,
                     'language' => $result['language'],
                     'citations' => $result['citations'],
@@ -173,26 +219,67 @@ class StudentAiChatController extends Controller
                 if (ob_get_level() > 0) ob_flush();
                 flush();
 
-            } catch (\Throwable $e) {
-                Log::error('StudentAiChatController Stream Exception: ' . $e->getMessage(), [
-                    'exception' => $e,
-                    'user_id' => $user->id,
+            } catch (\App\Services\Rag\GeminiSafetyBlockedException $e) {
+                $blockReason = $e->getBlockReason() ?? $e->getFinishReason() ?? 'SAFETY';
+                $safetyMessage = match ($language) {
+                    'ta' => "இந்தக் கேள்வி அல்லது பதில் பாதுகாப்பு வழிகாட்டுதல்களின்படி தடுக்கப்பட்டுள்ளது. தயவுசெய்து உங்கள் கேள்வியை மாற்றி கேளுங்கள் அல்லது உங்கள் ஆசிரியரின் வழிகாட்டலைப் பெறுங்கள்.",
+                    'si' => "මෙම ප්‍රශ්නය හෝ පිළිතුර අපගේ ළමා ආරක්ෂණ පෙරහන් මගින් අවහිර කර ඇත. කරුණාකර ඔබේ ප්‍රශ්නය වෙනත් ආකාරයකින් අසන්න හෝ ඔබේ ගුරුවරයාගෙන් මඟ පෙන්වීම ලබා ගන්න.",
+                    default => "This question or answer was blocked by our child safety filters. Please rephrase your question or ask your teacher for guidance.",
+                };
+
+                $aiQuery->update([
+                    'status' => 'blocked_safety',
+                    'answer' => $safetyMessage,
+                    'is_flagged' => false,
+                    'flag_reason' => 'safety_block',
                 ]);
 
-                StudentAiQuery::create([
-                    'institute_id' => $user->institute_id,
-                    'user_id' => $user->id,
-                    'subject' => $subject,
-                    'question' => $question,
-                    'question_language' => $this->languageDetector->detect($question),
-                    'answer' => null,
-                    'status' => 'error',
-                ]);
+                // Stream friendly translated safety guidance to student
+                echo "event: message\ndata: " . json_encode(['text' => $safetyMessage]) . "\n\n";
+                echo "event: end\ndata: " . json_encode([
+                    'query_id' => $aiQuery->id,
+                    'status' => 'blocked_safety',
+                    'language' => $language,
+                    'citations' => [],
+                    'sources' => [],
+                    'has_valid_citations' => false,
+                ]) . "\n\n";
 
-                $errorMessage = 'An error occurred while generating your answer. Please try again.';
-                echo "event: error\ndata: " . json_encode(['message' => $errorMessage]) . "\n\n";
                 if (ob_get_level() > 0) ob_flush();
                 flush();
+
+            } catch (\Throwable $e) {
+                Log::error('StudentAiChatController Stream Exception: ' . $e->getMessage(), [
+                    'exception_class' => get_class($e),
+                    'user_id' => $user->id,
+                    'query_id' => $aiQuery->id,
+                ]);
+
+                if (connection_aborted()) {
+                    $aiQuery->update([
+                        'status' => 'aborted',
+                        'answer' => $accumulatedAnswer ?: null,
+                    ]);
+                } else {
+                    $aiQuery->update([
+                        'status' => 'error',
+                    ]);
+
+                    $errorMessage = 'An error occurred while generating your answer. Please try again.';
+                    echo "event: error\ndata: " . json_encode(['message' => $errorMessage]) . "\n\n";
+                    if (ob_get_level() > 0) ob_flush();
+                    flush();
+                }
+            } finally {
+                if (connection_aborted()) {
+                    $aiQuery->refresh();
+                    if ($aiQuery->status === 'processing') {
+                        $aiQuery->update([
+                            'status' => 'aborted',
+                            'answer' => $accumulatedAnswer ?: null,
+                        ]);
+                    }
+                }
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',
@@ -214,15 +301,13 @@ class StudentAiChatController extends Controller
             'comment' => 'nullable|string|max:500',
         ]);
 
-        $query = StudentAiQuery::where('id', $id)->first();
+        // Returns 404 for non-existent queries or queries belonging to other students
+        $query = StudentAiQuery::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
 
         if (!$query) {
             return response()->json(['message' => 'Query not found.'], 404);
-        }
-
-        // Ownership enforcement: students can only rate their own queries
-        if ($query->user_id !== $user->id) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $query->update([

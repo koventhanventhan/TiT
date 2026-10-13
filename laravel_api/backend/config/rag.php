@@ -57,6 +57,70 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | LLM Generation & Child Safety Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for Gemini LLM responses, token limits, timeouts, and child-safe
+    | strict harm category thresholds.
+    |
+    */
+    'llm' => [
+        'temperature' => (float) env('RAG_LLM_TEMPERATURE', 0.2),
+        'top_p' => (float) env('RAG_LLM_TOP_P', 0.8),
+        'max_output_tokens' => (int) env('RAG_LLM_MAX_OUTPUT_TOKENS', 1500),
+        'request_timeout' => (int) env('RAG_LLM_REQUEST_TIMEOUT', 45),
+        'safety_settings' => [
+            [
+                'category' => 'HARM_CATEGORY_HARASSMENT',
+                'threshold' => env('RAG_SAFETY_HARASSMENT', 'BLOCK_LOW_AND_ABOVE'),
+            ],
+            [
+                'category' => 'HARM_CATEGORY_HATE_SPEECH',
+                'threshold' => env('RAG_SAFETY_HATE_SPEECH', 'BLOCK_LOW_AND_ABOVE'),
+            ],
+            [
+                'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                'threshold' => env('RAG_SAFETY_SEXUALLY_EXPLICIT', 'BLOCK_LOW_AND_ABOVE'),
+            ],
+            [
+                'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                'threshold' => env('RAG_SAFETY_DANGEROUS_CONTENT', 'BLOCK_LOW_AND_ABOVE'),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Student Support & Distress Helplines
+    |--------------------------------------------------------------------------
+    |
+    | Configured crisis contacts and helplines shown when a student expresses distress.
+    | Empty by default: verified helpline names and numbers must be supplied via .env.
+    | Only helplines with a non-empty configured number are shown to students.
+    |
+    */
+    'safety' => [
+        'helplines' => [
+            [
+                'name' => env('RAG_HELPLINE_PRIMARY_NAME', ''),
+                'number' => env('RAG_HELPLINE_PRIMARY_NUMBER', ''),
+                'hours' => env('RAG_HELPLINE_PRIMARY_HOURS', ''),
+            ],
+            [
+                'name' => env('RAG_HELPLINE_SECONDARY_NAME', ''),
+                'number' => env('RAG_HELPLINE_SECONDARY_NUMBER', ''),
+                'hours' => env('RAG_HELPLINE_SECONDARY_HOURS', ''),
+            ],
+            [
+                'name' => env('RAG_HELPLINE_INSTITUTE_NAME', 'Institute / Teacher Support'),
+                'number' => env('RAG_HELPLINE_INSTITUTE_NUMBER', ''),
+                'hours' => env('RAG_HELPLINE_INSTITUTE_HOURS', ''),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Document Chunking Defaults
     |--------------------------------------------------------------------------
     */
@@ -78,6 +142,8 @@ return [
         'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
         'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
         'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),
+        'legacy_font_min_script_ratio' => (float) env('RAG_LEGACY_FONT_MIN_SCRIPT_RATIO', 0.20),
+        'legacy_font_min_letters' => (int) env('RAG_LEGACY_FONT_MIN_LETTERS', 50),
     ],
 
     /*

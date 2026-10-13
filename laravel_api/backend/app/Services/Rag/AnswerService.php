@@ -83,16 +83,18 @@ class AnswerService
 
         foreach ($qualifiedChunks as $index => $chunk) {
             $num = $index + 1;
-            $cappedTitle = mb_substr($chunk['material_title'] ?? 'Teacher Notes', 0, 100);
+            $rawTitle = $chunk['material_title'] ?? 'Teacher Notes';
+            $safeTitle = htmlspecialchars(mb_substr($rawTitle, 0, 100), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeContent = htmlspecialchars(trim($chunk['content']), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $pageInfo = !empty($chunk['page_number']) ? " (Page {$chunk['page_number']})" : '';
 
-            $contextChunksText .= "[{$num}] Material: \"{$cappedTitle}\"{$pageInfo}\n";
-            $contextChunksText .= trim($chunk['content']) . "\n\n";
+            $contextChunksText .= "[{$num}] Material: \"{$safeTitle}\"{$pageInfo}\n";
+            $contextChunksText .= $safeContent . "\n\n";
 
             $sources[] = [
                 'citation_id' => $num,
                 'material_id' => $chunk['material_id'],
-                'title' => $cappedTitle,
+                'title' => $safeTitle,
                 'page_number' => $chunk['page_number'] ?? null,
                 'similarity' => $chunk['similarity'],
             ];
@@ -122,7 +124,8 @@ CRITICAL INSTRUCTIONS:
 6. NEVER invent, assume, extrapolate, or hallucinate facts.
 EOT;
 
-        $userPrompt = "<context>\n" . trim($contextChunksText) . "\n</context>\n\n<question>\n" . trim($question) . "\n</question>\n\nAnswer the student question based strictly on the context above:";
+        $safeQuestion = htmlspecialchars(trim($question), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $userPrompt = "<context>\n" . trim($contextChunksText) . "\n</context>\n\n<question>\n" . $safeQuestion . "\n</question>\n\nAnswer the student question based strictly on the context above:";
 
         return [
             'language' => $language,
@@ -171,7 +174,27 @@ EOT;
             ];
         }
 
-        $rawAnswer = $this->geminiClient->generateAnswer($context['user_prompt'], $context['system_instruction']);
+        try {
+            $rawAnswer = $this->geminiClient->generateAnswer($context['user_prompt'], $context['system_instruction']);
+        } catch (\App\Services\Rag\GeminiSafetyBlockedException $e) {
+            $safetyMessage = match ($language) {
+                'ta' => "இந்தக் கேள்வி அல்லது பதில் பாதுகாப்பு வழிகாட்டுதல்களின்படி தடுக்கப்பட்டுள்ளது. தயவுசெய்து உங்கள் கேள்வியை மாற்றி கேளுங்கள் அல்லது உங்கள் ஆசிரியரின் வழிகாட்டலைப் பெறுங்கள்.",
+                'si' => "මෙම ප්‍රශ්නය හෝ පිළිතුර අපගේ ළමා ආරක්ෂණ පෙරහන් මගින් අවහිර කර ඇත. කරුණාකර ඔබේ ප්‍රශ්නය වෙනත් ආකාරයකින් අසන්න හෝ ඔබේ ගුරුවරයාගෙන් මඟ පෙන්වීම ලබා ගන්න.",
+                default => "This question or answer was blocked by our child safety filters. Please rephrase your question or ask your teacher for guidance.",
+            };
+
+            return [
+                'answer' => $safetyMessage,
+                'language' => $language,
+                'citations' => [],
+                'sources' => [],
+                'top_similarity_score' => $topScore,
+                'llm_called' => true,
+                'has_valid_citations' => false,
+                'is_safety_blocked' => true,
+                'safety_block_reason' => $e->getBlockReason() ?? $e->getFinishReason() ?? 'SAFETY',
+            ];
+        }
 
         // Extract bracket citations [1], [2], etc. from LLM answer and filter to 1..N
         $numChunks = count($qualifiedChunks);
@@ -181,7 +204,10 @@ EOT;
 
         $hasValidCitations = !empty($validCitations);
         if (!$hasValidCitations) {
-            Log::warning("RAG Answer produced no valid citations within 1..{$numChunks} for question: {$question}");
+            Log::warning("RAG Answer produced no valid citations within 1..{$numChunks}", [
+                'student_id' => $student->id,
+                'subject' => $subject,
+            ]);
         }
 
         return [
@@ -239,7 +265,10 @@ EOT;
 
         $hasValidCitations = !empty($validCitations);
         if (!$hasValidCitations) {
-            Log::warning("RAG Streamed Answer produced no valid citations within 1..{$numChunks} for question: {$question}");
+            Log::warning("RAG Streamed Answer produced no valid citations within 1..{$numChunks}", [
+                'student_id' => $student->id,
+                'subject' => $subject,
+            ]);
         }
 
         return [

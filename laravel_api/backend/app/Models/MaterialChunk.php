@@ -27,6 +27,7 @@ class MaterialChunk extends Model
         'dimensions',
         'embedding',
         'word_count',
+        'is_ocr',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class MaterialChunk extends Model
         'year' => 'integer',
         'dimensions' => 'integer',
         'word_count' => 'integer',
+        'is_ocr' => 'boolean',
     ];
 
     /**

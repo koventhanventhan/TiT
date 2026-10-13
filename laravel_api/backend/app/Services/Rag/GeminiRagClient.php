@@ -217,11 +217,16 @@ class GeminiRagClient implements GeminiClientInterface
                 ],
             ],
             'generationConfig' => [
-                'temperature' => 0.2,
-                'topP' => 0.8,
-                'maxOutputTokens' => 1500,
+                'temperature' => (float) config('rag.llm.temperature', 0.2),
+                'topP' => (float) config('rag.llm.top_p', 0.8),
+                'maxOutputTokens' => (int) config('rag.llm.max_output_tokens', 1500),
             ],
         ];
+
+        $safetySettings = config('rag.llm.safety_settings', []);
+        if (!empty($safetySettings)) {
+            $payload['safetySettings'] = $safetySettings;
+        }
 
         if (!empty($systemInstruction)) {
             $payload['systemInstruction'] = [
@@ -231,7 +236,8 @@ class GeminiRagClient implements GeminiClientInterface
             ];
         }
 
-        $response = Http::timeout($this->timeout)->post($url, $payload);
+        $timeout = (int) config('rag.llm.request_timeout', $this->timeout);
+        $response = Http::timeout($timeout)->post($url, $payload);
 
         if (!$response->successful()) {
             Log::error('Gemini GenerateContent API Error', [
@@ -242,6 +248,34 @@ class GeminiRagClient implements GeminiClientInterface
         }
 
         $data = $response->json();
+
+        // Check for prompt-level safety block
+        if (!empty($data['promptFeedback']['blockReason'])) {
+            $reason = (string) $data['promptFeedback']['blockReason'];
+            $ratings = $data['promptFeedback']['safetyRatings'] ?? [];
+            throw new GeminiSafetyBlockedException("Gemini prompt blocked ({$reason})", $reason, null, $ratings);
+        }
+
+        // Check for candidate-level safety block
+        $candidate = $data['candidates'][0] ?? null;
+        if ($candidate) {
+            $finishReason = $candidate['finishReason'] ?? null;
+            if ($finishReason === 'SAFETY') {
+                $ratings = $candidate['safetyRatings'] ?? [];
+                throw new GeminiSafetyBlockedException("Gemini generation blocked by safety filters.", null, 'SAFETY', $ratings);
+            }
+        }
+
+        // Log token usage per query
+        if (!empty($data['usageMetadata'])) {
+            $usage = $data['usageMetadata'];
+            Log::info('Gemini LLM Token Usage (generateAnswer)', [
+                'prompt_token_count' => $usage['promptTokenCount'] ?? null,
+                'candidates_token_count' => $usage['candidatesTokenCount'] ?? null,
+                'total_token_count' => $usage['totalTokenCount'] ?? null,
+            ]);
+        }
+
         return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
     }
 
@@ -271,11 +305,16 @@ class GeminiRagClient implements GeminiClientInterface
                 ],
             ],
             'generationConfig' => [
-                'temperature' => 0.2,
-                'topP' => 0.8,
-                'maxOutputTokens' => 1500,
+                'temperature' => (float) config('rag.llm.temperature', 0.2),
+                'topP' => (float) config('rag.llm.top_p', 0.8),
+                'maxOutputTokens' => (int) config('rag.llm.max_output_tokens', 1500),
             ],
         ];
+
+        $safetySettings = config('rag.llm.safety_settings', []);
+        if (!empty($safetySettings)) {
+            $payload['safetySettings'] = $safetySettings;
+        }
 
         if (!empty($systemInstruction)) {
             $payload['systemInstruction'] = [
@@ -285,8 +324,9 @@ class GeminiRagClient implements GeminiClientInterface
             ];
         }
 
+        $timeout = (int) config('rag.llm.request_timeout', $this->timeout);
         $response = Http::withOptions(['stream' => true])
-            ->timeout($this->timeout)
+            ->timeout($timeout)
             ->post($url, $payload);
 
         if (!$response->successful()) {
@@ -298,6 +338,7 @@ class GeminiRagClient implements GeminiClientInterface
 
         $body = $response->toPsrResponse()->getBody();
         $buffer = '';
+        $lastUsage = null;
 
         while (!$body->eof()) {
             $chunk = $body->read(1024);
@@ -315,12 +356,43 @@ class GeminiRagClient implements GeminiClientInterface
                     }
 
                     $data = json_decode($jsonStr, true);
-                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                    if ($text !== '') {
-                        $onChunk($text);
+                    if (is_array($data)) {
+                        // Check prompt-level safety block
+                        if (!empty($data['promptFeedback']['blockReason'])) {
+                            $reason = (string) $data['promptFeedback']['blockReason'];
+                            $ratings = $data['promptFeedback']['safetyRatings'] ?? [];
+                            throw new GeminiSafetyBlockedException("Gemini prompt blocked ({$reason})", $reason, null, $ratings);
+                        }
+
+                        // Check candidate-level safety block
+                        $candidate = $data['candidates'][0] ?? null;
+                        if ($candidate) {
+                            $finishReason = $candidate['finishReason'] ?? null;
+                            if ($finishReason === 'SAFETY') {
+                                $ratings = $candidate['safetyRatings'] ?? [];
+                                throw new GeminiSafetyBlockedException("Gemini generation blocked by safety filters.", null, 'SAFETY', $ratings);
+                            }
+                        }
+
+                        if (!empty($data['usageMetadata'])) {
+                            $lastUsage = $data['usageMetadata'];
+                        }
+
+                        $text = $candidate['content']['parts'][0]['text'] ?? '';
+                        if ($text !== '') {
+                            $onChunk($text);
+                        }
                     }
                 }
             }
+        }
+
+        if ($lastUsage) {
+            Log::info('Gemini LLM Token Usage (streamAnswer)', [
+                'prompt_token_count' => $lastUsage['promptTokenCount'] ?? null,
+                'candidates_token_count' => $lastUsage['candidatesTokenCount'] ?? null,
+                'total_token_count' => $lastUsage['totalTokenCount'] ?? null,
+            ]);
         }
     }
 }

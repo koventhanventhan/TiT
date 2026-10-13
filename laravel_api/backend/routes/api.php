@@ -134,6 +134,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
     // Admin Master Control Routes (Tenant Aware + Role: admin)
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
+        Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
         Route::post('/students/promote', [\App\Http\Controllers\AdminPromotionController::class, 'promoteStudents']);
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);

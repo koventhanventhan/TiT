@@ -190,8 +190,10 @@ function SafeMarkdownRenderer({ text }) {
     return <div className="ai-markdown-body">{elements}</div>
 }
 
-export default function StudentStudyAssistant({ user }) {
+export default function StudentStudyAssistant({ user: userProp }) {
     const { language, t } = useLanguage()
+    const currentUser = userProp || JSON.parse(localStorage.getItem('user') || '{}')
+    const isRagDisabled = currentUser?.rag_enabled === false
 
     const [messages, setMessages] = useState(() => {
         try {
@@ -342,11 +344,23 @@ export default function StudentStudyAssistant({ user }) {
             })
 
             if (!response.ok) {
-                let errorMsg = `Server error (${response.status})`
+                let errorMsg = null
                 try {
                     const errJson = await response.json()
-                    errorMsg = errJson.message || errorMsg
+                    errorMsg = errJson.message
                 } catch (_) {}
+
+                if (!errorMsg) {
+                    if (response.status === 403) {
+                        errorMsg = t('study_assistant_error_forbidden', 'Access is not permitted for your account or institute.')
+                    } else if (response.status === 429) {
+                        errorMsg = t('study_assistant_error_quota', 'Question limit reached. Please wait before asking again.')
+                    } else if (response.status === 503) {
+                        errorMsg = t('study_assistant_error_unavailable', 'The Study Assistant is temporarily unavailable. Please try again later.')
+                    } else {
+                        errorMsg = t('study_assistant_error_generic', 'An error occurred while connecting to the assistant. Please try again.')
+                    }
+                }
 
                 throw new Error(errorMsg)
             }
@@ -430,6 +444,22 @@ export default function StudentStudyAssistant({ user }) {
             setStreamedText('')
             abortControllerRef.current = null
         }
+    }
+
+    if (isRagDisabled) {
+        return (
+            <div className="study-assistant-container" style={{ padding: '2rem', textAlign: 'center' }}>
+                <div style={{ maxWidth: 500, margin: '4rem auto', background: '#fff', borderRadius: 12, padding: '2.5rem 2rem', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+                    <FiHelpCircle style={{ fontSize: '3rem', color: '#94a3b8', marginBottom: '1rem' }} />
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.5rem' }}>
+                        Study Assistant Disabled
+                    </h2>
+                    <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                        The AI Study Assistant is currently not enabled for your institute. Please contact your institute administrator or teacher for more details.
+                    </p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -574,7 +604,7 @@ export default function StudentStudyAssistant({ user }) {
                                             )}
 
                                             {/* Thumbs Up / Down Feedback */}
-                                            {msg.queryId && (
+                                            {msg.queryId && msg.status !== 'blocked_safety' && msg.status !== 'distress_blocked' && (
                                                 <div className="feedback-row">
                                                     <span className="feedback-label">
                                                         {t('study_assistant_helpful', 'Was this answer helpful?')}

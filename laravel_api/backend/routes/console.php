@@ -83,4 +83,7 @@ Schedule::call($guard('alerts:daily-summary', fn() => Artisan::call('alerts:dail
 // Daily privacy pruning for student RAG query text
 Schedule::command('rag:prune-queries')->dailyAt('03:00');
 
+// Clean up queries stuck in 'processing' status for over 5 minutes
+Schedule::command('rag:cleanup-stuck-queries')->everyFiveMinutes();
+
 

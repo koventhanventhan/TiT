@@ -27,6 +27,7 @@ class MultilingualTextChunker
         foreach ($pages as $page) {
             $pageNumber = $page['page_number'] ?? 1;
             $text = trim($page['text'] ?? '');
+            $usedOcr = !empty($page['used_ocr']);
 
             if (empty($text)) {
                 continue;
@@ -34,6 +35,7 @@ class MultilingualTextChunker
 
             $pageChunks = $this->chunkSinglePage($text, $pageNumber);
             foreach ($pageChunks as $chunk) {
+                $chunk['is_ocr'] = $usedOcr;
                 $chunks[] = $chunk;
             }
         }

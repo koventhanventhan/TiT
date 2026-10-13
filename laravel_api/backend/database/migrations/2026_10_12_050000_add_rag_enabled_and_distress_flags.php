@@ -11,11 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Add per-institute RAG switch to institutes table
-        if (Schema::hasTable('institutes') && !Schema::hasColumn('institutes', 'rag_enabled')) {
-            Schema::table('institutes', function (Blueprint $table) {
-                $table->boolean('rag_enabled')->default(true)->after('status');
-            });
+        // 1. Add per-institute RAG switch to institutes table (default FALSE)
+        if (Schema::hasTable('institutes')) {
+            if (!Schema::hasColumn('institutes', 'rag_enabled')) {
+                Schema::table('institutes', function (Blueprint $table) {
+                    $table->boolean('rag_enabled')->default(false)->after('status');
+                });
+            }
+            // Set all existing institutes to false
+            \Illuminate\Support\Facades\DB::table('institutes')->update(['rag_enabled' => false]);
         }
 
         // 2. Add admin review & distress flags to student_ai_queries table
@@ -27,6 +31,13 @@ return new class extends Migration
                 if (!Schema::hasColumn('student_ai_queries', 'flag_reason')) {
                     $table->string('flag_reason')->nullable()->after('is_flagged');
                 }
+            });
+        }
+
+        // 3. Add is_ocr flag to material_chunks to track pages extracted via OCR fallback
+        if (Schema::hasTable('material_chunks') && !Schema::hasColumn('material_chunks', 'is_ocr')) {
+            Schema::table('material_chunks', function (Blueprint $table) {
+                $table->boolean('is_ocr')->default(false)->after('word_count');
             });
         }
     }

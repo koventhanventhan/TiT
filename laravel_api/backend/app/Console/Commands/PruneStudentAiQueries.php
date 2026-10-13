@@ -30,6 +30,7 @@ class PruneStudentAiQueries extends Command
 
         $affected = StudentAiQuery::withoutGlobalScopes()
             ->where('created_at', '<', $cutoffDate)
+            ->where('is_flagged', false)
             ->where(function ($query) {
                 $query->where('question', '!=', '[REDACTED]')
                       ->orWhere('answer', '!=', '[REDACTED]');

@@ -438,6 +438,10 @@ export const translations = {
     study_assistant_rated_down: 'Marked as unhelpful',
     study_assistant_rate_error: 'Could not record feedback.',
     study_assistant_distress_help: 'Support & Guidance',
+    study_assistant_error_forbidden: 'Access is not permitted for your account or institute.',
+    study_assistant_error_quota: 'Question limit reached. Please wait before asking again.',
+    study_assistant_error_unavailable: 'The Study Assistant is temporarily unavailable. Please try again later.',
+    study_assistant_error_generic: 'An error occurred while connecting to the assistant. Please try again.',
   },
   ta: {
     nav_home: 'முகப்பு',
@@ -851,6 +855,10 @@ export const translations = {
     study_assistant_rated_down: 'பயனற்றதாக குறிக்கப்பட்டது',
     study_assistant_rate_error: 'கருத்தைப் பதிவு செய்ய முடியவில்லை.',
     study_assistant_distress_help: 'ஆதரவு மற்றும் வழிகாட்டல்',
+    study_assistant_error_forbidden: 'உங்கள் கணக்கு அல்லது கல்வி நிறுவனத்திற்கு அனுமதி இல்லை.',
+    study_assistant_error_quota: 'கேள்வி வரம்பு முடிந்தது. தயவுசெய்து சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.',
+    study_assistant_error_unavailable: 'படிப்பு உதவியாளர் தற்காலிகமாக கிடைக்கவில்லை. பின்னர் மீண்டும் முயற்சிக்கவும்.',
+    study_assistant_error_generic: 'உதவியாளரை இணைப்பதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
   },
   si: {
     nav_home: 'මුල් පිටුව',
@@ -1310,6 +1318,10 @@ export const translations = {
     study_assistant_rated_down: 'නිෂ්ප්‍රයෝජනවත් ලෙස සලකුණු කරන ලදී',
     study_assistant_rate_error: 'ප්‍රතිපෝෂණය වාර්තා කිරීමට නොහැකි විය.',
     study_assistant_distress_help: 'සහාය සහ මගපෙන්වීම',
+    study_assistant_error_forbidden: 'ඔබගේ ගිණුමට හෝ ආයතනයට ප්‍රවේශ වීමට අවසර නැත.',
+    study_assistant_error_quota: 'ප්‍රශ්න සීමාව ඉක්මවා ඇත. කරුණාකර නැවත උත්සාහ කිරීමට පෙර මදක් රැඳී සිටින්න.',
+    study_assistant_error_unavailable: 'අධ්‍යයන සහායක තාවකාලිකව ක්‍රියා විරහිතයි. කරුණාකර පසුව නැවත උත්සාහ කරන්න.',
+    study_assistant_error_generic: 'සහායක වෙත සම්බන්ධ වීමේදී දෝෂයක් ඇති විය. කරුණාකර නැවත උත්සාහ කරන්න.',
   },
 }
 

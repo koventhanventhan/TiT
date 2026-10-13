@@ -169,6 +169,19 @@ class User extends Authenticatable implements FilamentUser
         return $this->deactivated_at === null;
     }
 
+    public function institute()
+    {
+        return $this->belongsTo(\App\Models\Institute::class, 'institute_id');
+    }
+
+    public function isRagEnabled(): bool
+    {
+        if (!config('rag.enabled', true)) {
+            return false;
+        }
+        return (bool) optional($this->institute)->rag_enabled;
+    }
+
     public function parent()
     {
         return $this->belongsTo(User::class, 'parent_id');

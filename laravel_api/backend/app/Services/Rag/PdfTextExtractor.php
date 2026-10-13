@@ -26,6 +26,8 @@ class PdfTextExtractor
     protected int $ocrMaxPages;
     protected int $ocrMinWords;
     protected int $downloadTimeout;
+    protected float $legacyFontMinScriptRatio;
+    protected int $legacyFontMinLetters;
 
     public function __construct(GeminiClientInterface $geminiClient)
     {
@@ -35,6 +37,8 @@ class PdfTextExtractor
         $this->ocrMaxPages = (int) config('rag.ingestion.ocr_max_pages', 20);
         $this->ocrMinWords = (int) config('rag.ingestion.ocr_min_words_per_page', 20);
         $this->downloadTimeout = (int) config('rag.ingestion.download_timeout', 30);
+        $this->legacyFontMinScriptRatio = (float) config('rag.ingestion.legacy_font_min_script_ratio', 0.20);
+        $this->legacyFontMinLetters = (int) config('rag.ingestion.legacy_font_min_letters', 50);
     }
 
     /**
@@ -65,7 +69,7 @@ class PdfTextExtractor
 
             // 1. PDF Documents
             if ($extension === 'pdf') {
-                return $this->extractFromPdfFile($localPath);
+                return $this->extractFromPdfFile($localPath, $material->medium);
             }
 
             // 2. Images (Scanned notes, photo past papers)
@@ -88,9 +92,118 @@ class PdfTextExtractor
     }
 
     /**
-     * Parse PDF file using Smalot Parser with Gemini Vision OCR fallback for scanned pages.
+     * Compute per-page quality ratio comparing clean script characters (ASCII, Unicode Tamil, Unicode Sinhala,
+     * and math/science symbols like ×, ÷, °, µ) against Latin-1 mojibake characters.
+     *
+     * In Sri Lankan educational materials, legacy non-Unicode fonts (such as Bamini for Tamil or FMAbhaya for Sinhala)
+     * map glyphs onto high Latin-1 code points (U+00C0-U+00FF: À-ÿ). Math/science symbols like × (\x{00D7}), ÷ (\x{00F7}),
+     * ° (\x{00B0}), and µ (\x{00B5}) are explicitly excluded from mojibake counts.
+     *
+     * @param string $text
+     * @return float Value between 0.0 (entirely garbled mojibake) and 1.0 (clean Unicode/ASCII text)
      */
-    public function extractFromPdfFile(string $filePath): array
+    public function computeQualityRatio(string $text): float
+    {
+        $len = mb_strlen($text, 'UTF-8');
+        if ($len === 0) {
+            return 1.0;
+        }
+
+        // Count Latin-1 mojibake glyphs (U+00C0 through U+00FF, strictly excluding math symbols × (\x{00D7}) and ÷ (\x{00F7}))
+        $mojibakeCount = preg_match_all('/[\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}]/u', $text);
+
+        // Count valid clean characters: ASCII printable + Tamil script (U+0B80-U+0BFF) + Sinhala script (U+0D80-U+0DFF)
+        // + Math/Science symbols (×, ÷, °, µ, ±, ², ³, \p{Sm}) + whitespace
+        $validCount = preg_match_all('/[\x{0020}-\x{007E}\x{0B80}-\x{0BFF}\x{0D80}-\x{0DFF}\x{00B0}\x{00B1}\x{00B2}\x{00B3}\x{00B5}\x{00D7}\x{00F7}\p{Sm}\r\n\t]/u', $text);
+
+        $validRatio = $validCount / $len;
+        $mojibakeRatio = $mojibakeCount / $len;
+
+        return max(0.0, min(1.0, $validRatio - ($mojibakeRatio * 2)));
+    }
+
+    /**
+     * Check if a page belonging to a Tamil or Sinhala medium document has an abnormally low share
+     * of native script Unicode letters despite having substantial text (legacy ASCII/Bamini font symptom).
+     *
+     * @param string $text
+     * @param string|null $medium
+     * @return bool
+     */
+    public function isMediumScriptRatioDeficient(string $text, ?string $medium = null): bool
+    {
+        if (empty($medium)) {
+            return false;
+        }
+
+        $normMedium = strtolower(trim($medium));
+        if (!in_array($normMedium, ['tamil', 'sinhala'], true)) {
+            return false;
+        }
+
+        // Count total Unicode letters (alphabetic letters across all scripts)
+        preg_match_all('/\p{L}/u', $text, $letterMatches);
+        $totalLetters = count($letterMatches[0] ?? []);
+
+        // Only evaluate if the page has substantial text
+        if ($totalLetters < $this->legacyFontMinLetters) {
+            return false;
+        }
+
+        $scriptLetters = 0;
+        if ($normMedium === 'tamil') {
+            preg_match_all('/[\x{0B80}-\x{0BFF}]/u', $text, $scriptMatches);
+            $scriptLetters = count($scriptMatches[0] ?? []);
+        } elseif ($normMedium === 'sinhala') {
+            preg_match_all('/[\x{0D80}-\x{0DFF}]/u', $text, $scriptMatches);
+            $scriptLetters = count($scriptMatches[0] ?? []);
+        }
+
+        $scriptRatio = $scriptLetters / $totalLetters;
+
+        return $scriptRatio < $this->legacyFontMinScriptRatio;
+    }
+
+    /**
+     * Determine whether extracted page text is garbled legacy-font text requiring Gemini Vision OCR.
+     *
+     * @param string $text
+     * @param string|null $medium
+     * @return bool
+     */
+    public function isTextGarbled(string $text, ?string $medium = null): bool
+    {
+        $nonSpaceLen = mb_strlen(preg_replace('/\s+/u', '', $text), 'UTF-8');
+        if ($nonSpaceLen < 5) {
+            return false;
+        }
+
+        // 1. Mojibake density check (Latin-1 characters misused by legacy fonts, excluding math/science symbols like × and ÷)
+        $mojibakeCount = preg_match_all('/[\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}]/u', $text);
+        $mojibakeRatio = $mojibakeCount / $nonSpaceLen;
+
+        // If >= 3 mojibake characters and ratio >= 8%, it is unmistakably legacy font mojibake
+        if ($mojibakeCount >= 3 && $mojibakeRatio >= 0.08) {
+            return true;
+        }
+
+        // Overall quality ratio below 0.70 indicates heavy mojibake or distorted font encoding
+        if ($this->computeQualityRatio($text) < 0.70) {
+            return true;
+        }
+
+        // 2. Medium-aware Unicode script share check for Tamil/Sinhala documents
+        if ($this->isMediumScriptRatioDeficient($text, $medium)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Parse PDF file using Smalot Parser with Gemini Vision OCR fallback for scanned pages and garbled fonts.
+     */
+    public function extractFromPdfFile(string $filePath, ?string $medium = null): array
     {
         try {
             $parser = new Parser();
@@ -115,9 +228,11 @@ class PdfTextExtractor
 
             $extractedText = trim($page->getText() ?? '');
             $wordCount = count(preg_split('/\s+/u', $extractedText, -1, PREG_SPLIT_NO_EMPTY));
+            $isGarbled = $this->isTextGarbled($extractedText, $medium);
+            $usedOcr = false;
 
-            // If text is sparse (scanned page or image PDF), attempt Gemini Vision OCR
-            if ($wordCount < $this->ocrMinWords) {
+            // If text is sparse (scanned page or image PDF) OR garbled legacy font, fallback to Gemini Vision OCR
+            if ($wordCount < $this->ocrMinWords || $isGarbled) {
                 if ($ocrCount >= $this->ocrMaxPages) {
                     throw new OcrPageLimitExceededException("Document exceeds maximum OCR limit of {$this->ocrMaxPages} pages.");
                 }
@@ -125,6 +240,7 @@ class PdfTextExtractor
                 $ocrCount++;
                 if (!empty($ocrText)) {
                     $extractedText = $ocrText;
+                    $usedOcr = true;
                 }
             }
 
@@ -132,6 +248,7 @@ class PdfTextExtractor
                 $pageResults[] = [
                     'page_number' => $pageIndex,
                     'text' => $extractedText,
+                    'used_ocr' => $usedOcr,
                 ];
             }
         }
@@ -165,6 +282,7 @@ class PdfTextExtractor
             [
                 'page_number' => 1,
                 'text' => trim($ocrText),
+                'used_ocr' => true,
             ],
         ];
     }
@@ -201,6 +319,7 @@ class PdfTextExtractor
             [
                 'page_number' => 1,
                 'text' => $cleanText,
+                'used_ocr' => false,
             ],
         ];
     }

@@ -372,6 +372,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'rag_enabled' => $profile->isRagEnabled(),
                 'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
             ];
         });
@@ -581,6 +582,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $u->admin_confirmed_at,
                 'registration_status' => $u->registration_status,
                 'is_paid' => $u->hasPaidForMonth(now()->format('Y-m')),
+                'rag_enabled' => $u->isRagEnabled(),
             ])
         ]);
     }

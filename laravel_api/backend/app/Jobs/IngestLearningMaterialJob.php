@@ -137,6 +137,7 @@ class IngestLearningMaterialJob implements ShouldQueue
                         'embedding_model' => $embeddingModel,
                         'dimensions' => $dimensions,
                         'word_count' => $chunkData['word_count'] ?? 0,
+                        'is_ocr' => (bool) ($chunkData['is_ocr'] ?? false),
                     ], $allEmbeddings[$index]);
                 }
 

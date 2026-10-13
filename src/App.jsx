@@ -1,6 +1,14 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation, Navigate } from 'react-router-dom'
 import Header from './components/Header'
+
+function RagRouteGuard({ children }) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  if (user?.rag_enabled === false) {
+    return <Navigate to="/student/dashboard" replace />
+  }
+  return children
+}
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import CustomCursor from './components/CustomCursor'
@@ -115,7 +123,7 @@ function AppContent() {
           <Route path="performance" element={<StudentPerformance />} />
           <Route path="messages" element={<MessagingPage />} />
           <Route path="settings" element={<StudentSettings />} />
-          <Route path="study-assistant" element={<StudentStudyAssistant />} />
+          <Route path="study-assistant" element={<RagRouteGuard><StudentStudyAssistant /></RagRouteGuard>} />
         </Route>
 
         {/* Admin Master Control Routes */}

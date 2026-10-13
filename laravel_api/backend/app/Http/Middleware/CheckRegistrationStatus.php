@@ -20,6 +20,13 @@ class CheckRegistrationStatus
 
         // Only enforce for students (role 'user')
         if ($user && $user->role === 'user') {
+            // Block if deactivated
+            if (!empty($user->deactivated_at)) {
+                return response()->json([
+                    'message' => 'Your account has been deactivated. Please contact administration.',
+                ], 403);
+            }
+
             // 1. Block if registration payment is not even chosen
             if ($user->registration_status === 'pending_payment') {
                 return response()->json([

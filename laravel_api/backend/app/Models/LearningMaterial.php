@@ -30,6 +30,10 @@ class LearningMaterial extends Model
         'rag_indexed_at',
     ];
 
+    protected $casts = [
+        'rag_indexed_at' => 'datetime',
+    ];
+
     /**
      * Chunks extracted for RAG retrieval.
      */

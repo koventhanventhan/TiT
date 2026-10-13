@@ -59,28 +59,6 @@ export default function StudentSettings() {
                             }}>
                             {loading ? 'Loading...' : 'Edit Subjects & Medium'}
                         </button>
-
-                        {isSubjectModalOpen && stats?.user && (
-                            <SubjectUpdateModal 
-                                isOpen={isSubjectModalOpen}
-                                onClose={() => setIsSubjectModalOpen(false)}
-                                currentGrade={stats.user.current_grade}
-                                medium={stats.user.medium}
-                                stream={stats.user.stream}
-                                initialSubjects={stats.user.selected_subjects}
-                                onUpdateSuccess={(newSubjects) => {
-                                    setStats(prev => ({
-                                        ...prev,
-                                        user: {
-                                            ...prev.user,
-                                            needs_subject_review: false,
-                                            selected_subjects: newSubjects
-                                        }
-                                    }))
-                                    setIsSubjectModalOpen(false)
-                                }}
-                            />
-                        )}
                     </div>
                 </div>
 
@@ -101,17 +79,41 @@ export default function StudentSettings() {
                         }}>
                             Open Add Sibling Form
                         </button>
-                        
-                        {isAddSiblingModalOpen && (
-                            <StudentRegistrationForm
-                                isOpen={isAddSiblingModalOpen}
-                                onClose={() => setIsAddSiblingModalOpen(false)}
-                                isAddSiblingMode={true}
-                            />
-                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Modals are rendered OUTSIDE .t-card: its hover transform would otherwise
+                turn position:fixed overlays into card-relative (broken layout). */}
+            {isSubjectModalOpen && stats?.user && (
+                <SubjectUpdateModal
+                    isOpen={isSubjectModalOpen}
+                    onClose={() => setIsSubjectModalOpen(false)}
+                    currentGrade={stats.user.current_grade}
+                    medium={stats.user.medium}
+                    stream={stats.user.stream}
+                    initialSubjects={stats.user.selected_subjects}
+                    onUpdateSuccess={(newSubjects) => {
+                        setStats(prev => ({
+                            ...prev,
+                            user: {
+                                ...prev.user,
+                                needs_subject_review: false,
+                                selected_subjects: newSubjects
+                            }
+                        }))
+                        setIsSubjectModalOpen(false)
+                    }}
+                />
+            )}
+
+            {isAddSiblingModalOpen && (
+                <StudentRegistrationForm
+                    isOpen={isAddSiblingModalOpen}
+                    onClose={() => setIsAddSiblingModalOpen(false)}
+                    isAddSiblingMode={true}
+                />
+            )}
         </div>
     )
 }

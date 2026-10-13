@@ -1,0 +1,189 @@
+/* Shared Dashboard Theme Tokens & Base Rules for Teacher and Student Consoles */
+
+.teacher-console-layout,
+.student-console-layout {
+  /* Brand (reuses the site's existing purple tokens from index.css) */
+  --t-primary:        #4f0bd9;  /* = --primary-color; buttons, links, active nav, focus */
+  --t-primary-hover:  #4308b8;
+  --t-primary-soft:   #f5f3ff;  /* = --bg-light; tinted backgrounds, selected chips */
+  --t-primary-border: #ddd6fe;
+  --t-sidebar:        #1a103c;  /* = --primary-dark; sidebar + welcome banner */
+  --t-sidebar-text:   #cbd5e1;
+  --t-sidebar-active-bg: rgba(255,255,255,0.10);
+
+  /* Neutrals (slate) */
+  --t-bg:        #f8fafc;
+  --t-surface:   #ffffff;
+  --t-border:    #e2e8f0;
+  --t-text:      #0f172a;
+  --t-text-2:    #475569;
+  --t-text-3:    #64748b;   /* lightest allowed TEXT colour (4.76:1 on white) */
+  --t-muted:     #94a3b8;   /* for icons, borders, disabled only */
+
+  /* Status (only for semantic meaning) */
+  --t-success: #15803d;  --t-success-bg: #f0fdf4;
+  --t-warning: #b45309;  --t-warning-bg: #fffbeb;
+  --t-danger:  #b91c1c;  --t-danger-bg:  #fef2f2;
+}
+
+/* Universal focus rings for inputs & buttons in consoles */
+.teacher-console-layout button:focus-visible,
+.teacher-console-layout a:focus-visible,
+.teacher-console-layout input:focus-visible,
+.teacher-console-layout select:focus-visible,
+.teacher-console-layout textarea:focus-visible,
+.student-console-layout button:focus-visible,
+.student-console-layout a:focus-visible,
+.student-console-layout input:focus-visible,
+.student-console-layout select:focus-visible,
+.student-console-layout textarea:focus-visible {
+  outline: 2px solid var(--t-primary);
+  outline-offset: 2px;
+}
+
+/* Tap targets (minimum 44x44 CSS px on touch) */
+@media (pointer: coarse) {
+  .teacher-console-layout button,
+  .teacher-console-layout a.t-tap,
+  .teacher-console-layout select,
+  .teacher-console-layout input[type="checkbox"],
+  .student-console-layout button,
+  .student-console-layout a.t-tap,
+  .student-console-layout select,
+  .student-console-layout input[type="checkbox"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .teacher-console-layout .t-icon-btn,
+  .student-console-layout .t-icon-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* iOS zoom prevention (16px on inputs) */
+@media (max-width: 768px), (pointer: coarse) {
+  .teacher-console-layout input,
+  .teacher-console-layout select,
+  .teacher-console-layout textarea,
+  .student-console-layout input,
+  .student-console-layout select,
+  .student-console-layout textarea,
+  .messaging-container input,
+  .messaging-container select,
+  .messaging-container textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Tap feedback, no sticky hover, tap highlight */
+.teacher-console-layout button,
+.teacher-console-layout a,
+.teacher-console-layout select,
+.teacher-console-layout input,
+.teacher-console-layout textarea,
+.teacher-console-layout [role="button"],
+.student-console-layout button,
+.student-console-layout a,
+.student-console-layout select,
+.student-console-layout input,
+.student-console-layout textarea,
+.student-console-layout [role="button"],
+.messaging-container button,
+.messaging-container a,
+.messaging-container [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.t-btn,
+.t-card,
+.t-icon-btn {
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+@media (hover: hover) {
+  .t-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.t-btn:active,
+.t-card[role="button"]:active,
+.t-icon-btn:active {
+  transform: scale(0.98);
+  transition-duration: 80ms;
+}
+
+/* Modals & bottom sheets */
+.t-modal-container,
+.shared-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.shared-modal-dialog {
+  background: var(--t-surface);
+  width: calc(100% - 24px);
+  max-width: 600px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shared-modal-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+}
+
+@media (max-width: 640px) {
+  .shared-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .shared-modal-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    max-height: 90dvh !important;
+  }
+  .shared-modal-body {
+    padding: 16px;
+  }
+}
+
+/* Word wrap anywhere so long text never causes horizontal overflow */
+.teacher-console-layout,
+.teacher-console-layout *,
+.student-console-layout,
+.student-console-layout * {
+  overflow-wrap: anywhere;
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .teacher-console-layout *,
+  .teacher-console-layout *::before,
+  .teacher-console-layout *::after,
+  .student-console-layout *,
+  .student-console-layout *::before,
+  .student-console-layout *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

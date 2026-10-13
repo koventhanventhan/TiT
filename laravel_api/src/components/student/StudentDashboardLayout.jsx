@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
     FiBarChart2, FiMessageSquare, FiSettings, FiLogOut,
-    FiMenu, FiX, FiSearch, FiBell, FiChevronRight, FiUser, FiUsers
+    FiMenu, FiX, FiSearch, FiChevronRight, FiUser
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import { useToast } from '../../components/shared/ToastContext';
 import { getActiveStorage, getAuthHeaders } from '../../services/apiClient';
+import useMediaQuery from '../../hooks/useMediaQuery';
+import '../shared/dashboard-theme.css';
 
 const menuItems = [
     { name: 'Dashboard', icon: FiHome, path: '/student/dashboard' },
@@ -21,7 +23,7 @@ const menuItems = [
 ]
 
 export default function StudentDashboardLayout({ children, user }) {
-  const toast = useToast();
+    const toast = useToast();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -29,13 +31,38 @@ export default function StudentDashboardLayout({ children, user }) {
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
-    const fileInputRef = React.useRef(null)
-    const profileMenuRef = React.useRef(null)
+    const fileInputRef = useRef(null)
+    const profileMenuRef = useRef(null)
     
     const location = useLocation()
     const navigate = useNavigate()
 
+    const isDesktop = useMediaQuery('(min-width: 1024px)')
+    const isMobile = useMediaQuery('(max-width: 640px)')
+
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
+
+    // Close drawer on route change
+    useEffect(() => {
+        setIsSidebarOpen(false)
+    }, [location.pathname])
+
+    // Lock body scroll and handle Escape key when mobile drawer is open
+    useEffect(() => {
+        if (isSidebarOpen && !isDesktop) {
+            document.body.style.overflow = 'hidden'
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape') setIsSidebarOpen(false)
+            }
+            window.addEventListener('keydown', handleKeyDown)
+            return () => {
+                document.body.style.overflow = ''
+                window.removeEventListener('keydown', handleKeyDown)
+            }
+        } else {
+            document.body.style.overflow = ''
+        }
+    }, [isSidebarOpen, isDesktop])
 
     const searchResults = menuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -98,25 +125,28 @@ export default function StudentDashboardLayout({ children, user }) {
                 storage.setItem('user', JSON.stringify(currentUser));
             }
             
-            // Update the specific profile in availableProfiles
-            const profiles = JSON.parse(storage.getItem('availableProfiles') || '[]');
-            const updatedProfiles = profiles.map(profile => {
-                if (profile.id === currentUser.id) {
-                    return { ...profile, avatar: data.avatar };
-                }
-                return profile;
-            });
-            storage.setItem('availableProfiles', JSON.stringify(updatedProfiles));
-            
+            // Update in availableProfiles array
+            try {
+                const availableProfiles = JSON.parse(storage.getItem('availableProfiles') || '[]');
+                const updatedProfiles = availableProfiles.map(p => 
+                    p.id === currentUser.id ? { ...p, avatar: data.avatar } : p
+                );
+                storage.setItem('availableProfiles', JSON.stringify(updatedProfiles));
+            } catch (err) {
+                console.error("Could not update availableProfiles with new avatar", err);
+            }
+
+            toast.success("Profile photo updated successfully!");
         } catch (err) {
-            toast.error('Failed to update profile picture.');
+            console.error(err);
+            toast.error("Failed to update profile photo.");
         } finally {
             setUploadingAvatar(false);
-            setShowProfileMenu(false);
         }
-    }
+    };
 
-    React.useEffect(() => {
+    // Close profile menu when clicking outside
+    useEffect(() => {
         function handleClickOutside(event) {
             if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
                 setShowProfileMenu(false)
@@ -129,30 +159,31 @@ export default function StudentDashboardLayout({ children, user }) {
     }, [showProfileMenu])
 
     return (
-        <div style={{ display: 'flex', height: '100dvh', background: '#f1f5f9', fontFamily: "'Inter', sans-serif" }}>
-            {/* Mobile Overlay */}
-            {isSidebarOpen && (
+        <div className="student-console-layout" style={{ display: 'flex', height: '100dvh', background: 'var(--t-bg)', fontFamily: "'Inter', sans-serif" }}>
+            {/* Mobile Overlay - no backdrop-filter for performance */}
+            {isSidebarOpen && !isDesktop && (
                 <div
                     onClick={toggleSidebar}
                     style={{
                         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-                        zIndex: 998, backdropFilter: 'blur(4px)'
+                        zIndex: 998
                     }}
                 />
             )}
 
-            {/* â•â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â•â• */}
+            {/* SIDEBAR */}
             <aside style={{
                 width: 260,
-                background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
-                display: 'flex', flexDirection: 'column',
-                position: isSidebarOpen ? 'fixed' : undefined,
-                inset: isSidebarOpen ? '0 auto 0 0' : undefined,
+                background: 'var(--t-sidebar)',
+                display: (!isDesktop && !isSidebarOpen) ? 'none' : 'flex',
+                flexDirection: 'column',
+                position: !isDesktop ? 'fixed' : 'relative',
+                inset: !isDesktop ? '0 auto 0 0' : undefined,
+                height: '100dvh',
                 zIndex: 999,
-                transform: !isSidebarOpen ? undefined : undefined,
                 boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
                 transition: 'transform 0.3s ease',
-                ...(window.innerWidth < 1024 && !isSidebarOpen ? { display: 'none' } : {})
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)'
             }}>
                 {/* Logo */}
                 <div style={{
@@ -161,28 +192,29 @@ export default function StudentDashboardLayout({ children, user }) {
                 }}>
                     <div style={{
                         width: 40, height: 40, borderRadius: 12,
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        background: 'var(--t-primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', fontWeight: 800, fontSize: 18,
-                        boxShadow: '0 4px 12px rgba(99,102,241,0.4)'
+                        boxShadow: '0 4px 12px rgba(79,11,217,0.4)'
                     }}>TiT</div>
                     <div>
                         <div style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: '-0.5px' }}>
-                            TiT<span style={{ color: '#818cf8' }}>Education</span>
+                            TiT<span style={{ color: 'var(--t-primary-border)' }}>Education</span>
                         </div>
-                        <div style={{ color: '#64748b', fontSize: 11, fontWeight: 500 }}>Student Portal</div>
+                        <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student Portal</div>
                     </div>
-                    {isSidebarOpen && (
-                        <button onClick={toggleSidebar} style={{
+                    {!isDesktop && isSidebarOpen && (
+                        <button onClick={toggleSidebar} aria-label="Close navigation" style={{
                             marginLeft: 'auto', background: 'none', border: 'none',
-                            color: '#94a3b8', cursor: 'pointer', fontSize: 22
+                            color: 'var(--t-sidebar-text)', cursor: 'pointer', fontSize: 22,
+                            minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}><FiX /></button>
                     )}
                 </div>
 
                 {/* Nav */}
                 <nav className="hide-scrollbar" style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
-                    <div style={{ color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', padding: '8px 12px', marginBottom: 4 }}>
+                    <div style={{ color: 'var(--t-sidebar-text)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', padding: '8px 12px', marginBottom: 4 }}>
                         Menu
                     </div>
                     {menuItems.map((item) => {
@@ -196,15 +228,16 @@ export default function StudentDashboardLayout({ children, user }) {
                                 onClick={() => setIsSidebarOpen(false)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 12,
-                                    padding: '10px 14px', borderRadius: 10, marginBottom: 2,
+                                    padding: '12px 14px', borderRadius: 10, marginBottom: 4,
                                     textDecoration: 'none', fontSize: 14, fontWeight: 500,
+                                    minHeight: 48,
                                     transition: 'all 0.2s ease',
-                                    background: isActive ? 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)' : 'transparent',
-                                    color: isActive ? '#a5b4fc' : '#94a3b8',
-                                    borderLeft: isActive ? '3px solid #818cf8' : '3px solid transparent',
+                                    background: isActive ? 'var(--t-sidebar-active-bg)' : 'transparent',
+                                    color: isActive ? '#fff' : 'var(--t-sidebar-text)',
+                                    borderLeft: isActive ? '3px solid var(--t-primary-border)' : '3px solid transparent',
                                 }}
                             >
-                                <Icon style={{ fontSize: 18, color: isActive ? '#818cf8' : '#64748b' }} />
+                                <Icon style={{ fontSize: 18, color: isActive ? 'var(--t-primary-border)' : 'var(--t-sidebar-text)' }} />
                                 <span>{item.name}</span>
                                 {isActive && <FiChevronRight style={{ marginLeft: 'auto', fontSize: 14 }} />}
                             </NavLink>
@@ -215,30 +248,30 @@ export default function StudentDashboardLayout({ children, user }) {
                 {/* User Card */}
                 <div style={{
                     margin: '0 12px 12px', padding: '14px',
-                    background: 'rgba(255,255,255,0.05)', borderRadius: 12,
+                    background: 'var(--t-sidebar-active-bg)', borderRadius: 12,
                     border: '1px solid rgba(255,255,255,0.06)'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                         <div style={{
                             width: 36, height: 36, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                            background: 'var(--t-primary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: '#fff', fontWeight: 700, fontSize: 14, overflow: 'hidden'
                         }}>
                             {avatarUrl ? <img width="800" height="600" src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
                         </div>
                         <div>
-                            <div style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 600 }}>{user?.full_name || 'Student'}</div>
-                            <div style={{ color: '#64748b', fontSize: 11, fontWeight: 500 }}>Student</div>
+                            <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{user?.full_name || 'Student'}</div>
+                            <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student</div>
                         </div>
                     </div>
                     <button
                         onClick={() => window.location.href = '/?logout=1'}
                         style={{
                             width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: 8, padding: '8px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)',
-                            background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                            gap: 8, padding: '10px 8px', borderRadius: 8, border: '1px solid var(--t-danger)',
+                            background: 'var(--t-danger-bg)', color: 'var(--t-danger)', fontSize: 13,
+                            fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', minHeight: 44
                         }}
                     >
                         <FiLogOut /> Logout
@@ -246,95 +279,99 @@ export default function StudentDashboardLayout({ children, user }) {
                 </div>
             </aside>
 
-            {/* â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â• */}
+            {/* MAIN CONTENT */}
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'visible' }}>
                 {/* Header */}
                 <header style={{
                     height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '0 24px', background: '#fff',
-                    borderBottom: '1px solid #e2e8f0', zIndex: 30,
+                    borderBottom: '1px solid var(--t-border)', zIndex: 30,
                     position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button
-                            onClick={toggleSidebar}
-                            className="lg-hidden"
-                            style={{
-                                display: window.innerWidth < 1024 ? 'flex' : 'none',
-                                alignItems: 'center', justifyContent: 'center',
-                                width: 40, height: 40, borderRadius: 10, border: 'none',
-                                background: '#f1f5f9', color: '#475569', cursor: 'pointer', fontSize: 20
-                            }}
-                        ><FiMenu /></button>
-
-                        <div style={{ position: 'relative', display: window.innerWidth < 640 ? 'none' : 'flex', alignItems: 'center' }}>
-                            <FiSearch style={{ position: 'absolute', left: 14, color: '#94a3b8', fontSize: 16 }} />
-                            <input
-                                type="text"
-                                placeholder="Search portal..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
+                        {!isDesktop && (
+                            <button
+                                onClick={toggleSidebar}
+                                aria-label="Toggle navigation"
                                 style={{
-                                    width: 320, padding: '10px 16px 10px 42px', borderRadius: 12,
-                                    border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 14,
-                                    outline: 'none', color: '#334155',
-                                    transition: 'all 0.2s'
+                                    display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center',
+                                    width: 44, height: 44, borderRadius: 10, border: 'none',
+                                    background: 'var(--t-bg)', color: 'var(--t-text-2)', cursor: 'pointer', fontSize: 20
                                 }}
-                                onFocus={e => {
-                                    setIsSearchFocused(true)
-                                    e.target.style.borderColor = '#818cf8'
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(129,140,248,0.1)'
-                                }}
-                                onBlur={e => {
-                                    setTimeout(() => setIsSearchFocused(false), 200)
-                                    e.target.style.borderColor = '#e2e8f0'
-                                    e.target.style.boxShadow = 'none'
-                                }}
-                            />
+                            ><FiMenu /></button>
+                        )}
 
-                            {/* Command Palette Dropdown */}
-                            {isSearchFocused && searchQuery && (
-                                <div style={{
-                                    position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 8,
-                                    background: '#fff', borderRadius: 12,
-                                    boxShadow: '0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
-                                    border: '1px solid #e2e8f0', zIndex: 100, overflow: 'hidden',
-                                    animation: 'slideDown 0.2s ease'
-                                }}>
-                                    {searchResults.length > 0 ? searchResults.map(item => {
-                                        const Icon = item.icon
-                                        return (
-                                            <div
-                                                key={item.path}
-                                                onClick={() => navigate(item.path)}
-                                                style={{
-                                                    padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
-                                                    cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
-                                                    transition: 'background 0.2s'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                                                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-                                            >
-                                                <div style={{
-                                                    width: 32, height: 32, borderRadius: 8, background: '#eef2ff',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: '#6366f1'
-                                                }}>
-                                                    <Icon />
+                        {!isMobile && (
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <FiSearch style={{ position: 'absolute', left: 14, color: 'var(--t-muted)', fontSize: 16 }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search portal..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{
+                                        width: 320, padding: '10px 16px 10px 42px', borderRadius: 12,
+                                        border: '1px solid var(--t-border)', background: 'var(--t-bg)', fontSize: 14,
+                                        outline: 'none', color: 'var(--t-text)',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onFocus={e => {
+                                        setIsSearchFocused(true)
+                                        e.target.style.borderColor = 'var(--t-primary)'
+                                        e.target.style.boxShadow = '0 0 0 3px rgba(79,11,217,0.1)'
+                                    }}
+                                    onBlur={e => {
+                                        setTimeout(() => setIsSearchFocused(false), 200)
+                                        e.target.style.borderColor = 'var(--t-border)'
+                                        e.target.style.boxShadow = 'none'
+                                    }}
+                                />
+
+                                {/* Command Palette Dropdown */}
+                                {isSearchFocused && searchQuery && (
+                                    <div style={{
+                                        position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 8,
+                                        background: '#fff', borderRadius: 12,
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
+                                        border: '1px solid var(--t-border)', zIndex: 100, overflow: 'hidden',
+                                        animation: 'slideDown 0.2s ease'
+                                    }}>
+                                        {searchResults.length > 0 ? searchResults.map(item => {
+                                            const Icon = item.icon
+                                            return (
+                                                <div
+                                                    key={item.path}
+                                                    onClick={() => navigate(item.path)}
+                                                    style={{
+                                                        padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                                                        cursor: 'pointer', borderBottom: '1px solid var(--t-border)',
+                                                        transition: 'background 0.2s'
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                                >
+                                                    <div style={{
+                                                        width: 32, height: 32, borderRadius: 8, background: 'var(--t-primary-soft)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: 'var(--t-primary)'
+                                                    }}>
+                                                        <Icon />
+                                                    </div>
+                                                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-text)' }}>
+                                                        {item.name}
+                                                    </span>
                                                 </div>
-                                                <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>
-                                                    {item.name}
-                                                </span>
+                                            )
+                                        }) : (
+                                            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--t-muted)', fontSize: 13 }}>
+                                                No modules found matching "{searchQuery}"
                                             </div>
-                                        )
-                                    }) : (
-                                        <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-                                            No modules found matching "{searchQuery}"
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         <style>{`@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
                     </div>
 
@@ -344,23 +381,25 @@ export default function StudentDashboardLayout({ children, user }) {
 
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
-                            paddingLeft: 16, borderLeft: '1px solid #e2e8f0', position: 'relative'
+                            paddingLeft: 16, borderLeft: '1px solid var(--t-border)', position: 'relative'
                         }}>
-                            <div style={{ textAlign: 'right', display: window.innerWidth < 640 ? 'none' : 'block' }}>
-                                <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{user?.full_name || 'Student'}</div>
-                                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Student Portal</div>
-                            </div>
+                            {!isMobile && (
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-text)' }}>{user?.full_name || 'Student'}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--t-muted)', fontWeight: 500 }}>Student Portal</div>
+                                </div>
+                            )}
                             
                             {/* User Profile Dropdown */}
                             <div style={{ position: 'relative' }} ref={profileMenuRef}>
                             <div 
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                                 style={{
-                                width: 38, height: 38, borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                                width: 44, height: 44, borderRadius: '50%',
+                                background: 'var(--t-primary)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 color: '#fff', fontWeight: 700, fontSize: 15,
-                                boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+                                boxShadow: '0 2px 8px rgba(79,11,217,0.3)',
                                 border: '2px solid #fff', cursor: 'pointer', overflow: 'hidden',
                                 opacity: uploadingAvatar ? 0.6 : 1
                             }}>
@@ -388,12 +427,12 @@ export default function StudentDashboardLayout({ children, user }) {
                                     position: 'absolute', top: '100%', right: 0, marginTop: 12,
                                     width: 200, background: '#fff', borderRadius: 12,
                                     boxShadow: '0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
-                                    border: '1px solid #e2e8f0', zIndex: 100, overflow: 'hidden',
+                                    border: '1px solid var(--t-border)', zIndex: 100, overflow: 'hidden',
                                     animation: 'slideDown 0.2s ease'
                                 }}>
-                                    <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
-                                        <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayEmail}</div>
+                                    <div style={{ padding: '16px', borderBottom: '1px solid var(--t-border)', background: 'var(--t-bg)' }}>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--t-text-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayEmail}</div>
                                     </div>
                                     <div style={{ padding: '8px' }}>
                                         <button 
@@ -401,10 +440,10 @@ export default function StudentDashboardLayout({ children, user }) {
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
-                                            color: '#475569', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left'
+                                            color: 'var(--t-text-2)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-bg)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiSettings style={{ fontSize: 15 }} /> Upload Photo
@@ -416,10 +455,10 @@ export default function StudentDashboardLayout({ children, user }) {
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
-                                            color: '#6366f1', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4
+                                            color: 'var(--t-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4, minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#e0e7ff'}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-primary-soft)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiUser style={{ fontSize: 15 }} /> Switch Profile
@@ -431,10 +470,10 @@ export default function StudentDashboardLayout({ children, user }) {
                                             style={{
                                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                                             padding: '10px 12px', background: 'transparent', border: 'none',
-                                            color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4
+                                            color: 'var(--t-danger)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                            borderRadius: 8, transition: 'background 0.2s', textAlign: 'left', marginTop: 4, minHeight: 44
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--t-danger-bg)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <FiLogOut style={{ fontSize: 15 }} /> Sign Out
@@ -449,8 +488,8 @@ export default function StudentDashboardLayout({ children, user }) {
 
                 {/* Content */}
                 <div style={{
-                    flex: 1, overflowY: 'auto', padding: '24px',
-                    background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)'
+                    flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px',
+                    background: 'var(--t-bg)'
                 }}>
                     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                         {children}

@@ -138,7 +138,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     }
 
     return (
-      <div style={{ backgroundColor: '#e0e7ff', color: '#3730a3', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', borderLeft: '4px solid #4f46e5' }}>
+      <div style={{ backgroundColor: 'var(--t-primary-soft)', color: 'var(--t-primary)', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', borderLeft: '4px solid var(--t-primary)' }}>
         <div style={{ marginBottom: '6px' }}><strong>{msgEn}</strong></div>
         <div><strong>{msgTa}</strong></div>
       </div>
@@ -334,7 +334,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)',
+      background: 'rgba(15,23,42,0.6)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: 9999, padding: 20
     }}>
@@ -345,33 +345,32 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
         margin: '16px'
       }}>
         <div style={{
-          padding: '20px', borderBottom: '1px solid #f1f5f9',
+          padding: '20px', borderBottom: '1px solid var(--t-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#1e293b' }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--t-text)' }}>
               {step === 1 ? 'Update Your Subjects' : 'Monthly Payment'}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: '#64748b' }}>For {currentGrade}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--t-text-3)' }}>For {currentGrade}</p>
           </div>
-          <button onClick={handleClose} style={{
-            background: '#f1f5f9', border: 'none', width: 36, height: 36,
+          <button onClick={handleClose} aria-label="Close" style={{
+            background: 'var(--t-bg)', border: 'none', width: 36, height: 36,
             borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#64748b', cursor: 'pointer', transition: 'all 0.2s'
-          }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
-             onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}>
+            color: 'var(--t-text-3)', cursor: 'pointer', transition: 'all 0.2s'
+          }}>
             <FiX size={18} />
           </button>
         </div>
 
         <div style={{ padding: '20px', overflowY: 'auto' }}>
           {error && (
-            <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
+            <div style={{ background: 'var(--t-danger-bg)', color: 'var(--t-danger)', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
               {error}
             </div>
           )}
           {successMessage && (
-            <div style={{ background: '#dcfce7', color: '#16a34a', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
+            <div style={{ background: 'var(--t-success-bg)', color: 'var(--t-success)', padding: '12px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>
               {successMessage}
             </div>
           )}
@@ -379,16 +378,16 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           {step === 1 && (
             <>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 8 }}>
-                  Medium of Learning <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--t-text-2)', marginBottom: 8 }}>
+                  Medium of Learning <span style={{ color: 'var(--t-danger)' }}>*</span>
                 </label>
                 <select
                   value={localMedium}
                   onChange={(e) => setLocalMedium(e.target.value)}
                   style={{
-                    width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #cbd5e1',
-                    fontSize: 15, color: '#1e293b', outline: 'none', appearance: 'none',
-                    background: '#fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 16px center'
+                    width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
+                    fontSize: 15, color: 'var(--t-text)', outline: 'none', appearance: 'none',
+                    background: '#fff'
                   }}
                 >
                   <option value="">Select Medium</option>
@@ -397,7 +396,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                 </select>
               </div>
 
-              <p style={{ fontSize: 15, color: '#475569', marginBottom: 20, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 15, color: 'var(--t-text-2)', marginBottom: 20, lineHeight: 1.5 }}>
                 Please review and select the subjects you will be taking in your new grade.
               </p>
 
@@ -410,14 +409,14 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   return (
                     <label key={idx} style={{
                       display: 'flex', alignItems: 'center', gap: 14, padding: '16px',
-                      border: `2px solid ${isSelected ? '#6366f1' : '#e2e8f0'}`,
+                      border: `2px solid ${isSelected ? 'var(--t-primary)' : 'var(--t-border)'}`,
                       borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
-                      background: isSelected ? '#f5f3ff' : '#fff'
+                      background: isSelected ? 'var(--t-primary-soft)' : '#fff'
                     }}>
                       <div style={{
                         width: 24, height: 24, borderRadius: 6,
-                        border: `2px solid ${isSelected ? '#6366f1' : '#cbd5e1'}`,
-                        background: isSelected ? '#6366f1' : '#fff',
+                        border: `2px solid ${isSelected ? 'var(--t-primary)' : 'var(--t-border)'}`,
+                        background: isSelected ? 'var(--t-primary)' : '#fff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', transition: 'all 0.2s'
                       }}>
@@ -425,18 +424,18 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                       </div>
                       <input type="checkbox" checked={isSelected} onChange={() => handleToggle(sub.name)} style={{ display: 'none' }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: isSelected ? '#4f46e5' : '#334155' }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: isSelected ? 'var(--t-primary)' : 'var(--t-text)' }}>
                           {sub.name}
                         </div>
-                        {sub.name_ta && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{sub.name_ta}</div>}
+                        {sub.name_ta && <div style={{ fontSize: 13, color: 'var(--t-text-3)', marginTop: 2 }}>{sub.name_ta}</div>}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: isSelected ? '#4f46e5' : '#94a3b8', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: isSelected ? 'var(--t-primary)' : 'var(--t-muted)', whiteSpace: 'nowrap' }}>
                         Rs. {price.toFixed(0)}
                       </div>
                     </label>
                   );
                 }) : (
-                  <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: 14 }}>
+                  <div style={{ textAlign: 'center', padding: '30px', color: 'var(--t-muted)', fontSize: 14 }}>
                     Loading subjects...
                   </div>
                 )}
@@ -446,15 +445,15 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
               {selectedSubjects.length > 0 && (
                 <div style={{
                   marginTop: 20, padding: '16px 20px', borderRadius: 16,
-                  background: 'linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%)',
-                  border: '1px solid #e0e7ff'
+                  background: 'var(--t-primary-soft)',
+                  border: '1px solid var(--t-primary-border)'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasDiscount ? 8 : 0 }}>
-                    <span style={{ fontSize: 14, color: '#475569', fontWeight: 500 }}>
+                    <span style={{ fontSize: 14, color: 'var(--t-text-2)', fontWeight: 500 }}>
                       {selectedSubjects.length} subject{selectedSubjects.length > 1 ? 's' : ''} selected
                     </span>
                     {hasDiscount ? (
-                      <span style={{ fontSize: 14, color: '#94a3b8', textDecoration: 'line-through' }}>
+                      <span style={{ fontSize: 14, color: 'var(--t-muted)', textDecoration: 'line-through' }}>
                         Rs. {originalAmount.toFixed(0)}
                       </span>
                     ) : null}
@@ -466,8 +465,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                       marginBottom: 8
                     }}>
                       <span style={{
-                        fontSize: 12, fontWeight: 600, color: '#16a34a',
-                        background: '#dcfce7', padding: '2px 10px', borderRadius: 20
+                        fontSize: 12, fontWeight: 600, color: 'var(--t-success)',
+                        background: 'var(--t-success-bg)', padding: '2px 10px', borderRadius: 20
                       }}>
                         🎉 {appliedPackage?.name || 'Package'} — You save Rs. {savings.toFixed(0)}
                       </span>
@@ -477,10 +476,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     paddingTop: hasDiscount ? 8 : 0,
-                    borderTop: hasDiscount ? '1px solid #c7d2fe' : 'none'
+                    borderTop: hasDiscount ? '1px solid var(--t-primary-border)' : 'none'
                   }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Monthly Fee</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: '#4f46e5' }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Monthly Fee</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--t-primary)' }}>
                       Rs. {monthlyAmount.toFixed(0)}
                     </span>
                   </div>
@@ -492,36 +491,36 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           {step === 2 && (
             <div style={{ padding: '10px 0' }}>
               <div style={{
-                background: 'rgba(235, 129, 83, 0.1)', padding: '20px', borderRadius: '16px',
-                border: '1px solid rgba(235, 129, 83, 0.3)', marginBottom: '24px'
+                background: 'var(--t-primary-soft)', padding: '20px', borderRadius: '16px',
+                border: '1px solid var(--t-primary-border)', marginBottom: '24px'
               }}>
                 {hasDiscount ? (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
                       <span>Subjects Total:</span>
                       <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-success)', fontWeight: 'bold', marginBottom: '8px' }}>
                       <span>Package Discount ({appliedPackage?.name || 'Package'}):</span>
                       <span>Rs. {(serverMonthly ?? monthlyAmount).toFixed(2)}</span>
                     </div>
                   </>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
                     <span>Monthly Fee:</span>
                     <span>Rs. {(serverMonthly ?? monthlyAmount).toFixed(2)}</span>
                   </div>
                 )}
 
                 {serverAdmission > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
                     <span>Admission Fee (First Time):</span>
                     <span>Rs. {serverAdmission.toFixed(2)}</span>
                   </div>
                 )}
 
-                <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '12px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '20px' }}>
+                <hr style={{ borderColor: 'var(--t-primary-border)', margin: '12px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-primary)', fontWeight: 'bold', fontSize: '20px' }}>
                   <span>Total Amount:</span>
                   <span>Rs. {(serverAmount ?? monthlyAmount).toFixed(2)}</span>
                 </div>
@@ -530,7 +529,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
               {alreadyPaid ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ background: '#dcfce7', color: '#166534', padding: '14px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500 }}>
+                  <div style={{ background: 'var(--t-success-bg)', color: 'var(--t-success)', padding: '14px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500 }}>
                     {paidUntil ? (
                       <>You have already paid up to <strong>{paidUntil}</strong>. Your updated subjects are saved and the new fee will apply from next month's payment.</>
                     ) : (
@@ -539,7 +538,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   </div>
                   
                   <div style={{ marginTop: 8 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#334155', fontWeight: 600 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: 'var(--t-text-2)', fontWeight: 600 }}>
                       <input 
                         type="checkbox" 
                         checked={wantAdvancePayment} 
@@ -551,17 +550,17 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   </div>
 
                   {wantAdvancePayment ? (
-                    <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 8 }}>
-                      <label style={{ display: 'block', fontSize: 13, color: '#64748b', marginBottom: 6 }}>Number of Months:</label>
+                    <div style={{ background: 'var(--t-bg)', padding: 16, borderRadius: 12, border: '1px solid var(--t-border)', marginTop: 8 }}>
+                      <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 6 }}>Number of Months:</label>
                       <input 
                         type="number" 
                         min="1" 
                         max="12" 
                         value={advanceMonths} 
                         onChange={(e) => setAdvanceMonths(parseInt(e.target.value) || 1)} 
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', marginBottom: 12 }} 
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--t-border)', marginBottom: 12 }} 
                       />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#4f46e5', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: 'var(--t-primary)', marginBottom: 16 }}>
                         <span>Total Advance Amount:</span>
                         <span>Rs. {((serverMonthly ?? monthlyAmount) * advanceMonths).toFixed(2)}</span>
                       </div>
@@ -570,12 +569,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                         onClick={handlePayAdvanceOffline} 
                         disabled={loading || paymentDone}
                         style={{
-                          width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid #ef4444',
-                          background: '#fff', color: '#ef4444', fontSize: '15px', fontWeight: 600,
+                          width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
+                          background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
                           cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', textAlign: 'center'
                         }}
-                        onMouseEnter={e => !loading && (e.currentTarget.style.background = '#fef2f2')}
-                        onMouseLeave={e => !loading && (e.currentTarget.style.background = '#fff')}
                       >
                         I WILL PAY OFFLINE (CASH/BANK)
                       </button>
@@ -583,7 +580,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   ) : (
                     <button onClick={handleClose} style={{
                       padding: '14px 20px', borderRadius: '12px', border: 'none',
-                      background: '#4f46e5', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+                      background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
                     }}>Done</button>
                   )}
                 </div>
@@ -594,12 +591,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   disabled={loading || paymentDone}
                   style={{
                     padding: '14px 20px', borderRadius: '12px',
-                    background: '#fff', color: '#ef4444', fontSize: '15px', fontWeight: 600,
-                    cursor: loading ? 'not-allowed' : 'pointer', border: '2px solid #ef4444',
+                    background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
+                    cursor: loading ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
                     transition: 'all 0.2s', textAlign: 'center'
                   }}
-                  onMouseEnter={e => !loading && (e.currentTarget.style.background = '#fef2f2')}
-                  onMouseLeave={e => !loading && (e.currentTarget.style.background = '#fff')}
                 >
                   I WILL PAY OFFLINE
                 </button>
@@ -608,12 +603,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   disabled={loading || paymentDone}
                   style={{
                     padding: '14px 20px', borderRadius: '12px', border: 'none',
-                    background: '#16a34a', color: '#fff', fontSize: '15px', fontWeight: 600,
+                    background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s', textAlign: 'center'
                   }}
-                  onMouseEnter={e => !loading && (e.currentTarget.style.background = '#15803d')}
-                  onMouseLeave={e => !loading && (e.currentTarget.style.background = '#16a34a')}
                 >
                   {loading ? 'Processing...' : 'PAY ONLINE'}
                 </button>
@@ -623,24 +616,24 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           )}
         </div>
 
-        <div style={{ padding: '20px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderTop: '1px solid var(--t-border)', background: 'var(--t-bg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {step === 2 ? (
             <button onClick={() => setStep(1)} style={{
               padding: '10px 16px', border: 'none', background: 'transparent',
-              color: '#64748b', fontSize: 14, fontWeight: 600, cursor: 'pointer'
+              color: 'var(--t-text-3)', fontSize: 14, fontWeight: 600, cursor: 'pointer'
             }}>Back</button>
           ) : <div></div>}
           
           {step === 1 && (
             <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
               <button onClick={onClose} style={{
-                padding: '12px 24px', borderRadius: 12, border: '1px solid #cbd5e1',
-                background: '#fff', color: '#475569', fontSize: 15, fontWeight: 600, cursor: 'pointer'
+                padding: '12px 24px', borderRadius: 12, border: '1px solid var(--t-border)',
+                background: '#fff', color: 'var(--t-text-2)', fontSize: 15, fontWeight: 600, cursor: 'pointer'
               }}>Cancel</button>
               
               <button onClick={handleSaveSubjects} disabled={loading} style={{
                 padding: '12px 28px', borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                background: 'var(--t-primary)',
                 color: '#fff', fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8
               }}>

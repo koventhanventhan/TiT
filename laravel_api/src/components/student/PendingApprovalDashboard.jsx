@@ -9,7 +9,7 @@ const PendingApprovalDashboard = ({ user }) => {
     return (
         <div className="tit-reg-overlay">
             <div className="tit-reg-wrapper" style={{ maxWidth: '600px' }}>
-                <button className="tit-reg-close" onClick={handleLogout}>
+                <button className="tit-reg-close" onClick={handleLogout} aria-label="Close">
                     <FiX />
                 </button>
 
@@ -18,22 +18,22 @@ const PendingApprovalDashboard = ({ user }) => {
                         <div style={{
                             width: '80px',
                             height: '80px',
-                            background: 'rgba(59, 130, 246, 0.1)',
+                            background: 'var(--t-primary-soft)',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             margin: '0 auto 1.5rem',
-                            border: '2px solid rgba(59, 130, 246, 0.2)'
+                            border: '2px solid var(--t-primary-border)'
                         }}>
-                            <FiClock size={40} color="#3b82f6" />
+                            <FiClock size={40} style={{ color: 'var(--t-primary)' }} />
                         </div>
 
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', background: 'linear-gradient(to right, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: '1.4' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--t-primary-border)', lineHeight: '1.4' }}>
                             Admin இன்னும் உங்கள் பதிவை உறுதிப்படுத்தவில்லை. தயவுசெய்து காத்திருக்கவும்.
                         </h2>
 
-                        <p style={{ color: '#c7d2fe', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+                        <p style={{ color: 'var(--t-sidebar-text)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
                             (Account pending admin approval. Please wait.) <br/>
                             நீங்கள் Manual Payment முறையைத் தேர்ந்தெடுத்திருந்தால், Admin உங்கள் கட்டணத்தைச் சரிபார்த்த பிறகு உங்கள் கணக்கு உறுதிப்படுத்தப்படும்.
                         </p>
@@ -41,9 +41,9 @@ const PendingApprovalDashboard = ({ user }) => {
 
                     <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '1rem', padding: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.05)', textAlign: 'left', marginBottom: '2.5rem' }}>
                         <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FiShield color="#10b981" /> Next Steps:
+                            <FiShield style={{ color: 'var(--t-success)' }} /> Next Steps:
                         </h3>
-                        <ul style={{ color: 'rgba(199, 210, 254, 0.8)', paddingLeft: '1.25rem', margin: 0 }}>
+                        <ul style={{ color: 'var(--t-sidebar-text)', paddingLeft: '1.25rem', margin: 0 }}>
                             <li style={{ marginBottom: '0.75rem' }}>Admin உங்கள் கட்டணம் மற்றும் விபரங்களைச் சரிபார்ப்பார். (Admin will verify details)</li>
                             <li style={{ marginBottom: '0.75rem' }}>உங்கள் WhatsApp எண் ({user?.phone_number?.startsWith('94') ? '+' + user.phone_number : (user?.phone_number || 'N/A')}) அல்லது Email மூலம் உங்களுக்குத் தகவல் தெரிவிக்கப்படும். (WhatsApp / Email notification)</li>
                             <li>உறுதிப்படுத்தப்பட்ட பிறகு, நீங்கள் அனைத்து பாடங்கள் மற்றும் வகுப்புகளில் இணைய முடியும். (Access after approval)</li>
@@ -52,7 +52,7 @@ const PendingApprovalDashboard = ({ user }) => {
 
                     <button
                         className="tit-reg-submit-btn"
-                        style={{ width: '100%', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+                        style={{ width: '100%', background: 'var(--t-primary)' }}
                         onClick={() => window.location.reload()}
                     >
                         Check Status / Refresh

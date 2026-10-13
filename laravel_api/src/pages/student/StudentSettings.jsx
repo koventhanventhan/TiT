@@ -27,12 +27,11 @@ export default function StudentSettings() {
         <div style={{ paddingBottom: 40 }}>
             {/* Header Section */}
             <div style={{
-                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24,
-                '@media (minWidth: 640px)': { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
+                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24
             }}>
                 <div>
-                    <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Settings</h1>
-                    <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>Manage your profile and linked accounts</p>
+                    <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Settings</h1>
+                    <p style={{ color: 'var(--t-text-muted)', margin: 0, fontSize: 14 }}>Manage your profile and linked accounts</p>
                 </div>
             </div>
 
@@ -40,23 +39,23 @@ export default function StudentSettings() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 
                 {/* Subjects & Medium */}
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Subjects & Medium</h3>
+                <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Subjects & Medium</h3>
                     <div style={{ marginBottom: 24 }}>
-                        <p style={{ fontSize: 14, color: '#64748b' }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)' }}>
                             Update your medium of learning and manage the subjects you are enrolled in. Any changes to your subjects may affect your monthly fee.
                         </p>
                     </div>
                     
-                    <div style={{ background: '#f8fafc', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: '#334155' }}>Update Learning Preferences</h4>
+                    <div style={{ background: 'var(--t-bg)', padding: 24, borderRadius: 16, border: '1px solid var(--t-border)' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Update Learning Preferences</h4>
                         <button 
                             disabled={loading}
                             onClick={() => setIsSubjectModalOpen(true)} 
                             style={{
-                                padding: '10px 24px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10,
+                                minHeight: 44, padding: '10px 24px', background: 'var(--t-primary)', color: '#fff', border: 'none', borderRadius: 10,
                                 fontWeight: 600, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer',
-                                opacity: loading ? 0.7 : 1
+                                opacity: loading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(79, 11, 217, 0.2)'
                             }}>
                             {loading ? 'Loading...' : 'Edit Subjects & Medium'}
                         </button>
@@ -86,19 +85,19 @@ export default function StudentSettings() {
                 </div>
 
                 {/* Siblings */}
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Siblings</h3>
+                <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Siblings</h3>
                     <div style={{ marginBottom: 24 }}>
-                        <p style={{ fontSize: 14, color: '#64748b' }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)' }}>
                             If you have siblings studying with us, you can add them to this same account. This avoids needing separate emails and passwords. Each sibling will have their own dashboard and payment portal.
                         </p>
                     </div>
                     
-                    <div style={{ background: '#f8fafc', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: '#334155' }}>Add New Sibling</h4>
+                    <div style={{ background: 'var(--t-bg)', padding: 24, borderRadius: 16, border: '1px solid var(--t-border)' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Add New Sibling</h4>
                         <button onClick={() => setIsAddSiblingModalOpen(true)} style={{
-                            padding: '10px 24px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10,
-                            fontWeight: 600, fontSize: 14, cursor: 'pointer'
+                            minHeight: 44, padding: '10px 24px', background: 'var(--t-primary)', color: '#fff', border: 'none', borderRadius: 10,
+                            fontWeight: 600, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 11, 217, 0.2)'
                         }}>
                             Open Add Sibling Form
                         </button>

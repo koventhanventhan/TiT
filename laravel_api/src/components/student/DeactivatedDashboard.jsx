@@ -90,9 +90,9 @@ const DeactivatedDashboard = () => {
   };
 
   return (
-    <div className="tit-reg-overlay">
+    <div className="tit-reg-overlay" data-testid="gating-deactivated">
       <div className={`tit-reg-wrapper ${paymentStep === 'options' ? 'payment-step-active' : ''}`}>
-        <button className="tit-reg-close" onClick={handleLogout} aria-label="Close">
+        <button className="tit-reg-close" onClick={handleLogout} aria-label="Close" data-testid="gating-close-btn">
           <FiX />
         </button>
 
@@ -139,6 +139,16 @@ const DeactivatedDashboard = () => {
                   >
                     <FiCreditCard /> Pay Now / பணம் செலுத்த
                   </button>
+
+                  <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <button
+                      className="tit-reg-back-link"
+                      onClick={handleLogout}
+                      data-testid="gating-logout-btn"
+                    >
+                      Logout / வெளியேறு
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -154,7 +164,7 @@ const DeactivatedDashboard = () => {
               <p style={{ color: 'var(--t-sidebar-text)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1.75rem' }}>
                 உங்கள் Offline Payment பதிவு செய்யப்பட்டது. நிர்வாகி உறுதிசெய்த பிறகு உங்கள் கணக்கு மீண்டும் செயல்படுத்தப்படும்.
               </p>
-              <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handleLogout}>
+              <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handleLogout} data-testid="gating-ok-btn">
                 OK / சரி
               </button>
             </div>

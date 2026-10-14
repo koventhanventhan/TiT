@@ -5,8 +5,15 @@
 .dashboard-payment-section .section-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: var(--t-text);
+    color: var(--t-text, #0f172a);
     margin-bottom: 1rem;
+}
+
+/* Ensure white heading text with >= 4.5:1 contrast on dark gating or modal wrappers */
+.tit-reg-wrapper .dashboard-payment-section .section-title,
+.tit-reg-container .dashboard-payment-section .section-title,
+.tit-reg-overlay .dashboard-payment-section .section-title {
+    color: #ffffff;
 }
 
 .payment-module-card {
@@ -95,30 +102,77 @@
     margin-top: 0.25rem;
 }
 
+.payment-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 1rem;
+}
+
 .pay-now-btn {
-    background: var(--t-primary);
-    color: #fff;
-    font-weight: 600;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0.75rem 1.5rem;
+    background: var(--t-primary, #4f0bd9);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-height: 48px;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
     border-radius: 0.5rem;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    box-sizing: border-box;
 }
 
 .pay-now-btn:hover:not(:disabled) {
-    background: var(--t-primary-hover);
-    transform: translateY(-1.0px);
+    background: var(--t-primary-hover, #4308b8);
+    transform: translateY(-1px);
     box-shadow: 0 0.25rem 0.75rem -0.125rem rgba(79, 11, 217, 0.4);
 }
 
+.pay-now-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
 .pay-now-btn:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pay-offline-btn {
+    background: transparent;
+    color: var(--t-primary, #4f0bd9);
+    border: 1.5px solid var(--t-primary, #4f0bd9);
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-height: 48px;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+.pay-offline-btn:hover:not(:disabled) {
+    background: var(--t-primary-soft, #f5f3ff);
+}
+
+.pay-offline-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.pay-offline-btn:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
@@ -162,8 +216,10 @@
         margin-right: 0;
     }
     
-    .pay-now-btn {
+    .pay-now-btn,
+    .pay-offline-btn {
         width: 100%;
+        min-height: 48px;
         justify-content: center;
     }
 }

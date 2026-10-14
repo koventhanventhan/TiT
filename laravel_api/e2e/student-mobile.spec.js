@@ -32,7 +32,8 @@ const defaultStudentUser = {
   role: 'user',
   current_grade: 'Grade 10',
   medium: 'english',
-  subjects: ['Maths', 'Science', 'English'],
+  subjects: ['Mathematics', 'Science', 'English'],
+  selected_subjects: ['Mathematics', 'Science', 'English'],
   registration_status: 'completed',
   admin_confirmed_at: '2026-01-01 10:00:00',
   is_paid: true,
@@ -232,6 +233,48 @@ async function setupStudentMocks(page, userOverrides = {}, customHandlers = {}) 
         body: JSON.stringify({
           messages: [
             { id: 601, sender: { id: 1, name: 'Dr. Jane Teacher', role: 'teacher' }, receiver: { id: 201, name: 'Kasun Perera' }, body: 'Hello Kasun, welcome!', created_at: new Date().toISOString(), is_read: false }
+          ]
+        })
+      });
+    }
+
+    if (url.includes('/subjects/prices')) {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          grade_10_to_11: [
+            { id: 1, name: 'Mathematics', price: 1000, medium: 'english' },
+            { id: 2, name: 'Science', price: 1000, medium: 'english' },
+            { id: 3, name: 'English', price: 800, medium: 'english' }
+          ]
+        })
+      });
+    }
+
+    if (url.includes('/packages')) {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 1,
+            name: 'All 3 Subjects Pack',
+            applicable_grades: [10, 11],
+            medium: 'english',
+            price: 2500
+          }
+        ])
+      });
+    }
+
+    if (url.includes('/student/payment-details')) {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          total: 2500,
+          subjects: [
+            { name: 'Mathematics', price: 1000 },
+            { name: 'Science', price: 1000 },
+            { name: 'English', price: 800 }
           ]
         })
       });
@@ -536,9 +579,9 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
     expect(attendCalls, 'Double-tapping Join must only invoke attend API once').toBe(1);
   });
 
-  // 6. Gating screens (PendingApproval, PaymentRequired, Deactivated) at 320 and 390: no overflow
-  for (const gVp of [{ width: 320, height: 640 }, { width: 390, height: 844 }]) {
-    test(`Gating screens at ${gVp.width}x${gVp.height}: no overflow`, async ({ page }) => {
+  // 6. Gating screens (PendingApproval, PaymentRequired, Deactivated) at 320x568, 320x640, and 390x844: bilingual & no overflow
+  for (const gVp of [{ width: 320, height: 568 }, { width: 320, height: 640 }, { width: 390, height: 844 }]) {
+    test(`Gating screens at ${gVp.width}x${gVp.height}: bilingual & no overflow`, async ({ page }) => {
       // 6A: Pending Approval
       await setupStudentMocks(page, { admin_confirmed_at: null });
       await page.setViewportSize(gVp);
@@ -547,7 +590,16 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
 
       let scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollWidth, `PendingApproval at ${gVp.width}px must not scroll horizontally`).toBeLessThanOrEqual(gVp.width);
-      await expect(page.locator('text=Account pending admin approval')).toBeVisible();
+
+      const pendingScreen = page.locator('[data-testid="gating-pending-approval"]');
+      await expect(pendingScreen).toBeVisible();
+      const pendingText = await pendingScreen.innerText();
+      expect(pendingText).toMatch(/[A-Za-z]/);
+      expect(pendingText).toMatch(/[\u0B80-\u0BFF]/);
+
+      const pendingLogoutBtn = pendingScreen.locator('[data-testid="gating-logout-btn"]');
+      await pendingLogoutBtn.scrollIntoViewIfNeeded();
+      await expect(pendingLogoutBtn).toBeVisible();
 
       // 6B: Payment Required
       await setupStudentMocks(page, { admin_confirmed_at: '2026-01-01 10:00:00', is_paid: false });
@@ -556,7 +608,16 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
 
       scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollWidth, `PaymentRequired at ${gVp.width}px must not scroll horizontally`).toBeLessThanOrEqual(gVp.width);
-      await expect(page.locator('h2.tit-reg-title:has-text("Payment Status")')).toBeVisible();
+
+      const paymentScreen = page.locator('[data-testid="gating-payment-required"]');
+      await expect(paymentScreen).toBeVisible();
+      const paymentText = await paymentScreen.innerText();
+      expect(paymentText).toMatch(/[A-Za-z]/);
+      expect(paymentText).toMatch(/[\u0B80-\u0BFF]/);
+
+      const paymentLogoutBtn = paymentScreen.locator('[data-testid="gating-logout-btn"]');
+      await paymentLogoutBtn.scrollIntoViewIfNeeded();
+      await expect(paymentLogoutBtn).toBeVisible();
 
       // 6C: Deactivated
       await setupStudentMocks(page, { is_deactivated: true });
@@ -565,7 +626,16 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
 
       scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollWidth, `Deactivated at ${gVp.width}px must not scroll horizontally`).toBeLessThanOrEqual(gVp.width);
-      await expect(page.locator('text=Account Status')).toBeVisible();
+
+      const deactScreen = page.locator('[data-testid="gating-deactivated"]');
+      await expect(deactScreen).toBeVisible();
+      const deactText = await deactScreen.innerText();
+      expect(deactText).toMatch(/[A-Za-z]/);
+      expect(deactText).toMatch(/[\u0B80-\u0BFF]/);
+
+      const deactLogoutBtn = deactScreen.locator('[data-testid="gating-logout-btn"]');
+      await deactLogoutBtn.scrollIntoViewIfNeeded();
+      await expect(deactLogoutBtn).toBeVisible();
     });
   }
 
@@ -599,6 +669,419 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
     });
 
     expect(legacyColoredElements, `Elements with legacy blue/indigo backgrounds found: ${JSON.stringify(legacyColoredElements)}`).toEqual([]);
+  });
+
+});
+
+test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
+
+  // Probe 1: Mobile drawer fits viewport (all items + Logout inside viewport, no "MENU" label) at 360x740 and 320x568
+  for (const vp of [{ width: 360, height: 740 }, { width: 320, height: 568 }]) {
+    test(`Drawer fits inside viewport at ${vp.width}x${vp.height} with no MENU label and accessible Logout`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize(vp);
+      await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      // Open mobile drawer
+      const menuBtn = page.locator('button[aria-label="Toggle navigation menu"]');
+      await expect(menuBtn).toBeVisible();
+      await menuBtn.click();
+      await page.waitForTimeout(200);
+
+      const aside = page.locator('aside');
+      await expect(aside).toBeVisible();
+
+      // No "MENU" label header
+      const menuLabel = aside.locator('text=/^MENU$/i');
+      await expect(menuLabel).toHaveCount(0);
+
+      // All 8 nav items fit inside viewport and have min-height >= 44
+      const navItems = aside.locator('a.t-menu-item');
+      const count = await navItems.count();
+      expect(count).toBe(8);
+
+      for (let i = 0; i < count; i++) {
+        const item = navItems.nth(i);
+        await expect(item).toBeVisible();
+        const box = await item.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box.height, `Nav item ${i} height must be >= 44px`).toBeGreaterThanOrEqual(44);
+        expect(box.y, `Nav item ${i} y must be >= 0`).toBeGreaterThanOrEqual(0);
+        expect(box.y + box.height, `Nav item ${i} must be within viewport height`).toBeLessThanOrEqual(vp.height);
+      }
+
+      // Logout button is inside viewport and >= 44px
+      const logoutBtn = aside.locator('button[aria-label="Logout"]');
+      await expect(logoutBtn).toBeVisible();
+      const logoutBox = await logoutBtn.boundingBox();
+      expect(logoutBox).not.toBeNull();
+      expect(logoutBox.height).toBeGreaterThanOrEqual(44);
+      expect(logoutBox.y + logoutBox.height, 'Logout button must be within viewport height').toBeLessThanOrEqual(vp.height);
+    });
+  }
+
+  // Probe 2: Checkbox visual size <= 28px with label row tap target >= 44px
+  test('Checkbox visual size <= 28px with label row tap target >= 44px in SubjectUpdateModal', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    const editBtn = page.locator('button:has-text("Edit Subjects & Medium")');
+    await expect(editBtn).toBeVisible();
+    await editBtn.click();
+    await page.waitForTimeout(400);
+
+    // Modal subject checkboxes
+    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
+    const count = await checkboxLabels.count();
+    expect(count, 'Subject options should be present').toBeGreaterThan(0);
+
+    for (let i = 0; i < Math.min(count, 4); i++) {
+      const label = checkboxLabels.nth(i);
+      const labelBox = await label.boundingBox();
+      expect(labelBox).not.toBeNull();
+      expect(labelBox.height, `Label row ${i} min-height must be >= 44px`).toBeGreaterThanOrEqual(44);
+
+      const checkbox = label.locator('input[type="checkbox"]');
+      if (await checkbox.isVisible()) {
+        const box = await checkbox.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box.width, `Checkbox ${i} visual width must be <= 28px`).toBeLessThanOrEqual(28);
+        expect(box.height, `Checkbox ${i} visual height must be <= 28px`).toBeLessThanOrEqual(28);
+      } else {
+        const visualBox = label.locator('div').first();
+        const box = await visualBox.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box.width, `Checkbox visual box ${i} width must be <= 28px`).toBeLessThanOrEqual(28);
+        expect(box.height, `Checkbox visual box ${i} height must be <= 28px`).toBeLessThanOrEqual(28);
+      }
+    }
+  });
+
+  // Probe 3: Fee values never wrap (FeeRow)
+  test('Fee values never wrap across FeeRow components on mobile', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    await page.locator('button:has-text("Edit Subjects & Medium")').click();
+    await page.waitForTimeout(400);
+
+    const feeRowValues = page.locator('.fee-row-value:not(:empty)');
+    await expect(feeRowValues.first()).toBeVisible({ timeout: 5000 });
+    const count = await feeRowValues.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const el = feeRowValues.nth(i);
+      const whiteSpace = await el.evaluate(node => window.getComputedStyle(node).whiteSpace);
+      expect(whiteSpace, 'FeeRow value must have white-space: nowrap').toBe('nowrap');
+
+      const scrollWidth = await el.evaluate(node => node.scrollWidth);
+      const clientWidth = await el.evaluate(node => node.clientWidth);
+      expect(scrollWidth, 'FeeRow value must not have internal text wrapping overflow').toBeLessThanOrEqual(clientWidth + 2);
+    }
+  });
+
+  // Probe 4: Months stepper (type 7, type 12, "+", clamp <= 12)
+  test('Advance months stepper allows typing 7 and 12, clamps at 12 on +, and updates totals', async ({ page }) => {
+    await setupStudentMocks(page, {}, {
+      onRequest: async (route, url, method) => {
+        if (url.includes('/student/update-subjects') && method === 'POST') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              already_paid: true,
+              paid_until: '2026-11',
+              monthly_fee: 1500,
+              amount: 1500
+            })
+          });
+          return true;
+        }
+        return false;
+      }
+    });
+
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    await page.locator('button:has-text("Edit Subjects & Medium")').click();
+    await page.waitForTimeout(300);
+
+    const saveBtn = page.locator('button:has-text("Save Subjects")');
+    await expect(saveBtn).toBeVisible();
+    await saveBtn.click();
+    await page.waitForTimeout(400);
+
+    const advanceCheckboxLabel = page.locator('label:has-text("I want to pay for advance months")');
+    await expect(advanceCheckboxLabel).toBeVisible();
+    await advanceCheckboxLabel.click();
+    await page.waitForTimeout(200);
+
+    const monthsInput = page.locator('input[aria-label="Number of advance months"]');
+    const plusBtn = page.locator('button[aria-label="Increase months"]');
+    const minusBtn = page.locator('button[aria-label="Decrease months"]');
+    await expect(monthsInput).toBeVisible();
+
+    // Type 7
+    await monthsInput.fill('7');
+    await monthsInput.blur();
+    await expect(monthsInput).toHaveValue('7');
+    await expect(page.locator('.fee-row-value:has-text("10,500.00")')).toBeVisible();
+
+    // Type 12
+    await monthsInput.fill('12');
+    await monthsInput.blur();
+    await expect(monthsInput).toHaveValue('12');
+    await expect(page.locator('.fee-row-value:has-text("18,000.00")')).toBeVisible();
+
+    // Plus button should be disabled when clamped at 12
+    await expect(plusBtn).toBeDisabled();
+
+    // Minus button decrements to 11
+    await minusBtn.click();
+    await expect(monthsInput).toHaveValue('11');
+  });
+
+  // Probe 5: Offline-pay feedback < 400 ms and exactly ONE advance-payment request on double tap
+  test('Offline-pay gives immediate feedback < 400 ms and triggers exactly ONE request on double tap', async ({ page }) => {
+    let advanceCalls = 0;
+    await setupStudentMocks(page, {}, {
+      onRequest: async (route, url, method) => {
+        if (url.includes('/student/update-subjects') && method === 'POST') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              already_paid: true,
+              paid_until: '2026-11',
+              monthly_fee: 1500,
+              amount: 1500
+            })
+          });
+          return true;
+        }
+        if ((url.includes('/student/advance-payment-offline') || url.includes('/student/request-advance-payment-offline')) && method === 'POST') {
+          advanceCalls++;
+          await new Promise(r => setTimeout(r, 600));
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, message: 'Advance payment request received.' })
+          });
+          return true;
+        }
+        return false;
+      }
+    });
+
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    await page.locator('button:has-text("Edit Subjects & Medium")').click();
+    await page.waitForTimeout(300);
+
+    const saveBtn = page.locator('button:has-text("Save Subjects")');
+    await saveBtn.click();
+    await page.waitForTimeout(400);
+
+    await page.locator('label:has-text("I want to pay for advance months")').click();
+    await page.waitForTimeout(200);
+
+    const offlineBtn = page.locator('button:has-text("I WILL PAY OFFLINE")');
+    await expect(offlineBtn).toBeVisible();
+    await offlineBtn.scrollIntoViewIfNeeded();
+
+    const t0 = Date.now();
+    await offlineBtn.evaluate(btn => {
+      btn.click();
+      btn.click();
+    });
+    const feedbackTime = Date.now() - t0;
+    expect(feedbackTime, 'Offline-pay button must give feedback in < 400ms').toBeLessThan(400);
+
+    const submittingBtn = page.locator('button:has-text("Submitting")');
+    await expect(submittingBtn).toBeVisible();
+    await expect(submittingBtn).toBeDisabled();
+
+    await page.waitForTimeout(800);
+    expect(advanceCalls, 'Double click must send exactly ONE advance payment request').toBe(1);
+  });
+
+  // Probe 6: Gating screens bilingual (English + Tamil)
+  test('Gating screens contain both English text and Tamil characters', async ({ page }) => {
+    // 6A: Pending Approval
+    await setupStudentMocks(page, { admin_confirmed_at: null });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const pending = page.locator('[data-testid="gating-pending-approval"]');
+    await expect(pending).toBeVisible();
+    const pendingText = await pending.innerText();
+    expect(pendingText).toMatch(/[A-Za-z]/);
+    expect(pendingText).toMatch(/[\u0B80-\u0BFF]/);
+
+    // 6B: Payment Required
+    await setupStudentMocks(page, { admin_confirmed_at: '2026-01-01 10:00:00', is_paid: false });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const payment = page.locator('[data-testid="gating-payment-required"]');
+    await expect(payment).toBeVisible();
+    const paymentText = await payment.innerText();
+    expect(paymentText).toMatch(/[A-Za-z]/);
+    expect(paymentText).toMatch(/[\u0B80-\u0BFF]/);
+
+    // 6C: Deactivated
+    await setupStudentMocks(page, { is_deactivated: true });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const deact = page.locator('[data-testid="gating-deactivated"]');
+    await expect(deact).toBeVisible();
+    const deactText = await deact.innerText();
+    expect(deactText).toMatch(/[A-Za-z]/);
+    expect(deactText).toMatch(/[\u0B80-\u0BFF]/);
+  });
+
+  // Probe 7: Registration modal payment step (container scrolls, Pay Later/Back reachable, primary button rgb(79, 11, 217) and no red/green gradient)
+  test('StudentRegistrationForm payment step: container scrolls, Back/Pay Later reachable, primary button rgb(79, 11, 217) with no gradients', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/register?step=2', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    const modal = page.locator('.tit-reg-container');
+    await expect(modal).toBeVisible();
+
+    const backBtn = page.locator('.tit-reg-back-link');
+    await expect(backBtn).toBeVisible();
+    await backBtn.scrollIntoViewIfNeeded();
+    await expect(backBtn).toBeVisible();
+
+    const primaryBtn = page.locator('.tit-reg-submit-btn').first();
+    await expect(primaryBtn).toBeVisible();
+    const bg = await primaryBtn.evaluate(el => window.getComputedStyle(el).backgroundColor);
+    expect(bg, 'Primary button must have brand purple #4f0bd9 background').toBe('rgb(79, 11, 217)');
+
+    const bgImage = await primaryBtn.evaluate(el => window.getComputedStyle(el).backgroundImage);
+    expect(bgImage === 'none' || !bgImage.includes('gradient'), 'Primary button must not have gradients').toBe(true);
+
+    const overflowY = await modal.evaluate(el => window.getComputedStyle(el).overflowY);
+    expect(['auto', 'scroll']).toContain(overflowY);
+  });
+
+  // Probe 8: Automated contrast check for gating screen headings (computed color vs nearest opaque background >= 4.5)
+  test('Automated contrast check: gating screen headings have contrast >= 4.5:1 against background', async ({ page }) => {
+    function computeContrast(rgb1, rgb2) {
+      function lum(r, g, b) {
+        const a = [r, g, b].map(v => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+      }
+      function parse(c) {
+        const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : [255, 255, 255];
+      }
+      const l1 = lum(...parse(rgb1));
+      const l2 = lum(...parse(rgb2));
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    }
+
+    // Check PaymentRequiredDashboard
+    await setupStudentMocks(page, { admin_confirmed_at: '2026-01-01 10:00:00', is_paid: false });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const titleContrast = await page.evaluate(() => {
+      function getBg(el) {
+        let curr = el;
+        while (curr && curr !== document.documentElement) {
+          const bg = window.getComputedStyle(curr).backgroundColor;
+          const m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+          if (m && (m[4] === undefined || parseFloat(m[4]) > 0.8)) {
+            return bg;
+          }
+          curr = curr.parentElement;
+        }
+        return 'rgb(15, 23, 42)';
+      }
+      const title = document.querySelector('.tit-reg-title');
+      const sectionTitle = document.querySelector('.section-title');
+      return {
+        titleColor: title ? window.getComputedStyle(title).color : null,
+        titleBg: title ? getBg(title) : null,
+        sectionTitleColor: sectionTitle ? window.getComputedStyle(sectionTitle).color : null,
+        sectionTitleBg: sectionTitle ? getBg(sectionTitle) : null
+      };
+    });
+
+    expect(titleContrast.titleColor).not.toBeNull();
+    const r1 = computeContrast(titleContrast.titleColor, titleContrast.titleBg);
+    expect(r1, `Gating title contrast ${r1.toFixed(2)} must be >= 4.5:1`).toBeGreaterThanOrEqual(4.5);
+
+    if (titleContrast.sectionTitleColor) {
+      const r2 = computeContrast(titleContrast.sectionTitleColor, titleContrast.sectionTitleBg);
+      expect(r2, `Section title contrast ${r2.toFixed(2)} must be >= 4.5:1`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // Probe 9: StudentPaymentModule on PaymentRequiredDashboard has stacked full-width 48px buttons with 12px gap
+  test('StudentPaymentModule has stacked full-width 48px buttons with 12px gap on gating screen', async ({ page }) => {
+    await setupStudentMocks(page, { admin_confirmed_at: '2026-01-01 10:00:00', is_paid: false }, {
+      onRequest: async (route, url) => {
+        if (url.includes('/student/payment/status')) {
+          await route.fulfill({
+            status: 200, contentType: 'application/json',
+            body: JSON.stringify({
+              status: 'pending',
+              is_paid: false,
+              year_month: '2026-10',
+              amount: 2500,
+              payment: null
+            })
+          });
+          return true;
+        }
+        return false;
+      }
+    });
+
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    const payNowBtn = page.locator('button.pay-now-btn');
+    const offlineBtn = page.locator('button.pay-offline-btn');
+    await expect(payNowBtn).toBeVisible();
+    await expect(offlineBtn).toBeVisible();
+
+    const payNowBox = await payNowBtn.boundingBox();
+    const offlineBox = await offlineBtn.boundingBox();
+    expect(payNowBox.height, 'Pay Now height must be >= 48px').toBeGreaterThanOrEqual(48);
+    expect(offlineBox.height, 'Offline button height must be >= 48px').toBeGreaterThanOrEqual(48);
+
+    expect(offlineBox.y, 'Offline button must be below Pay Now button').toBeGreaterThanOrEqual(payNowBox.y + payNowBox.height);
+    const gap = offlineBox.y - (payNowBox.y + payNowBox.height);
+    expect(Math.round(gap), 'Gap between stacked buttons must be ~12px').toBeCloseTo(12, -1);
+
+    const offlineBg = await offlineBtn.evaluate(el => window.getComputedStyle(el).backgroundColor);
+    expect(offlineBg === 'rgba(0, 0, 0, 0)' || offlineBg === 'transparent' || offlineBg === 'rgb(255, 255, 255)').toBe(true);
+
+    const payNowBg = await payNowBtn.evaluate(el => window.getComputedStyle(el).backgroundColor);
+    expect(payNowBg).toBe('rgb(79, 11, 217)');
   });
 
 });

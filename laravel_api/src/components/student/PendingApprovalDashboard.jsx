@@ -7,9 +7,9 @@ const PendingApprovalDashboard = ({ user }) => {
     const handleLogout = () => logout();
 
     return (
-        <div className="tit-reg-overlay">
+        <div className="tit-reg-overlay" data-testid="gating-pending-approval">
             <div className="tit-reg-wrapper" style={{ maxWidth: '600px' }}>
-                <button className="tit-reg-close" onClick={handleLogout} aria-label="Close">
+                <button className="tit-reg-close" onClick={handleLogout} aria-label="Close" data-testid="gating-close-btn">
                     <FiX />
                 </button>
 
@@ -76,6 +76,7 @@ const PendingApprovalDashboard = ({ user }) => {
                         className="tit-reg-back-link"
                         style={{ marginTop: '1rem' }}
                         onClick={handleLogout}
+                        data-testid="gating-logout-btn"
                     >
                         Logout / வெளியேறு
                     </button>

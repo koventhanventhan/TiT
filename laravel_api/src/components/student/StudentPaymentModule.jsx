@@ -150,7 +150,7 @@ const StudentPaymentModule = () => {
                 </div>
                 
                 {!is_paid && !isPendingOffline && (
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="payment-actions-stack">
                         <button 
                             className="pay-now-btn" 
                             onClick={handlePayment}
@@ -163,25 +163,10 @@ const StudentPaymentModule = () => {
                             type="button"
                             onClick={handleOfflinePayment}
                             disabled={paying || payingOffline}
-                            className="t-tap"
-                            style={{
-                                minHeight: 44,
-                                padding: '8px 14px',
-                                borderRadius: 8,
-                                border: '1px solid var(--t-primary)',
-                                background: '#fff',
-                                color: 'var(--t-primary)',
-                                fontWeight: 600,
-                                fontSize: 13,
-                                cursor: (paying || payingOffline) ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                touchAction: 'manipulation',
-                                boxSizing: 'border-box'
-                            }}
+                            className="pay-offline-btn t-tap"
+                            style={{ touchAction: 'manipulation' }}
                         >
-                            {payingOffline ? <><FiLoader className="spin-icon" /> {t('submitting') || 'Submitting...'}</> : (t('pay_offline') || 'I Will Pay Offline')}
+                            {payingOffline ? <><FiLoader className="spin-icon" /> {t('submitting') || 'Submitting...'}</> : (t('pay_offline') || 'I WILL PAY OFFLINE')}
                         </button>
                     </div>
                 )}

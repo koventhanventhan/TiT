@@ -8,9 +8,9 @@ const PaymentRequiredDashboard = ({ user }) => {
     const handleLogout = () => logout();
 
     return (
-        <div className="tit-reg-overlay">
+        <div className="tit-reg-overlay" data-testid="gating-payment-required">
             <div className="tit-reg-wrapper" style={{ maxWidth: '600px' }}>
-                <button className="tit-reg-close" onClick={handleLogout} aria-label="Close">
+                <button className="tit-reg-close" onClick={handleLogout} aria-label="Close" data-testid="gating-close-btn">
                     <FiX />
                 </button>
 
@@ -30,7 +30,7 @@ const PaymentRequiredDashboard = ({ user }) => {
                             <FiDollarSign size={40} style={{ color: 'var(--t-warning)' }} />
                         </div>
 
-                        <h2 className="tit-reg-title" style={{ fontSize: '1.5rem', color: 'var(--t-warning)' }}>
+                        <h2 className="tit-reg-title" style={{ fontSize: '1.5rem', color: '#ffffff' }}>
                             Payment Status (கட்டண விபரம்)
                         </h2>
 
@@ -59,6 +59,7 @@ const PaymentRequiredDashboard = ({ user }) => {
                     <button
                         className="tit-reg-back-link"
                         onClick={handleLogout}
+                        data-testid="gating-logout-btn"
                     >
                         Logout / வெளியேறு
                     </button>

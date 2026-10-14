@@ -269,3 +269,83 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* FeeRow styles (Phase 2) */
+.fee-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 4px 0;
+  color: var(--t-text-2, #475569);
+  font-size: 14px;
+}
+
+.fee-row-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fee-row-value {
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--t-text, #0f172a);
+}
+
+.fee-row.fee-row-discount .fee-row-label,
+.fee-row.fee-row-discount .fee-row-value {
+  color: var(--t-success, #15803d);
+}
+
+.fee-row.fee-row-strikethrough .fee-row-value {
+  text-decoration: line-through;
+  color: var(--t-muted, #94a3b8);
+}
+
+.fee-row.fee-row-total {
+  border-top: 1px solid var(--t-primary-border, #ddd6fe);
+  margin-top: 8px;
+  padding-top: 10px;
+  font-size: clamp(15px, 4vw, 18px);
+  font-weight: 700;
+  color: var(--t-primary, #4f0bd9);
+}
+
+.fee-row.fee-row-total .fee-row-label {
+  font-weight: 700;
+}
+
+.fee-row.fee-row-total .fee-row-value {
+  font-size: clamp(17px, 4.5vw, 22px);
+  font-weight: 800;
+  color: var(--t-primary, #4f0bd9);
+}
+
+/* In dark/overlay cards like .tit-reg-overlay */
+.tit-reg-overlay .fee-row {
+  color: rgba(199, 210, 254, 0.85);
+}
+
+.tit-reg-overlay .fee-row-value {
+  color: #ffffff;
+}
+
+.tit-reg-overlay .fee-row.fee-row-discount .fee-row-label,
+.tit-reg-overlay .fee-row.fee-row-discount .fee-row-value {
+  color: #4ade80;
+}
+
+.tit-reg-overlay .fee-row.fee-row-strikethrough .fee-row-value {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tit-reg-overlay .fee-row.fee-row-total {
+  border-top-color: rgba(139, 92, 246, 0.3);
+  color: #fff;
+}
+
+.tit-reg-overlay .fee-row.fee-row-total .fee-row-value {
+  color: #c084fc;
+}

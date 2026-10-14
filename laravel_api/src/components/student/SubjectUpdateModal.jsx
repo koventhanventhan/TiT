@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FiX, FiCheck } from 'react-icons/fi';
 import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
+import FeeRow from '../shared/FeeRow';
+import { formatRs } from '../../utils/format';
 
 export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, stream, initialSubjects = [], onUpdateSuccess }) {
   const [serverAmount, setServerAmount] = useState(null);
@@ -449,41 +451,28 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   background: 'var(--t-primary-soft)',
                   border: '1px solid var(--t-primary-border)'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasDiscount ? 8 : 0 }}>
-                    <span style={{ fontSize: 14, color: 'var(--t-text-2)', fontWeight: 500 }}>
-                      {selectedSubjects.length} subject{selectedSubjects.length > 1 ? 's' : ''} selected
-                    </span>
-                    {hasDiscount ? (
-                      <span style={{ fontSize: 14, color: 'var(--t-muted)', textDecoration: 'line-through' }}>
-                        Rs. {originalAmount.toFixed(0)}
-                      </span>
-                    ) : null}
-                  </div>
+                  <FeeRow
+                    label={`${selectedSubjects.length} subject${selectedSubjects.length > 1 ? 's' : ''} selected`}
+                    value={hasDiscount ? formatRs(originalAmount) : ''}
+                    isStrikethrough={hasDiscount}
+                  />
 
                   {hasDiscount && (
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      marginBottom: 8
-                    }}>
+                    <div style={{ margin: '6px 0' }}>
                       <span style={{
                         fontSize: 12, fontWeight: 600, color: 'var(--t-success)',
                         background: 'var(--t-success-bg)', padding: '2px 10px', borderRadius: 20
                       }}>
-                        🎉 {appliedPackage?.name || 'Package'} — You save Rs. {savings.toFixed(0)}
+                        🎉 {appliedPackage?.name || 'Package'} — You save {formatRs(savings)}
                       </span>
                     </div>
                   )}
 
-                  <div style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    paddingTop: hasDiscount ? 8 : 0,
-                    borderTop: hasDiscount ? '1px solid var(--t-primary-border)' : 'none'
-                  }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Monthly Fee</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--t-primary)' }}>
-                      Rs. {monthlyAmount.toFixed(0)}
-                    </span>
-                  </div>
+                  <FeeRow
+                    label="Monthly Fee"
+                    value={formatRs(monthlyAmount)}
+                    isTotal={true}
+                  />
                 </div>
               )}
             </>
@@ -497,34 +486,36 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
               }}>
                 {hasDiscount ? (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
-                      <span>Subjects Total:</span>
-                      <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-success)', fontWeight: 'bold', marginBottom: '8px' }}>
-                      <span>Package Discount ({appliedPackage?.name || 'Package'}):</span>
-                      <span>Rs. {(serverMonthly ?? monthlyAmount).toFixed(2)}</span>
-                    </div>
+                    <FeeRow
+                      label="Subjects Total:"
+                      value={formatRs(originalAmount)}
+                      isStrikethrough={true}
+                    />
+                    <FeeRow
+                      label={`Package Discount (${appliedPackage?.name || 'Package'}):`}
+                      value={formatRs(serverMonthly ?? monthlyAmount)}
+                      isDiscount={true}
+                    />
                   </>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
-                    <span>Monthly Fee:</span>
-                    <span>Rs. {(serverMonthly ?? monthlyAmount).toFixed(2)}</span>
-                  </div>
+                  <FeeRow
+                    label="Monthly Fee:"
+                    value={formatRs(serverMonthly ?? monthlyAmount)}
+                  />
                 )}
 
                 {serverAdmission > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-text-3)', marginBottom: '8px' }}>
-                    <span>Admission Fee (First Time):</span>
-                    <span>Rs. {serverAdmission.toFixed(2)}</span>
-                  </div>
+                  <FeeRow
+                    label="Admission Fee (First Time):"
+                    value={formatRs(serverAdmission)}
+                  />
                 )}
 
-                <hr style={{ borderColor: 'var(--t-primary-border)', margin: '12px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-primary)', fontWeight: 'bold', fontSize: '20px' }}>
-                  <span>Total Amount:</span>
-                  <span>Rs. {(serverAmount ?? monthlyAmount).toFixed(2)}</span>
-                </div>
+                <FeeRow
+                  label="Total Amount:"
+                  value={formatRs(serverAmount ?? monthlyAmount)}
+                  isTotal={true}
+                />
 
               </div>
 
@@ -573,10 +564,12 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                         onChange={(e) => setAdvanceMonths(parseInt(e.target.value) || 1)} 
                         style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--t-border)', marginBottom: 12 }} 
                       />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: 'var(--t-primary)', marginBottom: 16 }}>
-                        <span>Total Advance Amount:</span>
-                        <span>Rs. {((serverMonthly ?? monthlyAmount) * advanceMonths).toFixed(2)}</span>
-                      </div>
+                      <FeeRow
+                        label="Total Advance Amount:"
+                        value={formatRs((serverMonthly ?? monthlyAmount) * advanceMonths)}
+                        isTotal={true}
+                        style={{ marginBottom: 16 }}
+                      />
                       
                       <button 
                         onClick={handlePayAdvanceOffline} 

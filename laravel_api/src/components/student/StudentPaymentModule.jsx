@@ -3,6 +3,7 @@ import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader } from 'react-icon
 import { getStudentPaymentStatus, initializeMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
 import './StudentPaymentModule.css';
+import { formatRs } from '../../utils/format';
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
@@ -117,7 +118,9 @@ const StudentPaymentModule = () => {
                     </div>
                     <div className="payment-period">{paid_until ? `Paid up to ${paid_until}` : monthName}</div>
                     {!is_paid && (
-                        <div className="payment-amount">LKR {parseFloat(amount).toFixed(2)}</div>
+                        <div className="payment-amount" style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                            {formatRs(amount)}
+                        </div>
                     )}
                 </div>
                 

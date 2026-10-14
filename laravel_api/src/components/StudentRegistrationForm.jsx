@@ -7,6 +7,8 @@ import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
 import { useToast } from '../components/shared/ToastContext';
+import FeeRow from './shared/FeeRow';
+import { formatRs } from '../utils/format';
 
 
 // Subject data structures
@@ -1146,44 +1148,54 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
             ) : (
               <div className="tit-reg-payment-options">
               {totalAmount > 0 && (
-                <div style={{ marginBottom: '1rem', background: 'rgba(235, 129, 83, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(235, 129, 83, 0.3)' }}>
-                  
+                <div style={{
+                  marginBottom: '1rem',
+                  background: 'rgba(79, 11, 217, 0.12)',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(139, 92, 246, 0.3)'
+                }}>
                   {appliedPackage ? (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                        <span>Subjects Total:</span>
-                        <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                        <span>Package Discount ({appliedPackage.name}):</span>
-                        <span>Rs. {monthlyAmount.toFixed(2)}</span>
-                      </div>
+                      <FeeRow
+                        label="Subjects Total:"
+                        value={formatRs(originalAmount)}
+                        isStrikethrough={true}
+                      />
+                      <FeeRow
+                        label={`Package Discount (${appliedPackage.name}):`}
+                        value={formatRs(monthlyAmount)}
+                        isDiscount={true}
+                      />
                     </>
                   ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                      <span>Monthly Fee:</span>
-                      <span>Rs. {monthlyAmount.toFixed(2)}</span>
-                    </div>
+                    <FeeRow
+                      label="Monthly Fee:"
+                      value={formatRs(monthlyAmount)}
+                    />
                   )}
 
                   {admissionFee > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                      <span>Admission Fee (First Time):</span>
-                      <span>Rs. {admissionFee.toFixed(2)}</span>
-                    </div>
+                    <FeeRow
+                      label="Admission Fee (First Time):"
+                      value={formatRs(admissionFee)}
+                    />
                   )}
 
-                  <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '0.5rem 0' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    <span>Total Amount:</span>
-                    <span>Rs. {totalAmount.toFixed(2)}</span>
-                  </div>
+                  <FeeRow
+                    label="Total Amount:"
+                    value={formatRs(totalAmount)}
+                    isTotal={true}
+                  />
                 </div>
               )}
               {totalAmount === 0 && (
-                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
-                  {t('pay_total')}: Rs. {MONTHLY_AMOUNT} (Monthly)
-                </p>
+                <FeeRow
+                  label={`${t('pay_total')} (Monthly):`}
+                  value={formatRs(MONTHLY_AMOUNT)}
+                  isTotal={true}
+                  style={{ marginBottom: '1.25rem' }}
+                />
               )}
               <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
                 {t('pay_offline')}

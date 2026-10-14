@@ -4,6 +4,8 @@ import { logout, registerStep2 } from '../../services/authService';
 import { getAuthHeaders } from '../../services/apiClient';
 import '../StudentRegistrationForm.css';
 import { useToast } from '../../components/shared/ToastContext';
+import FeeRow from '../shared/FeeRow';
+import { formatRs } from '../../utils/format';
 
 const DeactivatedDashboard = () => {
   const toast = useToast();
@@ -96,18 +98,20 @@ const DeactivatedDashboard = () => {
                     {paymentData.subjects && paymentData.subjects.length > 0 ? (
                       // Only show unique subjects (safety check for UI)
                       Array.from(new Map(paymentData.subjects.map(s => [(s?.name ? s.name.toLowerCase() : ''), s])).values()).map(s => (
-                        <div key={s?.name || Math.random()} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--t-sidebar-text)' }}>
-                          <span>{s?.name}</span>
-                          <span>Rs. {parseFloat(s?.price || 0).toFixed(0)}</span>
-                        </div>
+                        <FeeRow
+                          key={s?.name || Math.random()}
+                          label={s?.name}
+                          value={formatRs(s?.price || 0)}
+                        />
                       ))
                     ) : (
                       <p style={{ color: 'var(--t-danger)' }}>No subjects found. Defaulting to base amount.</p>
                     )}
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1.0px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', fontSize: '1.375rem', fontWeight: '800', color: '#fff' }}>
-                      <span>Total Amount:</span>
-                      <span style={{ color: 'var(--t-warning)' }}>Rs. {parseFloat(paymentData.total || 0).toFixed(0)}</span>
-                    </div>
+                    <FeeRow
+                      label="Total Amount:"
+                      value={formatRs(paymentData.total || 0)}
+                      isTotal={true}
+                    />
                   </div>
 
                   <button 
@@ -140,9 +144,13 @@ const DeactivatedDashboard = () => {
               <h2 className="tit-reg-title">Payment</h2>
               <p className="tit-reg-subtitle">Choose how you would like to pay</p>
               
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--t-warning)', marginBottom: '1.875rem', textAlign: 'center' }}>
-                Total Amount: Rs. {parseFloat(paymentData.total || 0).toFixed(0)}
-              </p>
+              <div style={{ marginBottom: '1.875rem' }}>
+                <FeeRow
+                  label="Total Amount:"
+                  value={formatRs(paymentData.total || 0)}
+                  isTotal={true}
+                />
+              </div>
 
               <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handlePayOffline} disabled={processing}>
                 {processing ? 'PROCESSING...' : 'I WILL PAY OFFLINE'}

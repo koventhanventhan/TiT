@@ -490,4 +490,139 @@ class StudentDashboardFeatureTest extends TestCase
         ]);
         $respTeacherPdf->assertStatus(201);
     }
+
+    public function test_student_assignments_endpoint_whitelists_teacher_fields_and_isolates_submissions(): void
+    {
+        $otherStudent = User::factory()->create([
+            'role' => 'user',
+            'institute_id' => $this->institute->id,
+            'name' => 'Other Student',
+            'email' => 'other@student.com',
+            'registration_status' => 'approved',
+            'admin_confirmed_at' => now(),
+            'current_grade' => 'Grade 4',
+        ]);
+
+        $assignment = Assignment::create([
+            'title' => 'Maths Homework Security Check',
+            'description' => 'Security test',
+            'teacher_id' => $this->teacher->id,
+            'grade' => 'Grade 4',
+            'subject' => 'Maths',
+            'institute_id' => $this->institute->id,
+            'due_date' => now()->addDays(5),
+        ]);
+
+        // Student submission
+        AssignmentSubmission::create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $this->student->id,
+            'status' => 'pending',
+            'file_path' => 'submissions/student.pdf',
+            'submitted_at' => now(),
+        ]);
+
+        // Other student submission
+        AssignmentSubmission::create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $otherStudent->id,
+            'status' => 'graded',
+            'marks' => 90,
+            'file_path' => 'submissions/other.pdf',
+            'submitted_at' => now(),
+        ]);
+
+        Sanctum::actingAs($this->student);
+        $response = $this->getJson('/api/student/assignments');
+
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertNotEmpty($data, 'Assignments list should not be empty');
+
+        foreach ($data as $item) {
+            $this->assertArrayHasKey('teacher', $item, 'Assignment should have teacher relation');
+            $teacher = $item['teacher'];
+
+            // Whitelisted fields allowed
+            $this->assertArrayHasKey('id', $teacher);
+            $this->assertArrayHasKey('name', $teacher);
+
+            // Sensitive fields must NOT be present
+            $this->assertArrayNotHasKey('email', $teacher, 'Teacher email leaked in student assignments');
+            $this->assertArrayNotHasKey('phone', $teacher, 'Teacher phone leaked in student assignments');
+            $this->assertArrayNotHasKey('phone_number', $teacher, 'Teacher phone_number leaked in student assignments');
+            $this->assertArrayNotHasKey('password', $teacher, 'Teacher password hash leaked in student assignments');
+            $this->assertArrayNotHasKey('remember_token', $teacher, 'Teacher remember_token leaked in student assignments');
+
+            // Verify submissions payload only includes the logged-in student's own rows
+            if (!empty($item['submissions'])) {
+                foreach ($item['submissions'] as $submission) {
+                    $this->assertEquals(
+                        $this->student->id,
+                        $submission['student_id'],
+                        'Submissions list leaked other students data'
+                    );
+                }
+            }
+        }
+    }
+
+    public function test_student_zoom_endpoints_do_not_leak_teacher_private_data(): void
+    {
+        $schedule = ZoomSchedule::create([
+            'title' => 'Maths Live Class',
+            'zoom_link' => 'https://zoom.us/j/987654321',
+            'join_url' => 'https://zoom.us/j/987654321?pwd=abc',
+            'start_url' => 'https://zoom.us/s/987654321?zak=SECRET_HOST_KEY',
+            'password' => 'secret123',
+            'scheduled_at' => Carbon::now()->addHour(),
+            'duration' => 60,
+            'grade' => 'Grade 4',
+            'subject' => 'Maths',
+            'medium' => 'english',
+            'institute_id' => $this->institute->id,
+        ]);
+        $schedule->teachers()->attach($this->teacher->id);
+
+        Sanctum::actingAs($this->student);
+
+        // 1. Upcoming schedules
+        $upcomingRes = $this->getJson('/api/student/upcoming-schedules');
+        $upcomingRes->assertStatus(200);
+        $upcomingData = $upcomingRes->json();
+        $this->assertNotEmpty($upcomingData);
+
+        foreach ($upcomingData as $item) {
+            $this->assertArrayNotHasKey('start_url', $item);
+            $this->assertArrayHasKey('teacher', $item);
+            $this->assertArrayHasKey('teachers', $item);
+            foreach ($item['teachers'] as $t) {
+                $this->assertArrayNotHasKey('email', $t);
+                $this->assertArrayNotHasKey('phone', $t);
+                $this->assertArrayNotHasKey('phone_number', $t);
+                $this->assertArrayNotHasKey('password', $t);
+                $this->assertArrayNotHasKey('remember_token', $t);
+            }
+        }
+
+        // 2. Zoom classes
+        $classesRes = $this->getJson('/api/student/zoom-classes');
+        $classesRes->assertStatus(200);
+        $classesData = $classesRes->json('data');
+        $this->assertNotEmpty($classesData);
+
+        foreach ($classesData as $item) {
+            $this->assertArrayNotHasKey('start_url', $item);
+            $this->assertArrayHasKey('teacher', $item);
+            $this->assertArrayHasKey('teachers', $item);
+            foreach ($item['teachers'] as $t) {
+                $this->assertArrayNotHasKey('email', $t);
+                $this->assertArrayNotHasKey('phone', $t);
+                $this->assertArrayNotHasKey('phone_number', $t);
+                $this->assertArrayNotHasKey('password', $t);
+                $this->assertArrayNotHasKey('remember_token', $t);
+            }
+        }
+    }
 }

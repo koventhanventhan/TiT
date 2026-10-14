@@ -46,7 +46,7 @@ class StudentZoomController extends Controller
         $startBuffer = Carbon::now()->subDays(2);
         $endBuffer = Carbon::now()->addDays(90);
 
-        $query = ZoomSchedule::with('teachers')
+        $query = ZoomSchedule::with(['teachers:id,name,full_name'])
             ->where('scheduled_at', '>=', $startBuffer)
             ->where('scheduled_at', '<=', $endBuffer)
             ->orderBy('scheduled_at');
@@ -55,6 +55,8 @@ class StudentZoomController extends Controller
 
         $items = $schedules->values()->map(function ($s) use ($user) {
             $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
+            $teacher = $s->teachers->first();
+            $teacherName = $teacher ? ($teacher->name ?? $teacher->full_name) : 'Unknown Teacher';
             return [
                 'id' => $s->id,
                 'title' => $s->title,
@@ -66,7 +68,13 @@ class StudentZoomController extends Controller
                 'subject' => $s->subject,
                 'grade' => $s->grade,
                 'medium' => $s->medium,
-                'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'teacher' => $teacherName,
+                'teacher_name' => $teacherName,
+                'teachers' => $s->teachers->map(fn($t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'full_name' => $t->full_name,
+                ])->values(),
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
         });
@@ -161,7 +169,7 @@ class StudentZoomController extends Controller
         }
 
         // Only show schedules from the last 2 days up to 90 days ahead
-        $query = ZoomSchedule::with('teachers')
+        $query = ZoomSchedule::with(['teachers:id,name,full_name'])
             ->where('scheduled_at', '>=', now()->subDays(2))
             ->where('scheduled_at', '<=', now()->addDays(90))
             ->orderBy('scheduled_at');
@@ -170,6 +178,8 @@ class StudentZoomController extends Controller
 
         $items = $schedules->values()->map(function($s) use ($user) {
             $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
+            $teacher = $s->teachers->first();
+            $teacherName = $teacher ? ($teacher->name ?? $teacher->full_name) : 'Unknown Teacher';
             return [
                 'id' => $s->id,
                 'title' => $s->title,
@@ -181,11 +191,25 @@ class StudentZoomController extends Controller
                 'subject' => $s->subject,
                 'grade' => $s->grade,
                 'medium' => $s->medium,
-                'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'teacher' => $teacherName,
+                'teacher_name' => $teacherName,
+                'teachers' => $s->teachers->map(fn($t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'full_name' => $t->full_name,
+                ])->values(),
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
         });
 
         return response()->json($items->all());
+    }
+
+    /**
+     * Alias for upcomingSchedules for /api/student/zoom-schedules route.
+     */
+    public function schedules(Request $request)
+    {
+        return $this->upcomingSchedules($request);
     }
 }

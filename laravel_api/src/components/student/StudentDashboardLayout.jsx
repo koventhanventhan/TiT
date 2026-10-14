@@ -188,18 +188,19 @@ export default function StudentDashboardLayout({ children, user }) {
             }}>
                 {/* Logo */}
                 <div style={{
-                    padding: '24px 20px', display: 'flex', alignItems: 'center',
-                    gap: 12, borderBottom: '1px solid rgba(255,255,255,0.08)'
+                    padding: '12px 16px', display: 'flex', alignItems: 'center',
+                    gap: 12, borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    minHeight: 56, maxHeight: 64, boxSizing: 'border-box'
                 }}>
                     <div style={{
-                        width: 40, height: 40, borderRadius: 12,
+                        width: 38, height: 38, borderRadius: 10,
                         background: 'var(--t-primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 800, fontSize: 18,
-                        boxShadow: '0 4px 12px rgba(79,11,217,0.4)'
+                        color: '#fff', fontWeight: 800, fontSize: 16,
+                        boxShadow: '0 4px 12px rgba(79,11,217,0.4)', flexShrink: 0
                     }}>TiT</div>
-                    <div>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: '-0.5px' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
                             TiT<span style={{ color: 'var(--t-primary-border)' }}>Education</span>
                         </div>
                         <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student Portal</div>
@@ -208,16 +209,14 @@ export default function StudentDashboardLayout({ children, user }) {
                         <button onClick={toggleSidebar} aria-label="Close sidebar" style={{
                             marginLeft: 'auto', background: 'none', border: 'none',
                             color: 'var(--t-sidebar-text)', cursor: 'pointer', fontSize: 22,
-                            minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, touchAction: 'manipulation'
                         }}><FiX /></button>
                     )}
                 </div>
 
                 {/* Nav */}
-                <nav className="hide-scrollbar" style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
-                    <div style={{ color: 'var(--t-sidebar-text)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', padding: '8px 12px', marginBottom: 4 }}>
-                        Menu
-                    </div>
+                <nav className="hide-scrollbar" style={{ flex: 1, minHeight: 0, padding: '8px 10px', overflowY: 'auto' }}>
                     {menuItems.map((item) => {
                         const Icon = item.icon
                         const isActive = location.pathname === item.path ||
@@ -227,55 +226,65 @@ export default function StudentDashboardLayout({ children, user }) {
                                 key={item.name}
                                 to={item.path}
                                 onClick={() => setIsSidebarOpen(false)}
+                                className="t-tap t-menu-item"
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: 12,
-                                    padding: '12px 14px', borderRadius: 10, marginBottom: 4,
-                                    textDecoration: 'none', fontSize: 14, fontWeight: 500,
-                                    minHeight: 48,
-                                    transition: 'all 0.2s ease',
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '8px 12px', borderRadius: 8, marginBottom: 2,
+                                    textDecoration: 'none', fontSize: 13, fontWeight: 500,
+                                    minHeight: 44, boxSizing: 'border-box',
+                                    transition: 'all 0.15s ease',
                                     background: isActive ? 'var(--t-sidebar-active-bg)' : 'transparent',
                                     color: isActive ? '#fff' : 'var(--t-sidebar-text)',
                                     borderLeft: isActive ? '3px solid var(--t-primary-border)' : '3px solid transparent',
+                                    touchAction: 'manipulation'
                                 }}
                             >
-                                <Icon style={{ fontSize: 18, color: isActive ? 'var(--t-primary-border)' : 'var(--t-sidebar-text)' }} />
-                                <span>{item.name}</span>
-                                {isActive && <FiChevronRight style={{ marginLeft: 'auto', fontSize: 14 }} />}
+                                <Icon style={{ fontSize: 18, color: isActive ? 'var(--t-primary-border)' : 'var(--t-sidebar-text)', flexShrink: 0 }} />
+                                <span style={{ whiteSpace: 'nowrap' }}>{item.name}</span>
+                                {isActive && <FiChevronRight style={{ marginLeft: 'auto', fontSize: 14, flexShrink: 0 }} />}
                             </NavLink>
                         )
                     })}
                 </nav>
 
-                {/* User Card */}
+                {/* User Card & Logout - Pinned to bottom */}
                 <div style={{
-                    margin: '0 12px 12px', padding: '14px',
-                    background: 'var(--t-sidebar-active-bg)', borderRadius: 12,
-                    border: '1px solid rgba(255,255,255,0.06)'
+                    marginTop: 'auto',
+                    padding: '8px 12px',
+                    background: 'var(--t-sidebar-active-bg)',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    flexShrink: 0,
+                    boxSizing: 'border-box'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                        <div style={{
-                            width: 36, height: 36, borderRadius: '50%',
-                            background: 'var(--t-primary)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: 14, overflow: 'hidden'
-                        }}>
-                            {avatarUrl ? <img width="800" height="600" src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
-                        </div>
-                        <div>
-                            <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{user?.full_name || 'Student'}</div>
-                            <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student</div>
-                        </div>
+                    <div style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: 'var(--t-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden',
+                        flexShrink: 0
+                    }}>
+                        {avatarUrl ? <img width="36" height="36" src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
+                        <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student</div>
                     </div>
                     <button
                         onClick={() => window.location.href = '/?logout=1'}
+                        aria-label="Logout"
+                        className="t-btn"
                         style={{
-                            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: 8, padding: '10px 8px', borderRadius: 8, border: '1px solid var(--t-danger)',
-                            background: 'var(--t-danger-bg)', color: 'var(--t-danger)', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', minHeight: 44
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--t-danger)',
+                            background: 'var(--t-danger-bg)', color: 'var(--t-danger)', fontSize: 12,
+                            fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', minHeight: 44,
+                            flexShrink: 0, touchAction: 'manipulation'
                         }}
                     >
-                        <FiLogOut /> Logout
+                        <FiLogOut /> <span>Logout</span>
                     </button>
                 </div>
             </aside>

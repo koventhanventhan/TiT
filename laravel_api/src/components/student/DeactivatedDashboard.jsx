@@ -86,15 +86,20 @@ const DeactivatedDashboard = () => {
         <div className="tit-reg-container">
           {paymentStep === 'info' ? (
             <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2 className="tit-reg-title">Account Status</h2>
-              <p className="tit-reg-subtitle">உங்கள் கணக்கு தற்காலிகமாக முடக்கப்பட்டுள்ளது. மீண்டும் தொடங்க தயவுசெய்து பணம் செலுத்தவும்.</p>
+              <h2 className="tit-reg-title">Account Status / கணக்கு நிலை</h2>
+              <p className="tit-reg-subtitle" style={{ marginBottom: '0.5rem', color: '#ffffff' }}>
+                Your account is temporarily suspended. Please complete your payment to reactivate.
+              </p>
+              <p style={{ color: 'var(--t-sidebar-text)', fontSize: '0.95rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+                உங்கள் கணக்கு தற்காலிகமாக முடக்கப்பட்டுள்ளது. மீண்டும் தொடங்க தயவுசெய்து பணம் செலுத்தவும்.
+              </p>
               
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--t-sidebar-text)' }}>Loading payment details...</div>
               ) : (
                 <>
-                  <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem', border: '1.0px solid var(--t-primary-border)' }}>
-                    <h3 style={{ color: 'var(--t-primary-border)', marginBottom: '1rem', fontSize: '1.125rem' }}>Selected Subjects:</h3>
+                  <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '1rem', padding: '1.25rem', marginBottom: '1.5rem', border: '1.0px solid var(--t-primary-border)' }}>
+                    <h3 style={{ color: 'var(--t-primary-border)', marginBottom: '0.75rem', fontSize: '1rem' }}>Selected Subjects / பாடங்கள்:</h3>
                     {paymentData.subjects && paymentData.subjects.length > 0 ? (
                       // Only show unique subjects (safety check for UI)
                       Array.from(new Map(paymentData.subjects.map(s => [(s?.name ? s.name.toLowerCase() : ''), s])).values()).map(s => (
@@ -125,15 +130,16 @@ const DeactivatedDashboard = () => {
               )}
             </div>
           ) : paymentStep === 'submitted' ? (
-            <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'center', padding: '2rem 1rem' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
-              <h2 className="tit-reg-title" style={{ color: 'var(--t-success)' }}>Payment Submitted!</h2>
-              <p style={{ color: 'var(--t-sidebar-text)', fontSize: '1.1rem', lineHeight: '1.8', marginBottom: '1.5rem' }}>
-                உங்கள் Offline Payment பதிவு செய்யப்பட்டது.<br/>
-                Admin உறுதிசெய்த பிறகு உங்கள் கணக்கு மீண்டும் செயல்படுத்தப்படும்.
+            <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'center', padding: '1.5rem 1rem' }}>
+              <div style={{ fontSize: '3.5rem', marginBottom: '0.75rem' }}>✅</div>
+              <h2 className="tit-reg-title" style={{ color: 'var(--t-success)', fontSize: '1.35rem' }}>
+                Payment Submitted! / கட்டணம் சமர்ப்பிக்கப்பட்டது!
+              </h2>
+              <p style={{ color: '#ffffff', fontSize: '1rem', lineHeight: '1.6', marginBottom: '0.75rem' }}>
+                Your offline payment has been recorded. Your account will be reactivated after the admin confirms the payment.
               </p>
-              <p style={{ color: 'var(--t-sidebar-text)', fontSize: '0.95rem', marginBottom: '2rem' }}>
-                Your offline payment has been recorded. Your account will be reactivated after admin confirms the payment.
+              <p style={{ color: 'var(--t-sidebar-text)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1.75rem' }}>
+                உங்கள் Offline Payment பதிவு செய்யப்பட்டது. நிர்வாகி உறுதிசெய்த பிறகு உங்கள் கணக்கு மீண்டும் செயல்படுத்தப்படும்.
               </p>
               <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handleLogout}>
                 OK / சரி
@@ -141,10 +147,12 @@ const DeactivatedDashboard = () => {
             </div>
           ) : (
             <div className="tit-reg-payment-options" style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2 className="tit-reg-title">Payment</h2>
-              <p className="tit-reg-subtitle">Choose how you would like to pay</p>
+              <h2 className="tit-reg-title">Payment / கட்டணம்</h2>
+              <p className="tit-reg-subtitle" style={{ marginBottom: '1.25rem' }}>
+                Choose how you would like to pay / எவ்வாறு பணம் செலுத்த விரும்புகிறீர்கள் என்பதைத் தேர்வுசெய்க
+              </p>
               
-              <div style={{ marginBottom: '1.875rem' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
                 <FeeRow
                   label="Total Amount:"
                   value={formatRs(paymentData.total || 0)}
@@ -153,16 +161,16 @@ const DeactivatedDashboard = () => {
               </div>
 
               <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handlePayOffline} disabled={processing}>
-                {processing ? 'PROCESSING...' : 'I WILL PAY OFFLINE'}
+                {processing ? 'PROCESSING...' : 'I WILL PAY OFFLINE / ஆஃப்லைனில் செலுத்துவேன்'}
               </button>
               
               <button className="tit-reg-submit-btn tit-reg-secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>
-                {processing ? 'PROCESSING...' : 'PAY ONLINE'}
+                {processing ? 'PROCESSING...' : 'PAY ONLINE / ஆன்லைனில் செலுத்துங்கள்'}
               </button>
 
               <div style={{ textAlign: 'center' }}>
                 <button className="tit-reg-back-link" onClick={() => setPaymentStep('info')}>
-                  Back to form
+                  Back to form / மீண்டும் படிவத்திற்கு
                 </button>
               </div>
             </div>

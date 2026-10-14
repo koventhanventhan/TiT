@@ -208,26 +208,52 @@
 
 .tit-reg-submit-btn {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, #ff4d4d 0%, #cc0000 100%);
-  color: white;
+  background: var(--t-primary, #4f0bd9);
+  color: #ffffff;
   border: none;
-  padding: 1.125rem;
-  border-radius: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  min-height: 52px;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-transform: uppercase;
   margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 14px rgba(79, 11, 217, 0.3);
 }
 
 .tit-reg-submit-btn:hover:not(:disabled) {
+  background: var(--t-primary-hover, #4308b8);
   transform: translateY(-2px);
-  filter: brightness(1.1);
+}
+
+.tit-reg-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+  background: #38069e;
+}
+
+.tit-reg-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .tit-reg-submit-btn.tit-reg-secondary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: transparent;
+  border: 2px solid var(--t-primary, #4f0bd9);
+  color: #c084fc;
+  box-shadow: none;
+}
+
+.tit-reg-submit-btn.tit-reg-secondary:hover:not(:disabled) {
+  background: rgba(79, 11, 217, 0.15);
+  color: #ffffff;
 }
 
 .tit-reg-payment-options {
@@ -236,7 +262,7 @@
   gap: 1.25rem;
   align-items: stretch;
   width: 100%;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
 .tit-reg-payment-options .tit-reg-submit-btn {
@@ -247,23 +273,44 @@
   justify-content: center;
 }
 
-.tit-reg-payment-options .tit-reg-submit-btn {
-  box-shadow: 0 0.5rem 1.5rem rgba(239, 68, 68, 0.4);
-}
-
-.tit-reg-payment-options .tit-reg-submit-btn.tit-reg-secondary {
-  box-shadow: 0 0.5rem 1.5rem rgba(16, 185, 129, 0.4);
-}
-
 .tit-reg-back-link {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #cbd5e1; /* slate-300: > 8:1 contrast on #0f172a */
   text-decoration: none;
   cursor: pointer;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
   margin: 1rem auto 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.tit-reg-back-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tit-reg-back-link:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 @keyframes fadeIn {
@@ -271,10 +318,31 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 48rem), (max-width: 768px) {
+  .tit-reg-overlay {
+    padding: 0.75rem;
+    align-items: center;
+  }
+  .tit-reg-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 1.25rem !important;
+    overscroll-behavior: contain !important;
+    overflow: hidden !important;
+  }
+  .tit-reg-container {
+    padding: 2rem 1.25rem calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
   .tit-reg-form { grid-template-columns: 1fr; }
-  .tit-reg-container { padding: 2.25rem 1.25rem; }
-  .tit-reg-title { font-size: 1.625rem; }
+  .tit-reg-title { font-size: 1.5rem; }
   .tit-reg-input,
   .tit-reg-select {
     font-size: 16px !important;
@@ -284,11 +352,6 @@
     height: 44px !important;
     min-width: 44px !important;
     min-height: 44px !important;
-  }
-  .tit-reg-wrapper {
-    width: calc(100% - 24px) !important;
-    max-height: 90dvh !important;
-    overscroll-behavior: contain;
   }
 }
 

@@ -24,7 +24,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [wantAdvancePayment, setWantAdvancePayment] = useState(false);
   const [advanceMonths, setAdvanceMonths] = useState(3);
 
-  // Reset state when opened
+  // Reset state and lock body scroll when opened
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -38,6 +38,12 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setPaidUntil(null);
       setSaved(false);
       setPaymentDone(false);
+
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
     }
   }, [isOpen, medium]);
 

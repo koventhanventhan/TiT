@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
 import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
-import { FiX } from 'react-icons/fi'
+import { FiX, FiLoader } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
@@ -23,6 +23,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const { getSetting, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
 
   // reCAPTCHA v3
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -1078,7 +1089,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                 className="tit-reg-submit-btn"
                 disabled={isLoading || settingsLoading || packagesLoading}
               >
-                {isLoading ? t('reg_submitting') : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('reg_submitting')}</span>
+                  </>
+                ) : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
               </button>
             </form>
           </div>
@@ -1198,12 +1214,26 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                 />
               )}
               <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                {t('pay_offline')}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('pay_processing') || 'Processing...'}</span>
+                  </>
+                ) : (
+                  t('pay_offline')
+                )}
               </button>
               <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
                 onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
                 disabled={isLoading}>
-                {isLoading ? t('pay_processing') : t('pay_online')}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('pay_processing') || 'Processing...'}</span>
+                  </>
+                ) : (
+                  t('pay_online')
+                )}
               </button>
             </div>
             )}

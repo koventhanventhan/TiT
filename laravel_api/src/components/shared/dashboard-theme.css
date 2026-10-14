@@ -46,17 +46,17 @@
   .teacher-console-layout button,
   .teacher-console-layout a.t-tap,
   .teacher-console-layout select,
-  .teacher-console-layout input:not([type="hidden"]),
+  .teacher-console-layout input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
   .teacher-console-layout textarea,
   .student-console-layout button,
   .student-console-layout a.t-tap,
   .student-console-layout select,
-  .student-console-layout input:not([type="hidden"]),
+  .student-console-layout input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
   .student-console-layout textarea,
   .messaging-container button,
   .messaging-container a.t-tap,
   .messaging-container select,
-  .messaging-container input:not([type="hidden"]) {
+  .messaging-container input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]) {
     min-height: 44px;
     min-width: 44px;
   }
@@ -65,6 +65,66 @@
     min-width: 44px !important;
     min-height: 44px !important;
   }
+}
+
+/* Shared Checkbox & Radio styling (Phase 1) */
+.teacher-console-layout input[type="checkbox"],
+.teacher-console-layout input[type="radio"],
+.student-console-layout input[type="checkbox"],
+.student-console-layout input[type="radio"],
+.messaging-container input[type="checkbox"],
+.messaging-container input[type="radio"],
+.tit-reg-overlay input[type="checkbox"],
+.tit-reg-overlay input[type="radio"] {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  flex: 0 0 22px;
+  accent-color: var(--t-primary, #4f0bd9);
+  margin: 0;
+  cursor: pointer;
+}
+
+.teacher-console-layout input[type="checkbox"]:focus-visible,
+.teacher-console-layout input[type="radio"]:focus-visible,
+.student-console-layout input[type="checkbox"]:focus-visible,
+.student-console-layout input[type="radio"]:focus-visible,
+.messaging-container input[type="checkbox"]:focus-visible,
+.messaging-container input[type="radio"]:focus-visible,
+.tit-reg-overlay input[type="checkbox"]:focus-visible,
+.tit-reg-overlay input[type="radio"]:focus-visible {
+  outline: 2px solid var(--t-primary, #4f0bd9);
+  outline-offset: 2px;
+}
+
+.teacher-console-layout label:has(input[type="checkbox"]),
+.teacher-console-layout label:has(input[type="radio"]),
+.student-console-layout label:has(input[type="checkbox"]),
+.student-console-layout label:has(input[type="radio"]),
+.messaging-container label:has(input[type="checkbox"]),
+.messaging-container label:has(input[type="radio"]),
+.tit-reg-overlay label:has(input[type="checkbox"]),
+.tit-reg-overlay label:has(input[type="radio"]) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teacher-console-layout label:has(input[type="checkbox"]):active,
+.teacher-console-layout label:has(input[type="radio"]):active,
+.student-console-layout label:has(input[type="checkbox"]):active,
+.student-console-layout label:has(input[type="radio"]):active,
+.messaging-container label:has(input[type="checkbox"]):active,
+.messaging-container label:has(input[type="radio"]):active,
+.tit-reg-overlay label:has(input[type="checkbox"]):active,
+.tit-reg-overlay label:has(input[type="radio"]):active {
+  background-color: var(--t-primary-soft, rgba(79, 11, 217, 0.06));
 }
 
 /* iOS zoom prevention (16px on inputs) */

@@ -96,14 +96,15 @@ export default function ZoomRecordingSettingsModal({ isOpen, onClose }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
           {GRADES.map(grade => (
             <label key={grade} style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer'
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer',
+              minHeight: '48px', touchAction: 'manipulation'
             }}>
               <input
                 type="checkbox"
                 checked={!disabledGrades.includes(grade)}
                 onChange={() => handleToggle(grade)}
-                style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                style={{ cursor: 'pointer' }}
               />
               <span style={{ color: '#334155', fontWeight: '500' }}>{grade}</span>
             </label>

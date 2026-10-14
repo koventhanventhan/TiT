@@ -539,14 +539,26 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   </div>
                   
                   <div style={{ marginTop: 8 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: 'var(--t-text-2)', fontWeight: 600 }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      minHeight: 48,
+                      padding: '8px 0',
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      color: 'var(--t-text-2)',
+                      fontWeight: 600,
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent',
+                      userSelect: 'none'
+                    }}>
                       <input 
                         type="checkbox" 
                         checked={wantAdvancePayment} 
                         onChange={(e) => setWantAdvancePayment(e.target.checked)} 
-                        style={{ width: 16, height: 16 }} 
                       />
-                      I want to pay for advance months (Offline)
+                      <span>I want to pay for advance months (Offline)</span>
                     </label>
                   </div>
 

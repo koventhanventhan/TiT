@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiX, FiCheck } from 'react-icons/fi';
+import { FiX, FiCheck, FiMinus, FiPlus } from 'react-icons/fi';
 import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
@@ -24,6 +24,41 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [wantAdvancePayment, setWantAdvancePayment] = useState(false);
   const [advanceMonths, setAdvanceMonths] = useState(3);
 
+  // Stepper handlers
+  const handleMonthsChange = (e) => {
+    const val = e.target.value;
+    if (val === '') {
+      setAdvanceMonths('');
+      return;
+    }
+    if (/^\d+$/.test(val)) {
+      setAdvanceMonths(val);
+    }
+  };
+
+  const handleMonthsBlur = () => {
+    const parsed = parseInt(advanceMonths, 10);
+    if (isNaN(parsed) || parsed < 1) {
+      setAdvanceMonths(1);
+    } else if (parsed > 12) {
+      setAdvanceMonths(12);
+    } else {
+      setAdvanceMonths(parsed);
+    }
+  };
+
+  const handleStepDown = () => {
+    const parsed = parseInt(advanceMonths, 10);
+    const current = isNaN(parsed) ? 1 : parsed;
+    setAdvanceMonths(Math.max(1, current - 1));
+  };
+
+  const handleStepUp = () => {
+    const parsed = parseInt(advanceMonths, 10);
+    const current = isNaN(parsed) ? 1 : parsed;
+    setAdvanceMonths(Math.min(12, current + 1));
+  };
+
   // Reset state and lock body scroll when opened
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +73,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setPaidUntil(null);
       setSaved(false);
       setPaymentDone(false);
+      setWantAdvancePayment(false);
+      setAdvanceMonths(3);
 
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -276,14 +313,15 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   };
 
   const handlePayAdvanceOffline = async () => {
-    if (advanceMonths < 1 || advanceMonths > 12) {
+    const num = parseInt(advanceMonths, 10);
+    if (isNaN(num) || num < 1 || num > 12) {
       setError('Please select a valid number of months (1-12).');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      const resp = await requestAdvancePaymentOffline(advanceMonths);
+      const resp = await requestAdvancePaymentOffline(num);
       setSuccessMessage(resp.message || 'Advance payment requested.');
       setPaymentDone(true);
       setTimeout(() => {
@@ -336,6 +374,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
   if (!isOpen) return null;
 
+  const numericAdvanceMonths = parseInt(advanceMonths, 10);
+  const isAdvanceValid = !isNaN(numericAdvanceMonths) && numericAdvanceMonths >= 1 && numericAdvanceMonths <= 12;
   const effectiveMonthly = step === 2 ? (serverMonthly ?? monthlyAmount) : monthlyAmount;
   const hasDiscount = appliedPackage && effectiveMonthly < originalAmount;
   const savings = originalAmount - monthlyAmount;
@@ -561,29 +601,107 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
                   {wantAdvancePayment ? (
                     <div style={{ background: 'var(--t-bg)', padding: 16, borderRadius: 12, border: '1px solid var(--t-border)', marginTop: 8 }}>
-                      <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 6 }}>Number of Months:</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="12" 
-                        value={advanceMonths} 
-                        onChange={(e) => setAdvanceMonths(parseInt(e.target.value) || 1)} 
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--t-border)', marginBottom: 12 }} 
-                      />
+                      <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 8, fontWeight: 600 }}>Number of Months:</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                        <button
+                          type="button"
+                          onClick={handleStepDown}
+                          disabled={!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone}
+                          aria-label="Decrease months"
+                          className="t-tap"
+                          style={{
+                            width: 48,
+                            height: 48,
+                            minWidth: 48,
+                            minHeight: 48,
+                            borderRadius: 10,
+                            border: '1px solid var(--t-border)',
+                            background: '#fff',
+                            color: 'var(--t-text)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: (!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone) ? 'not-allowed' : 'pointer',
+                            opacity: (!isAdvanceValid || numericAdvanceMonths <= 1) ? 0.4 : 1,
+                            fontSize: 18,
+                            touchAction: 'manipulation',
+                            WebkitTapHighlightColor: 'transparent',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <FiMinus />
+                        </button>
+
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={advanceMonths}
+                          onChange={handleMonthsChange}
+                          onBlur={handleMonthsBlur}
+                          aria-label="Number of advance months"
+                          style={{
+                            flex: 1,
+                            height: 48,
+                            minHeight: 48,
+                            borderRadius: 10,
+                            border: '1px solid var(--t-border)',
+                            textAlign: 'center',
+                            fontSize: 16,
+                            fontWeight: 600,
+                            color: 'var(--t-text)',
+                            background: '#fff',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={handleStepUp}
+                          disabled={(isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone}
+                          aria-label="Increase months"
+                          className="t-tap"
+                          style={{
+                            width: 48,
+                            height: 48,
+                            minWidth: 48,
+                            minHeight: 48,
+                            borderRadius: 10,
+                            border: '1px solid var(--t-border)',
+                            background: '#fff',
+                            color: 'var(--t-text)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: ((isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone) ? 'not-allowed' : 'pointer',
+                            opacity: (isAdvanceValid && numericAdvanceMonths >= 12) ? 0.4 : 1,
+                            fontSize: 18,
+                            touchAction: 'manipulation',
+                            WebkitTapHighlightColor: 'transparent',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <FiPlus />
+                        </button>
+                      </div>
+
                       <FeeRow
                         label="Total Advance Amount:"
-                        value={formatRs((serverMonthly ?? monthlyAmount) * advanceMonths)}
+                        value={isAdvanceValid ? formatRs((serverMonthly ?? monthlyAmount) * numericAdvanceMonths) : '—'}
                         isTotal={true}
                         style={{ marginBottom: 16 }}
                       />
                       
                       <button 
                         onClick={handlePayAdvanceOffline} 
-                        disabled={loading || paymentDone}
+                        disabled={loading || paymentDone || !isAdvanceValid}
                         style={{
                           width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
                           background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                          cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', textAlign: 'center'
+                          cursor: (loading || !isAdvanceValid) ? 'not-allowed' : 'pointer',
+                          opacity: !isAdvanceValid ? 0.5 : 1,
+                          transition: 'all 0.2s', textAlign: 'center',
+                          minHeight: 48, touchAction: 'manipulation'
                         }}
                       >
                         I WILL PAY OFFLINE (CASH/BANK)

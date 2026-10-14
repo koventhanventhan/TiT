@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
 import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
@@ -269,6 +269,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const [selectedStream, setSelectedStream] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isOfflineSubmitting, setIsOfflineSubmitting] = useState(false)
+  const offlineSubmittingRef = useRef(false)
   const [error, setError] = useState('')
   const [paymentChoice, setPaymentChoice] = useState(null)
   const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
@@ -718,17 +720,28 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   }
 
   const handlePaymentOffline = async (amount) => {
+    if (offlineSubmittingRef.current || isLoading || isOfflineSubmitting) return
+    offlineSubmittingRef.current = true
+    setIsOfflineSubmitting(true)
     setError('')
     setIsLoading(true)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
     try {
-      await registerStep2('offline', amount, newSiblingId)
+      await registerStep2('offline', amount, newSiblingId, { signal: controller.signal })
+      clearTimeout(timeoutId)
       toast.success(t('pay_offline_success'))
       if (onClose) onClose()
       if (isAddSiblingMode) window.location.reload()
       else window.location.href = '/student/dashboard'
     } catch (err) {
+      clearTimeout(timeoutId)
       setIsLoading(false)
-      setError(err.message || 'Failed.')
+      setIsOfflineSubmitting(false)
+      offlineSubmittingRef.current = false
+      setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed.'))
     }
   }
 
@@ -1213,11 +1226,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                   style={{ marginBottom: '1.25rem' }}
                 />
               )}
-              <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                {isLoading ? (
+              <button
+                type="button"
+                className="tit-reg-submit-btn"
+                onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
+                disabled={isLoading || isOfflineSubmitting}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, touchAction: 'manipulation' }}
+              >
+                {isOfflineSubmitting ? (
                   <>
                     <FiLoader className="spin-icon" />
-                    <span>{t('pay_processing') || 'Processing...'}</span>
+                    <span>{t('submitting') || 'Submitting...'}</span>
                   </>
                 ) : (
                   t('pay_offline')

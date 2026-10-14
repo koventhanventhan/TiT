@@ -138,11 +138,12 @@ export const initializeMonthlyPayment = async () => {
   return res.json()
 }
 
-export const initializeOfflineMonthlyPayment = async () => {
+export const initializeOfflineMonthlyPayment = async (options = {}) => {
   const res = await fetch(`${API_BASE_URL}/student/pay-monthly-offline`, {
     method: 'POST',
     headers: getAuthHeaders(),
     credentials: 'include',
+    signal: options.signal,
   })
   
   if (!res.ok) {
@@ -153,12 +154,13 @@ export const initializeOfflineMonthlyPayment = async () => {
   return res.json()
 }
 
-export const requestAdvancePaymentOffline = async (months) => {
+export const requestAdvancePaymentOffline = async (months, options = {}) => {
   const res = await fetch(`${API_BASE_URL}/student/advance-payment-offline`, {
     method: 'POST',
     headers: getAuthHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ months })
+    body: JSON.stringify({ months }),
+    signal: options.signal,
   })
   
   if (!res.ok) {

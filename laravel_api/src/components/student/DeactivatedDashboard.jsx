@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiLock, FiCreditCard, FiX } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiLock, FiCreditCard, FiX, FiLoader } from 'react-icons/fi';
 import { logout, registerStep2 } from '../../services/authService';
 import { getAuthHeaders } from '../../services/apiClient';
 import '../StudentRegistrationForm.css';
@@ -14,6 +14,8 @@ const DeactivatedDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [paymentStep, setPaymentStep] = useState('info'); // 'info' or 'options'
   const [processing, setProcessing] = useState(false);
+  const [processingOffline, setProcessingOffline] = useState(false);
+  const offlineSubmittingRef = useRef(false);
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
@@ -38,13 +40,24 @@ const DeactivatedDashboard = () => {
   const handleLogout = () => logout();
 
   const handlePayOffline = async () => {
+    if (offlineSubmittingRef.current || processing || processingOffline) return;
+    offlineSubmittingRef.current = true;
+    setProcessingOffline(true);
     setProcessing(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     try {
-      await registerStep2('offline', paymentData.total);
+      await registerStep2('offline', paymentData.total, null, { signal: controller.signal });
+      clearTimeout(timeoutId);
       setPaymentStep('submitted');
     } catch (err) {
-      toast.error('Error: ' + err.message);
+      clearTimeout(timeoutId);
+      toast.error('Error: ' + (err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : err.message));
       setProcessing(false);
+      setProcessingOffline(false);
+      offlineSubmittingRef.current = false;
     }
   };
 
@@ -160,8 +173,20 @@ const DeactivatedDashboard = () => {
                 />
               </div>
 
-              <button className="tit-reg-submit-btn" style={{ width: '100%', background: 'var(--t-primary)' }} onClick={handlePayOffline} disabled={processing}>
-                {processing ? 'PROCESSING...' : 'I WILL PAY OFFLINE / ஆஃப்லைனில் செலுத்துவேன்'}
+              <button
+                className="tit-reg-submit-btn"
+                style={{ width: '100%', background: 'var(--t-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, touchAction: 'manipulation' }}
+                onClick={handlePayOffline}
+                disabled={processing || processingOffline}
+              >
+                {processingOffline ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>SUBMITTING... / சமர்ப்பிக்கப்படுகிறது...</span>
+                  </>
+                ) : (
+                  'I WILL PAY OFFLINE / ஆஃப்லைனில் செலுத்துவேன்'
+                )}
               </button>
               
               <button className="tit-reg-submit-btn tit-reg-secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>

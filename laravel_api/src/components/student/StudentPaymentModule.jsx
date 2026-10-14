@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader } from 'react-icons/fi';
-import { getStudentPaymentStatus, initializeMonthlyPayment } from '../../services/dashboardService';
+import { getStudentPaymentStatus, initializeMonthlyPayment, initializeOfflineMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
 import './StudentPaymentModule.css';
 import { formatRs } from '../../utils/format';
@@ -10,7 +10,10 @@ const StudentPaymentModule = () => {
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
+    const [payingOffline, setPayingOffline] = useState(false);
+    const [offlineSuccess, setOfflineSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const submittingOfflineRef = useRef(false);
 
     const fetchStatus = async () => {
         try {
@@ -83,6 +86,28 @@ const StudentPaymentModule = () => {
         }
     };
 
+    const handleOfflinePayment = async () => {
+        if (submittingOfflineRef.current || paying || payingOffline) return;
+        submittingOfflineRef.current = true;
+        setPayingOffline(true);
+        setError(null);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        try {
+            await initializeOfflineMonthlyPayment({ signal: controller.signal });
+            clearTimeout(timeoutId);
+            setOfflineSuccess(true);
+            await fetchStatus();
+        } catch (err) {
+            clearTimeout(timeoutId);
+            setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed to submit offline payment'));
+            setPayingOffline(false);
+            submittingOfflineRef.current = false;
+        }
+    };
+
     if (loading) return (
         <div className="payment-module-card loading">
             <FiLoader className="spin-icon" />
@@ -125,13 +150,54 @@ const StudentPaymentModule = () => {
                 </div>
                 
                 {!is_paid && !isPendingOffline && (
-                    <button 
-                        className="pay-now-btn" 
-                        onClick={handlePayment}
-                        disabled={paying}
-                    >
-                        {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button 
+                            className="pay-now-btn" 
+                            onClick={handlePayment}
+                            disabled={paying || payingOffline}
+                            style={{ touchAction: 'manipulation' }}
+                        >
+                            {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleOfflinePayment}
+                            disabled={paying || payingOffline}
+                            className="t-tap"
+                            style={{
+                                minHeight: 44,
+                                padding: '8px 14px',
+                                borderRadius: 8,
+                                border: '1px solid var(--t-primary)',
+                                background: '#fff',
+                                color: 'var(--t-primary)',
+                                fontWeight: 600,
+                                fontSize: 13,
+                                cursor: (paying || payingOffline) ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                touchAction: 'manipulation',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            {payingOffline ? <><FiLoader className="spin-icon" /> {t('submitting') || 'Submitting...'}</> : (t('pay_offline') || 'I Will Pay Offline')}
+                        </button>
+                    </div>
+                )}
+
+                {offlineSuccess && (
+                    <div style={{
+                        marginTop: 10,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        background: 'var(--t-success-bg)',
+                        color: 'var(--t-success)',
+                        fontSize: 13,
+                        fontWeight: 500
+                    }}>
+                        {t('pay_offline_success') || 'Offline payment submitted. Admin will confirm shortly.'}
+                    </div>
                 )}
 
                 {error && <div className="payment-error-toast">{error}</div>}

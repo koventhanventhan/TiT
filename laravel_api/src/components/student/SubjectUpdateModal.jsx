@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FiX, FiCheck, FiMinus, FiPlus } from 'react-icons/fi';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { FiX, FiCheck, FiMinus, FiPlus, FiLoader } from 'react-icons/fi';
 import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
@@ -23,6 +23,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   
   const [wantAdvancePayment, setWantAdvancePayment] = useState(false);
   const [advanceMonths, setAdvanceMonths] = useState(3);
+  const submittingOfflineRef = useRef(false);
 
   // Stepper handlers
   const handleMonthsChange = (e) => {
@@ -75,6 +76,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setPaymentDone(false);
       setWantAdvancePayment(false);
       setAdvanceMonths(3);
+      submittingOfflineRef.current = false;
 
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -297,18 +299,27 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   };
 
   const handlePayOffline = async () => {
+    if (submittingOfflineRef.current || loading || paymentDone) return;
+    submittingOfflineRef.current = true;
     setLoading(true);
     setError('');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     try {
-      const resp = await initializeOfflineMonthlyPayment();
+      const resp = await initializeOfflineMonthlyPayment({ signal: controller.signal });
+      clearTimeout(timeoutId);
       setSuccessMessage(resp.message || 'Offline payment initiated.');
       setPaymentDone(true);
       setTimeout(() => {
         onUpdateSuccess(selectedSubjects);
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to initialize offline payment');
+      clearTimeout(timeoutId);
+      setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed to initialize offline payment'));
       setLoading(false);
+      submittingOfflineRef.current = false;
     }
   };
 
@@ -318,18 +329,27 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setError('Please select a valid number of months (1-12).');
       return;
     }
+    if (submittingOfflineRef.current || loading || paymentDone) return;
+    submittingOfflineRef.current = true;
     setLoading(true);
     setError('');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     try {
-      const resp = await requestAdvancePaymentOffline(num);
+      const resp = await requestAdvancePaymentOffline(num, { signal: controller.signal });
+      clearTimeout(timeoutId);
       setSuccessMessage(resp.message || 'Advance payment requested.');
       setPaymentDone(true);
       setTimeout(() => {
         onUpdateSuccess(selectedSubjects);
       }, 3000);
     } catch (err) {
-      setError(err.message || 'Failed to request advance payment');
+      clearTimeout(timeoutId);
+      setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed to request advance payment'));
       setLoading(false);
+      submittingOfflineRef.current = false;
     }
   };
 
@@ -698,13 +718,14 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                         style={{
                           width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
                           background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                          cursor: (loading || !isAdvanceValid) ? 'not-allowed' : 'pointer',
+                          cursor: (loading || paymentDone || !isAdvanceValid) ? 'not-allowed' : 'pointer',
                           opacity: !isAdvanceValid ? 0.5 : 1,
                           transition: 'all 0.2s', textAlign: 'center',
-                          minHeight: 48, touchAction: 'manipulation'
+                          minHeight: 48, touchAction: 'manipulation',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                         }}
                       >
-                        I WILL PAY OFFLINE (CASH/BANK)
+                        {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE (CASH/BANK)'}
                       </button>
                     </div>
                   ) : (
@@ -722,11 +743,13 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   style={{
                     padding: '14px 20px', borderRadius: '12px',
                     background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                    cursor: loading ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
-                    transition: 'all 0.2s', textAlign: 'center'
+                    cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
+                    transition: 'all 0.2s', textAlign: 'center', minHeight: 48,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    touchAction: 'manipulation'
                   }}
                 >
-                  I WILL PAY OFFLINE
+                  {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE'}
                 </button>
                 <button 
                   onClick={handlePayOnline} 

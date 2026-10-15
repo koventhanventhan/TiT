@@ -6,6 +6,7 @@ import {
     FiMenu, FiX, FiSearch, FiChevronRight, FiUser
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
+import SidebarShell from '../shared/SidebarShell'
 import { useToast } from '../../components/shared/ToastContext';
 import { getActiveStorage, getAuthHeaders } from '../../services/apiClient';
 import useMediaQuery from '../../hooks/useMediaQuery';
@@ -25,7 +26,6 @@ const menuItems = [
 export default function StudentDashboardLayout({ children, user }) {
     const toast = useToast();
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -39,30 +39,6 @@ export default function StudentDashboardLayout({ children, user }) {
 
     const isDesktop = useMediaQuery('(min-width: 1024px)')
     const isMobile = useMediaQuery('(max-width: 640px)')
-
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
-
-    // Close drawer on route change
-    useEffect(() => {
-        setIsSidebarOpen(false)
-    }, [location.pathname])
-
-    // Lock body scroll and handle Escape key when mobile drawer is open
-    useEffect(() => {
-        if (isSidebarOpen && !isDesktop) {
-            document.body.style.overflow = 'hidden'
-            const handleKeyDown = (e) => {
-                if (e.key === 'Escape') setIsSidebarOpen(false)
-            }
-            window.addEventListener('keydown', handleKeyDown)
-            return () => {
-                document.body.style.overflow = ''
-                window.removeEventListener('keydown', handleKeyDown)
-            }
-        } else {
-            document.body.style.overflow = ''
-        }
-    }, [isSidebarOpen, isDesktop])
 
     const searchResults = menuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -160,134 +136,13 @@ export default function StudentDashboardLayout({ children, user }) {
 
     return (
         <div className="student-console-layout" style={{ display: 'flex', height: '100dvh', background: 'var(--t-bg)', fontFamily: "'Inter', sans-serif" }}>
-            {/* Mobile Overlay - no backdrop-filter for performance */}
-            {isSidebarOpen && !isDesktop && (
-                <div
-                    onClick={toggleSidebar}
-                    aria-label="Close sidebar overlay"
-                    style={{
-                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-                        zIndex: 998
-                    }}
-                />
-            )}
-
             {/* SIDEBAR */}
-            <aside style={{
-                width: 260,
-                background: 'var(--t-sidebar)',
-                display: (!isDesktop && !isSidebarOpen) ? 'none' : 'flex',
-                flexDirection: 'column',
-                position: !isDesktop ? 'fixed' : 'relative',
-                inset: !isDesktop ? '0 auto 0 0' : undefined,
-                height: '100dvh',
-                zIndex: 999,
-                boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
-                transition: 'transform 0.3s ease',
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-            }}>
-                {/* Logo */}
-                <div style={{
-                    padding: '12px 16px', display: 'flex', alignItems: 'center',
-                    gap: 12, borderBottom: '1px solid rgba(255,255,255,0.08)',
-                    minHeight: 56, maxHeight: 64, boxSizing: 'border-box'
-                }}>
-                    <div style={{
-                        width: 38, height: 38, borderRadius: 10,
-                        background: 'var(--t-primary)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 800, fontSize: 16,
-                        boxShadow: '0 4px 12px rgba(79,11,217,0.4)', flexShrink: 0
-                    }}>TiT</div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
-                            TiT<span style={{ color: 'var(--t-primary-border)' }}>Education</span>
-                        </div>
-                        <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student Portal</div>
-                    </div>
-                    {!isDesktop && isSidebarOpen && (
-                        <button onClick={toggleSidebar} aria-label="Close sidebar" style={{
-                            marginLeft: 'auto', background: 'none', border: 'none',
-                            color: 'var(--t-sidebar-text)', cursor: 'pointer', fontSize: 22,
-                            minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0, touchAction: 'manipulation'
-                        }}><FiX /></button>
-                    )}
-                </div>
-
-                {/* Nav */}
-                <nav className="hide-scrollbar" style={{ flex: 1, minHeight: 0, padding: '8px 10px', overflowY: 'auto' }}>
-                    {menuItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = location.pathname === item.path ||
-                            (item.path === '/student/dashboard' && (location.pathname === '/student' || location.pathname === '/student/overview'))
-                        return (
-                            <NavLink
-                                key={item.name}
-                                to={item.path}
-                                onClick={() => setIsSidebarOpen(false)}
-                                className="t-tap t-menu-item"
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 10,
-                                    padding: '8px 12px', borderRadius: 8, marginBottom: 2,
-                                    textDecoration: 'none', fontSize: 13, fontWeight: 500,
-                                    minHeight: 44, boxSizing: 'border-box',
-                                    transition: 'all 0.15s ease',
-                                    background: isActive ? 'var(--t-sidebar-active-bg)' : 'transparent',
-                                    color: isActive ? '#fff' : 'var(--t-sidebar-text)',
-                                    borderLeft: isActive ? '3px solid var(--t-primary-border)' : '3px solid transparent',
-                                    touchAction: 'manipulation'
-                                }}
-                            >
-                                <Icon style={{ fontSize: 18, color: isActive ? 'var(--t-primary-border)' : 'var(--t-sidebar-text)', flexShrink: 0 }} />
-                                <span style={{ whiteSpace: 'nowrap' }}>{item.name}</span>
-                                {isActive && <FiChevronRight style={{ marginLeft: 'auto', fontSize: 14, flexShrink: 0 }} />}
-                            </NavLink>
-                        )
-                    })}
-                </nav>
-
-                {/* User Card & Logout - Pinned to bottom */}
-                <div style={{
-                    marginTop: 'auto',
-                    padding: '8px 12px',
-                    background: 'var(--t-sidebar-active-bg)',
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    flexShrink: 0,
-                    boxSizing: 'border-box'
-                }}>
-                    <div style={{
-                        width: 36, height: 36, borderRadius: '50%',
-                        background: 'var(--t-primary)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden',
-                        flexShrink: 0
-                    }}>
-                        {avatarUrl ? <img width="36" height="36" src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.full_name || 'Student'}</div>
-                        <div style={{ color: 'var(--t-sidebar-text)', fontSize: 11, fontWeight: 500 }}>Student</div>
-                    </div>
-                    <button
-                        onClick={() => window.location.href = '/?logout=1'}
-                        aria-label="Logout"
-                        className="t-btn"
-                        style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--t-danger)',
-                            background: 'var(--t-danger-bg)', color: 'var(--t-danger)', fontSize: 12,
-                            fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', minHeight: 44,
-                            flexShrink: 0, touchAction: 'manipulation'
-                        }}
-                    >
-                        <FiLogOut /> <span>Logout</span>
-                    </button>
-                </div>
-            </aside>
+            <SidebarShell
+                brandSubtitle="Student Portal"
+                items={menuItems}
+                user={user}
+                avatarUrl={avatarUrl}
+            />
 
             {/* MAIN CONTENT */}
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'visible' }}>
@@ -299,18 +154,6 @@ export default function StudentDashboardLayout({ children, user }) {
                     position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        {!isDesktop && (
-                            <button
-                                onClick={toggleSidebar}
-                                aria-label="Toggle navigation menu"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    width: 44, height: 44, borderRadius: 10, border: 'none',
-                                    background: 'var(--t-bg)', color: 'var(--t-text-2)', cursor: 'pointer', fontSize: 20
-                                }}
-                            ><FiMenu /></button>
-                        )}
 
                         {!isMobile && (
                             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>

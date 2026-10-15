@@ -1,4 +1,5 @@
 /* Shared Dashboard Theme Tokens & Base Rules for Teacher and Student Consoles */
+@import './sidebar-shell.css';
 
 .teacher-console-layout,
 .student-console-layout {

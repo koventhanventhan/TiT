@@ -39,6 +39,7 @@
   padding-right: 0;
   overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
 }
 
 @media (min-width: 640px) {
@@ -144,7 +145,11 @@
   background: transparent;
   color: var(--t-sidebar-text);
   text-decoration: none;
+  border: none;
   border-left: 3px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   box-sizing: border-box;
   transition: all 0.15s ease;
   touch-action: manipulation;
@@ -579,63 +584,35 @@
 }
 
 /* --------------------------------------------------------------------------
-   5. Mobile & Tablet Overlay Drawer (< 1024px)
+   5. Overlay Drawer (All screen sizes: Mobile, Tablet, Desktop)
    -------------------------------------------------------------------------- */
-@media (max-width: 1023px) {
-  .sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 998;
-    touch-action: manipulation;
-  }
-  .sidebar-drawer {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: min(260px, 86vw);
-    max-width: 260px;
-    height: 100dvh;
-    background: var(--t-sidebar);
-    z-index: 999;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    transform: translateX(0);
-    transition: transform 200ms ease-out;
-  }
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 998;
+  touch-action: manipulation;
+}
+
+.sidebar-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(260px, 86vw);
+  max-width: 260px;
+  height: 100dvh;
+  background: var(--t-sidebar);
+  z-index: 999;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  transition: transform 200ms ease-out;
 }
 
 /* --------------------------------------------------------------------------
-   6. Desktop Sidebar Push Transition (>= 1024px)
-   -------------------------------------------------------------------------- */
-@media (min-width: 1024px) {
-  .sidebar-desktop-shell {
-    height: 100dvh;
-    background: var(--t-sidebar);
-    transition: width 200ms ease-out;
-    flex-shrink: 0;
-    z-index: 40;
-    position: relative;
-    overflow: hidden;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-  }
-  .sidebar-desktop-shell.is-collapsed {
-    width: 72px;
-    min-width: 72px;
-    max-width: 72px;
-  }
-  .sidebar-desktop-shell.is-expanded {
-    width: 260px;
-    min-width: 260px;
-    max-width: 260px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   7. Accessibility: Prefers-Reduced-Motion
+   6. Accessibility: Prefers-Reduced-Motion
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-desktop-shell,
   .sidebar-drawer,
   .sidebar-rail-item,
   .sidebar-nav-item,

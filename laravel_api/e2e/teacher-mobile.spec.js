@@ -204,7 +204,7 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
         }
 
         // Navigation rail check: logo button is reachable on all viewports
-        const logoBtn = page.locator('button[aria-label="Open menu"]');
+        const logoBtn = page.locator('button[data-rail="logo"]');
         await expect(logoBtn).toBeVisible();
       });
     }
@@ -218,7 +218,7 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
-    const logoBtn = page.locator('button[aria-label="Open menu"]');
+    const logoBtn = page.locator('button[data-rail="logo"]');
     await expect(logoBtn).toBeVisible();
 
     // Tap logo to open drawer
@@ -237,7 +237,7 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
 
     // Rail should be visible statically
     await expect(logoBtn).toBeVisible();
-    const navItem = page.locator('aside nav a').first();
+    const navItem = page.locator('.sidebar-rail-item').first();
     await expect(navItem).toBeVisible();
 
     // Rotate back to portrait 768x1024
@@ -415,8 +415,11 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      const logoBtn = page.locator('button[aria-label="Open menu"]');
+      const logoBtn = page.locator('button[data-rail="logo"]');
       await expect(logoBtn).toBeVisible();
+      await expect(logoBtn).toHaveAttribute('aria-label', 'Open menu');
+      await expect(logoBtn).toHaveAttribute('aria-expanded', 'false');
+      await expect(logoBtn).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
       const logoBox = await logoBtn.boundingBox();
       expect(logoBox).not.toBeNull();
       expect(logoBox.width, 'Logo button width must be >= 44px').toBeGreaterThanOrEqual(44);
@@ -424,13 +427,16 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
 
       if (vp.width === 320 && vp.height === 568) {
         // Check all 8 item icon buttons + Logout inside viewport at 320x568
-        const railItems = page.locator('.sidebar-rail a.sidebar-rail-item');
+        const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
         const count = await railItems.count();
         expect(count, 'Must have 8 rail item icon buttons').toBe(8);
 
         for (let i = 0; i < count; i++) {
           const item = railItems.nth(i);
           await expect(item).toBeVisible();
+          await expect(item).toHaveAttribute('aria-label', 'Open menu');
+          await expect(item).toHaveAttribute('aria-expanded', 'false');
+          await expect(item).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
           const box = await item.boundingBox();
           expect(box).not.toBeNull();
           expect(box.width, `Rail item ${i} width must be >= 44px`).toBeGreaterThanOrEqual(44);
@@ -438,8 +444,15 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
           expect(box.y + box.height, `Rail item ${i} must be within viewport height`).toBeLessThanOrEqual(vp.height);
         }
 
-        const logoutBtn = page.locator('.sidebar-rail button[aria-label="Logout"]');
+        // Active page highlight
+        const dashboardRailBtn = page.locator('.sidebar-rail button[data-rail="dashboard"]');
+        await expect(dashboardRailBtn).toHaveClass(/active/);
+
+        const logoutBtn = page.locator('.sidebar-rail button[data-rail="logout"]');
         await expect(logoutBtn).toBeVisible();
+        await expect(logoutBtn).toHaveAttribute('aria-label', 'Open menu');
+        await expect(logoutBtn).toHaveAttribute('aria-expanded', 'false');
+        await expect(logoutBtn).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
         const logoutBox = await logoutBtn.boundingBox();
         expect(logoutBox).not.toBeNull();
         expect(logoutBox.width, 'Logout button width must be >= 44px').toBeGreaterThanOrEqual(44);
@@ -456,7 +469,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
-    const railItems = page.locator('.sidebar-rail a.sidebar-rail-item');
+    const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
     const count = await railItems.count();
     expect(count).toBe(8);
 
@@ -469,7 +482,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       expect(box.y + box.height).toBeLessThanOrEqual(640);
     }
 
-    const logoutBtn = page.locator('.sidebar-rail button[aria-label="Logout"]');
+    const logoutBtn = page.locator('.sidebar-rail button[data-rail="logout"]');
     await expect(logoutBtn).toBeVisible();
     const logoutBox = await logoutBtn.boundingBox();
     expect(logoutBox.width).toBeGreaterThanOrEqual(44);
@@ -477,11 +490,164 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     expect(logoutBox.y + logoutBox.height).toBeLessThanOrEqual(640);
   });
 
-  // 2. Tap logo -> expanded; labels visible; at 320x568 / 360x640 / 360x740 all 8 labels incl. Settings and Logout inside viewport
+  // 2. For each of: logo, Dashboard icon, Messages icon, Settings icon, Logout icon, empty rail area:
+  // click/tap on the rail at 320x568, 360x740, 768x1024 and 1280x800 -> sidebar expands (all 8 labels + subtitle visible),
+  // URL unchanged, user still logged in (no logout request/redirect).
+  for (const vp of [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+    { width: 768, height: 1024 },
+    { width: 1280, height: 800 },
+  ]) {
+    for (const trigger of [
+      { name: 'logo', selector: 'button[data-rail="logo"]' },
+      { name: 'Dashboard icon', selector: 'button[data-rail="dashboard"]' },
+      { name: 'Messages icon', selector: 'button[data-rail="messages"]' },
+      { name: 'Settings icon', selector: 'button[data-rail="settings"]' },
+      { name: 'Logout icon', selector: 'button[data-rail="logout"]' },
+      { name: 'empty rail area', selector: '.sidebar-rail', position: { x: 30, y: 10 } },
+    ]) {
+      test(`Teacher tapping ${trigger.name} at ${vp.width}x${vp.height} expands full sidebar without navigation or logout`, async ({ page }) => {
+        await setupMocks(page, true);
+        await page.setViewportSize(vp);
+        await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(300);
+
+        const initialUrl = page.url();
+
+        // Trigger expand
+        const target = page.locator(trigger.selector);
+        if (trigger.position) {
+          await target.click({ position: trigger.position });
+        } else {
+          await target.click();
+        }
+        await page.waitForTimeout(250);
+
+        // Sidebar expanded drawer visible
+        const drawer = page.locator('.sidebar-drawer');
+        await expect(drawer).toBeVisible();
+
+        // Subtitle visible
+        await expect(drawer.locator('.sidebar-brand-subtitle')).toHaveText(/Teacher Portal/i);
+
+        // All 8 labels visible
+        const navLabels = drawer.locator('.sidebar-nav-label');
+        expect(await navLabels.count()).toBe(8);
+        const expectedLabels = ['Dashboard', 'My Students', 'Schedule', 'Materials', 'Assignments', 'Reports', 'Messages', 'Settings'];
+        for (const label of expectedLabels) {
+          await expect(drawer.locator(`.sidebar-nav-label:has-text("${label}")`)).toBeVisible();
+        }
+
+        // URL unchanged and no logout redirect
+        expect(page.url()).toBe(initialUrl);
+        expect(page.url()).not.toContain('logout');
+        expect(page.url()).not.toContain('login');
+      });
+    }
+  }
+
+  // 3. Tap a labelled item -> URL changes to that route AND the sidebar is collapsed again within 500 ms
+  test('Teacher tapping a labelled item navigates and auto-collapses back to rail within 500ms', async ({ page }) => {
+    await setupMocks(page, true);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Expand sidebar via messages rail button
+    await page.locator('button[data-rail="messages"]').click();
+    const drawer = page.locator('.sidebar-drawer');
+    await expect(drawer).toBeVisible();
+    await page.waitForTimeout(250);
+
+    // Tap Schedule labelled item
+    const scheduleLink = drawer.locator('a.sidebar-nav-item:has-text("Schedule")');
+    await expect(scheduleLink).toBeVisible();
+    await scheduleLink.click();
+
+    // URL changes
+    await expect(page).toHaveURL(/\/teacher\/schedule/);
+
+    // Auto-collapses within 500ms: drawer not visible, rail visible
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
+    await expect(page.locator('.sidebar-rail')).toBeVisible();
+  });
+
+  // 4. Backdrop tap, X, Escape each collapse; at 1280x800 main content bounding box is identical before and after opening (no push)
+  test('Teacher backdrop tap, X, logo click, and Escape collapse overlay; no push at 1280x800', async ({ page }) => {
+    await setupMocks(page, true);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const main = page.locator('main').first();
+    const initialMainBox = await main.boundingBox();
+    expect(initialMainBox).not.toBeNull();
+
+    const logoBtn = page.locator('button[data-rail="logo"]');
+    const drawer = page.locator('.sidebar-drawer');
+    const closeBtn = page.locator('button[aria-label="Close sidebar"]').last();
+    const backdrop = page.locator('div[aria-label="Close sidebar overlay"]');
+
+    // 1) Test X button and verify bounding box during and after
+    await logoBtn.click();
+    await expect(drawer).toBeVisible();
+    const expandedMainBox = await main.boundingBox();
+    expect(expandedMainBox.x, 'Main content X must not shift when sidebar is open').toBe(initialMainBox.x);
+    expect(expandedMainBox.width, 'Main content width must not change when sidebar is open').toBe(initialMainBox.width);
+
+    await closeBtn.click();
+    await expect(drawer).not.toBeVisible();
+    const afterCloseBox = await main.boundingBox();
+    expect(afterCloseBox.x).toBe(initialMainBox.x);
+    expect(afterCloseBox.width).toBe(initialMainBox.width);
+
+    // 2) Test Backdrop tap
+    await page.locator('button[data-rail="settings"]').click();
+    await expect(drawer).toBeVisible();
+    await backdrop.click({ position: { x: 500, y: 300 } });
+    await expect(drawer).not.toBeVisible();
+
+    // 3) Test Escape key
+    await page.locator('button[data-rail="dashboard"]').click();
+    await expect(drawer).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible();
+
+    // 4) Test clicking expanded header brand/logo
+    await page.locator('button[data-rail="logout"]').click();
+    await expect(drawer).toBeVisible();
+    await page.locator('.sidebar-header-brand').click();
+    await expect(drawer).not.toBeVisible();
+  });
+
+  // 5. Double-tap on a rail icon opens once and does not navigate
+  test('Teacher double-tap on a rail icon opens once and does not navigate', async ({ page }) => {
+    await setupMocks(page, true);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const messagesRailBtn = page.locator('button[data-rail="messages"]');
+    await messagesRailBtn.dblclick();
+    await page.waitForTimeout(300);
+
+    // URL is still /teacher/dashboard (did not navigate)
+    expect(page.url()).toContain('/teacher/dashboard');
+    expect(page.url()).not.toContain('/teacher/messages');
+
+    // Drawer is open
+    await expect(page.locator('.sidebar-drawer')).toBeVisible();
+  });
+
+  // 6. Adaptive heights: all 8 items + Logout visible with no scrolling at 320x568, 360x640, 360x740, 390x844, 768x1024, 1280x800
   for (const vp of [
     { width: 320, height: 568 },
     { width: 360, height: 640 },
     { width: 360, height: 740 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1280, height: 800 },
   ]) {
     test(`Teacher expanded sidebar displays all 8 labels incl. Settings and Logout inside viewport at ${vp.width}x${vp.height} with no MENU label`, async ({ page }) => {
       await setupMocks(page, true);
@@ -489,22 +655,21 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      // Tap logo button to expand
-      const logoBtn = page.locator('button[aria-label="Open menu"]');
-      await logoBtn.click();
-      await page.waitForTimeout(300);
+      // Open drawer via logo button
+      await page.locator('button[data-rail="logo"]').click();
+      await page.waitForTimeout(250);
 
-      const expandedAside = page.locator('aside');
-      await expect(expandedAside).toBeVisible();
+      const drawer = page.locator('.sidebar-drawer');
+      await expect(drawer).toBeVisible();
 
       // No "MENU" label
-      const menuLabel = expandedAside.locator('text=/^MENU$/i');
+      const menuLabel = drawer.locator('text=/^MENU$/i');
       await expect(menuLabel).toHaveCount(0);
 
-      // All 8 nav items visible with labels
-      const navItems = expandedAside.locator('a.sidebar-nav-item');
+      // All 8 nav items visible with labels inside viewport
+      const navItems = drawer.locator('a.sidebar-nav-item');
       const count = await navItems.count();
-      expect(count, 'Must have 8 expanded nav items').toBe(8);
+      expect(count).toBe(8);
 
       for (let i = 0; i < count; i++) {
         const item = navItems.nth(i);
@@ -515,104 +680,20 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       }
 
       // Explicitly check Settings is visible inside viewport
-      const settingsItem = expandedAside.locator('a.sidebar-nav-item:has-text("Settings")');
+      const settingsItem = drawer.locator('a.sidebar-nav-item:has-text("Settings")');
       await expect(settingsItem).toBeVisible();
       const settingsBox = await settingsItem.boundingBox();
       expect(settingsBox.y + settingsBox.height, 'Settings item must be within viewport height').toBeLessThanOrEqual(vp.height);
 
       // Logout button visible inside viewport
-      const logoutBtn = expandedAside.locator('button[aria-label="Logout"]');
+      const logoutBtn = drawer.locator('button[aria-label="Logout"]');
       await expect(logoutBtn).toBeVisible();
       const logoutBox = await logoutBtn.boundingBox();
       expect(logoutBox.y + logoutBox.height, 'Logout button must be within viewport height').toBeLessThanOrEqual(vp.height);
     });
   }
 
-  // 3. Backdrop tap, X, Escape, and clicking a menu item each collapse the overlay at <1024px
-  test('Teacher backdrop tap, X button, Escape, and menu item click collapse the overlay (<1024px)', async ({ page }) => {
-    await setupMocks(page, true);
-    await page.setViewportSize({ width: 360, height: 740 });
-    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(300);
-
-    const logoBtn = page.locator('button[aria-label="Open menu"]');
-    const closeBtn = page.locator('button[aria-label="Close sidebar"]');
-    const overlay = page.locator('div[aria-label="Close sidebar overlay"]');
-
-    // 1) Close via X button
-    await logoBtn.click();
-    await expect(closeBtn).toBeVisible();
-    await closeBtn.click();
-    await expect(closeBtn).not.toBeVisible();
-
-    // 2) Close via Backdrop tap
-    await logoBtn.click();
-    await expect(overlay).toBeVisible();
-    await overlay.click({ position: { x: 300, y: 200 } });
-    await expect(overlay).not.toBeVisible();
-
-    // 3) Close via Escape key
-    await logoBtn.click();
-    await expect(closeBtn).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(closeBtn).not.toBeVisible();
-
-    // 4) Close via clicking a menu item
-    await logoBtn.click();
-    await expect(closeBtn).toBeVisible();
-    const scheduleLink = page.locator('aside a.sidebar-nav-item:has-text("Schedule")');
-    await scheduleLink.click();
-    await expect(closeBtn).not.toBeVisible();
-    expect(page.url()).toContain('/teacher/schedule');
-  });
-
-  // 4. Desktop: toggle persists across reload (>=1024px)
-  test('Teacher desktop toggle persists across reload at 1280x800', async ({ page }) => {
-    await setupMocks(page, true);
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(300);
-
-    const desktopAside = page.locator('aside.sidebar-desktop-shell');
-    await expect(desktopAside).toBeVisible();
-
-    // Initially collapsed (width ~72px)
-    let box = await desktopAside.boundingBox();
-    expect(Math.round(box.width)).toBe(72);
-
-    // Tap logo to expand
-    const logoBtn = page.locator('button[aria-label="Open menu"]');
-    await logoBtn.click();
-    await page.waitForTimeout(300);
-
-    // Should now be expanded (width ~260px)
-    box = await desktopAside.boundingBox();
-    expect(Math.round(box.width)).toBe(260);
-
-    // Reload page -> should stay expanded
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(300);
-
-    box = await desktopAside.boundingBox();
-    expect(Math.round(box.width)).toBe(260);
-
-    // Collapse again
-    const closeBtn = page.locator('button[aria-label="Close sidebar"]');
-    await closeBtn.click();
-    await page.waitForTimeout(300);
-
-    box = await desktopAside.boundingBox();
-    expect(Math.round(box.width)).toBe(72);
-
-    // Reload -> should stay collapsed
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(300);
-
-    box = await desktopAside.boundingBox();
-    expect(Math.round(box.width)).toBe(72);
-  });
-
-  // 5. Colours: rail/expanded use tokens; primary resolves to rgb(79, 11, 217)
+  // 7. Colours: rail and expanded use design tokens, primary resolves to rgb(79, 11, 217)
   test('Teacher colours: rail and expanded use design tokens, primary resolves to rgb(79, 11, 217)', async ({ page }) => {
     await setupMocks(page, true);
     await page.setViewportSize({ width: 390, height: 844 });
@@ -626,7 +707,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     expect(primaryBg).toBe('rgb(79, 11, 217)');
 
     // Expand sidebar
-    await page.locator('button[aria-label="Open menu"]').click();
+    await page.locator('button[data-rail="logo"]').click();
     await page.waitForTimeout(250);
 
     // Expanded logo tile also has primary color
@@ -636,7 +717,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     expect(expandedPrimaryBg).toBe('rgb(79, 11, 217)');
   });
 
-  // 6. Screenshots (saved under /tmp): collapsed + expanded at 320x568, 360x740, 768x1024, 1280x800
+  // 8. Screenshots (saved under /tmp): collapsed + expanded at 320x568, 360x740, 768x1024, 1280x800
   for (const shotVp of [
     { width: 320, height: 568 },
     { width: 360, height: 740 },
@@ -659,8 +740,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       await page.screenshot({ path: collapsedPath, fullPage: false });
 
       // Expanded screenshot
-      const logoBtn = page.locator('button[aria-label="Open menu"]');
-      await logoBtn.click();
+      await page.locator('button[data-rail="logo"]').click();
       await page.waitForTimeout(300);
 
       const expandedPath = path.join(tmpDir, `teacher_expanded_${shotVp.width}x${shotVp.height}.png`);

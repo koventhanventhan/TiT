@@ -1438,4 +1438,243 @@ test.describe('Phase 3 - Student Sidebar Redesign Icon Rail & Adaptive Expanded 
     });
   }
 
+
+});
+
+test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
+
+  const studentExpectedLabels = ['Dashboard', 'Schedule', 'Zoom Classes', 'Assignments', 'Materials', 'Performance', 'Messages', 'Settings'];
+
+  // Helper: hover on the rail and wait for the hover-drawer to appear
+  async function hoverOpenDrawer(page, selector, position) {
+    if (position) {
+      await page.hover(selector, { position });
+    } else {
+      await page.hover(selector);
+    }
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+    return drawer;
+  }
+
+  // 1. Hover on rail logo, each of 8 icons, and empty rail area → expanded sidebar visible
+  for (const vp of [
+    { width: 1280, height: 800 },
+    { width: 1366, height: 768 },
+  ]) {
+    for (const trigger of [
+      { name: 'rail logo', selector: 'button[data-rail="logo"]' },
+      { name: 'Dashboard icon', selector: 'button[data-rail="dashboard"]' },
+      { name: 'Schedule icon', selector: 'button[data-rail="schedule"]' },
+      { name: 'Zoom Classes icon', selector: 'button[data-rail="zoom-classes"]' },
+      { name: 'Assignments icon', selector: 'button[data-rail="assignments"]' },
+      { name: 'Materials icon', selector: 'button[data-rail="materials"]' },
+      { name: 'Performance icon', selector: 'button[data-rail="performance"]' },
+      { name: 'Messages icon', selector: 'button[data-rail="messages"]' },
+      { name: 'Settings icon', selector: 'button[data-rail="settings"]' },
+      { name: 'empty rail area', selector: '.sidebar-rail', position: { x: 30, y: 10 } },
+    ]) {
+      test(`Student hover on ${trigger.name} at ${vp.width}x${vp.height} opens expanded sidebar with all labels`, async ({ page }) => {
+        await setupStudentMocks(page);
+        await page.setViewportSize(vp);
+        await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(300);
+
+        const drawer = await hoverOpenDrawer(page, trigger.selector, trigger.position);
+
+        // All 8 labels visible
+        for (const label of studentExpectedLabels) {
+          await expect(drawer.locator(`.sidebar-nav-label:has-text("${label}")`)).toBeVisible();
+        }
+
+        // User card and Logout visible
+        await expect(drawer.locator('.sidebar-user-card')).toBeVisible();
+        await expect(drawer.locator('button[aria-label="Logout"]')).toBeVisible();
+
+        // URL unchanged
+        expect(page.url()).toContain('/student/dashboard');
+      });
+    }
+  }
+
+  // 2. Move mouse from rail to expanded drawer → it stays open (no flicker)
+  test('Student hover: moving mouse from rail into expanded drawer keeps it open', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Hover on rail to open
+    await page.hover('button[data-rail="dashboard"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    // Move mouse into the middle of the expanded drawer
+    const drawerBox = await drawer.boundingBox();
+    await page.mouse.move(drawerBox.x + drawerBox.width / 2, drawerBox.y + drawerBox.height / 2);
+
+    // Sample 3 times over 600ms to confirm it stays open
+    for (let i = 0; i < 3; i++) {
+      await page.waitForTimeout(200);
+      await expect(drawer).toBeVisible();
+    }
+  });
+
+  // 3. Move mouse to main content → drawer closes within 500ms
+  test('Student hover: moving mouse to main content closes hover drawer within 500ms', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Hover on rail to open
+    await page.hover('button[data-rail="dashboard"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    // Move mouse to main content area (far right)
+    await page.mouse.move(800, 400);
+
+    // Drawer closes within 500ms
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
+  });
+
+  // 4. Gap: distance between header bottom and first nav item top >= 16px
+  for (const vp of [
+    { width: 1280, height: 800 },
+    { width: 360, height: 740 },
+  ]) {
+    test(`Student gap between header and first nav item >= 16px at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize(vp);
+      await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      // Open via click (touch mode) so we can measure consistently
+      await page.locator('button[data-rail="logo"]').click();
+      const drawer = page.locator('.sidebar-drawer');
+      await expect(drawer).toBeVisible();
+      await page.waitForTimeout(250);
+
+      const header = drawer.locator('.sidebar-expanded-header');
+      const firstNav = drawer.locator('a.sidebar-nav-item').first();
+      await expect(header).toBeVisible();
+      await expect(firstNav).toBeVisible();
+
+      const headerBox = await header.boundingBox();
+      const firstNavBox = await firstNav.boundingBox();
+      const gap = firstNavBox.y - (headerBox.y + headerBox.height);
+      expect(gap, `Gap between header and first item must be >= 16px (got ${gap}px)`).toBeGreaterThanOrEqual(16);
+
+      // No "MENU" text
+      const menuLabel = drawer.locator('text=/^MENU$/i');
+      await expect(menuLabel).toHaveCount(0);
+    });
+  }
+
+  // 5. Main content bounding box identical before/after hover (no layout shift)
+  test('Student hover: main content bounding box unchanged at 1280x800', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const main = page.locator('main').first();
+    const initialBox = await main.boundingBox();
+    expect(initialBox).not.toBeNull();
+
+    // Hover to open
+    await page.hover('button[data-rail="logo"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    const duringBox = await main.boundingBox();
+    expect(duringBox.x, 'Main x must not shift during hover').toBe(initialBox.x);
+    expect(duringBox.width, 'Main width must not change during hover').toBe(initialBox.width);
+
+    // Move mouse away to close
+    await page.mouse.move(800, 400);
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
+
+    const afterBox = await main.boundingBox();
+    expect(afterBox.x).toBe(initialBox.x);
+    expect(afterBox.width).toBe(initialBox.width);
+  });
+
+  // 6. Navigate via hover: hover to open, click an item, URL changes, drawer closes
+  test('Student hover: clicking a labelled item navigates and closes drawer', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Hover on schedule icon to open
+    await page.hover('button[data-rail="schedule"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+    await page.waitForTimeout(250);
+
+    // Click Schedule in the expanded drawer
+    const scheduleLink = drawer.locator('a.sidebar-nav-item:has-text("Schedule")');
+    await expect(scheduleLink).toBeVisible();
+    await scheduleLink.click();
+
+    // URL changes
+    await expect(page).toHaveURL(/\/student\/schedule/);
+
+    // Drawer closes
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
+  });
+
+  // 7. Escape closes hover drawer
+  test('Student hover: Escape key closes hover drawer', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    await page.hover('button[data-rail="logo"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
+  });
+
+  // 8. Vertical alignment: rail icon centre y matches expanded row centre y within 4px
+  test('Student hover: rail icon and expanded row centres align within 4px at 1280x800', async ({ page }) => {
+    await setupStudentMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Get rail icon positions before hover
+    const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
+    const railCount = await railItems.count();
+    expect(railCount).toBe(8);
+
+    const railCentres = [];
+    for (let i = 0; i < railCount; i++) {
+      const box = await railItems.nth(i).boundingBox();
+      railCentres.push(box.y + box.height / 2);
+    }
+
+    // Hover to open
+    await page.hover('button[data-rail="logo"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    // Get expanded row positions
+    const navItems = drawer.locator('a.sidebar-nav-item');
+    const navCount = await navItems.count();
+    expect(navCount).toBe(8);
+
+    for (let i = 0; i < navCount; i++) {
+      const box = await navItems.nth(i).boundingBox();
+      const expandedCentre = box.y + box.height / 2;
+      const diff = Math.abs(railCentres[i] - expandedCentre);
+      expect(diff, `Item ${i} rail centre ${railCentres[i].toFixed(1)} vs expanded centre ${expandedCentre.toFixed(1)} diff ${diff.toFixed(1)} must be <= 4px`).toBeLessThanOrEqual(4);
+    }
+  });
+
 });

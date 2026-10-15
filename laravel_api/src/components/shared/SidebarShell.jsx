@@ -207,17 +207,18 @@ export default function SidebarShell({
                     closeBtnRef.current?.focus();
                 });
             } else if (prevExpandedRef.current) {
-                requestAnimationFrame(() => {
-                    const railId = lastTriggerDataRailRef.current;
-                    const targetBtn = railId && railId !== 'hover'
-                        ? document.querySelector(`button[data-rail="${railId}"]`)
-                        : null;
-                    if (targetBtn) {
-                        targetBtn.focus();
-                    } else {
-                        logoBtnRef.current?.focus();
-                    }
-                });
+                // NEVER programmatically focus anything after mouse hover closes
+                if (lastTriggerDataRailRef.current && lastTriggerDataRailRef.current !== 'hover') {
+                    requestAnimationFrame(() => {
+                        const railId = lastTriggerDataRailRef.current;
+                        const targetBtn = document.querySelector(`button[data-rail="${railId}"]`);
+                        if (targetBtn) {
+                            targetBtn.focus();
+                        } else {
+                            logoBtnRef.current?.focus();
+                        }
+                    });
+                }
             }
             prevExpandedRef.current = isExpanded;
         }
@@ -250,8 +251,8 @@ export default function SidebarShell({
 
     // ── Item click (inside expanded drawer) ──────────────────────────────
     const handleItemClick = (e) => {
-        // Guard against accidental double-tap/click during opening animation
-        if (Date.now() - openTimeRef.current < 200) {
+        // Guard against accidental double-tap during touch overlay slide-in
+        if (openMode === 'touch' && Date.now() - openTimeRef.current < 150) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -295,25 +296,29 @@ export default function SidebarShell({
                     title="Collapse sidebar"
                     aria-label="TiT Education"
                 >
-                    <div className="sidebar-logo-tile" style={{ width: 38, height: 38, minWidth: 38, minHeight: 38 }}>
-                        TiT
+                    <div className="sidebar-header-logo-col">
+                        <div className="sidebar-logo-tile">
+                            TiT
+                        </div>
                     </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="sidebar-brand-text">
                         <div className="sidebar-brand-name">
                             TiT<span className="sidebar-brand-accent">Education</span>
                         </div>
                         <div className="sidebar-brand-subtitle">{brandSubtitle}</div>
                     </div>
                 </button>
-                <button
-                    ref={isHover ? undefined : closeBtnRef}
-                    type="button"
-                    onClick={closeSidebar}
-                    className="sidebar-close-btn t-icon-btn"
-                    aria-label="Close sidebar"
-                >
-                    <FiX />
-                </button>
+                {!isHover && (
+                    <button
+                        ref={closeBtnRef}
+                        type="button"
+                        onClick={closeSidebar}
+                        className="sidebar-close-btn t-icon-btn"
+                        aria-label="Close sidebar"
+                    >
+                        <FiX />
+                    </button>
+                )}
             </div>
 
             {/* Gap between header and first nav item */}
@@ -331,7 +336,9 @@ export default function SidebarShell({
                             onClick={handleItemClick}
                             className={`t-tap t-menu-item sidebar-nav-item${active ? ' active' : ''}`}
                         >
-                            <Icon className="sidebar-nav-icon" />
+                            <div className="sidebar-nav-icon-col">
+                                <Icon className="sidebar-nav-icon" />
+                            </div>
                             <span className="sidebar-nav-label">{item.name}</span>
                             {active && <FiChevronRight className="sidebar-nav-chevron" />}
                         </NavLink>

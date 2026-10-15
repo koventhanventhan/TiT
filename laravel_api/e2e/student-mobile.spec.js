@@ -1482,6 +1482,17 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
 
         const drawer = await hoverOpenDrawer(page, trigger.selector, trigger.position);
 
+        // Hover drawer starts at x = 0
+        const drawerBox = await drawer.boundingBox();
+        expect(drawerBox.x, 'Hover drawer must start at x=0').toBe(0);
+
+        // Rail is hidden underneath as layout placeholder (single icon column)
+        await expect(page.locator('.sidebar-rail')).toHaveCSS('visibility', 'hidden');
+
+        // No X button in hover mode
+        await expect(drawer.locator('.sidebar-close-btn')).toHaveCount(0);
+        await expect(drawer.locator('button[aria-label="Close sidebar"]')).toHaveCount(0);
+
         // All 8 labels visible
         for (const label of studentExpectedLabels) {
           await expect(drawer.locator(`.sidebar-nav-label:has-text("${label}")`)).toBeVisible();
@@ -1641,40 +1652,155 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
     await expect(drawer).not.toBeVisible({ timeout: 500 });
   });
 
-  // 8. Vertical alignment: rail icon centre y matches expanded row centre y within 4px
-  test('Student hover: rail icon and expanded row centres align within 4px at 1280x800', async ({ page }) => {
+  // 8. Zero-jump alignment at 1280x800 and 1366x768:
+  //    - Drawer starts at x = 0
+  //    - Rail has visibility: hidden (single icon column)
+  //    - elementFromPoint at each rail icon hits inside drawer
+  //    - Logo tile center x/y match within 2px
+  //    - Each of 8 item icon center x matches within 2px, center y within 4px
+  //    - No X button in hover mode
+  for (const vp of [
+    { width: 1280, height: 800 },
+    { width: 1366, height: 768 },
+  ]) {
+    test(`Student hover: icon and logo zero-jump alignment at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize(vp);
+      await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      // Measure rail logo tile
+      const railLogoTile = page.locator('.sidebar-rail .sidebar-logo-tile');
+      await expect(railLogoTile).toBeVisible();
+      const railLogoBox = await railLogoTile.boundingBox();
+      const railLogoCenterX = railLogoBox.x + railLogoBox.width / 2;
+      const railLogoCenterY = railLogoBox.y + railLogoBox.height / 2;
+
+      // Measure rail item icons
+      const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
+      const railCount = await railItems.count();
+      expect(railCount).toBe(8);
+
+      const railIcons = [];
+      for (let i = 0; i < railCount; i++) {
+        const iconEl = railItems.nth(i).locator('.sidebar-rail-icon');
+        const iconBox = await iconEl.boundingBox();
+        railIcons.push({
+          x: iconBox.x + iconBox.width / 2,
+          y: iconBox.y + iconBox.height / 2,
+        });
+      }
+
+      // Hover to open
+      await page.hover('button[data-rail="logo"]');
+      const drawer = page.locator('.sidebar-drawer.hover-drawer');
+      await expect(drawer).toBeVisible({ timeout: 2000 });
+
+      // 1. Drawer starts at x = 0
+      const drawerBox = await drawer.boundingBox();
+      expect(drawerBox.x, 'Hover drawer boundingBox x must be 0').toBe(0);
+
+      // 2. Rail is hidden (single visible icon column)
+      await expect(page.locator('.sidebar-rail')).toHaveCSS('visibility', 'hidden');
+
+      // 3. No X button in hover mode
+      await expect(drawer.locator('.sidebar-close-btn')).toHaveCount(0);
+
+      // 4. Logo tile center x and y match within 2px
+      const expLogoTile = drawer.locator('.sidebar-logo-tile');
+      await expect(expLogoTile).toBeVisible();
+      const expLogoBox = await expLogoTile.boundingBox();
+      const expLogoCenterX = expLogoBox.x + expLogoBox.width / 2;
+      const expLogoCenterY = expLogoBox.y + expLogoBox.height / 2;
+      expect(Math.abs(expLogoCenterX - railLogoCenterX), `Logo tile x diff ${Math.abs(expLogoCenterX - railLogoCenterX)} must be <= 2px`).toBeLessThanOrEqual(2);
+      expect(Math.abs(expLogoCenterY - railLogoCenterY), `Logo tile y diff ${Math.abs(expLogoCenterY - railLogoCenterY)} must be <= 2px`).toBeLessThanOrEqual(2);
+
+      // 5. Each item icon center x within 2px, center y within 4px, elementFromPoint inside drawer
+      const navItems = drawer.locator('a.sidebar-nav-item');
+      const navCount = await navItems.count();
+      expect(navCount).toBe(8);
+
+      for (let i = 0; i < navCount; i++) {
+        const expIcon = navItems.nth(i).locator('.sidebar-nav-icon');
+        const expIconBox = await expIcon.boundingBox();
+        const expIconCenterX = expIconBox.x + expIconBox.width / 2;
+        const expIconCenterY = expIconBox.y + expIconBox.height / 2;
+
+        const diffX = Math.abs(railIcons[i].x - expIconCenterX);
+        const diffY = Math.abs(railIcons[i].y - expIconCenterY);
+        expect(diffX, `Item ${i} centre x diff ${diffX.toFixed(2)}px must be <= 2px`).toBeLessThanOrEqual(2);
+        expect(diffY, `Item ${i} centre y diff ${diffY.toFixed(2)}px must be <= 4px`).toBeLessThanOrEqual(4);
+
+        // elementFromPoint at rail icon center returns element inside drawer
+        const hitDrawer = await page.evaluate(({ x, y }) => {
+          const el = document.elementFromPoint(x, y);
+          return el ? el.closest('aside.sidebar-drawer') !== null : false;
+        }, { x: railIcons[i].x, y: railIcons[i].y });
+        expect(hitDrawer, `elementFromPoint at icon ${i} (${railIcons[i].x}, ${railIcons[i].y}) must hit inside drawer`).toBe(true);
+      }
+    });
+  }
+
+  // 9. Alignment click test: hover icon N, then click at the same point → navigates to route N
+  test('Student alignment click: hover icon N, click at same coordinates navigates to route N', async ({ page }) => {
     await setupStudentMocks(page);
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
-    // Get rail icon positions before hover
-    const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
-    const railCount = await railItems.count();
-    expect(railCount).toBe(8);
+    // Pick Schedule icon (route /student/schedule)
+    const scheduleRailItem = page.locator('button[data-rail="schedule"] .sidebar-rail-icon');
+    const railBox = await scheduleRailItem.boundingBox();
+    const clickX = railBox.x + railBox.width / 2;
+    const clickY = railBox.y + railBox.height / 2;
 
-    const railCentres = [];
-    for (let i = 0; i < railCount; i++) {
-      const box = await railItems.nth(i).boundingBox();
-      railCentres.push(box.y + box.height / 2);
-    }
-
-    // Hover to open
-    await page.hover('button[data-rail="logo"]');
+    // Hover to trigger expand
+    await page.mouse.move(clickX, clickY);
     const drawer = page.locator('.sidebar-drawer.hover-drawer');
     await expect(drawer).toBeVisible({ timeout: 2000 });
+    await page.waitForTimeout(100);
 
-    // Get expanded row positions
-    const navItems = drawer.locator('a.sidebar-nav-item');
-    const navCount = await navItems.count();
-    expect(navCount).toBe(8);
+    // Click at the exact same point
+    await page.mouse.click(clickX, clickY);
 
-    for (let i = 0; i < navCount; i++) {
-      const box = await navItems.nth(i).boundingBox();
-      const expandedCentre = box.y + box.height / 2;
-      const diff = Math.abs(railCentres[i] - expandedCentre);
-      expect(diff, `Item ${i} rail centre ${railCentres[i].toFixed(1)} vs expanded centre ${expandedCentre.toFixed(1)} diff ${diff.toFixed(1)} must be <= 4px`).toBeLessThanOrEqual(4);
-    }
+    // Navigates to /student/schedule
+    await expect(page).toHaveURL(/\/student\/schedule/);
+    await expect(drawer).not.toBeVisible({ timeout: 500 });
   });
+
+  // 10. Touch mode at 320x568, 360x740, 768x1024: drawer starts at x=0, covers rail, X button and backdrop visible
+  for (const touchVp of [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+    { width: 768, height: 1024 },
+  ]) {
+    test(`Student touch mode at ${touchVp.width}x${touchVp.height}: drawer starts at x=0 with X button and backdrop`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize(touchVp);
+      await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      // Tap rail logo to expand in touch mode
+      await page.click('button[data-rail="logo"]');
+      const drawer = page.locator('.sidebar-drawer.touch-drawer');
+      await expect(drawer).toBeVisible({ timeout: 2000 });
+
+      // Drawer starts at x = 0
+      const box = await drawer.boundingBox();
+      expect(box.x, 'Touch drawer must start at x=0').toBe(0);
+
+      // Backdrop is visible
+      await expect(page.locator('.sidebar-backdrop')).toBeVisible();
+
+      // Close button is visible
+      const closeBtn = drawer.locator('button.sidebar-close-btn');
+      await expect(closeBtn).toBeVisible();
+
+      // Clicking close button closes drawer
+      await closeBtn.click();
+      await expect(drawer).not.toBeVisible({ timeout: 500 });
+      await expect(page.locator('.sidebar-backdrop')).not.toBeVisible();
+    });
+  }
 
 });

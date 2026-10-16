@@ -265,7 +265,7 @@ export const registerStep1 = async (userData) => {
 }
 
 // Student registration step 2 (payment: offline or online)
-export const registerStep2 = async (paymentMethod, amount = null, profileId = null) => {
+export const registerStep2 = async (paymentMethod, amount = null, profileId = null, options = {}) => {
   const token = localStorage.getItem('authToken')
   if (!token) throw new Error('Not authenticated')
   const headers = getAuthHeaders()
@@ -277,6 +277,7 @@ export const registerStep2 = async (paymentMethod, amount = null, profileId = nu
     headers,
     credentials: 'include',
     body: JSON.stringify({ payment_method: paymentMethod, amount: amount || undefined }),
+    signal: options.signal,
   })
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))

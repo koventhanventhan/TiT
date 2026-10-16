@@ -19,6 +19,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(false)
+  const [markingRead, setMarkingRead] = useState(false)
   const [error, setError] = useState(null)
   const dropdownRef = useRef(null)
 
@@ -66,6 +67,8 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
   }
 
   const markAsRead = async (id) => {
+    if (markingRead) return
+    setMarkingRead(true)
     // Optimistically update UI
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
@@ -81,10 +84,14 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, read: false } : n)
       )
+    } finally {
+      setMarkingRead(false)
     }
   }
 
   const markAllAsRead = async () => {
+    if (markingRead) return
+    setMarkingRead(true)
     const unread = notifications.filter(n => !n.read)
     // Optimistic update
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -100,6 +107,8 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       )
     } catch (err) {
       fetchNotifications() // Re-fetch on error
+    } finally {
+      setMarkingRead(false)
     }
   }
 
@@ -111,14 +120,14 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
         title="Notifications"
         style={{
           position: 'relative',
-          width: 40, height: 40, borderRadius: 10,
-          border: isOpen ? '1px solid #818cf8' : '1px solid #e2e8f0',
-          background: isOpen ? 'rgba(129,140,248,0.08)' : '#fff',
+          width: 44, height: 44, borderRadius: 10,
+          border: isOpen ? '1px solid var(--t-primary-border)' : '1px solid var(--t-border)',
+          background: isOpen ? 'var(--t-primary-soft)' : '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: isOpen ? '#6366f1' : '#64748b',
+          color: isOpen ? 'var(--t-primary)' : 'var(--t-text-3)',
           cursor: 'pointer', fontSize: 18,
           transition: 'all 0.2s ease',
-          boxShadow: isOpen ? '0 0 0 3px rgba(99,102,241,0.15)' : 'none',
+          boxShadow: isOpen ? '0 0 0 3px rgba(79,11,217,0.15)' : 'none',
         }}
       >
         <FiBell />
@@ -126,7 +135,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           <span style={{
             position: 'absolute', top: 6, right: 6,
             minWidth: 18, height: 18, borderRadius: 99,
-            background: '#ef4444', border: '2px solid #fff',
+            background: 'var(--t-danger)', border: '2px solid #fff',
             color: '#fff', fontSize: 9, fontWeight: 800,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3px', lineHeight: 1,
@@ -145,17 +154,17 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           <div style={{
             padding: '16px 20px', display: 'flex', alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid #f1f5f9',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            borderBottom: '1px solid var(--t-border)',
+            background: 'var(--t-bg)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FiBell style={{ color: '#6366f1', fontSize: 16 }} />
-              <span style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>
+              <FiBell style={{ color: 'var(--t-primary)', fontSize: 16 }} />
+              <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--t-text)' }}>
                 Notifications
               </span>
               {unreadCount > 0 && (
                 <span style={{
-                  background: '#6366f1', color: '#fff',
+                  background: 'var(--t-primary)', color: '#fff',
                   borderRadius: 99, fontSize: 11, fontWeight: 700,
                   padding: '1px 7px',
                 }}>
@@ -163,41 +172,46 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
+                  disabled={markingRead}
                   title="Mark all as read"
                   style={{
-                    background: 'rgba(99,102,241,0.08)', border: 'none',
-                    borderRadius: 8, padding: '4px 10px',
-                    color: '#6366f1', fontSize: 11, fontWeight: 600,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    background: 'var(--t-primary-soft)', border: 'none',
+                    borderRadius: 8, padding: '6px 12px', minHeight: 44,
+                    color: 'var(--t-primary)', fontSize: 12, fontWeight: 600,
+                    cursor: markingRead ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
-                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark all read
+                  <FiCheckCircle style={{ fontSize: 13 }} /> Mark all read
                 </button>
               )}
               <button
                 onClick={fetchNotifications}
                 title="Refresh"
+                aria-label="Refresh notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: 'var(--t-muted)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiRefreshCw style={{ fontSize: 13, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                <FiRefreshCw style={{ fontSize: 14, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: 'var(--t-muted)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiX style={{ fontSize: 14 }} />
+                <FiX style={{ fontSize: 16 }} />
               </button>
             </div>
           </div>
@@ -208,19 +222,19 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
               <div style={{ padding: 40, textAlign: 'center' }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: '50%',
-                  border: '3px solid #e2e8f0', borderTopColor: '#6366f1',
+                  border: '3px solid var(--t-border)', borderTopColor: 'var(--t-primary)',
                   margin: '0 auto 12px', animation: 'spin 0.8s linear infinite',
                 }} />
-                <div style={{ color: '#94a3b8', fontSize: 13 }}>Loading notifications...</div>
+                <div style={{ color: 'var(--t-text-3)', fontSize: 13 }}>Loading notifications...</div>
               </div>
             ) : error ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>⚠️</div>
-                <div style={{ color: '#ef4444', fontSize: 13, fontWeight: 500 }}>{error}</div>
+                <div style={{ color: 'var(--t-danger)', fontSize: 13, fontWeight: 500 }}>{error}</div>
                 <button
                   onClick={fetchNotifications}
                   style={{
-                    marginTop: 12, background: '#6366f1', color: '#fff',
+                    marginTop: 12, background: 'var(--t-primary)', color: '#fff',
                     border: 'none', borderRadius: 8, padding: '6px 16px',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}
@@ -230,11 +244,11 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
               </div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
-                <FiMessageSquare style={{ fontSize: 36, color: '#cbd5e1', marginBottom: 10 }} />
-                <div style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500 }}>
+                <FiMessageSquare style={{ fontSize: 36, color: 'var(--t-border)', marginBottom: 10 }} />
+                <div style={{ color: 'var(--t-text-3)', fontSize: 13, fontWeight: 500 }}>
                   No notifications yet
                 </div>
-                <div style={{ color: '#cbd5e1', fontSize: 12, marginTop: 4 }}>
+                <div style={{ color: 'var(--t-muted)', fontSize: 12, marginTop: 4 }}>
                   You'll see messages from your admin here
                 </div>
               </div>
@@ -245,54 +259,48 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                   onClick={() => !notif.read && markAsRead(notif.id)}
                   style={{
                     padding: '14px 20px',
-                    borderBottom: idx < notifications.length - 1 ? '1px solid #f8fafc' : 'none',
-                    background: notif.read ? '#fff' : 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.03) 100%)',
+                    borderBottom: idx < notifications.length - 1 ? '1px solid var(--t-bg)' : 'none',
+                    background: notif.read ? '#fff' : 'var(--t-primary-soft)',
                     cursor: notif.read ? 'default' : 'pointer',
                     transition: 'background 0.15s ease',
                     display: 'flex', gap: 12, alignItems: 'flex-start',
-                  }}
-                  onMouseEnter={e => {
-                    if (!notif.read) e.currentTarget.style.background = 'rgba(99,102,241,0.08)'
-                  }}
-                  onMouseLeave={e => {
-                    if (!notif.read) e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.03) 100%)'
                   }}
                 >
                   {/* Icon */}
                   <div style={{
                     width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                    background: notif.read ? '#f1f5f9' : 'linear-gradient(135deg, #6366f1, #a855f7)',
+                    background: notif.read ? 'var(--t-bg)' : 'var(--t-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 15,
                   }}>
-                    <FiMessageSquare style={{ color: notif.read ? '#94a3b8' : '#fff' }} />
+                    <FiMessageSquare style={{ color: notif.read ? 'var(--t-muted)' : '#fff' }} />
                   </div>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontSize: 13, fontWeight: notif.read ? 500 : 700,
-                      color: notif.read ? '#475569' : '#1e293b',
+                      color: notif.read ? 'var(--t-text-2)' : 'var(--t-text)',
                       marginBottom: 3,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {notif.title}
                     </div>
                     <div style={{
-                      fontSize: 12, color: '#64748b', lineHeight: 1.4,
-                      display: '-webkit-box', WebkitLineClamp: 2,
+                      fontSize: 12, color: 'var(--t-text-3)', lineHeight: 1.4,
+                      display: '-webkit-box', WebKitLineClamp: 2,
                       WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
                       {notif.body}
                     </div>
                     <div style={{
-                      fontSize: 10, color: '#94a3b8', marginTop: 4,
+                      fontSize: 10, color: 'var(--t-muted)', marginTop: 4,
                       fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6,
                     }}>
                       {timeAgo(notif.created_at)}
                       {notif.target_type === 'broadcast' && (
                         <span style={{
-                          background: '#f0fdf4', color: '#16a34a',
+                          background: 'var(--t-success-bg)', color: 'var(--t-success)',
                           padding: '1px 6px', borderRadius: 99, fontSize: 9, fontWeight: 700,
                         }}>
                           Broadcast
@@ -305,7 +313,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                   {!notif.read && (
                     <div style={{
                       width: 8, height: 8, borderRadius: '50%',
-                      background: '#6366f1', flexShrink: 0, marginTop: 4,
+                      background: 'var(--t-primary)', flexShrink: 0, marginTop: 4,
                     }} />
                   )}
                 </div>
@@ -316,10 +324,10 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           {/* Footer */}
           {notifications.length > 0 && (
             <div style={{
-              padding: '10px 20px', borderTop: '1px solid #f1f5f9',
-              background: '#fafbfc', textAlign: 'center',
+              padding: '10px 20px', borderTop: '1px solid var(--t-border)',
+              background: 'var(--t-bg)', textAlign: 'center',
             }}>
-              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: 'var(--t-muted)', fontWeight: 500 }}>
                 {notifications.length} total • {unreadCount} unread
               </span>
             </div>
@@ -332,12 +340,13 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           position: absolute;
           top: calc(100% + 10px);
           right: 0;
-          width: 360px;
+          width: 320px;
+          max-width: calc(100vw - 24px);
           max-height: 480px;
           background: #fff;
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
-          border: 1px solid rgba(226,232,240,0.8);
+          border: 1px solid var(--t-border);
           z-index: 10000;
           overflow: hidden;
           animation: notifSlideDown 0.2s ease;
@@ -349,6 +358,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
             left: 12px !important;
             right: 12px !important;
             width: auto !important;
+            max-width: none !important;
             max-height: calc(100vh - 90px) !important;
             border-radius: 14px;
           }

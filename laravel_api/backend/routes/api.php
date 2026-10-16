@@ -102,7 +102,6 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
             Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
             Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
             Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
-            Route::get('/zoom-schedules', [\App\Http\Controllers\Api\StudentZoomController::class, 'schedules']);
             Route::post('/update-subjects', [\App\Http\Controllers\StudentSubjectController::class, 'updateSubjects']);
 
             // Student AI Study Assistant (RAG Chatbot)

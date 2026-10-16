@@ -5,8 +5,15 @@
 .dashboard-payment-section .section-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--t-text, #0f172a);
     margin-bottom: 1rem;
+}
+
+/* Ensure white heading text with >= 4.5:1 contrast on dark gating or modal wrappers */
+.tit-reg-wrapper .dashboard-payment-section .section-title,
+.tit-reg-container .dashboard-payment-section .section-title,
+.tit-reg-overlay .dashboard-payment-section .section-title {
+    color: #ffffff;
 }
 
 .payment-module-card {
@@ -14,23 +21,23 @@
     align-items: center;
     padding: 1.5rem;
     border-radius: 1rem;
-    background: #ffffff;
+    background: var(--t-surface);
     box-shadow: 0 0.25rem 0.375rem -1.0px rgb(0 0 0 / 0.1), 0 0.125rem 0.25rem -0.125rem rgb(0 0 0 / 0.1);
     transition: all 0.3s ease;
     border-left: 0.3125rem solid transparent;
 }
 
 .payment-module-card.error {
-    background: #fef2f2;
-    border-left-color: #ef4444;
-    color: #b91c1c;
+    background: var(--t-danger-bg);
+    border-left-color: var(--t-danger);
+    color: var(--t-danger);
     justify-content: center;
     gap: 1rem;
 }
 
 .payment-module-card.error button {
-    background: #ef4444;
-    color: white;
+    background: var(--t-danger);
+    color: #fff;
     padding: 0.25rem 0.75rem;
     border-radius: 0.25rem;
     border: none;
@@ -38,13 +45,13 @@
 }
 
 .payment-module-card.pending {
-    border-left-color: #ef4444;
-    background: #fef2f2;
+    border-left-color: var(--t-warning);
+    background: var(--t-warning-bg);
 }
 
 .payment-module-card.paid {
-    border-left-color: #22c55e;
-    background: #f0fdf4;
+    border-left-color: var(--t-success);
+    background: var(--t-success-bg);
 }
 
 .payment-card-icon {
@@ -55,11 +62,11 @@
 }
 
 .pending .payment-card-icon {
-    color: #ef4444;
+    color: var(--t-warning);
 }
 
 .paid .payment-card-icon {
-    color: #22c55e;
+    color: var(--t-success);
 }
 
 .payment-card-content {
@@ -75,55 +82,104 @@
 }
 
 .pending .payment-status-label {
-    color: #b91c1c;
+    color: var(--t-warning);
 }
 
 .paid .payment-status-label {
-    color: #15803d;
+    color: var(--t-success);
 }
 
 .payment-period {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--t-text);
 }
 
 .payment-amount {
     font-size: 1rem;
     font-weight: 600;
-    color: #475569;
+    color: var(--t-text-2);
     margin-top: 0.25rem;
 }
 
+.payment-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 1rem;
+}
+
 .pay-now-btn {
-    background: #4f46e5;
-    color: white;
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
+    background: var(--t-primary, #4f0bd9);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-height: 48px;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
     border-radius: 0.5rem;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    box-sizing: border-box;
 }
 
 .pay-now-btn:hover:not(:disabled) {
-    background: #4338ca;
-    transform: translateY(-1.0px);
-    box-shadow: 0 0.25rem 0.75rem -0.125rem rgba(79, 70, 229, 0.4);
+    background: var(--t-primary-hover, #4308b8);
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.75rem -0.125rem rgba(79, 11, 217, 0.4);
+}
+
+.pay-now-btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .pay-now-btn:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pay-offline-btn {
+    background: transparent;
+    color: var(--t-primary, #4f0bd9);
+    border: 1.5px solid var(--t-primary, #4f0bd9);
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-height: 48px;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+.pay-offline-btn:hover:not(:disabled) {
+    background: var(--t-primary-soft, #f5f3ff);
+}
+
+.pay-offline-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.pay-offline-btn:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .payment-module-card.loading {
     justify-content: center;
     gap: 1rem;
-    color: #64748b;
+    color: var(--t-text-3);
 }
 
 .spin-icon {
@@ -140,8 +196,8 @@
     bottom: -2.5rem;
     left: 0;
     right: 0;
-    background: #ef4444;
-    color: white;
+    background: var(--t-danger);
+    color: #fff;
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
@@ -160,8 +216,10 @@
         margin-right: 0;
     }
     
-    .pay-now-btn {
+    .pay-now-btn,
+    .pay-offline-btn {
         width: 100%;
+        min-height: 48px;
         justify-content: center;
     }
 }

@@ -487,14 +487,14 @@
 }
 
 .checkbox-option input[type="checkbox"] {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 22px;
+  height: 22px;
   cursor: pointer;
-  accent-color: #1e40af;
+  accent-color: var(--primary-color, #4f0bd9);
 }
 
 .register-mode .checkbox-option input[type="checkbox"] {
-  accent-color: var(--primary-color);
+  accent-color: var(--primary-color, #4f0bd9);
 }
 
 .checkbox-option input[type="checkbox"]:checked+span {

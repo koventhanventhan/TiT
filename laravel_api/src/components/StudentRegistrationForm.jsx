@@ -1,12 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
 import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
-import { FiX } from 'react-icons/fi'
+import { FiX, FiLoader } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
 import { useToast } from '../components/shared/ToastContext';
+import FeeRow from './shared/FeeRow';
+import { formatRs } from '../utils/format';
 
 
 // Subject data structures
@@ -21,6 +23,17 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const { getSetting, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
 
   // reCAPTCHA v3
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -256,6 +269,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const [selectedStream, setSelectedStream] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isOfflineSubmitting, setIsOfflineSubmitting] = useState(false)
+  const offlineSubmittingRef = useRef(false)
   const [error, setError] = useState('')
   const [paymentChoice, setPaymentChoice] = useState(null)
   const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
@@ -705,17 +720,28 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   }
 
   const handlePaymentOffline = async (amount) => {
+    if (offlineSubmittingRef.current || isLoading || isOfflineSubmitting) return
+    offlineSubmittingRef.current = true
+    setIsOfflineSubmitting(true)
     setError('')
     setIsLoading(true)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
     try {
-      await registerStep2('offline', amount, newSiblingId)
+      await registerStep2('offline', amount, newSiblingId, { signal: controller.signal })
+      clearTimeout(timeoutId)
       toast.success(t('pay_offline_success'))
       if (onClose) onClose()
       if (isAddSiblingMode) window.location.reload()
       else window.location.href = '/student/dashboard'
     } catch (err) {
+      clearTimeout(timeoutId)
       setIsLoading(false)
-      setError(err.message || 'Failed.')
+      setIsOfflineSubmitting(false)
+      offlineSubmittingRef.current = false
+      setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed.'))
     }
   }
 
@@ -1076,7 +1102,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                 className="tit-reg-submit-btn"
                 disabled={isLoading || settingsLoading || packagesLoading}
               >
-                {isLoading ? t('reg_submitting') : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('reg_submitting')}</span>
+                  </>
+                ) : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
               </button>
             </form>
           </div>
@@ -1146,52 +1177,82 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
             ) : (
               <div className="tit-reg-payment-options">
               {totalAmount > 0 && (
-                <div style={{ marginBottom: '1rem', background: 'rgba(235, 129, 83, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(235, 129, 83, 0.3)' }}>
-                  
+                <div style={{
+                  marginBottom: '1rem',
+                  background: 'rgba(79, 11, 217, 0.12)',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(139, 92, 246, 0.3)'
+                }}>
                   {appliedPackage ? (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                        <span>Subjects Total:</span>
-                        <span style={{ textDecoration: 'line-through' }}>Rs. {originalAmount.toFixed(2)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                        <span>Package Discount ({appliedPackage.name}):</span>
-                        <span>Rs. {monthlyAmount.toFixed(2)}</span>
-                      </div>
+                      <FeeRow
+                        label="Subjects Total:"
+                        value={formatRs(originalAmount)}
+                        isStrikethrough={true}
+                      />
+                      <FeeRow
+                        label={`Package Discount (${appliedPackage.name}):`}
+                        value={formatRs(monthlyAmount)}
+                        isDiscount={true}
+                      />
                     </>
                   ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                      <span>Monthly Fee:</span>
-                      <span>Rs. {monthlyAmount.toFixed(2)}</span>
-                    </div>
+                    <FeeRow
+                      label="Monthly Fee:"
+                      value={formatRs(monthlyAmount)}
+                    />
                   )}
 
                   {admissionFee > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginBottom: '0.5rem' }}>
-                      <span>Admission Fee (First Time):</span>
-                      <span>Rs. {admissionFee.toFixed(2)}</span>
-                    </div>
+                    <FeeRow
+                      label="Admission Fee (First Time):"
+                      value={formatRs(admissionFee)}
+                    />
                   )}
 
-                  <hr style={{ borderColor: 'rgba(235, 129, 83, 0.3)', margin: '0.5rem 0' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    <span>Total Amount:</span>
-                    <span>Rs. {totalAmount.toFixed(2)}</span>
-                  </div>
+                  <FeeRow
+                    label="Total Amount:"
+                    value={formatRs(totalAmount)}
+                    isTotal={true}
+                  />
                 </div>
               )}
               {totalAmount === 0 && (
-                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
-                  {t('pay_total')}: Rs. {MONTHLY_AMOUNT} (Monthly)
-                </p>
+                <FeeRow
+                  label={`${t('pay_total')} (Monthly):`}
+                  value={formatRs(MONTHLY_AMOUNT)}
+                  isTotal={true}
+                  style={{ marginBottom: '1.25rem' }}
+                />
               )}
-              <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                {t('pay_offline')}
+              <button
+                type="button"
+                className="tit-reg-submit-btn"
+                onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
+                disabled={isLoading || isOfflineSubmitting}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, touchAction: 'manipulation' }}
+              >
+                {isOfflineSubmitting ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('submitting') || 'Submitting...'}</span>
+                  </>
+                ) : (
+                  t('pay_offline')
+                )}
               </button>
               <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
                 onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
                 disabled={isLoading}>
-                {isLoading ? t('pay_processing') : t('pay_online')}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('pay_processing') || 'Processing...'}</span>
+                  </>
+                ) : (
+                  t('pay_online')
+                )}
               </button>
             </div>
             )}

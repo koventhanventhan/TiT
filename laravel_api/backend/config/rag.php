@@ -25,6 +25,8 @@ return [
         'embedding' => env('RAG_EMBEDDING_MODEL', 'gemini-embedding-2'),
         'embedding_dimensions' => (int) env('RAG_EMBEDDING_DIMENSIONS', 768),
         'llm' => env('RAG_LLM_MODEL', 'gemini-3.5-flash'),
+        'ocr' => env('RAG_OCR_MODEL', 'gemini-3.8-flash'),
+        'ocr_fallback' => env('RAG_OCR_FALLBACK_MODEL', 'gemini-3.5-flash-lite'),
     ],
 
     /*
@@ -140,6 +142,8 @@ return [
         'max_file_size_mb' => (int) env('RAG_MAX_FILE_SIZE_MB', 50),
         'ocr_max_pages' => (int) env('RAG_OCR_MAX_PAGES', 20),
         'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
+        'ocr_max_dimension' => (int) env('RAG_OCR_MAX_DIMENSION', 1600),
+        'ocr_jpeg_quality' => (int) env('RAG_OCR_JPEG_QUALITY', 80),
         'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
         'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),
         'legacy_font_min_script_ratio' => (float) env('RAG_LEGACY_FONT_MIN_SCRIPT_RATIO', 0.20),

@@ -20,6 +20,12 @@ class SendLoginAlert
      */
     public function handle(Login $event): void
     {
+        // Login alert emails are DISABLED. Laravel auto-discovers this listener,
+        // so we short-circuit here. Set LOGIN_ALERTS_ENABLED=true in .env to re-enable.
+        if (!filter_var(env('LOGIN_ALERTS_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
+
         $user = $event->user;
         $profileSettings = $user->profile_settings ?? [];
         $alertsEnabled = collect($profileSettings)->get('login_alerts') === 'on';

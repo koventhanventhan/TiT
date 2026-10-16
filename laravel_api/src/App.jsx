@@ -29,6 +29,7 @@ const StudentMaterials = lazy(() => import('./pages/student/StudentMaterials'))
 const StudentSchedule = lazy(() => import('./pages/student/StudentSchedule'))
 const StudentPerformance = lazy(() => import('./pages/student/StudentPerformance'))
 const StudentSettings = lazy(() => import('./pages/student/StudentSettings'))
+const StudentStudyAssistant = lazy(() => import('./components/StudentStudyAssistant'))
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const MessagingPage = lazy(() => import('./pages/MessagingPage'))
 const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'))
@@ -68,6 +69,18 @@ function PageWrapper({ children }) {
   return <>{children}</>
 }
 
+function RagRouteGuard({ children }) {
+  try {
+    const storage = typeof getActiveStorage === 'function' ? getActiveStorage() : localStorage;
+    const user = JSON.parse(storage.getItem('user') || '{}');
+    if (!user?.rag_enabled) {
+      return <Navigate to="/student/dashboard" replace />;
+    }
+  } catch (e) {
+    return <Navigate to="/student/dashboard" replace />;
+  }
+  return children;
+}
 function AppContent() {
   const location = useLocation()
   const isDashboard = location.pathname.startsWith('/teacher') ||
@@ -110,6 +123,7 @@ function AppContent() {
               <Route path="zoom" element={<StudentZoom />} />
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="materials" element={<StudentMaterials />} />
+              <Route path="study-assistant" element={<RagRouteGuard><StudentStudyAssistant /></RagRouteGuard>} />
               <Route path="performance" element={<StudentPerformance />} />
               <Route path="messages" element={<MessagingPage />} />
               <Route path="settings" element={<StudentSettings />} />

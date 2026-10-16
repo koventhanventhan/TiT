@@ -14,6 +14,10 @@ class GeminiRagClient implements GeminiClientInterface
     protected int $dimensions;
     protected string $llmModel;
     protected int $timeout;
+    protected string $ocrModel;
+    protected string $ocrFallbackModel;
+    protected int $ocrMaxDimension;
+    protected int $ocrJpegQuality;
 
     public function __construct()
     {
@@ -22,6 +26,10 @@ class GeminiRagClient implements GeminiClientInterface
         $this->dimensions = (int) config('rag.models.embedding_dimensions', 768);
         $this->llmModel = (string) config('rag.models.llm', 'gemini-3.5-flash');
         $this->timeout = (int) config('rag.ingestion.gemini_timeout', 45);
+        $this->ocrModel = (string) config('rag.models.ocr', 'gemini-2.5-flash');
+        $this->ocrFallbackModel = (string) config('rag.models.ocr_fallback', 'gemini-2.5-flash-lite');
+        $this->ocrMaxDimension = (int) config('rag.ingestion.ocr_max_dimension', 1600);
+        $this->ocrJpegQuality = (int) config('rag.ingestion.ocr_jpeg_quality', 80);
     }
 
     /**
@@ -143,7 +151,94 @@ class GeminiRagClient implements GeminiClientInterface
         return $allEmbeddings;
     }
 
-    /**
+        /**
+     * Downscale image bytes so the longest side does not exceed $maxDimension and compress at $quality.
+     *
+     * @param string $binaryData Raw image bytes
+     * @param int $maxDimension Maximum width or height
+     * @param int $quality JPEG quality (1-100)
+     * @return array{data: string, mime: string, downscaled: bool, orig_size: int, new_size: int}
+     */
+    public function downscaleImage(string $binaryData, int $maxDimension = 1600, int $quality = 80): array
+    {
+        $origSize = strlen($binaryData);
+
+        if (!extension_loaded('gd')) {
+            return [
+                'data' => $binaryData,
+                'mime' => 'image/jpeg',
+                'downscaled' => false,
+                'orig_size' => $origSize,
+                'new_size' => $origSize,
+            ];
+        }
+
+        $image = @imagecreatefromstring($binaryData);
+        if (!$image) {
+            return [
+                'data' => $binaryData,
+                'mime' => 'image/jpeg',
+                'downscaled' => false,
+                'orig_size' => $origSize,
+                'new_size' => $origSize,
+            ];
+        }
+
+        $origWidth = imagesx($image);
+        $origHeight = imagesy($image);
+
+        if ($origWidth <= $maxDimension && $origHeight <= $maxDimension) {
+            ob_start();
+            imagejpeg($image, null, $quality);
+            $jpegData = (string) ob_get_clean();
+            imagedestroy($image);
+
+            $useNew = strlen($jpegData) < $origSize;
+            return [
+                'data' => $useNew ? $jpegData : $binaryData,
+                'mime' => 'image/jpeg',
+                'downscaled' => $useNew,
+                'orig_size' => $origSize,
+                'new_size' => $useNew ? strlen($jpegData) : $origSize,
+            ];
+        }
+
+        if ($origWidth >= $origHeight) {
+            $newWidth = $maxDimension;
+            $newHeight = (int) round(($origHeight * $maxDimension) / $origWidth);
+        } else {
+            $newHeight = $maxDimension;
+            $newWidth = (int) round(($origWidth * $maxDimension) / $origHeight);
+        }
+
+        $resized = imagescale($image, $newWidth, $newHeight, IMG_BILINEAR_FIXED);
+        imagedestroy($image);
+
+        if (!$resized) {
+            return [
+                'data' => $binaryData,
+                'mime' => 'image/jpeg',
+                'downscaled' => false,
+                'orig_size' => $origSize,
+                'new_size' => $origSize,
+            ];
+        }
+
+        ob_start();
+        imagejpeg($resized, null, $quality);
+        $downscaledData = (string) ob_get_clean();
+        imagedestroy($resized);
+
+        return [
+            'data' => $downscaledData,
+            'mime' => 'image/jpeg',
+            'downscaled' => true,
+            'orig_size' => $origSize,
+            'new_size' => strlen($downscaledData),
+        ];
+    }
+
+        /**
      * Extract text from a page image using Gemini Vision OCR (supports Tamil, Sinhala, English).
      *
      * @param string $binaryData Raw image bytes
@@ -156,7 +251,10 @@ class GeminiRagClient implements GeminiClientInterface
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:generateContent?key={$this->apiKey}";
+        // Downscale high-resolution scans to prevent excessive payload sizes and gateway timeouts
+        $processed = $this->downscaleImage($binaryData, $this->ocrMaxDimension, $this->ocrJpegQuality);
+        $payloadData = $processed['data'];
+        $payloadMime = $processed['mime'];
 
         $prompt = "You are an OCR extraction engine. Extract all text from this scanned document page verbatim. " .
             "Preserve original Tamil (தமிழ்), Sinhala (සිංහල), and English text, numbers, formulas, and layout accurately. " .
@@ -169,8 +267,8 @@ class GeminiRagClient implements GeminiClientInterface
                         ['text' => $prompt],
                         [
                             'inlineData' => [
-                                'mimeType' => $mimeType,
-                                'data' => base64_encode($binaryData),
+                                'mimeType' => $payloadMime,
+                                'data' => base64_encode($payloadData),
                             ],
                         ],
                     ],
@@ -178,18 +276,77 @@ class GeminiRagClient implements GeminiClientInterface
             ],
         ];
 
-        $response = Http::timeout($this->timeout)->post($url, $payload);
+        // Execute with primary OCR model, fallback to fallback model if transient error occurs
+        $primaryModel = $this->ocrModel ?: $this->llmModel;
+        try {
+            return $this->executeOcrRequest($primaryModel, $payload);
+        } catch (\Throwable $e) {
+            Log::warning("Primary Gemini OCR model ({$primaryModel}) failed after retries: " . $e->getMessage());
 
-        if (!$response->successful()) {
-            Log::error('Gemini Vision OCR API Error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            throw new RuntimeException("Gemini OCR request failed ({$response->status()}): " . $response->body());
+            if (!empty($this->ocrFallbackModel) && $this->ocrFallbackModel !== $primaryModel) {
+                Log::info("Attempting OCR with fallback model ({$this->ocrFallbackModel})...");
+                try {
+                    return $this->executeOcrRequest($this->ocrFallbackModel, $payload);
+                } catch (\Throwable $fallbackEx) {
+                    Log::error("Fallback Gemini OCR model ({$this->ocrFallbackModel}) also failed: " . $fallbackEx->getMessage());
+                    throw $fallbackEx;
+                }
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Execute Gemini generateContent request for OCR with exponential backoff on 429/503.
+     *
+     * @param string $model
+     * @param array $payload
+     * @return string
+     */
+    protected function executeOcrRequest(string $model, array $payload): string
+    {
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$this->apiKey}";
+        $maxAttempts = 3;
+        $delayMs = 1500;
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                $response = Http::timeout($this->timeout)->post($url, $payload);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
+                }
+
+                $status = $response->status();
+                if ($attempt === $maxAttempts || !in_array($status, [429, 500, 502, 503, 504])) {
+                    Log::error("Gemini Vision OCR API Error for model [{$model}] permanently failed ({$status})", [
+                        'body' => $response->body(),
+                    ]);
+                    throw new RuntimeException("Gemini OCR request failed ({$status}): " . $response->body());
+                }
+
+                Log::warning("Gemini OCR model [{$model}] throttled/busy (status {$status}), retrying attempt {$attempt}/{$maxAttempts} in {$delayMs}ms...");
+                usleep($delayMs * 1000);
+                $delayMs *= 2;
+
+            } catch (\Throwable $e) {
+                $lastException = $e;
+                if ($attempt === $maxAttempts || !($e instanceof RuntimeException && str_contains($e->getMessage(), 'Gemini OCR request failed'))) {
+                    throw $e;
+                }
+                usleep($delayMs * 1000);
+                $delayMs *= 2;
+            }
         }
 
-        $data = $response->json();
-        return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
+        if ($lastException) {
+            throw $lastException;
+        }
+
+        throw new RuntimeException("Gemini OCR failed for model [{$model}] after {$maxAttempts} attempts.");
     }
 
     /**

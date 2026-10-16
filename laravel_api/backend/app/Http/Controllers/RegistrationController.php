@@ -435,12 +435,19 @@ class RegistrationController extends Controller
             // Mark registration as completed — email is now locked
             $user->update(['registration_status' => 'payment_completed']);
 
-            // Notify user about offline payment submission
-            $this->notifier->notifyUser(
-                $user, 'payment_reminder', 'tit_payment_reminder',
-                [$user->full_name ?? $user->name, now()->format('F Y')],
-                ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
-            );
+            // Notify user about offline payment submission asynchronously after response
+            dispatch(function () use ($user) {
+                try {
+                    $notifier = app(\App\Services\NotificationService::class);
+                    $notifier->notifyUser(
+                        $user, 'payment_reminder', 'tit_payment_reminder',
+                        [$user->full_name ?? $user->name, now()->format('F Y')],
+                        ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Offline step2 notification failed: ' . $e->getMessage());
+                }
+            })->afterResponse();
 
             return response()->json([
                 'message' => 'Registration submitted. Please complete payment offline. Admin will confirm and you will receive a WhatsApp message.',
@@ -836,12 +843,19 @@ class RegistrationController extends Controller
             'institute_id'   => $user->institute_id ?? 1,
         ]);
 
-        // Notify user about offline payment submission (using the same notification pattern)
-        $this->notifier->notifyUser(
-            $user, 'payment_reminder', 'tit_payment_reminder',
-            [$user->full_name ?? $user->name, now()->format('F Y')],
-            ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
-        );
+        // Notify user about offline payment submission asynchronously after response
+        dispatch(function () use ($user) {
+            try {
+                $notifier = app(\App\Services\NotificationService::class);
+                $notifier->notifyUser(
+                    $user, 'payment_reminder', 'tit_payment_reminder',
+                    [$user->full_name ?? $user->name, now()->format('F Y')],
+                    ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Offline monthly payment notification failed: ' . $e->getMessage());
+            }
+        })->afterResponse();
 
         Log::info('Offline monthly payment initialized', [
             'user_id'    => $user->id,
@@ -876,7 +890,7 @@ class RegistrationController extends Controller
             'status' => 'pending',
         ]);
 
-        // Notify Admin
+        // Notify Admin asynchronously after response
         $studentName = $user->full_name ?? $user->name;
         $contactInfo = $user->phone_number;
         if (empty($contactInfo) && $user->parent_id && $user->parent) {
@@ -885,11 +899,18 @@ class RegistrationController extends Controller
             $contactInfo = str_ends_with($user->email, '@child.local') ? 'No Contact' : $user->email;
         }
 
-        $this->notifier->notifyAdmin(
-            'admin_alert', 'tit_admin_approved',
-            ["ADMIN ALERT: Advance Payment Request from " . $studentName, "admin"],
-            ['alert_title' => 'Advance Payment Request', 'alert_message' => "Student {$studentName} ({$contactInfo}) requested offline payment for {$monthsCount} months (LKR {$totalAmount})."]
-        );
+        dispatch(function () use ($studentName, $contactInfo, $monthsCount, $totalAmount) {
+            try {
+                $notifier = app(\App\Services\NotificationService::class);
+                $notifier->notifyAdmin(
+                    'admin_alert', 'tit_admin_approved',
+                    ["ADMIN ALERT: Advance Payment Request from " . $studentName, "admin"],
+                    ['alert_title' => 'Advance Payment Request', 'alert_message' => "Student {$studentName} ({$contactInfo}) requested offline payment for {$monthsCount} months (LKR {$totalAmount})."]
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Offline advance payment notification failed: ' . $e->getMessage());
+            }
+        })->afterResponse();
 
         Log::info('Offline advance payment requested', [
             'user_id' => $user->id,

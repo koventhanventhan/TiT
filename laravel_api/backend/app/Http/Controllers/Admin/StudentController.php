@@ -79,7 +79,8 @@ class StudentController extends Controller
         }
 
         $payments = \App\Models\Payment::where('user_id', $student->id)
-            ->orderBy('paid_at', 'desc')
+            ->orderByDesc('year_month')
+            ->orderByDesc('id')
             ->get();
         
         // Use edit view as show view is not implemented separately
@@ -106,7 +107,8 @@ class StudentController extends Controller
         }
 
         $payments = Payment::where('user_id', $student->id)
-            ->orderBy('paid_at', 'desc')
+            ->orderByDesc('year_month')
+            ->orderByDesc('id')
             ->get();
         
         $medium = strtolower($student->medium ?? '');
@@ -362,28 +364,14 @@ class StudentController extends Controller
 
         // Handle Quick Payment (current month)
         if ($request->boolean('quick_payment')) {
-            $amount = $this->calculateUserAmount($user);
-            Payment::create([
-                'user_id' => $user->id,
-                'year_month' => now()->format('Y-m'),
-                'amount' => $amount,
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
+            $this->markMonthPaid($user, now()->format('Y-m'), now()->format('Y-m-d H:i:s'), null);
         }
 
         // Handle Custom Payment Date
         if (!empty($validated['custom_payment_month'])) {
-            $amount = $this->calculateUserAmount($user);
             $customDate = $validated['custom_payment_month'];
             $yearMonth = substr($customDate, 0, 7); // Extract YYYY-MM from YYYY-MM-DD
-            Payment::create([
-                'user_id' => $user->id,
-                'year_month' => $yearMonth,
-                'amount' => $amount,
-                'status' => 'paid',
-                'paid_at' => $customDate,
-            ]);
+            $this->markMonthPaid($user, $yearMonth, $customDate, null);
         }
 
         return redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
@@ -502,25 +490,13 @@ class StudentController extends Controller
             $paidAt = $inputValue . '-01'; // default to 1st of month
         }
 
-        // Prevent duplicate payments for the same month
-        $existingPayment = Payment::where('user_id', $student->id)
-            ->where('year_month', $yearMonth)
-            ->where('status', 'paid')
-            ->first();
+        $amount = $request->filled('amount') ? (float) $request->amount : null;
 
-        if ($existingPayment) {
+        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount);
+
+        if (!$payment) {
             return redirect()->back()->with('error', 'Payment for ' . $yearMonth . ' is already marked as paid!');
         }
-
-        $amount = $request->amount ?? $this->calculateUserAmount($student);
-
-        Payment::create([
-            'user_id' => $student->id,
-            'year_month' => $yearMonth,
-            'amount' => $amount,
-            'status' => 'paid',
-            'paid_at' => $paidAt,
-        ]);
 
         // If student was deactivated, automatically reactivate them now that payment is made
         if ($student->deactivated_at) {
@@ -529,6 +505,66 @@ class StudentController extends Controller
         }
 
         return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . '.');
+    }
+
+    /**
+     * Mark a month as paid for a student, updating any existing pending row or creating a new row.
+     * Prevents duplicate rows using transactions and row locking.
+     */
+    private function markMonthPaid(User $student, string $yearMonth, string $paidAt, ?float $amount = null): ?Payment
+    {
+        return DB::transaction(function () use ($student, $yearMonth, $paidAt, $amount) {
+            $existingPayments = Payment::where('user_id', $student->id)
+                ->where('year_month', $yearMonth)
+                ->lockForUpdate()
+                ->orderByDesc('id')
+                ->get();
+
+            if ($existingPayments->where('status', 'paid')->isNotEmpty()) {
+                return null;
+            }
+
+            $pendingPayments = $existingPayments->where('status', 'pending');
+
+            if ($pendingPayments->isNotEmpty()) {
+                $newestPending = $pendingPayments->first();
+                $otherPending = $pendingPayments->slice(1);
+
+                if ($otherPending->isNotEmpty()) {
+                    Payment::whereIn('id', $otherPending->pluck('id'))->update(['status' => 'cancelled']);
+                }
+
+                $finalAmount = $amount !== null
+                    ? $amount
+                    : (($newestPending->amount > 0) ? (float) $newestPending->amount : (float) $this->calculateUserAmount($student));
+
+                $updateData = [
+                    'status' => 'paid',
+                    'paid_at' => $paidAt,
+                    'amount' => $finalAmount,
+                ];
+
+                if (empty($newestPending->payment_method)) {
+                    $updateData['payment_method'] = 'offline';
+                }
+
+                $newestPending->update($updateData);
+
+                return $newestPending;
+            }
+
+            $finalAmount = $amount !== null ? $amount : (float) $this->calculateUserAmount($student);
+
+            return Payment::create([
+                'user_id' => $student->id,
+                'year_month' => $yearMonth,
+                'amount' => $finalAmount,
+                'status' => 'paid',
+                'paid_at' => $paidAt,
+                'payment_method' => 'offline',
+                'institute_id' => $student->institute_id ?? 1,
+            ]);
+        });
     }
 
     public function bulkDelete(Request $request)
@@ -700,7 +736,7 @@ class StudentController extends Controller
             for ($i = 0; $i < $monthsCount; $i++) {
                 $yearMonth = $startMonth->copy()->addMonths($i)->format('Y-m');
                 
-                \App\Models\Payment::updateOrCreate(
+                $payment = \App\Models\Payment::updateOrCreate(
                     [
                         'user_id' => $request->user->id,
                         'year_month' => $yearMonth,
@@ -714,6 +750,12 @@ class StudentController extends Controller
                         'gateway_ref' => 'ADVANCE_APP_' . $request->id . '_' . $i
                     ]
                 );
+
+                \App\Models\Payment::where('user_id', $request->user->id)
+                    ->where('year_month', $yearMonth)
+                    ->where('status', 'pending')
+                    ->where('id', '!=', $payment->id)
+                    ->update(['status' => 'cancelled']);
             }
 
             // If student was deactivated, automatically reactivate them now that payment is approved

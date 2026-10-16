@@ -130,7 +130,7 @@
                 <h4 class="card-title">Student Information</h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.students.store') }}" id="studentCreateForm">
+                <form method="POST" action="{{ route('admin.students.store') }}" id="studentCreateForm" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                     @csrf
 
                     @php

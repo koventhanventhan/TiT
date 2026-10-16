@@ -460,6 +460,12 @@ class RegistrationController extends Controller
         $amount = $this->calculateUserAmount($user, $request->amount);
         $yearMonth = now()->format('Y-m');
 
+        // Cancel any pending payments for this month
+        Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'cancelled']);
+
         $payment = Payment::create([
             'user_id'        => $user->id,
             'amount'         => $amount,
@@ -728,11 +734,39 @@ class RegistrationController extends Controller
 
         $amount = $this->calculateUserAmount($user);
 
+        // Fetch subjects info for the user
+        $selectedSubjects = [];
+        if (!empty($user->selected_subjects)) {
+            $subs = $user->selected_subjects;
+            if (is_array($subs)) {
+                $selectedSubjects = $subs;
+            } elseif (is_string($subs)) {
+                $decoded = json_decode($subs, true);
+                if (is_array($decoded)) {
+                    $selectedSubjects = $decoded;
+                } else {
+                    $selectedSubjects = array_map('trim', explode(',', $subs));
+                }
+            }
+        }
+        $selectedSubjects = array_values(array_unique(array_filter($selectedSubjects)));
+        $category = $this->getSubjectCategoryForUser($user);
+        $subjectData = [];
+        if (!empty($selectedSubjects)) {
+            $subjectData = \App\Models\Subject::when($category, function($query) use ($category) {
+                if ($category === 'grade_12_to_13') {
+                    return $query->whereIn('category', ['arts_stream', 'commerce_stream', 'tech_stream', 'bio_maths_stream', 'grade_12_to_13']);
+                }
+                return $query->where('category', $category);
+            })->whereIn('name', $selectedSubjects)->get(['name', 'price'])->toArray();
+        }
+
         return response()->json([
             'is_paid'    => $payment && $payment->status === 'paid',
             'paid_until' => $paidUntil,
             'amount'     => $amount,
             'year_month' => $yearMonth,
+            'subjects'   => $subjectData,
             'payment'    => $payment ? [
                 'id'         => $payment->id,
                 'status'     => $payment->status,

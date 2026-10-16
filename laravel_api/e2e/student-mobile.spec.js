@@ -260,9 +260,24 @@ async function setupStudentMocks(page, userOverrides = {}, customHandlers = {}) 
             name: 'All 3 Subjects Pack',
             applicable_grades: [10, 11],
             medium: 'english',
-            price: 2500
+            price: 2500,
+            package_price: 2500,
+            type: 'all_subjects'
           }
         ])
+      });
+    }
+
+    if (url.includes('/student/update-subjects')) {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          monthly_fee: 2500,
+          amount: 2500,
+          admission_fee: 0,
+          already_paid: false
+        })
       });
     }
 
@@ -2118,6 +2133,138 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       // Confirm no one-row variant exists in computed style
       const cardFlexDir = await userCard.evaluate(el => window.getComputedStyle(el).flexDirection);
       expect(cardFlexDir, 'User card must have flex-direction: column').toBe('column');
+    });
+  }
+
+  // PART B: Fee display tests without package wording or strikethrough at 320x568 and 390x844
+  for (const vp of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+    test(`Part B: Registration payment step contains no package wording, no strikethrough, no overflow, no FeeRow overlap at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto('/register?step=2', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(400);
+
+      const modal = page.locator('.tit-reg-container');
+      await expect(modal).toBeVisible();
+
+      // Wait for fee calculation to finish
+      await expect(modal.locator('.fee-subjects-section')).toBeVisible({ timeout: 5000 });
+
+      // 1. Contains NO text matching /package/i
+      const text = await modal.innerText();
+      expect(text, 'Payment step must not contain package wording').not.toMatch(/package/i);
+
+      // 2. Contains no strikethrough element
+      await expect(modal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+
+      // 3. Contains subject names (Mathematics, Science, English), Monthly Fee, Total Amount with correct numbers
+      expect(text).toContain('Mathematics');
+      expect(text).toContain('Science');
+      expect(text).toContain('English');
+      await expect(modal.locator('.fee-row-label:has-text("Monthly Fee")')).toBeVisible();
+      await expect(modal.locator('.fee-row-label:has-text("Total Amount")')).toBeVisible();
+      await expect(modal.locator('.fee-row-value:has-text("2,500")').first()).toBeVisible();
+
+      // 4. No horizontal overflow
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+      expect(scrollWidth, 'Page must not have horizontal overflow').toBeLessThanOrEqual(clientWidth + 1);
+
+      // 5. Each FeeRow label and value do not overlap
+      const feeRows = modal.locator('.fee-row');
+      const rowCount = await feeRows.count();
+      expect(rowCount).toBeGreaterThan(0);
+      for (let i = 0; i < rowCount; i++) {
+        const row = feeRows.nth(i);
+        const label = row.locator('.fee-row-label');
+        const val = row.locator('.fee-row-value');
+        const lBox = await label.boundingBox();
+        const vBox = await val.boundingBox();
+        if (lBox && vBox) {
+          const isSeparateLines = vBox.y >= lBox.y + lBox.height - 1 || lBox.y >= vBox.y + vBox.height - 1;
+          const isNonOverlappingColumns = vBox.x >= lBox.x + lBox.width - 1;
+          expect(isSeparateLines || isNonOverlappingColumns, `FeeRow ${i} label and value must not overlap`).toBe(true);
+        }
+      }
+    });
+
+    test(`Part B: SubjectUpdateModal step 1 summary & step 2 contain no package wording, no strikethrough, no FeeRow overlap at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page);
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(400);
+
+      const editBtn = page.locator('button:has-text("Edit Subjects & Medium")');
+      await expect(editBtn).toBeVisible();
+      await editBtn.click();
+      await page.waitForTimeout(300);
+
+      const updateModal = page.locator('div[role="dialog"], .tit-reg-container, div[style*="z-index: 1000"], div[style*="zIndex: 1000"]').first();
+      await expect(updateModal).toBeVisible();
+
+      // STEP 1:
+      // Verify step 1 summary card contains no /package/i and no strikethrough
+      const step1Text = await updateModal.innerText();
+      expect(step1Text, 'Step 1 must not contain package wording').not.toMatch(/package/i);
+      await expect(updateModal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+
+      // Step 1 FeeRow check
+      const step1FeeRows = updateModal.locator('.fee-row');
+      const step1RowCount = await step1FeeRows.count();
+      for (let i = 0; i < step1RowCount; i++) {
+        const row = step1FeeRows.nth(i);
+        const label = row.locator('.fee-row-label');
+        const val = row.locator('.fee-row-value');
+        const lBox = await label.boundingBox();
+        const vBox = await val.boundingBox();
+        if (lBox && vBox && vBox.width > 0) {
+          const isSeparateLines = vBox.y >= lBox.y + lBox.height - 1 || lBox.y >= vBox.y + vBox.height - 1;
+          const isNonOverlappingColumns = vBox.x >= lBox.x + lBox.width - 1;
+          expect(isSeparateLines || isNonOverlappingColumns, `Step 1 FeeRow ${i} label and value must not overlap`).toBe(true);
+        }
+      }
+
+      // Transition to STEP 2
+      const saveBtn = page.locator('button:has-text("Save Subjects")');
+      await expect(saveBtn).toBeVisible();
+      await saveBtn.click();
+      await page.waitForTimeout(400);
+
+      // STEP 2:
+      // Wait for step 2 fee card
+      await expect(updateModal.locator('.fee-subjects-section')).toBeVisible({ timeout: 5000 });
+
+      // 1. Contains NO text matching /package/i
+      const step2Text = await updateModal.innerText();
+      expect(step2Text, 'Step 2 must not contain package wording').not.toMatch(/package/i);
+
+      // 2. Contains no strikethrough
+      await expect(updateModal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+
+      // 3. Contains subject chips, Monthly Fee, Total Amount with correct numbers
+      expect(step2Text).toContain('Mathematics');
+      expect(step2Text).toContain('Science');
+      expect(step2Text).toContain('English');
+      await expect(updateModal.locator('.fee-row-label:has-text("Monthly Fee")')).toBeVisible();
+      await expect(updateModal.locator('.fee-row-label:has-text("Total Amount")')).toBeVisible();
+      await expect(updateModal.locator('.fee-row-value:has-text("2,500")').first()).toBeVisible();
+
+      // 4. Step 2 FeeRows non-overlapping
+      const step2FeeRows = updateModal.locator('.fee-row');
+      const step2RowCount = await step2FeeRows.count();
+      expect(step2RowCount).toBeGreaterThan(0);
+      for (let i = 0; i < step2RowCount; i++) {
+        const row = step2FeeRows.nth(i);
+        const label = row.locator('.fee-row-label');
+        const val = row.locator('.fee-row-value');
+        const lBox = await label.boundingBox();
+        const vBox = await val.boundingBox();
+        if (lBox && vBox) {
+          const isSeparateLines = vBox.y >= lBox.y + lBox.height - 1 || lBox.y >= vBox.y + vBox.height - 1;
+          const isNonOverlappingColumns = vBox.x >= lBox.x + lBox.width - 1;
+          expect(isSeparateLines || isNonOverlappingColumns, `Step 2 FeeRow ${i} label and value must not overlap`).toBe(true);
+        }
+      }
     });
   }
 

@@ -4,6 +4,7 @@ import { getStudentPaymentStatus, initializeMonthlyPayment, initializeOfflineMon
 import { useLanguage } from '../../context/LanguageContext';
 import './StudentPaymentModule.css';
 import { formatRs } from '../../utils/format';
+import FeeRow from '../shared/FeeRow';
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
@@ -143,8 +144,56 @@ const StudentPaymentModule = () => {
                     </div>
                     <div className="payment-period">{paid_until ? `Paid up to ${paid_until}` : monthName}</div>
                     {!is_paid && (
-                        <div className="payment-amount" style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                            {formatRs(amount)}
+                        <div style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            borderRadius: '0.75rem',
+                            background: 'var(--t-primary-soft)',
+                            border: '1px solid var(--t-primary-border)',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            textAlign: 'left'
+                        }}>
+                            {status.subjects && status.subjects.length > 0 && (
+                                <div className="fee-subjects-section">
+                                    <div className="fee-subjects-heading">{t('fee_subjects') || 'Subjects'}</div>
+                                    {status.has_discount ? (
+                                        <div className="fee-subject-chips">
+                                            {status.subjects.map(s => (
+                                                <span key={s.name} className="fee-subject-chip">
+                                                    {s.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        status.subjects.map(s => (
+                                            <FeeRow
+                                                key={s.name}
+                                                label={s.name}
+                                                value={formatRs(s.price)}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            <FeeRow
+                                label={t('fee_monthly') || 'Monthly Fee:'}
+                                value={formatRs(typeof status.monthly_fee === 'number' ? status.monthly_fee : amount)}
+                            />
+
+                            {status.admission_fee > 0 && (
+                                <FeeRow
+                                    label={t('fee_admission') || 'Admission Fee (First Time):'}
+                                    value={formatRs(status.admission_fee)}
+                                />
+                            )}
+
+                            <FeeRow
+                                label={t('fee_total') || 'Total Amount:'}
+                                value={formatRs(amount)}
+                                isTotal={true}
+                            />
                         </div>
                     )}
                 </div>

@@ -243,9 +243,22 @@ class StudentZoomController extends Controller
             });
         }
 
-        $mapped = $schedules->values()->map(function($s) {
-            $s->teacher = $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher';
-            return $s;
+        $mapped = $schedules->values()->map(function($s) use ($user) {
+            $att = Attendance::where('zoom_schedule_id', $s->id)->where('user_id', $user->id)->first();
+            return [
+                'id' => $s->id,
+                'title' => $s->title,
+                'zoom_link' => $s->zoom_link,
+                'join_url' => $s->join_url,
+                'password' => $s->password,
+                'scheduled_at' => $s->scheduled_at ? $s->scheduled_at->toIso8601String() : null,
+                'duration' => $s->duration,
+                'subject' => $s->subject,
+                'grade' => $s->grade,
+                'medium' => $s->medium,
+                'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'attendance_status' => $att ? $att->status : 'absent',
+            ];
         });
 
         return response()->json($mapped->all());

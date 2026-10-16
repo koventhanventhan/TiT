@@ -196,6 +196,13 @@
   .t-menu-item-danger:hover {
     background: var(--t-danger-bg) !important;
   }
+  /* Scope guard: dark sidebar rows and rail items must never turn light on hover */
+  .sidebar-drawer .sidebar-nav-item:hover,
+  .sidebar-nav-item:hover,
+  .sidebar-rail .sidebar-rail-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+  }
 }
 
 /* Modals & bottom sheets */

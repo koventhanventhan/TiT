@@ -40,6 +40,7 @@ export default function SidebarShell({
     const lastTriggerDataRailRef = useRef(null);
     const prevExpandedRef = useRef(false);
     const openTimeRef = useRef(0);
+    const openedAtRef = useRef(0);
     const prevPathnameRef = useRef(location.pathname);
 
     // Hover timers
@@ -53,12 +54,13 @@ export default function SidebarShell({
 
     // Opens in "touch" mode (with backdrop)
     const openSidebarTouch = useCallback((e, railId = 'logo') => {
-        if (e) e.stopPropagation();
+        if (e && e.stopPropagation) e.stopPropagation();
         // Clear any pending hover timers
         clearTimeout(hoverIntentTimerRef.current);
         hoverIntentTimerRef.current = null;
         clearTimeout(hoverLeaveTimerRef.current);
         hoverLeaveTimerRef.current = null;
+        openedAtRef.current = performance.now();
         openTimeRef.current = Date.now();
         lastTriggerDataRailRef.current = railId;
         setOpenMode('touch');
@@ -70,6 +72,7 @@ export default function SidebarShell({
         if (suppressHoverRef.current) return;
         clearTimeout(hoverIntentTimerRef.current);
         hoverIntentTimerRef.current = null;
+        openedAtRef.current = 0;
         openTimeRef.current = Date.now();
         lastTriggerDataRailRef.current = 'hover';
         setOpenMode('hover');
@@ -140,27 +143,40 @@ export default function SidebarShell({
     // ── Click/Tap handlers (on rail — always opens in touch mode) ────────
 
     const handleRailPointerDown = useCallback((e, railId) => {
-        // If hover drawer is already open, upgrade to touch mode on click
-        if (isExpanded && openMode === 'hover') {
-            e.stopPropagation();
-            clearTimeout(hoverLeaveTimerRef.current);
-            hoverLeaveTimerRef.current = null;
-            openTimeRef.current = Date.now();
-            lastTriggerDataRailRef.current = railId;
-            setOpenMode('touch');
+        if (e.pointerType === 'mouse') {
+            // If hover drawer is already open, upgrade to touch mode on click
+            if (isExpanded && openMode === 'hover') {
+                e.stopPropagation();
+                clearTimeout(hoverLeaveTimerRef.current);
+                hoverLeaveTimerRef.current = null;
+                openedAtRef.current = performance.now();
+                openTimeRef.current = Date.now();
+                lastTriggerDataRailRef.current = railId;
+                setOpenMode('touch');
+            }
             return;
         }
+        // In touch/pen mode, preventDefault so no ghost click is synthesized
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+    }, [isExpanded, openMode]);
+
+    const handleRailPointerUp = useCallback((e, railId) => {
+        if (e.pointerType === 'mouse') return;
+        e.stopPropagation();
+        if (isExpanded && openMode === 'touch') return;
+        if (performance.now() - openedAtRef.current < 450) return;
         openSidebarTouch(e, railId);
     }, [isExpanded, openMode, openSidebarTouch]);
 
     const handleRailClick = useCallback((e, railId) => {
-        // If already expanded (either mode), don't re-open
-        if (isExpanded) {
-            e.stopPropagation();
-            return;
-        }
+        e.stopPropagation();
+        // If already expanded in touch mode or just opened within 450ms, ignore
+        if (isExpanded && openMode === 'touch') return;
+        if (performance.now() - openedAtRef.current < 450) return;
         openSidebarTouch(e, railId);
-    }, [isExpanded, openSidebarTouch]);
+    }, [isExpanded, openMode, openSidebarTouch]);
 
     // Keyboard support: Enter or Space on rail buttons
     const handleRailKeyDown = (e, railId) => {
@@ -249,10 +265,54 @@ export default function SidebarShell({
     const resolvedAvatarUrl = getAvatarUrl();
     const displayRole = brandSubtitle.includes('Student') ? 'Student' : 'Instructor';
 
-    // ── Item click (inside expanded drawer) ──────────────────────────────
+    // Helper to check if touch guard is active for touch interactions
+    const isTouchTimingGuarded = (e) => {
+        if (openMode !== 'touch') return false;
+        if (e && e.pointerType === 'mouse') return false;
+        return (performance.now() - openedAtRef.current < 450);
+    };
+
+    // ── Handlers inside expanded drawer (guarded by 450ms openedAt in touch mode) ─────
+    const handleHeaderBrandClick = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        // In touch mode, ignore ghost click on drawer header brand within 450ms
+        if (openMode === 'touch' && (performance.now() - openedAtRef.current < 450)) {
+            return;
+        }
+        closeSidebar();
+    };
+
+    const handleHeaderBrandPointerDown = (e) => {
+        if (openMode === 'touch' && (performance.now() - openedAtRef.current < 450)) {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const handleCloseBtnClick = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isTouchTimingGuarded(e)) {
+            return;
+        }
+        closeSidebar();
+    };
+
+    const handleCloseBtnPointerDown = (e) => {
+        if (isTouchTimingGuarded(e)) {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
     const handleItemClick = (e) => {
-        // Guard against accidental double-tap during touch overlay slide-in
-        if (openMode === 'touch' && Date.now() - openTimeRef.current < 150) {
+        // Guard against ghost click or rapid tap after opening in touch mode
+        if (isTouchTimingGuarded(e)) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -260,9 +320,19 @@ export default function SidebarShell({
         closeSidebarAfterNav();
     };
 
+    const handleItemPointerDown = (e) => {
+        if (isTouchTimingGuarded(e)) {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
     const handleLogout = (e) => {
-        if (Date.now() - openTimeRef.current < 200) {
+        if (e && e.preventDefault) {
             e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isTouchTimingGuarded(e)) {
             return;
         }
         if (onLogout) {
@@ -271,6 +341,19 @@ export default function SidebarShell({
             window.location.href = '/?logout=1';
         }
     };
+
+    const handleLogoutPointerDown = (e) => {
+        if (isTouchTimingGuarded(e)) {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const handleRailTouchStart = useCallback((e) => {
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+    }, []);
 
     // ── Active route detection ───────────────────────────────────────────
     const isItemActive = (item) => {
@@ -292,7 +375,8 @@ export default function SidebarShell({
                 <button
                     type="button"
                     className="sidebar-header-brand"
-                    onClick={closeSidebar}
+                    onPointerDown={handleHeaderBrandPointerDown}
+                    onClick={handleHeaderBrandClick}
                     title="Collapse sidebar"
                     aria-label="TiT Education"
                 >
@@ -312,7 +396,8 @@ export default function SidebarShell({
                     <button
                         ref={closeBtnRef}
                         type="button"
-                        onClick={closeSidebar}
+                        onPointerDown={handleCloseBtnPointerDown}
+                        onClick={handleCloseBtnClick}
                         className="sidebar-close-btn t-icon-btn"
                         aria-label="Close sidebar"
                     >
@@ -333,8 +418,9 @@ export default function SidebarShell({
                         <NavLink
                             key={item.name}
                             to={item.path}
+                            onPointerDown={handleItemPointerDown}
                             onClick={handleItemClick}
-                            className={`t-tap t-menu-item sidebar-nav-item${active ? ' active' : ''}`}
+                            className={`t-tap sidebar-nav-item${active ? ' active' : ''}`}
                         >
                             <div className="sidebar-nav-icon-col">
                                 <Icon className="sidebar-nav-icon" />
@@ -346,12 +432,12 @@ export default function SidebarShell({
                 })}
             </nav>
 
-            {/* User Card & Logout */}
+            {/* User Card & Logout (ALWAYS original stacked design) */}
             <div className="sidebar-user-card">
                 <div className="sidebar-user-info">
                     <div className="sidebar-user-avatar">
                         {resolvedAvatarUrl ? (
-                            <img width="36" height="36" src={resolvedAvatarUrl} alt="Avatar" />
+                            <img width="40" height="40" src={resolvedAvatarUrl} alt="Avatar" />
                         ) : (
                             initial
                         )}
@@ -363,6 +449,7 @@ export default function SidebarShell({
                 </div>
                 <button
                     type="button"
+                    onPointerDown={handleLogoutPointerDown}
                     onClick={handleLogout}
                     aria-label="Logout"
                     className="sidebar-logout-btn t-btn"
@@ -373,6 +460,18 @@ export default function SidebarShell({
             </div>
         </div>
     );
+
+    const handleBackdropClick = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        closeSidebar();
+    };
+
+    const handleBackdropPointerDown = (e) => {
+        // Backdrop tap closes directly
+    };
 
     return (
         <>
@@ -397,7 +496,9 @@ export default function SidebarShell({
                     <aside
                         className={`sidebar-rail${isExpanded ? ' rail-behind-drawer' : ''}`}
                         aria-label="Sidebar navigation"
+                        onTouchStart={handleRailTouchStart}
                         onPointerDown={(e) => handleRailPointerDown(e, 'empty')}
+                        onPointerUp={(e) => handleRailPointerUp(e, 'empty')}
                         onClick={(e) => handleRailClick(e, 'empty')}
                     >
                         {/* Top Logo Button */}
@@ -410,7 +511,9 @@ export default function SidebarShell({
                             aria-expanded={isExpanded}
                             aria-controls="expanded-sidebar-drawer"
                             data-rail="logo"
+                            onTouchStart={handleRailTouchStart}
                             onPointerDown={(e) => handleRailPointerDown(e, 'logo')}
+                            onPointerUp={(e) => handleRailPointerUp(e, 'logo')}
                             onClick={(e) => handleRailClick(e, 'logo')}
                             onKeyDown={(e) => handleRailKeyDown(e, 'logo')}
                         >
@@ -436,7 +539,9 @@ export default function SidebarShell({
                                         aria-controls="expanded-sidebar-drawer"
                                         data-rail={railId}
                                         data-title={item.name}
+                                        onTouchStart={handleRailTouchStart}
                                         onPointerDown={(e) => handleRailPointerDown(e, railId)}
+                                        onPointerUp={(e) => handleRailPointerUp(e, railId)}
                                         onClick={(e) => handleRailClick(e, railId)}
                                         onKeyDown={(e) => handleRailKeyDown(e, railId)}
                                         className={`sidebar-rail-item t-tap${active ? ' active' : ''}`}
@@ -456,7 +561,9 @@ export default function SidebarShell({
                                 aria-expanded={isExpanded}
                                 aria-controls="expanded-sidebar-drawer"
                                 data-rail="logout"
+                                onTouchStart={handleRailTouchStart}
                                 onPointerDown={(e) => handleRailPointerDown(e, 'logout')}
+                                onPointerUp={(e) => handleRailPointerUp(e, 'logout')}
                                 onClick={(e) => handleRailClick(e, 'logout')}
                                 onKeyDown={(e) => handleRailKeyDown(e, 'logout')}
                                 className="sidebar-rail-logout t-btn"
@@ -489,8 +596,8 @@ export default function SidebarShell({
                     {/* Backdrop */}
                     <div
                         className="sidebar-backdrop"
-                        onPointerDown={closeSidebar}
-                        onClick={closeSidebar}
+                        onPointerDown={handleBackdropPointerDown}
+                        onClick={handleBackdropClick}
                         aria-label="Close sidebar overlay"
                         role="button"
                         tabIndex={-1}

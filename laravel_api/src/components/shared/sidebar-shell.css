@@ -27,15 +27,17 @@
 
 @media (max-height: 699px) {
   :root {
+    --sb-header-h: 60px;
     --sb-nav-gap: 8px;
-    --sb-row: 44px;
+    --sb-row: clamp(40px, 6.2dvh, 44px);
   }
 }
 
 @media (max-height: 520px) {
   :root {
+    --sb-header-h: 56px;
     --sb-nav-gap: 4px;
-    --sb-row: 44px;
+    --sb-row: 40px;
   }
 }
 
@@ -207,8 +209,12 @@
 }
 
 .sidebar-rail-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-rail-item:hover .sidebar-rail-icon {
+  color: #ffffff !important;
 }
 
 .sidebar-rail-item.active {
@@ -268,7 +274,13 @@
 }
 
 .sidebar-rail-logout:hover {
-  background: rgba(185, 28, 28, 0.18);
+  background: rgba(185, 28, 28, 0.25) !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+
+.sidebar-rail-logout:hover svg {
+  color: #ffffff !important;
 }
 
 .sidebar-rail-logout:active {
@@ -440,11 +452,20 @@
   border-left: none;
 }
 
+.sidebar-drawer .sidebar-nav-item:hover,
 .sidebar-nav-item:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #ffffff !important;
 }
 
+.sidebar-drawer .sidebar-nav-item:hover .sidebar-nav-icon,
+.sidebar-nav-item:hover .sidebar-nav-icon,
+.sidebar-drawer .sidebar-nav-item:hover .sidebar-nav-label,
+.sidebar-nav-item:hover .sidebar-nav-label {
+  color: #ffffff !important;
+}
+
+.sidebar-drawer .sidebar-nav-item.active,
 .sidebar-nav-item.active {
   background: var(--t-sidebar-active-bg) !important;
   color: #ffffff !important;
@@ -493,19 +514,32 @@
   flex-shrink: 0;
 }
 
-/* User Card */
+/* User Card: ALWAYS original stacked design */
 .sidebar-user-card {
   background: var(--t-sidebar-active-bg);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin: 0 10px 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .sidebar-user-avatar {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   background: var(--t-primary);
   display: flex;
@@ -513,7 +547,7 @@
   justify-content: center;
   color: #ffffff;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 16px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -526,23 +560,36 @@
 
 .sidebar-user-name {
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .sidebar-user-role {
   color: var(--t-sidebar-text);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+  line-height: 1.25;
 }
 
 .sidebar-logout-btn {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid var(--t-danger);
   background: var(--t-danger-bg);
   color: var(--t-danger);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -551,7 +598,14 @@
 }
 
 .sidebar-logout-btn:hover {
-  background: rgba(185, 28, 28, 0.18);
+  background: rgba(185, 28, 28, 0.25) !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+
+.sidebar-logout-btn:hover svg,
+.sidebar-logout-btn:hover span {
+  color: #ffffff !important;
 }
 
 .sidebar-logout-btn:active {
@@ -564,14 +618,14 @@
 }
 
 /* --------------------------------------------------------------------------
-   4. Adaptive Heights for User Card (TALL vs SHORT viewports)
+   4. Adaptive Heights for User Card (TALL vs SHORT viewports - ALWAYS STACKED)
    -------------------------------------------------------------------------- */
 
-/* TALL VIEWPORTS (>= 700px): Full spacious user card */
+/* TALL VIEWPORTS (>= 700px): Full spacious stacked user card */
 @media (min-height: 700px) {
   .sidebar-user-card {
-    margin: 0 12px 12px;
-    padding: 14px;
+    margin: 0 10px 12px;
+    padding: 10px 12px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -583,59 +637,63 @@
     gap: 10px;
   }
   .sidebar-user-name {
-    font-size: 13px;
+    font-size: 16px;
   }
   .sidebar-logout-btn {
     width: 100%;
-    min-height: 44px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 8px;
-    border-radius: 8px;
-    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 600;
   }
 }
 
-/* SHORT VIEWPORTS (<= 699px): Compact spacing, single-row user card */
+/* SHORT VIEWPORTS (<= 699px): Compact spacing, ALWAYS STACKED user card */
 @media (max-height: 699px) {
   .sidebar-user-card {
-    margin: 0;
-    padding: 6px 12px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0 10px 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
   }
   .sidebar-user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
-    flex: 1;
+  }
+  .sidebar-user-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 14px;
   }
   .sidebar-user-name {
+    font-size: 14px;
+  }
+  .sidebar-user-role {
     font-size: 12px;
   }
   .sidebar-logout-btn {
+    width: 100%;
     min-height: 44px;
-    min-width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 600;
-    flex-shrink: 0;
   }
 }
 

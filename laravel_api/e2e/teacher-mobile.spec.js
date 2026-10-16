@@ -558,7 +558,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     await page.locator('button[data-rail="messages"]').click();
     const drawer = page.locator('.sidebar-drawer');
     await expect(drawer).toBeVisible();
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(500);
 
     // Tap Schedule labelled item
     const scheduleLink = drawer.locator('a.sidebar-nav-item:has-text("Schedule")');
@@ -595,6 +595,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     const expandedMainBox = await main.boundingBox();
     expect(expandedMainBox.x, 'Main content X must not shift when sidebar is open').toBe(initialMainBox.x);
     expect(expandedMainBox.width, 'Main content width must not change when sidebar is open').toBe(initialMainBox.width);
+    await page.waitForTimeout(500);
 
     await closeBtn.click();
     await expect(drawer).not.toBeVisible();
@@ -617,6 +618,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     // 4) Test clicking expanded header brand/logo
     await page.locator('button[data-rail="logout"]').click();
     await expect(drawer).toBeVisible();
+    await page.waitForTimeout(500);
     await page.locator('.sidebar-header-brand').click();
     await expect(drawer).not.toBeVisible();
   });
@@ -1061,20 +1063,28 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
     await expect(drawer).not.toBeVisible({ timeout: 500 });
   });
 
-  // 10. Touch mode at 320x568, 360x740, 768x1024: drawer starts at x=0, covers rail, X button and backdrop visible
+  // 10. Touch mode at 320x568, 360x740, 768x1024: drawer starts at x=0, covers rail, X button and backdrop visible (REAL TOUCH)
   for (const touchVp of [
     { width: 320, height: 568 },
     { width: 360, height: 740 },
     { width: 768, height: 1024 },
   ]) {
-    test(`Teacher touch mode at ${touchVp.width}x${touchVp.height}: drawer starts at x=0 with X button and backdrop`, async ({ page }) => {
+    test(`Teacher touch mode at ${touchVp.width}x${touchVp.height}: drawer starts at x=0 with X button and backdrop`, async ({ browser }) => {
+      const context = await browser.newContext({
+        viewport: touchVp,
+        hasTouch: true,
+        isMobile: true,
+      });
+      const page = await context.newPage();
       await setupMocks(page, true);
-      await page.setViewportSize(touchVp);
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      // Tap rail logo to expand in touch mode
-      await page.click('button[data-rail="logo"]');
+      // Tap rail logo with real touch
+      const logoBtn = page.locator('button[data-rail="logo"]');
+      await expect(logoBtn).toBeVisible();
+      await logoBtn.tap();
+
       const drawer = page.locator('.sidebar-drawer.touch-drawer');
       await expect(drawer).toBeVisible({ timeout: 2000 });
 
@@ -1089,10 +1099,318 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
       const closeBtn = drawer.locator('button.sidebar-close-btn');
       await expect(closeBtn).toBeVisible();
 
-      // Clicking close button closes drawer
-      await closeBtn.click();
+      // Wait past guard (>450ms) then tapping close button closes drawer
+      await page.waitForTimeout(500);
+      await closeBtn.tap();
       await expect(drawer).not.toBeVisible({ timeout: 500 });
       await expect(page.locator('.sidebar-backdrop')).not.toBeVisible();
+
+      await context.close();
+    });
+  }
+
+  // ── Bug 1: Real Touch Tests (locator.tap & touchscreen.tap, hasTouch + isMobile) ──
+  const touchViewports = [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+  ];
+
+  const teacherRailTargets = [
+    { name: 'logo', selector: '.sidebar-rail-logo-btn' },
+    { name: 'Dashboard icon', selector: 'button[data-rail="dashboard"]' },
+    { name: 'My Students icon', selector: 'button[data-rail="my-students"]' },
+    { name: 'Schedule icon', selector: 'button[data-rail="schedule"]' },
+    { name: 'Materials icon', selector: 'button[data-rail="materials"]' },
+    { name: 'Assignments icon', selector: 'button[data-rail="assignments"]' },
+    { name: 'Reports icon', selector: 'button[data-rail="reports"]' },
+    { name: 'Messages icon', selector: 'button[data-rail="messages"]' },
+    { name: 'Settings icon', selector: 'button[data-rail="settings"]' },
+    { name: 'Logout icon', selector: 'button[data-rail="logout"]' },
+    { name: 'empty rail area', selector: '.sidebar-rail', isEmptyArea: true },
+  ];
+
+  for (const touchVp of touchViewports) {
+    // Regression test with page.touchscreen.tap exactly on the logo
+    test(`Bug 1 Regression: touchscreen.tap on logo at ${touchVp.width}x${touchVp.height} opens drawer and stays open >= 1500ms`, async ({ browser }) => {
+      const context = await browser.newContext({
+        viewport: touchVp,
+        hasTouch: true,
+        isMobile: true,
+      });
+      const page = await context.newPage();
+      await setupMocks(page, true);
+      await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      const logo = page.locator('.sidebar-rail-logo-btn');
+      await expect(logo).toBeVisible();
+      const logoBox = await logo.boundingBox();
+      expect(logoBox).not.toBeNull();
+
+      // Real touchscreen tap on the exact center of the logo button
+      await page.touchscreen.tap(logoBox.x + logoBox.width / 2, logoBox.y + logoBox.height / 2);
+
+      const drawer = page.locator('aside.sidebar-drawer');
+      await expect(drawer).toBeVisible({ timeout: 2000 });
+      const drawerBox = await drawer.boundingBox();
+      expect(drawerBox.width).toBeGreaterThanOrEqual(250);
+
+      // Must stay open >= 1500ms without ghost collapse
+      await page.waitForTimeout(1500);
+      await expect(drawer).toBeVisible();
+      expect(page.url()).toContain('/teacher/dashboard');
+
+      await context.close();
+    });
+
+    // Test each rail target with real touch locator.tap() / touchscreen.tap()
+    for (const target of teacherRailTargets) {
+      test(`Bug 1: Real touch tap on ${target.name} at ${touchVp.width}x${touchVp.height} keeps drawer open >= 1500ms, then navigates on row tap`, async ({ browser }) => {
+        let logoutRequested = false;
+        const context = await browser.newContext({
+          viewport: touchVp,
+          hasTouch: true,
+          isMobile: true,
+        });
+        const page = await context.newPage();
+        await setupMocks(page, true, {
+          onRequest: async (route, url) => {
+            if (url.includes('logout') || url.includes('/auth/logout')) {
+              logoutRequested = true;
+              return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+            }
+            return false;
+          }
+        });
+
+        await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(300);
+
+        if (target.isEmptyArea) {
+          const rail = page.locator('.sidebar-rail');
+          await expect(rail).toBeVisible();
+          const railBox = await rail.boundingBox();
+          // Tap lower empty region of the rail
+          await page.touchscreen.tap(railBox.x + railBox.width / 2, railBox.y + railBox.height - 30);
+        } else {
+          const el = page.locator(target.selector);
+          await expect(el).toBeVisible();
+          await el.tap();
+        }
+
+        const drawer = page.locator('aside.sidebar-drawer');
+        await expect(drawer).toBeVisible({ timeout: 2000 });
+        const drawerBox = await drawer.boundingBox();
+        // width ≈ 260 or 86vw
+        const expectedW = Math.min(260, touchVp.width * 0.86);
+        expect(drawerBox.width).toBeGreaterThanOrEqual(expectedW - 10);
+
+        // Still visible after 1500 ms, pathname unchanged, no logout
+        await page.waitForTimeout(1500);
+        await expect(drawer).toBeVisible();
+        expect(page.url()).toContain('/teacher/dashboard');
+        expect(logoutRequested, 'User must not be logged out by rail tap').toBe(false);
+
+        // After guard passes (we waited 1500ms > 450ms), tapping a labelled row navigates and collapses within 500ms
+        const scheduleRow = drawer.locator('a.sidebar-nav-item:has-text("Schedule")');
+        await expect(scheduleRow).toBeVisible();
+        await scheduleRow.tap();
+
+        await expect(page).toHaveURL(/\/teacher\/schedule/);
+        await expect(drawer).not.toBeVisible({ timeout: 500 });
+
+        await context.close();
+      });
+    }
+  }
+
+  // ── Bug 2: Hover menu row luminance < 0.35 and contrast >= 4.5:1 at 1280x800 ──
+  test('Bug 2: Hovered menu rows and Logout have luminance < 0.35 and contrast >= 4.5:1 at 1280x800', async ({ page }) => {
+    await setupMocks(page, true);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Hover on rail logo to expand drawer
+    await page.hover('button[data-rail="logo"]');
+    const drawer = page.locator('.sidebar-drawer.hover-drawer');
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+
+    const navRows = drawer.locator('a.sidebar-nav-item');
+    const rowCount = await navRows.count();
+    expect(rowCount).toBe(8);
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = navRows.nth(i);
+      await row.hover();
+      await page.waitForTimeout(100);
+
+      const colorCheck = await row.evaluate((el) => {
+        function sRGBtoLin(c) {
+          c = c / 255;
+          return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        function lum(r, g, b) {
+          return 0.2126 * sRGBtoLin(r) + 0.7152 * sRGBtoLin(g) + 0.0722 * sRGBtoLin(b);
+        }
+        function parseColor(str) {
+          const match = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+          if (!match) return { r: 15, g: 23, b: 42, a: 1 };
+          return {
+            r: parseInt(match[1], 10),
+            g: parseInt(match[2], 10),
+            b: parseInt(match[3], 10),
+            a: match[4] !== undefined ? parseFloat(match[4]) : 1,
+          };
+        }
+        const bgStr = window.getComputedStyle(el).backgroundColor;
+        const pBg = parseColor(bgStr);
+        // Blend over base dark sidebar #0f172a
+        const effR = Math.round(pBg.r * pBg.a + 15 * (1 - pBg.a));
+        const effG = Math.round(pBg.g * pBg.a + 23 * (1 - pBg.a));
+        const effB = Math.round(pBg.b * pBg.a + 42 * (1 - pBg.a));
+        const bgLuminance = lum(effR, effG, effB);
+
+        const labelEl = el.querySelector('.sidebar-nav-label') || el;
+        const textStr = window.getComputedStyle(labelEl).color;
+        const pText = parseColor(textStr);
+        const textLuminance = lum(pText.r, pText.g, pText.b);
+
+        const lighter = Math.max(bgLuminance, textLuminance);
+        const darker = Math.min(bgLuminance, textLuminance);
+        const contrast = (lighter + 0.05) / (darker + 0.05);
+
+        return { bgLuminance, contrast, bgStr, textStr };
+      });
+
+      expect(colorCheck.bgLuminance, `Row ${i} hover background luminance ${colorCheck.bgLuminance} must be < 0.35`).toBeLessThan(0.35);
+      expect(colorCheck.contrast, `Row ${i} text contrast ${colorCheck.contrast.toFixed(2)} must be >= 4.5:1`).toBeGreaterThanOrEqual(4.5);
+    }
+
+    // Hover Logout button
+    const logoutBtn = drawer.locator('.sidebar-logout-btn');
+    await expect(logoutBtn).toBeVisible();
+    await logoutBtn.hover();
+    await page.waitForTimeout(100);
+
+    const logoutCheck = await logoutBtn.evaluate((el) => {
+      function sRGBtoLin(c) {
+        c = c / 255;
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      }
+      function lum(r, g, b) {
+        return 0.2126 * sRGBtoLin(r) + 0.7152 * sRGBtoLin(g) + 0.0722 * sRGBtoLin(b);
+      }
+      function parseColor(str) {
+        const match = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (!match) return { r: 15, g: 23, b: 42, a: 1 };
+        return {
+          r: parseInt(match[1], 10),
+          g: parseInt(match[2], 10),
+          b: parseInt(match[3], 10),
+          a: match[4] !== undefined ? parseFloat(match[4]) : 1,
+        };
+      }
+      const bgStr = window.getComputedStyle(el).backgroundColor;
+      const pBg = parseColor(bgStr);
+      const effR = Math.round(pBg.r * pBg.a + 15 * (1 - pBg.a));
+      const effG = Math.round(pBg.g * pBg.a + 23 * (1 - pBg.a));
+      const effB = Math.round(pBg.b * pBg.a + 42 * (1 - pBg.a));
+      const bgLuminance = lum(effR, effG, effB);
+
+      const spanEl = el.querySelector('span') || el;
+      const textStr = window.getComputedStyle(spanEl).color;
+      const pText = parseColor(textStr);
+      const textLuminance = lum(pText.r, pText.g, pText.b);
+
+      const lighter = Math.max(bgLuminance, textLuminance);
+      const darker = Math.min(bgLuminance, textLuminance);
+      const contrast = (lighter + 0.05) / (darker + 0.05);
+
+      return { bgLuminance, contrast, bgStr, textStr };
+    });
+
+    expect(logoutCheck.bgLuminance, `Logout hover background luminance ${logoutCheck.bgLuminance} must be < 0.35`).toBeLessThan(0.35);
+    expect(logoutCheck.contrast, `Logout text contrast ${logoutCheck.contrast.toFixed(2)} must be >= 4.5:1`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // ── Change 3: Always Stacked User Card & Viewport Fitting ────────────────
+  const allViewports = [
+    { width: 320, height: 568, mode: 'touch' },
+    { width: 360, height: 640, mode: 'touch' },
+    { width: 360, height: 740, mode: 'touch' },
+    { width: 390, height: 844, mode: 'touch' },
+    { width: 768, height: 1024, mode: 'touch' },
+    { width: 1280, height: 800, mode: 'hover' },
+    { width: 1366, height: 768, mode: 'hover' },
+  ];
+
+  for (const vp of allViewports) {
+    test(`Change 3: Stacked card & all 8 items fit viewport without scroll at ${vp.width}x${vp.height} (${vp.mode})`, async ({ page }) => {
+      await setupMocks(page, true);
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+
+      let drawer;
+      if (vp.mode === 'hover') {
+        await page.hover('button[data-rail="logo"]');
+        drawer = page.locator('.sidebar-drawer.hover-drawer');
+      } else {
+        await page.click('button[data-rail="logo"]');
+        drawer = page.locator('.sidebar-drawer.touch-drawer');
+      }
+      await expect(drawer).toBeVisible({ timeout: 2000 });
+      await page.waitForTimeout(150);
+
+      const drawerBox = await drawer.boundingBox();
+      expect(drawerBox).not.toBeNull();
+
+      // All 8 nav items fit inside viewport without scrolling
+      const navItems = drawer.locator('a.sidebar-nav-item');
+      const count = await navItems.count();
+      expect(count).toBe(8);
+
+      for (let i = 0; i < count; i++) {
+        const itemBox = await navItems.nth(i).boundingBox();
+        expect(itemBox.y, `Nav item ${i} y must be >= 0`).toBeGreaterThanOrEqual(0);
+        expect(itemBox.y + itemBox.height, `Nav item ${i} bottom must be <= viewport height`).toBeLessThanOrEqual(vp.height);
+      }
+
+      // Nav container must NOT have vertical scrollbar (since height >= 568px)
+      const navScrollable = await drawer.locator('.sidebar-expanded-nav').evaluate((el) => {
+        return el.scrollHeight > el.clientHeight + 2;
+      });
+      expect(navScrollable, `Nav list must not scroll at viewport height ${vp.height}`).toBe(false);
+
+      // Stacked user card
+      const userCard = drawer.locator('.sidebar-user-card');
+      await expect(userCard).toBeVisible();
+      const cardBox = await userCard.boundingBox();
+      expect(cardBox.y + cardBox.height, `User card bottom must be <= viewport height`).toBeLessThanOrEqual(vp.height);
+
+      // Top row: avatar & name
+      const avatar = userCard.locator('.sidebar-user-avatar');
+      const name = userCard.locator('.sidebar-user-name');
+      await expect(avatar).toBeVisible();
+      await expect(name).toBeVisible();
+      const avatarBox = await avatar.boundingBox();
+
+      // Logout button directly below avatar, full card width (>= 80% of sidebar width), min-height >= 44
+      const logoutBtn = userCard.locator('.sidebar-logout-btn');
+      await expect(logoutBtn).toBeVisible();
+      const logoutBox = await logoutBtn.boundingBox();
+
+      expect(logoutBox.y, 'Logout button must be vertically below avatar').toBeGreaterThanOrEqual(avatarBox.y + avatarBox.height - 4);
+      expect(logoutBox.y + logoutBox.height, 'Logout button bottom must be within viewport').toBeLessThanOrEqual(vp.height);
+      expect(logoutBox.height, 'Logout button min-height must be >= 44px').toBeGreaterThanOrEqual(44);
+      expect(logoutBox.width, 'Logout button must be >= 80% of drawer width').toBeGreaterThanOrEqual(drawerBox.width * 0.80);
+
+      // Confirm no one-row variant exists in computed style
+      const cardFlexDir = await userCard.evaluate(el => window.getComputedStyle(el).flexDirection);
+      expect(cardFlexDir, 'User card must have flex-direction: column').toBe('column');
     });
   }
 

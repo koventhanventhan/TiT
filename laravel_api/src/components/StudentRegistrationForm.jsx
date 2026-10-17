@@ -126,6 +126,9 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
              if (u.current_grade) {
                setFormData(prev => ({ ...prev, currentGrade: u.current_grade }))
              }
+             if (u.medium) {
+               setFormData(prev => ({ ...prev, medium: u.medium }))
+             }
              if (u.stream) {
                setSelectedStream(u.stream)
              }
@@ -459,19 +462,19 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
 
     if (allSubjPkg) {
       const pkgPrice = parseFloat(allSubjPkg.package_price).toFixed(0);
-      msgEn += `But if you select all subjects, your package price is only Rs. ${pkgPrice}!`;
-      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான Package கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
+      msgEn += `But if you select all subjects, your combined price is only Rs. ${pkgPrice}!`;
+      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான சேர்ந்த கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
     } else if (mainSubjPkg) {
        const pkgPrice = parseFloat(mainSubjPkg.package_price).toFixed(0);
        const baseCount = mainSubjPkg.base_subject_count || 5;
        const addonPrice = mainSubjPkg.addon_price ? parseFloat(mainSubjPkg.addon_price).toFixed(0) : 0;
        
        if (addonPrice > 0) {
-           msgEn += `But if you select ${baseCount} subjects, your package price will be Rs. ${pkgPrice}! Each additional subject costs Rs. ${addonPrice}.`;
-           msgTa += `ஆனால், நீங்கள் ${baseCount} பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} மட்டுமே! அதன்பின் தேர்ந்தெடுக்கப்படும் ஒவ்வொரு கூடுதல் பாடத்திற்கும் கட்டணம் Rs. ${addonPrice} மட்டுமே!`;
+           msgEn += `But if you select ${baseCount} subjects, your combined price will be Rs. ${pkgPrice}! Each additional subject costs Rs. ${addonPrice}.`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} பாடங்களை தேர்ந்தெடுத்தால் சேர்ந்த கட்டணம் Rs. ${pkgPrice} மட்டுமே! அதன்பின் தேர்ந்தெடுக்கப்படும் ஒவ்வொரு கூடுதல் பாடத்திற்கும் கட்டணம் Rs. ${addonPrice} மட்டுமே!`;
        } else {
-           msgEn += `But if you select ${baseCount} or more subjects, your package price will be reduced to Rs. ${pkgPrice}!`;
-           msgTa += `ஆனால், நீங்கள் ${baseCount} அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
+           msgEn += `But if you select ${baseCount} or more subjects, your combined price will be reduced to Rs. ${pkgPrice}!`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் சேர்ந்த கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
        }
     } else {
        msgEn = `Note: Your monthly fee is calculated based on the subjects you select. ` + msgEn;
@@ -1184,35 +1187,52 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                   borderRadius: '0.75rem',
                   border: '1px solid rgba(139, 92, 246, 0.3)'
                 }}>
-                  {appliedPackage ? (
-                    <>
-                      <FeeRow
-                        label="Subjects Total:"
-                        value={formatRs(originalAmount)}
-                        isStrikethrough={true}
-                      />
-                      <FeeRow
-                        label={`Package Discount (${appliedPackage.name}):`}
-                        value={formatRs(monthlyAmount)}
-                        isDiscount={true}
-                      />
-                    </>
-                  ) : (
-                    <FeeRow
-                      label="Monthly Fee:"
-                      value={formatRs(monthlyAmount)}
-                    />
+                  {selectedSubjects.length > 0 && (
+                    <div className="fee-subjects-section">
+                      <div className="fee-subjects-heading">{t('fee_subjects') || 'Subjects'}</div>
+                      {appliedPackage || Math.abs(originalAmount - monthlyAmount) > 0.01 ? (
+                        <div className="fee-subject-chips">
+                          {selectedSubjects.map(subName => {
+                            const subObj = availableSubjects.find(s => s.name === subName);
+                            const displayName = language === 'ta' && subObj?.name_ta ? subObj.name_ta : (language === 'si' && subObj?.name_si ? subObj.name_si : subName);
+                            return (
+                              <span key={subName} className="fee-subject-chip">
+                                {displayName}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        selectedSubjects.map(subName => {
+                          const subObj = availableSubjects.find(s => s.name === subName);
+                          const displayName = language === 'ta' && subObj?.name_ta ? subObj.name_ta : (language === 'si' && subObj?.name_si ? subObj.name_si : subName);
+                          const price = subObj ? parseFloat(subObj.price) : 0;
+                          return (
+                            <FeeRow
+                              key={subName}
+                              label={displayName}
+                              value={formatRs(price)}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
                   )}
+
+                  <FeeRow
+                    label={t('fee_monthly') || 'Monthly Fee:'}
+                    value={formatRs(monthlyAmount)}
+                  />
 
                   {admissionFee > 0 && (
                     <FeeRow
-                      label="Admission Fee (First Time):"
+                      label={t('fee_admission') || 'Admission Fee (First Time):'}
                       value={formatRs(admissionFee)}
                     />
                   )}
 
                   <FeeRow
-                    label="Total Amount:"
+                    label={t('fee_total') || 'Total Amount:'}
                     value={formatRs(totalAmount)}
                     isTotal={true}
                   />
@@ -1220,7 +1240,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
               )}
               {totalAmount === 0 && (
                 <FeeRow
-                  label={`${t('pay_total')} (Monthly):`}
+                  label={t('fee_monthly') || 'Monthly Fee:'}
                   value={formatRs(MONTHLY_AMOUNT)}
                   isTotal={true}
                   style={{ marginBottom: '1.25rem' }}

@@ -4,8 +4,18 @@ import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonth
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
 import { formatRs } from '../../utils/format';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, stream, initialSubjects = [], onUpdateSuccess }) {
+  const langCtx = (() => {
+    try {
+      return useLanguage();
+    } catch (_) {
+      return { language: 'en', t: (k) => k };
+    }
+  })();
+  const language = langCtx?.language || 'en';
+  const t = langCtx?.t || ((k) => k);
   const [serverAmount, setServerAmount] = useState(null);
   const [serverMonthly, setServerMonthly] = useState(null);
   const [serverAdmission, setServerAdmission] = useState(0);
@@ -165,19 +175,19 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
     if (allSubjPkg) {
       const pkgPrice = parseFloat(allSubjPkg.package_price).toFixed(0);
-      msgEn += `But if you select all subjects, your package price is only Rs. ${pkgPrice}!`;
-      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான Package கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
+      msgEn += `But if you select all subjects, your combined price is only Rs. ${pkgPrice}!`;
+      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான சேர்ந்த கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
     } else if (mainSubjPkg) {
        const pkgPrice = parseFloat(mainSubjPkg.package_price).toFixed(0);
        const baseCount = mainSubjPkg.base_subject_count || 5;
        const addonPrice = mainSubjPkg.addon_price ? parseFloat(mainSubjPkg.addon_price).toFixed(0) : 0;
 
        if (addonPrice > 0) {
-           msgEn += `But if you select ${baseCount} subjects, your package price will be Rs. ${pkgPrice}! Each additional subject costs Rs. ${addonPrice}.`;
-           msgTa += `ஆனால், நீங்கள் ${baseCount} பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} மட்டுமே! அதன்பின் தேர்ந்தெடுக்கப்படும் ஒவ்வொரு கூடுதல் பாடத்திற்கும் கட்டணம் Rs. ${addonPrice} மட்டுமே!`;
+           msgEn += `But if you select ${baseCount} subjects, your combined price will be Rs. ${pkgPrice}! Each additional subject costs Rs. ${addonPrice}.`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} பாடங்களை தேர்ந்தெடுத்தால் சேர்ந்த கட்டணம் Rs. ${pkgPrice} மட்டுமே! அதன்பின் தேர்ந்தெடுக்கப்படும் ஒவ்வொரு கூடுதல் பாடத்திற்கும் கட்டணம் Rs. ${addonPrice} மட்டுமே!`;
        } else {
-           msgEn += `But if you select ${baseCount} or more subjects, your package price will be reduced to Rs. ${pkgPrice}!`;
-           msgTa += `ஆனால், நீங்கள் ${baseCount} அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
+           msgEn += `But if you select ${baseCount} or more subjects, your combined price will be reduced to Rs. ${pkgPrice}!`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் சேர்ந்த கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
        }
     } else {
        msgEn = `Note: Your monthly fee is calculated based on the subjects you select. ` + msgEn;
@@ -407,7 +417,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: 9999, padding: 12
     }}>
-      <div className="shared-modal-dialog" style={{
+      <div className="shared-modal-dialog" role="dialog" aria-modal="true" style={{
         background: '#fff', borderRadius: 24, width: 'calc(100% - 24px)', maxWidth: 500,
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
         display: 'flex', flexDirection: 'column', maxHeight: '90dvh',
@@ -519,23 +529,11 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                 }}>
                   <FeeRow
                     label={`${selectedSubjects.length} subject${selectedSubjects.length > 1 ? 's' : ''} selected`}
-                    value={hasDiscount ? formatRs(originalAmount) : ''}
-                    isStrikethrough={hasDiscount}
+                    value=""
                   />
 
-                  {hasDiscount && (
-                    <div style={{ margin: '6px 0' }}>
-                      <span style={{
-                        fontSize: 12, fontWeight: 600, color: 'var(--t-success)',
-                        background: 'var(--t-success-bg)', padding: '2px 10px', borderRadius: 20
-                      }}>
-                        🎉 {appliedPackage?.name || 'Package'} — You save {formatRs(savings)}
-                      </span>
-                    </div>
-                  )}
-
                   <FeeRow
-                    label="Monthly Fee"
+                    label={t('fee_monthly') || 'Monthly Fee:'}
                     value={formatRs(monthlyAmount)}
                     isTotal={true}
                   />
@@ -550,39 +548,55 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                 background: 'var(--t-primary-soft)', padding: '20px', borderRadius: '16px',
                 border: '1px solid var(--t-primary-border)', marginBottom: '24px'
               }}>
-                {hasDiscount ? (
-                  <>
-                    <FeeRow
-                      label="Subjects Total:"
-                      value={formatRs(originalAmount)}
-                      isStrikethrough={true}
-                    />
-                    <FeeRow
-                      label={`Package Discount (${appliedPackage?.name || 'Package'}):`}
-                      value={formatRs(serverMonthly ?? monthlyAmount)}
-                      isDiscount={true}
-                    />
-                  </>
-                ) : (
-                  <FeeRow
-                    label="Monthly Fee:"
-                    value={formatRs(serverMonthly ?? monthlyAmount)}
-                  />
+                {selectedSubjects.length > 0 && (
+                  <div className="fee-subjects-section">
+                    <div className="fee-subjects-heading">{t('fee_subjects') || 'Subjects'}</div>
+                    {hasDiscount ? (
+                      <div className="fee-subject-chips">
+                        {selectedSubjects.map(subName => {
+                          const subObj = availableSubjects.find(s => s.name === subName);
+                          const displayName = language === 'ta' && subObj?.name_ta ? subObj.name_ta : (language === 'si' && subObj?.name_si ? subObj.name_si : subName);
+                          return (
+                            <span key={subName} className="fee-subject-chip">
+                              {displayName}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      selectedSubjects.map(subName => {
+                        const subObj = availableSubjects.find(s => s.name === subName);
+                        const displayName = language === 'ta' && subObj?.name_ta ? subObj.name_ta : (language === 'si' && subObj?.name_si ? subObj.name_si : subName);
+                        const price = subObj ? parseFloat(subObj.price) : 0;
+                        return (
+                          <FeeRow
+                            key={subName}
+                            label={displayName}
+                            value={formatRs(price)}
+                          />
+                        );
+                      })
+                    )}
+                  </div>
                 )}
+
+                <FeeRow
+                  label={t('fee_monthly') || 'Monthly Fee:'}
+                  value={formatRs(serverMonthly ?? monthlyAmount)}
+                />
 
                 {serverAdmission > 0 && (
                   <FeeRow
-                    label="Admission Fee (First Time):"
+                    label={t('fee_admission') || 'Admission Fee (First Time):'}
                     value={formatRs(serverAdmission)}
                   />
                 )}
 
                 <FeeRow
-                  label="Total Amount:"
+                  label={t('fee_total') || 'Total Amount:'}
                   value={formatRs(serverAmount ?? monthlyAmount)}
                   isTotal={true}
                 />
-
               </div>
 
               {alreadyPaid ? (

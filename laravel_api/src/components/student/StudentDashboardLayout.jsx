@@ -6,7 +6,7 @@ import {
     FiMenu, FiX, FiSearch, FiChevronRight, FiUser
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
-import SidebarShell from '../shared/SidebarShell'
+import SidebarShell, { SidebarHamburgerButton, PHONE_MEDIA_QUERY } from '../shared/SidebarShell'
 import { useToast } from '../../components/shared/ToastContext';
 import { getActiveStorage, getAuthHeaders } from '../../services/apiClient';
 import useMediaQuery from '../../hooks/useMediaQuery';
@@ -31,6 +31,8 @@ export default function StudentDashboardLayout({ children, user }) {
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+    const hamburgerRef = useRef(null)
     const fileInputRef = useRef(null)
     const profileMenuRef = useRef(null)
     
@@ -38,7 +40,8 @@ export default function StudentDashboardLayout({ children, user }) {
     const navigate = useNavigate()
 
     const isDesktop = useMediaQuery('(min-width: 1024px)')
-    const isMobile = useMediaQuery('(max-width: 640px)')
+    const isPhone = useMediaQuery(PHONE_MEDIA_QUERY)
+    const isMobile = isPhone
 
     const searchResults = menuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -142,6 +145,10 @@ export default function StudentDashboardLayout({ children, user }) {
                 items={menuItems}
                 user={user}
                 avatarUrl={avatarUrl}
+                isOpen={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+                onOpen={() => setIsDrawerOpen(true)}
+                hamburgerRef={hamburgerRef}
             />
 
             {/* MAIN CONTENT */}
@@ -149,11 +156,29 @@ export default function StudentDashboardLayout({ children, user }) {
                 {/* Header */}
                 <header style={{
                     height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 24px', background: '#fff',
+                    padding: isPhone ? '0 12px' : '0 24px', background: '#fff',
                     borderBottom: '1px solid var(--t-border)', zIndex: 30,
                     position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, minWidth: 0 }}>
+                        {isPhone && (
+                            <SidebarHamburgerButton
+                                isOpen={isDrawerOpen}
+                                onClick={() => setIsDrawerOpen(prev => !prev)}
+                                buttonRef={hamburgerRef}
+                            />
+                        )}
+
+                        {isPhone && (
+                            <div style={{
+                                fontWeight: 700, fontSize: 16, color: 'var(--t-text)',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                minWidth: 0
+                            }}>
+                                TiT <span style={{ color: 'var(--t-primary)' }}>Student</span>
+                            </div>
+                        )}
 
                         {!isMobile && (
                             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -227,13 +252,15 @@ export default function StudentDashboardLayout({ children, user }) {
                         <style>{`@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 16, flexShrink: 0 }}>
                         {/* Notification Bell */}
                         <NotificationBell />
 
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
-                            paddingLeft: 16, borderLeft: '1px solid var(--t-border)', position: 'relative'
+                            paddingLeft: isPhone ? 8 : 16,
+                            borderLeft: isPhone ? 'none' : '1px solid var(--t-border)',
+                            position: 'relative'
                         }}>
                             {!isMobile && (
                                 <div style={{ textAlign: 'right' }}>
@@ -337,7 +364,9 @@ export default function StudentDashboardLayout({ children, user }) {
 
                 {/* Content */}
                 <div style={{
-                    flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px',
+                    flex: 1, overflowY: 'auto',
+                    padding: isPhone ? '16px' : '24px',
+                    paddingBottom: isPhone ? '80px' : '24px',
                     background: 'var(--t-bg)'
                 }}>
                     <div style={{ maxWidth: 1200, margin: '0 auto' }}>

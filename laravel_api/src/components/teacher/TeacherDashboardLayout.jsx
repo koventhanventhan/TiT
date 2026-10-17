@@ -6,7 +6,7 @@ import {
     FiMenu, FiX, FiSearch, FiBell, FiChevronRight
 } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
-import SidebarShell from '../shared/SidebarShell'
+import SidebarShell, { SidebarHamburgerButton, PHONE_MEDIA_QUERY } from '../shared/SidebarShell'
 import { useToast } from '../../components/shared/ToastContext'
 import { getAuthHeaders } from '../../services/apiClient'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
@@ -31,14 +31,17 @@ export default function TeacherDashboardLayout({ children, user }) {
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+    const hamburgerRef = useRef(null)
     const fileInputRef = useRef(null)
     const profileMenuRef = useRef(null)
     const location = useLocation()
     const navigate = useNavigate()
 
     const isDesktop = useMediaQuery('(min-width: 1024px)')
-    const isTabletOrDesktop = useMediaQuery('(min-width: 640px)')
-    const isMobile = !isTabletOrDesktop
+    const isPhone = useMediaQuery(PHONE_MEDIA_QUERY)
+    const isTabletOrDesktop = !isPhone
+    const isMobile = isPhone
 
     const searchResults = menuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,6 +109,10 @@ export default function TeacherDashboardLayout({ children, user }) {
                 items={menuItems}
                 user={user}
                 avatarUrl={avatarUrl}
+                isOpen={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+                onOpen={() => setIsDrawerOpen(true)}
+                hamburgerRef={hamburgerRef}
             />
 
             {/* ══════════════ MAIN CONTENT ══════════════ */}
@@ -113,16 +120,28 @@ export default function TeacherDashboardLayout({ children, user }) {
                 {/* Header */}
                 <header style={{
                     height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: isMobile ? '0 12px' : '0 24px',
+                    padding: isPhone ? '0 12px' : '0 24px',
                     paddingTop: 'env(safe-area-inset-top, 0px)',
                     background: 'var(--t-surface)',
                     borderBottom: '1px solid var(--t-border)', zIndex: 30,
                     position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, minWidth: 0 }}>
+                        {isPhone && (
+                            <SidebarHamburgerButton
+                                isOpen={isDrawerOpen}
+                                onClick={() => setIsDrawerOpen(prev => !prev)}
+                                buttonRef={hamburgerRef}
+                            />
+                        )}
 
-                        {isMobile && (
-                            <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--t-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {isPhone && (
+                            <div style={{
+                                fontWeight: 700, fontSize: 16, color: 'var(--t-text)',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                minWidth: 0
+                            }}>
                                 TiT <span style={{ color: 'var(--t-primary)' }}>Teacher</span>
                             </div>
                         )}
@@ -199,13 +218,15 @@ export default function TeacherDashboardLayout({ children, user }) {
                         <style>{`@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 16, flexShrink: 0 }}>
                         {/* Notification Bell */}
                         <GlobalNotificationBell />
 
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
-                            paddingLeft: isMobile ? 8 : 16, borderLeft: '1px solid var(--t-border)', position: 'relative'
+                            paddingLeft: isPhone ? 8 : 16,
+                            borderLeft: isPhone ? 'none' : '1px solid var(--t-border)',
+                            position: 'relative'
                         }}>
                             {isTabletOrDesktop && (
                                 <div style={{ textAlign: 'right' }}>

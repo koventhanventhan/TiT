@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 
 /**
+ * Shared Breakpoint Constants
+ * Phone: max-width: 639px (NO rail, hamburger + drawer)
+ * Tablet/Desktop: min-width: 640px (rail + hover/tap)
+ */
+export const PHONE_MEDIA_QUERY = '(max-width: 639px)';
+export const TABLET_DESKTOP_MEDIA_QUERY = '(min-width: 640px)';
+
+/**
  * SSR-safe media query hook with dynamic listener on screen resize / rotate.
  * @param {string} query
  * @returns {boolean}

@@ -401,3 +401,67 @@
   color: #ffffff;
 }
 
+/* Study Materials Segmented Tab Strip */
+.materials-tab-strip {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.materials-tab-strip::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Floating chat / WhatsApp widget positioning and containment */
+.whatsapp-float,
+.chat-widget-float,
+.floating-chat,
+.whatsapp-btn,
+.chat-bubble,
+[class*="whatsapp-float"],
+[class*="chat-float"],
+[class*="floating-chat"],
+[id*="whatsapp"],
+[id*="chat-widget"],
+iframe[id*="chat"],
+iframe[title*="chat" i] {
+  position: fixed !important;
+  right: 16px !important;
+  left: auto !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  width: 52px !important;
+  height: 52px !important;
+  z-index: 80 !important; /* Below drawer (z: 100), modals (z: 1000), notifications (z: 9999) */
+}
+
+/* Hide floating chat bubble when drawer is open or modal is open */
+body.drawer-open .whatsapp-float,
+body.drawer-open .chat-widget-float,
+body.drawer-open .floating-chat,
+body.drawer-open .whatsapp-btn,
+body.drawer-open .chat-bubble,
+body.drawer-open [class*="whatsapp-float"],
+body.drawer-open [class*="chat-float"],
+body.drawer-open [class*="floating-chat"],
+body.drawer-open [id*="whatsapp"],
+body.drawer-open [id*="chat-widget"],
+body.drawer-open iframe[id*="chat"],
+body.drawer-open iframe[title*="chat" i],
+body.modal-open .whatsapp-float,
+body.modal-open .chat-widget-float,
+body.modal-open .floating-chat,
+body.modal-open .whatsapp-btn,
+body.modal-open .chat-bubble,
+body.modal-open [class*="whatsapp-float"],
+body.modal-open [class*="chat-float"],
+body.modal-open [class*="floating-chat"],
+body.modal-open [id*="whatsapp"],
+body.modal-open [id*="chat-widget"],
+body.modal-open iframe[id*="chat"],
+body.modal-open iframe[title*="chat" i] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+

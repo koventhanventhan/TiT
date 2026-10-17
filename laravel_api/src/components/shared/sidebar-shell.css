@@ -10,12 +10,39 @@
   --sb-header-h: 72px;
   --sb-nav-gap: 20px;
   --sb-row: 48px;
-  --sb-rail-w: 64px;
+  --sb-rail-w: 0px;
 }
 
+/* --------------------------------------------------------------------------
+   Phones (max-width: 639px): NO rail. Content starts at x=0.
+   -------------------------------------------------------------------------- */
+@media (max-width: 639px) {
+  :root {
+    --sb-rail-w: 0px !important;
+  }
+  .sidebar-hover-zone {
+    display: none !important;
+  }
+  .sidebar-rail {
+    display: none !important;
+  }
+  .sidebar-rail-placeholder {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tablet & Desktop (min-width: 640px): 72px rail
+   -------------------------------------------------------------------------- */
 @media (min-width: 640px) {
   :root {
     --sb-rail-w: 72px;
+  }
+  .sidebar-hover-zone {
+    display: flex;
+  }
+  .sidebar-hamburger-btn {
+    display: none !important;
   }
 }
 
@@ -712,7 +739,9 @@
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 998;
   touch-action: manipulation;
 }
@@ -720,8 +749,8 @@
 .sidebar-drawer.touch-drawer {
   position: fixed;
   inset: 0 auto 0 0;
-  width: min(260px, 86vw);
-  max-width: 260px;
+  width: min(280px, 86vw);
+  max-width: 280px;
   height: 100dvh;
   background: var(--t-sidebar);
   z-index: 999;

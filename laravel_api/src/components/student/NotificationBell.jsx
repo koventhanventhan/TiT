@@ -148,7 +148,13 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="student-notif-dropdown">
+        <>
+          <div
+            className="notif-backdrop"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close notifications"
+          />
+          <div className="student-notif-dropdown">
 
           {/* Header */}
           <div style={{
@@ -333,33 +339,54 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
             </div>
           )}
         </div>
+        </>
       )}
 
       <style>{`
+        .notif-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.25);
+          z-index: 9998;
+          touch-action: manipulation;
+        }
         .student-notif-dropdown {
           position: absolute;
           top: calc(100% + 10px);
           right: 0;
-          width: 320px;
+          width: 360px;
           max-width: calc(100vw - 24px);
           max-height: 480px;
           background: #fff;
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
           border: 1px solid var(--t-border);
-          z-index: 10000;
+          z-index: 9999;
           overflow: hidden;
           animation: notifSlideDown 0.2s ease;
         }
-        @media (max-width: 768px) {
+        /* Tablet (640px - 1023px): starts to the RIGHT of rail */
+        @media (min-width: 640px) and (max-width: 1023px) {
           .student-notif-dropdown {
             position: fixed !important;
-            top: 70px !important;
+            top: calc(var(--header-h, 64px) + 8px) !important;
+            left: calc(var(--sb-rail-w, 72px) + 12px) !important;
+            right: auto !important;
+            width: min(380px, calc(100vw - var(--sb-rail-w, 72px) - 24px)) !important;
+            max-height: calc(100dvh - var(--header-h, 64px) - 24px) !important;
+            border-radius: 16px;
+          }
+        }
+        /* Phones (< 640px): fixed panel left: 12px; right: 12px; top: calc(var(--header-h, 64px) + 8px) */
+        @media (max-width: 639px) {
+          .student-notif-dropdown {
+            position: fixed !important;
+            top: calc(var(--header-h, 64px) + 8px) !important;
             left: 12px !important;
             right: 12px !important;
             width: auto !important;
             max-width: none !important;
-            max-height: calc(100vh - 90px) !important;
+            max-height: calc(100dvh - var(--header-h, 64px) - 24px) !important;
             border-radius: 14px;
           }
         }

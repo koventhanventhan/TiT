@@ -476,7 +476,7 @@
                             <div class="p-4 rounded" style="background: rgba(255, 171, 45, 0.1); border-left: 0.3125rem solid #ffab2d; height: 100%;">
                                 <h5 class="mb-3" style="color: #fff;">Quick Payment (Current Month)</h5>
                                 <p class="mb-3">Mark student as paid for <strong>{{ now()->format('F Y') }}</strong></p>
-                                <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST">
+                                <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                                     @csrf
                                     <input type="hidden" name="year_month" value="{{ now()->format('Y-m-d') }}">
                                     <button type="submit" class="btn btn-success font-weight-bold btn-block" style="border-radius: 0.5rem;">
@@ -489,7 +489,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1.0px dashed rgba(255, 255, 255, 0.2); height: 100%;">
                                 <h5 class="mb-3" style="color: #fff;">Custom Payment Month</h5>
-                                <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST">
+                                <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                                     @csrf
                                     <div class="form-group">
                                         <label class="small text-muted">Select Date 
@@ -533,7 +533,11 @@
                                         <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                                         <td>
                                             @if($payment->status === 'paid')
-                                                <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID </span>
+                                                <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID</span>
+                                            @elseif($payment->status === 'pending')
+                                                <span class="badge" style="background: #ffab2d; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PENDING</span>
+                                            @elseif($payment->status === 'cancelled')
+                                                <span class="badge" style="background: #757575; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">CANCELLED</span>
                                             @else
                                                 <span class="badge" style="background: #f44336; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">{{ strtoupper($payment->status) }}</span>
                                             @endif

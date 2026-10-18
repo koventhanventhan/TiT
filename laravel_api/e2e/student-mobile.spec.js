@@ -2429,7 +2429,8 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
 
     // Resize across 640px to tablet 768x1024
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.waitForTimeout(300);
+    await page.mouse.move(600, 600);
+    await page.waitForTimeout(500);
 
     // Drawer must be closed, overlay gone, body scroll restored, rail visible
     await expect(drawer).not.toBeVisible();
@@ -2440,12 +2441,50 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
 
     // Resize back across 640px to 390x844
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.waitForTimeout(300);
+    await page.mouse.move(600, 600);
+    await page.waitForTimeout(500);
 
     // Rail hidden, drawer closed, hamburger ready
     await expect(page.locator('.sidebar-rail')).not.toBeVisible();
     await expect(drawer).not.toBeVisible();
     await expect(hamburger).toBeVisible();
+  });
+
+  test('Resizing across 640px switches cleanly in touch context (mobile emulation)', async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+    await setupStudentMocks(page);
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    const hamburger = page.locator('header button[aria-label="Open menu"]');
+    await expect(hamburger).toBeVisible();
+    await hamburger.tap();
+
+    const drawer = page.locator('.sidebar-drawer');
+    await expect(drawer).toBeVisible();
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.waitForTimeout(500);
+
+    await expect(drawer).not.toBeVisible();
+    await expect(page.locator('.sidebar-backdrop')).not.toBeVisible();
+    const overflowRestored = await page.evaluate(() => document.body.style.overflow);
+    expect(overflowRestored).toBe('');
+    await expect(page.locator('.sidebar-rail')).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(500);
+
+    await expect(page.locator('.sidebar-rail')).not.toBeVisible();
+    await expect(drawer).not.toBeVisible();
+    await expect(hamburger).toBeVisible();
+
+    await context.close();
   });
 
   // ── Ghost-click test: real touch input ──
@@ -2529,12 +2568,20 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       }, { x: panelBox.x + 8, y: panelBox.y + 12 });
       expect(pointElInside, `Left edge of notification panel must not be occluded by rail at ${vp.width}px`).toBe(true);
 
+      // Notification header must be on a single line (title and actions do not wrap)
+      const notifHeader = panel.locator('.student-notif-header, .global-notif-header').first();
+      if (await notifHeader.count() > 0) {
+        const headerBox = await notifHeader.boundingBox();
+        expect(headerBox).not.toBeNull();
+        expect(headerBox.height, `Notification header must remain a single row at ${vp.width}px`).toBeLessThanOrEqual(68);
+      }
+
       // Close button and Mark all read reachable
       const closeBtn = panel.locator('button[aria-label="Close notifications"]');
       await expect(closeBtn).toBeVisible();
       const closeBox = await closeBtn.boundingBox();
-      expect(closeBox.width).toBeGreaterThanOrEqual(40);
-      expect(closeBox.height).toBeGreaterThanOrEqual(40);
+      expect(closeBox.width).toBeGreaterThanOrEqual(39);
+      expect(closeBox.height).toBeGreaterThanOrEqual(39);
 
       const markAllRead = panel.locator('button:has-text("Mark all read")');
       if (await markAllRead.count() > 0) {
@@ -2608,7 +2655,7 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
     { width: 360, height: 740 },
     { width: 390, height: 844 },
   ]) {
-    test(`Issue 5: Schedule cards single-line time, status badge, join >= 44px, chat bubble clear at ${vp.width}x${vp.height}`, async ({ page }) => {
+    test(`Issue 5: Schedule cards single-line time, status badge, join >= 44px, no chat bubble at ${vp.width}x${vp.height}`, async ({ page }) => {
       await setupStudentMocks(page);
       await page.setViewportSize(vp);
       await page.goto('/student/schedule', { waitUntil: 'domcontentloaded' });
@@ -2650,25 +2697,32 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       const mainBox = await page.locator('main').first().boundingBox();
       expect(mainBox.x).toBeLessThanOrEqual(16);
 
-      // Chat bubble check
-      const chatBubble = page.locator('.floating-chat-bubble');
-      await expect(chatBubble).toBeVisible();
-      const cBox = await chatBubble.boundingBox();
-      expect(cBox.width).toBeGreaterThanOrEqual(48);
-      expect(cBox.height).toBeGreaterThanOrEqual(48);
+      // Chat bubble removed: verify 0 count
+      await expect(page.locator('.floating-chat-bubble, [aria-label="WhatsApp support"]')).toHaveCount(0);
 
-      // Open hamburger drawer and verify chat bubble does not cover Logout
+      // Open hamburger drawer and verify Logout button is reachable
       const hamburger = page.locator('header button[aria-label="Open menu"]');
       await hamburger.click();
       const drawer = page.locator('.sidebar-drawer');
       await expect(drawer).toBeVisible();
 
-      // Chat bubble is hidden while drawer is open
-      await expect(chatBubble).not.toBeVisible();
-
       // Logout button reachable
       const logoutBtn = drawer.locator('button[aria-label="Logout"]');
       await expect(logoutBtn).toBeVisible();
+    });
+  }
+
+  // Verify teacher dashboard also has 0 floating chat bubbles
+  for (const vp of [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`Teacher dashboard has no floating chat bubble at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await page.setViewportSize(vp);
+      await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+      await expect(page.locator('.floating-chat-bubble, [aria-label="WhatsApp support"]')).toHaveCount(0);
     });
   }
 

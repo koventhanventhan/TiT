@@ -7,7 +7,6 @@ import {
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import SidebarShell, { SidebarHamburger } from '../shared/SidebarShell'
-import FloatingChatBubble from '../shared/FloatingChatBubble'
 import { useToast } from '../../components/shared/ToastContext';
 import { getActiveStorage, getAuthHeaders } from '../../services/apiClient';
 import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery';
@@ -379,7 +378,6 @@ export default function StudentDashboardLayout({ children, user }) {
                 {/* Content */}
                 <div style={{
                     flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px',
-                    paddingBottom: isMobile ? '80px' : '24px',
                     background: 'var(--t-bg)',
                     boxSizing: 'border-box'
                 }}>
@@ -387,9 +385,6 @@ export default function StudentDashboardLayout({ children, user }) {
                         {children}
                     </div>
                 </div>
-
-                {/* Floating Chat Bubble */}
-                <FloatingChatBubble isDrawerOpen={phoneMenuOpen} />
             </main>
         </div>
     )

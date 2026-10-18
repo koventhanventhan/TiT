@@ -166,40 +166,41 @@ export default function GlobalNotificationBell() {
           <div className="global-notif-dropdown">
 
           {/* Header */}
-          <div style={{
-            padding: '16px 20px', display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between',
+          <div className="global-notif-header" style={{
+            padding: '10px 12px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 6, flexWrap: 'nowrap',
             borderBottom: '1px solid #f1f5f9',
             background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FiBell style={{ color: '#0d9488', fontSize: 16 }} />
-              <span style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexShrink: 1 }}>
+              <FiBell style={{ color: '#0d9488', fontSize: 16, flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', whiteSpace: 'nowrap' }}>
                 Notifications
               </span>
               {unreadTotalCount > 0 && (
                 <span style={{
                   background: '#0d9488', color: '#fff',
                   borderRadius: 99, fontSize: 11, fontWeight: 700,
-                  padding: '1px 7px',
+                  padding: '1px 6px', whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
                   {unreadTotalCount} new
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
               {unreadTotalCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   title="Mark all as read"
                   style={{
                     background: 'rgba(20,184,166,0.08)', border: 'none',
-                    borderRadius: 8, padding: '6px 12px', minHeight: 44,
-                    color: '#0d9488', fontSize: 12, fontWeight: 600,
+                    borderRadius: 8, padding: '4px 8px', minHeight: 36,
+                    color: '#0d9488', fontSize: 11, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <FiCheckCircle style={{ fontSize: 13 }} /> Mark all read
+                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark read
                 </button>
               )}
               <button
@@ -208,7 +209,7 @@ export default function GlobalNotificationBell() {
                 aria-label="Refresh notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  width: 36, height: 36, minWidth: 36, minHeight: 36,
                   color: '#94a3b8', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}

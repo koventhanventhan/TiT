@@ -293,6 +293,12 @@ class AdminMarkPaidTest extends TestCase
             'selected_subjects' => json_encode(['Mathematics']),
         ]);
 
+        $fakePayHere = $this->createMock(\App\Services\PayHereService::class);
+        $fakePayHere->method('isConfigured')->willReturn(true);
+        $fakePayHere->method('buildCheckoutParams')->willReturn(['order_id' => 'TEST']);
+        $fakePayHere->method('getCheckoutUrl')->willReturn('https://sandbox.payhere.lk/pay/checkout');
+        $this->app->instance(\App\Services\PayHereService::class, $fakePayHere);
+
         \Laravel\Sanctum\Sanctum::actingAs($regStudent);
 
         $res1 = $this->postJson('/api/register/step2', [

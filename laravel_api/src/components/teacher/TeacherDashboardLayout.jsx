@@ -7,7 +7,6 @@ import {
 } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
 import SidebarShell, { SidebarHamburger } from '../shared/SidebarShell'
-import FloatingChatBubble from '../shared/FloatingChatBubble'
 import { useToast } from '../../components/shared/ToastContext'
 import { getAuthHeaders } from '../../services/apiClient'
 import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery'
@@ -348,9 +347,6 @@ export default function TeacherDashboardLayout({ children, user }) {
                         {children}
                     </div>
                 </div>
-
-                {/* Floating Chat Bubble */}
-                <FloatingChatBubble isDrawerOpen={phoneMenuOpen} />
             </main>
         </div>
     )

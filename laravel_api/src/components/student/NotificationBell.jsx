@@ -160,28 +160,28 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           <div className="student-notif-dropdown">
 
           {/* Header */}
-          <div style={{
-            padding: '16px 20px', display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between',
+          <div className="student-notif-header" style={{
+            padding: '10px 12px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 6, flexWrap: 'nowrap',
             borderBottom: '1px solid var(--t-border)',
             background: 'var(--t-bg)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FiBell style={{ color: 'var(--t-primary)', fontSize: 16 }} />
-              <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--t-text)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexShrink: 1 }}>
+              <FiBell style={{ color: 'var(--t-primary)', fontSize: 16, flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--t-text)', whiteSpace: 'nowrap' }}>
                 Notifications
               </span>
               {unreadCount > 0 && (
                 <span style={{
                   background: 'var(--t-primary)', color: '#fff',
                   borderRadius: 99, fontSize: 11, fontWeight: 700,
-                  padding: '1px 7px',
+                  padding: '1px 6px', whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
                   {unreadCount} new
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
@@ -189,12 +189,13 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                   title="Mark all as read"
                   style={{
                     background: 'var(--t-primary-soft)', border: 'none',
-                    borderRadius: 8, padding: '6px 12px', minHeight: 44,
-                    color: 'var(--t-primary)', fontSize: 12, fontWeight: 600,
+                    borderRadius: 8, padding: '4px 8px', minHeight: 36,
+                    color: 'var(--t-primary)', fontSize: 11, fontWeight: 600,
                     cursor: markingRead ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <FiCheckCircle style={{ fontSize: 13 }} /> Mark all read
+                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark read
                 </button>
               )}
               <button
@@ -203,7 +204,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                 aria-label="Refresh notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  width: 36, height: 36, minWidth: 36, minHeight: 36,
                   color: 'var(--t-muted)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}

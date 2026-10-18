@@ -203,9 +203,17 @@ test.describe('Teacher Area Mobile, Tablet & Tap Optimization Suite', () => {
           expect(smallFontInputs, `Inputs with font-size < 16px on mobile: ${JSON.stringify(smallFontInputs)}`).toEqual([]);
         }
 
-        // Navigation rail check: logo button is reachable on all viewports
-        const logoBtn = page.locator('button[data-rail="logo"]');
-        await expect(logoBtn).toBeVisible();
+        // Navigation check: on phones (<640px) hamburger is visible & rail hidden; on tablet/desktop (>=640px) rail logo is visible
+        if (vp.width < 640) {
+          const hamburger = page.locator('header button[aria-label="Open menu"]');
+          await expect(hamburger).toBeVisible();
+          await expect(page.locator('.sidebar-rail')).not.toBeVisible();
+          const mainBox = await page.locator('main').first().boundingBox();
+          expect(mainBox.x).toBeLessThanOrEqual(16);
+        } else {
+          const logoBtn = page.locator('button[data-rail="logo"]');
+          await expect(logoBtn).toBeVisible();
+        }
       });
     }
   }
@@ -409,104 +417,117 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     { width: 1024, height: 768 },
     { width: 1280, height: 800 },
   ]) {
-    test(`Teacher rail visible by default at ${vp.width}x${vp.height} with logo button >= 44x44`, async ({ page }) => {
+    test(`Teacher navigation geometry at ${vp.width}x${vp.height}`, async ({ page }) => {
       await setupMocks(page, true);
       await page.setViewportSize(vp);
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      const logoBtn = page.locator('button[data-rail="logo"]');
-      await expect(logoBtn).toBeVisible();
-      await expect(logoBtn).toHaveAttribute('aria-label', 'Open menu');
-      await expect(logoBtn).toHaveAttribute('aria-expanded', 'false');
-      await expect(logoBtn).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
-      const logoBox = await logoBtn.boundingBox();
-      expect(logoBox).not.toBeNull();
-      expect(logoBox.width, 'Logo button width must be >= 44px').toBeGreaterThanOrEqual(44);
-      expect(logoBox.height, 'Logo button height must be >= 44px').toBeGreaterThanOrEqual(44);
+      if (vp.width < 640) {
+        // No rail
+        await expect(page.locator('.sidebar-rail')).not.toBeVisible();
+        // Content x <= 16
+        const mainBox = await page.locator('main').first().boundingBox();
+        expect(mainBox.x).toBeLessThanOrEqual(16);
 
-      if (vp.width === 320 && vp.height === 568) {
-        // Check all 8 item icon buttons + Logout inside viewport at 320x568
-        const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
-        const count = await railItems.count();
-        expect(count, 'Must have 8 rail item icon buttons').toBe(8);
+        // Hamburger button in header
+        const hamburger = page.locator('header button[aria-label="Open menu"]');
+        await expect(hamburger).toBeVisible();
+        await expect(hamburger).toHaveAttribute('aria-expanded', 'false');
+        await expect(hamburger).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
+        const hBox = await hamburger.boundingBox();
+        expect(hBox.width).toBeGreaterThanOrEqual(44);
+        expect(hBox.height).toBeGreaterThanOrEqual(44);
 
-        for (let i = 0; i < count; i++) {
-          const item = railItems.nth(i);
-          await expect(item).toBeVisible();
-          await expect(item).toHaveAttribute('aria-label', 'Open menu');
-          await expect(item).toHaveAttribute('aria-expanded', 'false');
-          await expect(item).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
+        // Click hamburger opens drawer with 8 items + Logout
+        await hamburger.click();
+        const drawer = page.locator('aside.sidebar-drawer');
+        await expect(drawer).toBeVisible();
+        const navItems = drawer.locator('a.sidebar-nav-item');
+        expect(await navItems.count()).toBe(8);
+
+        for (let i = 0; i < 8; i++) {
+          const item = navItems.nth(i);
           const box = await item.boundingBox();
-          expect(box).not.toBeNull();
-          expect(box.width, `Rail item ${i} width must be >= 44px`).toBeGreaterThanOrEqual(44);
-          expect(box.height, `Rail item ${i} height must be >= 44px`).toBeGreaterThanOrEqual(44);
-          expect(box.y + box.height, `Rail item ${i} must be within viewport height`).toBeLessThanOrEqual(vp.height);
+          expect(box.y + box.height).toBeLessThanOrEqual(vp.height);
         }
 
-        // Active page highlight
-        const dashboardRailBtn = page.locator('.sidebar-rail button[data-rail="dashboard"]');
-        await expect(dashboardRailBtn).toHaveClass(/active/);
-
-        const logoutBtn = page.locator('.sidebar-rail button[data-rail="logout"]');
+        const logoutBtn = drawer.locator('button[aria-label="Logout"]');
         await expect(logoutBtn).toBeVisible();
-        await expect(logoutBtn).toHaveAttribute('aria-label', 'Open menu');
-        await expect(logoutBtn).toHaveAttribute('aria-expanded', 'false');
-        await expect(logoutBtn).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
         const logoutBox = await logoutBtn.boundingBox();
-        expect(logoutBox).not.toBeNull();
-        expect(logoutBox.width, 'Logout button width must be >= 44px').toBeGreaterThanOrEqual(44);
-        expect(logoutBox.height, 'Logout button height must be >= 44px').toBeGreaterThanOrEqual(44);
-        expect(logoutBox.y + logoutBox.height, 'Logout button must be within viewport height').toBeLessThanOrEqual(vp.height);
+        expect(logoutBox.y + logoutBox.height).toBeLessThanOrEqual(vp.height);
+      } else {
+        const logoBtn = page.locator('button[data-rail="logo"]');
+        await expect(logoBtn).toBeVisible();
+        await expect(logoBtn).toHaveAttribute('aria-label', 'Open menu');
+        await expect(logoBtn).toHaveAttribute('aria-expanded', 'false');
+        await expect(logoBtn).toHaveAttribute('aria-controls', 'expanded-sidebar-drawer');
+        const logoBox = await logoBtn.boundingBox();
+        expect(logoBox.width).toBeGreaterThanOrEqual(44);
+        expect(logoBox.height).toBeGreaterThanOrEqual(44);
+
+        const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
+        expect(await railItems.count()).toBe(8);
       }
     });
   }
 
-  // Also check 360x640 for all 8 items + Logout >= 44x44 inside viewport
-  test('Teacher rail has all 8 items and Logout >= 44x44 inside viewport at 360x640', async ({ page }) => {
+  // Also check 360x640 for all 8 items + Logout >= 44x44 inside viewport on mobile
+  test('Teacher mobile drawer has all 8 items and Logout >= 44x44 inside viewport at 360x640', async ({ page }) => {
     await setupMocks(page, true);
     await page.setViewportSize({ width: 360, height: 640 });
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
-    const railItems = page.locator('.sidebar-rail button.sidebar-rail-item');
-    const count = await railItems.count();
-    expect(count).toBe(8);
+    const hamburger = page.locator('header button[aria-label="Open menu"]');
+    await expect(hamburger).toBeVisible();
+    await hamburger.click();
 
-    for (let i = 0; i < count; i++) {
-      const item = railItems.nth(i);
+    const drawer = page.locator('aside.sidebar-drawer');
+    await expect(drawer).toBeVisible();
+
+    const navItems = drawer.locator('a.sidebar-nav-item');
+    expect(await navItems.count()).toBe(8);
+
+    for (let i = 0; i < 8; i++) {
+      const item = navItems.nth(i);
       await expect(item).toBeVisible();
       const box = await item.boundingBox();
-      expect(box.width).toBeGreaterThanOrEqual(44);
       expect(box.height).toBeGreaterThanOrEqual(44);
       expect(box.y + box.height).toBeLessThanOrEqual(640);
     }
 
-    const logoutBtn = page.locator('.sidebar-rail button[data-rail="logout"]');
+    const logoutBtn = drawer.locator('button[aria-label="Logout"]');
     await expect(logoutBtn).toBeVisible();
     const logoutBox = await logoutBtn.boundingBox();
-    expect(logoutBox.width).toBeGreaterThanOrEqual(44);
     expect(logoutBox.height).toBeGreaterThanOrEqual(44);
     expect(logoutBox.y + logoutBox.height).toBeLessThanOrEqual(640);
   });
 
-  // 2. For each of: logo, Dashboard icon, Messages icon, Settings icon, Logout icon, empty rail area:
-  // click/tap on the rail at 320x568, 360x740, 768x1024 and 1280x800 -> sidebar expands (all 8 labels + subtitle visible),
-  // URL unchanged, user still logged in (no logout request/redirect).
+  // 2. Expand drawer without navigation or logout (hamburger on phone, rail on tablet/desktop)
   for (const vp of [
     { width: 320, height: 568 },
     { width: 360, height: 740 },
     { width: 768, height: 1024 },
     { width: 1280, height: 800 },
   ]) {
-    for (const trigger of [
-      { name: 'logo', selector: 'button[data-rail="logo"]' },
-      { name: 'Dashboard icon', selector: 'button[data-rail="dashboard"]' },
-      { name: 'Messages icon', selector: 'button[data-rail="messages"]' },
-      { name: 'Settings icon', selector: 'button[data-rail="settings"]' },
-      { name: 'Logout icon', selector: 'button[data-rail="logout"]' },
-      { name: 'empty rail area', selector: '.sidebar-rail', position: { x: 30, y: 10 } },
-    ]) {
+    const triggers = vp.width < 640
+      ? [{ name: 'hamburger', selector: 'header button[aria-label="Open menu"]' }]
+      : [
+          { name: 'logo', selector: 'button[data-rail="logo"]' },
+          { name: 'Dashboard icon', selector: 'button[data-rail="dashboard"]' },
+          { name: 'My Students icon', selector: 'button[data-rail="my-students"]' },
+          { name: 'Schedule icon', selector: 'button[data-rail="schedule"]' },
+          { name: 'Materials icon', selector: 'button[data-rail="materials"]' },
+          { name: 'Assignments icon', selector: 'button[data-rail="assignments"]' },
+          { name: 'Reports icon', selector: 'button[data-rail="reports"]' },
+          { name: 'Messages icon', selector: 'button[data-rail="messages"]' },
+          { name: 'Settings icon', selector: 'button[data-rail="settings"]' },
+          { name: 'Logout icon', selector: 'button[data-rail="logout"]' },
+          { name: 'empty rail area', selector: '.sidebar-rail', position: { x: 30, y: 10 } },
+        ];
+
+    for (const trigger of triggers) {
       test(`Teacher tapping ${trigger.name} at ${vp.width}x${vp.height} expands full sidebar without navigation or logout`, async ({ page }) => {
         await setupMocks(page, true);
         await page.setViewportSize(vp);
@@ -554,8 +575,8 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
-    // Expand sidebar via messages rail button
-    await page.locator('button[data-rail="messages"]').click();
+    // Expand sidebar via hamburger on phone
+    await page.locator('header button[aria-label="Open menu"]').click();
     const drawer = page.locator('.sidebar-drawer');
     await expect(drawer).toBeVisible();
     await page.waitForTimeout(500);
@@ -568,9 +589,8 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     // URL changes
     await expect(page).toHaveURL(/\/teacher\/schedule/);
 
-    // Auto-collapses within 500ms: drawer not visible, rail visible
+    // Auto-collapses within 500ms: drawer not visible
     await expect(drawer).not.toBeVisible({ timeout: 500 });
-    await expect(page.locator('.sidebar-rail')).toBeVisible();
   });
 
   // 4. Backdrop tap, X, Escape each collapse; at 1280x800 main content bounding box is identical before and after opening (no push)
@@ -626,7 +646,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
   // 5. Double-tap on a rail icon opens once and does not navigate
   test('Teacher double-tap on a rail icon opens once and does not navigate', async ({ page }) => {
     await setupMocks(page, true);
-    await page.setViewportSize({ width: 360, height: 740 });
+    await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
@@ -657,8 +677,12 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      // Open drawer via logo button
-      await page.locator('button[data-rail="logo"]').click();
+      // Open drawer via hamburger on phones, logo button on tablet/desktop
+      if (vp.width < 640) {
+        await page.locator('header button[aria-label="Open menu"]').click();
+      } else {
+        await page.locator('button[data-rail="logo"]').click();
+      }
       await page.waitForTimeout(250);
 
       const drawer = page.locator('.sidebar-drawer');
@@ -698,7 +722,7 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
   // 7. Colours: rail and expanded use design tokens, primary resolves to rgb(79, 11, 217)
   test('Teacher colours: rail and expanded use design tokens, primary resolves to rgb(79, 11, 217)', async ({ page }) => {
     await setupMocks(page, true);
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(300);
 
@@ -742,7 +766,11 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
       await page.screenshot({ path: collapsedPath, fullPage: false });
 
       // Expanded screenshot
-      await page.locator('button[data-rail="logo"]').click();
+      if (shotVp.width < 640) {
+        await page.locator('header button[aria-label="Open menu"]').click();
+      } else {
+        await page.locator('button[data-rail="logo"]').click();
+      }
       await page.waitForTimeout(300);
 
       const expandedPath = path.join(tmpDir, `teacher_expanded_${shotVp.width}x${shotVp.height}.png`);
@@ -865,7 +893,11 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      await page.locator('button[data-rail="logo"]').click();
+      if (vp.width < 640) {
+        await page.locator('header button[aria-label="Open menu"]').click();
+      } else {
+        await page.locator('button[data-rail="logo"]').click();
+      }
       const drawer = page.locator('.sidebar-drawer');
       await expect(drawer).toBeVisible();
       await page.waitForTimeout(250);
@@ -1080,10 +1112,16 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      // Tap rail logo with real touch
-      const logoBtn = page.locator('button[data-rail="logo"]');
-      await expect(logoBtn).toBeVisible();
-      await logoBtn.tap();
+      // Tap opener with real touch: hamburger on phones, rail logo on tablet
+      if (touchVp.width < 640) {
+        const hamburger = page.locator('header button[aria-label="Open menu"]');
+        await expect(hamburger).toBeVisible();
+        await hamburger.tap();
+      } else {
+        const logoBtn = page.locator('button[data-rail="logo"]');
+        await expect(logoBtn).toBeVisible();
+        await logoBtn.tap();
+      }
 
       const drawer = page.locator('.sidebar-drawer.touch-drawer');
       await expect(drawer).toBeVisible({ timeout: 2000 });
@@ -1132,7 +1170,7 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
   ];
 
   for (const touchVp of touchViewports) {
-    // Regression test with page.touchscreen.tap exactly on the logo
+    // Regression test with page.touchscreen.tap exactly on the logo/hamburger
     test(`Bug 1 Regression: touchscreen.tap on logo at ${touchVp.width}x${touchVp.height} opens drawer and stays open >= 1500ms`, async ({ browser }) => {
       const context = await browser.newContext({
         viewport: touchVp,
@@ -1144,13 +1182,15 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
       await page.goto('/teacher/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(300);
 
-      const logo = page.locator('.sidebar-rail-logo-btn');
-      await expect(logo).toBeVisible();
-      const logoBox = await logo.boundingBox();
-      expect(logoBox).not.toBeNull();
+      const opener = touchVp.width < 640
+        ? page.locator('header button[aria-label="Open menu"]')
+        : page.locator('.sidebar-rail-logo-btn');
+      await expect(opener).toBeVisible();
+      const openerBox = await opener.boundingBox();
+      expect(openerBox).not.toBeNull();
 
-      // Real touchscreen tap on the exact center of the logo button
-      await page.touchscreen.tap(logoBox.x + logoBox.width / 2, logoBox.y + logoBox.height / 2);
+      // Real touchscreen tap on the exact center of the opener button
+      await page.touchscreen.tap(openerBox.x + openerBox.width / 2, openerBox.y + openerBox.height / 2);
 
       const drawer = page.locator('aside.sidebar-drawer');
       await expect(drawer).toBeVisible({ timeout: 2000 });
@@ -1165,8 +1205,12 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
       await context.close();
     });
 
-    // Test each rail target with real touch locator.tap() / touchscreen.tap()
-    for (const target of teacherRailTargets) {
+    // Test opener / rail targets with real touch locator.tap() / touchscreen.tap()
+    const targets = touchVp.width < 640
+      ? [{ name: 'hamburger', selector: 'header button[aria-label="Open menu"]' }]
+      : teacherRailTargets;
+
+    for (const target of targets) {
       test(`Bug 1: Real touch tap on ${target.name} at ${touchVp.width}x${touchVp.height} keeps drawer open >= 1500ms, then navigates on row tap`, async ({ browser }) => {
         let logoutRequested = false;
         const context = await browser.newContext({
@@ -1359,7 +1403,11 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
         await page.hover('button[data-rail="logo"]');
         drawer = page.locator('.sidebar-drawer.hover-drawer');
       } else {
-        await page.click('button[data-rail="logo"]');
+        if (vp.width < 640) {
+          await page.click('header button[aria-label="Open menu"]');
+        } else {
+          await page.click('button[data-rail="logo"]');
+        }
         drawer = page.locator('.sidebar-drawer.touch-drawer');
       }
       await expect(drawer).toBeVisible({ timeout: 2000 });

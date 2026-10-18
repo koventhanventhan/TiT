@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 
 /**
- * Shared hook for computing subject pricing with package discounts.
+ * Shared hook for computing subject pricing with discounts.
  * Used by both SubjectUpdateModal (existing students) and StudentRegistrationForm (new students).
  *
  * @param {string[]} selectedSubjects - Array of selected subject names

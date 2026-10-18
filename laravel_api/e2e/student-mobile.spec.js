@@ -2177,10 +2177,78 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
     });
   }
 
-  // PART B: Fee display tests without package wording or strikethrough at 320x568 and 390x844
-  for (const vp of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
-    test(`Part B: Registration payment step contains no package wording, no strikethrough, no overflow, no FeeRow overlap at ${vp.width}x${vp.height}`, async ({ page }) => {
-      await setupStudentMocks(page);
+  // PART B: Fee display tests restoring original design with only package discount wording removed
+  const partBMockHandlers = {
+    onRequest: async (route, url) => {
+      if (url.includes('/subjects/prices')) {
+        await route.fulfill({
+          status: 200, contentType: 'application/json',
+          body: JSON.stringify({
+            grade_10_to_11: [
+              { id: 1, name: 'Mathematics', price: 2000, medium: 'english' },
+              { id: 2, name: 'Science', price: 2000, medium: 'english' },
+              { id: 3, name: 'English', price: 1500, medium: 'english' },
+              { id: 4, name: 'Tamil', price: 1300, medium: 'english' }
+            ]
+          })
+        });
+        return true;
+      }
+      if (url.includes('/packages')) {
+        await route.fulfill({
+          status: 200, contentType: 'application/json',
+          body: JSON.stringify([
+            {
+              id: 1,
+              name: 'Greade-6-9 in-package English Medium',
+              applicable_grades: [10, 11],
+              medium: 'english',
+              price: 3500,
+              package_price: 3500,
+              type: 'all_subjects'
+            }
+          ])
+        });
+        return true;
+      }
+      if (url.includes('/settings')) {
+        await route.fulfill({
+          status: 200, contentType: 'application/json',
+          body: JSON.stringify({
+            admission_fees_config: JSON.stringify({
+              '10': { enabled: true, amount: 500 }
+            })
+          })
+        });
+        return true;
+      }
+      if (url.includes('/student/update-subjects')) {
+        await route.fulfill({
+          status: 200, contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            monthly_fee: 3500,
+            amount: 4000,
+            admission_fee: 500,
+            already_paid: false
+          })
+        });
+        return true;
+      }
+      return false;
+    }
+  };
+
+  const partBUserOverrides = {
+    current_grade: 'Grade 10',
+    medium: 'english',
+    subjects: ['Mathematics', 'Science', 'English', 'Tamil'],
+    selected_subjects: ['Mathematics', 'Science', 'English', 'Tamil'],
+  };
+
+  for (const vp of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1280, height: 800 }]) {
+    test(`Part B: Registration payment step original look without package discount wording at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page, partBUserOverrides, partBMockHandlers);
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto('/register?step=2', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(400);
@@ -2188,30 +2256,42 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       const modal = page.locator('.tit-reg-container');
       await expect(modal).toBeVisible();
 
-      // Wait for fee calculation to finish
-      await expect(modal.locator('.fee-subjects-section')).toBeVisible({ timeout: 5000 });
+      // Wait for fee calculation to finish: look for Subjects Total
+      await expect(modal.locator('.fee-row-label:has-text("Subjects Total:")')).toBeVisible({ timeout: 5000 });
 
-      // 1. Contains NO text matching /package/i
+      // 1. Contains NO text matching /package\s*discount/i, /in-?package/i, or package name
       const text = await modal.innerText();
-      expect(text, 'Payment step must not contain package wording').not.toMatch(/package/i);
+      expect(text, 'Payment step must not contain package discount wording').not.toMatch(/package\s*discount/i);
+      expect(text, 'Payment step must not contain in-package wording').not.toMatch(/in-?package/i);
+      expect(text, 'Payment step must not contain appliedPackage name').not.toContain('Greade-6-9');
 
-      // 2. Contains no strikethrough element
-      await expect(modal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+      // 2. Contains strikethrough element for Subjects Total (Rs. 6,800.00)
+      const strikethroughRow = modal.locator('.fee-row.fee-row-strikethrough');
+      await expect(strikethroughRow).toHaveCount(1);
+      await expect(strikethroughRow.locator('.fee-row-label')).toHaveText('Subjects Total:');
+      await expect(strikethroughRow.locator('.fee-row-value')).toContainText('6,800');
 
-      // 3. Contains subject names (Mathematics, Science, English), Monthly Fee, Total Amount with correct numbers
-      expect(text).toContain('Mathematics');
-      expect(text).toContain('Science');
-      expect(text).toContain('English');
-      await expect(modal.locator('.fee-row-label:has-text("Monthly Fee")')).toBeVisible();
-      await expect(modal.locator('.fee-row-label:has-text("Total Amount")')).toBeVisible();
-      await expect(modal.locator('.fee-row-value:has-text("2,500")').first()).toBeVisible();
+      // 3. Contains label "Monthly Fee:" with green discount style and Rs. 3,500.00
+      const discountRow = modal.locator('.fee-row.fee-row-discount');
+      await expect(discountRow).toHaveCount(1);
+      await expect(discountRow.locator('.fee-row-label')).toHaveText('Monthly Fee:');
+      await expect(discountRow.locator('.fee-row-value')).toContainText('3,500');
 
-      // 4. No horizontal overflow
+      // 4. Contains Admission Fee (First Time): Rs. 500.00 and Total Amount: Rs. 4,000.00
+      const admissionRow = modal.locator('.fee-row', { hasText: 'Admission Fee' });
+      await expect(admissionRow).toHaveCount(1);
+      await expect(admissionRow.locator('.fee-row-value')).toContainText('500');
+
+      const totalRow = modal.locator('.fee-row', { hasText: 'Total Amount' });
+      await expect(totalRow).toHaveCount(1);
+      await expect(totalRow.locator('.fee-row-value')).toContainText('4,000');
+
+      // 5. No horizontal overflow
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
       expect(scrollWidth, 'Page must not have horizontal overflow').toBeLessThanOrEqual(clientWidth + 1);
 
-      // 5. Each FeeRow label and value do not overlap
+      // 6. Each FeeRow label and value do not overlap
       const feeRows = modal.locator('.fee-row');
       const rowCount = await feeRows.count();
       expect(rowCount).toBeGreaterThan(0);
@@ -2227,10 +2307,15 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
           expect(isSeparateLines || isNonOverlappingColumns, `FeeRow ${i} label and value must not overlap`).toBe(true);
         }
       }
+
+      // Take screenshot at 1280x800 as requested
+      if (vp.width === 1280) {
+        await page.screenshot({ path: 'C:/tmp/registration-payment-step-1280x800.png' });
+      }
     });
 
-    test(`Part B: SubjectUpdateModal step 1 summary & step 2 contain no package wording, no strikethrough, no FeeRow overlap at ${vp.width}x${vp.height}`, async ({ page }) => {
-      await setupStudentMocks(page);
+    test(`Part B: SubjectUpdateModal step 1 summary & step 2 contain no package wording, correct strikethrough & numbers at ${vp.width}x${vp.height}`, async ({ page }) => {
+      await setupStudentMocks(page, partBUserOverrides, partBMockHandlers);
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto('/student/settings', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(400);
@@ -2244,10 +2329,14 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       await expect(updateModal).toBeVisible();
 
       // STEP 1:
-      // Verify step 1 summary card contains no /package/i and no strikethrough
+      // Verify step 1 summary card contains no /package\s*discount/i, /in-?package/i, or appliedPackage name
       const step1Text = await updateModal.innerText();
-      expect(step1Text, 'Step 1 must not contain package wording').not.toMatch(/package/i);
-      await expect(updateModal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+      expect(step1Text, 'Step 1 must not contain package discount wording').not.toMatch(/package\s*discount/i);
+      expect(step1Text, 'Step 1 must not contain in-package wording').not.toMatch(/in-?package/i);
+      expect(step1Text, 'Step 1 must not contain appliedPackage name').not.toContain('Greade-6-9');
+
+      // Step 1 savings chip has "🎉 You save" without package name
+      await expect(updateModal.locator('span:has-text("🎉 You save")')).toBeVisible();
 
       // Step 1 FeeRow check
       const step1FeeRows = updateModal.locator('.fee-row');
@@ -2272,23 +2361,33 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       await page.waitForTimeout(400);
 
       // STEP 2:
-      // Wait for step 2 fee card
-      await expect(updateModal.locator('.fee-subjects-section')).toBeVisible({ timeout: 5000 });
+      // Wait for step 2 fee card with Subjects Total
+      await expect(updateModal.locator('.fee-row-label:has-text("Subjects Total:")')).toBeVisible({ timeout: 5000 });
 
-      // 1. Contains NO text matching /package/i
+      // 1. Contains NO text matching /package\s*discount/i, /in-?package/i, or package name
       const step2Text = await updateModal.innerText();
-      expect(step2Text, 'Step 2 must not contain package wording').not.toMatch(/package/i);
+      expect(step2Text, 'Step 2 must not contain package discount wording').not.toMatch(/package\s*discount/i);
+      expect(step2Text, 'Step 2 must not contain in-package wording').not.toMatch(/in-?package/i);
+      expect(step2Text, 'Step 2 must not contain appliedPackage name').not.toContain('Greade-6-9');
 
-      // 2. Contains no strikethrough
-      await expect(updateModal.locator('s, strike, del, .fee-row-strikethrough')).toHaveCount(0);
+      // 2. Contains strikethrough for Subjects Total (6,800) and discount row for Monthly Fee (3,500)
+      const s2Strikethrough = updateModal.locator('.fee-row.fee-row-strikethrough');
+      await expect(s2Strikethrough).toHaveCount(1);
+      await expect(s2Strikethrough.locator('.fee-row-value')).toContainText('6,800');
 
-      // 3. Contains subject chips, Monthly Fee, Total Amount with correct numbers
-      expect(step2Text).toContain('Mathematics');
-      expect(step2Text).toContain('Science');
-      expect(step2Text).toContain('English');
-      await expect(updateModal.locator('.fee-row-label:has-text("Monthly Fee")')).toBeVisible();
-      await expect(updateModal.locator('.fee-row-label:has-text("Total Amount")')).toBeVisible();
-      await expect(updateModal.locator('.fee-row-value:has-text("2,500")').first()).toBeVisible();
+      const s2Discount = updateModal.locator('.fee-row.fee-row-discount');
+      await expect(s2Discount).toHaveCount(1);
+      await expect(s2Discount.locator('.fee-row-label')).toHaveText('Monthly Fee:');
+      await expect(s2Discount.locator('.fee-row-value')).toContainText('3,500');
+
+      // 3. Admission fee (500) and Total (4,000)
+      const s2Admission = updateModal.locator('.fee-row', { hasText: 'Admission Fee' });
+      await expect(s2Admission).toHaveCount(1);
+      await expect(s2Admission.locator('.fee-row-value')).toContainText('500');
+
+      const s2Total = updateModal.locator('.fee-row', { hasText: 'Total Amount' });
+      await expect(s2Total).toHaveCount(1);
+      await expect(s2Total.locator('.fee-row-value')).toContainText('4,000');
 
       // 4. Step 2 FeeRows non-overlapping
       const step2FeeRows = updateModal.locator('.fee-row');

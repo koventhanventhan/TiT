@@ -510,22 +510,28 @@
 
                     {{-- Payment History Table --}}
                     @if(isset($payments) && $payments->count() > 0)
+                    @php
+                        $latestPaidPayment = $payments->where('status', 'paid')->sortByDesc('year_month')->first();
+                    @endphp
                     <div class="mt-5 border-top pt-4">
-                        <h4 class="mb-4" style="color: #4caf50; font-weight: 700;"><i class="flaticon-381-notepad mr-2"></i> PAYMENT HISTORY 
-                     </h4>
+                        <h4 class="mb-4" style="color: #4caf50; font-weight: 700;"><i class="flaticon-381-notepad mr-2"></i> PAYMENT HISTORY</h4>
                         <div class="table-responsive">
                             <table class="table table-bordered" style="color: #fff;">
                                 <thead style="background: rgba(76, 175, 80, 0.2);">
                                     <tr>
                                         <th style="color: #4caf50; font-weight: 700;">#</th>
-                                        <th style="color: #4caf50; font-weight: 700;">Month  </th>
-                                        <th style="color: #4caf50; font-weight: 700;">Paid Date </th>
-                                        <th style="color: #4caf50; font-weight: 700;">Amount </th>
-                                        <th style="color: #4caf50; font-weight: 700;">Status </th>
+                                        <th style="color: #4caf50; font-weight: 700;">Month</th>
+                                        <th style="color: #4caf50; font-weight: 700;">Paid Date</th>
+                                        <th style="color: #4caf50; font-weight: 700;">Amount</th>
+                                        <th style="color: #4caf50; font-weight: 700;">Status</th>
+                                        <th style="color: #4caf50; font-weight: 700;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($payments as $index => $payment)
+                                    @php
+                                        $isLatestPaid = ($payment->status === 'paid' && $latestPaidPayment && $latestPaidPayment->id === $payment->id);
+                                    @endphp
                                     <tr style="border-bottom: 1.0px solid rgba(255,255,255,0.1);">
                                         <td>{{ $index + 1 }}</td>
                                         <td><strong>{{ $payment->year_month }}</strong></td>
@@ -542,7 +548,244 @@
                                                 <span class="badge" style="background: #f44336; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">{{ strtoupper($payment->status) }}</span>
                                             @endif
                                         </td>
+                                        <td class="nowrap-column">
+                                            <div class="payment-actions-wrap">
+                                                {{-- 1. Edit Button --}}
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-action-edit" 
+                                                        data-toggle="modal" 
+                                                        data-target="#editPaymentModal_{{ $payment->id }}"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editPaymentModal_{{ $payment->id }}"
+                                                        title="Edit payment {{ $payment->year_month }}" 
+                                                        aria-label="Edit payment {{ $payment->year_month }}"
+                                                        style="min-height: 36px; background: #ffab2d; border-color: #ffab2d; color: #1a103c; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                    <i class="fa fa-pencil"></i> <span>Edit</span>
+                                                </button>
+
+                                                {{-- 2. Context Action Button (Receipt fallback: Revert to Pending / Mark Paid) --}}
+                                                @if($payment->status === 'paid')
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-action-revert" 
+                                                            data-toggle="modal" 
+                                                            data-target="#revertPaymentModal_{{ $payment->id }}"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#revertPaymentModal_{{ $payment->id }}"
+                                                            title="Revert payment {{ $payment->year_month }} to pending" 
+                                                            aria-label="Revert payment {{ $payment->year_month }} to pending"
+                                                            style="min-height: 36px; background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                        <i class="fa fa-undo"></i> <span>Revert</span>
+                                                    </button>
+                                                @else
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-action-mark-paid" 
+                                                            data-toggle="modal" 
+                                                            data-target="#markPaidModal_{{ $payment->id }}"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#markPaidModal_{{ $payment->id }}"
+                                                            title="Mark payment {{ $payment->year_month }} as paid" 
+                                                            aria-label="Mark payment {{ $payment->year_month }} as paid"
+                                                            style="min-height: 36px; background: #4caf50; border-color: #4caf50; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                        <i class="fa fa-check"></i> <span>Mark Paid</span>
+                                                    </button>
+                                                @endif
+
+                                                {{-- 3. Delete Button --}}
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-action-delete" 
+                                                        data-toggle="modal" 
+                                                        data-target="#deletePaymentModal_{{ $payment->id }}"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deletePaymentModal_{{ $payment->id }}"
+                                                        title="Delete payment {{ $payment->year_month }}" 
+                                                        aria-label="Delete payment {{ $payment->year_month }}"
+                                                        style="min-height: 36px; background: #f44336; border-color: #f44336; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                    <i class="fa fa-trash"></i> <span>Delete</span>
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
+
+                                    {{-- Modals for Payment {{ $payment->id }} --}}
+                                    {{-- Edit Modal --}}
+                                    <div class="modal fade" id="editPaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="editPaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;">
+                                                <form action="{{ route('admin.students.payments.update', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="payment_id" value="{{ $payment->id }}">
+                                                    <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                        <h5 class="modal-title text-white" id="editPaymentModalLabel_{{ $payment->id }}">
+                                                            <i class="fa fa-pencil text-warning mr-2"></i> Edit Payment — {{ $payment->year_month }}
+                                                        </h5>
+                                                        <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body text-left">
+                                                        @if($errors->any() && old('payment_id') == $payment->id)
+                                                            <div class="alert alert-danger" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #f44336; color: #fff;">
+                                                                <ul class="mb-0 pl-3">
+                                                                    @foreach($errors->all() as $err)
+                                                                        <li>{{ $err }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="text-white font-weight-bold">Month (YYYY-MM) <span class="text-danger">*</span></label>
+                                                            <input type="month" class="form-control" name="year_month" 
+                                                                value="{{ old('payment_id') == $payment->id ? old('year_month', $payment->year_month) : $payment->year_month }}" 
+                                                                required pattern="^\d{4}-(0[1-9]|1[0-2])$"
+                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="text-white font-weight-bold">Paid Date</label>
+                                                            <input type="date" class="form-control" name="paid_date" 
+                                                                value="{{ old('payment_id') == $payment->id ? old('paid_date', ($payment->paid_at ? $payment->paid_at->format('Y-m-d') : '')) : ($payment->paid_at ? $payment->paid_at->format('Y-m-d') : '') }}"
+                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                            <small class="text-muted">Cleared automatically if status is not Paid. Defaults to today if status is Paid and date is empty.</small>
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="text-white font-weight-bold">Amount (Rs.) <span class="text-danger">*</span></label>
+                                                            <input type="number" step="0.01" min="0" class="form-control" name="amount" 
+                                                                value="{{ old('payment_id') == $payment->id ? old('amount', $payment->amount) : $payment->amount }}" 
+                                                                required
+                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="text-white font-weight-bold">Status <span class="text-danger">*</span></label>
+                                                            @php $curStatus = old('payment_id') == $payment->id ? old('status', $payment->status) : $payment->status; @endphp
+                                                            <select class="form-control" name="status" required style="background: #1a103c; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                <option value="paid" {{ $curStatus === 'paid' ? 'selected' : '' }}>Paid</option>
+                                                                <option value="pending" {{ $curStatus === 'pending' ? 'selected' : '' }}>Pending</option>
+                                                                <option value="cancelled" {{ $curStatus === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                                                <option value="failed" {{ $curStatus === 'failed' ? 'selected' : '' }}>Failed</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="text-white font-weight-bold">Payment Method</label>
+                                                            @php $curMethod = old('payment_id') == $payment->id ? old('payment_method', $payment->payment_method) : $payment->payment_method; @endphp
+                                                            <select class="form-control" name="payment_method" style="background: #1a103c; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                <option value="offline" {{ $curMethod === 'offline' ? 'selected' : '' }}>Offline</option>
+                                                                <option value="online" {{ $curMethod === 'online' ? 'selected' : '' }}>Online</option>
+                                                                <option value="bank_transfer" {{ $curMethod === 'bank_transfer' ? 'selected' : '' }}>Bank transfer</option>
+                                                                <option value="cash" {{ $curMethod === 'cash' ? 'selected' : '' }}>Cash</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary" style="background: #ffab2d; border-color: #ffab2d; color: #1a103c; font-weight: 700; min-height: 36px;">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Delete Modal --}}
+                                    <div class="modal fade" id="deletePaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="deletePaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(244,67,54,0.3); border-radius: 12px;">
+                                                <form action="{{ route('admin.students.payments.destroy', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                        <h5 class="modal-title text-white" id="deletePaymentModalLabel_{{ $payment->id }}">
+                                                            <i class="fa fa-trash text-danger mr-2"></i> Delete Payment
+                                                        </h5>
+                                                        <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body text-left">
+                                                        <p class="mb-2" style="font-size: 1rem;">
+                                                            Delete payment <strong>{{ $payment->year_month }}</strong> – Rs. {{ number_format($payment->amount, 2) }} ({{ strtoupper($payment->status) }})? 
+                                                            This cannot be undone.
+                                                        </p>
+                                                        @if($isLatestPaid)
+                                                            <div class="alert alert-danger mt-3 mb-0" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #f44336; color: #fca5a5; font-size: 0.875rem;">
+                                                                <i class="fa fa-exclamation-triangle mr-1"></i> The student may be treated as unpaid for this month after deleting.
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger" style="min-height: 36px; font-weight: 700; background: #f44336; border-color: #f44336;">Delete Payment</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($payment->status === 'paid')
+                                        {{-- Revert to Pending Modal --}}
+                                        <div class="modal fade" id="revertPaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="revertPaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(255,152,0,0.3); border-radius: 12px;">
+                                                    <form action="{{ route('admin.students.payments.revert', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
+                                                        @csrf
+                                                        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                            <h5 class="modal-title text-white" id="revertPaymentModalLabel_{{ $payment->id }}">
+                                                                <i class="fa fa-undo text-warning mr-2"></i> Revert to Pending
+                                                            </h5>
+                                                            <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body text-left">
+                                                            <p class="mb-0" style="font-size: 1rem;">
+                                                                Revert payment for <strong>{{ $payment->year_month }}</strong> (Rs. {{ number_format($payment->amount, 2) }}) back to <strong>PENDING</strong>? This will clear the paid date.
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
+                                                            <button type="submit" class="btn btn-warning" style="min-height: 36px; font-weight: 700; color: #fff; background: #ff9800; border-color: #ff9800;">Revert to Pending</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- Mark Paid Modal --}}
+                                        <div class="modal fade" id="markPaidModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="markPaidModalLabel_{{ $payment->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(76,175,80,0.3); border-radius: 12px;">
+                                                    <form action="{{ route('admin.students.payments.mark-paid', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
+                                                        @csrf
+                                                        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                            <h5 class="modal-title text-white" id="markPaidModalLabel_{{ $payment->id }}">
+                                                                <i class="fa fa-check text-success mr-2"></i> Mark Month as Paid
+                                                            </h5>
+                                                            <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body text-left">
+                                                            <p class="mb-3" style="font-size: 1rem;">
+                                                                Mark payment for <strong>{{ $payment->year_month }}</strong> (Rs. {{ number_format($payment->amount, 2) }}) as <strong>PAID</strong>?
+                                                            </p>
+                                                            <div class="form-group mb-0">
+                                                                <label class="text-white font-weight-bold">Paid Date</label>
+                                                                <input type="date" class="form-control" name="paid_date" value="{{ date('Y-m-d') }}" required
+                                                                    style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
+                                                            <button type="submit" class="btn btn-success" style="min-height: 36px; font-weight: 700; background: #4caf50; border-color: #4caf50;">Mark Paid</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                     @endforeach
                                 </tbody>
                             </table>
@@ -550,8 +793,39 @@
                     </div>
                     @else
                     <div class="mt-4 text-center p-4" style="background: rgba(255,255,255,0.05); border-radius: 0.5rem;">
-                        <p class="mb-0" style="color: #938787;">No payment records yet / à®‡à®¤à¯ à®µà®°à¯ˆ à®•à®Ÿà¯ à®Ÿà®£ à®ªà®¤à®¿à®µà¯ à®•à®³à¯  à®‡à®²à¯ à®²à¯ˆ</p>
+                        <p class="mb-0" style="color: #938787;">No payment records yet</p>
                     </div>
+                    @endif
+
+                    <style>
+                    .payment-actions-wrap {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        flex-wrap: wrap;
+                        min-width: 220px;
+                    }
+                    @media (max-width: 575.98px) {
+                        .payment-actions-wrap {
+                            flex-direction: column;
+                            align-items: stretch !important;
+                            min-width: 0;
+                        }
+                        .payment-actions-wrap .btn {
+                            width: 100%;
+                            justify-content: center;
+                        }
+                    }
+                    </style>
+
+                    @if($errors->any() && old('payment_id'))
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (typeof $ !== 'undefined') {
+                                $('#editPaymentModal_{{ old('payment_id') }}').modal('show');
+                            }
+                        });
+                    </script>
                     @endif
                 </div>
             </div>

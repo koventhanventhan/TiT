@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\Auth\AdminAuthController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\StudentPaymentController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\ZoomScheduleController;
 use App\Http\Controllers\Admin\AttendanceController;
@@ -57,6 +58,10 @@ Route::prefix('admin')->group(function () {
         Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy');
         Route::post('/students/{id}/mark-paid', [StudentController::class, 'markPaid'])->name('admin.students.mark-paid');
+        Route::put('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'update'])->name('admin.students.payments.update');
+        Route::delete('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'destroy'])->name('admin.students.payments.destroy');
+        Route::post('/students/{id}/payments/{payment}/mark-paid', [StudentPaymentController::class, 'markPaid'])->name('admin.students.payments.mark-paid');
+        Route::post('/students/{id}/payments/{payment}/revert', [StudentPaymentController::class, 'revert'])->name('admin.students.payments.revert');
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
         Route::post('/students/promote', [StudentController::class, 'promote'])->name('admin.students.promote');
         Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password');

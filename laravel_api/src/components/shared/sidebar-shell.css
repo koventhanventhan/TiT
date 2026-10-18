@@ -68,6 +68,25 @@
 }
 
 /* --------------------------------------------------------------------------
+   1c. Phones (<640px): NO rail. Full drawer toggled via hamburger.
+   -------------------------------------------------------------------------- */
+@media (max-width: 639px) {
+  .sidebar-hover-zone,
+  .sidebar-rail,
+  .sidebar-rail-placeholder {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    flex-basis: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    pointer-events: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
    2. Collapsed State: Icon Rail (Default on all screen sizes)
    -------------------------------------------------------------------------- */
 .sidebar-rail {
@@ -712,7 +731,9 @@
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 998;
   touch-action: manipulation;
 }
@@ -720,16 +741,51 @@
 .sidebar-drawer.touch-drawer {
   position: fixed;
   inset: 0 auto 0 0;
-  width: min(260px, 86vw);
-  max-width: 260px;
+  width: min(280px, 86vw);
+  max-width: 280px;
   height: 100dvh;
   background: var(--t-sidebar);
   z-index: 999;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   transform: translateX(0);
   transition: transform 200ms ease-out;
+}
+
+/* Header hamburger button (>= 44x44) */
+.sidebar-hamburger-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--t-text);
+  cursor: pointer;
+  padding: 0;
+  font-size: 22px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  transition: transform 120ms ease, background-color 150ms ease;
+}
+
+.sidebar-hamburger-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-hamburger-btn:active {
+  transform: scale(0.96);
+}
+
+.sidebar-hamburger-btn:focus-visible {
+  outline: 2px solid var(--t-primary) !important;
+  outline-offset: 2px !important;
 }
 
 /* Hover overlay: starts at x=0 covering rail completely, no backdrop */

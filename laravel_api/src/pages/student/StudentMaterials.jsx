@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
     FiFolder, FiFileText, FiVideo, FiLink, FiDownload,
     FiSearch, FiExternalLink, FiRefreshCw, FiAlertCircle
@@ -75,6 +75,14 @@ export default function StudentMaterials() {
         { id: 'document', label: 'Documents' }
     ]
 
+    const tabRefs = useRef({})
+
+    useEffect(() => {
+        if (tabRefs.current[activeTab]) {
+            tabRefs.current[activeTab].scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' })
+        }
+    }, [activeTab])
+
     const q = searchQuery.trim().toLowerCase()
     const filteredMaterials = (materials || []).filter(m => {
         const itemType = (m.type || '').toLowerCase()
@@ -105,29 +113,33 @@ export default function StudentMaterials() {
                 border: '1px solid var(--t-border)', boxShadow: 'var(--t-shadow-sm)'
             }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                                minHeight: 44, padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                border: activeTab === tab.id ? '1px solid var(--t-primary)' : '1px solid transparent',
-                                background: activeTab === tab.id ? 'var(--t-primary-soft)' : 'transparent',
-                                color: activeTab === tab.id ? 'var(--t-primary)' : 'var(--t-text-muted)',
-                                transition: 'opacity 0.2s', whiteSpace: 'nowrap'
-                            }}>
-                                {tab.label}
-                            </button>
-                        ))}
+                    <div className="materials-tab-strip" style={{ flex: '1 1 auto', minWidth: 0, maxWidth: '100%' }}>
+                        {tabs.map(tab => {
+                            const isActive = activeTab === tab.id
+                            return (
+                                <button
+                                    key={tab.id}
+                                    ref={el => { tabRefs.current[tab.id] = el }}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`materials-tab-pill ${isActive ? 'active' : ''}`}
+                                >
+                                    {tab.label}
+                                </button>
+                            )
+                        })}
                     </div>
 
-                    <div style={{ position: 'relative' }}>
-                        <FiSearch style={{ position: 'absolute', left: 12, top: 12, color: 'var(--t-text-muted)' }} />
+                    <div className="materials-search-wrap">
+                        <FiSearch style={{ position: 'absolute', left: 12, top: 14, color: 'var(--t-text-muted)', pointerEvents: 'none' }} />
                         <input
                             type="text"
+                            className="materials-search-input"
                             placeholder="Search materials..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
-                                width: 220, padding: '10px 12px 10px 36px', borderRadius: 8,
+                                width: '100%', boxSizing: 'border-box', minHeight: 44,
+                                padding: '10px 12px 10px 36px', borderRadius: 8,
                                 border: '1px solid var(--t-border)', background: 'var(--t-bg)', fontSize: 16,
                                 outline: 'none', transition: 'border-color 0.2s', color: 'var(--t-text)'
                             }}
@@ -135,6 +147,64 @@ export default function StudentMaterials() {
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                .materials-tab-strip {
+                    display: flex;
+                    gap: 8px;
+                    overflow-x: auto;
+                    scroll-snap-type: x proximity;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+                    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+                    padding: 2px 0;
+                }
+                .materials-tab-strip::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                }
+                .materials-tab-pill {
+                    flex: 0 0 auto;
+                    min-height: 44px;
+                    height: 44px;
+                    padding: 0 16px;
+                    border-radius: 999px;
+                    white-space: nowrap;
+                    font-size: 14px;
+                    line-height: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    box-sizing: border-box;
+                    transition: background 0.2s, color 0.2s, border-color 0.2s;
+                }
+                .materials-tab-pill.active {
+                    background: var(--t-primary-soft, #f5f3ff);
+                    border: 1px solid var(--t-primary-border, #ddd6fe);
+                    color: var(--t-primary, #4f0bd9);
+                    font-weight: 600;
+                }
+                .materials-tab-pill:not(.active) {
+                    background: transparent;
+                    border: 1px solid transparent;
+                    color: var(--t-text-muted, #64748b);
+                    font-weight: 500;
+                }
+                .materials-search-wrap {
+                    position: relative;
+                    width: 220px;
+                    max-width: 100%;
+                }
+                @media (max-width: 639px) {
+                    .materials-search-wrap {
+                        width: 100%;
+                    }
+                }
+            `}</style>
 
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>

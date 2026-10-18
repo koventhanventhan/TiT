@@ -118,6 +118,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
       <button
         onClick={handleOpen}
         title="Notifications"
+        aria-label="Notifications"
         style={{
           position: 'relative',
           width: 44, height: 44, borderRadius: 10,
@@ -148,7 +149,15 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="student-notif-dropdown">
+        <>
+          {/* Backdrop on mobile and tablet */}
+          <div
+            className="student-notif-backdrop"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close notifications overlay"
+          />
+
+          <div className="student-notif-dropdown">
 
           {/* Header */}
           <div style={{
@@ -217,7 +226,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
           </div>
 
           {/* Body */}
-          <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+          <div style={{ maxHeight: 'calc(100dvh - 180px)', overflowY: 'auto' }}>
             {loading && notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
                 <div style={{
@@ -235,7 +244,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                   onClick={fetchNotifications}
                   style={{
                     marginTop: 12, background: 'var(--t-primary)', color: '#fff',
-                    border: 'none', borderRadius: 8, padding: '6px 16px',
+                    border: 'none', borderRadius: 8, padding: '6px 16px', minHeight: 44,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}
                 >
@@ -289,7 +298,7 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
                     <div style={{
                       fontSize: 12, color: 'var(--t-text-3)', lineHeight: 1.4,
                       display: '-webkit-box', WebKitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      WebKitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
                       {notif.body}
                     </div>
@@ -333,34 +342,75 @@ export default function NotificationBell({ apiPrefix = 'student' }) {
             </div>
           )}
         </div>
+        </>
       )}
 
       <style>{`
+        .student-notif-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 999;
+          background: rgba(0, 0, 0, 0.25);
+          touch-action: manipulation;
+        }
         .student-notif-dropdown {
           position: absolute;
-          top: calc(100% + 10px);
+          top: calc(100% + 8px);
           right: 0;
-          width: 320px;
-          max-width: calc(100vw - 24px);
+          width: 380px;
+          max-width: min(380px, calc(100vw - 24px));
           max-height: 480px;
           background: #fff;
           border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
           border: 1px solid var(--t-border);
-          z-index: 10000;
+          z-index: 1000;
           overflow: hidden;
           animation: notifSlideDown 0.2s ease;
         }
-        @media (max-width: 768px) {
+        /* Phones (<640px) */
+        @media (max-width: 639px) {
           .student-notif-dropdown {
             position: fixed !important;
-            top: 70px !important;
+            top: calc(var(--sb-header-h, 64px) + 8px) !important;
             left: 12px !important;
             right: 12px !important;
             width: auto !important;
             max-width: none !important;
-            max-height: calc(100vh - 90px) !important;
+            max-height: calc(100dvh - 64px - 24px) !important;
             border-radius: 14px;
+            z-index: 1000 !important;
+          }
+        }
+        /* Tablet (640-1023px): start right of rail */
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .student-notif-dropdown {
+            position: fixed !important;
+            top: calc(var(--sb-header-h, 64px) + 8px) !important;
+            left: calc(var(--sb-rail-w, 72px) + 12px) !important;
+            right: auto !important;
+            width: min(380px, calc(100vw - var(--sb-rail-w, 72px) - 24px)) !important;
+            max-width: calc(100vw - var(--sb-rail-w, 72px) - 24px) !important;
+            max-height: calc(100dvh - 64px - 24px) !important;
+            border-radius: 14px;
+            z-index: 1000 !important;
+          }
+        }
+        /* Desktop (>=1024px): anchored to bell */
+        @media (min-width: 1024px) {
+          .student-notif-backdrop {
+            display: none;
+          }
+          .student-notif-dropdown {
+            position: absolute !important;
+            top: calc(100% + 8px) !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 380px !important;
+            max-width: min(380px, calc(100vw - 24px)) !important;
+            max-height: 480px !important;
+            border-radius: 16px;
+            z-index: 1000 !important;
           }
         }
         @keyframes notifSlideDown {

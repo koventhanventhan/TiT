@@ -125,6 +125,7 @@ export default function GlobalNotificationBell() {
       <button
         onClick={handleOpen}
         title="Notifications"
+        aria-label="Notifications"
         style={{
           position: 'relative',
           width: 40, height: 40, borderRadius: 10,
@@ -155,7 +156,14 @@ export default function GlobalNotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="global-notif-dropdown">
+        <>
+          <div
+            className="global-notif-backdrop"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close notifications overlay"
+          />
+
+          <div className="global-notif-dropdown">
 
           {/* Header */}
           <div style={{
@@ -179,41 +187,45 @@ export default function GlobalNotificationBell() {
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {unreadTotalCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   title="Mark all as read"
                   style={{
                     background: 'rgba(20,184,166,0.08)', border: 'none',
-                    borderRadius: 8, padding: '4px 10px',
-                    color: '#0d9488', fontSize: 11, fontWeight: 600,
+                    borderRadius: 8, padding: '6px 12px', minHeight: 44,
+                    color: '#0d9488', fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
-                  <FiCheckCircle style={{ fontSize: 12 }} /> Mark all read
+                  <FiCheckCircle style={{ fontSize: 13 }} /> Mark all read
                 </button>
               )}
               <button
                 onClick={fetchNotifications}
                 title="Refresh"
+                aria-label="Refresh notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: '#94a3b8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiRefreshCw style={{ fontSize: 13, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                <FiRefreshCw style={{ fontSize: 14, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close notifications"
                 style={{
                   background: 'none', border: 'none', borderRadius: 8,
-                  padding: '4px 8px', color: '#94a3b8', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
+                  width: 44, height: 44, minWidth: 44, minHeight: 44,
+                  color: '#94a3b8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <FiX style={{ fontSize: 14 }} />
+                <FiX style={{ fontSize: 16 }} />
               </button>
             </div>
           </div>
@@ -331,32 +343,75 @@ export default function GlobalNotificationBell() {
             )}
           </div>
         </div>
+        </>
       )}
 
       <style>{`
+        .global-notif-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 999;
+          background: rgba(0, 0, 0, 0.25);
+          touch-action: manipulation;
+        }
         .global-notif-dropdown {
           position: absolute;
-          top: calc(100% + 10px);
+          top: calc(100% + 8px);
           right: 0;
-          width: 360px;
+          width: 380px;
+          max-width: min(380px, calc(100vw - 24px));
           max-height: 480px;
           background: #fff;
           border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
           border: 1px solid rgba(226,232,240,0.8);
-          z-index: 10000;
+          z-index: 1000;
           overflow: hidden;
           animation: notifSlideDown 0.2s ease;
         }
-        @media (max-width: 768px) {
+        /* Phones (<640px) */
+        @media (max-width: 639px) {
           .global-notif-dropdown {
             position: fixed !important;
-            top: 70px !important;
+            top: calc(var(--sb-header-h, 64px) + 8px) !important;
             left: 12px !important;
             right: 12px !important;
             width: auto !important;
-            max-height: calc(100vh - 90px) !important;
+            max-width: none !important;
+            max-height: calc(100dvh - 64px - 24px) !important;
             border-radius: 14px;
+            z-index: 1000 !important;
+          }
+        }
+        /* Tablet (640-1023px): start right of rail */
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .global-notif-dropdown {
+            position: fixed !important;
+            top: calc(var(--sb-header-h, 64px) + 8px) !important;
+            left: calc(var(--sb-rail-w, 72px) + 12px) !important;
+            right: auto !important;
+            width: min(380px, calc(100vw - var(--sb-rail-w, 72px) - 24px)) !important;
+            max-width: calc(100vw - var(--sb-rail-w, 72px) - 24px) !important;
+            max-height: calc(100dvh - 64px - 24px) !important;
+            border-radius: 14px;
+            z-index: 1000 !important;
+          }
+        }
+        /* Desktop (>=1024px): anchored to bell */
+        @media (min-width: 1024px) {
+          .global-notif-backdrop {
+            display: none;
+          }
+          .global-notif-dropdown {
+            position: absolute !important;
+            top: calc(100% + 8px) !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 380px !important;
+            max-width: min(380px, calc(100vw - 24px)) !important;
+            max-height: 480px !important;
+            border-radius: 16px;
+            z-index: 1000 !important;
           }
         }
         @keyframes notifSlideDown {

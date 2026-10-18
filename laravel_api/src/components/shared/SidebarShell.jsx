@@ -1,39 +1,58 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FiX, FiChevronRight, FiLogOut } from 'react-icons/fi';
+import { FiX, FiChevronRight, FiLogOut, FiMenu } from 'react-icons/fi';
+import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery';
 import './sidebar-shell.css';
 
 /**
+ * SidebarHamburger button component
+ * Accessible >= 44x44 hamburger button for phone headers.
+ */
+export function SidebarHamburger({
+    isOpen = false,
+    onClick,
+    onPointerDown,
+    hamburgerRef,
+}) {
+    return (
+        <button
+            ref={hamburgerRef}
+            type="button"
+            className="sidebar-hamburger-btn t-icon-btn"
+            aria-label="Open menu"
+            aria-expanded={isOpen}
+            aria-controls="expanded-sidebar-drawer"
+            onPointerDown={onPointerDown}
+            onClick={onClick}
+        >
+            <FiMenu />
+        </button>
+    );
+}
+
+/**
  * SidebarShell
- * Responsive Icon Rail (collapsed by default on all screen sizes).
- *
- * **Mouse hover (pointer:fine devices):**
- *   pointerenter on the rail → opens expanded sidebar after ~70ms intent delay.
- *   No backdrop; drawer overlays. Combined hover zone prevents flicker.
- *   pointerleave → closes after ~150ms grace.
- *   After navigating, a ~300ms suppress prevents instant re-open.
- *
- * **Click / Tap (all devices):**
- *   Click/tap on any rail icon → opens overlay with dimming backdrop.
- *   Click a labelled item → navigate + collapse. Backdrop / X / Escape close.
- *
- * @param {string} brandSubtitle - "Student Portal" | "Teacher Portal"
- * @param {Array<{name: string, path: string, icon: React.ComponentType}>} items
- * @param {object} user - Current user object
- * @param {function} [onLogout] - Optional logout handler
- * @param {string} [avatarUrl] - Optional avatar URL override
+ * Responsive Icon Rail (collapsed by default on all screen sizes >= 640px).
+ * On phones (< 640px), rail is hidden and drawer is opened via hamburger.
  */
 export default function SidebarShell({
     brandSubtitle = 'Portal',
     items = [],
     user = null,
     onLogout,
-    avatarUrl: propAvatarUrl
+    avatarUrl: propAvatarUrl,
+    isOpen: controlledIsOpen,
+    onClose: controlledOnClose,
+    onOpen: controlledOnOpen,
+    hamburgerRef,
 }) {
     const location = useLocation();
-    const [isExpanded, setIsExpanded] = useState(false);
+    const isPhone = useMediaQuery(MOBILE_BREAKPOINT);
+    const prevIsPhoneRef = useRef(isPhone);
+
+    const [isExpanded, setIsExpanded] = useState(Boolean(controlledIsOpen));
     // 'touch' | 'hover' | null — tracks HOW the drawer was opened
-    const [openMode, setOpenMode] = useState(null);
+    const [openMode, setOpenMode] = useState(controlledIsOpen ? 'touch' : null);
 
     const logoBtnRef = useRef(null);
     const closeBtnRef = useRef(null);
@@ -65,11 +84,14 @@ export default function SidebarShell({
         lastTriggerDataRailRef.current = railId;
         setOpenMode('touch');
         setIsExpanded(true);
-    }, []);
+        if (controlledOnOpen) {
+            controlledOnOpen();
+        }
+    }, [controlledOnOpen]);
 
     // Opens in "hover" mode (no backdrop, positioned next to rail)
     const openSidebarHover = useCallback(() => {
-        if (suppressHoverRef.current) return;
+        if (isPhone || suppressHoverRef.current) return;
         clearTimeout(hoverIntentTimerRef.current);
         hoverIntentTimerRef.current = null;
         openedAtRef.current = 0;
@@ -77,7 +99,7 @@ export default function SidebarShell({
         lastTriggerDataRailRef.current = 'hover';
         setOpenMode('hover');
         setIsExpanded(true);
-    }, []);
+    }, [isPhone]);
 
     const closeSidebar = useCallback(() => {
         clearTimeout(hoverIntentTimerRef.current);
@@ -86,7 +108,39 @@ export default function SidebarShell({
         hoverLeaveTimerRef.current = null;
         setIsExpanded(false);
         setOpenMode(null);
-    }, []);
+        document.body.style.overflow = '';
+        if (controlledOnClose) {
+            controlledOnClose();
+        }
+    }, [controlledOnClose]);
+
+    // Sync with controlledIsOpen prop
+    useEffect(() => {
+        if (controlledIsOpen !== undefined) {
+            if (controlledIsOpen && !isExpanded) {
+                openSidebarTouch(null, 'hamburger');
+            } else if (!controlledIsOpen && isExpanded) {
+                closeSidebar();
+            }
+        }
+    }, [controlledIsOpen]);
+
+    // Clean breakpoint switch across 640px
+    useEffect(() => {
+        if (prevIsPhoneRef.current !== isPhone) {
+            prevIsPhoneRef.current = isPhone;
+            clearTimeout(hoverIntentTimerRef.current);
+            hoverIntentTimerRef.current = null;
+            clearTimeout(hoverLeaveTimerRef.current);
+            hoverLeaveTimerRef.current = null;
+            document.body.style.overflow = '';
+            setIsExpanded(false);
+            setOpenMode(null);
+            if (controlledOnClose) {
+                controlledOnClose();
+            }
+        }
+    }, [isPhone, controlledOnClose]);
 
     const closeSidebarAfterNav = useCallback(() => {
         closeSidebar();
@@ -223,8 +277,12 @@ export default function SidebarShell({
                     closeBtnRef.current?.focus();
                 });
             } else if (prevExpandedRef.current) {
-                // NEVER programmatically focus anything after mouse hover closes
-                if (lastTriggerDataRailRef.current && lastTriggerDataRailRef.current !== 'hover') {
+                // When closing on phone: focus hamburger
+                if (isPhone || lastTriggerDataRailRef.current === 'hamburger') {
+                    requestAnimationFrame(() => {
+                        hamburgerRef?.current?.focus();
+                    });
+                } else if (lastTriggerDataRailRef.current && lastTriggerDataRailRef.current !== 'hover') {
                     requestAnimationFrame(() => {
                         const railId = lastTriggerDataRailRef.current;
                         const targetBtn = document.querySelector(`button[data-rail="${railId}"]`);
@@ -238,7 +296,7 @@ export default function SidebarShell({
             }
             prevExpandedRef.current = isExpanded;
         }
-    }, [isExpanded, openMode]);
+    }, [isExpanded, openMode, isPhone, hamburgerRef]);
 
     // ── Cleanup timers on unmount ────────────────────────────────────────
     useEffect(() => {
@@ -470,123 +528,126 @@ export default function SidebarShell({
     };
 
     const handleBackdropPointerDown = (e) => {
-        // Backdrop tap closes directly
+        if (e && e.cancelable) {
+            e.preventDefault();
+        }
     };
 
     return (
         <>
             {/* ══════════════════════════════════════════════════════════════
-                Wrapper: combined hover zone for rail + hover-drawer.
-                Hover zone wraps both so moving the mouse from rail to
-                expanded drawer never fires a leave event.
+                Wrapper: combined hover zone for rail + hover-drawer (TABLET/DESKTOP ONLY).
+                On phones (< 640px), NO rail is rendered. Content uses full width.
                 ══════════════════════════════════════════════════════════════ */}
-            <div
-                className={`sidebar-hover-zone${isHoverMode ? ' is-hover-expanded' : ''}`}
-                onPointerEnter={handleZonePointerEnter}
-                onPointerMove={handleZonePointerMove}
-                onPointerLeave={handleZonePointerLeave}
-            >
-                {/* ──────────────────────────────────────────────────────────
-                    1. Rail (in touch overlay mode, placeholder preserves width;
-                       in collapsed or hover mode, rail is interactive)
-                    ────────────────────────────────────────────────────────── */}
-                {isTouchMode ? (
-                    <div className="sidebar-rail-placeholder" aria-hidden="true" />
-                ) : (
-                    <aside
-                        className={`sidebar-rail${isExpanded ? ' rail-behind-drawer' : ''}`}
-                        aria-label="Sidebar navigation"
-                        onTouchStart={handleRailTouchStart}
-                        onPointerDown={(e) => handleRailPointerDown(e, 'empty')}
-                        onPointerUp={(e) => handleRailPointerUp(e, 'empty')}
-                        onClick={(e) => handleRailClick(e, 'empty')}
-                    >
-                        {/* Top Logo Button */}
-                        <button
-                            ref={logoBtnRef}
-                            type="button"
-                            className="sidebar-rail-logo-btn"
-                            title="TiT Education"
-                            aria-label="Open menu"
-                            aria-expanded={isExpanded}
-                            aria-controls="expanded-sidebar-drawer"
-                            data-rail="logo"
+            {!isPhone && (
+                <div
+                    className={`sidebar-hover-zone${isHoverMode ? ' is-hover-expanded' : ''}`}
+                    onPointerEnter={handleZonePointerEnter}
+                    onPointerMove={handleZonePointerMove}
+                    onPointerLeave={handleZonePointerLeave}
+                >
+                    {/* ──────────────────────────────────────────────────────────
+                        1. Rail (in touch overlay mode, placeholder preserves width;
+                           in collapsed or hover mode, rail is interactive)
+                        ────────────────────────────────────────────────────────── */}
+                    {isTouchMode ? (
+                        <div className="sidebar-rail-placeholder" aria-hidden="true" />
+                    ) : (
+                        <aside
+                            className={`sidebar-rail${isExpanded ? ' rail-behind-drawer' : ''}`}
+                            aria-label="Sidebar navigation"
                             onTouchStart={handleRailTouchStart}
-                            onPointerDown={(e) => handleRailPointerDown(e, 'logo')}
-                            onPointerUp={(e) => handleRailPointerUp(e, 'logo')}
-                            onClick={(e) => handleRailClick(e, 'logo')}
-                            onKeyDown={(e) => handleRailKeyDown(e, 'logo')}
+                            onPointerDown={(e) => handleRailPointerDown(e, 'empty')}
+                            onPointerUp={(e) => handleRailPointerUp(e, 'empty')}
+                            onClick={(e) => handleRailClick(e, 'empty')}
                         >
-                            <div className="sidebar-logo-tile">TiT</div>
-                        </button>
-
-                        {/* Spacer matching --sb-nav-gap for vertical alignment */}
-                        <div className="sidebar-rail-gap" aria-hidden="true" />
-
-                        {/* Nav Item Icon Buttons */}
-                        <nav className="sidebar-rail-nav hide-scrollbar" aria-label="Rail navigation">
-                            {items.map((item) => {
-                                const Icon = item.icon;
-                                const active = isItemActive(item);
-                                const railId = item.name.toLowerCase().replace(/\s+/g, '-');
-                                return (
-                                    <button
-                                        key={item.name}
-                                        type="button"
-                                        title={item.name}
-                                        aria-label="Open menu"
-                                        aria-expanded={isExpanded}
-                                        aria-controls="expanded-sidebar-drawer"
-                                        data-rail={railId}
-                                        data-title={item.name}
-                                        onTouchStart={handleRailTouchStart}
-                                        onPointerDown={(e) => handleRailPointerDown(e, railId)}
-                                        onPointerUp={(e) => handleRailPointerUp(e, railId)}
-                                        onClick={(e) => handleRailClick(e, railId)}
-                                        onKeyDown={(e) => handleRailKeyDown(e, railId)}
-                                        className={`sidebar-rail-item t-tap${active ? ' active' : ''}`}
-                                    >
-                                        <Icon className="sidebar-rail-icon" />
-                                    </button>
-                                );
-                            })}
-                        </nav>
-
-                        {/* Bottom Pinned Logout Icon */}
-                        <div className="sidebar-rail-bottom">
+                            {/* Top Logo Button */}
                             <button
+                                ref={logoBtnRef}
                                 type="button"
-                                title="Logout"
+                                className="sidebar-rail-logo-btn"
+                                title="TiT Education"
                                 aria-label="Open menu"
                                 aria-expanded={isExpanded}
                                 aria-controls="expanded-sidebar-drawer"
-                                data-rail="logout"
+                                data-rail="logo"
                                 onTouchStart={handleRailTouchStart}
-                                onPointerDown={(e) => handleRailPointerDown(e, 'logout')}
-                                onPointerUp={(e) => handleRailPointerUp(e, 'logout')}
-                                onClick={(e) => handleRailClick(e, 'logout')}
-                                onKeyDown={(e) => handleRailKeyDown(e, 'logout')}
-                                className="sidebar-rail-logout t-btn"
+                                onPointerDown={(e) => handleRailPointerDown(e, 'logo')}
+                                onPointerUp={(e) => handleRailPointerUp(e, 'logo')}
+                                onClick={(e) => handleRailClick(e, 'logo')}
+                                onKeyDown={(e) => handleRailKeyDown(e, 'logo')}
                             >
-                                <FiLogOut style={{ fontSize: 18 }} />
+                                <div className="sidebar-logo-tile">TiT</div>
                             </button>
-                        </div>
-                    </aside>
-                )}
 
-                {/* ──────────────────────────────────────────────────────────
-                    2. Hover Drawer (no backdrop, inside hover zone)
-                    ────────────────────────────────────────────────────────── */}
-                {isHoverMode && (
-                    <aside
-                        id="expanded-sidebar-drawer"
-                        className="sidebar-drawer is-open hover-drawer"
-                        aria-label="Main menu"
-                    >
-                        {renderExpandedContent(true)}
-                    </aside>
-                )}
-            </div>
+                            {/* Spacer matching --sb-nav-gap for vertical alignment */}
+                            <div className="sidebar-rail-gap" aria-hidden="true" />
+
+                            {/* Nav Item Icon Buttons */}
+                            <nav className="sidebar-rail-nav hide-scrollbar" aria-label="Rail navigation">
+                                {items.map((item) => {
+                                    const Icon = item.icon;
+                                    const active = isItemActive(item);
+                                    const railId = item.name.toLowerCase().replace(/\s+/g, '-');
+                                    return (
+                                        <button
+                                            key={item.name}
+                                            type="button"
+                                            title={item.name}
+                                            aria-label="Open menu"
+                                            aria-expanded={isExpanded}
+                                            aria-controls="expanded-sidebar-drawer"
+                                            data-rail={railId}
+                                            data-title={item.name}
+                                            onTouchStart={handleRailTouchStart}
+                                            onPointerDown={(e) => handleRailPointerDown(e, railId)}
+                                            onPointerUp={(e) => handleRailPointerUp(e, railId)}
+                                            onClick={(e) => handleRailClick(e, railId)}
+                                            onKeyDown={(e) => handleRailKeyDown(e, railId)}
+                                            className={`sidebar-rail-item t-tap${active ? ' active' : ''}`}
+                                        >
+                                            <Icon className="sidebar-rail-icon" />
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+
+                            {/* Bottom Pinned Logout Icon */}
+                            <div className="sidebar-rail-bottom">
+                                <button
+                                    type="button"
+                                    title="Logout"
+                                    aria-label="Open menu"
+                                    aria-expanded={isExpanded}
+                                    aria-controls="expanded-sidebar-drawer"
+                                    data-rail="logout"
+                                    onTouchStart={handleRailTouchStart}
+                                    onPointerDown={(e) => handleRailPointerDown(e, 'logout')}
+                                    onPointerUp={(e) => handleRailPointerUp(e, 'logout')}
+                                    onClick={(e) => handleRailClick(e, 'logout')}
+                                    onKeyDown={(e) => handleRailKeyDown(e, 'logout')}
+                                    className="sidebar-rail-logout t-btn"
+                                >
+                                    <FiLogOut style={{ fontSize: 18 }} />
+                                </button>
+                            </div>
+                        </aside>
+                    )}
+
+                    {/* ──────────────────────────────────────────────────────────
+                        2. Hover Drawer (no backdrop, inside hover zone)
+                        ────────────────────────────────────────────────────────── */}
+                    {isHoverMode && (
+                        <aside
+                            id="expanded-sidebar-drawer"
+                            className="sidebar-drawer is-open hover-drawer"
+                            aria-label="Main menu"
+                        >
+                            {renderExpandedContent(true)}
+                        </aside>
+                    )}
+                </div>
+            )}
 
             {/* ══════════════════════════════════════════════════════════════
                 3. Touch / Click Overlay (with backdrop — outside hover zone)

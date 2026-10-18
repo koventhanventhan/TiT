@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+export const MOBILE_BREAKPOINT = '(max-width: 639px)';
+
 /**
  * SSR-safe media query hook with dynamic listener on screen resize / rotate.
  * @param {string} query

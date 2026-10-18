@@ -64,7 +64,7 @@ export default function StudentSchedule() {
                     <p style={{ margin: '0 0 20px 0', color: 'var(--t-text-muted)', fontSize: 14 }}>You don't have any classes scheduled in the near future.</p>
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                <div className="schedule schedule-container" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
                     {Object.entries(grouped).map(([date, items]) => (
                         <div key={date}>
                             <h3 style={{
@@ -77,11 +77,12 @@ export default function StudentSchedule() {
                                 {date}
                             </h3>
                             
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 {items.map(cls => {
                                     const time = new Date(cls.scheduled_at || cls.start_time)
                                     const now = new Date()
-                                    const end = time.getTime() + (cls.duration || 60) * 60000
+                                    const duration = cls.duration || 60
+                                    const end = time.getTime() + duration * 60000
                                     const isEnded = end <= now.getTime()
                                     const isLive = time.getTime() <= now.getTime() && !isEnded
                                     const canJoin = !isEnded && now.getTime() >= (time.getTime() - 10 * 60 * 1000)
@@ -89,79 +90,187 @@ export default function StudentSchedule() {
                                     const hasLink = Boolean(cls.zoom_link || cls.join_url)
                                     const busy = isJoining(cls.id)
 
+                                    const startStr = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                                    const endStr = new Date(end).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                                    const timeRange = `${startStr} – ${endStr}`
+                                    const weekday = time.toLocaleDateString('en-US', { weekday: 'short' })
+                                    const dayNum = time.getDate()
+
                                     return (
-                                        <div key={cls.id} className="t-card" style={{
-                                            display: 'flex', alignItems: 'stretch',
-                                            background: '#fff', borderRadius: 16,
-                                            border: isLive ? '1px solid var(--t-primary-border)' : '1px solid var(--t-border)',
-                                            boxShadow: isLive ? '0 4px 12px rgba(79, 11, 217, 0.1)' : 'var(--t-shadow-sm)',
-                                            overflow: 'hidden', flexWrap: 'wrap',
-                                            opacity: isEnded ? 0.65 : 1
-                                        }}>
-                                            {/* Time Block */}
-                                            <div style={{
-                                                width: 100, padding: 20,
-                                                background: isLive ? 'var(--t-primary)' : 'var(--t-bg)',
-                                                borderRight: '1px solid var(--t-border)',
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                                color: isLive ? '#fff' : 'var(--t-text)'
-                                            }}>
-                                                <span style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</span>
-                                                <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.8 }}>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</span>
-                                                {isLive && <span style={{ padding: '2px 8px', borderRadius: 12, background: 'var(--t-success)', color: '#fff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginTop: 8 }}>Live Now</span>}
+                                        <div
+                                            key={cls.id}
+                                            className={`schedule-card t-card ${isLive ? 'is-live' : ''} ${isEnded ? 'is-ended' : ''}`}
+                                        >
+                                            {/* Desktop Side Date Chip (>=640px) */}
+                                            <div className="schedule-side-chip">
+                                                <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', opacity: 0.85 }}>{weekday}</span>
+                                                <span style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.1 }}>{dayNum}</span>
                                             </div>
 
-                                            {/* Info Block */}
-                                            <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 200 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                                    <span style={{ padding: '2px 8px', borderRadius: 6, background: 'var(--t-bg)', color: 'var(--t-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{cls.subject || 'Subject'}</span>
-                                                    <span style={{ padding: '2px 8px', borderRadius: 6, background: isOnline ? 'var(--t-primary-soft)' : 'var(--t-success-bg)', color: isOnline ? 'var(--t-primary)' : 'var(--t-success)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                        {isOnline ? <FiVideo /> : <FiMapPin />} {isOnline ? 'Online' : 'Physical'}
-                                                    </span>
-                                                </div>
-                                                <h4 style={{ margin: '0 0 4px 0', fontSize: 18, color: 'var(--t-text)', fontWeight: 700 }}>
-                                                    {cls.title || 'Class Session'}
-                                                </h4>
-                                                <div style={{ color: 'var(--t-text-muted)', fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{cls.teacher}</div>
-                                                
-                                                <div style={{ display: 'flex', gap: 16, color: 'var(--t-text-muted)', fontSize: 13, fontWeight: 500, flexWrap: 'wrap' }}>
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FiClock /> {cls.duration || 60} min duration</span>
-                                                    {!isOnline && cls.location && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FiMapPin /> {cls.location}</span>}
-                                                </div>
-                                            </div>
+                                            {/* Main Card Content */}
+                                            <div className="schedule-content-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {/* Top row: Subject & Title + Status Badge */}
+                                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                                                            <span style={{ padding: '2px 8px', borderRadius: 6, background: 'var(--t-bg)', color: 'var(--t-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                                                                {cls.subject || 'Subject'}
+                                                            </span>
+                                                            <span style={{
+                                                                padding: '2px 8px', borderRadius: 6,
+                                                                background: isOnline ? 'var(--t-primary-soft)' : 'var(--t-success-bg)',
+                                                                color: isOnline ? 'var(--t-primary)' : 'var(--t-success)',
+                                                                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                                                                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap'
+                                                            }}>
+                                                                {isOnline ? <FiVideo /> : <FiMapPin />} {isOnline ? 'Online' : 'Physical'}
+                                                            </span>
+                                                        </div>
+                                                        <h4 style={{
+                                                            margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--t-text)',
+                                                            lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                                                        }}>
+                                                            {cls.title || 'Class Session'}
+                                                        </h4>
+                                                    </div>
 
-                                            {/* Action Block */}
-                                            {isOnline && (
-                                                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderLeft: '1px solid var(--t-border)' }}>
-                                                    {isEnded ? (
-                                                        <span style={{ padding: '6px 14px', borderRadius: 8, background: 'var(--t-bg)', color: 'var(--t-text-muted)', fontSize: 12, fontWeight: 700 }}>
-                                                            Ended
+                                                    {/* Status Badge (Never wraps) */}
+                                                    <div style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                        {isEnded ? (
+                                                            <span
+                                                                className="schedule-status-badge"
+                                                                style={{
+                                                                    padding: '4px 10px', borderRadius: 8,
+                                                                    background: 'var(--t-bg)', color: 'var(--t-text-muted)',
+                                                                    fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                                                                    whiteSpace: 'nowrap', display: 'inline-block'
+                                                                }}
+                                                            >
+                                                                ENDED
+                                                            </span>
+                                                        ) : isLive ? (
+                                                            <span
+                                                                className="schedule-status-badge"
+                                                                style={{
+                                                                    padding: '4px 10px', borderRadius: 8,
+                                                                    background: 'var(--t-danger, #ef4444)', color: '#ffffff',
+                                                                    fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
+                                                                    letterSpacing: '0.5px', whiteSpace: 'nowrap',
+                                                                    display: 'inline-flex', alignItems: 'center', gap: 5
+                                                                }}
+                                                            >
+                                                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
+                                                                LIVE NOW
+                                                            </span>
+                                                        ) : (
+                                                            <span
+                                                                className="schedule-status-badge"
+                                                                style={{
+                                                                    padding: '4px 10px', borderRadius: 8,
+                                                                    background: 'var(--t-primary-soft)', color: 'var(--t-primary)',
+                                                                    fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                                                                    whiteSpace: 'nowrap', display: 'inline-block'
+                                                                }}
+                                                            >
+                                                                UPCOMING
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Second row: Time range on ONE line + Teacher/Mode Meta */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--t-text)', fontSize: 14, fontWeight: 600 }}>
+                                                        <FiClock style={{ color: 'var(--t-primary)', flexShrink: 0 }} />
+                                                        <time
+                                                            className="schedule-time-text"
+                                                            style={{
+                                                                whiteSpace: 'nowrap',
+                                                                fontVariantNumeric: 'tabular-nums',
+                                                                lineHeight: 1.2
+                                                            }}
+                                                        >
+                                                            {timeRange}
+                                                        </time>
+                                                        <span style={{ color: 'var(--t-text-muted)', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                                            ({duration} mins)
                                                         </span>
-                                                    ) : canJoin ? (
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--t-text-muted)', fontSize: 13, flexWrap: 'wrap' }}>
+                                                        {cls.teacher && <span>Instructor: <strong style={{ color: 'var(--t-text)' }}>{cls.teacher}</strong></span>}
+                                                        {!isOnline && cls.location && (
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                                <FiMapPin /> {cls.location}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Block / Button (Full-width on mobile, >=48px) */}
+                                            <div className="schedule-action-wrap">
+                                                {isEnded ? (
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        style={{
+                                                            width: '100%', minHeight: 48, borderRadius: 10,
+                                                            background: 'var(--t-bg)', border: '1px solid var(--t-border)',
+                                                            color: 'var(--t-text-muted)', fontWeight: 600, fontSize: 13,
+                                                            cursor: 'not-allowed', display: 'flex', alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        Class Ended
+                                                    </button>
+                                                ) : isOnline ? (
+                                                    canJoin ? (
                                                         <button
+                                                            type="button"
+                                                            className="schedule-join-btn"
                                                             onClick={() => joinClass(cls)}
                                                             disabled={busy || !hasLink}
                                                             style={{
-                                                                padding: '10px 18px', borderRadius: 10,
-                                                                background: isLive ? 'var(--t-primary)' : 'var(--t-bg)',
-                                                                color: isLive ? '#fff' : 'var(--t-text-muted)',
-                                                                border: isLive ? 'none' : '1px solid var(--t-border)',
-                                                                fontWeight: 700, fontSize: 13,
+                                                                width: '100%', minHeight: 48, borderRadius: 10,
+                                                                background: isLive ? 'var(--t-primary, #4f0bd9)' : 'var(--t-primary)',
+                                                                color: '#ffffff', border: 'none', fontWeight: 700, fontSize: 14,
                                                                 cursor: (busy || !hasLink) ? 'not-allowed' : 'pointer',
-                                                                display: 'flex', alignItems: 'center', gap: 6,
-                                                                boxShadow: isLive ? '0 4px 12px rgba(79, 11, 217, 0.2)' : 'none',
-                                                                opacity: busy ? 0.7 : 1
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                                boxShadow: isLive ? '0 4px 14px rgba(79, 11, 217, 0.25)' : 'none',
+                                                                opacity: busy ? 0.7 : 1, transition: 'all 0.15s ease'
                                                             }}
                                                         >
-                                                            <FiExternalLink /> {busy ? 'Joining...' : (isLive ? 'Join Live Class' : 'Join Class')}
+                                                            <FiExternalLink /> {busy ? 'Joining Class...' : (isLive ? 'Join Live Class' : 'Join Class')}
                                                         </button>
                                                     ) : (
-                                                        <span style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--t-bg)', border: '1px solid var(--t-border)', color: 'var(--t-text-muted)', fontSize: 12, fontWeight: 600 }}>
-                                                            Starts at {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            style={{
+                                                                width: '100%', minHeight: 48, borderRadius: 10,
+                                                                background: 'var(--t-bg)', border: '1px solid var(--t-border)',
+                                                                color: 'var(--t-text-muted)', fontWeight: 600, fontSize: 13,
+                                                                cursor: 'not-allowed', display: 'flex', alignItems: 'center',
+                                                                justifyContent: 'center'
+                                                            }}
+                                                        >
+                                                            Starts at {startStr}
+                                                        </button>
+                                                    )
+                                                ) : (
+                                                    <div style={{
+                                                        minHeight: 48, borderRadius: 10, background: 'var(--t-bg)',
+                                                        border: '1px solid var(--t-border)', display: 'flex',
+                                                        alignItems: 'center', justifyContent: 'center',
+                                                        color: 'var(--t-text-muted)', fontSize: 13, fontWeight: 600,
+                                                        padding: '0 12px', textAlign: 'center'
+                                                    }}>
+                                                        Physical Class
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -170,6 +279,73 @@ export default function StudentSchedule() {
                     ))}
                 </div>
             )}
+
+            <style>{`
+                .schedule-card {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 14px;
+                    background: #ffffff;
+                    border-radius: 16px;
+                    padding: 16px;
+                    border: 1px solid var(--t-border);
+                    box-shadow: var(--t-shadow-sm);
+                    box-sizing: border-box;
+                    width: 100%;
+                    overflow: hidden;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                }
+                .schedule-card.is-live {
+                    border-color: var(--t-primary-border);
+                    box-shadow: 0 4px 16px rgba(79, 11, 217, 0.12);
+                }
+                .schedule-card.is-ended {
+                    opacity: 0.65;
+                }
+                .schedule-side-chip {
+                    display: none;
+                }
+                .schedule-action-wrap {
+                    width: 100%;
+                    margin-top: 4px;
+                }
+                @media (min-width: 640px) {
+                    .schedule-card {
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 16px;
+                        padding: 16px 20px;
+                    }
+                    .schedule-side-chip {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 56px;
+                        padding: 10px 8px;
+                        border-radius: 12px;
+                        background: var(--t-bg);
+                        border: 1px solid var(--t-border);
+                        color: var(--t-text);
+                        flex-shrink: 0;
+                    }
+                    .schedule-card.is-live .schedule-side-chip {
+                        background: var(--t-primary);
+                        color: #ffffff;
+                        border-color: var(--t-primary);
+                    }
+                    .schedule-content-wrap {
+                        flex: 1;
+                        min-width: 0;
+                    }
+                    .schedule-action-wrap {
+                        width: auto;
+                        min-width: 160px;
+                        margin-top: 0;
+                        flex-shrink: 0;
+                    }
+                }
+            `}</style>
         </div>
     )
 }

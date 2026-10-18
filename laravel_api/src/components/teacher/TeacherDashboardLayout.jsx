@@ -6,10 +6,11 @@ import {
     FiMenu, FiX, FiSearch, FiBell, FiChevronRight
 } from 'react-icons/fi'
 import GlobalNotificationBell from '../shared/GlobalNotificationBell'
-import SidebarShell from '../shared/SidebarShell'
+import SidebarShell, { SidebarHamburger } from '../shared/SidebarShell'
+import FloatingChatBubble from '../shared/FloatingChatBubble'
 import { useToast } from '../../components/shared/ToastContext'
 import { getAuthHeaders } from '../../services/apiClient'
-import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery'
 import './teacher-theme.css'
 
 const menuItems = [
@@ -31,14 +32,32 @@ export default function TeacherDashboardLayout({ children, user }) {
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [localAvatar, setLocalAvatar] = useState(null)
+    const [phoneMenuOpen, setPhoneMenuOpen] = useState(false)
+    const hamburgerRef = useRef(null)
+    const hamburgerTouchGuardRef = useRef(0)
     const fileInputRef = useRef(null)
     const profileMenuRef = useRef(null)
     const location = useLocation()
     const navigate = useNavigate()
 
     const isDesktop = useMediaQuery('(min-width: 1024px)')
-    const isTabletOrDesktop = useMediaQuery('(min-width: 640px)')
-    const isMobile = !isTabletOrDesktop
+    const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
+    const isTabletOrDesktop = !isMobile
+
+    const handleHamburgerPointerDown = (e) => {
+        if (e.pointerType !== 'mouse' && e.cancelable) {
+            e.preventDefault();
+        }
+    };
+
+    const handleHamburgerClick = (e) => {
+        e.stopPropagation();
+        if (e.pointerType !== 'mouse' && performance.now() - hamburgerTouchGuardRef.current < 450) {
+            return;
+        }
+        hamburgerTouchGuardRef.current = performance.now();
+        setPhoneMenuOpen(prev => !prev);
+    };
 
     const searchResults = menuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,6 +125,10 @@ export default function TeacherDashboardLayout({ children, user }) {
                 items={menuItems}
                 user={user}
                 avatarUrl={avatarUrl}
+                isOpen={isMobile ? phoneMenuOpen : undefined}
+                onClose={() => setPhoneMenuOpen(false)}
+                onOpen={() => setPhoneMenuOpen(true)}
+                hamburgerRef={hamburgerRef}
             />
 
             {/* ══════════════ MAIN CONTENT ══════════════ */}
@@ -119,10 +142,22 @@ export default function TeacherDashboardLayout({ children, user }) {
                     borderBottom: '1px solid var(--t-border)', zIndex: 30,
                     position: 'relative', overflow: 'visible', flexShrink: 0
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, minWidth: 0 }}>
+                        {isMobile && (
+                            <SidebarHamburger
+                                isOpen={phoneMenuOpen}
+                                onClick={handleHamburgerClick}
+                                onPointerDown={handleHamburgerPointerDown}
+                                hamburgerRef={hamburgerRef}
+                            />
+                        )}
 
                         {isMobile && (
-                            <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--t-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{
+                                fontWeight: 700, fontSize: 16, color: 'var(--t-text)',
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                            }}>
                                 TiT <span style={{ color: 'var(--t-primary)' }}>Teacher</span>
                             </div>
                         )}
@@ -313,6 +348,9 @@ export default function TeacherDashboardLayout({ children, user }) {
                         {children}
                     </div>
                 </div>
+
+                {/* Floating Chat Bubble */}
+                <FloatingChatBubble isDrawerOpen={phoneMenuOpen} />
             </main>
         </div>
     )

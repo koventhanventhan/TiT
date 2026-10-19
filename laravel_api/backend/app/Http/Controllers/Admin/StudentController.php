@@ -255,7 +255,7 @@ class StudentController extends Controller
 
         $batchYear = $request->filled('batch_year')
             ? $this->indexService->normalizeBatchYear($request->batch_year)
-            : $this->indexService->calculateDefaultBatchYear($student);
+            : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
 
         // Assign automatic student index number (idempotent, e.g. TiT/28/100)
         $indexNumber = $this->indexService->assign($student, $batchYear);
@@ -391,7 +391,7 @@ class StudentController extends Controller
         try {
             $batchYear = $request->filled('batch_year')
                 ? $this->indexService->normalizeBatchYear($request->batch_year)
-                : $this->indexService->calculateDefaultBatchYear($user);
+                : ($this->indexService->calculateDefaultBatchYear($user) ?? (int) date('y'));
             $this->indexService->assign($user, $batchYear);
         } catch (\Throwable $e) {
             \Log::warning("Could not auto-assign index number in student store(): " . $e->getMessage());
@@ -880,7 +880,7 @@ class StudentController extends Controller
 
         $batchYear = $request->filled('batch_year')
             ? $this->indexService->normalizeBatchYear($request->batch_year)
-            : $this->indexService->calculateDefaultBatchYear($student);
+            : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
 
         $indexNumber = $this->indexService->assign($student, $batchYear);
 

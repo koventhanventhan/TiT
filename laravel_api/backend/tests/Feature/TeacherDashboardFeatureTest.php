@@ -397,7 +397,11 @@ class TeacherDashboardFeatureTest extends TestCase
         $this->assertArrayHasKey('attendance', $data);
 
         $profile = $data['profile'];
-        $expectedKeys = ['id', 'name', 'email', 'phone_number', 'current_grade', 'stream', 'registration_status'];
+        $expectedKeys = [
+            'id', 'name', 'full_name', 'username', 'email', 'phone_number',
+            'phone_is_parent', 'is_sibling', 'parent_name', 'parent_id',
+            'index_number', 'current_grade', 'stream', 'registration_status'
+        ];
         sort($expectedKeys);
         $actualKeys = array_keys($profile);
         sort($actualKeys);
@@ -406,6 +410,7 @@ class TeacherDashboardFeatureTest extends TestCase
         $this->assertArrayNotHasKey('password', $profile);
         $this->assertArrayNotHasKey('plain_password', $profile);
         $this->assertArrayNotHasKey('remember_token', $profile);
+        $this->assertArrayNotHasKey('parent_email', $profile);
     }
 
     public function test_materials_download_security(): void

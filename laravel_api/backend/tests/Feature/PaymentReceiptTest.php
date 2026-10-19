@@ -345,54 +345,193 @@ class PaymentReceiptTest extends TestCase
         $this->assertNotNull($payment->receipt_sent_at);
     }
 
-    public function test_receipt_pdf_renders_with_tamil_characters_and_subjects(): void
+    public function test_receipt_pdf_renders_with_tamil_characters_and_embedded_font(): void
     {
-        $teacher = User::factory()->create([
-            'institute_id' => $this->institute->id,
-            'role' => 'teacher',
-            'full_name' => 'Dr. K. Ramanathan',
-        ]);
-
-        $subject = Subject::create([
-            'name' => 'Tamil Language',
-            'category' => 'secondary_6_9',
-            'price' => 500,
-        ]);
-
-        Timetable::create([
-            'institute_id' => $this->institute->id,
-            'title' => 'Grade 09 Tamil',
-            'grade' => 'Grade 09',
-            'day_of_week' => 'Monday',
-            'start_time' => '16:00:00',
-            'end_time' => '18:00:00',
-            'subject_id' => $subject->id,
-            'teacher_id' => $teacher->id,
-        ]);
-
         $student = User::factory()->create([
             'institute_id' => $this->institute->id,
             'role' => 'user',
-            'full_name' => 'கவின் கந்தசாமி (Kavin Kandasamy)',
+            'full_name' => 'கவின் கந்தசாமி குணரத்தினம்',
             'index_number' => 'TiT/28/105',
-            'current_grade' => '9',
-            'selected_subjects' => json_encode(['Tamil Language', 'Mathematics', 'Science', 'English', 'History', 'Commerce', 'ICT']),
+            'current_grade' => '04',
+            'selected_subjects' => json_encode(['Mathematics', 'Science', 'English']),
         ]);
 
         $payment = Payment::create([
             'user_id' => $student->id,
             'institute_id' => $this->institute->id,
-            'amount' => 3500,
+            'amount' => 1200,
             'status' => 'paid',
             'paid_at' => now(),
             'year_month' => '2026-10',
-            'payment_method' => 'online',
+            'payment_method' => 'bank',
         ]);
 
         $pdfBinary = $this->service->pdf($payment);
 
         $this->assertNotEmpty($pdfBinary);
         $this->assertStringStartsWith('%PDF-', $pdfBinary);
-        $this->assertEquals("RC-" . date('Y') . "-000001", $payment->receipt_no);
+        $this->assertMatchesRegularExpression('/\/FontName\s*\/[^\s\/]*NotoSansTamil/', $pdfBinary);
+
+        // Rasterise with pdftoppm -r 80 when available to catch tofu
+        $pdftoppm = $this->resolvePdftoppmPath();
+        if (!$pdftoppm) {
+            $this->markTestSkipped('pdftoppm is not available in environment');
+        }
+
+        $tmpPdf = tempnam(sys_get_temp_dir(), 'rcpt_') . '.pdf';
+        $tmpPngPrefix = tempnam(sys_get_temp_dir(), 'rcpt_png_');
+        file_put_contents($tmpPdf, $pdfBinary);
+
+        exec("\"$pdftoppm\" -png -r 80 " . escapeshellarg($tmpPdf) . " " . escapeshellarg($tmpPngPrefix), $out, $ret);
+
+        @unlink($tmpPdf);
+        $pngFile = $tmpPngPrefix . '-1.png';
+        $this->assertEquals(0, $ret, 'pdftoppm exited with error code ' . $ret);
+        $this->assertFileExists($pngFile);
+        $this->assertGreaterThan(1000, filesize($pngFile));
+        @unlink($pngFile);
+    }
+
+    public function test_receipt_pdf_renders_mixed_english_tamil_and_sixty_char_name(): void
+    {
+        $mixedStudent = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'கவின் Kavin கந்தசாமி Kandasamy',
+            'index_number' => 'TiT/28/106',
+            'current_grade' => '10',
+        ]);
+
+        $payment1 = Payment::create([
+            'user_id' => $mixedStudent->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 2000,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+            'payment_method' => 'cash',
+        ]);
+
+        $pdfMixed = $this->service->pdf($payment1);
+        $this->assertStringStartsWith('%PDF-', $pdfMixed);
+
+        // 60-character name must wrap, not overflow
+        $longNameStudent = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'கவின் கந்தசாமி குணரத்தினம் சிவசுப்பிரமணியம் பாலசுப்பிரமணியம்',
+            'index_number' => 'TiT/28/107',
+            'current_grade' => '10',
+        ]);
+
+        $payment2 = Payment::create([
+            'user_id' => $longNameStudent->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 2000,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+            'payment_method' => 'online',
+        ]);
+
+        $pdfLong = $this->service->pdf($payment2);
+        $this->assertStringStartsWith('%PDF-', $pdfLong);
+    }
+
+    public function test_teacher_resolution_from_timetables_and_eight_subjects_cap(): void
+    {
+        $teacher = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'teacher',
+            'name' => 'ghajanan',
+            'full_name' => 'G. Hajanan',
+        ]);
+
+        $math = Subject::create([
+            'name' => 'Mathematics',
+            'category' => 'secondary_6_9',
+            'price' => 500,
+        ]);
+
+        Timetable::create([
+            'institute_id' => $this->institute->id,
+            'title' => 'Grade 10 Mathematics',
+            'grade' => 'Grade 10',
+            'day_of_week' => 'Monday',
+            'start_time' => '16:00:00',
+            'end_time' => '18:00:00',
+            'subject_id' => $math->id,
+            'teacher_id' => $teacher->id,
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Student Eight Subjects',
+            'index_number' => 'TiT/28/108',
+            'current_grade' => '10',
+            'selected_subjects' => [
+                'Mathematics',
+                'Science',
+                'English',
+                'Tamil Language',
+                'History',
+                'Commerce',
+                'ICT',
+                'Art',
+            ],
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 5000,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+            'payment_method' => 'bank',
+        ]);
+
+        $data = $this->service->getReceiptData($payment);
+        $classes = $data['classes'];
+
+        // Mathematics line should have teacher full_name with en dash
+        $this->assertContains('Mathematics – G. Hajanan', $classes);
+
+        // Exactly 6 lines plus "+ 2 more"
+        $this->assertCount(7, $classes);
+        $this->assertEquals('+ 2 more', $classes[6]);
+    }
+
+    public function test_payment_method_wording(): void
+    {
+        $this->assertEquals('Bank Transfer', $this->service->formatPaymentMethod('bank'));
+        $this->assertEquals('Bank Transfer', $this->service->formatPaymentMethod('bank_transfer'));
+        $this->assertEquals('Cash', $this->service->formatPaymentMethod('cash'));
+        $this->assertEquals('Online Payment (PayHere)', $this->service->formatPaymentMethod('online'));
+        $this->assertEquals('Online Payment (PayHere)', $this->service->formatPaymentMethod('payhere'));
+        $this->assertEquals('Bank Transfer / Cash', $this->service->formatPaymentMethod('offline'));
+        $this->assertEquals('—', $this->service->formatPaymentMethod('unknown'));
+        $this->assertEquals('—', $this->service->formatPaymentMethod(null));
+        $this->assertEquals('—', $this->service->formatPaymentMethod(''));
+    }
+
+    private function resolvePdftoppmPath(): ?string
+    {
+        if (file_exists('C:\\poppler\\bin\\pdftoppm.exe')) {
+            return 'C:\\poppler\\bin\\pdftoppm.exe';
+        }
+
+        exec('where.exe pdftoppm 2>&1', $out, $ret);
+        if ($ret === 0 && !empty($out[0]) && file_exists(trim($out[0]))) {
+            return trim($out[0]);
+        }
+
+        exec('which pdftoppm 2>&1', $out2, $ret2);
+        if ($ret2 === 0 && !empty($out2[0])) {
+            return trim($out2[0]);
+        }
+
+        return null;
     }
 }

@@ -495,12 +495,12 @@
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
                                               @if(!$student->admin_confirmed_at)
-                                                 <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', {{ $student->calculateDefaultBatchYear() }})">
+                                                 <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->batch_year ?? "" }}')">
                                                      Confirm Registration
                                                  </button>
                                                  <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST" id="confirm-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
-                                                     <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="{{ $student->calculateDefaultBatchYear() }}">
+                                                     <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="'{{ $student->batch_year ?? "" }}'">
                                                  </form>
                                                  <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
                                                      @csrf
@@ -510,7 +510,7 @@
                                              @endif
                                              <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
                                              @if(!$student->index_number)
-                                                 <button type="button" class="dropdown-item text-info" onclick="promptAssignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', {{ $student->calculateDefaultBatchYear() }})">
+                                                 <button type="button" class="dropdown-item text-info" onclick="promptAssignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->batch_year ?? "" }}')">
                                                      Assign Index Number
                                                  </button>
                                                  <form action="{{ route('admin.students.assign-index', $student->id) }}" method="POST" id="assign-index-form-{{ $student->id }}" style="display: none;">
@@ -518,7 +518,7 @@
                                                      <input type="hidden" name="batch_year" id="assign-batch-{{ $student->id }}">
                                                  </form>
                                              @else
-                                                 <button type="button" class="dropdown-item text-warning" onclick="promptReassignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', {{ $student->batch_year ?? $student->calculateDefaultBatchYear() }})">
+                                                 <button type="button" class="dropdown-item text-warning" onclick="promptReassignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', '{{ $student->batch_year ?? "" }}')">
                                                      Change Index Number
                                                  </button>
                                                  <form action="{{ route('admin.students.reassign-index', $student->id) }}" method="POST" id="reassign-index-form-{{ $student->id }}" style="display: none;">
@@ -747,7 +747,7 @@
                 </p>
                 <div style="text-align: left; margin-top: 1rem;">
                     <label style="color:#fff; font-size: 0.85rem; font-weight:600;">A/L or O/L Batch Year:</label>
-                    <input type="number" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch}" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                    <input type="number" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="e.g. 28" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
                     <small style="color: #9ca3af;">An index number (e.g. TiT/${defaultBatch}/100) will be automatically generated.</small>
                 </div>
             `,
@@ -783,7 +783,7 @@
                 </p>
                 <div style="text-align: left; margin-top: 1rem;">
                     <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Batch Year (2 digits):</label>
-                    <input type="number" id="swalAssignBatch" class="swal2-input" value="${defaultBatch}" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                    <input type="number" id="swalAssignBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="e.g. 28" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
                 </div>
             `,
             type: 'info',

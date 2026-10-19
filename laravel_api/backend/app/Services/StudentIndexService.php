@@ -40,41 +40,22 @@ class StudentIndexService
     }
 
     /**
-     * Calculate default batch year from student grade or current calendar year.
+     * Return student's existing batch_year if set, otherwise null (admin must choose).
      *
      * @param User|null $student
-     * @return int
+     * @return int|null
      */
-    public function calculateDefaultBatchYear(?User $student = null): int
+    public function calculateDefaultBatchYear(?User $student = null): ?int
     {
         if ($student && !empty($student->batch_year)) {
             try {
                 return $this->normalizeBatchYear($student->batch_year);
             } catch (\InvalidArgumentException $e) {
-                // fallback below
+                // ignore
             }
         }
 
-        if ($student && !empty($student->current_grade)) {
-            $gradeStr = $student->current_grade;
-
-            // Check if grade string mentions a 4-digit year e.g. "2028 A/L" or "2027"
-            if (preg_match('/20([2-9]\d)/', $gradeStr, $m)) {
-                return (int) $m[1];
-            }
-
-            // Check if numeric grade is available (e.g. 10..13)
-            $numericGrade = $student->getNumericGrade();
-            if ($numericGrade !== null && $numericGrade >= 1 && $numericGrade <= 13) {
-                $currentCalYear = (int) date('Y');
-                // In Sri Lankan education, A/L is at grade 13
-                $yearsToAl = max(0, 13 - $numericGrade);
-                $targetYear = $currentCalYear + $yearsToAl;
-                return (int) ($targetYear % 100);
-            }
-        }
-
-        return (int) date('y');
+        return null;
     }
 
     /**

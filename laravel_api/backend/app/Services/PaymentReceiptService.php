@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
+use Mpdf\Mpdf;
 
 class PaymentReceiptService
 {
@@ -132,10 +135,14 @@ class PaymentReceiptService
         $amountFormatted = 'LKR ' . number_format((float) $payment->amount, 2);
 
         // Transaction ID / Gateway Ref
+        // Transaction ID / Gateway Ref
         $transactionId = $payment->transaction_id ?: $payment->gateway_ref;
 
-        // Base64 Logo (No network request needed for Dompdf)
-        $logoBase64 = $this->getLogoBase64();
+        // Base64 Logo (overridable via public/images/receipt-logo.png or institute setting receipt_logo)
+        $logoBase64 = $this->getLogoBase64($payment);
+
+        // Institute Contact Line
+        $contactLine = $this->resolveInstituteContactLine($payment);
 
         return [
             'receiptNo' => $payment->receipt_no,
@@ -150,6 +157,7 @@ class PaymentReceiptService
             'amountFormatted' => $amountFormatted,
             'transactionId' => $transactionId,
             'logoBase64' => $logoBase64,
+            'contactLine' => $contactLine,
         ];
     }
 
@@ -179,10 +187,6 @@ class PaymentReceiptService
             }
         }
         $selectedSubjects = array_values(array_filter($selectedSubjects));
-
-        if (empty($selectedSubjects)) {
-            return [];
-        }
 
         // Query timetable for teacher assignments
         $timetables = Timetable::where('institute_id', $instituteId)
@@ -217,6 +221,19 @@ class PaymentReceiptService
             }
         }
 
+        if (empty($selectedSubjects) && $timetables->isNotEmpty()) {
+            foreach ($timetables as $tt) {
+                if ($tt->subject) {
+                    $subjName = $tt->subject->name;
+                    $teacherName = $tt->teacher ? ($tt->teacher->full_name ?: $tt->teacher->name) : null;
+                    $line = $teacherName ? "{$subjName} – {$teacherName}" : $subjName;
+                    if (!in_array($line, $result) && count($result) < 6) {
+                        $result[] = $line;
+                    }
+                }
+            }
+        }
+
         if ($count > 6) {
             $extra = $count - 6;
             $result[] = "+ {$extra} more";
@@ -227,49 +244,89 @@ class PaymentReceiptService
 
     /**
      * Format payment method string.
+     * offline -> "Bank Transfer / Cash"
+     * bank / bank_transfer -> "Bank Transfer"
+     * cash -> "Cash"
+     * online / payhere -> "Online Payment (PayHere)"
+     * unknown / empty -> "—"
      *
      * @param string|null $method
      * @return string
      */
-    protected function formatPaymentMethod(?string $method): string
+    public function formatPaymentMethod(?string $method): string
     {
         return match (strtolower(trim((string) $method))) {
-            'online' => 'Online Payment (PayHere)',
+            'bank', 'bank_transfer' => 'Bank Transfer',
+            'cash' => 'Cash',
+            'online', 'payhere' => 'Online Payment (PayHere)',
             'offline' => 'Bank Transfer / Cash',
-            'bank_transfer' => 'Bank Transfer',
-            'cash' => 'Cash Payment',
-            'card' => 'Credit/Debit Card',
-            default => !empty($method) ? ucfirst($method) : 'Paid Offline',
+            default => '—',
         };
     }
 
     /**
-     * Retrieve base64 embedded logo.
+     * Retrieve base64 embedded logo if overridden.
+     * Uses public/images/receipt-logo.png or institute setting receipt_logo.
+     * Otherwise returns null to let template render text wordmark.
      *
-     * @return string
+     * @param Payment|null $payment
+     * @return string|null
      */
-    public function getLogoBase64(): string
+    public function getLogoBase64(?Payment $payment = null): ?string
     {
-        $possiblePaths = [
-            public_path('admin-theme/images/logo.png'),
-            public_path('admin-theme/images/logo-full.png'),
-            base_path('logo.png'),
-            public_path('logo.png'),
+        $customPaths = [
+            public_path('images/receipt-logo.png'),
         ];
 
-        foreach ($possiblePaths as $path) {
-            if (file_exists($path)) {
+        if ($payment && $payment->institute) {
+            $settingLogo = $payment->institute->theme_settings['receipt_logo'] ?? null;
+            if (!empty($settingLogo)) {
+                $customPaths[] = public_path($settingLogo);
+                $customPaths[] = storage_path('app/public/' . $settingLogo);
+            }
+        }
+
+        foreach ($customPaths as $path) {
+            if (!empty($path) && file_exists($path)) {
                 $data = file_get_contents($path);
                 $mime = mime_content_type($path) ?: 'image/png';
                 return 'data:' . $mime . ';base64,' . base64_encode($data);
             }
         }
 
-        return '';
+        return null;
     }
 
     /**
-     * Generate PDF binary string for a payment.
+     * Resolve institute contact line for footer.
+     *
+     * @param Payment $payment
+     * @return string
+     */
+    protected function resolveInstituteContactLine(Payment $payment): string
+    {
+        $institute = $payment->institute;
+        $parts = [];
+
+        if ($institute && !empty($institute->theme_settings['phone'])) {
+            $parts[] = $institute->theme_settings['phone'];
+        }
+        if ($institute && !empty($institute->theme_settings['email'])) {
+            $parts[] = $institute->theme_settings['email'];
+        }
+
+        if (empty($parts)) {
+            $mail = config('mail.from.address');
+            if ($mail) {
+                $parts[] = $mail;
+            }
+        }
+
+        return !empty($parts) ? implode(' • ', $parts) : 'TiT Institute • Jaffna';
+    }
+
+    /**
+     * Generate PDF binary string for a payment using mPDF with Indic OpenType shaping.
      *
      * @param Payment $payment
      * @return string
@@ -277,8 +334,47 @@ class PaymentReceiptService
     public function pdf(Payment $payment): string
     {
         $data = $this->getReceiptData($payment);
-        $pdf = Pdf::loadView('pdf.receipt', $data)->setPaper('a4', 'portrait');
-        return $pdf->output();
+        $html = view('pdf.receipt', $data)->render();
+
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $tempDir = storage_path('app/mpdf');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A5',
+            'orientation' => 'P',
+            'tempDir' => $tempDir,
+            'fontDir' => array_merge($fontDirs, [resource_path('fonts')]),
+            'fontdata' => $fontData + [
+                'notosanstamil' => [
+                    'R' => 'NotoSansTamil-Regular.ttf',
+                    'B' => 'NotoSansTamil-Bold.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 75,
+                ],
+                'montserrat' => [
+                    'B' => 'Montserrat-ExtraBold.ttf',
+                ],
+            ],
+            'default_font' => 'notosanstamil',
+            'autoScriptToLang' => false,
+            'autoLangToFont' => false,
+            'useSubstitutions' => true,
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+        ]);
+
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('', 'S');
     }
 
     /**

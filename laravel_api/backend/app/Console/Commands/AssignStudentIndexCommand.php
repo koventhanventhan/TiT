@@ -67,7 +67,7 @@ class AssignStudentIndexCommand extends Command
             try {
                 $batchYear = $batchOption
                     ? $indexService->normalizeBatchYear($batchOption)
-                    : $indexService->calculateDefaultBatchYear($student);
+                    : ($indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
             } catch (\InvalidArgumentException $e) {
                 $rows[] = [$student->id, $student->full_name ?? $student->name, $student->current_grade, $batchOption ?? '?', 'N/A', 'ERROR: ' . $e->getMessage()];
                 continue;

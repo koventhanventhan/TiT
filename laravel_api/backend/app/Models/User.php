@@ -410,7 +410,7 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Calculate default batch year for this student using StudentIndexService.
      */
-    public function calculateDefaultBatchYear(): int
+    public function calculateDefaultBatchYear(): ?int
     {
         return app(\App\Services\StudentIndexService::class)->calculateDefaultBatchYear($this);
     }

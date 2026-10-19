@@ -208,21 +208,19 @@ class StudentIndexNumberTest extends TestCase
         $this->service->normalizeBatchYear(15); // < 20
     }
 
-    public function test_default_batch_calculation_from_grade(): void
+    public function test_default_batch_returns_existing_or_null(): void
     {
-        $currentYear = (int) date('Y');
-
-        $studentGrade11 = User::factory()->make([
-            'current_grade' => 'Grade 11',
+        $studentWithoutBatch = User::factory()->make([
+            'current_grade' => 'Grade 04',
+            'batch_year' => null,
         ]);
-        $expectedBatch = ($currentYear + (13 - 11)) % 100;
-        $this->assertEquals($expectedBatch, $this->service->calculateDefaultBatchYear($studentGrade11));
+        $this->assertNull($this->service->calculateDefaultBatchYear($studentWithoutBatch));
 
-        $studentGrade13 = User::factory()->make([
-            'current_grade' => '13',
+        $studentWithBatch = User::factory()->make([
+            'current_grade' => 'Grade 04',
+            'batch_year' => 28,
         ]);
-        $expectedBatch13 = $currentYear % 100;
-        $this->assertEquals($expectedBatch13, $this->service->calculateDefaultBatchYear($studentGrade13));
+        $this->assertEquals(28, $this->service->calculateDefaultBatchYear($studentWithBatch));
     }
 
     public function test_admin_confirm_assigns_index_number(): void

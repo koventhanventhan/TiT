@@ -4,154 +4,146 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Payment Receipt - {{ $receiptNo }}</title>
     <style>
-        @page {
-            size: a4 portrait;
-            margin: 18mm 20mm 18mm 20mm;
-        }
-        * {
-            box-sizing: border-box;
-        }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 11.5px;
-            color: #1e293b;
-            line-height: 1.5;
+            font-family: 'notosanstamil', sans-serif;
+            font-size: 10.5pt;
+            color: #0b1f4b;
+            line-height: 1.4;
             margin: 0;
             padding: 0;
             background: #ffffff;
         }
         .header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+        }
+        .wordmark-logo {
+            font-family: 'montserrat', sans-serif;
+            font-size: 46pt;
+            font-weight: bold;
+            color: #0b1f4b;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            letter-spacing: -0.5pt;
+        }
+        .wordmark-sub {
+            font-family: 'notosanstamil', sans-serif;
+            font-size: 10.5pt;
+            font-weight: bold;
+            color: #0b1f4b;
+            letter-spacing: 3pt;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
         .logo-img {
-            max-height: 52px;
-            max-width: 140px;
-            object-fit: contain;
-            margin: 0 auto 4px auto;
+            max-height: 48px;
+            max-width: 150px;
+            margin: 0 auto 6px auto;
         }
-        .subtitle {
-            font-size: 10px;
-            font-weight: 700;
+        .title-container {
+            border-top: 1.5px solid #7dd3fc;
+            border-bottom: 1.5px solid #7dd3fc;
+            padding: 6px 0;
+            margin: 6px 0 10px 0;
+            text-align: center;
+        }
+        .title-text {
+            font-family: 'notosanstamil', sans-serif;
+            font-size: 20pt;
+            font-weight: bold;
             color: #0b1f4b;
-            letter-spacing: 3.5px;
+            letter-spacing: 2pt;
             text-transform: uppercase;
-            margin: 2px 0 6px 0;
-        }
-        .divider-line {
-            height: 1.5px;
-            background-color: #7dd3fc;
-            margin: 6px 0;
-            border: none;
-        }
-        .title {
-            font-size: 19px;
-            font-weight: 800;
-            color: #0b1f4b;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin: 6px 0;
+            margin: 0;
+            padding: 0;
         }
         .meta-table {
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-collapse: collapse;
         }
         .meta-table td {
-            font-size: 11px;
-            color: #475569;
+            font-size: 10.5pt;
+            color: #0b1f4b;
             padding: 2px 0;
+            vertical-align: top;
+        }
+        .meta-label {
+            font-weight: 600;
+            color: #0b1f4b;
         }
         .meta-val {
-            font-weight: 700;
-            color: #0f172a;
+            font-weight: bold;
+            color: #0b1f4b;
         }
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         .details-table tr {
             border-bottom: 1px solid #e0f2fe;
         }
         .details-table td {
-            padding: 8px 6px;
+            padding: 5px 4px;
             vertical-align: top;
-            font-size: 11.5px;
+            font-size: 10.5pt;
         }
         .label-col {
-            width: 32%;
-            color: #475569;
+            width: 38%;
+            color: #0b1f4b;
             font-weight: 600;
         }
         .value-col {
-            width: 68%;
-            color: #0f172a;
-        }
-        .index-badge {
-            font-family: 'DejaVu Sans Mono', monospace;
-            font-weight: 700;
-            color: #0284c7;
-            background: #f0f9ff;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #bae6fd;
-            display: inline-block;
+            width: 62%;
+            color: #0b1f4b;
         }
         .class-item {
-            margin-bottom: 3px;
-            color: #1e293b;
+            margin-bottom: 2px;
+            color: #0b1f4b;
         }
         .class-item:last-child {
             margin-bottom: 0;
         }
         .amount-box {
+            width: 100%;
             background-color: #f0f9ff;
             border: 1.5px solid #7dd3fc;
-            border-radius: 8px;
-            padding: 12px 18px;
-            margin-top: 22px;
-            width: 100%;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 12px;
+            text-align: center;
         }
-        .amount-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .amount-table td {
-            vertical-align: middle;
-            padding: 0;
-        }
-        .amount-label {
-            font-size: 11px;
-            font-weight: 800;
+        .amount-caption {
+            font-size: 9.5pt;
+            font-weight: bold;
             color: #0369a1;
-            letter-spacing: 1px;
+            letter-spacing: 2pt;
             text-transform: uppercase;
+            margin-bottom: 4px;
         }
-        .amount-val {
-            text-align: right;
-            font-size: 17px;
-            font-weight: 900;
-            color: #0c4a6e;
-            letter-spacing: 0.5px;
+        .amount-value {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #0b1f4b;
+            line-height: 1.1;
         }
         .footer {
-            margin-top: 35px;
+            margin-top: 16px;
             text-align: center;
-            color: #64748b;
-            font-size: 10.5px;
         }
         .thank-you {
-            font-size: 12px;
+            font-size: 11pt;
             font-style: italic;
-            color: #334155;
+            color: #0b1f4b;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
-        .disclaimer {
-            font-size: 9px;
-            color: #94a3b8;
-            margin-top: 6px;
+        .contact-line {
+            font-size: 8.5pt;
+            color: #64748b;
         }
     </style>
 </head>
@@ -159,37 +151,35 @@
     <div class="header">
         @if(!empty($logoBase64))
             <img src="{{ $logoBase64 }}" class="logo-img" alt="Logo">
+            <div class="wordmark-sub">INSTITUTE • JAFFNA</div>
+        @else
+            <div class="wordmark-logo">TiT</div>
+            <div class="wordmark-sub">INSTITUTE • JAFFNA</div>
         @endif
-        <div class="subtitle">INSTITUTE &bull; JAFFNA</div>
-        <hr class="divider-line">
-        <div class="title">PAYMENT RECEIPT</div>
-        <hr class="divider-line">
+
+        <div class="title-container">
+            <div class="title-text">PAYMENT RECEIPT</div>
+        </div>
     </div>
 
     <table class="meta-table">
         <tr>
-            <td style="text-align: left;">
-                Receipt No: <span class="meta-val">{{ $receiptNo }}</span>
+            <td style="text-align: left; width: 60%;">
+                <span class="meta-label">Student Name:</span>
+                <span class="meta-val">{{ $studentName }}</span>
             </td>
-            <td style="text-align: right;">
-                Date: <span class="meta-val">{{ $paymentDate }}</span>
+            <td style="text-align: right; width: 40%;">
+                <span class="meta-label">Receipt No:</span>
+                <span class="meta-val">{{ $receiptNo }}</span>
             </td>
         </tr>
     </table>
 
     <table class="details-table">
         <tr>
-            <td class="label-col">Student Name</td>
-            <td class="value-col"><strong>{{ $studentName }}</strong></td>
-        </tr>
-        <tr>
             <td class="label-col">Index Number</td>
             <td class="value-col">
-                @if($indexNumber && $indexNumber !== 'Pending')
-                    <span class="index-badge">{{ $indexNumber }}</span>
-                @else
-                    <span style="color: #64748b; font-style: italic;">Pending</span>
-                @endif
+                <strong>{{ $indexNumber }}</strong>
             </td>
         </tr>
         <tr>
@@ -201,10 +191,10 @@
             <td class="value-col">
                 @if(!empty($classes))
                     @foreach($classes as $c)
-                        <div class="class-item">&bull; {{ $c }}</div>
+                        <div class="class-item">• {{ $c }}</div>
                     @endforeach
                 @else
-                    <span style="color: #64748b;">General Tuition</span>
+                    <span>General Tuition</span>
                 @endif
             </td>
         </tr>
@@ -223,24 +213,19 @@
         @if(!empty($transactionId))
         <tr>
             <td class="label-col">Transaction Ref</td>
-            <td class="value-col" style="font-family: monospace; font-size: 10.5px; color: #475569;">{{ $transactionId }}</td>
+            <td class="value-col" style="font-family: monospace; font-size: 9.5pt; color: #475569;">{{ $transactionId }}</td>
         </tr>
         @endif
     </table>
 
     <div class="amount-box">
-        <table class="amount-table">
-            <tr>
-                <td class="amount-label">AMOUNT RECEIVED</td>
-                <td class="amount-val">{{ $amountFormatted }}</td>
-            </tr>
-        </table>
+        <div class="amount-caption">AMOUNT RECEIVED</div>
+        <div class="amount-value">{{ $amountFormatted }}</div>
     </div>
 
     <div class="footer">
         <div class="thank-you">Thank you for your payment.</div>
-        <div style="font-size: 9.5px; color: #64748b;">TiT Institute &bull; Quality Education for Future Leaders</div>
-        <div class="disclaimer">This is a computer-generated receipt and requires no physical signature.</div>
+        <div class="contact-line">{{ $contactLine ?? 'TiT Institute • Jaffna' }}</div>
     </div>
 </body>
 </html>

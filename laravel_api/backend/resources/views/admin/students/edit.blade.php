@@ -176,7 +176,7 @@
                                     <div class="input-group">
                                         <input type="text" class="form-control" value="Pending / Not Assigned" readonly style="background: rgba(255, 255, 255, 0.05); color: #9ca3af;">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, {{ app(\App\Services\StudentIndexService::class)->calculateDefaultBatchYear($student) }})">
+                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $student->batch_year ?? '' }}')">
                                                 <i class="flaticon-381-id-card"></i> Assign Index
                                             </button>
                                         </div>
@@ -1075,10 +1075,11 @@
     }
 
     function promptAssignIndex(studentId, defaultBatch) {
+        const val = defaultBatch ? defaultBatch : '';
         Swal.fire({
             title: 'Assign Student Index Number',
             html: `Enter the 2-digit batch year (e.g. 28 for A/L 2028):<br><br>
-                   <input id="swal-batch-year" type="number" min="20" max="99" value="${defaultBatch}" class="form-control text-center" style="width: 120px; margin: 0 auto; font-size: 1.2rem; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">`,
+                   <input id="swal-batch-year" type="number" min="20" max="99" value="${val}" placeholder="e.g. 28" class="form-control text-center" style="width: 140px; margin: 0 auto; font-size: 1.2rem; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">`,
             showCancelButton: true,
             confirmButtonText: 'Generate Number',
             confirmButtonColor: '#38bdf8',

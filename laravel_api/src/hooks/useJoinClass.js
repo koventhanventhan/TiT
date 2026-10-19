@@ -1,9 +1,19 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { studentAttend } from '../services/dashboardService';
 
 export function useJoinClass() {
     const [joiningId, setJoiningId] = useState(null);
+    const [isCooldown, setIsCooldown] = useState(false);
     const inFlightRef = useRef(false);
+    const cooldownTimerRef = useRef(null);
+
+    useEffect(() => {
+        return () => {
+            if (cooldownTimerRef.current) {
+                clearTimeout(cooldownTimerRef.current);
+            }
+        };
+    }, []);
 
     const joinClass = useCallback(async (cls) => {
         if (!cls || inFlightRef.current) return;
@@ -27,15 +37,23 @@ export function useJoinClass() {
                 w.location.href = link;
             }
         } finally {
-            inFlightRef.current = false;
             setJoiningId(null);
+            setIsCooldown(true);
+            if (cooldownTimerRef.current) {
+                clearTimeout(cooldownTimerRef.current);
+            }
+            cooldownTimerRef.current = setTimeout(() => {
+                inFlightRef.current = false;
+                setIsCooldown(false);
+            }, 1500);
         }
     }, []);
 
     return {
         joinClass,
         joiningId,
-        isJoining: (id) => joiningId === id,
+        isCooldown,
+        isJoining: (id) => joiningId === id || inFlightRef.current || isCooldown,
     };
 }
 

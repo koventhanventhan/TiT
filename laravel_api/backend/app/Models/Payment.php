@@ -22,12 +22,15 @@ class Payment extends Model
         'institute_id',
         'year_month',
         'gateway_ref',
+        'receipt_no',
+        'receipt_sent_at',
     ];
 
     protected function casts(): array
     {
         return [
             'paid_at' => 'datetime',
+            'receipt_sent_at' => 'datetime',
             'amount' => 'decimal:2',
         ];
     }

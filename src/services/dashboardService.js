@@ -128,6 +128,36 @@ export const initializeMonthlyPayment = async () => {
   return res.json()
 }
 
+export const downloadStudentReceipt = async (paymentId, receiptNo) => {
+  const token = localStorage.getItem('authToken')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (user?.institute_id) headers['X-Institute-Id'] = user.institute_id
+
+  const res = await fetch(`${API_BASE_URL}/student/payments/${paymentId}/receipt`, {
+    headers,
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    let msg = 'Failed to download receipt'
+    try {
+      const err = await res.json()
+      if (err.message) msg = err.message
+    } catch (_) {}
+    throw new Error(msg)
+  }
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `receipt-${receiptNo || paymentId}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+}
+
 export const getTeacherZoomClasses = async () => {
   const res = await fetch(`${API_BASE_URL}/teacher/zoom-classes`, {
     headers: getAuthHeaders(),

@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     Route::middleware(['role:user', 'tenant'])->prefix('student')->group(function () {
         // Monthly Payment Routes (Must be accessible even if reg_status check fails)
         Route::get('/payment-status', [RegistrationController::class, 'checkMonthlyPaymentStatus']);
+        Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\PaymentReceiptController::class, 'downloadStudent']);
         Route::post('/pay-monthly', [RegistrationController::class, 'initializeMonthlyPayment']);
         Route::post('/pay-monthly-offline', [RegistrationController::class, 'offlineMonthlyPayment']);
         Route::post('/advance-payment-offline', [RegistrationController::class, 'offlineAdvancePayment']);

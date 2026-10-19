@@ -600,6 +600,15 @@ class RegistrationController extends Controller
                     ['student_name' => $user->full_name ?? $user->name]
                 );
 
+                // Generate receipt and dispatch notifications
+                try {
+                    $receiptSvc = app(\App\Services\PaymentReceiptService::class);
+                    $receiptSvc->ensureReceipt($payment);
+                    $receiptSvc->sendReceiptNotifications($payment);
+                } catch (\Throwable $e) {
+                    Log::error('PayHere notify: Receipt generation failed: ' . $e->getMessage());
+                }
+
                 // Notify Admin
                 $this->notifier->notifyAdmin(
                     'admin_alert', 'tit_payment_success',
@@ -715,6 +724,15 @@ class RegistrationController extends Controller
                 ['student_name' => $user->full_name ?? $user->name]
             );
 
+            // Generate receipt and dispatch notifications
+            try {
+                $receiptSvc = app(\App\Services\PaymentReceiptService::class);
+                $receiptSvc->ensureReceipt($payment);
+                $receiptSvc->sendReceiptNotifications($payment);
+            } catch (\Throwable $e) {
+                Log::error('paymentSuccess: Receipt generation failed: ' . $e->getMessage());
+            }
+
             // Notify Admin
             $this->notifier->notifyAdmin(
                 'admin_alert', 'tit_payment_success',
@@ -782,6 +800,23 @@ class RegistrationController extends Controller
             })->whereIn('name', $selectedSubjects)->get(['name', 'price'])->toArray();
         }
 
+        $history = Payment::where('user_id', $user->id)
+            ->orderBy('year_month', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(12)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'             => $p->id,
+                    'year_month'     => $p->year_month,
+                    'amount'         => (float) $p->amount,
+                    'status'         => $p->status,
+                    'paid_at'        => $p->paid_at ? (is_string($p->paid_at) ? $p->paid_at : $p->paid_at->toIso8601String()) : null,
+                    'receipt_no'     => $p->receipt_no,
+                    'payment_method' => $p->payment_method,
+                ];
+            });
+
         return response()->json([
             'is_paid'    => $payment && $payment->status === 'paid',
             'paid_until' => $paidUntil,
@@ -789,13 +824,15 @@ class RegistrationController extends Controller
             'year_month' => $yearMonth,
             'subjects'   => $subjectData,
             'payment'    => $payment ? [
-                'id'         => $payment->id,
-                'status'     => $payment->status,
-                'amount'     => $payment->amount,
-                'paid_at'    => $payment->paid_at,
-                'gateway_ref' => $payment->gateway_ref,
+                'id'             => $payment->id,
+                'status'         => $payment->status,
+                'amount'         => $payment->amount,
+                'paid_at'        => $payment->paid_at,
+                'gateway_ref'    => $payment->gateway_ref,
                 'payment_method' => $payment->payment_method,
+                'receipt_no'     => $payment->receipt_no,
             ] : null,
+            'history'    => $history,
         ]);
     }
 

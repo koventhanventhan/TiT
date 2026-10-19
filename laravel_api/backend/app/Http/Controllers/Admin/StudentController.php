@@ -544,6 +544,15 @@ class StudentController extends Controller
             return redirect()->back()->with('error', 'Payment for ' . $yearMonth . ' is already marked as paid!');
         }
 
+        // Trigger receipt generation and notifications
+        try {
+            $receiptService = app(\App\Services\PaymentReceiptService::class);
+            $receiptService->ensureReceipt($payment);
+            $receiptService->sendReceiptNotifications($payment);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Receipt trigger failed in markPaid: ' . $e->getMessage());
+        }
+
         // If student was deactivated, automatically reactivate them now that payment is made
         if ($student->deactivated_at) {
             $student->update(['deactivated_at' => null]);
@@ -779,6 +788,7 @@ class StudentController extends Controller
                 $startMonth = now()->startOfMonth();
             }
 
+            $approvedPayments = [];
             for ($i = 0; $i < $monthsCount; $i++) {
                 $yearMonth = $startMonth->copy()->addMonths($i)->format('Y-m');
                 
@@ -802,6 +812,21 @@ class StudentController extends Controller
                     ->where('status', 'pending')
                     ->where('id', '!=', $payment->id)
                     ->update(['status' => 'cancelled']);
+
+                $approvedPayments[] = $payment;
+            }
+
+            // Assign receipts to approved payments and send receipt notification
+            try {
+                $receiptService = app(\App\Services\PaymentReceiptService::class);
+                foreach ($approvedPayments as $p) {
+                    $receiptService->ensureReceipt($p);
+                }
+                if (!empty($approvedPayments[0])) {
+                    $receiptService->sendReceiptNotifications($approvedPayments[0]);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in approveAdvancePayment: ' . $e->getMessage());
             }
 
             // If student was deactivated, automatically reactivate them now that payment is approved

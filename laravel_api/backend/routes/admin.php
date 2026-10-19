@@ -64,6 +64,8 @@ Route::prefix('admin')->group(function () {
         Route::delete('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'destroy'])->name('admin.students.payments.destroy');
         Route::post('/students/{id}/payments/{payment}/mark-paid', [StudentPaymentController::class, 'markPaid'])->name('admin.students.payments.mark-paid');
         Route::post('/students/{id}/payments/{payment}/revert', [StudentPaymentController::class, 'revert'])->name('admin.students.payments.revert');
+        Route::get('/students/{id}/payments/{payment}/receipt', [StudentPaymentController::class, 'downloadReceipt'])->name('admin.students.payments.receipt');
+        Route::post('/students/{id}/payments/{payment}/resend-receipt', [StudentPaymentController::class, 'resendReceipt'])->name('admin.students.payments.resend-receipt');
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
         Route::post('/students/promote', [StudentController::class, 'promote'])->name('admin.students.promote');
         Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password');

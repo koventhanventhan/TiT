@@ -598,8 +598,30 @@
                                                     <i class="fa fa-pencil"></i> <span>Edit</span>
                                                 </button>
 
-                                                {{-- 2. Context Action Button (Receipt fallback: Revert to Pending / Mark Paid) --}}
+                                                {{-- 2. Context Action Button (Receipt / Resend / Revert / Mark Paid) --}}
                                                 @if($payment->status === 'paid')
+                                                    {{-- Receipt View/Download Button --}}
+                                                    <a href="{{ route('admin.students.payments.receipt', ['id' => $student->id, 'payment' => $payment->id]) }}" 
+                                                       target="_blank" 
+                                                       class="btn btn-sm btn-action-receipt" 
+                                                       title="View / Download PDF Receipt" 
+                                                       aria-label="View / Download PDF Receipt"
+                                                       style="min-height: 36px; background: #0284c7; border-color: #0284c7; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                        <i class="fa fa-file-pdf-o"></i> <span>Receipt</span>
+                                                    </a>
+
+                                                    {{-- Resend Receipt Button --}}
+                                                    <form action="{{ route('admin.students.payments.resend-receipt', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST" style="display: inline-block; margin: 0;">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                class="btn btn-sm btn-action-resend" 
+                                                                title="Resend receipt email & WhatsApp" 
+                                                                aria-label="Resend receipt email & WhatsApp"
+                                                                style="min-height: 36px; background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                            <i class="fa fa-paper-plane"></i> <span>Resend</span>
+                                                        </button>
+                                                    </form>
+
                                                     <button type="button" 
                                                             class="btn btn-sm btn-action-revert" 
                                                             data-toggle="modal" 

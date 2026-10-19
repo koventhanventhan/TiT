@@ -177,6 +177,18 @@ class StudentPaymentController extends Controller
             // If student was deactivated, reactivate
             if ($student->deactivated_at) {
                 $student->update(['deactivated_at' => null]);
+            }
+
+            // Assign receipt number & dispatch receipt notifications (Email + WhatsApp)
+            try {
+                $receiptService = app(\App\Services\PaymentReceiptService::class);
+                $receiptService->ensureReceipt($payment);
+                $receiptService->sendReceiptNotifications($payment);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to trigger receipt on markPaid: ' . $e->getMessage());
+            }
+
+            if ($student->deactivated_at) {
                 return redirect()->back()->with('success', 'Payment marked for ' . $payment->year_month . ' and student account reactivated.');
             }
 
@@ -213,6 +225,43 @@ class StudentPaymentController extends Controller
 
             return redirect()->back()->with('success', 'Payment reverted to pending.');
         });
+    }
+
+    /**
+     * Download payment receipt (Admin view).
+     * GET /admin/students/{id}/payments/{payment}/receipt
+     */
+    public function downloadReceipt(Request $request, $studentId, $paymentId)
+    {
+        [$student, $payment] = $this->resolveStudentAndPayment($studentId, $paymentId);
+
+        $receiptService = app(\App\Services\PaymentReceiptService::class);
+        $pdfBinary = $receiptService->pdf($payment);
+        $receiptNo = $payment->receipt_no ?: "payment-{$payment->id}";
+
+        return response($pdfBinary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="receipt-' . $receiptNo . '.pdf"',
+        ]);
+    }
+
+    /**
+     * Resend receipt email & WhatsApp message.
+     * POST /admin/students/{id}/payments/{payment}/resend-receipt
+     */
+    public function resendReceipt(Request $request, $studentId, $paymentId)
+    {
+        [$student, $payment] = $this->resolveStudentAndPayment($studentId, $paymentId);
+
+        if ($payment->status !== 'paid') {
+            return redirect()->back()->with('error', 'Cannot send receipt for an unpaid payment.');
+        }
+
+        $receiptService = app(\App\Services\PaymentReceiptService::class);
+        $receiptService->ensureReceipt($payment);
+        $receiptService->sendReceiptNotifications($payment, force: true);
+
+        return redirect()->back()->with('success', "Receipt #{$payment->receipt_no} has been queued for delivery to the student/parent.");
     }
 
     /**

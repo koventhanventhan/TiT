@@ -244,6 +244,15 @@
                             </div>
                         </div>
 
+                        <!-- Batch Year -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label>Batch Year (YY) <small class="text-muted">(Optional, e.g. 28 for A/L 2028)</small></label>
+                                <input type="number" name="batch_year" class="form-control" value="{{ old('batch_year', date('y')) }}" min="20" max="99" placeholder="e.g. 28">
+                                <small class="text-muted d-block mt-1">Used for automatic index number generation (e.g. TiT/28/100)</small>
+                            </div>
+                        </div>
+
                         <!-- Device Used -->
                         <div class="col-md-6 mb-3">
                             <div class="form-group">

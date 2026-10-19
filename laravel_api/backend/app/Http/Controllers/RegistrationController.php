@@ -564,6 +564,16 @@ class RegistrationController extends Controller
                         'registration_status' => 'approved',
                         'admin_confirmed_at'  => now(),
                     ]);
+
+                    if (empty($user->index_number)) {
+                        try {
+                            $indexSvc = app(\App\Services\StudentIndexService::class);
+                            $batch = $indexSvc->calculateDefaultBatchYear($user);
+                            $indexSvc->assign($user, $batch);
+                        } catch (\Throwable $e) {
+                            Log::warning("Could not auto-assign index number in online payment callback: " . $e->getMessage());
+                        }
+                    }
                 }
 
                 // Notify Admin of successful payment
@@ -670,6 +680,17 @@ class RegistrationController extends Controller
                 'registration_status' => 'approved',
                 'admin_confirmed_at'  => now(),
             ]);
+
+            if (empty($user->index_number)) {
+                try {
+                    $indexSvc = app(\App\Services\StudentIndexService::class);
+                    $batch = $indexSvc->calculateDefaultBatchYear($user);
+                    $indexSvc->assign($user, $batch);
+                } catch (\Throwable $e) {
+                    Log::warning("Could not auto-assign index number in paymentSuccess: " . $e->getMessage());
+                }
+            }
+
             Log::info('paymentSuccess: User automatically approved', ['user_id' => $user->id]);
 
             // Notify Admin

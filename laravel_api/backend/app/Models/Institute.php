@@ -17,11 +17,14 @@ class Institute extends Model
         'status',
         'subscription_plan_id',
         'expires_at',
+        'index_prefix',
+        'index_seq_start',
     ];
 
     protected $casts = [
         'theme_settings' => 'array',
         'expires_at' => 'datetime',
+        'index_seq_start' => 'integer',
     ];
 
     public function plan()

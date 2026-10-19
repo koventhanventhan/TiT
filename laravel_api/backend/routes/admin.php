@@ -51,8 +51,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/students/{id}', [StudentController::class, 'show'])->name('admin.students.show');
         Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('admin.students.edit');
         Route::put('/students/{id}', [StudentController::class, 'update'])->name('admin.students.update');
-        Route::patch('/students/{id}', [StudentController::class, 'update']);
         Route::post('/students/{id}/confirm', [StudentController::class, 'confirm'])->name('admin.students.confirm');
+        Route::post('/students/{id}/assign-index', [StudentController::class, 'assignIndexNumber'])->name('admin.students.assign-index');
+        Route::post('/students/{id}/reassign-index', [StudentController::class, 'reassignIndexNumber'])->name('admin.students.reassign-index');
+        Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');
         Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject');
         Route::post('/students/{id}/activate', [StudentController::class, 'activate'])->name('admin.students.activate');
         Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');

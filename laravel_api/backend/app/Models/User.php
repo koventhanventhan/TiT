@@ -105,6 +105,9 @@ class User extends Authenticatable implements FilamentUser
         'needs_subject_review',
         'is_graduated',
         'last_promoted_at',
+        'batch_year',
+        'index_seq',
+        'index_number',
     ];
 
     /**
@@ -135,6 +138,8 @@ class User extends Authenticatable implements FilamentUser
             'profile_settings' => 'array',
             'selected_subjects' => 'array',
             'custom_fields' => 'array',
+            'batch_year' => 'integer',
+            'index_seq' => 'integer',
         ];
     }
 
@@ -400,5 +405,13 @@ class User extends Authenticatable implements FilamentUser
             return (float) $config[$gradeNum]['amount'];
         }
         return 0.0;
+    }
+
+    /**
+     * Calculate default batch year for this student using StudentIndexService.
+     */
+    public function calculateDefaultBatchYear(): int
+    {
+        return app(\App\Services\StudentIndexService::class)->calculateDefaultBatchYear($this);
     }
 }

@@ -298,10 +298,22 @@
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 mr-3">
                     <div class="premium-filter-group">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid rgba(235, 129, 83, 0.5) !important; color: #fff !important; padding: 4px 12px;">
+
                         <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
                             <option value=""> All Grades</option>
                             @for($i = 1; $i <= 13; $i++)
                                 <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                            @endfor
+                        </select>
+
+                        <select name="batch_year" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                            <option value=""> All Batches</option>
+                            @php
+                                $curBatch = (int) date('y');
+                            @endphp
+                            @for($b = $curBatch + 4; $b >= $curBatch - 5; $b--)
+                                <option value="{{ $b }}" {{ request('batch_year') == $b ? 'selected' : '' }}>Batch '{{ $b }}</option>
                             @endfor
                         </select>
                         
@@ -309,11 +321,14 @@
                             <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
                             <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                Needs Subject Review
+                                Review
                             </label>
                         </div>
                     </div>
                 </form>
+                <button type="button" class="btn btn-info btn-sm mr-2" id="bulkIndexBtn" style="display: none;" onclick="submitBulkAssignIndex()">
+                    <i class="flaticon-381-layer-1"></i> Assign Index (<span id="indexSelectedCount">0</span>)
+                </button>
                 <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">
                     <i class="flaticon-381-upload"></i> Promote Selected (<span id="promoteSelectedCount">0</span>)
                 </button>
@@ -336,6 +351,12 @@
 <form id="bulkPromoteForm" action="{{ route('admin.students.promote') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="ids" id="bulkPromoteIds">
+</form>
+
+<form id="bulkIndexForm" action="{{ route('admin.students.bulk-assign-index') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="ids" id="bulkIndexIds">
+    <input type="hidden" name="batch_year" id="bulkIndexBatchYear">
 </form>
 
 @if (session('success'))
@@ -400,9 +421,16 @@
                                        </div>
                                    </td>
                                     <td class="nowrap-column">
-                                       <div style="font-weight: 800; font-size: 0.75rem;">{{ $student->id }}</div>
-                                       <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
-                                   </td>
+                                        <div style="font-weight: 800; font-size: 0.75rem;">#{{ $student->id }}</div>
+                                        @if($student->index_number)
+                                            <div style="font-weight: 800; font-size: 0.72rem; color: #38bdf8; font-family: monospace; letter-spacing: 0.3px;" title="Index Number: {{ $student->index_number }} (Batch '{{ $student->batch_year }}')">
+                                                {{ $student->index_number }}
+                                            </div>
+                                        @else
+                                            <div style="font-size: 0.6rem; color: #6b7280; font-style: italic;">No Index</div>
+                                        @endif
+                                        <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
+                                    </td>
                                   <td style="max-width: 7.5rem;">
                                       <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
                                       @if($student->displayEmail())
@@ -467,17 +495,38 @@
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
                                               @if(!$student->admin_confirmed_at)
-                                                 <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="dropdown-item text-success">Confirm Registration</button>
-                                                </form>
-                                                <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
-                                                    @csrf
-                                                    <input type="hidden" name="reason" id="reject-reason-{{ $student->id }}" value="">
-                                                    <button type="button" class="dropdown-item text-danger" onclick="promptReject({{ $student->id }})">Reject Registration</button>
-                                                </form>
-                                            @endif
-                                            <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
+                                                 <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', {{ $student->calculateDefaultBatchYear() }})">
+                                                     Confirm Registration
+                                                 </button>
+                                                 <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST" id="confirm-form-{{ $student->id }}" style="display: none;">
+                                                     @csrf
+                                                     <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="{{ $student->calculateDefaultBatchYear() }}">
+                                                 </form>
+                                                 <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
+                                                     @csrf
+                                                     <input type="hidden" name="reason" id="reject-reason-{{ $student->id }}" value="">
+                                                     <button type="button" class="dropdown-item text-danger" onclick="promptReject({{ $student->id }})">Reject Registration</button>
+                                                 </form>
+                                             @endif
+                                             <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
+                                             @if(!$student->index_number)
+                                                 <button type="button" class="dropdown-item text-info" onclick="promptAssignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', {{ $student->calculateDefaultBatchYear() }})">
+                                                     Assign Index Number
+                                                 </button>
+                                                 <form action="{{ route('admin.students.assign-index', $student->id) }}" method="POST" id="assign-index-form-{{ $student->id }}" style="display: none;">
+                                                     @csrf
+                                                     <input type="hidden" name="batch_year" id="assign-batch-{{ $student->id }}">
+                                                 </form>
+                                             @else
+                                                 <button type="button" class="dropdown-item text-warning" onclick="promptReassignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', {{ $student->batch_year ?? $student->calculateDefaultBatchYear() }})">
+                                                     Change Index Number
+                                                 </button>
+                                                 <form action="{{ route('admin.students.reassign-index', $student->id) }}" method="POST" id="reassign-index-form-{{ $student->id }}" style="display: none;">
+                                                     @csrf
+                                                     <input type="hidden" name="batch_year" id="reassign-batch-{{ $student->id }}">
+                                                     <input type="hidden" name="reason" id="reassign-reason-{{ $student->id }}">
+                                                 </form>
+                                             @endif
                                             @if($student->deactivated_at)
                                                 <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" id="activate-form-{{ $student->id }}">
                                                     @csrf
@@ -557,19 +606,26 @@
         const promoteSelectedCountSpan = document.getElementById('promoteSelectedCount');
         const bulkDeleteIdsInput = document.getElementById('bulkDeleteIds');
         const bulkPromoteIdsInput = document.getElementById('bulkPromoteIds');
+        const bulkIndexBtn = document.getElementById('bulkIndexBtn');
+        const indexSelectedCountSpan = document.getElementById('indexSelectedCount');
+        const bulkIndexIdsInput = document.getElementById('bulkIndexIds');
 
         function updateBulkDeleteBtn() {
             const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
             if (selected.length > 0) {
                 bulkDeleteBtn.style.display = 'inline-block';
                 bulkPromoteBtn.style.display = 'inline-block';
+                if (bulkIndexBtn) bulkIndexBtn.style.display = 'inline-block';
                 selectedCountSpan.textContent = selected.length;
                 promoteSelectedCountSpan.textContent = selected.length;
+                if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = selected.length;
                 bulkDeleteIdsInput.value = selected.join(',');
                 bulkPromoteIdsInput.value = selected.join(',');
+                if (bulkIndexIdsInput) bulkIndexIdsInput.value = selected.join(',');
             } else {
                 bulkDeleteBtn.style.display = 'none';
                 bulkPromoteBtn.style.display = 'none';
+                if (bulkIndexBtn) bulkIndexBtn.style.display = 'none';
             }
         }
 
@@ -645,6 +701,153 @@
             if (result.value !== undefined && result.value !== false) {
                 document.getElementById('reject-reason-' + studentId).value = result.value || '';
                 document.getElementById('reject-form-' + studentId).submit();
+            }
+        });
+    }
+
+
+    function submitBulkAssignIndex() {
+        Swal.fire({
+            title: 'Assign Index Numbers',
+            html: `
+                <p style="color:#d1d5db; font-size: 0.9rem;">
+                    Assign sequential Index Numbers (e.g. <code>TiT/YY/100</code>) to the selected students who do not have an index number yet.
+                </p>
+                <div style="text-align: left; margin-top: 1rem;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Batch Year (2 digits, e.g. 28 for 2028):</label>
+                    <input type="number" id="swalBulkBatch" class="swal2-input" placeholder="Leave empty to auto-calculate from student grades" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                    <small style="color: #9ca3af;">If left blank, each student's batch year will be derived from their current grade.</small>
+                </div>
+            `,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0ea5e9',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Assign Index Numbers',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const batch = document.getElementById('swalBulkBatch').value.trim();
+                return batch;
+            }
+        }).then((result) => {
+            if (result.value !== undefined && result.value !== false) {
+                document.getElementById('bulkIndexBatchYear').value = result.value || '';
+                document.getElementById('bulkIndexForm').submit();
+            }
+        });
+    }
+
+    function promptConfirmStudent(studentId, studentName, defaultBatch) {
+        Swal.fire({
+            title: 'Confirm Registration',
+            html: `
+                <p style="color: #d1d5db; font-size: 0.9rem;">
+                    Confirm registration for <strong>${studentName}</strong>?
+                </p>
+                <div style="text-align: left; margin-top: 1rem;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">A/L or O/L Batch Year:</label>
+                    <input type="number" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch}" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                    <small style="color: #9ca3af;">An index number (e.g. TiT/${defaultBatch}/100) will be automatically generated.</small>
+                </div>
+            `,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Confirm & Assign Index',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const batch = document.getElementById('swalConfirmBatch').value.trim();
+                if (!batch || isNaN(batch) || parseInt(batch) < 20 || parseInt(batch) > 99) {
+                    Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99)');
+                    return false;
+                }
+                return batch;
+            }
+        }).then((result) => {
+            if (result.value) {
+                document.getElementById('confirm-batch-' + studentId).value = result.value;
+                document.getElementById('confirm-form-' + studentId).submit();
+            }
+        });
+    }
+
+    function promptAssignIndexSingle(studentId, studentName, defaultBatch) {
+        Swal.fire({
+            title: 'Assign Index Number',
+            html: `
+                <p style="color: #d1d5db; font-size: 0.9rem;">
+                    Generate next sequential index for <strong>${studentName}</strong>.
+                </p>
+                <div style="text-align: left; margin-top: 1rem;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Batch Year (2 digits):</label>
+                    <input type="number" id="swalAssignBatch" class="swal2-input" value="${defaultBatch}" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                </div>
+            `,
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#0ea5e9',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Assign Now',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const batch = document.getElementById('swalAssignBatch').value.trim();
+                if (!batch || isNaN(batch) || parseInt(batch) < 20 || parseInt(batch) > 99) {
+                    Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99)');
+                    return false;
+                }
+                return batch;
+            }
+        }).then((result) => {
+            if (result.value) {
+                document.getElementById('assign-batch-' + studentId).value = result.value;
+                document.getElementById('assign-index-form-' + studentId).submit();
+            }
+        });
+    }
+
+    function promptReassignIndexSingle(studentId, studentName, currentIndex, currentBatch) {
+        Swal.fire({
+            title: 'Change Index Number',
+            html: `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; color: #fca5a5; font-size: 0.82rem; text-align: left;">
+                    <strong>Warning:</strong> Current index is <code>${currentIndex}</code>. Reassigning will allocate a NEW sequence number. The old number will NOT be reused.
+                </div>
+                <div style="text-align: left;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">New Batch Year (2 digits):</label>
+                    <input type="number" id="swalReassignBatch" class="swal2-input" value="${currentBatch}" min="20" max="99" style="width: 100%; margin: 0.5rem 0 1rem 0;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Reason for change (Required):</label>
+                    <input type="text" id="swalReassignReason" class="swal2-input" placeholder="e.g. Changed batch from '28 to '29" style="width: 100%; margin: 0.5rem 0;">
+                </div>
+            `,
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Confirm & Reassign',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const batch = document.getElementById('swalReassignBatch').value.trim();
+                const reason = document.getElementById('swalReassignReason').value.trim();
+                if (!batch || isNaN(batch) || parseInt(batch) < 20 || parseInt(batch) > 99) {
+                    Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99)');
+                    return false;
+                }
+                if (!reason) {
+                    Swal.showValidationMessage('Reason is required for audit log');
+                    return false;
+                }
+                return { batch, reason };
+            }
+        }).then((result) => {
+            if (result.value) {
+                document.getElementById('reassign-batch-' + studentId).value = result.value.batch;
+                document.getElementById('reassign-reason-' + studentId).value = result.value.reason;
+                document.getElementById('reassign-index-form-' + studentId).submit();
             }
         });
     }

@@ -23,11 +23,16 @@ class StudentController extends Controller
 
     protected NotificationService $notifier;
     protected StudentPromotionService $promotionService;
+    protected \App\Services\StudentIndexService $indexService;
 
-    public function __construct(NotificationService $notifier, StudentPromotionService $promotionService)
-    {
+    public function __construct(
+        NotificationService $notifier,
+        StudentPromotionService $promotionService,
+        \App\Services\StudentIndexService $indexService
+    ) {
         $this->notifier = $notifier;
         $this->promotionService = $promotionService;
+        $this->indexService = $indexService;
     }
     /**
      * Display a listing of all students
@@ -51,6 +56,29 @@ class StudentController extends Controller
             $query->where(function ($q) use ($request) {
                 $q->where('current_grade', $request->grade)
                   ->orWhere('current_grade', 'Grade ' . $request->grade);
+            });
+        }
+
+        if ($request->filled('batch_year')) {
+            $query->where('batch_year', (int) $request->batch_year);
+        }
+
+        if ($request->has('has_index')) {
+            if ($request->has_index === '1') {
+                $query->whereNotNull('index_number');
+            } elseif ($request->has_index === '0') {
+                $query->whereNull('index_number');
+            }
+        }
+
+        if ($request->filled('search')) {
+            $term = trim($request->search);
+            $query->where(function ($q) use ($term) {
+                $q->where('full_name', 'like', "%{$term}%")
+                  ->orWhere('name', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%")
+                  ->orWhere('phone_number', 'like', "%{$term}%")
+                  ->orWhere('index_number', 'like', "%{$term}%");
             });
         }
             
@@ -214,7 +242,7 @@ class StudentController extends Controller
     /**
      * Confirm student registration and send WhatsApp message.
      */
-    public function confirm($id)
+    public function confirm(Request $request, $id)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
@@ -224,6 +252,13 @@ class StudentController extends Controller
             ->where('id', $id)
             ->whereNotNull('full_name')
             ->firstOrFail();
+
+        $batchYear = $request->filled('batch_year')
+            ? $this->indexService->normalizeBatchYear($request->batch_year)
+            : $this->indexService->calculateDefaultBatchYear($student);
+
+        // Assign automatic student index number (idempotent, e.g. TiT/28/100)
+        $indexNumber = $this->indexService->assign($student, $batchYear);
 
         $student->update([
             'admin_confirmed_at' => now(),
@@ -311,6 +346,7 @@ class StudentController extends Controller
             'current_grade' => 'required|string|max:100',
             'stream' => 'nullable|string|max:50|in:arts,bio_maths',
             'selected_subjects' => 'nullable|array',
+            'batch_year' => 'nullable|integer',
             'quick_payment' => 'nullable|boolean',
             'custom_payment_month' => 'nullable|date',
         ]);
@@ -350,6 +386,16 @@ class StudentController extends Controller
             'registration_status' => 'approved',
             'admin_confirmed_at' => now(),
         ]);
+
+        // Assign automatic student index number
+        try {
+            $batchYear = $request->filled('batch_year')
+                ? $this->indexService->normalizeBatchYear($request->batch_year)
+                : $this->indexService->calculateDefaultBatchYear($user);
+            $this->indexService->assign($user, $batchYear);
+        } catch (\Throwable $e) {
+            \Log::warning("Could not auto-assign index number in student store(): " . $e->getMessage());
+        }
 
         // Notify Admin of manual student entry
         $admin = User::where('role', 'admin')->first();
@@ -794,6 +840,129 @@ class StudentController extends Controller
         }
 
         return redirect()->back()->with('success', 'Advance payment rejected.');
+    }
+
+    /**
+     * Assign student index number manually if not assigned yet.
+     */
+    public function assignIndexNumber(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $student = User::where('role', 'user')->findOrFail($id);
+
+        $batchYear = $request->filled('batch_year')
+            ? $this->indexService->normalizeBatchYear($request->batch_year)
+            : $this->indexService->calculateDefaultBatchYear($student);
+
+        $indexNumber = $this->indexService->assign($student, $batchYear);
+
+        return back()->with('success', "Assigned index number {$indexNumber} to " . ($student->full_name ?? $student->name) . ".");
+    }
+
+    /**
+     * Re-assign index number to a student (creates activity log).
+     */
+    public function reassignIndexNumber(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate([
+            'batch_year' => 'required|integer',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $student = User::where('role', 'user')->findOrFail($id);
+        $oldIndex = $student->index_number;
+        $newIndex = $this->indexService->reassign($student, $request->batch_year, auth()->user(), $request->input('reason'));
+
+        return back()->with('success', "Reassigned index number from {$oldIndex} to {$newIndex}.");
+    }
+
+    /**
+     * Bulk assign index numbers or preview bulk assignments.
+     */
+    public function bulkAssignIndex(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Admin access required'], 403);
+            }
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $rawIds = $request->input('ids');
+        if (is_string($rawIds)) {
+            $rawIds = array_filter(array_map('trim', explode(',', $rawIds)));
+            $request->merge(['ids' => $rawIds]);
+        }
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:users,id',
+            'batch_year' => 'nullable|integer',
+            'preview' => 'nullable|boolean',
+        ]);
+
+        $students = User::whereIn('id', $request->ids)
+            ->where('role', 'user')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($request->boolean('preview')) {
+            $previews = [];
+            $batchYear = $request->filled('batch_year')
+                ? $this->indexService->normalizeBatchYear($request->batch_year)
+                : (int) date('y');
+            $instituteId = (int) ($students->first()?->institute_id ?: 1);
+            $unassignedCount = $students->whereNull('index_number')->count();
+            $generated = $this->indexService->previewNext($instituteId, $batchYear, $unassignedCount);
+            $previewIdx = 0;
+
+            foreach ($students as $s) {
+                if ($s->index_number) {
+                    $previews[] = [
+                        'id' => $s->id,
+                        'name' => $s->full_name ?? $s->name,
+                        'batch_year' => $s->batch_year,
+                        'index_number' => $s->index_number,
+                        'status' => 'Already Assigned',
+                    ];
+                } else {
+                    $previews[] = [
+                        'id' => $s->id,
+                        'name' => $s->full_name ?? $s->name,
+                        'batch_year' => $batchYear,
+                        'index_number' => $generated[$previewIdx++] ?? 'N/A',
+                        'status' => 'Will Assign',
+                    ];
+                }
+            }
+
+            return response()->json(['preview' => $previews]);
+        }
+
+        $assignedCount = 0;
+        foreach ($students as $student) {
+            if (empty($student->index_number)) {
+                $batchYear = $request->filled('batch_year')
+                    ? $this->indexService->normalizeBatchYear($request->batch_year)
+                    : $this->indexService->calculateDefaultBatchYear($student);
+
+                $this->indexService->assign($student, $batchYear);
+                $assignedCount++;
+            }
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'assigned_count' => $assignedCount]);
+        }
+
+        return back()->with('success', "Assigned index numbers to {$assignedCount} student(s).");
     }
 }
 

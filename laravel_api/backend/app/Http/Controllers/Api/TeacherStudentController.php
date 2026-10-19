@@ -36,10 +36,27 @@ class TeacherStudentController extends Controller
 
         $students = User::where('role', 'user')
             ->whereIn('registration_status', ['approved', 'payment_completed'])
-            ->select('id', 'name', 'email', 'phone_number', 'current_grade', 'stream', 'registration_status as status')
+            ->with(['parent:id,name,full_name,phone_number'])
+            ->select('id', 'name', 'full_name', 'email', 'phone_number', 'current_grade', 'stream', 'registration_status as status', 'parent_id')
             ->get()
             ->map(function ($student) use ($presentUserIds) {
+                $isSibling = !empty($student->parent_id);
+                $parent = $student->parent;
+                $phone = $student->phone_number;
+                $phoneIsParent = false;
+                if (empty($phone) && $parent && !empty($parent->phone_number)) {
+                    $phone = $parent->phone_number;
+                    $phoneIsParent = true;
+                }
+
                 $student->is_online = isset($presentUserIds[$student->id]);
+                $student->is_sibling = $isSibling;
+                $student->parent_name = $parent ? ($parent->full_name ?: $parent->name) : null;
+                $student->phone_number = $phone;
+                $student->phone_is_parent = $phoneIsParent;
+                $student->email = $student->displayEmail();
+                $student->display_name = $student->full_name ?: $student->name;
+                $student->index_number = $student->getAttribute('index_number') ?: ("STU-" . $student->id);
                 return $student;
             })
             ->values();
@@ -52,6 +69,8 @@ class TeacherStudentController extends Controller
         if ($student->role !== 'user') {
             abort(404);
         }
+
+        $student->load(['parent:id,name,full_name,phone_number']);
 
         $attendance = Attendance::where('user_id', $student->id)
             ->with(['zoomSchedule' => function($q) {
@@ -76,12 +95,28 @@ class TeacherStudentController extends Controller
                 ];
             });
 
+        $isSibling = !empty($student->parent_id);
+        $parent = $student->parent;
+        $phone = $student->phone_number;
+        $phoneIsParent = false;
+        if (empty($phone) && $parent && !empty($parent->phone_number)) {
+            $phone = $parent->phone_number;
+            $phoneIsParent = true;
+        }
+
         return response()->json([
             'profile' => [
                 'id' => $student->id,
-                'name' => $student->name,
-                'email' => $student->email,
-                'phone_number' => $student->phone_number,
+                'name' => $student->full_name ?: $student->name,
+                'full_name' => $student->full_name ?: $student->name,
+                'username' => $student->name,
+                'email' => $student->displayEmail(),
+                'phone_number' => $phone,
+                'phone_is_parent' => $phoneIsParent,
+                'is_sibling' => $isSibling,
+                'parent_name' => $parent ? ($parent->full_name ?: $parent->name) : null,
+                'parent_id' => $student->parent_id,
+                'index_number' => $student->getAttribute('index_number') ?: ("STU-" . $student->id),
                 'current_grade' => $student->current_grade,
                 'stream' => $student->stream,
                 'registration_status' => $student->registration_status,

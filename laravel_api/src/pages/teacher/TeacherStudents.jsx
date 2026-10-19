@@ -45,11 +45,13 @@ export default function TeacherStudents() {
     const grades = Array.from(new Set(students.map(s => s.current_grade).filter(Boolean))).sort()
 
     const filtered = students.filter(s => {
-        const query = search.toLowerCase()
-        const nameMatch = (s.name || '').toLowerCase().includes(query)
+        const query = search.toLowerCase().trim()
+        const nameMatch = (s.name || '').toLowerCase().includes(query) || (s.full_name || '').toLowerCase().includes(query) || (s.display_name || '').toLowerCase().includes(query)
+        const parentMatch = (s.parent_name || '').toLowerCase().includes(query)
         const emailMatch = (s.email || '').toLowerCase().includes(query)
         const phoneMatch = (s.phone_number || '').includes(query)
-        const matchesSearch = nameMatch || emailMatch || phoneMatch
+        const indexMatch = (s.index_number || '').toLowerCase().includes(query) || `stu-${s.id}`.includes(query)
+        const matchesSearch = !query || nameMatch || parentMatch || emailMatch || phoneMatch || indexMatch
         const matchesGrade = selectedGrade === 'all' || s.current_grade === selectedGrade
         return matchesSearch && matchesGrade
     })
@@ -176,8 +178,27 @@ export default function TeacherStudents() {
                                                 color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0
                                             }}>{(student.name || 'S').charAt(0).toUpperCase()}</div>
                                             <div>
-                                                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)', marginBottom: 2 }}>{student.name || 'Unnamed Student'}</div>
-                                                <div style={{ fontSize: 13, color: 'var(--t-text-3)' }}>STU-{student.id} • {student.email || 'No email'}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                                                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>
+                                                        {student.display_name || student.full_name || student.name || 'Unnamed Student'}
+                                                    </span>
+                                                    {student.is_sibling && (
+                                                        <span style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                            padding: '2px 8px', borderRadius: 99,
+                                                            background: 'var(--t-primary-soft)',
+                                                            border: '1px solid var(--t-primary-border)',
+                                                            color: 'var(--t-primary)',
+                                                            fontSize: 11, fontWeight: 700,
+                                                        }}>
+                                                            <FiUsers style={{ fontSize: 11 }} /> Sibling of {student.parent_name || 'Parent'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div style={{ fontSize: 13, color: 'var(--t-text-3)' }}>
+                                                    {student.index_number || (`STU-${student.id}`)} • {student.email || '—'}
+                                                    {student.phone_number ? ` • ${student.phone_number}${student.phone_is_parent ? ' (Parent)' : ''}` : ''}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -242,10 +263,29 @@ export default function TeacherStudents() {
                                         background: 'var(--t-primary)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0
-                                    }}>{(student.name || 'S').charAt(0).toUpperCase()}</div>
+                                    }}>{(student.display_name || student.name || 'S').charAt(0).toUpperCase()}</div>
                                     <div style={{ minWidth: 0, flex: 1 }}>
-                                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>{student.name || 'Unnamed Student'}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--t-text-3)' }}>STU-{student.id} • {student.email || 'No email'}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-text)' }}>
+                                                {student.display_name || student.full_name || student.name || 'Unnamed Student'}
+                                            </span>
+                                            {student.is_sibling && (
+                                                <span style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                    padding: '2px 8px', borderRadius: 99,
+                                                    background: 'var(--t-primary-soft)',
+                                                    border: '1px solid var(--t-primary-border)',
+                                                    color: 'var(--t-primary)',
+                                                    fontSize: 10, fontWeight: 700,
+                                                }}>
+                                                    <FiUsers style={{ fontSize: 10 }} /> Sibling of {student.parent_name || 'Parent'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'var(--t-text-3)', marginTop: 2 }}>
+                                            {student.index_number || (`STU-${student.id}`)} • {student.email || '—'}
+                                            {student.phone_number ? ` • ${student.phone_number}${student.phone_is_parent ? ' (Parent)' : ''}` : ''}
+                                        </div>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
@@ -309,21 +349,51 @@ export default function TeacherStudents() {
                             ) : (
                                 <div>
                                     {/* Profile Summary */}
+                                    {selectedStudentData.profile?.is_sibling && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: 8,
+                                            padding: '10px 14px', borderRadius: 10,
+                                            background: 'var(--t-primary-soft)', border: '1px solid var(--t-primary-border)',
+                                            color: 'var(--t-primary)', fontSize: 13, fontWeight: 600,
+                                            marginBottom: 16
+                                        }}>
+                                            <FiUsers style={{ fontSize: 16, flexShrink: 0 }} />
+                                            <span>
+                                                This student is a sibling. Parent Account: <strong>{selectedStudentData.profile?.parent_name || 'Parent'}</strong>
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <div style={{
                                         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14,
                                         background: 'var(--t-bg)', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid var(--t-border)'
                                     }}>
                                         <div>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Full Name</div>
-                                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t-text)', marginTop: 2 }}>{selectedStudentData.profile?.name}</div>
+                                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t-text)', marginTop: 2 }}>
+                                                {selectedStudentData.profile?.full_name || selectedStudentData.profile?.name}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Student ID / Index</div>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-text)', marginTop: 2 }}>
+                                                {selectedStudentData.profile?.index_number || `STU-${selectedStudentData.profile?.id}`}
+                                            </div>
                                         </div>
                                         <div>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Email</div>
-                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.email}</div>
+                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>
+                                                {selectedStudentData.profile?.email || '—'}
+                                            </div>
                                         </div>
                                         <div>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Phone</div>
-                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>{selectedStudentData.profile?.phone_number || 'N/A'}</div>
+                                            <div style={{ fontSize: 13, color: 'var(--t-text-2)', marginTop: 2 }}>
+                                                {selectedStudentData.profile?.phone_number || '—'}
+                                                {selectedStudentData.profile?.phone_is_parent && (
+                                                    <span style={{ fontSize: 11, color: 'var(--t-muted)', marginLeft: 4 }}>(Parent)</span>
+                                                )}
+                                            </div>
                                         </div>
                                         <div>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Grade / Stream</div>
@@ -334,7 +404,7 @@ export default function TeacherStudents() {
                                         <div>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-3)', textTransform: 'uppercase' }}>Registration Status</div>
                                             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t-success)', textTransform: 'capitalize', marginTop: 2 }}>
-                                                {selectedStudentData.profile?.registration_status || 'Approved'}
+                                                {selectedStudentData.profile?.registration_status === 'payment_completed' ? 'Payment Completed' : (selectedStudentData.profile?.registration_status || 'Approved')}
                                             </div>
                                         </div>
                                     </div>

@@ -179,6 +179,19 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(User::class, 'parent_id');
     }
 
+    public function isPlaceholderEmail(): bool
+    {
+        if (empty($this->email)) {
+            return false;
+        }
+        return str_ends_with($this->email, '@child.local') || str_ends_with($this->email, '@student.local');
+    }
+
+    public function displayEmail(): ?string
+    {
+        return $this->isPlaceholderEmail() ? null : $this->email;
+    }
+
     public function hasPaidForMonth(string $yearMonth): bool
     {
         return $this->payments()

@@ -44,7 +44,7 @@ const studentUser = {
   is_paid: true,
 };
 
-async function setupMocks(page, isTeacher = true) {
+async function setupMocks(page, isTeacher = true, customHandlers = {}) {
   const currentUser = isTeacher ? teacherUser : studentUser;
 
   await page.addInitScript(({ token, user }) => {
@@ -54,6 +54,12 @@ async function setupMocks(page, isTeacher = true) {
 
   await page.route('**/api/**', async (route) => {
     const url = route.request().url();
+    const method = route.request().method();
+
+    if (customHandlers.onRequest) {
+      const handled = await customHandlers.onRequest(route, url, method);
+      if (handled) return;
+    }
 
     if (url.includes('/auth/user')) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ user: currentUser }) });
@@ -1462,4 +1468,96 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
     });
   }
 
+  test('Teacher My Students displays sibling account badge, parent phone, and sanitized email in profile modal', async ({ page }) => {
+    await setupMocks(page, true, {
+      onRequest: async (route, url) => {
+        if (url.includes('/teacher/students/301')) {
+          await route.fulfill({
+            status: 200, contentType: 'application/json',
+            body: JSON.stringify({
+              profile: {
+                id: 301,
+                name: 'Kavitha Sibling',
+                full_name: 'Kavitha Sibling',
+                email: null,
+                phone_number: '0771234567',
+                phone_is_parent: true,
+                is_sibling: true,
+                parent_name: 'Ravindran Parent',
+                parent_id: 10,
+                index_number: 'STU-301',
+                current_grade: '10',
+                stream: 'Science',
+                registration_status: 'approved'
+              },
+              attendance: []
+            })
+          });
+          return true;
+        }
+        if (url.includes('/teacher/students')) {
+          await route.fulfill({
+            status: 200, contentType: 'application/json',
+            body: JSON.stringify([
+              {
+                id: 301,
+                name: 'kavi_sibling',
+                full_name: 'Kavitha Sibling',
+                display_name: 'Kavitha Sibling',
+                email: null,
+                phone_number: '0771234567',
+                phone_is_parent: true,
+                is_sibling: true,
+                parent_name: 'Ravindran Parent',
+                parent_id: 10,
+                index_number: 'STU-301',
+                current_grade: '10',
+                stream: 'Science',
+                status: 'approved',
+                is_online: 0,
+              }
+            ])
+          });
+          return true;
+        }
+        return false;
+      }
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/teacher/students', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(300);
+
+    // Sibling badge visible in list
+    const siblingBadge = page.locator('text=Sibling of Ravindran Parent');
+    await expect(siblingBadge).toBeVisible();
+
+    // No @child.local or placeholder email
+    const content = await page.textContent('body');
+    expect(content).not.toContain('@child.local');
+    expect(content).not.toContain('@student.local');
+
+    // Phone shows (Parent) label
+    await expect(page.locator('text=(Parent)').first()).toBeVisible();
+
+    // Open Student Profile modal
+    const viewInfoBtn = page.locator('button:has-text("View Info")').first();
+    await viewInfoBtn.click();
+
+    // Modal opens
+    const modal = page.locator('.teacher-modal-dialog');
+    await expect(modal).toBeVisible();
+
+    // Sibling banner in modal
+    await expect(modal.locator('text=This student is a sibling. Parent Account: Ravindran Parent')).toBeVisible();
+
+    // Email shows '—'
+    await expect(modal.locator('text=—')).toBeVisible();
+
+    // Close modal
+    await modal.locator('button[aria-label="Close student info modal"]').click();
+    await expect(modal).not.toBeVisible();
+  });
+
 });
+

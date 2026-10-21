@@ -66,6 +66,10 @@ Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])
 
 Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWhatsApp']);
 
+// Unified Website Assistant Route (Optional Sanctum Auth + ProfileContext)
+Route::middleware([\App\Http\Middleware\OptionalSanctumAuth::class, \App\Http\Middleware\ProfileContext::class])
+    ->post('/assistant/chat', [\App\Http\Controllers\Api\AssistantChatController::class, 'chat']);
+
 // Protected routes
 Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
@@ -133,6 +137,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
     // Admin Master Control Routes (Tenant Aware + Role: admin)
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
+        Route::apiResource('faqs', \App\Http\Controllers\Api\AdminFaqController::class);
         Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
         Route::post('/students/promote', [\App\Http\Controllers\AdminPromotionController::class, 'promoteStudents']);
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);

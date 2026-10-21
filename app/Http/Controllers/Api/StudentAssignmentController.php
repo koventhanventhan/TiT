@@ -41,6 +41,7 @@ class StudentAssignmentController extends Controller
                 'due_date' => $dueDateIso,
                 'grade' => $a->grade,
                 'subject' => $a->subject,
+                'max_score' => $a->max_score ?? $a->total_marks ?? 100,
                 'file_path' => $a->file_path,
                 'file_url' => $a->file_path ? asset('storage/' . $a->file_path) : null,
                 'teacher_id' => $a->teacher_id,
@@ -49,6 +50,7 @@ class StudentAssignmentController extends Controller
                     'name' => $a->teacher->name,
                     'full_name' => $a->teacher->full_name ?? $a->teacher->name,
                 ] : null,
+                'teacher_name' => $a->teacher ? ($a->teacher->full_name ?? $a->teacher->name) : 'Unknown Teacher',
                 'submissions' => $a->submissions->map(function ($sub) {
                     $submittedAtIso = null;
                     $submitted = $sub->submitted_at ?? $sub->created_at;

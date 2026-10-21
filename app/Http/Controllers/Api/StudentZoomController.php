@@ -108,6 +108,8 @@ class StudentZoomController extends Controller
                 'subject' => $s->subject,
                 'grade' => $s->grade,
                 'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'teacher_name' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'start_time' => $s->start_time ?? ($s->scheduled_at ? $s->scheduled_at->format('H:i') : null),
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
         });
@@ -257,6 +259,8 @@ class StudentZoomController extends Controller
                 'grade' => $s->grade,
                 'medium' => $s->medium,
                 'teacher' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'teacher_name' => $s->teachers->first() ? $s->teachers->first()->name : 'Unknown Teacher',
+                'start_time' => $s->start_time ?? ($s->scheduled_at ? $s->scheduled_at->format('H:i') : null),
                 'attendance_status' => $att ? $att->status : 'absent',
             ];
         });

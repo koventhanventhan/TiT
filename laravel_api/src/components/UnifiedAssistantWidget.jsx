@@ -116,6 +116,7 @@ export default function UnifiedAssistantWidget() {
             {/* Chat Trigger Button */}
             {!isOpen && (
                 <button
+                    className="unified-assistant-trigger"
                     onClick={() => setIsOpen(true)}
                     aria-label={t('unified_assistant_open') || 'Ask Assistant'}
                     style={{
@@ -145,7 +146,7 @@ export default function UnifiedAssistantWidget() {
 
             {/* Chat Modal / Window */}
             {isOpen && (
-                <div style={{
+                <div className="unified-assistant-modal" style={{
                     width: 'min(380px, calc(100vw - 2rem))',
                     height: 'min(520px, calc(100dvh - 5rem))',
                     background: '#ffffff',

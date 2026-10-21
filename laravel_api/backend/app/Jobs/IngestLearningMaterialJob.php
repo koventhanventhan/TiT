@@ -45,9 +45,9 @@ class IngestLearningMaterialJob implements ShouldQueue
     public function handle(
         VectorStoreInterface $vectorStore,
         PdfTextExtractor $extractor,
-        MultilingualTextChunker $chunker,
-        GeminiClientInterface $geminiClient,
-        TextReadabilityChecker $readabilityChecker
+        ?MultilingualTextChunker $chunker = null,
+        ?GeminiClientInterface $geminiClient = null,
+        ?TextReadabilityChecker $readabilityChecker = null
     ): void {
         $material = LearningMaterial::withoutGlobalScopes()->find($this->materialId);
 
@@ -87,6 +87,14 @@ class IngestLearningMaterialJob implements ShouldQueue
         try {
             // 2. Inspect document and classify pages into native vs OCR
             $inspection = $extractor->inspectPagesForIngestion($material);
+            if (!is_array($inspection) || !isset($inspection['total_pages'])) {
+                $extracted = $extractor->extract($material);
+                $inspection = [
+                    'total_pages' => count($extracted),
+                    'native_pages' => $extracted,
+                    'pages_needing_ocr' => [],
+                ];
+            }
             $totalPages = $inspection['total_pages'];
             $nativePages = $inspection['native_pages'];
             $pagesNeedingOcr = $inspection['pages_needing_ocr'];

@@ -301,6 +301,10 @@ class PdfTextExtractor
             return true;
         }
 
+        if ($medium && $this->isMediumScriptRatioDeficient($text, $medium)) {
+            return true;
+        }
+
         return false;
     }
 

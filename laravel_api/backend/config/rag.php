@@ -189,5 +189,26 @@ return [
     | Defaults to MariaDB packed-float BLOB with cosine similarity.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Public Website Assistant Settings
+    |--------------------------------------------------------------------------
+    |
+    | Global switch, visitor rate limits, reCAPTCHA score thresholds,
+    | and caching settings for the unified public website assistant.
+    |
+    */
+    'public_enabled' => filter_var(env('RAG_PUBLIC_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+
+    'assistant' => [
+        'public_cache_ttl' => (int) env('RAG_ASSISTANT_CACHE_TTL', 300),
+        'recaptcha_min_score' => (float) env('RAG_RECAPTCHA_MIN_SCORE', 0.5),
+        'visitor_per_minute' => (int) env('RAG_VISITOR_PER_MINUTE', 10),
+        'visitor_per_day' => (int) env('RAG_VISITOR_PER_DAY', 60),
+        'visitor_daily_cap' => (int) env('RAG_VISITOR_DAILY_CAP', 500),
+        'visitor_max_chars' => (int) env('RAG_VISITOR_MAX_CHARS', 200),
+        'visitor_log_retention_days' => (int) env('RAG_VISITOR_RETENTION_DAYS', 7),
+    ],
+
     'vector_store' => env('RAG_VECTOR_STORE', 'database'),
 ];

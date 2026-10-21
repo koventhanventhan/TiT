@@ -11,7 +11,7 @@ class DistressDetector
      */
     protected array $patterns = [
         // English: Requires first-person subject or direct intent (kill myself, end my life, want to die)
-        '/(?:^|\b)(?:i\s*(?:am|feel|want|wish|plan|going|will|might|\'m|’m)?\s*(?:like\s*)?(?:to\s*)?(?:kill\s+myself|end\s+my\s+(?:own\s+)?life|take\s+my\s+(?:own\s+)?life|commit\s+suicide|cut\s+myself|harm\s+myself|hurt\s+myself|die)|(?:kill|harm|hurt|cut)\s+myself|(?:want|going)\s+to\s+die)\b/i',
+        '/(?:^|\b)(?:i[\s\S]{0,40}?(?:kill\s+myself|end\s+my\s+(?:own\s+)?life|take\s+my\s+(?:own\s+)?life|commit\s+suicide|cut\s+myself|harm\s+myself|hurt\s+myself|die\b)|(?:kill|harm|hurt|cut)\s+myself|(?:want|going)\s+to\s+(?:die|kill\s+myself|end\s+my\s+(?:own\s+)?life))\b/i',
 
         // Tamil script: First person (நான், எனக்கு, என்) with self-harm / suicide / dying intent
         '/(?:நான்|எனக்கு|என்|என்னை)[\s\S]{0,35}(?:சாக(?:ப்\s*போகிறேன்|ப்\s*போறேன்|\s*வேண்டும்|\s*தோணுது|\s*நினைக்கிறேன்)|\s*தற்கொலை\s*(?:செய்ய|செய்துக்க|பண்ண|செய்து\s*கொள்ள)|உயிரை\s*மாய்க்க)|(?:சாகப்\s*போகிறேன்|சாகப்\s*போறேன்|சாக\s*வேண்டும்\s*போல|தற்கொலை\s*செய்து\s*கொள்ளப்\s*போகிறேன்)/u',

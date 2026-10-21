@@ -589,15 +589,71 @@ test.describe('Student Area Mobile, Tablet & Tap Optimization Suite', () => {
 
     const joinBtn = page.locator('button:has-text("Join Class")').first();
     await expect(joinBtn).toBeVisible();
+    const handle = await joinBtn.elementHandle();
+    expect(handle).not.toBeNull();
 
-    // Rapid double-tap
+    // Grab the first button once and double-click that exact element
     await Promise.all([
-      joinBtn.click(),
-      joinBtn.click()
+      handle.click({ force: true }),
+      handle.click({ force: true })
     ]);
+    await expect.poll(() => attendCalls, { timeout: 5000 }).toBe(1);
     await page.waitForTimeout(500);
 
     expect(attendCalls, 'Double-tapping Join must only invoke attend API once').toBe(1);
+  });
+
+  // Variant with page.touchscreen.tap twice at the same coordinates
+  test('Join flow: touchscreen tap Join twice rapidly sends exactly ONE attend request', async ({ browser }) => {
+    let attendCalls = 0;
+
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+
+    await setupStudentMocks(page, {}, {
+      onRequest: async (route, url) => {
+        if (url.includes('/student/attend')) {
+          attendCalls++;
+          // Simulate slight network latency
+          await new Promise(r => setTimeout(r, 100));
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, message: 'Attendance recorded' })
+          });
+          return true;
+        }
+        return false;
+      }
+    });
+
+    await page.addInitScript(() => {
+      window.open = () => ({ location: { href: '' } });
+    });
+
+    await page.goto('/student/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+
+    const joinBtn = page.locator('button:has-text("Join Class")').first();
+    await expect(joinBtn).toBeVisible();
+    await joinBtn.scrollIntoViewIfNeeded();
+    const box = await joinBtn.boundingBox();
+    expect(box).not.toBeNull();
+
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    await page.touchscreen.tap(x, y);
+    await page.touchscreen.tap(x, y);
+    await expect.poll(() => attendCalls, { timeout: 5000 }).toBe(1);
+    await page.waitForTimeout(500);
+
+    expect(attendCalls, 'Touchscreen double-tap on Join must only invoke attend API once').toBe(1);
+    await context.close();
   });
 
   // 6. Gating screens (PendingApproval, PaymentRequired, Deactivated) at 320x568, 320x640, and 390x844: bilingual & no overflow
@@ -1306,6 +1362,9 @@ test.describe('Phase 3 - Student Sidebar Redesign Icon Rail & Adaptive Expanded 
     const backdrop = page.locator('div[aria-label="Close sidebar overlay"]');
 
     // 1) Test X button and verify bounding box during and after
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await logoBtn.click();
     await expect(drawer).toBeVisible();
     const expandedMainBox = await main.boundingBox();
@@ -1320,18 +1379,27 @@ test.describe('Phase 3 - Student Sidebar Redesign Icon Rail & Adaptive Expanded 
     expect(afterCloseBox.width).toBe(initialMainBox.width);
 
     // 2) Test Backdrop tap
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="settings"]').click();
     await expect(drawer).toBeVisible();
     await backdrop.click({ position: { x: 500, y: 300 } });
     await expect(drawer).not.toBeVisible();
 
     // 3) Test Escape key
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="dashboard"]').click();
     await expect(drawer).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(drawer).not.toBeVisible();
 
     // 4) Test clicking expanded header brand/logo
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="logout"]').click();
     await expect(drawer).toBeVisible();
     await page.waitForTimeout(500);

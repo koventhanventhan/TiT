@@ -616,6 +616,9 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     const backdrop = page.locator('div[aria-label="Close sidebar overlay"]');
 
     // 1) Test X button and verify bounding box during and after
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await logoBtn.click();
     await expect(drawer).toBeVisible();
     const expandedMainBox = await main.boundingBox();
@@ -630,18 +633,27 @@ test.describe('Phase 3 - Teacher Sidebar Redesign Icon Rail & Adaptive Expanded 
     expect(afterCloseBox.width).toBe(initialMainBox.width);
 
     // 2) Test Backdrop tap
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="settings"]').click();
     await expect(drawer).toBeVisible();
     await backdrop.click({ position: { x: 500, y: 300 } });
     await expect(drawer).not.toBeVisible();
 
     // 3) Test Escape key
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="dashboard"]').click();
     await expect(drawer).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(drawer).not.toBeVisible();
 
     // 4) Test clicking expanded header brand/logo
+    await page.mouse.move(900, 500);
+    await expect(drawer).not.toBeVisible();
+    await page.waitForTimeout(250);
     await page.locator('button[data-rail="logout"]').click();
     await expect(drawer).toBeVisible();
     await page.waitForTimeout(500);

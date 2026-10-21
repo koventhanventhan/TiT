@@ -15,20 +15,21 @@ class RagEvalCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'rag:eval {file : Path to the evaluation JSON file} {--institute=1 : Institute ID} {--live : Use real Gemini API client against live database}';
+    protected $signature = 'rag:eval {file : Path to the evaluation JSON file} {--institute=1 : Institute ID} {--live : Use real Gemini API client against live database} {--csv= : Path to output CSV evaluation report}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Evaluate RAG retrieval accuracy, score distribution, and threshold calibration';
+    protected $description = 'Evaluate RAG retrieval accuracy, score distribution, threshold calibration, and export CSV report';
 
     public function handle(): int
     {
         $filePath = $this->argument('file');
         $instituteId = (int) $this->option('institute');
         $isLive = (bool) $this->option('live');
+        $csvPath = $this->option('csv');
 
         if (!file_exists($filePath)) {
             $this->error("Evaluation file not found at: {$filePath}");
@@ -54,6 +55,7 @@ class RagEvalCommand extends Command
         $this->info("Evaluating " . count($testCases) . " benchmark questions for Institute #{$instituteId}...\n");
 
         $tableRows = [];
+        $csvRows = [];
         $answerableTotal = 0;
         $answerableHits = 0;
         $answerableScores = [];
@@ -113,6 +115,20 @@ class RagEvalCommand extends Command
                 number_format($topScore, 4),
                 $shouldAnswer ? ($hit ? '<info>HIT</info>' : '<error>MISS</error>') : '-',
             ];
+
+            $csvRows[] = [
+                $index + 1,
+                $question,
+                $result['language'],
+                $grade,
+                $medium,
+                $subject ?? 'General',
+                $shouldAnswer ? 'YES' : 'NO',
+                $expectedMaterialId ?? 'N/A',
+                $retrievedList,
+                number_format($topScore, 4),
+                $shouldAnswer ? ($hit ? 'HIT' : 'MISS') : 'N/A (Negative)',
+            ];
         }
 
         $this->table(
@@ -147,6 +163,7 @@ class RagEvalCommand extends Command
         $this->newLine();
         $this->info("=================== THRESHOLD CALIBRATION SWEEP (0.50 - 0.90) ===================");
         $sweepRows = [];
+        $csvSweepRows = [];
 
         for ($t = 0.50; $t <= 0.905; $t += 0.05) {
             $threshold = round($t, 2);
@@ -178,6 +195,17 @@ class RagEvalCommand extends Command
                 $totalErrors,
                 "{$errorRate}%",
             ];
+
+            $csvSweepRows[] = [
+                number_format($threshold, 2),
+                $falseNegatives,
+                $answerableTotal,
+                $falsePositives,
+                $negTotal,
+                $totalErrors,
+                "{$errorRate}%",
+                $currentMarker ? 'YES' : 'NO',
+            ];
         }
 
         $this->table(
@@ -186,6 +214,47 @@ class RagEvalCommand extends Command
         );
 
         $this->info("==================================================================================");
+
+        // 4. Write CSV report if requested
+        if ($csvPath) {
+            $fp = fopen($csvPath, 'w');
+            if ($fp) {
+                // Section 1: Detailed Question Results
+                fputcsv($fp, ['#', 'Question', 'Language', 'Grade', 'Medium', 'Subject', 'Should Answer', 'Expected Material ID', 'Retrieved IDs', 'Top Score', 'Result']);
+                foreach ($csvRows as $r) {
+                    fputcsv($fp, $r);
+                }
+
+                // Section 2: Metrics Summary
+                fputcsv($fp, []);
+                fputcsv($fp, ['--- SUMMARY METRICS ---']);
+                fputcsv($fp, ['Metric', 'Value']);
+                fputcsv($fp, ['Total Questions', count($testCases)]);
+                fputcsv($fp, ['Answerable Questions', $answerableTotal]);
+                fputcsv($fp, ['Expected Material Retrieved (Hits)', $answerableHits]);
+                fputcsv($fp, ['Hit Rate (%)', $hitRate]);
+                fputcsv($fp, ['Answerable Avg Score', $ansAvg]);
+                fputcsv($fp, ['Answerable Min Score', $ansMin]);
+                fputcsv($fp, ['Answerable Max Score', $ansMax]);
+                fputcsv($fp, ['Negative Questions', $negTotal]);
+                fputcsv($fp, ['Negative Avg Score', $negAvg]);
+                fputcsv($fp, ['Negative Min Score', $negMin]);
+                fputcsv($fp, ['Negative Max Score', $negMax]);
+
+                // Section 3: Threshold Sweep Table
+                fputcsv($fp, []);
+                fputcsv($fp, ['--- THRESHOLD CALIBRATION SWEEP ---']);
+                fputcsv($fp, ['Threshold', 'False Negatives', 'Total Answerable', 'False Positives', 'Total Negative', 'Total Errors', 'Error Rate', 'Is Current Threshold']);
+                foreach ($csvSweepRows as $sr) {
+                    fputcsv($fp, $sr);
+                }
+
+                fclose($fp);
+                $this->info("CSV evaluation report successfully written to: {$csvPath}");
+            } else {
+                $this->error("Failed to open CSV report file for writing: {$csvPath}");
+            }
+        }
 
         return self::SUCCESS;
     }

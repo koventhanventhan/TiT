@@ -18,15 +18,31 @@ return [
     |
     | Using current Google Gemini GA models:
     | - gemini-embedding-2: multimodal / text embedding supporting 768 / 1536 / 3072 dimensions
-    | - gemini-3.5-flash: high efficiency, high accuracy, streaming LLM
+    | - gemini-3.8-flash: stable, state-of-the-art GA answering and OCR model (GA Sept 2026)
+    | - gemini-3.5-flash-lite: high-throughput fallback model
     |
     */
     'models' => [
         'embedding' => env('RAG_EMBEDDING_MODEL', 'gemini-embedding-2'),
         'embedding_dimensions' => (int) env('RAG_EMBEDDING_DIMENSIONS', 768),
         'llm' => env('RAG_LLM_MODEL', 'gemini-3.5-flash'),
-        'ocr' => env('RAG_OCR_MODEL', 'gemini-3.8-flash'),
+        'ocr' => env('RAG_OCR_MODEL', 'gemini-3.5-flash'),
         'ocr_fallback' => env('RAG_OCR_FALLBACK_MODEL', 'gemini-3.5-flash-lite'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | OCR Engine Settings
+    |--------------------------------------------------------------------------
+    |
+    | Deterministic transcription settings for vision OCR:
+    | - temperature = 0.0: greedy token decoding for strictly reproducible transcription
+    | - page_timeout: seconds per page job
+    |
+    */
+    'ocr' => [
+        'temperature' => (float) env('RAG_OCR_TEMPERATURE', 0.0),
+        'page_timeout' => (int) env('RAG_OCR_PAGE_TIMEOUT', 120),
     ],
 
     /*
@@ -71,6 +87,8 @@ return [
         'top_p' => (float) env('RAG_LLM_TOP_P', 0.8),
         'max_output_tokens' => (int) env('RAG_LLM_MAX_OUTPUT_TOKENS', 1500),
         'request_timeout' => (int) env('RAG_LLM_REQUEST_TIMEOUT', 45),
+        'retry_429_max_attempts' => (int) env('RAG_429_MAX_ATTEMPTS', 4),
+        'retry_429_max_wait' => (int) env('RAG_429_MAX_WAIT', 60),
         'safety_settings' => [
             [
                 'category' => 'HARM_CATEGORY_HARASSMENT',
@@ -144,10 +162,15 @@ return [
         'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
         'ocr_max_dimension' => (int) env('RAG_OCR_MAX_DIMENSION', 1600),
         'ocr_jpeg_quality' => (int) env('RAG_OCR_JPEG_QUALITY', 80),
+        'ocr_total_timeout' => (int) env('RAG_OCR_TOTAL_TIMEOUT', 120),
         'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
         'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),
         'legacy_font_min_script_ratio' => (float) env('RAG_LEGACY_FONT_MIN_SCRIPT_RATIO', 0.20),
         'legacy_font_min_letters' => (int) env('RAG_LEGACY_FONT_MIN_LETTERS', 50),
+        'readability_min_score' => (float) env('RAG_READABILITY_MIN_SCORE', 0.60),
+        'readability_sample_words' => (int) env('RAG_READABILITY_SAMPLE_WORDS', 150),
+        'ocr_enable_safeguard' => filter_var(env('RAG_OCR_ENABLE_SAFEGUARD', true), FILTER_VALIDATE_BOOLEAN),
+        'ocr_completeness_diff_threshold' => (float) env('RAG_OCR_COMPLETENESS_DIFF_THRESHOLD', 0.10),
     ],
 
     /*
@@ -174,3 +197,4 @@ return [
     */
     'vector_store' => env('RAG_VECTOR_STORE', 'database'),
 ];
+

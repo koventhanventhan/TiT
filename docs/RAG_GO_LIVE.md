@@ -74,14 +74,17 @@ GEMINI_API_KEY=AIzaSyYourProductionApiKeyHere
 
 # AI Models
 # - Embedding: gemini-embedding-2 (768 dimensions)
-# - LLM Grounded Answers: gemini-3.5-flash (High speed, child safety, streaming support)
+# - LLM Grounded Answers: gemini-3.8-flash (Recommended stable GA model with extended support)
 # - Primary OCR Engine: gemini-3.8-flash (Latest multimodal document vision model)
 # - Fallback OCR Engine: gemini-3.5-flash-lite (Cost-effective automated failover)
 RAG_EMBEDDING_MODEL=gemini-embedding-2
 RAG_EMBEDDING_DIMENSIONS=768
-RAG_LLM_MODEL=gemini-3.5-flash
+RAG_LLM_MODEL=gemini-3.8-flash
 RAG_OCR_MODEL=gemini-3.8-flash
 RAG_OCR_FALLBACK_MODEL=gemini-3.5-flash-lite
+RAG_OCR_TEMPERATURE=0.0
+RAG_OCR_PAGE_TIMEOUT=120
+RAG_OCR_TOTAL_TIMEOUT=120
 
 # Ingestion & Downscaling Settings
 # Scanned PDF page images exceeding 1600px are automatically downscaled to 80% JPEG quality,
@@ -110,7 +113,7 @@ RAG_HELPLINE_PRIMARY_NUMBER="1926"
 RAG_HELPLINE_PRIMARY_HOURS="24/7 Toll-Free"
 
 RAG_HELPLINE_SECONDARY_NAME="Sumithrayo Suicide Prevention Helpline"
-RAG_HELPLINE_SECONDARY_NUMBER="011 269 6666"
+RAG_HELPLINE_SECONDARY_NUMBER="" # Note: Verify contact numbers with local authorities before populating
 RAG_HELPLINE_SECONDARY_HOURS="9:00 AM - 8:00 PM Daily"
 
 RAG_HELPLINE_INSTITUTE_NAME="TiT Institute Student Support Desk"
@@ -154,11 +157,18 @@ sudo supervisorctl start tit-worker:*
 ```
 
 #### Option 2: cPanel Cron Job Fallback (Shared Hosting)
-If Supervisor is unavailable on shared cPanel hosting, add a cron job that processes queued jobs every minute and exits when idle:
+If Supervisor is unavailable on shared cPanel hosting, add a cron job that processes queued jobs every minute and exits when idle.
+
+> [!IMPORTANT]
+> **Prevent Overlapping Cron Execution & Ensure Safe Timeout Limits:**
+> 1. **Worker Overlap Prevention (`flock -n`)**: When OCR jobs take 30-60+ seconds per page, a naive 1-minute cron job will spawn concurrent competing workers. Use `/usr/bin/flock -n /tmp/cpanel_rag_queue.lock` so a new worker immediately exits if a previous worker is still processing.
+> 2. **Job Timeout (`--timeout=120`)**: Give OCR jobs sufficient execution budget (120 seconds per page job).
+> 3. **Queue `retry_after` Setting**: In `config/queue.php` (or `.env` via `DB_QUEUE_RETRY_AFTER`), `retry_after` MUST be strictly higher than worker `--timeout` (e.g. `DB_QUEUE_RETRY_AFTER=180` for `--timeout=120`). If `retry_after <= timeout`, the queue driver will assume the job stalled and release it back to another worker while still actively processing OCR.
+
 - **Interval**: Once Per Minute (`* * * * *`)
 - **Command**:
 ```bash
-* * * * * cd /home/<cpanel_user>/public_html/laravel_api/backend && /usr/local/bin/php artisan queue:work --queue=rag,default --stop-when-empty --tries=3 --timeout=120 >> storage/logs/queue.log 2>&1
+* * * * * /usr/bin/flock -n /tmp/cpanel_rag_queue.lock -c "cd /home/<cpanel_user>/public_html/laravel_api/backend && /usr/local/bin/php artisan queue:work --queue=rag,default --stop-when-empty --tries=3 --timeout=120 >> storage/logs/queue.log 2>&1"
 ```
 
 ### B. Laravel Task Scheduler (Data Retention & Redaction)

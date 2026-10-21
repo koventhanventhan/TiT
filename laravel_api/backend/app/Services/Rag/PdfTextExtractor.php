@@ -28,6 +28,8 @@ class PdfTextExtractor
     protected int $downloadTimeout;
     protected float $legacyFontMinScriptRatio;
     protected int $legacyFontMinLetters;
+    protected int $ocrTotalTimeout;
+    protected ?float $currentOcrStartTime = null;
 
     public function __construct(GeminiClientInterface $geminiClient)
     {
@@ -39,6 +41,7 @@ class PdfTextExtractor
         $this->downloadTimeout = (int) config('rag.ingestion.download_timeout', 30);
         $this->legacyFontMinScriptRatio = (float) config('rag.ingestion.legacy_font_min_script_ratio', 0.20);
         $this->legacyFontMinLetters = (int) config('rag.ingestion.legacy_font_min_letters', 50);
+        $this->ocrTotalTimeout = (int) config('rag.ingestion.ocr_total_timeout', 60);
     }
 
     /**
@@ -47,8 +50,9 @@ class PdfTextExtractor
      * @param LearningMaterial $material
      * @return array<int, array{page_number: int, text: string}>
      */
-    public function extract(LearningMaterial $material): array
+    public function extract(LearningMaterial $material, bool $forceOcr = false): array
     {
+        $this->currentOcrStartTime = null;
         $localPath = null;
         $isTemporary = false;
 
@@ -57,6 +61,14 @@ class PdfTextExtractor
 
             if (!file_exists($localPath)) {
                 throw new RuntimeException("Material file not found at: {$localPath}");
+            }
+
+            if (empty($material->file_hash) && \Illuminate\Support\Facades\Schema::hasColumn('learning_materials', 'file_hash')) {
+                $fileHash = hash_file('sha256', $localPath);
+                if ($fileHash) {
+                    $material->updateQuietly(['file_hash' => $fileHash]);
+                    $material->file_hash = $fileHash;
+                }
             }
 
             $fileSize = filesize($localPath);
@@ -69,7 +81,7 @@ class PdfTextExtractor
 
             // 1. PDF Documents
             if ($extension === 'pdf') {
-                return $this->extractFromPdfFile($localPath, $material->medium);
+                return $this->extractFromPdfFile($localPath, $material->medium, $forceOcr);
             }
 
             // 2. Images (Scanned notes, photo past papers)
@@ -92,12 +104,107 @@ class PdfTextExtractor
     }
 
     /**
+     * Inspect pages of a learning material document and separate into native pages and pages needing OCR.
+     *
+     * @param LearningMaterial $material
+     * @return array{total_pages: int, native_pages: array, pages_needing_ocr: array}
+     */
+    public function inspectPagesForIngestion(LearningMaterial $material): array
+    {
+        $isTemporary = false;
+        $localPath = $this->resolveLocalFile($material, $isTemporary);
+
+        if (!file_exists($localPath)) {
+            throw new RuntimeException("Material file not found at: {$localPath}");
+        }
+
+        if (empty($material->file_hash) && \Illuminate\Support\Facades\Schema::hasColumn('learning_materials', 'file_hash')) {
+            $fileHash = hash_file('sha256', $localPath);
+            if ($fileHash) {
+                $material->updateQuietly(['file_hash' => $fileHash]);
+                $material->file_hash = $fileHash;
+            }
+        }
+
+        $fileSize = filesize($localPath);
+        $maxBytes = $this->maxFileSizeMb * 1024 * 1024;
+        if ($fileSize > $maxBytes) {
+            throw new FileTooLargeException("File exceeds maximum allowed size of {$this->maxFileSizeMb}MB (actual: " . round($fileSize / 1024 / 1024, 2) . "MB).");
+        }
+
+        $extension = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+
+        if ($extension === 'pdf') {
+            try {
+                $parser = new Parser();
+                $pdf = $parser->parseFile($localPath);
+                $pages = $pdf->getPages();
+            } catch (\Throwable $e) {
+                throw new RuntimeException("Failed to parse PDF document: " . $e->getMessage(), 0, $e);
+            }
+
+            $totalPages = count($pages);
+            if ($totalPages > $this->maxPages) {
+                throw new PageLimitExceededException("Document exceeds maximum allowed limit of {$this->maxPages} pages (actual: {$totalPages}).");
+            }
+
+            $nativePages = [];
+            $pagesNeedingOcr = [];
+
+            foreach ($pages as $index => $page) {
+                $pageNum = $index + 1;
+                $rawText = trim($page->getText() ?? '');
+                $extractedText = mb_convert_encoding($rawText, 'UTF-8', 'UTF-8');
+                $words = @preg_split('/\s+/u', $extractedText, -1, PREG_SPLIT_NO_EMPTY);
+                $wordCount = is_array($words) ? count($words) : 0;
+                $isGarbled = $this->isTextGarbled($extractedText, $material->medium);
+
+                if ($wordCount >= $this->ocrMinWords && !$isGarbled) {
+                    $nativePages[] = [
+                        'page_number' => $pageNum,
+                        'text' => $extractedText,
+                        'used_ocr' => false,
+                        'word_count' => $wordCount,
+                    ];
+                } else {
+                    $pagesNeedingOcr[] = $pageNum;
+                }
+            }
+
+            return [
+                'total_pages' => $totalPages,
+                'native_pages' => $nativePages,
+                'pages_needing_ocr' => $pagesNeedingOcr,
+            ];
+        }
+
+        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+            return [
+                'total_pages' => 1,
+                'native_pages' => [],
+                'pages_needing_ocr' => [1],
+            ];
+        }
+
+        if ($extension === 'docx') {
+            $extracted = $this->extractFromDocxFile($localPath);
+            return [
+                'total_pages' => 1,
+                'native_pages' => $extracted,
+                'pages_needing_ocr' => [],
+            ];
+        }
+
+        throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Only PDF, DOCX, and image documents are indexed for study search.");
+    }
+
+    /**
      * Compute per-page quality ratio comparing clean script characters (ASCII, Unicode Tamil, Unicode Sinhala,
-     * and math/science symbols like ×, ÷, °, µ) against Latin-1 mojibake characters.
+     * and math/science symbols like Ã—, Ã·, Â°, Âµ) against Latin-1 mojibake characters.
      *
      * In Sri Lankan educational materials, legacy non-Unicode fonts (such as Bamini for Tamil or FMAbhaya for Sinhala)
-     * map glyphs onto high Latin-1 code points (U+00C0-U+00FF: À-ÿ). Math/science symbols like × (\x{00D7}), ÷ (\x{00F7}),
-     * ° (\x{00B0}), and µ (\x{00B5}) are explicitly excluded from mojibake counts.
+     * map glyphs onto high Latin-1 code points (U+00C0-U+00FF: Ã€-Ã¿). Math/science symbols like Ã— (\x{00D7}), Ã· (\x{00F7}),
+     * Â° (\x{00B0}), and Âµ (\x{00B5}) are explicitly excluded from mojibake counts.
      *
      * @param string $text
      * @return float Value between 0.0 (entirely garbled mojibake) and 1.0 (clean Unicode/ASCII text)
@@ -109,11 +216,11 @@ class PdfTextExtractor
             return 1.0;
         }
 
-        // Count Latin-1 mojibake glyphs (U+00C0 through U+00FF, strictly excluding math symbols × (\x{00D7}) and ÷ (\x{00F7}))
+        // Count Latin-1 mojibake glyphs (U+00C0 through U+00FF, strictly excluding math symbols Ã— (\x{00D7}) and Ã· (\x{00F7}))
         $mojibakeCount = preg_match_all('/[\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}]/u', $text);
 
         // Count valid clean characters: ASCII printable + Tamil script (U+0B80-U+0BFF) + Sinhala script (U+0D80-U+0DFF)
-        // + Math/Science symbols (×, ÷, °, µ, ±, ², ³, \p{Sm}) + whitespace
+        // + Math/Science symbols (Ã—, Ã·, Â°, Âµ, Â±, Â², Â³, \p{Sm}) + whitespace
         $validCount = preg_match_all('/[\x{0020}-\x{007E}\x{0B80}-\x{0BFF}\x{0D80}-\x{0DFF}\x{00B0}\x{00B1}\x{00B2}\x{00B3}\x{00B5}\x{00D7}\x{00F7}\p{Sm}\r\n\t]/u', $text);
 
         $validRatio = $validCount / $len;
@@ -166,6 +273,8 @@ class PdfTextExtractor
 
     /**
      * Determine whether extracted page text is garbled legacy-font text requiring Gemini Vision OCR.
+     * Evaluates Latin-1 mojibake glyphs and quality ratio (< 0.70).
+     * Note: Medium/script mismatch alone does NOT trigger OCR here (fail-closed order of checks).
      *
      * @param string $text
      * @param string|null $medium
@@ -178,7 +287,7 @@ class PdfTextExtractor
             return false;
         }
 
-        // 1. Mojibake density check (Latin-1 characters misused by legacy fonts, excluding math/science symbols like × and ÷)
+        // 1. Mojibake density check (Latin-1 characters misused by legacy fonts, excluding math/science symbols like Ã— and Ã·)
         $mojibakeCount = preg_match_all('/[\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}]/u', $text);
         $mojibakeRatio = $mojibakeCount / $nonSpaceLen;
 
@@ -192,18 +301,13 @@ class PdfTextExtractor
             return true;
         }
 
-        // 2. Medium-aware Unicode script share check for Tamil/Sinhala documents
-        if ($this->isMediumScriptRatioDeficient($text, $medium)) {
-            return true;
-        }
-
         return false;
     }
 
     /**
      * Parse PDF file using Smalot Parser with Gemini Vision OCR fallback for scanned pages and garbled fonts.
      */
-    public function extractFromPdfFile(string $filePath, ?string $medium = null): array
+    public function extractFromPdfFile(string $filePath, ?string $medium = null, bool $forceOcr = false): array
     {
         try {
             $parser = new Parser();
@@ -226,17 +330,21 @@ class PdfTextExtractor
         foreach ($pages as $page) {
             $pageIndex++;
 
-            $extractedText = trim($page->getText() ?? '');
-            $wordCount = count(preg_split('/\s+/u', $extractedText, -1, PREG_SPLIT_NO_EMPTY));
+            $rawText = trim($page->getText() ?? '');
+            $extractedText = mb_convert_encoding($rawText, 'UTF-8', 'UTF-8');
+            $splitWords = @preg_split('/\s+/u', $extractedText, -1, PREG_SPLIT_NO_EMPTY);
+            $wordCount = is_array($splitWords) ? count($splitWords) : 0;
             $isGarbled = $this->isTextGarbled($extractedText, $medium);
             $usedOcr = false;
 
-            // If text is sparse (scanned page or image PDF) OR garbled legacy font, fallback to Gemini Vision OCR
-            if ($wordCount < $this->ocrMinWords || $isGarbled) {
+            // If text is sparse (scanned page or image PDF), garbled legacy font, or forceOcr requested
+            if ($forceOcr || $wordCount < $this->ocrMinWords || $isGarbled) {
                 if ($ocrCount >= $this->ocrMaxPages) {
                     throw new OcrPageLimitExceededException("Document exceeds maximum OCR limit of {$this->ocrMaxPages} pages.");
                 }
+                $this->checkOcrTimeBudget();
                 $ocrText = $this->attemptPageOcr($page);
+                $this->checkOcrTimeBudget();
                 $ocrCount++;
                 if (!empty($ocrText)) {
                     $extractedText = $ocrText;
@@ -257,6 +365,18 @@ class PdfTextExtractor
     }
 
     /**
+     * Check whether total OCR execution time for current material has exceeded configured limit.
+     */
+    public function checkOcrTimeBudget(): void
+    {
+        if ($this->currentOcrStartTime === null) {
+            $this->currentOcrStartTime = microtime(true);
+        } elseif ((microtime(true) - $this->currentOcrStartTime) > $this->ocrTotalTimeout) {
+            throw new OcrTimeLimitException('OCR time limit, retry later');
+        }
+    }
+
+    /**
      * Extract text directly from an image note using Gemini Vision OCR.
      */
     protected function extractFromImageFile(string $filePath, string $extension): array
@@ -272,7 +392,9 @@ class PdfTextExtractor
             return [];
         }
 
+        $this->checkOcrTimeBudget();
         $ocrText = $this->geminiClient->ocrPage($imageData, $mimeType);
+        $this->checkOcrTimeBudget();
 
         if (empty(trim($ocrText))) {
             return [];
@@ -280,7 +402,7 @@ class PdfTextExtractor
 
         return [
             [
-                'page_number' => 1,
+                'page_number' => null,
                 'text' => trim($ocrText),
                 'used_ocr' => true,
             ],
@@ -317,7 +439,7 @@ class PdfTextExtractor
 
         return [
             [
-                'page_number' => 1,
+                'page_number' => null,
                 'text' => $cleanText,
                 'used_ocr' => false,
             ],
@@ -327,7 +449,7 @@ class PdfTextExtractor
     /**
      * Resolve file path locally, safely downloading from Firebase if needed.
      */
-    protected function resolveLocalFile(LearningMaterial $material, bool &$isTemporary): string
+    public function resolveLocalFile(LearningMaterial $material, bool &$isTemporary): string
     {
         $filePath = (string) $material->file_path;
 
@@ -404,6 +526,8 @@ class PdfTextExtractor
                     }
                 }
             }
+        } catch (OcrUnavailableException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::warning('OCR fallback encountered an exception: ' . $e->getMessage());
         }
@@ -411,3 +535,5 @@ class PdfTextExtractor
         return null;
     }
 }
+
+

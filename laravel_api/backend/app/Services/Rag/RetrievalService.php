@@ -155,6 +155,8 @@ class RetrievalService
                 'page_number' => $chunk->page_number ?? 1,
                 'content' => $chunk->content,
                 'similarity' => (float) $hit['similarity'],
+                'is_ocr' => (bool) ($chunk->is_ocr ?? false),
+                'ocr_used' => (bool) ($chunk->is_ocr ?? false),
             ];
         }
 
@@ -165,3 +167,4 @@ class RetrievalService
         ];
     }
 }
+

@@ -12,7 +12,10 @@ class RagStatusCommand extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'rag:status {--institute= : Optional Institute ID to filter} {--days=14 : Days of history to analyze}';
+    protected $signature = 'rag:status
+                            {--institute= : Optional Institute ID to filter}
+                            {--days=14 : Days of history to analyze}
+                            {--list : List materials with ID, title, type, grade, medium, status, and error}';
 
     /**
      * The console command description.
@@ -53,12 +56,15 @@ class RagStatusCommand extends Command
 
         $totalMaterials = array_sum($materialCounts);
         $materialStatusRows = [];
-        foreach (['ready', 'processing', 'pending', 'failed', 'unsupported'] as $status) {
+        foreach (['ready', 'processing', 'pending', 'quality_pending', 'low_quality', 'skipped', 'failed', 'unsupported'] as $status) {
             $cnt = $materialCounts[$status] ?? 0;
             $pct = $totalMaterials > 0 ? round(($cnt / $totalMaterials) * 100, 1) : 0;
             $formattedStatus = match ($status) {
                 'ready' => '<info>ready</info>',
                 'failed' => '<error>failed</error>',
+                'quality_pending' => '<comment>quality_pending</comment>',
+                'low_quality' => '<comment>low_quality</comment>',
+                'skipped' => '<comment>skipped</comment>',
                 'processing' => '<comment>processing</comment>',
                 default => $status,
             };
@@ -67,29 +73,65 @@ class RagStatusCommand extends Command
 
         $this->info("1. Learning Materials by RAG Status (Total: {$totalMaterials})");
         $this->table(['Status', 'Count', 'Share'], $materialStatusRows);
+
+        $ocrWarningCount = (clone $materialsQuery)
+            ->where('rag_status', 'ready')
+            ->where('rag_error', 'like', 'Warning: OCR uncertainty%')
+            ->count();
+        if ($ocrWarningCount > 0) {
+            $this->warn(" • OCR Uncertainty Warnings: {$ocrWarningCount} material(s) have OCR discrepancy warnings");
+        }
         $this->newLine();
 
-        // 2. Failed Materials with rag_error
+        // Optional Detailed Material Listing
+        if ($this->option('list')) {
+            $allMaterials = (clone $materialsQuery)
+                ->select('id', 'title', 'type', 'grade', 'medium', 'rag_status', 'rag_error')
+                ->orderBy('id')
+                ->get();
+
+            $listRows = $allMaterials->map(function ($m) {
+                return [
+                    $m->id,
+                    mb_substr($m->title ?? '-', 0, 25),
+                    $m->type ?? '-',
+                    $m->grade ?? '-',
+                    $m->medium ?? '-',
+                    $m->rag_status ?? 'pending',
+                    mb_substr($m->rag_error ?? '-', 0, 60),
+                ];
+            });
+
+            $this->info("Detailed Material Listing (Total: " . $allMaterials->count() . ")");
+            $this->table(
+                ['ID', 'Title', 'Type', 'Grade', 'Medium', 'Status', 'Error'],
+                $listRows
+            );
+            $this->newLine();
+        }
+
+        // 2. Failed and Low Quality Materials with rag_error
         $failedMaterials = (clone $materialsQuery)
-            ->where('rag_status', 'failed')
-            ->select('id', 'title', 'institute_id', 'rag_error', 'updated_at')
-            ->limit(10)
+            ->whereIn('rag_status', ['failed', 'low_quality', 'quality_pending'])
+            ->select('id', 'title', 'institute_id', 'rag_status', 'rag_error', 'updated_at')
+            ->limit(20)
             ->get();
 
-        $this->info("2. Failed Learning Materials (showing up to 10)");
+        $this->info("2. Failed, Low-Quality & Quality-Pending Materials (showing up to 20)");
         if ($failedMaterials->isEmpty()) {
-            $this->line(" <info>No failed materials found.</info>");
+            $this->line(" <info>No failed or low-quality materials found.</info>");
         } else {
             $failedRows = $failedMaterials->map(function ($m) {
                 return [
                     $m->id,
                     mb_substr($m->title, 0, 30),
                     $m->institute_id,
+                    $m->rag_status,
                     mb_substr($m->rag_error ?? 'Unknown error', 0, 50),
                     $m->updated_at?->diffForHumans() ?? '-',
                 ];
             });
-            $this->table(['ID', 'Title', 'Institute', 'RAG Error', 'Failed At'], $failedRows);
+            $this->table(['ID', 'Title', 'Institute', 'Status', 'RAG Error', 'Updated At'], $failedRows);
         }
         $this->newLine();
 

@@ -87,3 +87,6 @@ Schedule::command('rag:prune-queries')->dailyAt('03:00');
 Schedule::command('rag:cleanup-stuck-queries')->everyFiveMinutes();
 
 
+
+// Clean up materials stuck in 'processing' status for over 15 minutes
+Schedule::command('rag:cleanup-stuck-materials')->everyTenMinutes();

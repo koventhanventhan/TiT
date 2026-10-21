@@ -13,6 +13,9 @@ class RagReindexCommand extends Command
      * The name and signature of the console command.
      */
     protected $signature = 'rag:reindex
+                            {--id=* : One or more Material IDs to process}
+                            {--status= : Filter materials by rag_status (e.g. failed, skipped, low_quality)}
+                            {--force : Force re-ingestion even if material is already in ready status}
                             {--institute= : Filter materials by Institute ID}
                             {--grade= : Filter materials by grade (e.g. grade-10)}
                             {--type= : Filter materials by type (e.g. note, paper, revision)}
@@ -31,6 +34,19 @@ class RagReindexCommand extends Command
      */
     public function handle(): int
     {
+        $rawIds = (array) $this->option('id');
+        $targetIds = [];
+        foreach ($rawIds as $rawId) {
+            foreach (explode(',', (string) $rawId) as $part) {
+                $trimmed = trim($part);
+                if (is_numeric($trimmed)) {
+                    $targetIds[] = (int) $trimmed;
+                }
+            }
+        }
+
+        $status = $this->option('status');
+        $force = (bool) $this->option('force');
         $instituteId = $this->option('institute');
         $grade = $this->option('grade');
         $type = $this->option('type');
@@ -47,6 +63,19 @@ class RagReindexCommand extends Command
                   ->orWhereNull('zoom_schedule_id');
             });
 
+        if (!empty($targetIds)) {
+            $query->whereIn('id', $targetIds);
+        }
+
+        if (!empty($status)) {
+            $statuses = array_filter(array_map('trim', explode('|', str_replace(',', '|', $status))));
+            if (count($statuses) === 1) {
+                $query->where('rag_status', reset($statuses));
+            } elseif (count($statuses) > 1) {
+                $query->whereIn('rag_status', $statuses);
+            }
+        }
+
         if (!empty($instituteId)) {
             $query->where('institute_id', (int) $instituteId);
         }
@@ -59,7 +88,7 @@ class RagReindexCommand extends Command
             $query->where('type', $type);
         }
 
-        if ($onlyMissing) {
+        if (!$force && $onlyMissing) {
             $query->where(function ($q) {
                 $q->where('rag_status', '!=', 'ready')
                   ->orWhereNull('rag_status')
@@ -76,6 +105,9 @@ class RagReindexCommand extends Command
 
         $this->info("=== RAG Reindex Backfill " . ($isDryRun ? "[DRY RUN]" : "[LIVE EXECUTION]") . " ===");
         $this->line("Filters Applied:");
+        $this->line(" • IDs:          " . (!empty($targetIds) ? implode(', ', $targetIds) : 'All'));
+        $this->line(" • Status:       " . ($status ?: 'All'));
+        $this->line(" • Force:        " . ($force ? 'Yes' : 'No'));
         $this->line(" • Institute:    " . ($instituteId ?: 'All'));
         $this->line(" • Grade:        " . ($grade ?: 'All'));
         $this->line(" • Type:         " . ($type ?: 'All (excluding recordings)'));
@@ -140,8 +172,8 @@ class RagReindexCommand extends Command
 
         foreach ($materials as $material) {
             try {
-                // If only-missing is set and material is already ready with chunks, skip
-                if ($onlyMissing && $material->rag_status === 'ready' && $material->chunks()->exists()) {
+                // If not forcing and only-missing is set and material is already ready with chunks, skip
+                if (!$force && $onlyMissing && $material->rag_status === 'ready' && $material->chunks()->exists()) {
                     $skippedCount++;
                     $bar->advance();
                     continue;
@@ -153,8 +185,16 @@ class RagReindexCommand extends Command
                 $material->refresh();
                 if ($material->rag_status === 'ready') {
                     $successCount++;
+                } elseif ($material->rag_status === 'skipped') {
+                    $skippedCount++;
                 } else {
                     $failCount++;
+                    if ($this->isQuotaExhaustedError($material->rag_error)) {
+                        $bar->finish();
+                        $this->newLine(2);
+                        $this->outputQuotaHalt($material->rag_error);
+                        return self::FAILURE;
+                    }
                 }
 
                 if ($delay > 0) {
@@ -164,7 +204,25 @@ class RagReindexCommand extends Command
             } catch (Throwable $e) {
                 $failCount++;
                 $this->newLine();
-                $this->error("Failed to ingest Material #{$material->id} ('{$material->title}'): " . $e->getMessage());
+                $cleanMsg = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $e->getMessage());
+                $cleanMsg = mb_substr(strip_tags($cleanMsg), 0, 500);
+
+                $material->refresh();
+                if (!in_array($material->rag_status, ['ready', 'skipped', 'low_quality'])) {
+                    $material->updateQuietly([
+                        'rag_status' => 'failed',
+                        'rag_error' => $cleanMsg,
+                    ]);
+                }
+
+                if ($this->isQuotaExhaustedError($cleanMsg) || $this->isQuotaExhaustedError($material->rag_error)) {
+                    $bar->finish();
+                    $this->newLine(2);
+                    $this->outputQuotaHalt($cleanMsg ?: $material->rag_error);
+                    return self::FAILURE;
+                }
+
+                $this->error("Failed to ingest Material #{$material->id} ('{$material->title}'): " . $cleanMsg);
             }
 
             $bar->advance();
@@ -180,5 +238,29 @@ class RagReindexCommand extends Command
         $this->line("Note: The backfill is resumable. Re-running with --only-missing will process any remaining or failed items.\n");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Check if error indicates 429 quota exhaustion from Gemini API.
+     */
+    protected function isQuotaExhaustedError(?string $message): bool
+    {
+        if (empty($message)) {
+            return false;
+        }
+        return str_contains($message, '429')
+            || str_contains($message, 'RESOURCE_EXHAUSTED')
+            || stripos($message, 'quota exhausted') !== false
+            || stripos($message, 'Resource has been exhausted') !== false;
+    }
+
+    /**
+     * Output quota halt diagnostics clearly distinguishing per-minute rate limits vs daily/billing quota.
+     */
+    protected function outputQuotaHalt(?string $errorSource): void
+    {
+        $this->error('quota exhausted, check plan and billing');
+        $classification = \App\Services\Rag\GeminiRagClient::classifyQuotaError($errorSource);
+        $this->line(" • Diagnostic: [{$classification['label']}] {$classification['detail']}");
     }
 }

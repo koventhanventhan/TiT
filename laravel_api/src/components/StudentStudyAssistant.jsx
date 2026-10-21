@@ -587,8 +587,8 @@ export default function StudentStudyAssistant({ user: userProp }) {
                                                         {msg.sources.map((src, i) => (
                                                             <div
                                                                 key={i}
-                                                                className="citation-chip"
-                                                                title={`From material: ${src.material_title}`}
+                                                                className={`citation-chip ${(src.ocr_used || src.is_ocr) ? 'citation-chip-ocr' : ''}`}
+                                                                title={(src.ocr_used || src.is_ocr) ? `${src.material_title} (${t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')})` : `From material: ${src.material_title}`}
                                                             >
                                                                 <span className="chip-index">[{src.citation_number}]</span>
                                                                 <span className="chip-title">{src.material_title}</span>
@@ -597,9 +597,19 @@ export default function StudentStudyAssistant({ user: userProp }) {
                                                                         ({t('study_assistant_page', 'Page')} {src.page_number})
                                                                     </span>
                                                                 )}
+                                                                {(src.ocr_used || src.is_ocr) && (
+                                                                    <span className="chip-ocr-tag" style={{ marginLeft: '4px', fontSize: '0.7rem', opacity: 0.85, fontWeight: 600 }}>
+                                                                        [OCR]
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>
+                                                    {msg.sources.some(s => s.ocr_used || s.is_ocr) && (
+                                                        <div className="citations-ocr-notice" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', fontStyle: 'italic' }}>
+                                                            * {t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 

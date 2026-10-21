@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\LearningMaterial;
 use App\Models\MaterialChunk;
+use App\Services\Rag\TextReadabilityChecker;
 use Illuminate\Console\Command;
 
 class RagInspectCommand extends Command
@@ -16,7 +17,7 @@ class RagInspectCommand extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Inspect learning material indexing status, page count, chunk count, pages using OCR, and first 3 chunks in full';
+    protected $description = 'Inspect learning material indexing status, page count, chunk count, pages using OCR, readability score, and share of Tamil letters';
 
     /**
      * Execute the console command.
@@ -54,6 +55,25 @@ class RagInspectCommand extends Command
 
         $statusFormatted = $material->rag_status ?? 'pending';
 
+        // Calculate readability score and Tamil script share
+        $allText = $chunks->pluck('content')->implode("\n\n");
+        $totalChars = mb_strlen($allText, 'UTF-8');
+        $tamilMatches = preg_match_all('/[\x{0B80}-\x{0BFF}]/u', $allText);
+        $tamilShare = ($totalChars > 0)
+            ? round(($tamilMatches / $totalChars) * 100, 2) . '%'
+            : '0%';
+
+        $readabilityScore = 'N/A';
+        if (!empty(trim($allText))) {
+            try {
+                $readabilityChecker = app(TextReadabilityChecker::class);
+                $heuristic = $readabilityChecker->evaluateHeuristic($allText, $material->medium);
+                $readabilityScore = number_format($heuristic['score'], 4);
+            } catch (\Throwable $e) {
+                $readabilityScore = 'N/A';
+            }
+        }
+
         $this->info("=== Learning Material #{$material->id} RAG Inspection ===");
         $this->table(
             ['Property', 'Value'],
@@ -66,13 +86,24 @@ class RagInspectCommand extends Command
                 ['Subject', $material->subject ?? 'N/A'],
                 ['File Path', $material->file_path ?? 'N/A'],
                 ['RAG Status', $statusFormatted],
-                ['RAG Error', $material->rag_error ?? 'None'],
+                ['RAG Error', (empty($material->rag_error) || str_starts_with((string) $material->rag_error, 'Warning:')) ? 'None' : $material->rag_error],
+                ['OCR Warnings', str_starts_with((string) $material->rag_error, 'Warning:') ? "<comment>{$material->rag_error}</comment>" : 'None'],
                 ['Indexed At', $material->rag_indexed_at ? \Illuminate\Support\Carbon::parse($material->rag_indexed_at)->toDateTimeString() : 'Never'],
                 ['Total Pages', $pageCount],
                 ['Chunk Count', $chunkCount],
                 ['Pages Using OCR', $ocrPagesSummary],
+                ['Detected Language', $material->detected_language ?? 'N/A'],
+                ['Readability Score', $readabilityScore],
+                ['Share of Tamil Letters', $tamilShare],
             ]
         );
+
+        $mediumNorm = strtolower(trim((string) $material->medium));
+        $detectedNorm = strtolower(trim((string) $material->detected_language));
+        if (!empty($mediumNorm) && !empty($detectedNorm) && !in_array($mediumNorm, ['both', 'all'], true) && $mediumNorm !== $detectedNorm) {
+            $this->warn("⚠️  Warning: Medium/script mismatch — configured medium is '{$material->medium}', but detected document language is '{$material->detected_language}'.");
+        }
+
         $this->newLine();
 
         $this->info("=== First 3 Chunks in Full ===");

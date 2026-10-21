@@ -8,16 +8,21 @@ use App\Models\LearningMaterial;
 use App\Services\Rag\FileTooLargeException;
 use App\Services\Rag\MultilingualTextChunker;
 use App\Services\Rag\OcrPageLimitExceededException;
+use App\Services\Rag\OcrTimeLimitException;
+use App\Services\Rag\OcrUnavailableException;
 use App\Services\Rag\PageLimitExceededException;
 use App\Services\Rag\PdfTextExtractor;
+use App\Services\Rag\QualityCheckUnavailableException;
+use App\Services\Rag\TextReadabilityChecker;
 use App\Services\Rag\UnsupportedFileTypeException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class IngestLearningMaterialJob implements ShouldQueue
@@ -26,7 +31,7 @@ class IngestLearningMaterialJob implements ShouldQueue
 
     public int $materialId;
     public int $tries = 3;
-    public int $timeout = 110;
+    public int $timeout = 120;
     public array $backoff = [10, 30, 60];
 
     public function __construct(int $materialId)
@@ -41,7 +46,8 @@ class IngestLearningMaterialJob implements ShouldQueue
         VectorStoreInterface $vectorStore,
         PdfTextExtractor $extractor,
         MultilingualTextChunker $chunker,
-        GeminiClientInterface $geminiClient
+        GeminiClientInterface $geminiClient,
+        TextReadabilityChecker $readabilityChecker
     ): void {
         $material = LearningMaterial::withoutGlobalScopes()->find($this->materialId);
 
@@ -76,113 +82,141 @@ class IngestLearningMaterialJob implements ShouldQueue
             'rag_error' => null,
         ]);
 
+        $tempDir = "rag_temp/material_{$material->id}";
+
         try {
-            // 2. Extract text from document (enforces max_pages, max_file_size, OCR limits)
-            $pages = $extractor->extract($material);
+            // 2. Inspect document and classify pages into native vs OCR
+            $inspection = $extractor->inspectPagesForIngestion($material);
+            $totalPages = $inspection['total_pages'];
+            $nativePages = $inspection['native_pages'];
+            $pagesNeedingOcr = $inspection['pages_needing_ocr'];
 
-            if (empty($pages)) {
-                $vectorStore->deleteByMaterial($material->id);
-                $material->updateQuietly([
-                    'rag_status' => 'skipped',
-                    'rag_error' => 'No extractable text found in file (empty or unsupported format).',
-                ]);
-                return;
+            // Store native pages in temporary stage for finalizer
+            foreach ($nativePages as $nativePage) {
+                $pageNum = $nativePage['page_number'];
+                Storage::disk('local')->put("{$tempDir}/page_{$pageNum}.json", json_encode([
+                    'page_number' => $pageNum,
+                    'text' => $nativePage['text'],
+                    'used_ocr' => false,
+                    'word_count' => $nativePage['word_count'] ?? 0,
+                    'completed_at' => now()->timestamp,
+                ]));
             }
 
-            // 3. Chunk page text preserving sentence and Unicode boundaries
-            $chunks = $chunker->chunkPages($pages);
-
-            $validChunks = array_values(array_filter($chunks, function ($c) {
-                return !empty(trim($c['content'] ?? ''));
-            }));
-
-            if (empty($validChunks)) {
-                $vectorStore->deleteByMaterial($material->id);
-                $material->updateQuietly([
-                    'rag_status' => 'skipped',
-                    'rag_error' => 'Document generated 0 text chunks.',
-                ]);
-                return;
+            $ocrMaxPages = (int) config('rag.ingestion.ocr_max_pages', 20);
+            if (count($pagesNeedingOcr) > $ocrMaxPages) {
+                throw new OcrPageLimitExceededException("Document exceeds maximum OCR limit of {$ocrMaxPages} pages (requires: " . count($pagesNeedingOcr) . ").");
             }
 
-            $embeddingModel = (string) config('rag.models.embedding', 'gemini-embedding-2');
-            $dimensions = (int) config('rag.models.embedding_dimensions', 768);
-
-            // 4. Generate ALL embeddings outside of database transactions using batchEmbedContents
-            $chunkTexts = array_column($validChunks, 'content');
-            $allEmbeddings = $geminiClient->batchEmbedContents(
-                $chunkTexts,
-                'RETRIEVAL_DOCUMENT',
-                $material->title
-            );
-
-            if (count($allEmbeddings) !== count($validChunks)) {
-                throw new \RuntimeException('Mismatch between chunk count and generated embeddings count.');
+            // 3. Prepare pipeline jobs: one ProcessMaterialOcrPageJob per OCR page, then FinalizeMaterialIngestionJob
+            $jobs = [];
+            foreach ($pagesNeedingOcr as $pageNum) {
+                $jobs[] = new ProcessMaterialOcrPageJob($material->id, $pageNum, $totalPages);
             }
+            $finalizeJob = new FinalizeMaterialIngestionJob($material->id, $totalPages);
+            $allPipelineJobs = array_merge($jobs, [$finalizeJob]);
 
-            // 5. Short, atomic transaction: delete old chunks, insert new ones, and mark ready
-            DB::transaction(function () use ($vectorStore, $material, $validChunks, $allEmbeddings, $embeddingModel, $dimensions) {
-                $vectorStore->deleteByMaterial($material->id);
-
-                foreach ($validChunks as $index => $chunkData) {
-                    $vectorStore->saveChunk([
-                        'institute_id' => (int) $material->institute_id,
-                        'material_id' => $material->id,
-                        'grade' => $material->grade,
-                        'medium' => $material->medium,
-                        'subject' => $material->subject,
-                        'chunk_type' => 'page',
-                        'page_number' => $chunkData['page_number'] ?? 1,
-                        'content' => $chunkData['content'],
-                        'embedding_model' => $embeddingModel,
-                        'dimensions' => $dimensions,
-                        'word_count' => $chunkData['word_count'] ?? 0,
-                        'is_ocr' => (bool) ($chunkData['is_ocr'] ?? false),
-                    ], $allEmbeddings[$index]);
+            // Synchronous vs Asynchronous execution
+            // If running without a queued job context (e.g. dispatchSync from rag:reindex), run each step synchronously
+            $isSync = ($this->job === null || $this->job instanceof \Illuminate\Queue\Jobs\SyncJob);
+            if ($isSync) {
+                foreach ($allPipelineJobs as $pipelineJob) {
+                    app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatchSync($pipelineJob);
                 }
+            } else {
+                // When executing inside a queue worker, chain the page-by-page OCR jobs and finalizer
+                Bus::chain($allPipelineJobs)->dispatch();
+            }
 
-                $material->updateQuietly([
-                    'rag_status' => 'ready',
-                    'rag_error' => null,
-                    'rag_indexed_at' => now(),
-                ]);
-            });
-
-            Log::info("IngestLearningMaterialJob: Successfully indexed material #{$material->id} (" . count($validChunks) . " chunks).");
-
-        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException|\RuntimeException $e) {
-            // Guardrail limit, invalid/unreachable file, or unparseable format: mark failed without retrying
-            Log::warning("IngestLearningMaterialJob: Document processing failed for material #{$material->id}: " . $e->getMessage());
+        } catch (OcrUnavailableException $e) {
+            $shortMsg = $e->getFormattedRagError();
+            Log::warning("IngestLearningMaterialJob: OCR unavailable for material #{$material->id}: {$shortMsg}");
             $vectorStore->deleteByMaterial($material->id);
             $material->updateQuietly([
                 'rag_status' => 'failed',
-                'rag_error' => substr($e->getMessage(), 0, 1000),
+                'rag_error' => $shortMsg,
+            ]);
+            Storage::disk('local')->deleteDirectory($tempDir);
+            return;
+
+        } catch (OcrTimeLimitException $e) {
+            $shortMsg = 'OCR time limit, retry later';
+            Log::warning("IngestLearningMaterialJob: OCR time limit exceeded for material #{$material->id}: {$shortMsg}");
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'failed',
+                'rag_error' => $shortMsg,
+            ]);
+            Storage::disk('local')->deleteDirectory($tempDir);
+            return;
+
+        } catch (QualityCheckUnavailableException $e) {
+            $shortMsg = 'quality check unavailable, retry later';
+            Log::warning("IngestLearningMaterialJob: Readability check unavailable for material #{$material->id}: {$shortMsg}");
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'quality_pending',
+                'rag_error' => $shortMsg,
             ]);
             return;
 
+        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException|\RuntimeException $e) {
+            $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
+            Log::warning("IngestLearningMaterialJob: Document processing failed for material #{$material->id}: " . $cleanMsg);
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'failed',
+                'rag_error' => $cleanMsg,
+            ]);
+            Storage::disk('local')->deleteDirectory($tempDir);
+            return;
+
         } catch (Throwable $e) {
-            Log::error("IngestLearningMaterialJob: Failed for material #{$material->id}: " . $e->getMessage(), [
+            $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
+            Log::error("IngestLearningMaterialJob: Failed for material #{$material->id}: " . $cleanMsg, [
                 'exception' => $e,
             ]);
 
-            // Re-throw so Laravel's queue retries transient errors with backoff up to $tries
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'failed',
+                'rag_error' => $cleanMsg,
+            ]);
+            Storage::disk('local')->deleteDirectory($tempDir);
+
+            // Re-throw so Laravel queue worker retries transient failures
             throw $e;
         }
     }
 
     /**
-     * Handle a job failure after all retries are exhausted.
+     * Handle job failure when retries exhausted.
      */
     public function failed(?Throwable $exception): void
     {
         $material = LearningMaterial::withoutGlobalScopes()->find($this->materialId);
         if ($material) {
+            $cleanMsg = match (true) {
+                $exception instanceof OcrUnavailableException => $exception->getFormattedRagError(),
+                $exception instanceof OcrTimeLimitException => 'OCR time limit, retry later',
+                $exception instanceof QualityCheckUnavailableException => 'quality check unavailable, retry later',
+                default => $this->sanitizeErrorMessage($exception ? $exception->getMessage() : 'Ingestion failed permanently.'),
+            };
+            $status = ($exception instanceof QualityCheckUnavailableException) ? 'quality_pending' : 'failed';
             $material->updateQuietly([
-                'rag_status' => 'failed',
-                'rag_error' => substr($exception ? $exception->getMessage() : 'Ingestion failed.', 0, 1000),
+                'rag_status' => $status,
+                'rag_error' => $cleanMsg,
             ]);
         }
 
-        Log::error("IngestLearningMaterialJob: Permanently failed for material #{$this->materialId}. Marked as failed.");
+        Storage::disk('local')->deleteDirectory("rag_temp/material_{$this->materialId}");
+        Log::error("IngestLearningMaterialJob: Permanently failed for material #{$this->materialId}.");
+    }
+
+    protected function sanitizeErrorMessage(string $message): string
+    {
+        $sanitized = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $message);
+        $sanitized = strip_tags($sanitized);
+        return mb_substr(trim($sanitized), 0, 500);
     }
 }

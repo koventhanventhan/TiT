@@ -111,6 +111,7 @@ class AdminRagController extends Controller
             'institute_id' => $instituteId,
             'materials_status' => [
                 'ready' => $statusCounts['ready'] ?? 0,
+                'ocr_uncertain_warnings' => (clone $materialsQuery)->where('rag_status', 'ready')->where('rag_error', 'like', 'Warning: OCR uncertainty%')->count(),
                 'processing' => $statusCounts['processing'] ?? 0,
                 'pending' => $statusCounts['pending'] ?? 0,
                 'failed' => $statusCounts['failed'] ?? 0,

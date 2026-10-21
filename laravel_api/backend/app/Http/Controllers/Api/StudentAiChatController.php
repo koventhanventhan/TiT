@@ -321,4 +321,44 @@ class StudentAiChatController extends Controller
             'feedback_rating' => $query->feedback_rating,
         ]);
     }
+
+    /**
+     * Get student's past question history (last 30 queries).
+     */
+    public function history(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $queries = StudentAiQuery::where('user_id', $user->id)
+            ->where('institute_id', $user->institute_id ?? 1)
+            ->where('is_flagged', false)
+            ->select('id', 'question', 'answer', 'subject', 'status', 'feedback_rating', 'sources_count', 'created_at')
+            ->latest()
+            ->limit(30)
+            ->get();
+
+        return response()->json($queries);
+    }
+
+    /**
+     * Get student's daily question usage and limit counter.
+     */
+    public function usage(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $dailyLimit = (int) config('rag.limits.daily_questions_per_student', 30);
+        $startOfDay = now()->startOfDay();
+        $endOfDay = now()->endOfDay();
+
+        $usedToday = StudentAiQuery::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->whereIn('status', ['processing', 'answered', 'no_notes_found', 'aborted'])
+            ->count();
+
+        return response()->json([
+            'used_today' => $usedToday,
+            'daily_limit' => $dailyLimit,
+            'remaining' => max(0, $dailyLimit - $usedToday),
+        ]);
+    }
 }

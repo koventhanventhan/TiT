@@ -10,7 +10,14 @@ import {
     FiHeart,
     FiCheckCircle,
     FiHelpCircle,
-    FiFileText
+    FiFileText,
+    FiPlus,
+    FiRefreshCw,
+    FiCopy,
+    FiCheck,
+    FiClock,
+    FiX,
+    FiSidebar
 } from 'react-icons/fi'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentStudyAssistant.css'
@@ -68,7 +75,6 @@ function SafeMarkdownRenderer({ text }) {
             }
 
             if (match[1]) {
-                // Citation token [n]
                 const num = match[2]
                 parts.push(
                     <span key={match.index} className="citation-badge-inline" title={`Citation [${num}]`}>
@@ -76,13 +82,10 @@ function SafeMarkdownRenderer({ text }) {
                     </span>
                 )
             } else if (match[3]) {
-                // Bold **text**
                 parts.push(<strong key={match.index}>{match[4]}</strong>)
             } else if (match[5]) {
-                // Italic *text*
                 parts.push(<em key={match.index}>{match[6]}</em>)
             } else if (match[7]) {
-                // Inline code `code`
                 parts.push(<code key={match.index} className="inline-code">{match[8]}</code>)
             }
 
@@ -99,7 +102,6 @@ function SafeMarkdownRenderer({ text }) {
     lines.forEach((line, idx) => {
         const trimmed = line.trim()
 
-        // Handle code blocks
         if (trimmed.startsWith('```')) {
             if (inCodeBlock) {
                 elements.push(
@@ -121,7 +123,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // Handle Bullet Lists
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
             if (listType !== 'ul') flushList(idx)
             listType = 'ul'
@@ -129,7 +130,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // Handle Numbered Lists
         const numMatch = trimmed.match(/^([0-9]+)\.\s+(.*)$/)
         if (numMatch) {
             if (listType !== 'ol') flushList(idx)
@@ -138,7 +138,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // If not a list item, flush pending lists
         flushList(idx)
 
         if (trimmed === '') {
@@ -146,7 +145,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // Blockquotes
         if (trimmed.startsWith('>')) {
             elements.push(
                 <blockquote key={`quote-${idx}`} className="ai-blockquote">
@@ -156,7 +154,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // Headings
         if (trimmed.startsWith('### ')) {
             elements.push(<h4 key={`h4-${idx}`} className="ai-heading-3">{renderInlineSpans(trimmed.slice(4))}</h4>)
             return
@@ -170,7 +167,6 @@ function SafeMarkdownRenderer({ text }) {
             return
         }
 
-        // Regular paragraph
         elements.push(
             <p key={`p-${idx}`} className="ai-paragraph">
                 {renderInlineSpans(line)}
@@ -191,7 +187,7 @@ function SafeMarkdownRenderer({ text }) {
 }
 
 export default function StudentStudyAssistant({ user: userProp }) {
-    const { language, t } = useLanguage()
+    const { t } = useLanguage()
     const currentUser = userProp || JSON.parse(localStorage.getItem('user') || '{}')
     const isRagDisabled = currentUser?.rag_enabled === false
 
@@ -205,11 +201,26 @@ export default function StudentStudyAssistant({ user: userProp }) {
     })
 
     const [question, setQuestion] = useState('')
+    const [lastQuestion, setLastQuestion] = useState('')
     const [selectedSubject, setSelectedSubject] = useState('')
     const [isStreaming, setIsStreaming] = useState(false)
     const [streamedText, setStreamedText] = useState('')
     const [streamError, setStreamError] = useState(null)
-    const [feedbackMap, setFeedbackMap] = useState({}) // { queryId: 'up' | 'down' }
+    const [feedbackMap, setFeedbackMap] = useState({})
+    const [copiedId, setCopiedId] = useState(null)
+
+    // Daily usage counter state
+    const [usageStats, setUsageStats] = useState({ used_today: 0, daily_limit: 30, remaining: 30 })
+
+    // Conversation history drawer state
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+    const [historyList, setHistoryList] = useState([])
+    const [loadingHistory, setLoadingHistory] = useState(false)
+
+    // First-time notice banner state
+    const [isNoticeDismissed, setIsNoticeDismissed] = useState(() => {
+        return localStorage.getItem('study_assistant_notice_dismissed') === 'true'
+    })
 
     const abortControllerRef = useRef(null)
     const chatEndRef = useRef(null)
@@ -227,7 +238,47 @@ export default function StudentStudyAssistant({ user: userProp }) {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, streamedText])
 
-    // Available subjects list
+    // Load daily usage stats
+    const fetchUsage = async () => {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+        if (!token) return
+        try {
+            const res = await fetch(`${API_BASE_URL}/student/ai-chat/usage`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setUsageStats(data)
+            }
+        } catch (_) {}
+    }
+
+    // Load past question history
+    const fetchHistory = async () => {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+        if (!token) return
+        setLoadingHistory(true)
+        try {
+            const res = await fetch(`${API_BASE_URL}/student/ai-chat/history`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setHistoryList(Array.isArray(data) ? data : [])
+            }
+        } catch (_) {
+            setHistoryList([])
+        } finally {
+            setLoadingHistory(false)
+        }
+    }
+
+    useEffect(() => {
+        if (!isRagDisabled) {
+            fetchUsage()
+        }
+    }, [isRagDisabled])
+
     const availableSubjects = [
         'Science',
         'Mathematics',
@@ -249,7 +300,12 @@ export default function StudentStudyAssistant({ user: userProp }) {
         'Combined Mathematics',
     ]
 
-    const handleClearChat = () => {
+    const handleDismissNotice = () => {
+        setIsNoticeDismissed(true)
+        localStorage.setItem('study_assistant_notice_dismissed', 'true')
+    }
+
+    const handleNewChat = () => {
         if (isStreaming) {
             handleStop()
         }
@@ -257,6 +313,13 @@ export default function StudentStudyAssistant({ user: userProp }) {
         setStreamedText('')
         setStreamError(null)
         sessionStorage.removeItem('study_assistant_chat_history')
+        if (inputRef.current) {
+            inputRef.current.focus()
+        }
+    }
+
+    const handleClearChat = () => {
+        handleNewChat()
     }
 
     const handleStop = () => {
@@ -265,6 +328,48 @@ export default function StudentStudyAssistant({ user: userProp }) {
             abortControllerRef.current = null
         }
         setIsStreaming(false)
+    }
+
+    const handleCopyAnswer = async (id, text) => {
+        if (!text) return
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopiedId(id)
+            setTimeout(() => setCopiedId(null), 2000)
+        } catch (err) {
+            console.error('Copy failed:', err)
+        }
+    }
+
+    const handleRetry = () => {
+        if (lastQuestion) {
+            setQuestion(lastQuestion)
+            setStreamError(null)
+            handleSubmit(null, lastQuestion)
+        }
+    }
+
+    const handleSelectHistoryItem = (item) => {
+        setIsHistoryOpen(false)
+        // Add user question and assistant answer to messages feed
+        const uMsg = {
+            id: 'h_u_' + item.id,
+            sender: 'user',
+            text: item.question,
+            subject: item.subject,
+            timestamp: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+        const aMsg = {
+            id: 'h_a_' + item.id,
+            queryId: item.id,
+            sender: 'assistant',
+            text: item.answer,
+            citations: [],
+            sources: [],
+            status: item.status || 'answered',
+            timestamp: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+        setMessages([uMsg, aMsg])
     }
 
     const handleFeedback = async (queryId, rating) => {
@@ -293,9 +398,10 @@ export default function StudentStudyAssistant({ user: userProp }) {
         }
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e, overrideQuestion = null) => {
         e?.preventDefault()
-        const trimmed = question.trim()
+        const textToSubmit = overrideQuestion || question
+        const trimmed = textToSubmit.trim()
 
         if (trimmed.length < 3) {
             setStreamError('Question must be at least 3 characters long.')
@@ -307,6 +413,7 @@ export default function StudentStudyAssistant({ user: userProp }) {
         }
         if (isStreaming) return
 
+        setLastQuestion(trimmed)
         setStreamError(null)
         const userMsg = {
             id: 'u_' + Date.now(),
@@ -354,10 +461,7 @@ export default function StudentStudyAssistant({ user: userProp }) {
                     if (response.status === 403) {
                         errorMsg = t('study_assistant_error_forbidden', 'Access is not permitted for your account or institute.')
                     } else if (response.status === 429) {
-                        const isDaily = errData?.error && (errData.error.includes('daily') || errData.error.includes('day'));
-                        errorMsg = isDaily
-                            ? t('study_assistant_error_daily_limit', 'You have reached your daily question limit. Please continue tomorrow.')
-                            : t('study_assistant_error_rate_limit', 'Please wait a moment before sending another message.');
+                        errorMsg = t('study_assistant_error_daily_limit', 'You have reached your daily question limit. Please continue tomorrow.')
                     } else if (response.status === 503) {
                         errorMsg = t('study_assistant_error_unavailable', 'The Study Assistant is temporarily unavailable. Please try again later.')
                     } else {
@@ -378,7 +482,7 @@ export default function StudentStudyAssistant({ user: userProp }) {
 
                 buffer += decoder.decode(value, { stream: true })
                 const lines = buffer.split('\n')
-                buffer = lines.pop() // keep last partial line
+                buffer = lines.pop()
 
                 let currentEvent = 'message'
 
@@ -422,6 +526,8 @@ export default function StudentStudyAssistant({ user: userProp }) {
 
             setMessages(prev => [...prev, assistantMsg])
             setStreamedText('')
+            // Refresh usage stats
+            fetchUsage()
         } catch (err) {
             if (err.name === 'AbortError') {
                 if (accumulatedAnswer) {
@@ -468,9 +574,9 @@ export default function StudentStudyAssistant({ user: userProp }) {
     return (
         <div className="study-assistant-container">
             {/* Header bar */}
-            <div className="assistant-header-bar">
+            <header className="assistant-header-bar">
                 <div className="assistant-title-group">
-                    <div className="assistant-avatar-badge">
+                    <div className="assistant-avatar-badge" aria-hidden="true">
                         <FiHelpCircle className="assistant-icon" />
                     </div>
                     <div>
@@ -484,6 +590,22 @@ export default function StudentStudyAssistant({ user: userProp }) {
                 </div>
 
                 <div className="assistant-actions-group">
+                    {/* Daily Usage Counter Pill */}
+                    <div
+                        className="daily-usage-pill"
+                        title={t('study_assistant_daily_usage', 'Daily questions used: {used} / {limit}')
+                            .replace('{used}', usageStats.used_today)
+                            .replace('{limit}', usageStats.daily_limit)}
+                        aria-label={`Questions used today: ${usageStats.used_today} of ${usageStats.daily_limit}`}
+                    >
+                        <FiClock size={13} style={{ marginRight: 5 }} />
+                        <span>
+                            {t('study_assistant_daily_usage', 'Daily: {used} / {limit}')
+                                .replace('{used}', usageStats.used_today)
+                                .replace('{limit}', usageStats.daily_limit)}
+                        </span>
+                    </div>
+
                     {/* Subject Filter Dropdown */}
                     <div className="subject-select-wrapper">
                         <select
@@ -492,6 +614,7 @@ export default function StudentStudyAssistant({ user: userProp }) {
                             value={selectedSubject}
                             onChange={(e) => setSelectedSubject(e.target.value)}
                             disabled={isStreaming}
+                            aria-label="Filter notes by subject"
                         >
                             <option value="">{t('study_assistant_all_subjects', 'All Subjects')}</option>
                             {availableSubjects.map((sub) => (
@@ -500,197 +623,338 @@ export default function StudentStudyAssistant({ user: userProp }) {
                         </select>
                     </div>
 
+                    {/* History Drawer Toggle Button */}
+                    <button
+                        type="button"
+                        id="rag-history-toggle-btn"
+                        className="btn-header-action"
+                        onClick={() => {
+                            if (!isHistoryOpen) fetchHistory()
+                            setIsHistoryOpen(!isHistoryOpen)
+                        }}
+                        title={t('study_assistant_history_toggle', 'History')}
+                        aria-label="View question history"
+                    >
+                        <FiSidebar /> <span>{t('study_assistant_history_toggle', 'History')}</span>
+                    </button>
+
+                    {/* New Chat Button */}
+                    <button
+                        type="button"
+                        id="rag-new-chat-btn"
+                        className="btn-header-action btn-new-chat"
+                        onClick={handleNewChat}
+                        title={t('study_assistant_new_chat', 'New Chat')}
+                        aria-label="Start a new chat session"
+                    >
+                        <FiPlus /> <span>{t('study_assistant_new_chat', 'New Chat')}</span>
+                    </button>
+
                     {/* Clear Chat Button */}
                     <button
                         type="button"
                         id="rag-clear-chat-btn"
-                        className="btn-clear-chat"
+                        className="btn-header-action"
                         onClick={handleClearChat}
                         title={t('study_assistant_clear_btn', 'Clear Chat')}
                         disabled={messages.length === 0 && !streamedText}
+                        aria-label="Clear chat messages"
                     >
-                        <FiTrash2 /> <span>{t('study_assistant_clear_btn', 'Clear Chat')}</span>
+                        <FiTrash2 /> <span>{t('study_assistant_clear_btn', 'Clear')}</span>
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* Disclaimer Alert */}
-            <div className="assistant-disclaimer-banner">
-                <FiAlertCircle className="disclaimer-icon" />
-                <span>{t('study_assistant_disclaimer', 'AI answers may contain mistakes. Check with your teacher.')}</span>
-            </div>
-
-            {/* Chat Messages Feed */}
-            <div className="chat-messages-scroll" id="rag-chat-messages-container">
-                {messages.length === 0 && !streamedText && (
-                    <div className="chat-welcome-card">
-                        <div className="welcome-icon-box">
-                            <FiBookOpen />
-                        </div>
-                        <h3>Welcome to your Study Assistant</h3>
-                        <p>
-                            Ask questions about your uploaded lessons, past papers, or homework notes.
-                            The AI answers strictly from your teacher&apos;s verified materials.
-                        </p>
-                        <div className="welcome-quick-prompts">
-                            <button
-                                type="button"
-                                className="quick-prompt-chip"
-                                onClick={() => setQuestion('Explain the main steps of photosynthesis from my biology notes')}
-                            >
-                                💡 &ldquo;Explain the main steps of photosynthesis from my biology notes&rdquo;
-                            </button>
-                            <button
-                                type="button"
-                                className="quick-prompt-chip"
-                                onClick={() => setQuestion('What are the key formulas for kinematics?')}
-                            >
-                                💡 &ldquo;What are the key formulas for kinematics?&rdquo;
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`chat-bubble-row ${msg.sender === 'user' ? 'row-user' : 'row-assistant'}`}
+            {/* First-Time Notice Banner */}
+            {!isNoticeDismissed && (
+                <div className="assistant-first-time-notice" role="note" aria-label="First-time guidance notice">
+                    <FiAlertCircle className="notice-icon" aria-hidden="true" />
+                    <span className="notice-text">
+                        {t('study_assistant_first_time_notice', "AI answers may contain mistakes; it only uses your teacher's notes.")}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={handleDismissNotice}
+                        className="notice-dismiss-btn"
+                        aria-label="Dismiss first-time notice"
                     >
-                        <div className={`chat-bubble ${msg.sender === 'user' ? 'bubble-user' : 'bubble-assistant'}`}>
-                            {msg.sender === 'user' ? (
-                                <div className="user-message-content">
-                                    <div className="user-text">{msg.text}</div>
-                                    <div className="bubble-meta">
-                                        {msg.subject && <span className="bubble-subject-badge">{msg.subject}</span>}
-                                        <span className="bubble-timestamp">{msg.timestamp}</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="assistant-message-content">
-                                    {/* Personal distress / self-harm special care banner */}
-                                    {msg.status === 'distress_blocked' ? (
-                                        <div className="distress-caring-card">
-                                            <div className="distress-header">
-                                                <FiHeart className="heart-icon" />
-                                                <h4>{t('study_assistant_distress_help', 'Support & Guidance')}</h4>
-                                            </div>
-                                            <p className="distress-text">{msg.text}</p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <SafeMarkdownRenderer text={msg.text} />
+                        <FiX size={16} />
+                    </button>
+                </div>
+            )}
 
-                                            {/* Citations & Sources Chips */}
-                                            {msg.sources && msg.sources.length > 0 && (
-                                                <div className="citations-container">
-                                                    <div className="citations-title">
-                                                        <FiFileText /> <span>{t('study_assistant_sources', 'Sources & Citations')}:</span>
-                                                    </div>
-                                                    <div className="citations-chips-list">
-                                                        {msg.sources.map((src, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className={`citation-chip ${(src.ocr_used || src.is_ocr) ? 'citation-chip-ocr' : ''}`}
-                                                                title={(src.ocr_used || src.is_ocr) ? `${src.material_title} (${t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')})` : `From material: ${src.material_title}`}
-                                                            >
-                                                                <span className="chip-index">[{src.citation_number}]</span>
-                                                                <span className="chip-title">{src.material_title}</span>
-                                                                {src.page_number && (
-                                                                    <span className="chip-page">
-                                                                        ({t('study_assistant_page', 'Page')} {src.page_number})
-                                                                    </span>
-                                                                )}
-                                                                {(src.ocr_used || src.is_ocr) && (
-                                                                    <span className="chip-ocr-tag" style={{ marginLeft: '4px', fontSize: '0.7rem', opacity: 0.85, fontWeight: 600 }}>
-                                                                        [{t('study_assistant_ocr_badge', 'Scan')}]
-                                                                    </span>
-                                                                )}
+            {/* Main Chat Layout (with optional history drawer) */}
+            <div className="assistant-main-layout">
+                {/* Chat Messages Feed */}
+                <div
+                    className="chat-messages-scroll"
+                    id="rag-chat-messages-container"
+                    role="log"
+                    aria-live="polite"
+                    aria-atomic="false"
+                    aria-label="Chat messages history"
+                >
+                    {messages.length === 0 && !streamedText && (
+                        <div className="chat-welcome-card">
+                            <div className="welcome-icon-box" aria-hidden="true">
+                                <FiBookOpen />
+                            </div>
+                            <h3>{t('study_assistant_title', 'AI Study Assistant')}</h3>
+                            <p>
+                                {t('study_assistant_subtitle', 'Ask questions strictly answered from your notes and learning materials')}
+                            </p>
+                            <div className="welcome-quick-prompts">
+                                <button
+                                    type="button"
+                                    className="quick-prompt-chip"
+                                    onClick={() => setQuestion('Explain the main steps of photosynthesis from my biology notes')}
+                                    aria-label="Ask prompt: Explain photosynthesis"
+                                >
+                                    &ldquo;Explain the main steps of photosynthesis from my biology notes&rdquo;
+                                </button>
+                                <button
+                                    type="button"
+                                    className="quick-prompt-chip"
+                                    onClick={() => setQuestion('What are the key formulas for kinematics?')}
+                                    aria-label="Ask prompt: Kinematics formulas"
+                                >
+                                    &ldquo;What are the key formulas for kinematics?&rdquo;
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {messages.map((msg) => (
+                        <div
+                            key={msg.id}
+                            className={`chat-bubble-row ${msg.sender === 'user' ? 'row-user' : 'row-assistant'}`}
+                        >
+                            <div className={`chat-bubble ${msg.sender === 'user' ? 'bubble-user' : 'bubble-assistant'}`}>
+                                {msg.sender === 'user' ? (
+                                    <div className="user-message-content">
+                                        <div className="user-text">{msg.text}</div>
+                                        <div className="bubble-meta">
+                                            {msg.subject && <span className="bubble-subject-badge">{msg.subject}</span>}
+                                            <span className="bubble-timestamp">{msg.timestamp}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="assistant-message-content">
+                                        {msg.status === 'distress_blocked' ? (
+                                            <div className="distress-caring-card">
+                                                <div className="distress-header">
+                                                    <FiHeart className="heart-icon" aria-hidden="true" />
+                                                    <h4>{t('study_assistant_distress_help', 'Support & Guidance')}</h4>
+                                                </div>
+                                                <p className="distress-text">{msg.text}</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <SafeMarkdownRenderer text={msg.text} />
+
+                                                {/* Citations & Sources Chips */}
+                                                {msg.sources && msg.sources.length > 0 && (
+                                                    <div className="citations-container">
+                                                        <div className="citations-title">
+                                                            <FiFileText aria-hidden="true" /> <span>{t('study_assistant_sources', 'Sources & Citations')}:</span>
+                                                        </div>
+                                                        <div className="citations-chips-list">
+                                                            {msg.sources.map((src, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className={`citation-chip ${(src.ocr_used || src.is_ocr) ? 'citation-chip-ocr' : ''}`}
+                                                                    title={(src.ocr_used || src.is_ocr) ? `${src.material_title} (${t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')})` : `From material: ${src.material_title}`}
+                                                                >
+                                                                    <span className="chip-index">[{src.citation_number}]</span>
+                                                                    <span className="chip-title">{src.material_title}</span>
+                                                                    {src.page_number && (
+                                                                        <span className="chip-page">
+                                                                            ({t('study_assistant_page', 'Page')} {src.page_number})
+                                                                        </span>
+                                                                    )}
+                                                                    {(src.ocr_used || src.is_ocr) && (
+                                                                        <span className="chip-ocr-tag" style={{ marginLeft: '4px', fontSize: '0.7rem', opacity: 0.85, fontWeight: 600 }}>
+                                                                            [{t('study_assistant_ocr_badge', 'Scan')}]
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        {msg.sources.some(s => s.ocr_used || s.is_ocr) && (
+                                                            <div className="citations-ocr-notice" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', fontStyle: 'italic' }}>
+                                                                * {t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')}
                                                             </div>
-                                                        ))}
+                                                        )}
                                                     </div>
-                                                    {msg.sources.some(s => s.ocr_used || s.is_ocr) && (
-                                                        <div className="citations-ocr-notice" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', fontStyle: 'italic' }}>
-                                                            * {t('study_assistant_ocr_notice', 'text read by AI from a scan, may contain errors')}
+                                                )}
+
+                                                {/* Action Bar: Copy Answer & Feedback */}
+                                                <div className="assistant-action-bar">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-copy-answer"
+                                                        onClick={() => handleCopyAnswer(msg.id, msg.text)}
+                                                        title={copiedId === msg.id ? t('study_assistant_copied', 'Copied!') : t('study_assistant_copy', 'Copy Answer')}
+                                                        aria-label="Copy answer to clipboard"
+                                                    >
+                                                        {copiedId === msg.id ? (
+                                                            <>
+                                                                <FiCheck className="text-success" />
+                                                                <span>{t('study_assistant_copied', 'Copied!')}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <FiCopy />
+                                                                <span>{t('study_assistant_copy', 'Copy')}</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+
+                                                    {msg.queryId && msg.status !== 'blocked_safety' && (
+                                                        <div className="feedback-group">
+                                                            <button
+                                                                type="button"
+                                                                className={`btn-feedback ${feedbackMap[msg.queryId] === 'up' ? 'active-up' : ''}`}
+                                                                onClick={() => handleFeedback(msg.queryId, 'up')}
+                                                                disabled={!!feedbackMap[msg.queryId]}
+                                                                title={t('study_assistant_rated_up', 'Marked as helpful')}
+                                                                aria-label="Mark answer as helpful"
+                                                            >
+                                                                <FiThumbsUp />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`btn-feedback ${feedbackMap[msg.queryId] === 'down' ? 'active-down' : ''}`}
+                                                                onClick={() => handleFeedback(msg.queryId, 'down')}
+                                                                disabled={!!feedbackMap[msg.queryId]}
+                                                                title={t('study_assistant_rated_down', 'Marked as unhelpful')}
+                                                                aria-label="Mark answer as unhelpful"
+                                                            >
+                                                                <FiThumbsDown />
+                                                            </button>
+                                                            {feedbackMap[msg.queryId] && (
+                                                                <span className="feedback-confirmed">
+                                                                    <FiCheckCircle aria-hidden="true" />
+                                                                    {feedbackMap[msg.queryId] === 'up'
+                                                                        ? t('study_assistant_rated_up', 'Marked as helpful')
+                                                                        : t('study_assistant_rated_down', 'Marked as unhelpful')}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
-                                            )}
+                                            </>
+                                        )}
 
-                                            {/* Thumbs Up / Down Feedback */}
-                                            {msg.queryId && msg.status !== 'blocked_safety' && msg.status !== 'distress_blocked' && (
-                                                <div className="feedback-row">
-                                                    <span className="feedback-label">
-                                                        {t('study_assistant_helpful', 'Was this answer helpful?')}
-                                                    </span>
-                                                    <div className="feedback-buttons">
-                                                        <button
-                                                            type="button"
-                                                            className={`btn-feedback ${feedbackMap[msg.queryId] === 'up' ? 'active-up' : ''}`}
-                                                            onClick={() => handleFeedback(msg.queryId, 'up')}
-                                                            disabled={!!feedbackMap[msg.queryId]}
-                                                            title={t('study_assistant_rated_up', 'Marked as helpful')}
-                                                        >
-                                                            <FiThumbsUp />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className={`btn-feedback ${feedbackMap[msg.queryId] === 'down' ? 'active-down' : ''}`}
-                                                            onClick={() => handleFeedback(msg.queryId, 'down')}
-                                                            disabled={!!feedbackMap[msg.queryId]}
-                                                            title={t('study_assistant_rated_down', 'Marked as unhelpful')}
-                                                        >
-                                                            <FiThumbsDown />
-                                                        </button>
-                                                    </div>
-                                                    {feedbackMap[msg.queryId] && (
-                                                        <span className="feedback-confirmed">
-                                                            <FiCheckCircle />
-                                                            {feedbackMap[msg.queryId] === 'up'
-                                                                ? t('study_assistant_rated_up', 'Marked as helpful')
-                                                                : t('study_assistant_rated_down', 'Marked as unhelpful')}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <div className="bubble-meta">
-                                        <span className="bubble-timestamp">{msg.timestamp}</span>
+                                        <div className="bubble-meta">
+                                            <span className="bubble-timestamp">{msg.timestamp}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
 
-                {/* Currently Streaming Response */}
-                {isStreaming && (
-                    <div className="chat-bubble-row row-assistant">
-                        <div className="chat-bubble bubble-assistant streaming-active">
-                            {streamedText ? (
-                                <SafeMarkdownRenderer text={streamedText} />
+                    {/* Currently Streaming Response */}
+                    {isStreaming && (
+                        <div className="chat-bubble-row row-assistant">
+                            <div className="chat-bubble bubble-assistant streaming-active">
+                                {streamedText ? (
+                                    <SafeMarkdownRenderer text={streamedText} />
+                                ) : (
+                                    <div className="streaming-dots-container" aria-label="Loading answer">
+                                        <div className="streaming-dots">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                        <span className="loading-helper-text">
+                                            {t('study_assistant_loading', 'Finding answers from your notes...')}
+                                        </span>
+                                    </div>
+                                )}
+                                <span className="typing-cursor" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div ref={chatEndRef} />
+                </div>
+
+                {/* Question History Drawer */}
+                {isHistoryOpen && (
+                    <aside className="assistant-history-drawer" aria-label="Recent questions list">
+                        <div className="history-drawer-header">
+                            <h4>{t('study_assistant_history', 'Recent Questions')}</h4>
+                            <button
+                                type="button"
+                                className="history-close-btn"
+                                onClick={() => setIsHistoryOpen(false)}
+                                aria-label="Close history"
+                            >
+                                <FiX size={18} />
+                            </button>
+                        </div>
+                        <div className="history-drawer-body">
+                            {loadingHistory ? (
+                                <div className="history-loading">
+                                    <div className="history-spinner" />
+                                </div>
+                            ) : historyList.length === 0 ? (
+                                <p className="history-empty">
+                                    {t('study_assistant_no_history', 'No recent questions yet.')}
+                                </p>
                             ) : (
-                                <div className="streaming-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
+                                <ul className="history-items-list">
+                                    {historyList.map(item => (
+                                        <li key={item.id}>
+                                            <button
+                                                type="button"
+                                                className="history-item-btn"
+                                                onClick={() => handleSelectHistoryItem(item)}
+                                            >
+                                                <div className="history-item-question">{item.question}</div>
+                                                <div className="history-item-meta">
+                                                    {item.subject && <span className="history-subject">{item.subject}</span>}
+                                                    <span className="history-date">
+                                                        {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
                             )}
-                            <span className="typing-cursor"></span>
                         </div>
-                    </div>
+                    </aside>
                 )}
-
-                <div ref={chatEndRef} />
             </div>
 
-            {/* Error Message Alert */}
+            {/* Error Message Alert with Retry Button */}
             {streamError && (
-                <div className="chat-error-banner">
-                    <FiAlertCircle />
-                    <span>{streamError}</span>
-                    <button type="button" onClick={() => setStreamError(null)} className="error-close-btn">&times;</button>
+                <div className="chat-error-banner" role="alert">
+                    <FiAlertCircle aria-hidden="true" />
+                    <span className="error-text">{streamError}</span>
+                    {lastQuestion && (
+                        <button
+                            type="button"
+                            onClick={handleRetry}
+                            className="btn-retry-error"
+                            title={t('study_assistant_retry', 'Retry')}
+                            aria-label="Retry question"
+                        >
+                            <FiRefreshCw size={13} style={{ marginRight: 4 }} />
+                            <span>{t('study_assistant_retry', 'Retry')}</span>
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => setStreamError(null)}
+                        className="error-close-btn"
+                        aria-label="Dismiss error"
+                    >
+                        &times;
+                    </button>
                 </div>
             )}
 
@@ -713,10 +977,11 @@ export default function StudentStudyAssistant({ user: userProp }) {
                         className="assistant-textarea"
                         disabled={isStreaming}
                         maxLength={500}
+                        aria-label="Type your study question here"
                     />
 
                     <div className="input-controls-group">
-                        <span className={`char-counter ${question.length > 450 ? 'near-limit' : ''}`}>
+                        <span className={`char-counter ${question.length > 450 ? 'near-limit' : ''}`} aria-hidden="true">
                             {question.length}/500
                         </span>
 
@@ -727,16 +992,18 @@ export default function StudentStudyAssistant({ user: userProp }) {
                                 onClick={handleStop}
                                 className="btn-stop-stream"
                                 title={t('study_assistant_stop_btn', 'Stop')}
+                                aria-label="Stop generating response"
                             >
                                 <FiStopCircle /> <span>{t('study_assistant_stop_btn', 'Stop')}</span>
                             </button>
                         ) : (
                             <button
                                 type="submit"
-                                id="rag-send-btn"
+                                id="rag-submit-btn"
                                 disabled={question.trim().length < 3 || isStreaming}
                                 className="btn-send-question"
                                 title={t('study_assistant_ask_btn', 'Ask')}
+                                aria-label="Send study question"
                             >
                                 <FiSend /> <span>{t('study_assistant_ask_btn', 'Ask')}</span>
                             </button>

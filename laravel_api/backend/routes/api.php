@@ -110,6 +110,8 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
             // Student AI Study Assistant (RAG Chatbot)
             Route::post('/ai-chat', [\App\Http\Controllers\Api\StudentAiChatController::class, 'chat']);
+            Route::get('/ai-chat/history', [\App\Http\Controllers\Api\StudentAiChatController::class, 'history']);
+            Route::get('/ai-chat/usage', [\App\Http\Controllers\Api\StudentAiChatController::class, 'usage']);
             Route::post('/ai-chat/{id}/feedback', [\App\Http\Controllers\Api\StudentAiChatController::class, 'feedback']);
         });
     });

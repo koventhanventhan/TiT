@@ -662,4 +662,70 @@ class StudentAiChatEndpointTest extends TestCase
 
         $this->assertTrue($this->student->isRagEnabled(), 'Student isRagEnabled() must be true when institute rag_enabled is true.');
     }
+
+    public function test_student_can_fetch_chat_history(): void
+    {
+        StudentAiQuery::create([
+            'user_id' => $this->student->id,
+            'institute_id' => $this->institute->id,
+            'question' => 'What is photosynthesis?',
+            'answer' => 'Photosynthesis is a process used by plants.',
+            'subject' => 'Science',
+            'status' => 'answered',
+            'is_flagged' => false,
+            'created_at' => now()->subMinutes(5),
+        ]);
+
+        StudentAiQuery::create([
+            'user_id' => $this->student->id,
+            'institute_id' => $this->institute->id,
+            'question' => 'Sensitive question that was flagged',
+            'answer' => 'Distress reply',
+            'subject' => 'General',
+            'status' => 'aborted',
+            'is_flagged' => true,
+            'created_at' => now()->subMinutes(2),
+        ]);
+
+        $response = $this->actingAs($this->student, 'sanctum')
+            ->getJson('/api/student/ai-chat/history');
+
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertCount(1, $data);
+        $this->assertEquals('What is photosynthesis?', $data[0]['question']);
+    }
+
+    public function test_student_can_fetch_daily_usage_and_limit(): void
+    {
+        StudentAiQuery::create([
+            'user_id' => $this->student->id,
+            'institute_id' => $this->institute->id,
+            'question' => 'Question 1',
+            'answer' => 'Answer 1',
+            'subject' => 'Science',
+            'status' => 'answered',
+            'created_at' => now(),
+        ]);
+
+        StudentAiQuery::create([
+            'user_id' => $this->student->id,
+            'institute_id' => $this->institute->id,
+            'question' => 'Question 2',
+            'answer' => 'Answer 2',
+            'subject' => 'Maths',
+            'status' => 'no_notes_found',
+            'created_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->student, 'sanctum')
+            ->getJson('/api/student/ai-chat/usage');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'used_today' => 2,
+            'daily_limit' => 30,
+            'remaining' => 28,
+        ]);
+    }
 }

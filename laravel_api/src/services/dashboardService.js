@@ -691,3 +691,16 @@ export const deleteExamTerm = async (id) => {
   if (!res.ok) throw new Error('Failed to delete term')
   return res.json()
 }
+
+export const retryTeacherMaterial = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/teacher/materials/${id}/retry`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to retry indexing')
+  }
+  return res.json()
+}

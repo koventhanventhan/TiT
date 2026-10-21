@@ -132,6 +132,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         
         Route::get('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'index']);
         Route::post('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'store']);
+        Route::post('/materials/{id}/retry', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'retry']);
         Route::delete('/materials/{id}', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'destroy']);
     });
 

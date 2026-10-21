@@ -216,12 +216,15 @@ class MasterAdminController extends Controller
      */
     public function storeMaterial(Request $request)
     {
+        $type = strtolower($request->input('type', ''));
+        $isStudyDoc = in_array($type, ['note', 'past_paper', 'paper', 'pdf', 'document'], true);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|string', // note, paper, recording, video, PDF
-            'subject' => 'nullable|string',
-            'grade' => 'nullable|string',
-            'medium' => 'nullable|string|in:tamil,english,all',
+            'type' => 'required|string', // note, past_paper, recording, video, PDF, document
+            'subject' => $isStudyDoc ? 'required|string|max:100' : 'nullable|string|max:100',
+            'grade' => $isStudyDoc ? 'required|string|max:50' : 'nullable|string|max:50',
+            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all' : 'nullable|string|in:tamil,english,sinhala,all',
             'file_path' => [
                 'nullable',
                 'string',
@@ -236,21 +239,49 @@ class MasterAdminController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $filePath = $validated['file_path'] ?? null;
+        $fileHash = null;
+        if (!empty($filePath) && !\Illuminate\Support\Str::startsWith($filePath, 'http')) {
+            $localFullPath = storage_path('app/public/' . $filePath);
+            if (file_exists($localFullPath)) {
+                $fileHash = hash_file('sha256', $localFullPath);
+            }
+        }
+
+        $instituteId = (int) ($request->user()->institute_id ?? 1);
+        $warning = null;
+        if (!empty($fileHash)) {
+            $existing = \App\Models\LearningMaterial::where('institute_id', $instituteId)
+                ->where('file_hash', $fileHash)
+                ->first();
+            if ($existing) {
+                $warning = "A file with identical content already exists in this institute: \"{$existing->title}\".";
+            }
+        }
+
+        $canonicalGrade = \App\Support\GradeMatcher::formatCanonical($validated['grade'] ?? null);
+
         $material = \App\Models\LearningMaterial::create([
             'title' => $validated['title'],
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
-            'grade' => $validated['grade'] ?? null,
+            'grade' => $canonicalGrade,
             'medium' => $validated['medium'] ?? 'all',
             'description' => $validated['description'] ?? null,
-            'file_path' => $validated['file_path'] ?? null,
+            'file_path' => $filePath,
+            'file_hash' => $fileHash,
             'file_size' => $validated['file_size'] ?? null,
             'url' => $validated['url'] ?? null,
-            'institute_id' => $request->user()->institute_id ?? 1,
+            'institute_id' => $instituteId,
             'teacher_id' => $request->user()->id,
         ]);
 
-        return response()->json($material, 201);
+        $responsePayload = $material->toArray();
+        if ($warning) {
+            $responsePayload['warning'] = $warning;
+        }
+
+        return response()->json($responsePayload, 201);
     }
 
     /**

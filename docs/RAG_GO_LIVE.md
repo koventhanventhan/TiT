@@ -20,6 +20,9 @@ php artisan migrate --path=database/migrations/2026_10_12_050000_add_rag_enabled
 php artisan migrate --path=database/migrations/2026_10_13_060000_update_institutes_rag_enabled_default_and_chunks_ocr.php
 php artisan migrate --path=database/migrations/2026_10_15_030000_add_file_hash_to_learning_materials_table.php
 php artisan migrate --path=database/migrations/2026_10_21_040000_create_material_pages_table.php
+php artisan migrate --path=database/migrations/2026_10_22_010000_add_public_assistant_enabled_to_institutes_table.php
+php artisan migrate --path=database/migrations/2026_10_22_020000_create_faqs_table.php
+php artisan migrate --path=database/migrations/2026_10_22_030000_create_assistant_visitor_logs_table.php
 ```
 
 ### Verification Script
@@ -179,6 +182,9 @@ Add the master Laravel scheduler cron entry:
 - **Command**:
 ```bash
 * * * * * cd /home/<cpanel_user>/public_html/laravel_api/backend && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
+
+# Or run visitor log pruning directly once daily (e.g., at 02:00 AM):
+0 2 * * * cd /home/<cpanel_user>/public_html/laravel_api/backend && /usr/local/bin/php artisan assistant:prune-visitor-logs >> /dev/null 2>&1
 ```
 
 ---
@@ -237,3 +243,82 @@ php artisan migrate:rollback --step=8
    Google Gemini API rate limits (RPM, TPM, RPD) apply across the entire Google Cloud Project. Heavy batch re-indexing should be scheduled during off-peak hours using `rag:reindex --limit=...` to avoid consuming quotas needed for live student answering.
 4. **Free Tier Unsuitable for Real Students**:
    The Google AI Studio Free Tier has strict 15 RPM and daily request quotas. Simultaneous classroom usage will immediately trigger HTTP 429 throttling. Production deployment requires a Google Cloud billing account with Pay-As-You-Go pricing.
+---
+
+## 7. Unified Website Assistant Configuration & Operations
+
+### 7.1 New Environment Keys (.env)
+
+Add the following keys to your `/home/<cpanel_user>/public_html/laravel_api/backend/.env` file:
+
+```ini
+# Global switch for public assistant on public pages (true / false)
+RAG_PUBLIC_ENABLED=true
+
+# Google reCAPTCHA v3 credentials for visitor chat verification
+RECAPTCHA_SITE_KEY=your_recaptcha_v3_site_key_here
+RECAPTCHA_SECRET_KEY=your_recaptcha_v3_secret_key_here
+RECAPTCHA_SCORE_THRESHOLD=0.5
+
+# Public Knowledge Cache TTL in seconds (default 300 = 5 minutes)
+RAG_PUBLIC_KNOWLEDGE_TTL=300
+
+# Visitor Rate Limits (Sri Lanka mobile IP friendly defaults)
+RAG_ASSISTANT_VISITOR_PER_MINUTE=10
+RAG_ASSISTANT_VISITOR_PER_DAY=60
+RAG_ASSISTANT_VISITOR_DAILY_CAP=500
+RAG_ASSISTANT_VISITOR_MAX_CHARS=200
+```
+
+### 7.2 Reverse Proxy & TrustProxies Verification
+
+In shared hosting, Cloudflare, or reverse-proxy architectures, client IP addresses arrive via headers such as `X-Forwarded-For`. To ensure accurate visitor rate limiting and prevent rate-limit poisoning across shared Sri Lankan mobile carrier networks:
+- In `bootstrap/app.php`, TrustProxies is configured via:
+  ```php
+  $middleware->trustProxies(at: '*');
+  ```
+- This instructs Symfony/Laravel to inspect trusted proxy headers and return the true originating client IP from `$request->ip()`.
+
+### 7.3 Per-Institute Public Assistant Toggle & Safety Gates
+
+The public website assistant is disabled by default (`public_assistant_enabled = false`). You can toggle it per institute using the artisan command:
+
+```bash
+# Enable public assistant for Institute 1:
+php artisan rag:public 1 on
+
+# Disable public assistant for Institute 1:
+php artisan rag:public 1 off
+```
+
+**MANDATORY SAFETY REFUSAL GATE:**
+The `rag:public {id} on` command will strictly refuse to enable the assistant if:
+1. Crisis helplines (`rag.safety.helplines`) are missing from `config/rag.php`.
+2. Institute contact settings (`assistant_public_contact_phone` or `assistant_public_contact_email`/address) are empty in `site_settings`.
+
+### 7.4 Dedicated Contact Settings Group
+
+Contact information provided by the public assistant is strictly sourced from the `assistant_public_contact` settings group in `site_settings`. The assistant never falls back to footer links or social '#' placeholders:
+- `assistant_public_contact_phone`
+- `assistant_public_contact_whatsapp`
+- `assistant_public_contact_email`
+- `assistant_public_contact_address`
+- `assistant_public_contact_hours`
+
+If these settings are empty, the assistant explicitly instructs visitors to check the Contact page at `/contact`.
+
+### 7.5 FAQ Management
+
+The FAQs table is created empty without seeded content. Administrators manage active institute FAQs through the RESTful endpoints:
+- `GET /api/admin/faqs` (list FAQs for institute)
+- `POST /api/admin/faqs` (create FAQ: question, answer, language, is_active, sort_order)
+- `PUT /api/admin/faqs/{id}` (update FAQ)
+- `DELETE /api/admin/faqs/{id}` (delete FAQ)
+
+Any create, update, or delete operation automatically purges the public knowledge cache (`rag_public_knowledge_{id}`) so updates appear immediately.
+
+### 7.6 Visitor Privacy & Data Retention
+
+- Visitor questions have all personal phone numbers, email addresses, and digit strings redacted before persistence (`[phone]`, `[email]`, `[number]`).
+- Raw questions and answers are never logged.
+- Visitor logs are automatically pruned after 7 days using `php artisan assistant:prune-visitor-logs`.

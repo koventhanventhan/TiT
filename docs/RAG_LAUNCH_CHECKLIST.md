@@ -26,6 +26,9 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
   php artisan migrate --path=database/migrations/2026_10_13_060000_update_institutes_rag_enabled_default_and_chunks_ocr.php
   php artisan migrate --path=database/migrations/2026_10_15_030000_add_file_hash_to_learning_materials_table.php
   php artisan migrate --path=database/migrations/2026_10_21_040000_create_material_pages_table.php
+  php artisan migrate --path=database/migrations/2026_10_22_010000_add_public_assistant_enabled_to_institutes_table.php
+  php artisan migrate --path=database/migrations/2026_10_22_020000_create_faqs_table.php
+  php artisan migrate --path=database/migrations/2026_10_22_030000_create_assistant_visitor_logs_table.php
   ```
 - [ ] 2.2 Verify migration status:
   ```bash
@@ -118,3 +121,36 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
   ```bash
   php artisan migrate:rollback --step=8
   ```
+---
+
+### Step 7: Unified Public Assistant Rollout & Verification
+- [ ] 7.1 Verify environment variables in `.env`:
+  ```ini
+  RAG_PUBLIC_ENABLED=true
+  RECAPTCHA_SITE_KEY=your_recaptcha_v3_site_key
+  RECAPTCHA_SECRET_KEY=your_recaptcha_v3_secret_key
+  RECAPTCHA_SCORE_THRESHOLD=0.5
+  RAG_ASSISTANT_VISITOR_PER_MINUTE=10
+  RAG_ASSISTANT_VISITOR_PER_DAY=60
+  RAG_ASSISTANT_VISITOR_DAILY_CAP=500
+  RAG_ASSISTANT_VISITOR_MAX_CHARS=200
+  RAG_PUBLIC_KNOWLEDGE_TTL=300
+  ```
+- [ ] 7.2 Configure dedicated contact details in `site_settings` under group `assistant_public_contact`:
+  - `assistant_public_contact_phone`
+  - `assistant_public_contact_whatsapp`
+  - `assistant_public_contact_email`
+  - `assistant_public_contact_address`
+  - `assistant_public_contact_hours`
+- [ ] 7.3 Enable the public assistant for the institute via artisan:
+  ```bash
+  php artisan rag:public 1 on
+  ```
+  *(Verify command succeeds and passes the contact / helpline validation gate)*
+- [ ] 7.4 Test public floating chat widget on Home, About, Classes, and Contact pages:
+  - Test general questions (fee inquiries, timetable, registration at `/register`).
+  - Test academic question in public mode (must return state-specific locked message with link to `/register`, no hallucinated academic answers).
+  - Test crisis helpline trigger (must show 1926/1333/1990 crisis numbers without logging raw text).
+- [ ] 7.5 Verify emergency kill switches:
+  - Disable single institute: `php artisan rag:public 1 off` (widget disappears immediately).
+  - Global master kill switch: `RAG_PUBLIC_ENABLED=false` in `.env`.

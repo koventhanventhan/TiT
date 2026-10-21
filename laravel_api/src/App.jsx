@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { ToastProvider } from './components/shared/ToastContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import UnifiedAssistantWidget from './components/UnifiedAssistantWidget'
 import ScrollToTop from './components/ScrollToTop'
 import CustomCursor from './components/CustomCursor'
 import HomePage from './pages/HomePage'
@@ -147,6 +148,7 @@ function AppContent() {
         </Suspense>
       </main>
       {!isDashboard && <Footer />}
+      {!isDashboard && <UnifiedAssistantWidget />}
     </div>
   )
 }

@@ -892,6 +892,12 @@ export const translations = {
     study_assistant_error_quota: 'கேள்வி வரம்பு முடிந்தது. தயவுசெய்து சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.',
     study_assistant_error_unavailable: 'படிப்பு உதவியாளர் தற்காலிகமாக கிடைக்கவில்லை. பின்னர் மீண்டும் முயற்சிக்கவும்.',
     study_assistant_error_generic: 'உதவியாளரை இணைப்பதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
+    unified_assistant_title: 'இணையதள உதவியாளர்',
+    unified_assistant_open: 'கேள்வி கேட்கவும்',
+    unified_assistant_welcome: 'வணக்கம்! எமது வகுப்புகள், கட்டண விபரம், நேர அட்டவணை அல்லது பதிவு பற்றி ஏதேனும் கேட்கலாம்.',
+    unified_assistant_study_mode: 'கற்றல் முறை',
+    unified_assistant_public_disclaimer: 'பதில்கள் செயற்கை நுண்ணறிவால் உருவாக்கப்பட்டவை, பிழைகள் இருக்கலாம். உத்தியோகபூர்வ பக்கங்கள் அல்லது ஆசிரியர்களிடம் உறுதிப்படுத்தவும்.',
+    unified_assistant_placeholder: 'வகுப்புகள், கட்டணங்கள் அல்லது உங்கள் குறிப்புகள் பற்றிக் கேட்கவும்...',
 
 
     // Exam Results (Tamil)
@@ -1383,6 +1389,12 @@ export const translations = {
     study_assistant_error_quota: 'ප්‍රශ්න සීමාව ඉක්මවා ඇත. කරුණාකර නැවත උත්සාහ කිරීමට පෙර මදක් රැඳී සිටින්න.',
     study_assistant_error_unavailable: 'අධ්‍යයන සහායක තාවකාලිකව ක්‍රියා විරහිතයි. කරුණාකර පසුව නැවත උත්සාහ කරන්න.',
     study_assistant_error_generic: 'සහායක වෙත සම්බන්ධ වීමේදී දෝෂයක් ඇති විය. කරුණාකර නැවත උත්සාහ කරන්න.',
+    unified_assistant_title: 'වෙබ් අඩවි සහායක',
+    unified_assistant_open: 'ප්‍රශ්නයක් අසන්න',
+    unified_assistant_welcome: 'ආයුබෝවන්! අපගේ පන්ති, ගාස්තු, කාලසටහන හෝ ලියාපදිංචිය පිළිබඳ ඕනෑම ප්‍රශ්නයක් අසන්න.',
+    unified_assistant_study_mode: 'අධ්‍යයන මාදිලිය',
+    unified_assistant_public_disclaimer: 'පිළිතුරු කෘතිම බුද්ධිය මඟින් ලබා දෙන අතර දෝෂ තිබිය හැක. නිල වෙබ් පිටු හෝ ගුරුවරුන්ගෙන් තහවුරු කරගන්න.',
+    unified_assistant_placeholder: 'පන්ති, ගාස්තු, ලියාපදිංචිය හෝ සටහන් ගැන අසන්න...',
 
 
     // Exam Results (Sinhala)

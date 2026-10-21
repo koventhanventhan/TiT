@@ -135,6 +135,7 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         Route::get('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'index']);
         Route::post('/materials', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'store']);
         Route::post('/materials/{id}/retry', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'retry']);
+        Route::get('/rag/feedback-loop', [\App\Http\Controllers\Api\AdminRagController::class, 'feedbackLoop']);
         Route::delete('/materials/{id}', [\App\Http\Controllers\Api\TeacherMaterialController::class, 'destroy']);
     });
 
@@ -142,6 +143,11 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
         Route::apiResource('faqs', \App\Http\Controllers\Api\AdminFaqController::class);
         Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
+        Route::post('/rag/materials/{id}/reindex', [\App\Http\Controllers\Api\AdminRagController::class, 'reindex']);
+        Route::post('/rag/toggle-assistant', [\App\Http\Controllers\Api\AdminRagController::class, 'toggleAssistant']);
+        Route::get('/rag/feedback-loop', [\App\Http\Controllers\Api\AdminRagController::class, 'feedbackLoop']);
+        Route::get('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'getContactSettings']);
+        Route::post('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'updateContactSettings']);
         Route::post('/students/promote', [\App\Http\Controllers\AdminPromotionController::class, 'promoteStudents']);
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
@@ -193,6 +199,15 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         Route::get('/search', [\App\Http\Controllers\Api\SuperAdminController::class, 'search']);
         Route::get('/announcements', [\App\Http\Controllers\Api\SuperAdminController::class, 'announcements']);
         Route::post('/announcements', [\App\Http\Controllers\Api\SuperAdminController::class, 'storeAnnouncement']);
+        
+        // Super Admin RAG & Assistant Operations
+        Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
+        Route::post('/rag/materials/{id}/reindex', [\App\Http\Controllers\Api\AdminRagController::class, 'reindex']);
+        Route::post('/rag/toggle-assistant', [\App\Http\Controllers\Api\AdminRagController::class, 'toggleAssistant']);
+        Route::get('/rag/feedback-loop', [\App\Http\Controllers\Api\AdminRagController::class, 'feedbackLoop']);
+        Route::get('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'getContactSettings']);
+        Route::post('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'updateContactSettings']);
+        Route::apiResource('faqs', \App\Http\Controllers\Api\AdminFaqController::class);
     });
 
     // Announcements (Any authenticated user)

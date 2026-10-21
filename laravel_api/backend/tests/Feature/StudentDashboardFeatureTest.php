@@ -489,6 +489,9 @@ class StudentDashboardFeatureTest extends TestCase
             'title' => 'Valid Lesson PDF',
             'type' => 'note',
             'file' => $teacherPdf,
+            'grade' => 'grade-10',
+            'subject' => 'Science',
+            'medium' => 'tamil',
         ]);
         $respTeacherPdf->assertStatus(201);
     }

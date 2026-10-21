@@ -94,7 +94,17 @@ class PdfTextExtractor
                 return $this->extractFromDocxFile($localPath);
             }
 
-            throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Only PDF, DOCX, and image documents are indexed for study search.");
+            // 4. PowerPoint Presentations (.pptx)
+            if ($extension === 'pptx') {
+                return $this->extractFromPptxFile($localPath);
+            }
+
+            // 5. Legacy Microsoft Office binary formats (.doc, .ppt)
+            if (in_array($extension, ['doc', 'ppt'], true)) {
+                throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Legacy format (.{$extension}) is unsupported, please upload PDF or DOCX.");
+            }
+
+            throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Only PDF, DOCX, and PPTX documents are indexed for study search.");
 
         } finally {
             if ($isTemporary && $localPath && file_exists($localPath)) {
@@ -195,7 +205,20 @@ class PdfTextExtractor
             ];
         }
 
-        throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Only PDF, DOCX, and image documents are indexed for study search.");
+        if ($extension === 'pptx') {
+            $extracted = $this->extractFromPptxFile($localPath);
+            return [
+                'total_pages' => count($extracted),
+                'native_pages' => $extracted,
+                'pages_needing_ocr' => [],
+            ];
+        }
+
+        if (in_array($extension, ['doc', 'ppt'], true)) {
+            throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Legacy format (.{$extension}) is unsupported, please upload PDF or DOCX.");
+        }
+
+        throw new UnsupportedFileTypeException("Unsupported file type (.{$extension}). Only PDF, DOCX, and PPTX documents are indexed for study search.");
     }
 
     /**
@@ -451,6 +474,70 @@ class PdfTextExtractor
     }
 
     /**
+     * Extract plain text slide-by-slide from PowerPoint Presentation (.pptx) via ZipArchive.
+     * Slides are extracted in numerical order with page_number = slide number.
+     * Images and non-text shapes are safely ignored.
+     *
+     * @param string $filePath
+     * @return array<int, array{page_number: int, text: string, used_ocr: bool, word_count: int}>
+     */
+    protected function extractFromPptxFile(string $filePath): array
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            throw new RuntimeException('Unable to open PPTX archive.');
+        }
+
+        $slides = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if ($stat && preg_match('#^ppt/slides/slide(\d+)\.xml$#i', $stat['name'], $matches)) {
+                $slideNum = (int) $matches[1];
+                $slides[$slideNum] = $i;
+            }
+        }
+
+        if (empty($slides)) {
+            $zip->close();
+            return [];
+        }
+
+        ksort($slides, SORT_NUMERIC);
+
+        $totalSlides = count($slides);
+        if ($totalSlides > $this->maxPages) {
+            $zip->close();
+            throw new PageLimitExceededException("Document exceeds maximum allowed limit of {$this->maxPages} slides (actual: {$totalSlides}).");
+        }
+
+        $pages = [];
+        foreach ($slides as $slideNum => $index) {
+            $xmlData = $zip->getFromIndex($index);
+            // Replace paragraph closing tags with newline
+            $text = preg_replace('#</a:p>#iu', "\n", $xmlData);
+            // Strip XML tags and decode HTML/XML entities
+            $text = strip_tags($text);
+            $cleanText = trim(html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8'));
+            // Remove excessive blank lines
+            $cleanText = preg_replace("/\n{3,}/u", "\n\n", $cleanText);
+
+            $words = @preg_split('/\s+/u', $cleanText, -1, PREG_SPLIT_NO_EMPTY);
+            $wordCount = is_array($words) ? count($words) : 0;
+
+            $pages[] = [
+                'page_number' => $slideNum,
+                'text' => $cleanText,
+                'used_ocr' => false,
+                'word_count' => $wordCount,
+            ];
+        }
+
+        $zip->close();
+
+        return $pages;
+    }
+
+    /**
      * Resolve file path locally, safely downloading from Firebase if needed.
      */
     public function resolveLocalFile(LearningMaterial $material, bool &$isTemporary): string
@@ -472,6 +559,11 @@ class PdfTextExtractor
         }
 
         // Local storage paths
+        if (file_exists($filePath)) {
+            $isTemporary = false;
+            return $filePath;
+        }
+
         if (Storage::disk('public')->exists($filePath)) {
             $isTemporary = false;
             return Storage::disk('public')->path($filePath);

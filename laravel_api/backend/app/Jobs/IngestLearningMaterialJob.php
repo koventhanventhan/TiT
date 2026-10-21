@@ -168,7 +168,18 @@ class IngestLearningMaterialJob implements ShouldQueue
             ]);
             return;
 
-        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|UnsupportedFileTypeException|\RuntimeException $e) {
+        } catch (UnsupportedFileTypeException $e) {
+            $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
+            Log::warning("IngestLearningMaterialJob: Unsupported file type for material #{$material->id}: " . $cleanMsg);
+            $vectorStore->deleteByMaterial($material->id);
+            $material->updateQuietly([
+                'rag_status' => 'unsupported',
+                'rag_error' => $cleanMsg,
+            ]);
+            Storage::disk('local')->deleteDirectory($tempDir);
+            return;
+
+        } catch (FileTooLargeException|PageLimitExceededException|OcrPageLimitExceededException|\RuntimeException $e) {
             $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
             Log::warning("IngestLearningMaterialJob: Document processing failed for material #{$material->id}: " . $cleanMsg);
             $vectorStore->deleteByMaterial($material->id);

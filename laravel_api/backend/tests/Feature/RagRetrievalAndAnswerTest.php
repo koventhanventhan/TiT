@@ -415,4 +415,137 @@ class RagRetrievalAndAnswerTest extends TestCase
         $this->assertFalse($res['llm_called']);
         $this->assertStringContainsString('could not find an answer', $res['answer']);
     }
+
+    public function test_question_paper_without_answers_includes_guidance_instruction(): void
+    {
+        $material = LearningMaterial::create([
+            'title' => 'Grade 10 Exam Paper 2026',
+            'type' => 'past_paper',
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'file_path' => 'materials/exam_2026.pdf',
+            'institute_id' => $this->instituteA->id,
+            'rag_status' => 'ready',
+        ]);
+
+        $chunkVector = array_fill(0, 768, 0.0);
+        $chunkVector[0] = 1.0;
+
+        MaterialChunk::create([
+            'institute_id' => $this->instituteA->id,
+            'material_id' => $material->id,
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'chunk_type' => 'qa',
+            'question_number' => '1-4',
+            'page_number' => 1,
+            'content' => '1. What is acceleration? 2. State Ohm law.',
+            'embedding_model' => 'gemini-embedding-2',
+            'dimensions' => 768,
+            'embedding' => pack('f*', ...$chunkVector),
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->instituteA->id,
+            'current_grade' => 'grade-10',
+            'medium' => 'english',
+            'role' => 'user',
+        ]);
+
+        $this->actingAs($student);
+
+        $answerService = app(AnswerService::class);
+        $context = $answerService->prepareContext($student, 'What is acceleration?');
+
+        $this->assertNotEmpty($context['qualified_chunks']);
+        $this->assertStringContainsString('QUESTION PAPERS WITHOUT ANSWERS', $context['system_instruction']);
+        $this->assertStringContainsString('notes contain the question but not the answer', $context['system_instruction']);
+    }
+
+    public function test_duplicate_collapse_by_identical_file_hash(): void
+    {
+        $hash = 'testhash_duplicate_abc123';
+
+        $material1 = LearningMaterial::create([
+            'title' => 'Original Paper 2026',
+            'type' => 'past_paper',
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'file_path' => 'materials/original.pdf',
+            'file_hash' => $hash,
+            'institute_id' => $this->instituteA->id,
+            'rag_status' => 'ready',
+        ]);
+
+        $material2 = LearningMaterial::create([
+            'title' => 'Duplicate Upload Paper 2026',
+            'type' => 'past_paper',
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'file_path' => 'materials/duplicate.pdf',
+            'file_hash' => $hash,
+            'institute_id' => $this->instituteA->id,
+            'rag_status' => 'ready',
+        ]);
+
+        $highVector = array_fill(0, 768, 0.0);
+        $highVector[0] = 1.0; // similarity = 1.0
+
+        $lowerVector = array_fill(0, 768, 0.0);
+        $lowerVector[0] = 0.95; // similarity = 0.95
+        $lowerVector[1] = sqrt(1 - 0.95*0.95);
+
+        // Chunk for Material 1 (higher similarity)
+        $chunk1 = MaterialChunk::create([
+            'institute_id' => $this->instituteA->id,
+            'material_id' => $material1->id,
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'chunk_type' => 'qa',
+            'question_number' => '1-4',
+            'page_number' => 1,
+            'content' => '1. What is kinetic energy?',
+            'embedding_model' => 'gemini-embedding-2',
+            'dimensions' => 768,
+            'embedding' => pack('f*', ...$highVector),
+        ]);
+
+        // Chunk for Material 2 with identical question/page on identical file_hash (lower similarity)
+        $chunk2 = MaterialChunk::create([
+            'institute_id' => $this->instituteA->id,
+            'material_id' => $material2->id,
+            'grade' => 'grade-10',
+            'medium' => 'english',
+            'subject' => 'Science',
+            'chunk_type' => 'qa',
+            'question_number' => '1-4',
+            'page_number' => 1,
+            'content' => '1. What is kinetic energy? (duplicate)',
+            'embedding_model' => 'gemini-embedding-2',
+            'dimensions' => 768,
+            'embedding' => pack('f*', ...$lowerVector),
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->instituteA->id,
+            'current_grade' => 'grade-10',
+            'medium' => 'english',
+            'role' => 'user',
+        ]);
+
+        $this->actingAs($student);
+
+        $retrievalService = app(RetrievalService::class);
+        $res = $retrievalService->retrieve($student, 'What is kinetic energy?');
+
+        // Only the higher scoring chunk (from Material 1) is kept; Material 2 chunk is collapsed
+        $chunkIds = array_column($res['chunks'], 'chunk_id');
+        $this->assertContains($chunk1->id, $chunkIds);
+        $this->assertNotContains($chunk2->id, $chunkIds);
+    }
 }

@@ -127,6 +127,7 @@ class StudentDashboardFeatureTest extends TestCase
 
     public function test_student_schedule_visibility_filters_by_grade_medium_and_subject(): void
     {
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::today()->setTime(10, 0, 0));
         Sanctum::actingAs($this->student);
 
         // Visible 1: Grade 4, english, Maths
@@ -209,6 +210,7 @@ class StudentDashboardFeatureTest extends TestCase
         $statsResp->assertStatus(200);
         $this->assertEquals(2, $statsResp->json('today_classes'));
         $this->assertEquals(2, $statsResp->json('upcoming_classes'));
+        \Carbon\Carbon::setTestNow();
     }
 
     public function test_stats_assignment_counts_use_grade_matcher(): void

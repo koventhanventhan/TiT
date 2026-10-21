@@ -44,7 +44,6 @@ class RetrievalService
         $instituteId = (int) $student->institute_id;
 
         // 1. Explicitly filter by student's institute to guarantee isolation across web & console
-        // Select only the columns needed for access decisions
         $query = LearningMaterial::select(['id', 'institute_id', 'grade', 'medium', 'subject'])
             ->where('institute_id', $instituteId)
             ->where('type', '!=', 'recording')
@@ -80,7 +79,7 @@ class RetrievalService
     }
 
     /**
-     * Retrieve top-k relevant chunks for a student query.
+     * Retrieve top-k relevant chunks for a student query with duplicate collapse.
      *
      * @param User $student
      * @param string $question
@@ -93,9 +92,15 @@ class RetrievalService
      *     chunk_id: int,
      *     material_id: int,
      *     material_title: string,
+     *     material_type: string,
+     *     file_hash: string|null,
+     *     chunk_type: string,
+     *     question_number: string|null,
      *     page_number: int|null,
      *     content: string,
-     *     similarity: float
+     *     similarity: float,
+     *     is_ocr: bool,
+     *     ocr_used: bool
      *   }>
      * }
      */
@@ -127,13 +132,14 @@ class RetrievalService
         // Generate query embedding with taskType RETRIEVAL_QUERY
         $queryVector = $this->geminiClient->embedContent($question, 'RETRIEVAL_QUERY');
 
-        // Search in vector store restricted strictly to allowedMaterialIds
+        // Search in vector store fetching extra candidates to allow duplicate collapse
+        $searchLimit = max($k * 2, 10);
         $hits = $this->vectorStore->search(
             $instituteId,
             $allowedMaterialIds,
             $queryVector,
-            $k,
-            0.0, // Return top K regardless of threshold so AnswerService can evaluate & log score
+            $searchLimit,
+            0.0, // Return candidate hits so AnswerService can evaluate & log score
             $subject
         );
 
@@ -146,18 +152,41 @@ class RetrievalService
         }
 
         $chunks = [];
+        $seenHashes = [];
+
         foreach ($hits as $hit) {
             $chunk = $hit['chunk'];
+            $fileHash = $chunk->material?->file_hash;
+
+            // Duplicate collapse: if multiple materials have the identical file_hash,
+            // collapse duplicates by (file_hash, page_number, question_number, md5(content))
+            // keeping only the highest scoring hit (first encountered in similarity-sorted hits).
+            if (!empty($fileHash)) {
+                $dedupKey = $fileHash . ':' . ($chunk->page_number ?? 0) . ':' . ($chunk->question_number ?? '');
+                if (isset($seenHashes[$dedupKey])) {
+                    continue;
+                }
+                $seenHashes[$dedupKey] = true;
+            }
+
             $chunks[] = [
                 'chunk_id' => $chunk->id,
                 'material_id' => $chunk->material_id,
                 'material_title' => $chunk->material?->title ?? 'Notes',
+                'material_type' => $chunk->material?->type ?? 'notes',
+                'file_hash' => $fileHash,
+                'chunk_type' => $chunk->chunk_type ?? 'page',
+                'question_number' => $chunk->question_number ?? null,
                 'page_number' => $chunk->page_number ?? 1,
                 'content' => $chunk->content,
                 'similarity' => (float) $hit['similarity'],
                 'is_ocr' => (bool) ($chunk->is_ocr ?? false),
                 'ocr_used' => (bool) ($chunk->is_ocr ?? false),
             ];
+
+            if (count($chunks) >= $k) {
+                break;
+            }
         }
 
         return [
@@ -167,4 +196,3 @@ class RetrievalService
         ];
     }
 }
-

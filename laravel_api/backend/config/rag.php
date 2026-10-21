@@ -1,32 +1,24 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Global Feature Switch
-    |--------------------------------------------------------------------------
-    |
-    | Instant kill switch to disable student AI study assistant across the board.
-    |
-    */
-    'enabled' => filter_var(env('RAG_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
 
     /*
     |--------------------------------------------------------------------------
     | AI Models
     |--------------------------------------------------------------------------
     |
-    | Using current Google Gemini GA models:
-    | - gemini-embedding-2: multimodal / text embedding supporting 768 / 1536 / 3072 dimensions
-    | - gemini-3.8-flash: stable, state-of-the-art GA answering and OCR model (GA Sept 2026)
-    | - gemini-3.5-flash-lite: high-throughput fallback model
+    | Official Google Gemini GA models (verified October 2026):
+    | - gemini-embedding-2: multimodal and text embeddings supporting 768 / 1536 / 3072 dimensions. No shutdown date announced.
+    | - gemini-3.6-flash: current production GA Flash model (gemini-3.5-flash shutdown is N/A and routes upstream to 3.6-flash).
+    | - gemini-3.5-flash-lite: high-throughput fallback model. No shutdown date announced.
+    | - text-embedding-004: legacy embedding model, shut down on January 14, 2026.
     |
     */
     'models' => [
         'embedding' => env('RAG_EMBEDDING_MODEL', 'gemini-embedding-2'),
         'embedding_dimensions' => (int) env('RAG_EMBEDDING_DIMENSIONS', 768),
-        'llm' => env('RAG_LLM_MODEL', 'gemini-3.5-flash'),
-        'ocr' => env('RAG_OCR_MODEL', 'gemini-3.5-flash'),
+        'llm' => env('RAG_LLM_MODEL', 'gemini-3.6-flash'),
+        'ocr' => env('RAG_OCR_MODEL', 'gemini-3.6-flash'),
         'ocr_fallback' => env('RAG_OCR_FALLBACK_MODEL', 'gemini-3.5-flash-lite'),
     ],
 
@@ -37,12 +29,12 @@ return [
     |
     | Deterministic transcription settings for vision OCR:
     | - temperature = 0.0: greedy token decoding for strictly reproducible transcription
-    | - page_timeout: seconds per page job
+    | - page_timeout: seconds per page job (240s minimum recommended for complex scans)
     |
     */
     'ocr' => [
         'temperature' => (float) env('RAG_OCR_TEMPERATURE', 0.0),
-        'page_timeout' => (int) env('RAG_OCR_PAGE_TIMEOUT', 120),
+        'page_timeout' => (int) env('RAG_OCR_PAGE_TIMEOUT', 240),
     ],
 
     /*
@@ -50,13 +42,15 @@ return [
     | Retrieval & Similarity Threshold
     |--------------------------------------------------------------------------
     |
-    | If the highest cosine similarity between the query and candidate chunks
-    | is below this threshold, the assistant must return a polite fallback
-    | stating the answer is not in the teacher's notes without calling the LLM.
+    | Two-level relevance thresholding:
+    | - min_candidate_similarity: determines candidate chunks eligible for LLM context (default 0.50).
+    | - similarity_threshold / min_similarity: confident answer threshold (default 0.70).
     |
     */
     'retrieval' => [
+        'min_candidate_similarity' => (float) env('RAG_MIN_CANDIDATE_SIMILARITY', 0.50),
         'similarity_threshold' => (float) env('RAG_SIMILARITY_THRESHOLD', 0.70),
+        'min_similarity' => (float) env('RAG_MIN_SIMILARITY', 0.70),
         'top_k' => (int) env('RAG_TOP_K', 5),
     ],
 
@@ -162,7 +156,7 @@ return [
         'ocr_min_words_per_page' => (int) env('RAG_OCR_MIN_WORDS_PER_PAGE', 20),
         'ocr_max_dimension' => (int) env('RAG_OCR_MAX_DIMENSION', 1600),
         'ocr_jpeg_quality' => (int) env('RAG_OCR_JPEG_QUALITY', 80),
-        'ocr_total_timeout' => (int) env('RAG_OCR_TOTAL_TIMEOUT', 120),
+        'ocr_total_timeout' => (int) env('RAG_OCR_TOTAL_TIMEOUT', 240),
         'download_timeout' => (int) env('RAG_DOWNLOAD_TIMEOUT', 30),
         'gemini_timeout' => (int) env('RAG_GEMINI_TIMEOUT', 45),
         'legacy_font_min_script_ratio' => (float) env('RAG_LEGACY_FONT_MIN_SCRIPT_RATIO', 0.20),
@@ -197,4 +191,3 @@ return [
     */
     'vector_store' => env('RAG_VECTOR_STORE', 'database'),
 ];
-

@@ -93,9 +93,8 @@ class StudentAiChatController extends Controller
         // 7. Daily question quota calculation & processing row creation
         // Count processing, answered, no_notes_found, and aborted toward the daily limit.
         $dailyLimit = (int) config('rag.limits.daily_questions_per_student', 30);
-        $tz = config('app.timezone', 'Asia/Colombo');
-        $startOfDay = now()->setTimezone($tz)->startOfDay()->setTimezone('UTC');
-        $endOfDay = now()->setTimezone($tz)->endOfDay()->setTimezone('UTC');
+        $startOfDay = now()->startOfDay();
+        $endOfDay = now()->endOfDay();
 
         // Atomically enforce daily limit and create 'processing' row at the start of request
         // Uses User row-level lock (FOR UPDATE) to serialize concurrent check-and-create per student

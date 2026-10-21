@@ -4,9 +4,10 @@ namespace App\Jobs;
 
 use App\Contracts\Rag\GeminiClientInterface;
 use App\Contracts\Rag\VectorStoreInterface;
-use App\Models\LearningMaterial;
-use App\Services\Rag\MultilingualTextChunker;
 use App\Services\Rag\QualityCheckUnavailableException;
+use App\Models\LearningMaterial;
+use App\Models\MaterialPage;
+use App\Services\Rag\MultilingualTextChunker;
 use App\Services\Rag\TextReadabilityChecker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,7 +26,7 @@ class FinalizeMaterialIngestionJob implements ShouldQueue
     public int $materialId;
     public int $totalPages;
     public int $tries = 2;
-    public int $timeout = 120;
+    public int $timeout = 240;
 
     public function __construct(int $materialId, int $totalPages = 1)
     {
@@ -71,6 +72,22 @@ class FinalizeMaterialIngestionJob implements ShouldQueue
         }
 
         try {
+            // Persist all extracted pages in material_pages table for instant re-chunking/re-embedding without OCR
+            foreach ($pages as $p) {
+                MaterialPage::updateOrCreate(
+                    [
+                        'material_id' => $material->id,
+                        'page_number' => $p['page_number'],
+                    ],
+                    [
+                        'text' => $p['text'],
+                        'is_ocr' => (bool) ($p['used_ocr'] ?? false),
+                        'ocr_uncertain' => (bool) ($p['ocr_uncertain'] ?? false),
+                        'file_hash' => $material->file_hash,
+                    ]
+                );
+            }
+
             // 1. Readability Gate
             $readability = ['readable' => true, 'score' => 1.0, 'reason' => 'Passed.'];
             try {
@@ -94,8 +111,8 @@ class FinalizeMaterialIngestionJob implements ShouldQueue
                 }
             }
 
-            // 2. Chunker
-            $chunks = $chunker->chunkPages($pages);
+            // 2. Chunker: pass material type (exam papers vs notes)
+            $chunks = $chunker->chunkPages($pages, $material->type);
             $validChunks = array_values(array_filter($chunks, function ($c) {
                 return !empty(trim($c['content'] ?? ''));
             }));
@@ -136,8 +153,9 @@ class FinalizeMaterialIngestionJob implements ShouldQueue
                         'grade' => $material->grade,
                         'medium' => $material->medium,
                         'subject' => $material->subject,
-                        'chunk_type' => 'page',
+                        'chunk_type' => $chunkData['chunk_type'] ?? 'page',
                         'page_number' => array_key_exists('page_number', $chunkData) ? $chunkData['page_number'] : null,
+                        'question_number' => $chunkData['question_number'] ?? null,
                         'content' => $chunkData['content'],
                         'embedding_model' => $embeddingModel,
                         'dimensions' => $dimensions,

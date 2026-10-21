@@ -3,9 +3,9 @@
 namespace App\Jobs;
 
 use App\Contracts\Rag\GeminiClientInterface;
+use App\Exceptions\Rag\OcrUnavailableException;
 use App\Models\LearningMaterial;
-use App\Services\Rag\GeminiRagClient;
-use App\Services\Rag\OcrUnavailableException;
+use App\Models\MaterialPage;
 use App\Services\Rag\PdfTextExtractor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,9 +24,8 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
     public int $materialId;
     public int $pageNumber;
     public int $totalPages;
-    public int $tries = 3;
-    public int $timeout = 120;
-    public array $backoff = [5, 15, 30];
+    public int $tries = 2;
+    public int $timeout = 240;
 
     public function __construct(int $materialId, int $pageNumber, int $totalPages = 1)
     {
@@ -36,17 +35,19 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
     }
 
     /**
-     * Execute the page OCR job.
+     * Execute the per-page OCR job.
      */
-    public function handle(GeminiClientInterface $geminiClient, PdfTextExtractor $extractor): void
-    {
+    public function handle(
+        GeminiClientInterface $geminiClient,
+        PdfTextExtractor $extractor
+    ): void {
         $tempPath = "rag_temp/material_{$this->materialId}/page_{$this->pageNumber}.json";
 
-        // Idempotency check: If page already processed with non-empty text, skip
+        // Idempotency check: if already completed in temp, skip
         if (Storage::disk('local')->exists($tempPath)) {
             $cached = json_decode(Storage::disk('local')->get($tempPath), true);
             if (!empty($cached['text'])) {
-                Log::info("ProcessMaterialOcrPageJob: Page {$this->pageNumber} of material #{$this->materialId} already completed, skipping OCR.");
+                Log::info("ProcessMaterialOcrPageJob: Page {$this->pageNumber} of material #{$this->materialId} already completed in temp, skipping OCR.");
                 return;
             }
         }
@@ -57,30 +58,44 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
             return;
         }
 
-        // Reuse existing OCR result when the same file_hash was already OCR'd in the same institute
-        if (!empty($material->file_hash) && !empty($material->institute_id)) {
-            $existingChunks = \App\Models\MaterialChunk::withoutGlobalScopes()
-                ->where('institute_id', $material->institute_id)
-                ->where('page_number', $this->pageNumber)
-                ->where('is_ocr', true)
-                ->whereHas('material', function ($q) use ($material) {
-                    $q->where('file_hash', $material->file_hash)
-                      ->where('id', '!=', $material->id)
-                      ->where('rag_status', 'ready');
-                })
-                ->orderBy('id')
-                ->get();
+        // 1. Check material_pages table for existing extracted page text
+        $existingPage = MaterialPage::where('material_id', $this->materialId)
+            ->where('page_number', $this->pageNumber)
+            ->whereNotNull('text')
+            ->where('text', '!=', '')
+            ->first();
 
-            if ($existingChunks->isNotEmpty()) {
-                $reusedText = $existingChunks->pluck('content')->implode("\n\n");
-                Log::info("ProcessMaterialOcrPageJob: Reusing existing OCR result for material #{$this->materialId} page {$this->pageNumber} from identical file_hash.");
+        if ($existingPage) {
+            Log::info("ProcessMaterialOcrPageJob: Reusing existing page text from material_pages for material #{$this->materialId} page {$this->pageNumber}.");
+            Storage::disk('local')->put($tempPath, json_encode([
+                'page_number' => $this->pageNumber,
+                'text' => trim($existingPage->text),
+                'used_ocr' => (bool) $existingPage->is_ocr,
+                'ocr_reused' => true,
+                'ocr_uncertain' => (bool) $existingPage->ocr_uncertain,
+                'word_count' => count(preg_split('/\s+/u', trim($existingPage->text), -1, PREG_SPLIT_NO_EMPTY) ?: []),
+                'completed_at' => now()->timestamp,
+            ]));
+            return;
+        }
+
+        // 2. Reuse existing OCR result when the same file_hash was already stored in material_pages
+        if (!empty($material->file_hash)) {
+            $existingHashPage = MaterialPage::where('file_hash', $material->file_hash)
+                ->where('page_number', $this->pageNumber)
+                ->whereNotNull('text')
+                ->where('text', '!=', '')
+                ->first();
+
+            if ($existingHashPage) {
+                Log::info("ProcessMaterialOcrPageJob: Reusing existing OCR result for material #{$this->materialId} page {$this->pageNumber} from identical file_hash in material_pages.");
                 Storage::disk('local')->put($tempPath, json_encode([
                     'page_number' => $this->pageNumber,
-                    'text' => trim($reusedText),
-                    'used_ocr' => true,
+                    'text' => trim($existingHashPage->text),
+                    'used_ocr' => (bool) $existingHashPage->is_ocr,
                     'ocr_reused' => true,
-                    'ocr_uncertain' => false,
-                    'word_count' => count(preg_split('/\s+/u', trim($reusedText), -1, PREG_SPLIT_NO_EMPTY) ?: []),
+                    'ocr_uncertain' => (bool) $existingHashPage->ocr_uncertain,
+                    'word_count' => count(preg_split('/\s+/u', trim($existingHashPage->text), -1, PREG_SPLIT_NO_EMPTY) ?: []),
                     'completed_at' => now()->timestamp,
                 ]));
                 return;
@@ -138,12 +153,19 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
                 $ocrText1 = $geminiClient->ocrPage($imageData, $mimeType);
                 $ocrText = $ocrText1;
 
-                $enableSafeguard = (bool) config('rag.ingestion.ocr_enable_safeguard', true);
-                $diffThreshold = (float) config('rag.ingestion.ocr_completeness_diff_threshold', 0.10);
+                // Cheap quality checks to decide if a second pass is warranted:
+                // 1. Text far too short for the image (< 150 chars when image data > 10KB)
+                $tooShort = (mb_strlen($ocrText1, 'UTF-8') < 150 && strlen($imageData) > 10240);
+                // 2. Mojibake / replacement characters
+                $hasMojibake = (bool) preg_match('/[\x{FFFD}\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}]/u', $ocrText1);
+                // 3. Question numbering gaps (e.g. questions found out of sequence with a skipped number)
+                $hasNumberingGaps = $this->detectNumberingGaps($ocrText1);
 
-                if ($enableSafeguard) {
+                $needsSecondPass = $tooShort || $hasMojibake || $hasNumberingGaps;
+
+                if ($needsSecondPass) {
                     try {
-                        Log::info("ProcessMaterialOcrPageJob: Running Gemini OCR safeguard check for material #{$this->materialId} page {$this->pageNumber} (pass 2)...");
+                        Log::info("ProcessMaterialOcrPageJob: Quality check triggered second OCR pass for material #{$this->materialId} page {$this->pageNumber} (short: " . ($tooShort ? 'yes' : 'no') . ", mojibake: " . ($hasMojibake ? 'yes' : 'no') . ", gaps: " . ($hasNumberingGaps ? 'yes' : 'no') . ")...");
                         $ocrText2 = $geminiClient->ocrPage($imageData, $mimeType);
 
                         $len1 = mb_strlen($ocrText1, 'UTF-8');
@@ -151,16 +173,16 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
                         $maxLen = max($len1, $len2);
                         $diffRatio = $maxLen > 0 ? (abs($len1 - $len2) / $maxLen) : 0.0;
 
+                        $diffThreshold = (float) config('rag.ingestion.ocr_completeness_diff_threshold', 0.10);
                         if ($diffRatio > $diffThreshold) {
                             $isUncertain = true;
-                            // Keep the longer result
                             $ocrText = ($len1 >= $len2) ? $ocrText1 : $ocrText2;
                             Log::warning("ProcessMaterialOcrPageJob: OCR discrepancy of " . round($diffRatio * 100, 1) . "% on page {$this->pageNumber} of material #{$this->materialId}. Marked ocr_uncertain.");
                         } else {
                             $ocrText = ($len1 >= $len2) ? $ocrText1 : $ocrText2;
                         }
                     } catch (\Throwable $e) {
-                        Log::warning("ProcessMaterialOcrPageJob: Safeguard pass skipped for material #{$this->materialId} page {$this->pageNumber}: " . $e->getMessage());
+                        Log::warning("ProcessMaterialOcrPageJob: Second pass skipped for material #{$this->materialId} page {$this->pageNumber}: " . $e->getMessage());
                     }
                 }
             }
@@ -193,6 +215,35 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
                 @unlink($localPath);
             }
         }
+    }
+
+    /**
+     * Detect gaps in numbered questions on a page (e.g. 1, 2, 4 without 3).
+     */
+    protected function detectNumberingGaps(string $text): bool
+    {
+        preg_match_all('/(?:^|\n)\s*(?:\(?(\d{1,3})\s*[\.\)\-]|(\d{1,3})\.\s+)/u', $text, $matches);
+        $numbers = [];
+        foreach ($matches[1] as $idx => $m1) {
+            $val = !empty($m1) ? (int) $m1 : (int) ($matches[2][$idx] ?? 0);
+            if ($val > 0) {
+                $numbers[] = $val;
+            }
+        }
+
+        if (count($numbers) < 3) {
+            return false;
+        }
+
+        // Check if there are gaps > 1 in strictly ascending sequences
+        for ($i = 0; $i < count($numbers) - 1; $i++) {
+            $diff = $numbers[$i + 1] - $numbers[$i];
+            if ($diff > 1 && $diff <= 3) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

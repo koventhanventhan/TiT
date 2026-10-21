@@ -36,6 +36,14 @@ class FakeGeminiTestClient implements GeminiClientInterface
 
     public function generateAnswer(string $prompt, ?string $systemInstruction = null): string
     {
+        if (str_contains($prompt, 'readability') || str_contains($systemInstruction ?? '', 'quality analyzer')) {
+            return json_encode([
+                'readable' => true,
+                'score' => 0.95,
+                'language' => 'tamil',
+                'reason' => 'Passed mock test readability check',
+            ]);
+        }
         return 'Mock answer from notes [1].';
     }
 

@@ -354,7 +354,10 @@ export default function StudentStudyAssistant({ user: userProp }) {
                     if (response.status === 403) {
                         errorMsg = t('study_assistant_error_forbidden', 'Access is not permitted for your account or institute.')
                     } else if (response.status === 429) {
-                        errorMsg = t('study_assistant_error_quota', 'Question limit reached. Please wait before asking again.')
+                        const isDaily = errData?.error && (errData.error.includes('daily') || errData.error.includes('day'));
+                        errorMsg = isDaily
+                            ? t('study_assistant_error_daily_limit', 'You have reached your daily question limit. Please continue tomorrow.')
+                            : t('study_assistant_error_rate_limit', 'Please wait a moment before sending another message.');
                     } else if (response.status === 503) {
                         errorMsg = t('study_assistant_error_unavailable', 'The Study Assistant is temporarily unavailable. Please try again later.')
                     } else {
@@ -599,7 +602,7 @@ export default function StudentStudyAssistant({ user: userProp }) {
                                                                 )}
                                                                 {(src.ocr_used || src.is_ocr) && (
                                                                     <span className="chip-ocr-tag" style={{ marginLeft: '4px', fontSize: '0.7rem', opacity: 0.85, fontWeight: 600 }}>
-                                                                        [OCR]
+                                                                        [{t('study_assistant_ocr_badge', 'Scan')}]
                                                                     </span>
                                                                 )}
                                                             </div>

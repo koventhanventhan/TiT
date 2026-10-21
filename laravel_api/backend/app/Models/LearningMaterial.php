@@ -28,6 +28,7 @@ class LearningMaterial extends Model
         'rag_status',
         'rag_error',
         'rag_indexed_at',
+        'file_hash',
     ];
 
     protected $casts = [
@@ -40,6 +41,14 @@ class LearningMaterial extends Model
     public function chunks()
     {
         return $this->hasMany(MaterialChunk::class, 'material_id');
+    }
+
+    /**
+     * Extracted pages for RAG ingestion/re-chunking.
+     */
+    public function pages()
+    {
+        return $this->hasMany(MaterialPage::class, 'material_id');
     }
 
     protected static function booted()

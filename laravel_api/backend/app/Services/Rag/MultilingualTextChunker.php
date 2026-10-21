@@ -17,12 +17,14 @@ class MultilingualTextChunker
      * Chunk extracted page text preserving sentence integrity, paragraphs,
      * and Tamil, Sinhala, and English words.
      *
-     * @param array<int, array{page_number: int, text: string}> $pages
-     * @return array<int, array{page_number: int, content: string, word_count: int}>
+     * @param array<int, array{page_number: int, text: string, used_ocr?: bool}> $pages
+     * @param string|null $materialType
+     * @return array<int, array{page_number: int, content: string, word_count: int, chunk_type?: string, question_number?: string, is_ocr?: bool}>
      */
-    public function chunkPages(array $pages): array
+    public function chunkPages(array $pages, ?string $materialType = null): array
     {
         $chunks = [];
+        $isNotes = ($materialType === 'notes');
 
         foreach ($pages as $page) {
             $pageNumber = $page['page_number'] ?? 1;
@@ -33,7 +35,22 @@ class MultilingualTextChunker
                 continue;
             }
 
-            $pageChunks = $this->chunkSinglePage($text, $pageNumber);
+            // For non-notes materials (or auto-detected question papers), check for numbered-question pattern
+            $pageChunks = null;
+            if (!$isNotes) {
+                $pageChunks = $this->chunkQuestionPage($text, $pageNumber);
+            }
+
+            // Fallback to generic semantic chunking if not a question page or if material is notes
+            if (empty($pageChunks)) {
+                $pageChunks = $this->chunkSinglePage($text, $pageNumber);
+                foreach ($pageChunks as &$c) {
+                    $c['chunk_type'] = 'page';
+                    $c['question_number'] = null;
+                }
+                unset($c);
+            }
+
             foreach ($pageChunks as $chunk) {
                 $chunk['is_ocr'] = $usedOcr;
                 $chunks[] = $chunk;
@@ -41,6 +58,189 @@ class MultilingualTextChunker
         }
 
         return $chunks;
+    }
+
+    /**
+     * Chunk a page containing numbered examination questions into groups of 3 to 5 questions
+     * with small overlap and question_number range in metadata (e.g. "1-4", "4-7", chunk_type: "qa").
+     *
+     * @param string $text
+     * @param int $pageNumber
+     * @param int $groupSize
+     * @param int $overlap
+     * @return array<int, array{page_number: int, content: string, word_count: int, chunk_type: string, question_number: string}>|null
+     */
+    public function chunkQuestionPage(string $text, int $pageNumber, int $groupSize = 4, int $overlap = 1): ?array
+    {
+        $cleanText = trim($text);
+        if (empty($cleanText)) {
+            return null;
+        }
+
+        $lines = preg_split('/\r?\n/u', $cleanText);
+        $sections = [];
+        $currentSection = [
+            'header' => [],
+            'questions' => [],
+        ];
+        $currentQ = null;
+        $prevNum = -1;
+
+        foreach ($lines as $line) {
+            $trimmedLine = trim($line);
+            // Match numbered questions: e.g. "1.", "1)", "(1)", "1 -", "வினா 1", "Q1", "Question 1"
+            if (preg_match('/^(?:(?:\(?(\d{1,3})\s*[\.\)\-:]|\((\d{1,3})\))|(?:வினா|Question|Q|பிரச்னை)\s*(\d{1,3})[\.\:\)]?)\s*(.*)$/ui', $trimmedLine, $m)) {
+                $num = 0;
+                for ($i = 1; $i <= 3; $i++) {
+                    if (!empty($m[$i])) {
+                        $num = (int) $m[$i];
+                        break;
+                    }
+                }
+
+                // If question number resets significantly (e.g. 20 -> 1) or a major section header preceded it, start a new section
+                if ($num <= $prevNum && $prevNum > 0 && ($prevNum - $num) >= 2) {
+                    if ($currentQ !== null) {
+                        $currentSection['questions'][] = $currentQ;
+                        $currentQ = null;
+                    }
+                    if (!empty($currentSection['questions'])) {
+                        $sections[] = $currentSection;
+                    }
+                    $currentSection = [
+                        'header' => [],
+                        'questions' => [],
+                    ];
+                }
+
+                if ($currentQ !== null) {
+                    $currentSection['questions'][] = $currentQ;
+                }
+
+                $currentQ = [
+                    'number' => $num,
+                    'lines' => [$line],
+                ];
+                $prevNum = $num;
+            } elseif ($currentQ !== null) {
+                // If line looks like a major section header (e.g. "பகுதி II", "Part B", "Section 2")
+                if (preg_match('/^(?:பகுதி|Part|Section|பிரிவு)\s*[I|V|X|\d]+/ui', $trimmedLine)) {
+                    $currentSection['questions'][] = $currentQ;
+                    $currentQ = null;
+                    if (!empty($currentSection['questions'])) {
+                        $sections[] = $currentSection;
+                    }
+                    $currentSection = [
+                        'header' => [$line],
+                        'questions' => [],
+                    ];
+                    $prevNum = -1;
+                } else {
+                    $currentQ['lines'][] = $line;
+                }
+            } else {
+                $currentSection['header'][] = $line;
+            }
+        }
+
+        if ($currentQ !== null) {
+            $currentSection['questions'][] = $currentQ;
+        }
+        if (!empty($currentSection['questions'])) {
+            $sections[] = $currentSection;
+        }
+
+        // Count total questions across all sections
+        $totalQuestions = 0;
+        foreach ($sections as $sec) {
+            $totalQuestions += count($sec['questions']);
+        }
+
+        // If fewer than 3 total questions found, do not treat as question paper
+        if ($totalQuestions < 3) {
+            return null;
+        }
+
+        $allChunks = [];
+
+        foreach ($sections as $sec) {
+            $questions = $sec['questions'];
+            $header = trim(implode("\n", $sec['header']));
+            $n = count($questions);
+
+            if ($n === 0) {
+                continue;
+            }
+
+            if ($n <= 5) {
+                // All questions fit in one chunk
+                $qStart = $questions[0]['number'];
+                $qEnd = $questions[$n - 1]['number'];
+                $content = !empty($header) ? ($header . "\n\n") : '';
+                foreach ($questions as $q) {
+                    $content .= implode("\n", $q['lines']) . "\n\n";
+                }
+                $content = trim($content);
+                $allChunks[] = [
+                    'page_number' => $pageNumber,
+                    'content' => $content,
+                    'word_count' => count(preg_split('/\s+/u', $content, -1, PREG_SPLIT_NO_EMPTY) ?: []),
+                    'chunk_type' => 'qa',
+                    'question_number' => ($qStart === $qEnd) ? (string) $qStart : "{$qStart}-{$qEnd}",
+                ];
+                continue;
+            }
+
+            // Sliding window: size 4, overlap 1 (step = 3)
+            $step = max(1, $groupSize - $overlap);
+            $i = 0;
+            while ($i < $n) {
+                $slice = array_slice($questions, $i, $groupSize);
+                // If tail slice is too small (< 3) and not the only chunk, expand backward
+                if (count($slice) < 3 && !empty($allChunks)) {
+                    $take = min(4, $n);
+                    $slice = array_slice($questions, $n - $take, $take);
+                    $qStart = $slice[0]['number'];
+                    $qEnd = $slice[count($slice) - 1]['number'];
+                    $content = (!empty($header) && $i === 0) ? ($header . "\n\n") : '';
+                    foreach ($slice as $q) {
+                        $content .= implode("\n", $q['lines']) . "\n\n";
+                    }
+                    $content = trim($content);
+                    $allChunks[] = [
+                        'page_number' => $pageNumber,
+                        'content' => $content,
+                        'word_count' => count(preg_split('/\s+/u', $content, -1, PREG_SPLIT_NO_EMPTY) ?: []),
+                        'chunk_type' => 'qa',
+                        'question_number' => ($qStart === $qEnd) ? (string) $qStart : "{$qStart}-{$qEnd}",
+                    ];
+                    break;
+                }
+
+                $qStart = $slice[0]['number'];
+                $qEnd = $slice[count($slice) - 1]['number'];
+                $content = (!empty($header) && $i === 0) ? ($header . "\n\n") : '';
+                foreach ($slice as $q) {
+                    $content .= implode("\n", $q['lines']) . "\n\n";
+                }
+                $content = trim($content);
+
+                $allChunks[] = [
+                    'page_number' => $pageNumber,
+                    'content' => $content,
+                    'word_count' => count(preg_split('/\s+/u', $content, -1, PREG_SPLIT_NO_EMPTY) ?: []),
+                    'chunk_type' => 'qa',
+                    'question_number' => ($qStart === $qEnd) ? (string) $qStart : "{$qStart}-{$qEnd}",
+                ];
+
+                $i += $step;
+                if ($i + $groupSize > $n && ($n - $i) < 2) {
+                    break;
+                }
+            }
+        }
+
+        return $allChunks;
     }
 
     /**

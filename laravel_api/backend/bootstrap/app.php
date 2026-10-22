@@ -18,7 +18,19 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        // Env-driven trusted proxies list (default empty = do not trust forwarded headers)
+        $trustedProxies = env('TRUSTED_PROXIES');
+        if (!empty($trustedProxies)) {
+            $trustedProxiesStr = trim((string) $trustedProxies);
+            if ($trustedProxiesStr === '*' || $trustedProxiesStr === '**') {
+                $middleware->trustProxies(at: $trustedProxiesStr);
+            } else {
+                $proxies = array_values(array_filter(array_map('trim', explode(',', $trustedProxiesStr))));
+                if (!empty($proxies)) {
+                    $middleware->trustProxies(at: $proxies);
+                }
+            }
+        }
 
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,

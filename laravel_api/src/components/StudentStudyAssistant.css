@@ -1042,3 +1042,144 @@
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
     }
 }
+
+
+/* Comprehensive Mobile & Accessibility Responsive Styling */
+@media (max-width: 768px) {
+    .study-assistant-container {
+        height: auto;
+        min-height: calc(100vh - 120px);
+        max-height: none;
+        border-radius: 12px;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .assistant-header-bar {
+        padding: 10px 12px;
+        gap: 10px;
+        box-sizing: border-box;
+    }
+
+    .assistant-title-group {
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .assistant-avatar-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .assistant-icon {
+        font-size: 20px;
+    }
+
+    .assistant-title {
+        font-size: 1rem;
+        word-break: break-word;
+    }
+
+    .assistant-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .assistant-actions-group {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .daily-usage-pill {
+        font-size: 0.72rem;
+        padding: 4px 10px;
+    }
+
+    .subject-select {
+        font-size: 16px !important;
+        padding: 8px 10px;
+        max-width: 130px;
+        box-sizing: border-box;
+    }
+
+    .btn-new-chat, .btn-history-toggle, .btn-clear-chat {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+
+    .assistant-first-time-notice {
+        padding: 10px 12px;
+        font-size: 0.78rem;
+        box-sizing: border-box;
+    }
+
+    .chat-messages-scroll {
+        padding: 12px;
+        gap: 14px;
+        box-sizing: border-box;
+    }
+
+    .chat-bubble {
+        max-width: 92%;
+        padding: 12px 14px;
+        box-sizing: border-box;
+    }
+
+    .assistant-input-form {
+        padding: 10px 12px;
+        box-sizing: border-box;
+    }
+
+    .input-bar-container {
+        padding: 6px 10px;
+        gap: 8px;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .assistant-textarea {
+        font-size: 16px !important;
+        min-width: 0;
+    }
+
+    .input-controls-group {
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .btn-send-question {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+    }
+}
+
+@media (max-width: 360px) {
+    .assistant-header-bar {
+        padding: 8px 8px;
+    }
+
+    .assistant-input-form {
+        padding: 8px 8px;
+    }
+
+    .chat-messages-scroll {
+        padding: 8px;
+    }
+
+    .daily-usage-pill {
+        font-size: 0.68rem;
+        padding: 3px 6px;
+    }
+
+    .subject-select {
+        max-width: 110px;
+    }
+}

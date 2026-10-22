@@ -103,7 +103,9 @@ class ClassNotifier
         array $teacherIds,
         array $studentIds
     ): void {
-        @set_time_limit(300);
+        if (!app()->environment('testing')) {
+            @set_time_limit(300);
+        }
 
         try {
             $notifier = app(NotificationService::class);

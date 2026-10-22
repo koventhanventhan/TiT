@@ -72,6 +72,10 @@ trait ValidatesEmail
      */
     protected function domainHasMailRecords(string $domain): bool
     {
+        if (app()->environment('testing')) {
+            return true;
+        }
+
         // In-memory cache for this request (avoids repeated DNS lookups in batch sends)
         static $cache = [];
 

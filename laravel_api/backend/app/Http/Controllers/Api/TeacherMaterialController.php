@@ -27,7 +27,7 @@ class TeacherMaterialController extends Controller
             'type' => 'required|string', // note, past_paper, paper, recording, video, pdf, document, etc.
             'subject' => $isStudyDoc ? 'required|string|max:100' : 'nullable|string|max:100',
             'grade' => $isStudyDoc ? 'required|string|max:50' : 'nullable|string|max:50',
-            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all' : 'nullable|string|in:tamil,english,sinhala,all',
+            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all,both' : 'nullable|string|in:tamil,english,sinhala,all,both',
             'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,jpg,jpeg,png,zip,mp4,mov,mp3|max:51200',
             'file_path' => [
                 'nullable',
@@ -77,12 +77,18 @@ class TeacherMaterialController extends Controller
         // Grade normalization on save (canonical grade format)
         $canonicalGrade = \App\Support\GradeMatcher::formatCanonical($validated['grade'] ?? null);
 
+        // Map 'both' to canonical 'all' on store
+        $mediumVal = $validated['medium'] ?? 'all';
+        if ($mediumVal === 'both') {
+            $mediumVal = 'all';
+        }
+
         $material = LearningMaterial::create([
             'title' => $validated['title'],
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
             'grade' => $canonicalGrade,
-            'medium' => $validated['medium'] ?? 'all',
+            'medium' => $mediumVal,
             'description' => $validated['description'] ?? null,
             'file_path' => $filePath,
             'file_hash' => $fileHash,

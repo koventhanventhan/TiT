@@ -46,8 +46,8 @@ class ClassNotifier
                 }
             }
 
-            // 2. Medium filter
-            if ($classMedium && $classMedium !== 'both' && $student->medium && $student->medium !== $classMedium) {
+            // 2. Medium filter (supports 'both' and 'all')
+            if ($classMedium && $classMedium !== 'both' && $classMedium !== 'all' && $student->medium && $student->medium !== $classMedium) {
                 continue;
             }
 

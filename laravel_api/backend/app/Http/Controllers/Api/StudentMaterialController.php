@@ -13,11 +13,13 @@ class StudentMaterialController extends Controller
         $user = $request->user();
         $query = LearningMaterial::orderBy('created_at', 'desc');
 
-        // Filter by student's medium (English/Tamil)
+        // Filter by student's medium (Tamil / English / Sinhala / all / both)
         if ($user && $user->medium) {
-            $query->where(function($q) use ($user) {
+            $query->where(function ($q) use ($user) {
                 $q->where('medium', $user->medium)
-                  ->orWhere('medium', 'both');
+                  ->orWhere('medium', 'both')
+                  ->orWhere('medium', 'all')
+                  ->orWhereNull('medium');
             });
         }
 

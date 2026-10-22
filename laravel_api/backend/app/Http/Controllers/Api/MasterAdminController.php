@@ -224,7 +224,7 @@ class MasterAdminController extends Controller
             'type' => 'required|string', // note, past_paper, recording, video, PDF, document
             'subject' => $isStudyDoc ? 'required|string|max:100' : 'nullable|string|max:100',
             'grade' => $isStudyDoc ? 'required|string|max:50' : 'nullable|string|max:50',
-            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all' : 'nullable|string|in:tamil,english,sinhala,all',
+            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all,both' : 'nullable|string|in:tamil,english,sinhala,all,both',
             'file_path' => [
                 'nullable',
                 'string',
@@ -266,7 +266,7 @@ class MasterAdminController extends Controller
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
             'grade' => $canonicalGrade,
-            'medium' => $validated['medium'] ?? 'all',
+            'medium' => (($validated['medium'] ?? 'all') === 'both' ? 'all' : ($validated['medium'] ?? 'all')),
             'description' => $validated['description'] ?? null,
             'file_path' => $filePath,
             'file_hash' => $fileHash,

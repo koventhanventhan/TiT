@@ -14,11 +14,11 @@ class StudentClassVisibility
      */
     public static function isVisible(User $user, ZoomSchedule $schedule): bool
     {
-        // 1. Medium check (English/Tamil) - also includes 'both'
+        // 1. Medium check (English/Tamil/Sinhala/All/Both)
         if ($user->medium) {
             $classMedium = strtolower(trim((string) $schedule->medium));
             $studentMedium = strtolower(trim((string) $user->medium));
-            if ($classMedium !== 'both' && $classMedium !== $studentMedium) {
+            if ($classMedium !== '' && $classMedium !== 'both' && $classMedium !== 'all' && $classMedium !== $studentMedium) {
                 return false;
             }
         }
@@ -82,7 +82,12 @@ class StudentClassVisibility
     {
         if ($queryOrCollection instanceof Builder || $queryOrCollection instanceof \Illuminate\Database\Query\Builder) {
             if ($user->medium) {
-                $queryOrCollection->whereIn('medium', [$user->medium, 'both']);
+                $queryOrCollection->where(function ($q) use ($user) {
+                    $q->where('medium', $user->medium)
+                      ->orWhere('medium', 'both')
+                      ->orWhere('medium', 'all')
+                      ->orWhereNull('medium');
+                });
             }
             $collection = $queryOrCollection->get();
         } else {
@@ -90,7 +95,7 @@ class StudentClassVisibility
             if ($user->medium) {
                 $collection = $collection->filter(function ($s) use ($user) {
                     $m = strtolower(trim((string) ($s->medium ?? '')));
-                    return $m === 'both' || $m === strtolower(trim((string) $user->medium));
+                    return $m === '' || $m === 'both' || $m === 'all' || $m === strtolower(trim((string) $user->medium));
                 });
             }
         }

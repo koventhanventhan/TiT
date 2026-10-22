@@ -294,7 +294,14 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
+            <div>
+                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
+                <div class="d-inline-flex align-items-center mt-1">
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px;">
+                        <i class="flaticon-381-layer-1 mr-1"></i> {{ $assignedIndexCount ?? 0 }} of {{ $totalStudentsCount ?? 0 }} students have an index number
+                    </span>
+                </div>
+            </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 mr-3">
                     <div class="premium-filter-group">
@@ -316,6 +323,12 @@
                                 <option value="{{ $b }}" {{ request('batch_year') == $b ? 'selected' : '' }}>Batch '{{ $b }}</option>
                             @endfor
                         </select>
+
+                        <select name="has_index" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                            <option value="">Index: All</option>
+                            <option value="1" {{ request('has_index') === '1' ? 'selected' : '' }}>Index: Assigned</option>
+                            <option value="0" {{ request('has_index') === '0' ? 'selected' : '' }}>Index: Not Assigned</option>
+                        </select>
                         
                         <div class="premium-toggle-wrapper">
                             <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
@@ -335,6 +348,12 @@
                 <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
                     <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
                 </button>
+                <a href="{{ route('admin.students.assign-index-tool') }}" class="btn btn-outline-info btn-sm mr-2">
+                    <i class="flaticon-381-layer-1"></i> Assign index numbers
+                </a>
+                <a href="{{ route('admin.students.import-index.view') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                    <i class="flaticon-381-file"></i> Import CSV
+                </a>
                 <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
                     <i class="flaticon-381-add-1"></i> Add Student
                 </a>
@@ -346,17 +365,32 @@
 <form id="bulkDeleteForm" action="{{ route('admin.students.bulk-delete') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="ids" id="bulkDeleteIds">
+    <input type="hidden" name="select_all_matching" id="bulkDeleteSelectAll">
+    <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
+    <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
 <form id="bulkPromoteForm" action="{{ route('admin.students.promote') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="ids" id="bulkPromoteIds">
+    <input type="hidden" name="select_all_matching" id="bulkPromoteSelectAll">
+    <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
+    <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
 <form id="bulkIndexForm" action="{{ route('admin.students.bulk-assign-index') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="ids" id="bulkIndexIds">
     <input type="hidden" name="batch_year" id="bulkIndexBatchYear">
+    <input type="hidden" name="select_all_matching" id="bulkIndexSelectAll">
+    <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="batch_year_filter" value="{{ request('batch_year') }}">
+    <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
 @if (session('success'))
@@ -375,6 +409,20 @@
                 <h4 class="card-title">All Student Entries</h4>
             </div>
             <div class="card-body">
+                @if($students->total() > $students->count())
+                <div id="selectAllMatchingBanner" class="alert alert-info py-2 px-3 text-center mb-3" style="display: none; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                    <span id="selectAllMatchingPrompt">
+                        All <strong id="pageSelectedCount">0</strong> students on this page are selected.
+                        <a href="javascript:void(0)" class="font-weight-bold ml-1 text-white text-decoration-underline" onclick="selectAllMatchingAcrossPages()">
+                            Select all {{ $students->total() }} matching students
+                        </a>
+                    </span>
+                    <span id="selectAllMatchingActiveNotice" style="display: none;">
+                        All <strong>{{ $students->total() }}</strong> matching students selected across all pages.
+                        <a href="javascript:void(0)" class="text-warning ml-2 font-weight-bold" onclick="clearSelectAllMatching()">Clear selection</a>
+                    </span>
+                </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-responsive-md">
                         <thead>
@@ -495,12 +543,15 @@
                                          </button>
                                          <div class="dropdown-menu dropdown-menu-right">
                                               @if(!$student->admin_confirmed_at)
-                                                 <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->batch_year ?? "" }}')">
+                                                 @php
+                                                     $suggestedBatch = $student->batch_year ?? ($gradeMapping[$student->current_grade] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', $student->current_grade)] ?? ''));
+                                                 @endphp
+                                                 <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}')">
                                                      Confirm Registration
                                                  </button>
                                                  <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST" id="confirm-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
-                                                     <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="'{{ $student->batch_year ?? "" }}'">
+                                                     <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="{{ $suggestedBatch }}">
                                                  </form>
                                                  <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
                                                      @csrf
@@ -610,24 +661,83 @@
         const indexSelectedCountSpan = document.getElementById('indexSelectedCount');
         const bulkIndexIdsInput = document.getElementById('bulkIndexIds');
 
+        let isSelectAllMatching = false;
+        const totalMatchingStudents = {{ $students->total() }};
+
         function updateBulkDeleteBtn() {
             const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            const banner = document.getElementById('selectAllMatchingBanner');
+            const promptSpan = document.getElementById('selectAllMatchingPrompt');
+            const noticeSpan = document.getElementById('selectAllMatchingActiveNotice');
+            const pageSelectedSpan = document.getElementById('pageSelectedCount');
+
             if (selected.length > 0) {
                 bulkDeleteBtn.style.display = 'inline-block';
                 bulkPromoteBtn.style.display = 'inline-block';
                 if (bulkIndexBtn) bulkIndexBtn.style.display = 'inline-block';
-                selectedCountSpan.textContent = selected.length;
-                promoteSelectedCountSpan.textContent = selected.length;
-                if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = selected.length;
+
+                if (isSelectAllMatching) {
+                    selectedCountSpan.textContent = totalMatchingStudents;
+                    promoteSelectedCountSpan.textContent = totalMatchingStudents;
+                    if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = totalMatchingStudents;
+                } else {
+                    selectedCountSpan.textContent = selected.length;
+                    promoteSelectedCountSpan.textContent = selected.length;
+                    if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = selected.length;
+                }
+
                 bulkDeleteIdsInput.value = selected.join(',');
                 bulkPromoteIdsInput.value = selected.join(',');
                 if (bulkIndexIdsInput) bulkIndexIdsInput.value = selected.join(',');
+
+                if (banner && selectAll && selectAll.checked && totalMatchingStudents > checkboxes.length) {
+                    banner.style.display = 'block';
+                    if (pageSelectedSpan) pageSelectedSpan.textContent = selected.length;
+                }
             } else {
                 bulkDeleteBtn.style.display = 'none';
                 bulkPromoteBtn.style.display = 'none';
                 if (bulkIndexBtn) bulkIndexBtn.style.display = 'none';
+                if (banner) banner.style.display = 'none';
+                clearSelectAllMatching();
             }
         }
+
+        window.selectAllMatchingAcrossPages = function() {
+            isSelectAllMatching = true;
+            document.getElementById('selectAllMatchingPrompt').style.display = 'none';
+            document.getElementById('selectAllMatchingActiveNotice').style.display = 'inline';
+            selectedCountSpan.textContent = totalMatchingStudents;
+            promoteSelectedCountSpan.textContent = totalMatchingStudents;
+            if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = totalMatchingStudents;
+
+            const delInput = document.getElementById('bulkDeleteSelectAll');
+            const promInput = document.getElementById('bulkPromoteSelectAll');
+            const idxInput = document.getElementById('bulkIndexSelectAll');
+            if (delInput) delInput.value = '1';
+            if (promInput) promInput.value = '1';
+            if (idxInput) idxInput.value = '1';
+        };
+
+        window.clearSelectAllMatching = function() {
+            isSelectAllMatching = false;
+            const promptSpan = document.getElementById('selectAllMatchingPrompt');
+            const noticeSpan = document.getElementById('selectAllMatchingActiveNotice');
+            if (promptSpan) promptSpan.style.display = 'inline';
+            if (noticeSpan) noticeSpan.style.display = 'none';
+
+            const delInput = document.getElementById('bulkDeleteSelectAll');
+            const promInput = document.getElementById('bulkPromoteSelectAll');
+            const idxInput = document.getElementById('bulkIndexSelectAll');
+            if (delInput) delInput.value = '';
+            if (promInput) promInput.value = '';
+            if (idxInput) idxInput.value = '';
+
+            const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            selectedCountSpan.textContent = selected.length;
+            promoteSelectedCountSpan.textContent = selected.length;
+            if (indexSelectedCountSpan) indexSelectedCountSpan.textContent = selected.length;
+        };
 
         if (selectAll) {
             selectAll.addEventListener('change', function() {
@@ -636,7 +746,12 @@
             });
         }
 
-        checkboxes.forEach(cb => cb.addEventListener('change', updateBulkDeleteBtn));
+        checkboxes.forEach(cb => cb.addEventListener('change', function() {
+            if (!this.checked && isSelectAllMatching) {
+                clearSelectAllMatching();
+            }
+            updateBulkDeleteBtn();
+        }));
     });
 
     function submitBulkDelete() {
@@ -746,28 +861,30 @@
                     Confirm registration for <strong>${studentName}</strong>?
                 </p>
                 <div style="text-align: left; margin-top: 1rem;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">A/L or O/L Batch Year:</label>
-                    <input type="number" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="e.g. 28" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
-                    <small style="color: #9ca3af;">An index number (e.g. TiT/${defaultBatch}/100) will be automatically generated.</small>
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">A/L or O/L Batch Year (Optional override):</label>
+                    <input type="number" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="Leave empty to use grade mapping" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
+                    <small style="color: #9ca3af;">Index number will be automatically generated using the Grade &rarr; Batch mapping. Leave empty to use mapping.</small>
                 </div>
             `,
             type: 'question',
             showCancelButton: true,
             confirmButtonColor: '#10b981',
             cancelButtonColor: '#374151',
-            confirmButtonText: 'Confirm & Assign Index',
+            confirmButtonText: 'Confirm Student',
             cancelButtonText: 'Cancel',
             customClass: 'swal-dark-popup',
             preConfirm: () => {
                 const batch = document.getElementById('swalConfirmBatch').value.trim();
-                if (!batch || isNaN(batch) || parseInt(batch) < 20 || parseInt(batch) > 99) {
-                    Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99)');
-                    return false;
+                if (batch !== '') {
+                    if (isNaN(batch) || parseInt(batch) < 20 || parseInt(batch) > 99) {
+                        Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99) or leave empty');
+                        return false;
+                    }
                 }
                 return batch;
             }
         }).then((result) => {
-            if (result.value) {
+            if (result.value !== undefined && result.value !== false) {
                 document.getElementById('confirm-batch-' + studentId).value = result.value;
                 document.getElementById('confirm-form-' + studentId).submit();
             }

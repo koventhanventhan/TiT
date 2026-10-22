@@ -176,7 +176,10 @@
                                     <div class="input-group">
                                         <input type="text" class="form-control" value="Pending / Not Assigned" readonly style="background: rgba(255, 255, 255, 0.05); color: #9ca3af;">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $student->batch_year ?? '' }}')">
+                                            @php
+                                                $editSuggestedBatch = $student->batch_year ?? ($gradeMapping[$student->current_grade] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', $student->current_grade)] ?? ''));
+                                            @endphp
+                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $editSuggestedBatch }}')">
                                                 <i class="flaticon-381-id-card"></i> Assign Index
                                             </button>
                                         </div>

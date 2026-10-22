@@ -248,7 +248,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label>Batch Year (YY) <small class="text-muted">(Optional, e.g. 28 for A/L 2028)</small></label>
-                                <input type="number" name="batch_year" class="form-control" value="{{ old('batch_year', date('y')) }}" min="20" max="99" placeholder="e.g. 28">
+                                <input type="number" name="batch_year" id="batch_year" class="form-control" value="{{ old('batch_year', (isset($gradeMapping) && old('current_grade') ? ($gradeMapping[old('current_grade')] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', old('current_grade'))] ?? '')) : '')) }}" min="20" max="99" placeholder="e.g. 28">
                                 <small class="text-muted d-block mt-1">Used for automatic index number generation (e.g. TiT/28/100)</small>
                             </div>
                         </div>
@@ -507,13 +507,19 @@
             }
         }
         
+        const gradeMapping = @json($gradeMapping ?? []);
         gradeSelect.on('change', function() {
+            // Update batch year from grade mapping
+            const gVal = $(this).val() || "";
+            const gNum = gVal.replace(/[^0-9]/g, '');
+            const mappedBatch = gradeMapping[gVal] || gradeMapping[gNum] || gradeMapping['Grade ' + gNum] || '';
+            $('#batch_year').val(mappedBatch);
+
             // If not 12-13, clear stream
-            const gradeValue = $(this).val() || "";
-            const match = gradeValue.match(/Grade\s*(\d+)/i);
+            const match = gVal.match(/Grade\s*(\d+)/i) || gVal.match(/^(\d+)$/);
             const gradeNum = match ? parseInt(match[1]) : null;
             
-            if (gradeNum < 12) {
+            if (gradeNum && gradeNum < 12) {
                 streamSelect.val('');
             }
             updateSubjectSections();

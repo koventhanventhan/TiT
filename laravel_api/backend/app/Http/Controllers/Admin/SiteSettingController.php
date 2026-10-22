@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Models\User;
+use App\Services\StudentIndexService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SiteSettingController extends Controller
 {
@@ -133,6 +136,80 @@ class SiteSettingController extends Controller
         SiteSetting::set('grade_promotion_schedule', json_encode($formattedSchedule), 'general');
 
         return redirect()->back()->with('success', 'Grade promotion schedule updated successfully.');
+    }
+
+    /**
+     * Display Index Number Batches settings page.
+     */
+    public function indexBatches(StudentIndexService $indexService)
+    {
+        $instituteId = auth()->check() ? auth()->user()->institute_id : null;
+        $instituteId = $instituteId ?: 1;
+
+        // Query distinct grades that really exist in users.current_grade for this institute + student counts
+        $existingGrades = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->whereNotNull('current_grade')
+            ->where('current_grade', '!=', '')
+            ->select('current_grade', DB::raw('count(*) as count'))
+            ->groupBy('current_grade')
+            ->get();
+
+        // Ensure standard grades (Grade 1 .. Grade 13) are available, along with distinct grades
+        $gradeMap = [];
+        for ($i = 1; $i <= 13; $i++) {
+            $gradeMap[(string) $i] = [
+                'grade_key' => (string) $i,
+                'display' => "Grade {$i}",
+                'count' => 0,
+            ];
+        }
+
+        foreach ($existingGrades as $row) {
+            $raw = trim((string) $row->current_grade);
+            if (preg_match('/(\d+)/', $raw, $m)) {
+                $num = (string) (int) $m[1];
+                if (isset($gradeMap[$num])) {
+                    $gradeMap[$num]['count'] += (int) $row->count;
+                    continue;
+                }
+            }
+            if (!isset($gradeMap[$raw])) {
+                $gradeMap[$raw] = [
+                    'grade_key' => $raw,
+                    'display' => $raw,
+                    'count' => (int) $row->count,
+                ];
+            } else {
+                $gradeMap[$raw]['count'] += (int) $row->count;
+            }
+        }
+
+        $savedMapping = $indexService->getGradeBatchMapping($instituteId);
+
+        return view('admin.settings.index_batches', [
+            'grades' => $gradeMap,
+            'mapping' => $savedMapping,
+        ]);
+    }
+
+    /**
+     * Store Index Number Batches settings.
+     */
+    public function storeIndexBatches(Request $request, StudentIndexService $indexService)
+    {
+        $request->validate([
+            'batches' => 'nullable|array',
+            'batches.*' => 'nullable|integer|min:20|max:99',
+        ]);
+
+        $batches = $request->input('batches', []);
+        $instituteId = auth()->check() ? auth()->user()->institute_id : 1;
+
+        $indexService->setGradeBatchMapping($batches, $instituteId);
+
+        return redirect()->back()->with('success', 'Index number batch mapping saved successfully.');
     }
 
     /**

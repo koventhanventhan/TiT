@@ -32,6 +32,25 @@ class SiteSetting extends Model
     }
 
     /**
+     * Get a setting value by key for a specific institute.
+     *
+     * @param string $key
+     * @param int|null $instituteId
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getForInstitute(string $key, ?int $instituteId = null, $default = null)
+    {
+        $instituteId = $instituteId ?: (auth()->check() ? auth()->user()->institute_id : null) ?: 1;
+        $setting = self::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('key', $key)
+            ->first();
+
+        return $setting ? $setting->value : $default;
+    }
+
+    /**
      * Set a setting value by key.
      *
      * @param string $key
@@ -41,8 +60,27 @@ class SiteSetting extends Model
      */
     public static function set($key, $value, $group = 'general')
     {
-        return self::updateOrCreate(
-            ['key' => $key],
+        $instituteId = auth()->check() && auth()->user()->institute_id ? auth()->user()->institute_id : 1;
+        return self::withoutGlobalScopes()->updateOrCreate(
+            ['key' => $key, 'institute_id' => $instituteId],
+            ['value' => $value, 'group' => $group]
+        );
+    }
+
+    /**
+     * Set a setting value by key for a specific institute.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param int|null $instituteId
+     * @param string $group
+     * @return self
+     */
+    public static function setForInstitute(string $key, $value, ?int $instituteId = null, string $group = 'general')
+    {
+        $instituteId = $instituteId ?: (auth()->check() ? auth()->user()->institute_id : null) ?: 1;
+        return self::withoutGlobalScopes()->updateOrCreate(
+            ['key' => $key, 'institute_id' => $instituteId],
             ['value' => $value, 'group' => $group]
         );
     }

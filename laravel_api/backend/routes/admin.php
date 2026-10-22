@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\TimetableController;
 use App\Http\Controllers\Admin\ZoomAccountController;
+use App\Http\Controllers\Admin\StudentIndexBulkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +56,13 @@ Route::prefix('admin')->group(function () {
         Route::post('/students/{id}/assign-index', [StudentController::class, 'assignIndexNumber'])->name('admin.students.assign-index');
         Route::post('/students/{id}/reassign-index', [StudentController::class, 'reassignIndexNumber'])->name('admin.students.reassign-index');
         Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');
+        Route::get('/students/assign-index-tool', [StudentIndexBulkController::class, 'index'])->name('admin.students.assign-index-tool');
+        Route::post('/students/assign-index-tool/preview', [StudentIndexBulkController::class, 'preview'])->name('admin.students.assign-index-tool.preview');
+        Route::post('/students/assign-index-tool/run-chunk', [StudentIndexBulkController::class, 'runChunk'])->name('admin.students.assign-index-tool.run-chunk');
+        Route::post('/students/assign-index-tool/export-preview', [StudentIndexBulkController::class, 'exportPreview'])->name('admin.students.assign-index-tool.export-preview');
+        Route::get('/students/import-index', [StudentIndexBulkController::class, 'importView'])->name('admin.students.import-index');
+        Route::post('/students/import-index/preview', [StudentIndexBulkController::class, 'importPreview'])->name('admin.students.import-index.preview');
+        Route::post('/students/import-index/run', [StudentIndexBulkController::class, 'importRun'])->name('admin.students.import-index.run');
         Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject');
         Route::post('/students/{id}/activate', [StudentController::class, 'activate'])->name('admin.students.activate');
         Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');
@@ -123,6 +131,8 @@ Route::prefix('admin')->group(function () {
         Route::delete('/settings/learning/{id}', [SiteSettingController::class, 'deleteMaterial'])->name('admin.settings.learning.material.delete');
         Route::post('/settings/upload', [SiteSettingController::class, 'uploadImage'])->name('admin.settings.upload');
         Route::post('/settings/delete-image', [SiteSettingController::class, 'deleteImage'])->name('admin.settings.delete-image');
+        Route::get('/settings/index-batches', [SiteSettingController::class, 'indexBatches'])->name('admin.settings.index-batches');
+        Route::post('/settings/index-batches', [SiteSettingController::class, 'storeIndexBatches'])->name('admin.settings.index-batches.store');
         Route::get('/firebase-token', [SiteSettingController::class, 'firebaseToken'])->name('admin.firebase-token');
 
         // Zoom classes

@@ -63,10 +63,11 @@ class StudentController extends Controller
             $query->where('batch_year', (int) $request->batch_year);
         }
 
-        if ($request->has('has_index')) {
-            if ($request->has_index === '1') {
+        if ($request->has('has_index') && $request->has_index !== '') {
+            $val = (string) $request->has_index;
+            if ($val === '1' || $val === 'assigned') {
                 $query->whereNotNull('index_number');
-            } elseif ($request->has_index === '0') {
+            } elseif ($val === '0' || $val === 'unassigned') {
                 $query->whereNull('index_number');
             }
         }
@@ -84,7 +85,16 @@ class StudentController extends Controller
             
         $students = $query->latest()->paginate(15)->appends($request->query());
         
-        return view('admin.students.index', compact('students'));
+        $instituteId = auth()->check() ? auth()->user()->institute_id : null;
+        $countQuery = User::where('role', 'user')->whereNotNull('full_name');
+        if ($instituteId) {
+            $countQuery->where('institute_id', $instituteId);
+        }
+        $totalStudentsCount = (clone $countQuery)->count();
+        $assignedIndexCount = (clone $countQuery)->whereNotNull('index_number')->count();
+        $gradeMapping = $this->indexService->getGradeBatchMapping($instituteId);
+
+        return view('admin.students.index', compact('students', 'totalStudentsCount', 'assignedIndexCount', 'gradeMapping'));
     }
 
     /**
@@ -149,8 +159,10 @@ class StudentController extends Controller
         $subjects = $subjectsQuery->get()->groupBy('category')->map(function ($items) {
             return $items->unique('name')->values();
         });
+
+        $gradeMapping = $this->indexService->getGradeBatchMapping($student->institute_id);
         
-        return view('admin.students.edit', compact('student', 'payments', 'subjects'));
+        return view('admin.students.edit', compact('student', 'payments', 'subjects', 'gradeMapping'));
     }
 
     /**
@@ -253,12 +265,22 @@ class StudentController extends Controller
             ->whereNotNull('full_name')
             ->firstOrFail();
 
-        $batchYear = $request->filled('batch_year')
-            ? $this->indexService->normalizeBatchYear($request->batch_year)
-            : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
+        $batchYear = null;
+        if ($request->filled('batch_year')) {
+            try {
+                $batchYear = $this->indexService->normalizeBatchYear($request->batch_year);
+            } catch (\InvalidArgumentException $e) {
+                // Invalid batch year
+            }
+        } else {
+            $batchYear = $this->indexService->getBatchForGrade($student->current_grade, $student->institute_id);
+        }
 
-        // Assign automatic student index number (idempotent, e.g. TiT/28/100)
-        $indexNumber = $this->indexService->assign($student, $batchYear);
+        $indexAssigned = false;
+        if ($batchYear !== null) {
+            $this->indexService->assign($student, $batchYear);
+            $indexAssigned = true;
+        }
 
         $student->update([
             'admin_confirmed_at' => now(),
@@ -279,8 +301,14 @@ class StudentController extends Controller
             ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
         );
 
+        if (!$indexAssigned) {
+            $gradeDisplay = $student->current_grade ?: 'unknown';
+            return redirect()->route('admin.students.index')
+                ->with('warning', "No batch year for Grade {$gradeDisplay} – set it in Index Number Batches, the number was not assigned");
+        }
+
         return redirect()->route('admin.students.index')
-            ->with('success', 'Student confirmed and notification sent.');
+            ->with('success', 'Student confirmed and index number assigned.');
     }
 
     /**
@@ -313,7 +341,8 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         $subjects = Subject::orderBy('name')->get()->groupBy('category');
-        return view('admin.students.create', compact('subjects'));
+        $gradeMapping = $this->indexService->getGradeBatchMapping(auth()->user()->institute_id);
+        return view('admin.students.create', compact('subjects', 'gradeMapping'));
     }
 
     public function store(Request $request)
@@ -391,8 +420,10 @@ class StudentController extends Controller
         try {
             $batchYear = $request->filled('batch_year')
                 ? $this->indexService->normalizeBatchYear($request->batch_year)
-                : ($this->indexService->calculateDefaultBatchYear($user) ?? (int) date('y'));
-            $this->indexService->assign($user, $batchYear);
+                : $this->indexService->getBatchForGrade($user->current_grade, $user->institute_id);
+            if ($batchYear !== null) {
+                $this->indexService->assign($user, $batchYear);
+            }
         } catch (\Throwable $e) {
             \Log::warning("Could not auto-assign index number in student store(): " . $e->getMessage());
         }
@@ -622,17 +653,74 @@ class StudentController extends Controller
         });
     }
 
+    /**
+     * Resolve student IDs from request or matching filters if select_all_matching is true.
+     *
+     * @param Request $request
+     * @return array<int>
+     */
+    private function resolveStudentIds(Request $request): array
+    {
+        if ($request->boolean('select_all_matching')) {
+            $query = User::where('role', 'user')->whereNotNull('full_name');
+            $instituteId = auth()->check() ? auth()->user()->institute_id : null;
+            if ($instituteId) {
+                $query->where('institute_id', $instituteId);
+            }
+            if ($request->has('needs_review') && $request->needs_review == '1') {
+                $query->where('needs_subject_review', true);
+            }
+            if ($request->filled('grade')) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('current_grade', $request->grade)
+                      ->orWhere('current_grade', 'Grade ' . $request->grade);
+                });
+            }
+            if ($request->filled('batch_year')) {
+                $query->where('batch_year', (int) $request->batch_year);
+            }
+            if ($request->has('has_index') && $request->has_index !== '') {
+                $val = (string) $request->has_index;
+                if ($val === '1' || $val === 'assigned') {
+                    $query->whereNotNull('index_number');
+                } elseif ($val === '0' || $val === 'unassigned') {
+                    $query->whereNull('index_number');
+                }
+            }
+            if ($request->filled('search')) {
+                $term = trim($request->search);
+                $query->where(function ($q) use ($term) {
+                    $q->where('full_name', 'like', "%{$term}%")
+                      ->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('email', 'like', "%{$term}%")
+                      ->orWhere('phone_number', 'like', "%{$term}%")
+                      ->orWhere('index_number', 'like', "%{$term}%");
+                });
+            }
+            return $query->pluck('id')->all();
+        }
+
+        $rawIds = $request->input('ids');
+        if (is_array($rawIds)) {
+            return array_values(array_map('intval', array_filter($rawIds)));
+        }
+        if (is_string($rawIds)) {
+            return array_values(array_map('intval', array_filter(array_map('trim', explode(',', $rawIds)))));
+        }
+        return [];
+    }
+
     public function bulkDelete(Request $request)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         
-        $request->validate([
-            'ids' => 'required|string'
-        ]);
+        $ids = $this->resolveStudentIds($request);
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'No students selected for deletion.');
+        }
 
-        $ids = explode(',', $request->ids);
         User::where('role', 'user')->whereIn('id', $ids)->delete();
 
         return redirect()->back()->with('success', count($ids) . ' students deleted successfully.');
@@ -660,14 +748,11 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request->validate([
-            'ids' => 'required|string',
-            'force' => 'boolean', // To override the 6-month safeguard
-        ]);
-
-        $ids = explode(',', $request->ids);
-        $studentIds = array_unique($ids);
-        $force = $request->input('force', false);
+        $studentIds = array_unique($this->resolveStudentIds($request));
+        if (empty($studentIds)) {
+            return redirect()->back()->with('error', 'No students selected for promotion.');
+        }
+        $force = $request->boolean('force');
 
         try {
             $summary = $this->promotionService->promoteStudents(
@@ -920,55 +1005,57 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $rawIds = $request->input('ids');
-        if (is_string($rawIds)) {
-            $rawIds = array_filter(array_map('trim', explode(',', $rawIds)));
-            $request->merge(['ids' => $rawIds]);
+        $studentIds = $this->resolveStudentIds($request);
+        if (empty($studentIds)) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'No students selected.'], 422);
+            }
+            return back()->with('error', 'No students selected.');
         }
 
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:users,id',
-            'batch_year' => 'nullable|integer',
-            'preview' => 'nullable|boolean',
-        ]);
-
-        $students = User::whereIn('id', $request->ids)
+        $students = User::whereIn('id', $studentIds)
             ->where('role', 'user')
             ->orderBy('id', 'asc')
             ->get();
 
         if ($request->boolean('preview')) {
-            $previews = [];
-            $batchYear = $request->filled('batch_year')
-                ? $this->indexService->normalizeBatchYear($request->batch_year)
-                : (int) date('y');
-            $instituteId = (int) ($students->first()?->institute_id ?: 1);
-            $unassignedCount = $students->whereNull('index_number')->count();
-            $generated = $this->indexService->previewNext($instituteId, $batchYear, $unassignedCount);
-            $previewIdx = 0;
+            $instituteId = (int) ($students->first()?->institute_id ?: (auth()->user()->institute_id ?: 1));
+            $batchMode = $request->filled('batch_year') ? 'single' : 'mapping';
+            $singleBatch = $request->filled('batch_year') ? $this->indexService->normalizeBatchYear($request->batch_year) : null;
+            $mapping = $this->indexService->getGradeBatchMapping($instituteId);
 
-            foreach ($students as $s) {
-                if ($s->index_number) {
-                    $previews[] = [
-                        'id' => $s->id,
-                        'name' => $s->full_name ?? $s->name,
-                        'batch_year' => $s->batch_year,
-                        'index_number' => $s->index_number,
-                        'status' => 'Already Assigned',
-                    ];
-                } else {
-                    $previews[] = [
-                        'id' => $s->id,
-                        'name' => $s->full_name ?? $s->name,
-                        'batch_year' => $batchYear,
-                        'index_number' => $generated[$previewIdx++] ?? 'N/A',
-                        'status' => 'Will Assign',
-                    ];
+            $bulkPreview = $this->indexService->previewBulkAssign($students, $instituteId, $batchMode, $singleBatch, $mapping);
+            return response()->json([
+                'preview' => $bulkPreview['preview_rows'],
+                'grade_summaries' => $bulkPreview['grade_summaries'],
+                'skipped' => $bulkPreview['skipped'],
+            ]);
+        }
+
+        $unassignedStudents = $students->whereNull('index_number');
+        if ($unassignedStudents->isNotEmpty()) {
+            $canDetermineAny = false;
+            foreach ($unassignedStudents as $student) {
+                $batchYear = $request->filled('batch_year')
+                    ? $this->indexService->normalizeBatchYear($request->batch_year)
+                    : $this->indexService->calculateDefaultBatchYear($student);
+                if ($batchYear !== null) {
+                    $canDetermineAny = true;
+                    break;
                 }
             }
 
-            return response()->json(['preview' => $previews]);
+            if (!$canDetermineAny) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'The given data was invalid.',
+                        'errors' => [
+                            'batch_year' => ['No batch year found for selected students. Set the grade mapping or pass a batch year.']
+                        ]
+                    ], 422);
+                }
+                return back()->withErrors(['batch_year' => 'No batch year found for selected students. Set the grade mapping or pass a batch year.']);
+            }
         }
 
         $assignedCount = 0;
@@ -977,6 +1064,10 @@ class StudentController extends Controller
                 $batchYear = $request->filled('batch_year')
                     ? $this->indexService->normalizeBatchYear($request->batch_year)
                     : $this->indexService->calculateDefaultBatchYear($student);
+
+                if ($batchYear === null) {
+                    continue;
+                }
 
                 $this->indexService->assign($student, $batchYear);
                 $assignedCount++;

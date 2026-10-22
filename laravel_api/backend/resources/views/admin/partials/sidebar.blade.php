@@ -122,6 +122,9 @@
                     <li class="{{ request()->routeIs('admin.settings.grade-promotion-schedule') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.grade-promotion-schedule') }}">Grade Promotion Schedule</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.settings.index-batches') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.index-batches') }}">Index Number Batches</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.settings.admission-fees') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.admission-fees') }}">Admission Fees</a>
                     </li>

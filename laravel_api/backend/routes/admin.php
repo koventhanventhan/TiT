@@ -45,16 +45,10 @@ Route::prefix('admin')->group(function () {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         });
         
-        // Student management routes
+        // Student management routes - static routes registered before {id} parameter routes
         Route::get('/students', [StudentController::class, 'index'])->name('admin.students.index');
         Route::get('/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
-        Route::get('/students/{id}', [StudentController::class, 'show'])->name('admin.students.show');
-        Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('admin.students.edit');
-        Route::put('/students/{id}', [StudentController::class, 'update'])->name('admin.students.update');
-        Route::post('/students/{id}/confirm', [StudentController::class, 'confirm'])->name('admin.students.confirm');
-        Route::post('/students/{id}/assign-index', [StudentController::class, 'assignIndexNumber'])->name('admin.students.assign-index');
-        Route::post('/students/{id}/reassign-index', [StudentController::class, 'reassignIndexNumber'])->name('admin.students.reassign-index');
         Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');
         Route::get('/students/assign-index-tool', [StudentIndexBulkController::class, 'index'])->name('admin.students.assign-index-tool');
         Route::post('/students/assign-index-tool/preview', [StudentIndexBulkController::class, 'preview'])->name('admin.students.assign-index-tool.preview');
@@ -63,28 +57,36 @@ Route::prefix('admin')->group(function () {
         Route::get('/students/import-index', [StudentIndexBulkController::class, 'importView'])->name('admin.students.import-index');
         Route::post('/students/import-index/preview', [StudentIndexBulkController::class, 'importPreview'])->name('admin.students.import-index.preview');
         Route::post('/students/import-index/run', [StudentIndexBulkController::class, 'importRun'])->name('admin.students.import-index.run');
-        Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject');
-        Route::post('/students/{id}/activate', [StudentController::class, 'activate'])->name('admin.students.activate');
-        Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate');
-        Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy');
-        Route::post('/students/{id}/mark-paid', [StudentController::class, 'markPaid'])->name('admin.students.mark-paid');
-        Route::put('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'update'])->name('admin.students.payments.update');
-        Route::delete('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'destroy'])->name('admin.students.payments.destroy');
-        Route::post('/students/{id}/payments/{payment}/mark-paid', [StudentPaymentController::class, 'markPaid'])->name('admin.students.payments.mark-paid');
-        Route::post('/students/{id}/payments/{payment}/revert', [StudentPaymentController::class, 'revert'])->name('admin.students.payments.revert');
-        Route::get('/students/{id}/payments/{payment}/receipt', [StudentPaymentController::class, 'downloadReceipt'])->name('admin.students.payments.receipt');
-        Route::post('/students/{id}/payments/{payment}/resend-receipt', [StudentPaymentController::class, 'resendReceipt'])->name('admin.students.payments.resend-receipt');
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
         Route::post('/students/promote', [StudentController::class, 'promote'])->name('admin.students.promote');
-        Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password');
+
+        // Parameterized {id} student routes
+        Route::get('/students/{id}', [StudentController::class, 'show'])->name('admin.students.show')->whereNumber('id');
+        Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('admin.students.edit')->whereNumber('id');
+        Route::put('/students/{id}', [StudentController::class, 'update'])->name('admin.students.update')->whereNumber('id');
+        Route::post('/students/{id}/confirm', [StudentController::class, 'confirm'])->name('admin.students.confirm')->whereNumber('id');
+        Route::post('/students/{id}/assign-index', [StudentController::class, 'assignIndexNumber'])->name('admin.students.assign-index')->whereNumber('id');
+        Route::post('/students/{id}/reassign-index', [StudentController::class, 'reassignIndexNumber'])->name('admin.students.reassign-index')->whereNumber('id');
+        Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject')->whereNumber('id');
+        Route::post('/students/{id}/activate', [StudentController::class, 'activate'])->name('admin.students.activate')->whereNumber('id');
+        Route::post('/students/{id}/deactivate', [StudentController::class, 'deactivate'])->name('admin.students.deactivate')->whereNumber('id');
+        Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('admin.students.destroy')->whereNumber('id');
+        Route::post('/students/{id}/mark-paid', [StudentController::class, 'markPaid'])->name('admin.students.mark-paid')->whereNumber('id');
+        Route::put('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'update'])->name('admin.students.payments.update')->whereNumber('id')->whereNumber('payment');
+        Route::delete('/students/{id}/payments/{payment}', [StudentPaymentController::class, 'destroy'])->name('admin.students.payments.destroy')->whereNumber('id')->whereNumber('payment');
+        Route::post('/students/{id}/payments/{payment}/mark-paid', [StudentPaymentController::class, 'markPaid'])->name('admin.students.payments.mark-paid')->whereNumber('id')->whereNumber('payment');
+        Route::post('/students/{id}/payments/{payment}/revert', [StudentPaymentController::class, 'revert'])->name('admin.students.payments.revert')->whereNumber('id')->whereNumber('payment');
+        Route::get('/students/{id}/payments/{payment}/receipt', [StudentPaymentController::class, 'downloadReceipt'])->name('admin.students.payments.receipt')->whereNumber('id')->whereNumber('payment');
+        Route::post('/students/{id}/payments/{payment}/resend-receipt', [StudentPaymentController::class, 'resendReceipt'])->name('admin.students.payments.resend-receipt')->whereNumber('id')->whereNumber('payment');
+        Route::post('/students/{id}/reset-password', [StudentController::class, 'resetPasswordAndNotify'])->name('admin.students.reset-password')->whereNumber('id');
         
         Route::get('/students-requests/medium-changes', [StudentController::class, 'pendingMediumChanges'])->name('admin.students.medium-changes');
-        Route::post('/students-requests/medium-changes/{id}/approve', [StudentController::class, 'approveMediumChange'])->name('admin.students.medium-changes.approve');
-        Route::post('/students-requests/medium-changes/{id}/reject', [StudentController::class, 'rejectMediumChange'])->name('admin.students.medium-changes.reject');
+        Route::post('/students-requests/medium-changes/{id}/approve', [StudentController::class, 'approveMediumChange'])->name('admin.students.medium-changes.approve')->whereNumber('id');
+        Route::post('/students-requests/medium-changes/{id}/reject', [StudentController::class, 'rejectMediumChange'])->name('admin.students.medium-changes.reject')->whereNumber('id');
         
         Route::get('/students-requests/advance-payments', [StudentController::class, 'pendingAdvancePayments'])->name('admin.students.advance-payments');
-        Route::post('/students-requests/advance-payments/{id}/approve', [StudentController::class, 'approveAdvancePayment'])->name('admin.students.advance-payments.approve');
-        Route::post('/students-requests/advance-payments/{id}/reject', [StudentController::class, 'rejectAdvancePayment'])->name('admin.students.advance-payments.reject');
+        Route::post('/students-requests/advance-payments/{id}/approve', [StudentController::class, 'approveAdvancePayment'])->name('admin.students.advance-payments.approve')->whereNumber('id');
+        Route::post('/students-requests/advance-payments/{id}/reject', [StudentController::class, 'rejectAdvancePayment'])->name('admin.students.advance-payments.reject')->whereNumber('id');
 
         // Teachers
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');

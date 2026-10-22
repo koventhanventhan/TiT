@@ -143,6 +143,10 @@ class SiteSettingController extends Controller
      */
     public function indexBatches(StudentIndexService $indexService)
     {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
         $instituteId = auth()->check() ? auth()->user()->institute_id : null;
         $instituteId = $instituteId ?: 1;
 
@@ -199,6 +203,10 @@ class SiteSettingController extends Controller
      */
     public function storeIndexBatches(Request $request, StudentIndexService $indexService)
     {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
         $request->validate([
             'batches' => 'nullable|array',
             'batches.*' => 'nullable|integer|min:20|max:99',

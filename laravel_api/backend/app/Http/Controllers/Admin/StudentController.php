@@ -63,10 +63,11 @@ class StudentController extends Controller
             $query->where('batch_year', (int) $request->batch_year);
         }
 
-        if ($request->has('has_index')) {
-            if ($request->has_index === '1') {
+        if ($request->has('has_index') && $request->has_index !== '') {
+            $val = (string) $request->has_index;
+            if ($val === '1' || $val === 'assigned') {
                 $query->whereNotNull('index_number');
-            } elseif ($request->has_index === '0') {
+            } elseif ($val === '0' || $val === 'unassigned') {
                 $query->whereNull('index_number');
             }
         }
@@ -678,10 +679,11 @@ class StudentController extends Controller
             if ($request->filled('batch_year')) {
                 $query->where('batch_year', (int) $request->batch_year);
             }
-            if ($request->has('has_index')) {
-                if ($request->has_index === '1') {
+            if ($request->has('has_index') && $request->has_index !== '') {
+                $val = (string) $request->has_index;
+                if ($val === '1' || $val === 'assigned') {
                     $query->whereNotNull('index_number');
-                } elseif ($request->has_index === '0') {
+                } elseif ($val === '0' || $val === 'unassigned') {
                     $query->whereNull('index_number');
                 }
             }

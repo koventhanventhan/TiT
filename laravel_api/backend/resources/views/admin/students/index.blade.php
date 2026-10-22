@@ -351,7 +351,7 @@
                 <a href="{{ route('admin.students.assign-index-tool') }}" class="btn btn-outline-info btn-sm mr-2">
                     <i class="flaticon-381-layer-1"></i> Assign index numbers
                 </a>
-                <a href="{{ route('admin.students.import-index.view') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                <a href="{{ route('admin.students.import-index') }}" class="btn btn-outline-secondary btn-sm mr-2">
                     <i class="flaticon-381-file"></i> Import CSV
                 </a>
                 <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">

@@ -189,7 +189,7 @@ function SafeMarkdownRenderer({ text }) {
 export default function StudentStudyAssistant({ user: userProp }) {
     const { t } = useLanguage()
     const currentUser = userProp || JSON.parse(localStorage.getItem('user') || '{}')
-    const isRagDisabled = currentUser?.rag_enabled === false
+    const isRagDisabled = currentUser?.rag_enabled !== true
 
     const [messages, setMessages] = useState(() => {
         try {

@@ -58,7 +58,27 @@ export default function StudentDashboardLayout({ children, user }) {
         setPhoneMenuOpen(prev => !prev);
     };
 
-    const searchResults = menuItems.filter(item =>
+    const activeMenuItems = React.useMemo(() => {
+        const items = [
+            { name: 'Dashboard', icon: FiHome, path: '/student/dashboard' },
+            { name: 'Schedule', icon: FiCalendar, path: '/student/schedule' },
+            { name: 'Zoom Classes', icon: FiVideo, path: '/student/zoom' },
+            { name: 'Assignments', icon: FiFileText, path: '/student/assignments' },
+            { name: 'Materials', icon: FiBookOpen, path: '/student/materials' },
+        ];
+        // Fail-safe: ONLY show Study Assistant when backend explicitly returns rag_enabled === true
+        if (user?.rag_enabled === true) {
+            items.push({ name: 'Study Assistant', icon: FiHelpCircle, path: '/student/study-assistant' });
+        }
+        items.push(
+            { name: 'Performance', icon: FiBarChart2, path: '/student/performance' },
+            { name: 'Messages', icon: FiMessageSquare, path: '/student/messages' },
+            { name: 'Settings', icon: FiSettings, path: '/student/settings' }
+        );
+        return items;
+    }, [user?.rag_enabled]);
+
+    const searchResults = activeMenuItems.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
     const initial = (user?.full_name || user?.username || 'S').charAt(0).toUpperCase()
@@ -157,7 +177,7 @@ export default function StudentDashboardLayout({ children, user }) {
             {/* SIDEBAR */}
             <SidebarShell
                 brandSubtitle="Student Portal"
-                items={menuItems}
+                items={activeMenuItems}
                 user={user}
                 avatarUrl={avatarUrl}
                 isOpen={isMobile ? phoneMenuOpen : undefined}

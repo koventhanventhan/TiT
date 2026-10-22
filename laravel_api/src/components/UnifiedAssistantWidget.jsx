@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 export default function UnifiedAssistantWidget() {
     const { language, t } = useLanguage();
@@ -11,16 +12,40 @@ export default function UnifiedAssistantWidget() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isEnabled, setIsEnabled] = useState(true);
+    // Fail-safe: default to disabled; only enable when backend explicitly returns public_assistant_enabled === true
+    const [isEnabled, setIsEnabled] = useState(false);
     const messagesEndRef = useRef(null);
 
     const instituteId = settings?.institute_id || 1;
 
+    // Load reCAPTCHA v3 script once if configured
     useEffect(() => {
-        // If settings explicitly specify public_assistant_enabled is false, hide widget
-        if (settings?.public_assistant_enabled === false || settings?.public_assistant_enabled === '0') {
-            setIsEnabled(false);
+        if (!RECAPTCHA_SITE_KEY || typeof document === 'undefined') return;
+        if (document.querySelector('script[src*="recaptcha/api.js"]')) return;
+        const script = document.createElement('script');
+        script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+        script.async = true;
+        document.head.appendChild(script);
+    }, []);
+
+    // Execute reCAPTCHA v3 and return token (null if not configured or execution fails)
+    const executeRecaptcha = async (action = 'assistant_chat') => {
+        if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null;
+        try {
+            await new Promise((resolve) => window.grecaptcha.ready(resolve));
+            return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+        } catch (err) {
+            console.warn('reCAPTCHA execution failed in assistant widget:', err);
+            return null;
         }
+    };
+
+    useEffect(() => {
+        // Fail-safe: ONLY show widget when backend explicitly returns true
+        const isPublicEnabled = settings?.public_assistant_enabled === true || 
+                               settings?.public_assistant_enabled === 1 || 
+                               settings?.public_assistant_enabled === '1';
+        setIsEnabled(Boolean(isPublicEnabled));
     }, [settings]);
 
     useEffect(() => {
@@ -59,20 +84,38 @@ export default function UnifiedAssistantWidget() {
             headers['X-Profile-Id'] = String(activeProfile);
         }
 
+        let recaptchaToken = null;
+        if (!token) {
+            recaptchaToken = await executeRecaptcha('assistant_chat');
+        }
+
         try {
+            const bodyPayload = {
+                question: trimmed,
+            };
+            if (recaptchaToken) {
+                bodyPayload.recaptcha_token = recaptchaToken;
+            }
+
             const res = await fetch(`${API_BASE_URL}/assistant/chat`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({
-                    question: trimmed,
-                }),
+                body: JSON.stringify(bodyPayload),
             });
+
+            // Fail-safe: 404 or 500 from the assistant endpoint must hide the feature quietly
+            if (res.status === 404 || res.status === 500) {
+                setIsEnabled(false);
+                setIsOpen(false);
+                return;
+            }
 
             const data = await res.json();
 
             if (!res.ok) {
                 if (res.status === 403 && data.public_enabled === false) {
                     setIsEnabled(false);
+                    setIsOpen(false);
                     return;
                 }
                 const errText = data.message || t('study_assistant_error_generic');
@@ -94,72 +137,76 @@ export default function UnifiedAssistantWidget() {
                 citations: data.citations || [],
             }]);
         } catch (err) {
-            setMessages((prev) => [...prev, {
-                id: Date.now() + 1,
-                sender: 'assistant',
-                text: t('study_assistant_error_generic'),
-                isError: true,
-            }]);
+            // Quietly hide if endpoint is completely unreachable
+            setIsEnabled(false);
+            setIsOpen(false);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div style={{
-            position: 'fixed',
-            bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
-            right: 'calc(1.5rem + env(safe-area-inset-right, 0px))',
-            zIndex: 9999,
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-        }}>
+        <div
+            id="unified-assistant-widget"
+            style={{
+                position: 'fixed',
+                bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+                right: 'calc(1.5rem + env(safe-area-inset-right, 0px))',
+                zIndex: 9999,
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            }}
+        >
             {/* Chat Trigger Button */}
             {!isOpen && (
                 <button
+                    id="unified-assistant-trigger"
                     className="unified-assistant-trigger"
                     onClick={() => setIsOpen(true)}
-                    aria-label={t('unified_assistant_open') || 'Ask Assistant'}
+                    aria-label="Open assistant chat"
                     style={{
-                        background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                        background: '#2563eb',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '9999px',
-                        padding: '0.85rem 1.4rem',
-                        fontSize: '0.95rem',
-                        fontWeight: '600',
-                        boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(37, 99, 235, 0.2)',
-                        cursor: 'pointer',
+                        padding: '0.85rem 1.25rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.6rem',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        gap: '0.5rem',
+                        boxShadow: '0 8px 24px rgba(37, 99, 235, 0.35)',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
+                        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                 >
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
-                    <span>{t('unified_assistant_open') || 'Ask Assistant'}</span>
+                    <span>{t('unified_assistant_button') || 'Need Help? Ask AI'}</span>
                 </button>
             )}
 
-            {/* Chat Modal / Window */}
+            {/* Chat Window Popup */}
             {isOpen && (
-                <div className="unified-assistant-modal" style={{
-                    width: 'min(380px, calc(100vw - 2rem))',
-                    height: 'min(520px, calc(100dvh - 5rem))',
-                    background: '#ffffff',
-                    borderRadius: '16px',
-                    boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
-                    border: '1px solid #e2e8f0',
-                }}>
+                <div
+                    id="unified-assistant-window" className="unified-assistant-modal"
+                    style={{
+                        width: '360px',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        height: '520px',
+                        maxHeight: 'calc(100vh - 5rem)',
+                        background: '#ffffff',
+                        borderRadius: '16px',
+                        boxShadow: '0 12px 36px rgba(0,0,0,0.18)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                    }}
+                >
                     {/* Header */}
                     <div style={{
-                        background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                        background: '#1e293b',
                         color: '#ffffff',
                         padding: '1rem 1.25rem',
                         display: 'flex',
@@ -175,6 +222,7 @@ export default function UnifiedAssistantWidget() {
                             </div>
                         </div>
                         <button
+                            id="unified-assistant-close"
                             onClick={() => setIsOpen(false)}
                             aria-label="Close"
                             style={{
@@ -292,6 +340,7 @@ export default function UnifiedAssistantWidget() {
                         }}
                     >
                         <input
+                            id="unified-assistant-input"
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -307,6 +356,7 @@ export default function UnifiedAssistantWidget() {
                             }}
                         />
                         <button
+                            id="unified-assistant-submit"
                             type="submit"
                             disabled={!input.trim() || isLoading}
                             style={{

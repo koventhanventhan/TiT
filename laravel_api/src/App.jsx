@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react'
-import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { ToastProvider } from './components/shared/ToastContext'
 import Header from './components/Header'
@@ -74,7 +74,7 @@ function RagRouteGuard({ children }) {
   try {
     const storage = typeof getActiveStorage === 'function' ? getActiveStorage() : localStorage;
     const user = JSON.parse(storage.getItem('user') || '{}');
-    if (!user?.rag_enabled) {
+    if (user?.rag_enabled !== true) {
       return <Navigate to="/student/dashboard" replace />;
     }
   } catch (e) {

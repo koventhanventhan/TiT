@@ -150,7 +150,7 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
 - [ ] 7.4 Test public floating chat widget on Home, About, Classes, and Contact pages:
   - Test general questions (fee inquiries, timetable, registration at `/register`).
   - Test academic question in public mode (must return state-specific locked message with link to `/register`, no hallucinated academic answers).
-  - Test crisis helpline trigger (must show 1926/1333/1990 crisis numbers without logging raw text).
+  - Test crisis helpline trigger (must show 1926/1333 crisis numbers without logging raw text).
 - [ ] 7.5 Verify emergency kill switches:
   - Disable single institute: `php artisan rag:public 1 off` (widget disappears immediately).
   - Global master kill switch: `RAG_PUBLIC_ENABLED=false` in `.env`.

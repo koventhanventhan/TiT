@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('material_chunks')) {
         Schema::create('material_chunks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('institute_id')->constrained('institutes')->onDelete('cascade');
@@ -37,6 +38,7 @@ return new class extends Migration
 
         if (\Illuminate\Support\Facades\Schema::getConnection()->getDriverName() === 'mysql') {
             \Illuminate\Support\Facades\DB::statement('ALTER TABLE `material_chunks` MODIFY `embedding` MEDIUMBLOB NOT NULL');
+        }
         }
     }
 

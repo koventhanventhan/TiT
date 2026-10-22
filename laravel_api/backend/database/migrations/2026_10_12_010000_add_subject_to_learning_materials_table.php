@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('learning_materials', 'subject')) {
+        if (Schema::hasTable('learning_materials') && !Schema::hasColumn('learning_materials', 'subject')) {
             Schema::table('learning_materials', function (Blueprint $table) {
                 $table->string('subject')->nullable()->after('grade')->index();
             });
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('learning_materials', 'subject')) {
+        if (Schema::hasTable('learning_materials') && Schema::hasColumn('learning_materials', 'subject')) {
             Schema::table('learning_materials', function (Blueprint $table) {
                 $table->dropColumn('subject');
             });

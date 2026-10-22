@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('learning_materials', 'file_hash')) {
+        if (Schema::hasTable('learning_materials') && !Schema::hasColumn('learning_materials', 'file_hash')) {
             Schema::table('learning_materials', function (Blueprint $table) {
                 $table->string('file_hash', 64)->nullable()->after('file_path')->index();
             });
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('learning_materials', 'file_hash')) {
+        if (Schema::hasTable('learning_materials') && Schema::hasColumn('learning_materials', 'file_hash')) {
             Schema::table('learning_materials', function (Blueprint $table) {
                 $table->dropColumn('file_hash');
             });

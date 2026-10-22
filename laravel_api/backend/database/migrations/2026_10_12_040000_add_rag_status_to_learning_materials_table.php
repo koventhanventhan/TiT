@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('learning_materials')) return;
         Schema::table('learning_materials', function (Blueprint $table) {
             if (!Schema::hasColumn('learning_materials', 'rag_status')) {
                 $table->string('rag_status', 20)->default('pending')->after('description')->index();
@@ -29,6 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('learning_materials')) return;
         Schema::table('learning_materials', function (Blueprint $table) {
             $columnsToDrop = [];
             if (Schema::hasColumn('learning_materials', 'rag_status')) {

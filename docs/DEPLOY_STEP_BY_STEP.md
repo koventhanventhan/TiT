@@ -1,356 +1,318 @@
-﻿# Complete Production Deployment Guide (Step-by-Step)
+# Complete Production Deployment Guide (Step-by-Step)
 **Target Audience:** Non-expert System Administrators & DevOps Engineers  
 **System:** TiT Learning Academy - RAG Study Assistant & Unified Public Assistant  
-**Release:** Rounds 1–4 Integrated Production Release  
+**Release:** Rounds 1–5 Integrated Production Release (Strict Ordering & Verification)
 
 ---
 
 ## 1. Overview & Architecture Summary
 
-This release deploys the **RAG Study Assistant**, **Unified Public Assistant**, and **Teacher/Admin Material Management** features.
+This release deploys the **RAG Study Assistant**, **Unified Public Assistant**, **Teacher/Admin Material Management**, and **Hotfix Controller Whitelisting**.
 
-### Important: Committed-Bundle Workflow
-The live production server serves compiled frontend assets **directly from the repository root**:
-- Root Entrypoint: `index.html`
-- Root Bundle Assets: `assets/*` (JavaScript, CSS, and dynamic chunks)
-- Backend API: `laravel_api/backend/`
-
-You do **not** need to install Node.js or run `npm run build` on the live production server. The production bundle has already been built, tested, and committed to git.
+### Committed-Bundle & Hosting Architecture
+1. **Live Production Server (cPanel / Apache / MariaDB):**
+   - The production server serves compiled frontend assets directly from the repository root:
+     - Entrypoint: `index.html`
+     - Compiled Assets: `assets/*` (JS/CSS bundles)
+     - Backend API: `laravel_api/backend/`
+   - You do **not** need Node.js or `npm run build` on the live cPanel server; the production bundle is committed in the repository.
+2. **Vercel Hosting Notice:**
+   - **Pushing to `main` on GitHub may trigger an automatic Vercel build** if your repository is connected to Vercel.
+   - **What Vercel deploys:** Vercel builds and hosts only the static Single Page Application (SPA) frontend.
+   - **Backend Dependency:** The Vercel frontend routes all API calls to your live cPanel/MariaDB backend (`VITE_API_URL`).
+   - **Safe Decoupling:** Even if Vercel deploys the new frontend before your cPanel backend migrations are executed, **the fail-safe feature flags ensure the Study Assistant and Public Widget remain completely hidden** until the backend explicitly returns `rag_enabled: true` and `public_assistant_enabled: true`. However, to avoid visual desynchronization, always execute database migrations before routing live traffic.
 
 ---
 
-## 2. Pre-Deployment: Full Backups
+## 2. STRICT DEPLOYMENT EXECUTION ORDER
 
-Always create full backups before changing code or running database migrations.
+To prevent downtime, service interruption, or broken student requests, execute the deployment in this **exact order**:
 
-### Step 2.1: Database Backup
-Run `mysqldump` from the server terminal:
+```
+[1. Full Backups (DB + Files)]
+          ↓
+[2. Deploy 2 Hotfix Controllers (Zoom + Assignments)]
+          ↓
+[3. Run migrate:status & Review Pending Migrations]
+          ↓
+[4. Upload New Backend Files & Update .env]
+          ↓
+[5. Run php artisan migrate --force]
+          ↓
+[6. Verify OLD Frontend Still Works with NEW Backend]
+          ↓
+[7. Publish New Frontend Bundle (index.html + assets/)]
+          ↓
+[8. Canary Rollout: Enable ONE Pilot Institute]
+```
+
+---
+
+## Step 1: Full Backups
+
+Always create full backups before modifying files or running migrations.
+
+### 1.1: Database Backup
+Run `mysqldump` from your server shell:
 ```bash
-# Replace [db_user] and [db_name] with your production database credentials
+# Replace [db_user] and [db_name] with your production credentials
 mysqldump -u [db_user] -p --single-transaction --quick --lock-tables=false [db_name] > /backups/db_backup_pre_rag_$(date +%F_%H%M%S).sql
 ```
-*Verify the backup:* Ensure the file size is greater than 0 (`ls -lh /backups/`).
+*Verify:* Check that the dump file exists and has size > 0 (`ls -lh /backups/`).
 
-### Step 2.2: Filesystem & Environment Backup
-Backup your existing `.env` file, storage folder, and root assets:
+### 1.2: Environment & Asset Backup
 ```bash
-# In your web application root (e.g., /var/www/tit/ or c:\xampp\htdocs\)
-mkdir -p /backups/app_backup_pre_rag
-cp laravel_api/backend/.env /backups/app_backup_pre_rag/.env.backup
-tar -czvf /backups/app_backup_pre_rag/storage_app.tar.gz laravel_api/backend/storage/app/
-tar -czvf /backups/app_backup_pre_rag/assets_backup.tar.gz index.html assets/
+mkdir -p /backups/app_pre_rag
+cp laravel_api/backend/.env /backups/app_pre_rag/.env.backup
+tar -czvf /backups/app_pre_rag/assets_backup.tar.gz index.html assets/
 ```
 
 ---
 
-## 3. Code Upload & File Deployment Order
+## Step 2: Deploy the Two Hotfix Controllers First
 
-When deploying via Git or SFTP/rsync, follow this exact sequence:
+Deploy the two field-whitelisting hotfix controllers before anything else so active student zoom join requests and assignment submissions remain completely stable:
+1. `laravel_api/backend/app/Http/Controllers/Api/ZoomMeetingController.php`
+2. `laravel_api/backend/app/Http/Controllers/Api/AssignmentController.php`
 
-### Option A: Deployment via Git (Recommended)
-1. **Pull the release branch:**
-   ```bash
-   git fetch origin
-   git checkout merge/rag-full-integration
-   # OR fast-forward merge into main if you have merged the branch
-   ```
-2. **Never overwrite server `.env`:** The `.gitignore` prevents `.env` from being touched, but verify your `laravel_api/backend/.env` remains intact.
-
-### Option B: Deployment via SFTP / rsync (Direct File Upload)
-If uploading files manually via SFTP or rsync, upload in this order:
-1. **Root Frontend Assets:**
-   - Upload `index.html` to root.
-   - Upload `assets/` directory to root.
-2. **Backend Application Files:**
-   - Upload `laravel_api/backend/app/`
-   - Upload `laravel_api/backend/routes/`
-   - Upload `laravel_api/backend/database/migrations/`
-   - Upload `laravel_api/backend/config/`
-3. **DO NOT OVERWRITE:**
-   - Never overwrite `laravel_api/backend/.env`
-   - Never overwrite `laravel_api/backend/storage/`
+*Why:* These controllers whitelist incoming client fields, preventing validation failures on active student requests.
 
 ---
 
-## 4. Backend Dependencies: Composer
+## Step 3: Run `migrate:status` and Review Pending Migrations
 
-### If Composer is installed on the server:
-Navigate to the backend directory and run:
+> [!CRITICAL]
+> Running `php artisan migrate --force` executes **ALL pending migrations in the `database/migrations` directory**, NOT only the RAG migrations!
+
+Before running any migration, connect to the server and inspect the migration status:
+```bash
+cd laravel_api/backend
+php artisan migrate:status
+```
+- Review the list of pending migrations (marked `[No]` or `Pending`).
+- Ensure no unexpected migrations from unrelated feature branches are present in the migrations folder.
+- The 12 migrations expected in this release are:
+  1. `2026_10_12_010000_add_subject_to_learning_materials_table`
+  2. `2026_10_12_020000_create_material_chunks_table`
+  3. `2026_10_12_030000_create_student_ai_queries_and_feedback_tables`
+  4. `2026_10_12_040000_add_rag_status_to_learning_materials_table`
+  5. `2026_10_12_050000_add_rag_enabled_and_distress_flags`
+  6. `2026_10_13_060000_update_institutes_rag_enabled_default_and_chunks_ocr`
+  7. `2026_10_15_030000_add_file_hash_to_learning_materials_table`
+  8. `2026_10_21_040000_create_material_pages_table`
+  9. `2026_10_22_010000_add_public_assistant_enabled_to_institutes_table`
+  10. `2026_10_22_020000_create_faqs_table`
+  11. `2026_10_22_030000_create_assistant_visitor_logs_table`
+  12. `2026_10_22_040000_widen_learning_materials_medium_enum`
+
+---
+
+## Step 4: Upload New Backend Application Files
+
+Upload the backend code to `laravel_api/backend/`:
+- `app/`
+- `bootstrap/app.php` (includes env-driven `TRUSTED_PROXIES`)
+- `config/`
+- `database/migrations/`
+- `routes/`
+
+### Configure Environment Variables (`.env`)
+Add these verified settings to `laravel_api/backend/.env` (do not share credentials):
+```dotenv
+# Gemini API Key (never share or commit)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Proxy Trust: Set comma-separated IPs or leave empty if directly on cPanel
+TRUSTED_PROXIES=
+
+# Distress Helplines (Verify verified crisis contacts; leave numbers empty if unset)
+RAG_HELPLINE_PRIMARY_NAME="National Mental Health Helpline"
+RAG_HELPLINE_PRIMARY_NUMBER="1926"
+RAG_HELPLINE_PRIMARY_HOURS="24/7"
+RAG_HELPLINE_SECONDARY_NAME="CCCline"
+RAG_HELPLINE_SECONDARY_NUMBER="1333"
+RAG_HELPLINE_SECONDARY_HOURS="24/7"
+RAG_HELPLINE_INSTITUTE_NAME="Institute / Teacher Support"
+RAG_HELPLINE_INSTITUTE_NUMBER=""
+```
+
+### Install Backend Dependencies
 ```bash
 cd laravel_api/backend
 composer install --no-dev --optimize-autoloader --no-interaction
 ```
 
-### If Composer is NOT available on the server:
-1. On your local deployment machine, run:
-   ```bash
-   cd laravel_api/backend
-   composer install --no-dev --optimize-autoloader
-   ```
-2. Compress the generated `vendor/` folder into a zip/tar:
-   ```bash
-   tar -czvf vendor.tar.gz vendor/
-   ```
-3. Upload `vendor.tar.gz` to the server under `laravel_api/backend/` and extract it:
-   ```bash
-   tar -xzvf vendor.tar.gz
-   ```
-
 ---
 
-## 5. Environment Variables (`.env`) Configuration
+## Step 5: Run Database Migrations
 
-Open `laravel_api/backend/.env` and add or verify the following configuration keys:
-
-```dotenv
-# ==============================================================================
-# Google Gemini API & RAG Settings
-# ==============================================================================
-# Required: Your Google Gemini API Key for embeddings and generative responses
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-
-# Embedding model (text-embedding-004 produces 768-dimensional vectors)
-GEMINI_EMBEDDING_MODEL=text-embedding-004
-
-# Generative model for generating answers
-GEMINI_GENERATE_MODEL=gemini-1.5-flash
-
-# Daily query limit per student (default 30)
-RAG_DAILY_QUERY_LIMIT=30
-
-# Similarity threshold for matching chunks (0.70 strict cutoff)
-RAG_SIMILARITY_THRESHOLD=0.70
-
-# Safety & Distress Resources (1926 National Helpline in Sri Lanka)
-RAG_DISTRESS_KEYWORDS_ENABLED=true
-
-# Queue configuration (ensure QUEUE_CONNECTION is database, redis, or sync)
-QUEUE_CONNECTION=database
-RAG_QUEUE_NAME=rag
-```
-
-> **Security Note:** Never commit your real `GEMINI_API_KEY` to Git or share it in support tickets.
-
----
-
-## 6. Database Migrations
-
-Run database migrations using the force flag:
 ```bash
 cd laravel_api/backend
 php artisan migrate --force
 ```
-
-### New Migrations Applied (In Order):
-All 11 migrations are **fully guarded** with `Schema::hasTable` and `Schema::hasColumn` checks, making them completely safe and idempotent (they will never fail or duplicate if already run):
-
-1. `2026_10_12_010000_add_subject_to_learning_materials_table.php`  
-   *Risk: None.* Adds indexed `subject` column to `learning_materials` if missing.
-2. `2026_10_12_020000_create_material_chunks_table.php`  
-   *Risk: None.* Creates `material_chunks` table for chunk text and 768d vector embeddings.
-3. `2026_10_12_030000_create_student_ai_queries_and_feedback_tables.php`  
-   *Risk: None.* Creates `student_ai_queries` and `student_ai_feedback` tables.
-4. `2026_10_12_040000_add_rag_status_to_learning_materials_table.php`  
-   *Risk: None.* Adds `rag_status`, `rag_indexed_at`, `rag_chunks_count`, and `rag_error` columns.
-5. `2026_10_12_050000_add_rag_enabled_and_distress_flags.php`  
-   *Risk: None.* Adds `rag_enabled` to institutes/users and `distress_flagged` to queries.
-6. `2026_10_13_060000_update_institutes_rag_enabled_default_and_chunks_ocr.php`  
-   *Risk: None.* Ensures institutes default to `rag_enabled = false` and adds OCR metadata.
-7. `2026_10_15_030000_add_file_hash_to_learning_materials_table.php`  
-   *Risk: None.* Adds indexed `file_hash` (SHA-256) column to prevent duplicate files.
-8. `2026_10_21_040000_create_material_pages_table.php`  
-   *Risk: None.* Creates `material_pages` table for page-level OCR caching.
-9. `2026_10_22_010000_add_public_assistant_enabled_to_institutes_table.php`  
-   *Risk: None.* Adds `public_assistant_enabled` flag to `institutes`.
-10. `2026_10_22_020000_create_faqs_table.php`  
-    *Risk: None.* Creates `faqs` table for public institute questions and answers.
-11. `2026_10_22_030000_create_assistant_visitor_logs_table.php`  
-    *Risk: None.* Creates `assistant_visitor_logs` table for public chat audit trails.
+All tables and columns are safely created. `learning_materials.medium` is widened to `enum('english','tamil','sinhala','all','both')` via an instant MySQL/MariaDB metadata operation (< 10ms, no table rebuild).
 
 ---
 
-## 7. Queue Worker & Cron Configuration
+## Step 6: Verify OLD Frontend Still Works with NEW Backend (Checklist)
 
-RAG file ingestion (PDF text extraction, OCR, and embedding generation) runs in background queues so teacher uploads are never blocked.
+Before publishing the new frontend bundle, perform this verification using the **existing live frontend** in your browser:
 
-### 7.1: Background Queue Worker
-Configure a supervisor or systemd process to run the queue worker.
-
-**Systemd Service Example (`/etc/systemd/system/tit-worker.service`):**
-```ini
-[Unit]
-Description=TiT RAG Background Queue Worker
-After=network.target
-
-[Service]
-User=www-data
-Group=www-data
-Restart=always
-ExecStart=/usr/bin/php /var/www/tit/laravel_api/backend/artisan queue:work --queue=rag,default --tries=3 --timeout=300
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start the service:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable tit-worker
-sudo systemctl start tit-worker
-```
-
-### 7.2: Scheduled Tasks (Cron)
-Add the standard Laravel scheduler line to your server crontab:
-```bash
-crontab -e
-```
-Add this single line (replace `/var/www/tit` with your actual project root):
-```cron
-* * * * * cd /var/www/tit/laravel_api/backend && php artisan schedule:run >> /dev/null 2>&1
-```
+### What to Click & Verify on OLD Frontend:
+- [ ] **Student Login (`/login`):** Authenticate with an existing student account.
+- [ ] **Student Dashboard (`/student/dashboard`):** Dashboard loads without errors or blank screens.
+- [ ] **Live Zoom / Timetable (`/student/classes`):** Verify join buttons and meeting details render correctly.
+- [ ] **Student Materials (`/student/materials`):** View list of existing notes in English/Tamil/Both and verify file downloads.
+- [ ] **Student Assignments (`/student/assignments`):** View active assignments and verify submission modal opens.
+- [ ] **Student Payments (`/student/payments`):** Verify payment history table and receipts display correctly.
+- [ ] **Teacher Materials (`/teacher/materials`):** Log in as teacher, verify materials list and upload modal.
+- [ ] **Admin Student List (`/admin/students`):** Verify student approvals and grade promotion workflows.
+- [ ] **Browser Console:** Ensure zero 500 API responses and zero uncaught JavaScript exceptions.
 
 ---
 
-## 8. Cache Clearing & Optimization
+## Step 7: Publish New Frontend Bundle
 
-After migrations and environment changes, clear and rebuild Laravel's production caches:
+Once Step 6 passes, publish the compiled frontend bundle:
+1. Upload `index.html` to the web root.
+2. Upload `assets/*` directory to `assets/` in the web root.
+
+### "New Frontend with Old Backend" Fail-Safe Checklist
+If the new frontend bundle is deployed before the backend is upgraded, or during an active migration window:
+- [ ] **Study Assistant Hidden:** The "Study Assistant" sidebar navigation link in `StudentDashboardLayout` is **completely hidden** because `user.rag_enabled !== true`.
+- [ ] **Direct URL Safe:** Navigating directly to `/student/study-assistant` shows a clean "Feature Not Available" notice or redirects safely.
+- [ ] **Public Widget Hidden:** The circular assistant widget at the bottom-right of public pages is **completely hidden** because `public_assistant_enabled !== true`.
+- [ ] **Zero Console Crashes:** Missing backend endpoints (returning 404 or 500) fail silently without throwing modal popups or blocking navigation.
+
+---
+
+## Step 8: Canary Rollout: Enable ONE Pilot Institute
+
+By default, RAG and the Public Assistant are **globally disabled** for all institutes. Enable them for a single pilot institute:
+
 ```bash
 cd laravel_api/backend
 
-# Clear stale caches
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-php artisan cache:clear
+# 1. Turn on public assistant for Institute 1:
+php artisan rag:public 1 on
 
-# Re-optimize for production performance
+# 2. Turn on Study Assistant for Institute 1:
+php artisan rag:institute 1 on
+
+# 3. Clear application caches:
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
 ```
 
 ---
 
-## 9. Canary Rollout: Enabling for ONE Institute
+## 3. PROXY TRUST & REVERSE PROXY CONFIGURATION
 
-By default, RAG and the Public Assistant are **disabled** for all institutes. You can safely enable them for a single pilot institute (canary rollout) to verify before turning them on for everyone.
+In `laravel_api/backend/bootstrap/app.php`, proxy trust is driven by the `TRUSTED_PROXIES` environment variable:
+```php
+$trustedProxiesEnv = env('TRUSTED_PROXIES');
+$trustedProxies = !empty($trustedProxiesEnv)
+    ? array_map('trim', explode(',', $trustedProxiesEnv))
+    : [];
 
-### Step 9.1: Find the Institute ID or Code
-```bash
-cd laravel_api/backend
-php artisan tinker --execute="App\Models\Institute::select('id', 'name', 'code', 'rag_enabled')->get()->toArray();"
+$middleware->trustProxies(at: $trustedProxies);
 ```
 
-### Step 9.2: Enable RAG and Public Assistant for that Institute
-```bash
-# Example: Enable for Institute ID 1 (or by code 'PREMIER')
-php artisan tinker --execute="App\Models\Institute::where('id', 1)->update(['rag_enabled' => true, 'public_assistant_enabled' => true]); echo 'Enabled!';"
-```
-
-### Step 9.3: Enable Students in that Institute
-```bash
-php artisan tinker --execute="App\Models\User::where('institute_id', 1)->where('role', 'user')->update(['rag_enabled' => true]); echo 'Students updated!';"
-```
+### How to Find the Right Value for Your Environment:
+1. **cPanel / Direct Apache / Nginx (No Reverse Proxy):**
+   - Leave `TRUSTED_PROXIES=` empty.
+   - When empty, Laravel uses `$_SERVER['REMOTE_ADDR']` directly and ignores `X-Forwarded-For`. This prevents malicious clients from spoofing their IP to bypass rate limits.
+2. **Cloudflare:**
+   - Cloudflare publishes its official IP ranges: [https://www.cloudflare.com/ips/](https://www.cloudflare.com/ips/)
+   - Set `TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22`
+3. **Vercel / Reverse Proxy Load Balancers:**
+   - Add the specific CIDR or upstream IP of the proxy load balancer. If the proxy runs on local loopback, use `127.0.0.1`.
 
 ---
 
-## 10. Post-Deployment Smoke Tests
+## 4. PUBLIC WIDGET & RECAPTCHA V3 GUIDE
 
-Perform these three verification tests immediately after deployment:
+### 4.1: Script Loading and Token Submission
+1. **Script Loading:**
+   - The script is loaded in `laravel_api/src/components/UnifiedAssistantWidget.jsx`.
+   - On component mount, if `VITE_RECAPTCHA_SITE_KEY` is configured and not yet present in `document.head`, it dynamically injects:
+     ```html
+     <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY" async></script>
+     ```
+2. **When it Requests a Token:**
+   - Tokens are **never requested on page load** (which wastes tokens and lowers score).
+   - A token is requested **on-demand only when an unauthenticated visitor clicks Send / submits a question**.
+   - It executes:
+     ```js
+     window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'assistant_chat' })
+     ```
+3. **Token Transmission:**
+   - The token is sent in the JSON body: `{ "question": "...", "recaptcha_token": "<token>" }` via POST to `/api/assistant/chat`.
 
-### Test 1: Student Study Assistant Smoke Test
-1. Log in to the student dashboard as an approved, paid student belonging to the enabled institute.
-2. In the navigation, click **Study Assistant** (`/student/study-assistant`).
-3. **Verify:**
-   - Header shows "AI Study Assistant" and daily question counter pill (e.g., `Daily: 0 / 30`).
-   - First-time disclaimer banner appears: *"AI Study Assistant can make mistakes. Verify important facts with your teachers."*
-   - Type a syllabus question (e.g. in English, Tamil, or Sinhala) and press Send.
-   - Streamed text response renders word by word.
-   - Citation chips appear under the answer displaying material titles and page numbers.
-   - Click the Thumbs Up or Thumbs Down feedback button.
-   - Type a safety test phrase indicating emotional distress (e.g. *"I want to hurt myself"*): verify that the mental health safety card appears immediately with the **1926** National Mental Health Helpline.
-
-### Test 2: Teacher Materials & Search Status Smoke Test
-1. Log in as a teacher (`/teacher/materials`).
-2. **Verify:**
-   - Materials table displays an **AI Search Status** column badge for each file:
-     - 🟢 **Ready** (Indexed)
-     - 🔵 **Processing**
-     - 🟠 **Low Quality / Needs Clearer File**
-     - 🔴 **Failed** (with a "Retry" button)
-   - Click **Upload Material**:
-     - Grade, Subject, and Medium are required fields.
-     - A hint explains that Grade controls student search visibility.
-   - Attempt to upload an identical PDF: verify that a warning is displayed notifying that the file hash already exists in this institute.
-
-### Test 3: Public Website Visitor Assistant Smoke Test
-1. Open an **Incognito / Private browser window** (not logged in).
-2. Visit the public homepage (`/`), Classes (`/classes`), or Contact (`/contact`).
-3. **Verify:**
-   - Floating circular assistant button appears at the bottom-right of the screen.
-   - Click the button: modal chat window opens.
-   - Ask: *"What classes are available?"* or *"How do I register?"*
-   - Verify the assistant answers using institute public context and FAQs without requiring login.
-   - Verify rate limiting: visitors are limited to 10 queries per IP per hour.
-
----
-
-## 11. 7-Day Monitoring Watchlist
-
-Monitor these items daily for the first 7 days following release:
-
-| Metric / Area | Where to Check | Normal Threshold | What to Do if Exceeded |
-|---|---|---|---|
-| **Failed Ingestion Jobs** | `failed_jobs` table | 0 failed jobs | Run `php artisan queue:retry all` and inspect `exception` column |
-| **Gemini API Errors / Quotas** | `laravel_api/backend/storage/logs/laravel.log` | 0 quota/rate-limit errors | Check Google Cloud Console API billing & rate limits |
-| **OCR Uncertainty Rate** | `material_pages` where `ocr_uncertain = 1` | < 10% of pages | Advise teachers to upload scanned PDFs with higher DPI (300 DPI) |
-| **Low Quality Chunks** | `learning_materials` where `rag_status = 'low_quality'` | < 5% of uploads | Check uploaded file readability; retry via teacher table |
-| **Distress Triggers** | `student_ai_queries` where `distress_flagged = 1` | Handled securely | Verify that crisis hotlines (1926) were presented properly |
-| **Server Disk Space** | `df -h` on server | < 80% disk usage | Check size of `storage/app/materials/` and database backups |
+### 4.2: Local Testing Steps for reCAPTCHA
+1. In the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin) (v3):
+   - Add `localhost` and `127.0.0.1` to **Domains**.
+   - Copy **Site Key** into `laravel_api/.env` as:
+     ```dotenv
+     VITE_RECAPTCHA_SITE_KEY=6LeIx0...
+     ```
+   - Copy **Secret Key** into `laravel_api/backend/.env` as:
+     ```dotenv
+     RECAPTCHA_SECRET_KEY=6LeIx0...
+     ```
+2. **What to Expect During Testing:**
+   - **Token Missing (or Bot Submissions):** Returns HTTP `422 Unprocessable Entity`:
+     ```json
+     {
+       "message": "reCAPTCHA verification is required for visitor queries.",
+       "errors": { "recaptcha": ["Verification token missing."] }
+     }
+     ```
+   - **Low Score (< 0.5):** Returns HTTP `422 Unprocessable Entity`:
+     ```json
+     {
+       "message": "Bot verification failed. Please refresh and try again.",
+       "errors": { "recaptcha": ["Verification failed."] }
+     }
+     ```
+   - **Local Development Bypass:** If `RECAPTCHA_SECRET_KEY` is left empty in `laravel_api/backend/.env`, backend verification is automatically skipped for easy local development.
 
 ---
 
-## 12. Rollback Plan
+## 5. LOCAL VERIFICATION & SMOKE TEST STEPS
 
-If an unexpected critical issue occurs, use these procedures to roll back safely.
-
-### 12.1: Instant Kill Switches (Zero Downtime)
-You do not need to uninstall code to disable the AI features. You can disable them instantly:
-
-**To disable RAG for all institutes:**
-```bash
-cd laravel_api/backend
-php artisan tinker --execute="App\Models\Institute::query()->update(['rag_enabled' => false, 'public_assistant_enabled' => false]); echo 'Disabled!';"
-```
-**To disable in `.env`:**
-Set `RAG_DAILY_QUERY_LIMIT=0` or revoke `GEMINI_API_KEY`.
-
-### 12.2: Migration Rollback
-If you need to roll back the 11 database migrations:
-```bash
-cd laravel_api/backend
-# Rollback the last 11 migrations
-php artisan migrate:rollback --step=11
-```
-
-### 12.3: Restoring Database and File Backups
-To fully restore the previous pre-deployment state:
-1. **Restore Database:**
+### 5.1: Testing the Public Widget
+1. Run migrations: `php artisan migrate`
+2. Enable public assistant for Institute 1:
    ```bash
-   mysql -u [db_user] -p [db_name] < /backups/db_backup_pre_rag_*.sql
+   php artisan rag:public 1 on
    ```
-2. **Restore Frontend Bundle & Assets:**
+3. Configure public contact and FAQs:
    ```bash
-   cd /var/www/tit/
-   tar -xzvf /backups/app_backup_pre_rag/assets_backup.tar.gz
+   php artisan tinker --execute="
+   AppModelsSiteSetting::updateOrCreate(['key' => 'assistant_public_contact'], ['value' => '+94 77 123 4567']);
+   AppModelsFaq::updateOrCreate(['institute_id' => 1, 'question' => 'How do I register?'], ['answer' => 'Visit /register to enroll in courses.', 'is_published' => true]);
+   "
    ```
-3. **Restore Environment:**
+4. Open an Incognito / Private browser window.
+5. Visit **Exact URL:** `http://localhost:5173/` (or `http://localhost/`).
+6. Click the floating circular widget at the bottom right.
+7. Ask: *"How do I register?"* -> Verify instant answer from FAQs.
+8. Rate Limit Test: Submit 11 rapid messages -> Verify 429 "Too Many Requests" rate limit kicks in after 10 requests per minute.
+
+### 5.2: Testing the Study Assistant
+1. Ensure Institute 1 and existing test student are enabled:
    ```bash
-   cp /backups/app_backup_pre_rag/.env.backup laravel_api/backend/.env
+   php artisan rag:institute 1 on
+   php artisan tinker --execute="
+   AppModelsUser::where('email', 'kamal@example.com')->update(['rag_enabled' => true, 'role' => 'user', 'admin_confirmed_at' => now()]);
+   "
    ```
-4. **Re-clear Caches:**
-   ```bash
-   cd laravel_api/backend
-   php artisan config:clear
-   php artisan route:clear
-   ```
+2. Log in with existing test student:
+   - Email: `kamal@example.com`
+   - Password: `password`
+3. Visit **Exact URL:** `http://localhost:5173/student/study-assistant` (or `http://localhost/student/study-assistant`).
+4. Ask a syllabus question:
+   - Verify word-by-word streaming.
+   - Verify numbered citation chips ([1], [2]) appear under the answer.
+   - Verify Thumbs Up / Thumbs Down feedback buttons log successfully.

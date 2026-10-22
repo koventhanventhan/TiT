@@ -330,9 +330,13 @@ class SiteSettingController extends Controller
      */
     public function storeMaterial(Request $request)
     {
+        $isStudyDoc = in_array($request->type, ['note', 'past_paper'], true);
+
         $request->validate([
             'type' => 'required|in:note,past_paper,recording',
-            'grade' => 'required|string',
+            'grade' => $isStudyDoc ? 'required|string|max:50' : 'nullable|string|max:50',
+            'subject' => $isStudyDoc ? 'required|string|max:100' : 'nullable|string|max:100',
+            'medium' => $isStudyDoc ? 'required|string|in:tamil,english,sinhala,all' : 'nullable|string|in:tamil,english,sinhala,all',
             'title' => 'required|string|max:255',
             'file' => 'nullable|file|max:512000', // 500MB max
             'file_url' => 'nullable|url|max:2048',
@@ -354,12 +358,20 @@ class SiteSettingController extends Controller
             }
         }
 
+        $canonicalGrade = \App\Support\GradeMatcher::formatCanonical($request->grade);
+
         $data = [
             'type' => $request->type,
-            'grade' => $request->grade,
+            'grade' => $canonicalGrade,
+            'subject' => $request->subject,
+            'medium' => $request->medium ?? 'all',
             'title' => $request->title,
             'url' => $request->url,
+            'institute_id' => (int) (auth()->user()->institute_id ?? 1),
         ];
+
+        $fileHash = null;
+        $warning = null;
 
         if ($hasFileUrl) {
             $fileUrl = $request->input('file_url');
@@ -373,6 +385,7 @@ class SiteSettingController extends Controller
             $data['file_size'] = $request->input('file_size');
         } elseif ($hasFile) {
             $file = $request->file('file');
+            $fileHash = hash_file('sha256', $file->getRealPath());
             $folder = 'uploads/' . $request->type . 's';
             $name = $request->type . '_' . time() . '.' . $file->getClientOriginalExtension();
             $destinationPath = public_path($folder);
@@ -386,11 +399,27 @@ class SiteSettingController extends Controller
             
             $data['file_path'] = $folder . '/' . $name;
             $data['file_size'] = $fileSize;
+            $data['file_hash'] = $fileHash;
+
+            $instituteId = (int) (auth()->user()->institute_id ?? 1);
+            if (!empty($fileHash)) {
+                $existing = \App\Models\LearningMaterial::where('institute_id', $instituteId)
+                    ->where('file_hash', $fileHash)
+                    ->first();
+                if ($existing) {
+                    $warning = "Note: A file with identical content already exists in this institute (\"{$existing->title}\").";
+                }
+            }
         }
 
         \App\Models\LearningMaterial::create($data);
 
-        return redirect()->back()->with('success', ucfirst($request->type) . ' added successfully.');
+        $redirect = redirect()->back()->with('success', ucfirst($request->type) . ' added successfully.');
+        if ($warning) {
+            $redirect->with('warning', $warning);
+        }
+
+        return $redirect;
     }
 
     /**

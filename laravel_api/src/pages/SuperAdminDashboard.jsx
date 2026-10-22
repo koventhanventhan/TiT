@@ -4,6 +4,7 @@ import SuperAdminLayout from '../components/super-admin/SuperAdminLayout'
 import SuperAdminOverview from './super-admin/SuperAdminOverview'
 import SuperAdminInstitutes from './super-admin/SuperAdminInstitutes'
 import SuperAdminPlans from './super-admin/SuperAdminPlans'
+import SuperAdminRag from './super-admin/SuperAdminRag'
 import { getCurrentUser } from '../services/authService'
 
 export default function SuperAdminDashboard() {
@@ -33,6 +34,7 @@ export default function SuperAdminDashboard() {
                 <Route path="dashboard" element={<SuperAdminOverview />} />
                 <Route path="institutes" element={<SuperAdminInstitutes />} />
                 <Route path="plans" element={<SuperAdminPlans />} />
+                <Route path="rag" element={<SuperAdminRag />} />
                 <Route path="*" element={<SuperAdminOverview />} />
             </Routes>
         </SuperAdminLayout>

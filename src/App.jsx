@@ -1,6 +1,14 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation, Navigate } from 'react-router-dom'
 import Header from './components/Header'
+
+function RagRouteGuard({ children }) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  if (user?.rag_enabled === false) {
+    return <Navigate to="/student/dashboard" replace />
+  }
+  return children
+}
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import CustomCursor from './components/CustomCursor'
@@ -24,6 +32,7 @@ import StudentMaterials from './pages/student/StudentMaterials'
 import StudentSchedule from './pages/student/StudentSchedule'
 import StudentPerformance from './pages/student/StudentPerformance'
 import StudentSettings from './pages/student/StudentSettings'
+import StudentStudyAssistant from './components/StudentStudyAssistant'
 import AdminDashboard from './pages/AdminDashboard'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import AdminOverview from './pages/admin/AdminOverview'
@@ -114,6 +123,7 @@ function AppContent() {
           <Route path="performance" element={<StudentPerformance />} />
           <Route path="messages" element={<MessagingPage />} />
           <Route path="settings" element={<StudentSettings />} />
+          <Route path="study-assistant" element={<RagRouteGuard><StudentStudyAssistant /></RagRouteGuard>} />
         </Route>
 
         {/* Admin Master Control Routes */}

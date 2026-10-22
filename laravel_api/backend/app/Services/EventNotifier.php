@@ -512,6 +512,44 @@ class EventNotifier
         ]);
     }
 
+    public static function studentDistressAlert(\App\Models\StudentAiQuery $query, User $student): void
+    {
+        self::defer(function () use ($query, $student) {
+            $institute = $student->institute;
+            $instituteName = $institute?->name ?? 'Institute #' . $student->institute_id;
+
+            $alertData = [
+                'subject_line' => 'URGENT: Student Distress Detected - ' . self::name($student),
+                'heading'      => 'Student Distress Alert',
+                'icon'         => '🚨',
+                'color'        => '#dc2626',
+                'message'      => 'A student AI study assistant query was flagged for personal distress / self-harm. Please reach out to the student immediately for pastoral care and support.',
+                'details'      => [
+                    'Student'   => self::name($student),
+                    'Student ID'=> (string) $student->id,
+                    'Institute' => $instituteName,
+                    'Query ID'  => (string) $query->id,
+                    'Question'  => mb_substr($query->question ?? '', 0, 150),
+                    'Flag'      => $query->flag_reason ?? 'Personal distress detected',
+                    'Time'      => self::fmt(now()),
+                ],
+            ];
+
+            // 1. Notify tenant institute admin(s)
+            $admins = User::where('institute_id', $student->institute_id)
+                ->where('role', 'admin')
+                ->whereNull('deactivated_at')
+                ->get();
+
+            foreach ($admins as $admin) {
+                self::toUser($admin, 'system_alert', $alertData);
+            }
+
+            // 2. Also notify global admin
+            self::toAdmin('system_alert', $alertData);
+        });
+    }
+
     public static function bounceBlocklisted(string $email, int $count): void
     {
         self::defer(fn() => self::toAdmin('system_alert', [

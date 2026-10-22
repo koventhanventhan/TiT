@@ -174,6 +174,19 @@ class User extends Authenticatable implements FilamentUser
         return $this->deactivated_at === null;
     }
 
+    public function institute()
+    {
+        return $this->belongsTo(\App\Models\Institute::class, 'institute_id');
+    }
+
+    public function isRagEnabled(): bool
+    {
+        if (!config('rag.enabled', true)) {
+            return false;
+        }
+        return (bool) optional($this->institute)->rag_enabled;
+    }
+
     public function parent()
     {
         return $this->belongsTo(User::class, 'parent_id');
@@ -203,6 +216,40 @@ class User extends Authenticatable implements FilamentUser
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
             ->exists();
+    }
+
+    /**
+     * Determine student eligibility state in one centralized place.
+     * Returns one of:
+     * - 'deactivated'
+     * - 'pending_registration'
+     * - 'pending_approval'
+     * - 'payment_due'
+     * - 'ok'
+     *
+     * @param string|null $yearMonth Optional year-month to check payment for (defaults to current month Y-m)
+     * @return string
+     */
+    public function studentAccessState(?string $yearMonth = null): string
+    {
+        if (!empty($this->deactivated_at)) {
+            return 'deactivated';
+        }
+
+        if ($this->registration_status === 'pending_payment') {
+            return 'pending_registration';
+        }
+
+        if (!$this->admin_confirmed_at) {
+            return 'pending_approval';
+        }
+
+        $checkMonth = $yearMonth ?: now()->format('Y-m');
+        if (!$this->hasPaidForMonth($checkMonth)) {
+            return 'payment_due';
+        }
+
+        return 'ok';
     }
 
     public function canAccessPanel(Panel $panel): bool

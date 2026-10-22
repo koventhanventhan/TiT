@@ -8,6 +8,7 @@ const ROUTES = [
   { path: '/student/zoom', name: 'zoom' },
   { path: '/student/assignments', name: 'assignments' },
   { path: '/student/materials', name: 'materials' },
+  { path: '/student/study-assistant', name: 'study-assistant' },
   { path: '/student/performance', name: 'performance' },
   { path: '/student/messages', name: 'messages' },
   { path: '/student/settings', name: 'settings' },

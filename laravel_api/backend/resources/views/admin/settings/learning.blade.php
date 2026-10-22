@@ -193,6 +193,14 @@
         </button>
     </div>
 @endif
+@if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: #fff;">
+        <i class="fa fa-exclamation-triangle mr-2 text-warning"></i>{{ session('warning') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
 
 <div class="row">
     <div class="col-xl-12">
@@ -400,14 +408,14 @@
                             @csrf
                             <input type="hidden" name="type" value="note">
                             <div class="form-group">
-                                <label>Select Grade</label>
+                                <label>Select Grade <span class="text-danger">*</span></label>
                                 <select name="grade" class="form-control" required>
                                     <option value="">-- Choose Grade --</option>
-                                      <option value="grade-1">Grade 1</option>
-                                        <option value="grade-2">Grade 2</option>
-                                          <option value="grade-3">Grade 3</option>
-                                            <option value="grade-4">Grade 4</option>
-                                              <option value="grade-5">Grade 5</option>
+                                    <option value="grade-1">Grade 1</option>
+                                    <option value="grade-2">Grade 2</option>
+                                    <option value="grade-3">Grade 3</option>
+                                    <option value="grade-4">Grade 4</option>
+                                    <option value="grade-5">Grade 5</option>
                                     <option value="grade-6">Grade 6</option>
                                     <option value="grade-7">Grade 7</option>
                                     <option value="grade-8">Grade 8</option>
@@ -416,6 +424,20 @@
                                     <option value="grade-11">Grade 11</option>
                                     <option value="grade-12">Grade 12</option>
                                     <option value="grade-13">Grade 13</option>
+                                </select>
+                                <small class="form-text text-muted" style="font-size: 11px; margin-top: 4px;">Grade controls which students can see this file and AI search.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject <span class="text-danger">*</span></label>
+                                <input type="text" name="subject" class="form-control" required placeholder="e.g. Science, Mathematics">
+                            </div>
+                            <div class="form-group">
+                                <label>Medium <span class="text-danger">*</span></label>
+                                <select name="medium" class="form-control" required>
+                                    <option value="tamil">Tamil</option>
+                                    <option value="english" selected>English</option>
+                                    <option value="sinhala">Sinhala</option>
+                                    <option value="all">All Mediums</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -494,7 +516,7 @@
                             @csrf
                             <input type="hidden" name="type" value="past_paper">
                             <div class="form-group">
-                                <label>Select Grade</label>
+                                <label>Select Grade <span class="text-danger">*</span></label>
                                 <select name="grade" class="form-control" required>
                                     <option value="">-- Choose Grade --</option>
                                     <option value="grade-1">Grade 1</option>
@@ -510,6 +532,20 @@
                                     <option value="grade-11">Grade 11</option>
                                     <option value="grade-12">Grade 12</option>
                                     <option value="grade-13">Grade 13</option>
+                                </select>
+                                <small class="form-text text-muted" style="font-size: 11px; margin-top: 4px;">Grade controls which students can see this file and AI search.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject <span class="text-danger">*</span></label>
+                                <input type="text" name="subject" class="form-control" required placeholder="e.g. Science, Mathematics">
+                            </div>
+                            <div class="form-group">
+                                <label>Medium <span class="text-danger">*</span></label>
+                                <select name="medium" class="form-control" required>
+                                    <option value="tamil">Tamil</option>
+                                    <option value="english" selected>English</option>
+                                    <option value="sinhala">Sinhala</option>
+                                    <option value="all">All Mediums</option>
                                 </select>
                             </div>
                             <div class="form-group">

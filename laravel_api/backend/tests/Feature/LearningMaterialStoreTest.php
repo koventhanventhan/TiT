@@ -44,6 +44,8 @@ class LearningMaterialStoreTest extends TestCase
             'title' => 'Grade 4 Science Notes',
             'type' => 'note',
             'grade' => 'grade-4',
+            'subject' => 'Science',
+            'medium' => 'english',
             'file_url' => $firebaseUrl,
             'file_size' => '3.5 MB',
         ]);
@@ -74,6 +76,8 @@ class LearningMaterialStoreTest extends TestCase
             'title' => 'Grade 4 Science Notes',
             'type' => 'note',
             'grade' => 'grade-4',
+            'subject' => 'Science',
+            'medium' => 'english',
             'file_url' => $firebaseUrl,
             'file_size' => '3.5 MB',
         ]);
@@ -94,6 +98,8 @@ class LearningMaterialStoreTest extends TestCase
             'title' => 'Grade 4 Foreign Bucket',
             'type' => 'note',
             'grade' => 'grade-4',
+            'subject' => 'Science',
+            'medium' => 'english',
             'file_url' => $foreignUrl,
         ]);
 
@@ -116,6 +122,8 @@ class LearningMaterialStoreTest extends TestCase
             'title' => 'Query String Trick',
             'type' => 'note',
             'grade' => 'grade-4',
+            'subject' => 'Science',
+            'medium' => 'english',
             'file_url' => $trickUrl,
         ]);
 
@@ -140,6 +148,8 @@ class LearningMaterialStoreTest extends TestCase
             'title' => 'Unconfigured Bucket Store',
             'type' => 'note',
             'grade' => 'grade-4',
+            'subject' => 'Science',
+            'medium' => 'english',
             'file_url' => $url,
         ]);
 
@@ -167,6 +177,8 @@ class LearningMaterialStoreTest extends TestCase
                 'title' => 'JSON Bad URL Note',
                 'type' => 'note',
                 'grade' => 'grade-4',
+                'subject' => 'Science',
+                'medium' => 'english',
                 'file_url' => $badUrl,
             ]);
 
@@ -313,12 +325,18 @@ class LearningMaterialStoreTest extends TestCase
         $response = $this->post('/api/teacher/materials', [
             'title' => 'Uploaded Lecture Notes',
             'type' => 'note',
+            'grade' => '10',
+            'subject' => 'Physics',
+            'medium' => 'tamil',
             'file' => $fakeFile,
         ], ['Accept' => 'application/json']);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('learning_materials', [
             'title' => 'Uploaded Lecture Notes',
+            'grade' => 'grade-10',
+            'subject' => 'Physics',
+            'medium' => 'tamil',
             'teacher_id' => $teacher->id,
         ]);
     }
@@ -344,5 +362,137 @@ class LearningMaterialStoreTest extends TestCase
         $this->assertDatabaseMissing('learning_materials', [
             'title' => 'Admin Traversing Material',
         ]);
+    }
+
+    public function test_notes_and_past_papers_require_grade_subject_medium_validation(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'institute_id' => $this->institute->id,
+        ]);
+        Sanctum::actingAs($teacher);
+
+        // Missing grade, subject, medium for note
+        $res = $this->postJson('/api/teacher/materials', [
+            'title' => 'Missing Fields Note',
+            'type' => 'note',
+        ]);
+        $res->assertStatus(422)
+            ->assertJsonValidationErrors(['grade', 'subject', 'medium']);
+
+        // Missing grade, subject, medium for past_paper
+        $res = $this->postJson('/api/teacher/materials', [
+            'title' => 'Missing Fields Past Paper',
+            'type' => 'past_paper',
+        ]);
+        $res->assertStatus(422)
+            ->assertJsonValidationErrors(['grade', 'subject', 'medium']);
+
+        // Non-study type (video/link) does not require grade, subject, medium
+        $res = $this->postJson('/api/teacher/materials', [
+            'title' => 'Video Link',
+            'type' => 'link',
+            'url' => 'https://youtube.com/watch?v=123',
+        ]);
+        $res->assertStatus(201);
+    }
+
+    public function test_grade_is_normalized_on_save(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'institute_id' => $this->institute->id,
+        ]);
+        Sanctum::actingAs($teacher);
+
+        $fakeFile = UploadedFile::fake()->create('grade_test.pdf', 50);
+
+        $res = $this->post('/api/teacher/materials', [
+            'title' => 'Grade Normalization Test',
+            'type' => 'note',
+            'grade' => 'Grade 11',
+            'subject' => 'Mathematics',
+            'medium' => 'all',
+            'file' => $fakeFile,
+        ], ['Accept' => 'application/json']);
+
+        $res->assertStatus(201);
+        $this->assertDatabaseHas('learning_materials', [
+            'title' => 'Grade Normalization Test',
+            'grade' => 'grade-11',
+        ]);
+    }
+
+    public function test_duplicate_file_hash_returns_warning(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'institute_id' => $this->institute->id,
+        ]);
+        Sanctum::actingAs($teacher);
+
+        $content = "Fixed Identical Content For Hash " . uniqid();
+        $file1 = UploadedFile::fake()->createWithContent('doc1.pdf', $content);
+        $file2 = UploadedFile::fake()->createWithContent('doc2.pdf', $content);
+
+        // Upload first
+        $res1 = $this->post('/api/teacher/materials', [
+            'title' => 'Original Document',
+            'type' => 'note',
+            'grade' => '10',
+            'subject' => 'Science',
+            'medium' => 'english',
+            'file' => $file1,
+        ], ['Accept' => 'application/json']);
+        $res1->assertStatus(201);
+        $this->assertNull($res1->json('warning'));
+
+        // Upload second with same content
+        $res2 = $this->post('/api/teacher/materials', [
+            'title' => 'Duplicate Document',
+            'type' => 'note',
+            'grade' => '10',
+            'subject' => 'Science',
+            'medium' => 'english',
+            'file' => $file2,
+        ], ['Accept' => 'application/json']);
+        $res2->assertStatus(201);
+        $this->assertNotNull($res2->json('warning'));
+        $this->assertStringContainsString('Original Document', $res2->json('warning'));
+    }
+
+    public function test_teacher_can_retry_failed_material(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake([\App\Jobs\IngestLearningMaterialJob::class]);
+
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'institute_id' => $this->institute->id,
+        ]);
+        Sanctum::actingAs($teacher);
+
+        $material = \App\Models\LearningMaterial::create([
+            'title' => 'Failed Ingestion Material',
+            'type' => 'note',
+            'grade' => 'grade-10',
+            'subject' => 'History',
+            'medium' => 'english',
+            'file_path' => 'materials/test.pdf',
+            'teacher_id' => $teacher->id,
+            'institute_id' => $this->institute->id,
+            'rag_status' => 'failed',
+            'rag_error' => 'OCR time limit, retry later',
+        ]);
+
+        $res = $this->postJson("/api/teacher/materials/{$material->id}/retry");
+        $res->assertStatus(200)
+            ->assertJson([
+                'message' => 'Material re-indexing has been scheduled.',
+            ]);
+
+        $material->refresh();
+        $this->assertEquals('pending', $material->rag_status);
+        $this->assertNull($material->rag_error);
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\IngestLearningMaterialJob::class);
     }
 }

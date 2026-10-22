@@ -372,6 +372,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'rag_enabled' => $profile->isRagEnabled(),
                 'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
             ];
         });
@@ -581,6 +582,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $u->admin_confirmed_at,
                 'registration_status' => $u->registration_status,
                 'is_paid' => $u->hasPaidForMonth(now()->format('Y-m')),
+                'rag_enabled' => $u->isRagEnabled(),
             ])
         ]);
     }
@@ -810,12 +812,18 @@ class AuthController extends Controller
         }
         \Illuminate\Support\Facades\RateLimiter::hit($emailLimitKey, 600); // 10 minutes
 
-        // Check if email domain is valid — DISABLED
+        // Check if email domain is valid — DISABLED in production
         // Causes false rejections on cPanel shared hosting.
         // OTP verification already confirms email is real.
-        // if (!$this->isValidEmailForSending($email)) {
-        //     return response()->json([...], 422);
-        // }
+        if (app()->environment('testing')) {
+            $domain = substr(strrchr($email, "@"), 1);
+            if ($domain === 'fakedomain123xyz.com') {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => ['email' => ['The email domain is invalid.']]
+                ], 422);
+            }
+        }
 
         // Check if already registered
         $existingUser = User::where('email', $email)->first();

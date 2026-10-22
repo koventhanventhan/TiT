@@ -7,7 +7,8 @@ import {
     FiTrendingUp,
     FiSettings,
     FiLogOut,
-    FiActivity
+    FiActivity,
+    FiCpu
 } from 'react-icons/fi'
 import './SuperAdminSidebar.css'
 
@@ -19,6 +20,7 @@ export default function SuperAdminSidebar() {
                 { name: 'Global Overview', icon: <FiGrid />, path: '/super-admin/dashboard' },
                 { name: 'Institutes', icon: <FiShield />, path: '/super-admin/institutes' },
                 { name: 'Pricing Plans', icon: <FiPackage />, path: '/super-admin/plans' },
+                { name: 'AI Assistant (RAG)', icon: <FiCpu />, path: '/super-admin/rag' },
             ]
         },
         {

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FiHome, FiCalendar, FiVideo, FiFileText, FiBookOpen,
     FiBarChart2, FiMessageSquare, FiSettings, FiLogOut,
-    FiMenu, FiX, FiSearch, FiChevronRight, FiUser
+    FiMenu, FiX, FiSearch, FiChevronRight, FiUser, FiHelpCircle
 } from 'react-icons/fi'
 import NotificationBell from './NotificationBell'
 import SidebarShell, { SidebarHamburger } from '../shared/SidebarShell'

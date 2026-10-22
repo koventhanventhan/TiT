@@ -1,0 +1,487 @@
+[
+  {
+    "question": "What is the balanced chemical equation for oxygenic photosynthesis?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "State Newton's second law of motion and explain its standard formula F = ma.",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "What are the primary differences between arteries and veins in the human circulatory system?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "Explain Ohm's Law and the relationship between voltage, current, and resistance.",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "How do you solve a quadratic equation using the quadratic formula?",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "What is Pythagoras' theorem and how is it used to find the hypotenuse?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "Describe the main causes of the 1818 Uva-Wellassa uprising in Sri Lankan history.",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "What were the significant features of King Parakramabahu I's hydraulic civilization?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "What are the three main organs of government under the Sri Lankan constitution?",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "List the fundamental rights guaranteed to citizens under chapter III of the constitution.",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+
+  {
+    "question": "What is the recipe for baking chocolate chip cookies at home?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "Who won the FIFA Men's World Cup football tournament in 2022?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "What is the current stock price of Apple Inc on the NASDAQ exchange?",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "Write Python source code to scrape data from an external e-commerce website.",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "What are the gameplay mechanics and cheat codes for Minecraft survival mode?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "What are the best tourist hotels and resorts to stay at near Mirissa beach?",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "Explain quantum chromodynamics and gluon color charge interactions in particle physics.",
+    "grade": "grade-10",
+    "medium": "english",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "What is the latest movie starring Tom Cruise released in cinema theaters?",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "How do you repair a punctured pneumatic tyre on a mountain bicycle?",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "Give me legal advice on registering a private limited liability shipping company in Panama.",
+    "grade": "grade-11",
+    "medium": "english",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+
+  {
+    "question": "ஒளிச்சேர்க்கை செயல்முறையின் சமன்பாட்டை விளக்குக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "நியூட்டனின் இரண்டாம் இயக்க விதியை கூறுக மற்றும் அதன் சமன்பாட்டை விளக்குக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "தமனி மற்றும் சிரை ஆகியவற்றுக்கு இடையிலான பிரதான வேறுபாடுகள் யாவை?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "ஓம் விதி என்றால் என்ன? அதன் பயன்பாட்டைக் குறிப்பிடுக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "பைதகரசு தேற்றத்தை விபரித்து அதனை எவ்வாறு பயன்படுத்துவது என விளக்குக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "இருபடிச் சமன்பாடுகளை சூத்திரத்தைப் பயன்படுத்தி எவ்வாறு தீர்ப்பது?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "1818 ஆம் ஆண்டு ஊவா-வெல்லச கிளர்ச்சிக்கான காரணங்களை விளக்குக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "முதலாம் பராக்கிரமபாகு மன்னனின் நீர்ப்பாசனப் பங்களிப்புகள் யாவை?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "இலங்கை அரசியலமைப்பின் கீழ் அரசாங்கத்தின் மூன்று பிரதான அங்கங்கள் யாவை?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "அரசியலமைப்பின் அத்தியாயம் III இன் கீழ் உத்தரவாதம் அளிக்கப்பட்டுள்ள அடிப்படை உரிமைகளைக் குறிப்பிடுக.",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+
+  {
+    "question": "வீட்டில் சாக்லேட் கேக் தயாரிக்கும் செய்முறை என்ன?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "2023 உலகக் கோப்பை கிரிக்கெட் போட்டியில் இறுதிப் போட்டியில் வென்ற அணி எது?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "கொழும்பு பங்குச் சந்தையில் இன்றைய வணிக விலை நிலவரங்கள் என்ன?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "யூடியூப் வீடியோக்களை பதிவிறக்க பைதான் கணினி நிரல் எழுதுக.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "ஜிடிஏ 5 வீடியோ கேமில் பணத்தை அதிகரிப்பதற்கான ரகசியக் குறியீடுகள் யாவை?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "யாழ்ப்பாணத்தில் தங்குவதற்கு சிறந்த சுற்றுலா விடுதிகள் எவை?",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "குவாண்டம் இயற்பியலில் ஸ்ட்ரிங் தத்துவத்தின் அடிப்படைக் கோட்பாடுகளை விவரிக்கவும்.",
+    "grade": "grade-10",
+    "medium": "tamil",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "சமீபத்தில் வெளியான புதிய தமிழ் திரைப்படத்தின் விமர்சனம் என்ன?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "மோட்டார் சைக்கிள் என்ஜின் ஆயிலை எவ்வாறு மாற்றுவது?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "சிங்கப்பூரில் குடியுரிமை பெறுவதற்கான சட்ட வழிமுறைகள் யாவை?",
+    "grade": "grade-11",
+    "medium": "tamil",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+
+  {
+    "question": "ප්‍රභාසංස්ලේෂණ ක්‍රියාවලියේ තුලිත රසායනික සමීකරණය ලියන්න.",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "නිව්ටන්ගේ දෙවන චලිත නියමය ප්‍රකාශ කර F = ma සමීකරණය පැහැදිලි කරන්න.",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "මිනිස් රුධිර සංසරණ පද්ධතියේ ධමනි සහ ශිරා අතර ඇති ප්‍රධාන වෙනස්කම් මොනවාද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "ඕම් නියමය යනු කුමක්ද සහ වෝල්ටීයතාව, ධාරාව හා ප්‍රතිරෝධය අතර සම්බන්ධතාවය කුමක්ද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "පයිතගරස් ප්‍රමේයය යනු කුමක්ද සහ එය ත්‍රිකෝණයක කර්ණය සෙවීමට භාවිත කරන්නේ කෙසේද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "වර්ගජ සමීකරණ සූත්‍රය භාවිතයෙන් විසඳන්නේ කෙසේද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Mathematics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "1818 ඌව-වෙල්ලස්ස කැරැල්ල ඇතිවීමට බලපෑ ප්‍රධාන හේතු මොනවාද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "පළමුවන පරාක්‍රමබාහු රජුගේ වාරි ශිෂ්ටාචාරයේ ප්‍රධාන ලක්ෂණ මොනවාද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "History",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "ශ්‍රී ලංකා ආණ්ඩුක්‍රම ව්‍යවස්ථාව යටතේ රජයේ ප්‍රධාන ආයතන තුන මොනවාද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+  {
+    "question": "ආණ්ඩුක්‍රම ව්‍යවස්ථාවේ III වන පරිච්ඡේදය යටතේ සහතික කර ඇති මූලික අයිතිවාසිකම් මොනවාද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Civics",
+    "should_answer": true,
+    "expected_material_id": null
+  },
+
+  {
+    "question": "නිවසේදී චොකලට් කේක් සාදාගන්නා වට්ටෝරුව කුමක්ද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "2022 පාපන්දු ලෝක කුසලානය දිනාගත් රට කුමක්ද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "කොළඹ කොටස් වෙළඳපොළේ අද දින සමාගම් කොටස් මිල ගණන් මොනවාද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "වෙබ් අඩවි දත්ත ලබාගැනීම සඳහා පයිතන් කේතයක් ලියන්න.",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Mathematics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "මයින්ක්‍රාෆ්ට් පරිගණක ක්‍රීඩාවේ රහස් කේත මොනවාද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "නුවරඑළියේ නැවතී සිටීමට ඇති හොඳම සංචාරක හෝටල් මොනවාද?",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "History",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "ක්වොන්ටම් යාන්ත්‍ර විද්‍යාවේ අංශු භෞතික විද්‍යා න්‍යාය පැහැදිලි කරන්න.",
+    "grade": "grade-10",
+    "medium": "sinhala",
+    "subject": "Science",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "දැනට සිනමාහල්වල තිරගත වන අලුත්ම සිංහල චිත්‍රපට මොනවාද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "යතුරුපැදියක තිරිංග පද්ධතිය අලුත්වැඩියා කරන්නේ කෙසේද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  },
+  {
+    "question": "ඩුබායි හි නව ව්‍යාපාරයක් ලියාපදිංචි කිරීමේ නීතිමය ක්‍රියාපටිපාටිය කුමක්ද?",
+    "grade": "grade-11",
+    "medium": "sinhala",
+    "subject": "Civics",
+    "should_answer": false,
+    "expected_material_id": null
+  }
+]

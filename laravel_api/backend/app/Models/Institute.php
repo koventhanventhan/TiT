@@ -15,6 +15,8 @@ class Institute extends Model
         'logo_path',
         'theme_settings',
         'status',
+        'rag_enabled',
+        'public_assistant_enabled',
         'subscription_plan_id',
         'expires_at',
         'index_prefix',
@@ -22,6 +24,8 @@ class Institute extends Model
     ];
 
     protected $casts = [
+        'rag_enabled' => 'boolean',
+        'public_assistant_enabled' => 'boolean',
         'theme_settings' => 'array',
         'expires_at' => 'datetime',
         'index_seq_start' => 'integer',
@@ -70,6 +74,11 @@ class Institute extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function faqs()
+    {
+        return $this->hasMany(Faq::class)->orderBy('sort_order');
     }
 
     public function activityLogs()

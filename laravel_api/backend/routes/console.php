@@ -80,4 +80,13 @@ Schedule::call($guard('alerts:pending-approvals', fn() => Artisan::call('alerts:
 // Daily summary for the admin
 Schedule::call($guard('alerts:daily-summary', fn() => Artisan::call('alerts:daily-summary')))->dailyAt('20:00');
 
+// Daily privacy pruning for student RAG query text
+Schedule::command('rag:prune-queries')->dailyAt('03:00');
 
+// Clean up queries stuck in 'processing' status for over 5 minutes
+Schedule::command('rag:cleanup-stuck-queries')->everyFiveMinutes();
+
+
+
+// Clean up materials stuck in 'processing' status for over 15 minutes
+Schedule::command('rag:cleanup-stuck-materials')->everyTenMinutes();

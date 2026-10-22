@@ -10,22 +10,29 @@ import {
     FiMessageSquare,
     FiSettings,
     FiLogOut,
-    FiCreditCard
+    FiCreditCard,
+    FiHelpCircle
 } from 'react-icons/fi'
 import './StudentSidebar.css'
 
 export default function StudentSidebar() {
-    const menuItems = [
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isRagEnabled = Boolean(user?.rag_enabled);
+
+    const allMenuItems = [
         { name: 'Dashboard', icon: <FiHome />, path: '/student/dashboard' },
         { name: 'Payments', icon: <FiCreditCard />, path: '/student/overview' }, // Redirect to overview where module is
         { name: 'Schedule', icon: <FiCalendar />, path: '/student/schedule' },
         { name: 'Zoom Classes', icon: <FiVideo />, path: '/student/zoom' },
         { name: 'Assignments', icon: <FiFileText />, path: '/student/assignments' },
         { name: 'Materials', icon: <FiBookOpen />, path: '/student/materials' },
+        { name: 'Study Assistant', icon: <FiHelpCircle />, path: '/student/study-assistant', requiresRag: true },
         { name: 'Performance', icon: <FiBarChart2 />, path: '/student/performance' },
         { name: 'Messages', icon: <FiMessageSquare />, path: '/student/messages' },
         { name: 'Settings', icon: <FiSettings />, path: '/student/settings' },
-    ]
+    ];
+
+    const menuItems = allMenuItems.filter(item => !item.requiresRag || isRagEnabled);
 
     return (
         <aside className="student-sidebar">

@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \App\Http\Middleware\TenantMiddleware::class,
@@ -29,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'reg_status' => \App\Http\Middleware\CheckRegistrationStatus::class,
             'profile.context' => \App\Http\Middleware\ProfileContext::class,
             'recaptcha' => \App\Http\Middleware\VerifyRecaptcha::class,
+            'auth.optional' => \App\Http\Middleware\OptionalSanctumAuth::class,
         ]);
         
         // Custom session timeout middleware

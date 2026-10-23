@@ -214,6 +214,9 @@ EOT;
 
         $ungrounded = [];
         foreach ($words as $word) {
+            if ($this->normalizer->isStopWord($word)) {
+                continue;
+            }
             if (in_array($word, $commonStopWords, true)) {
                 continue;
             }

@@ -7,29 +7,42 @@ class TextNormalizer
     /**
      * Common Tamil stop words / interrogatives that carry no topical relevance.
      */
-    protected const TAMIL_STOP_WORDS = [
-        'எது', 'எவை', 'என்ன', 'எவ்வாறு', 'எங்கு', 'எப்போது', 'யாருடைய', 'யார்', 'யாது', 'யாவை', 'யாவன',
-        'எத்தனை', 'எந்த', 'பற்றி', 'கூறுக', 'விளக்குக', 'குறிப்பிடுக', 'தருக', 'எழுதுக',
-        'விடை', 'வினா', 'கேள்வி', 'பதில்', 'ஒரு', 'இரு', 'மற்றும்', 'அல்லது', 'என',
-        'ஆகிய', 'உள்ள', 'உள்ளது', 'எனப்படுவது', 'என்பது', 'என்ற', 'இதன்', 'அதன்', 'ஏன்',
+        protected const TAMIL_STOP_WORDS = [
+        // Question words & interrogatives
+        'எது', 'எவை', 'என்ன', 'எவ்வாறு', 'எங்கு', 'எப்போது', 'எப்படி', 'யார்', 'யாருடைய', 'யாது', 'யாவை', 'யாவன',
+        'எத்தனை', 'எந்த', 'ஏன்',
+        // Light verbs & auxiliaries
+        'செய்', 'செய்ய', 'செய்வது', 'செய்யப்படும்', 'செய்யும்', 'செய்த', 'செய்து', 'செய்க',
+        'பயன்படு', 'பயன்படும்', 'பயன்படுத்தப்படும்', 'பயன்படுத்த', 'பயன்படுத்துவது', 'பயன்பாட்டு',
+        'கூறுக', 'விளக்குக', 'குறிப்பிடுக', 'தருக', 'எழுதுக',
+        // Common grammatical particles & functional terms
+        'பற்றி', 'விடை', 'வினா', 'கேள்வி', 'பதில்', 'ஒரு', 'இரு', 'மற்றும்', 'அல்லது', 'என',
+        'ஆகிய', 'உள்ள', 'உள்ளது', 'எனப்படுவது', 'என்பது', 'என்ற', 'இதன்', 'அதன்', 'இவை', 'அவை',
     ];
 
     /**
      * Common English stop words.
      */
-    protected const ENGLISH_STOP_WORDS = [
-        'what', 'which', 'who', 'where', 'when', 'why', 'how', 'is', 'are', 'was', 'were',
-        'the', 'a', 'an', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-        'do', 'does', 'did', 'done', 'has', 'have', 'had', 'can', 'could', 'will', 'would', 'should',
-        'explain', 'describe', 'give', 'state', 'name', 'tell', 'about', 'from',
+        protected const ENGLISH_STOP_WORDS = [
+        'what', 'which', 'who', 'whom', 'whose', 'where', 'when', 'why', 'how',
+        'do', 'does', 'did', 'done', 'doing', 'make', 'makes', 'made', 'making',
+        'use', 'uses', 'used', 'using',
+        'is', 'are', 'was', 'were', 'be', 'been', 'being',
+        'the', 'a', 'an', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from',
+        'has', 'have', 'had', 'can', 'could', 'will', 'would', 'should',
+        'explain', 'describe', 'give', 'state', 'name', 'tell', 'about',
     ];
 
     /**
      * Common Sinhala stop words / interrogatives.
      */
-    protected const SINHALA_STOP_WORDS = [
-        'කුමක්ද', 'මොනවාද', 'කවරේද', 'කවුද', 'කොහේද', 'කවදාද', 'ඇයි', 'කෙසේද', 'සහ', 'හෝ',
-        'සඳහන්', 'කරන්න', 'විස්තර', 'පිළිබඳ', 'ගැන', 'කුමන', 'යනු', 'මොකක්ද',
+        protected const SINHALA_STOP_WORDS = [
+        // Interrogatives
+        'කුමක්ද', 'මොනවාද', 'කවරේද', 'කවුද', 'කොහේද', 'කවදාද', 'ඇයි', 'කෙසේද', 'කුමන', 'මොකක්ද', 'මොන',
+        // Light verbs & auxiliaries
+        'කරන්නේ', 'කිරීම', 'කරන්න', 'කරනු', 'කරන', 'කරනලද', 'කරයි', 'කර',
+        'භාවිතා', 'භාවිත', 'භාවිතාකරන', 'යොදාගන්නා', 'සඳහා', 'සඳහන්', 'විස්තර', 'පිළිබඳ', 'ගැන', 'යනු',
+        'සහ', 'හා', 'පිළිතුර', 'ප්‍රශ්නය', 'නැත', 'ඇත', 'ලැබේ', 'වේ',
     ];
 
     public bool $suffixStrippingEnabled;
@@ -38,12 +51,16 @@ class TextNormalizer
     public int $minFuzzyWordLength;
     public array $variants;
 
+        public array $stopwords;
+    protected array $allStopwords = [];
+
     public function __construct(
         ?bool $suffixStrippingEnabled = null,
         ?bool $variantsEnabled = null,
         ?bool $fuzzyMatchingEnabled = null,
         ?int $minFuzzyWordLength = null,
-        ?array $variants = null
+        ?array $variants = null,
+        ?array $stopwords = null
     ) {
         $hasConfig = class_exists(\Illuminate\Container\Container::class) && \Illuminate\Container\Container::getInstance() && \Illuminate\Container\Container::getInstance()->bound('config');
         $this->suffixStrippingEnabled = $suffixStrippingEnabled ?? ($hasConfig ? (bool) config('rag.normalizer.suffix_stripping_enabled', true) : true);
@@ -57,6 +74,34 @@ class TextNormalizer
             'மங்கல' => 'மங்கள',
             'மங்கள' => 'மங்கல',
         ]);
+
+        $configStopwords = $hasConfig ? config('rag.normalizer.stopwords') : null;
+        $this->stopwords = $stopwords ?? (is_array($configStopwords) ? $configStopwords : [
+            'tamil' => self::TAMIL_STOP_WORDS,
+            'sinhala' => self::SINHALA_STOP_WORDS,
+            'english' => self::ENGLISH_STOP_WORDS,
+        ]);
+
+        $merged = [];
+        foreach ($this->stopwords as $langList) {
+            if (is_array($langList)) {
+                $merged = array_merge($merged, $langList);
+            }
+        }
+        $this->allStopwords = array_values(array_unique(array_merge($merged, self::TAMIL_STOP_WORDS, self::SINHALA_STOP_WORDS, self::ENGLISH_STOP_WORDS)));
+    }
+
+    /**
+     * Check whether a token is an excluded stopword in any supported language.
+     */
+    public function isStopWord(string $token): bool
+    {
+        $clean = mb_strtolower(trim($token), 'UTF-8');
+        if (empty($clean) || in_array($clean, $this->allStopwords, true)) {
+            return true;
+        }
+        $stem = $this->stemToken($clean);
+        return in_array($stem, $this->allStopwords, true);
     }
 
     /**
@@ -83,14 +128,12 @@ class TextNormalizer
             }
 
             // Skip stop words
-            if (in_array($token, self::TAMIL_STOP_WORDS, true) ||
-                in_array($token, self::ENGLISH_STOP_WORDS, true) ||
-                in_array($token, self::SINHALA_STOP_WORDS, true)) {
+            if ($this->isStopWord($token)) {
                 continue;
             }
 
             $stem = $this->normalizeToken($token);
-            if (!empty($stem) && !in_array($stem, self::TAMIL_STOP_WORDS, true)) {
+            if (!empty($stem) && !$this->isStopWord($stem)) {
                 $keywords[] = $stem;
             }
         }

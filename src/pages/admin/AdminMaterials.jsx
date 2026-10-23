@@ -5,15 +5,18 @@ import {
     FiVideo,
     FiDownload,
     FiTrash2,
-    FiSearch,
-    FiGrid
+    FiEdit2
 } from 'react-icons/fi'
 import { getAdminMaterials } from '../../services/dashboardService'
+import { useLanguage } from '../../context/LanguageContext'
+import MaterialExtractedTextModal from '../../components/MaterialExtractedTextModal'
 import './AdminMaterials.css'
 
 export default function AdminMaterials() {
+    const { t } = useLanguage()
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
+    const [reviewModalMaterial, setReviewModalMaterial] = useState(null)
 
     useEffect(() => {
         async function loadMaterials() {
@@ -56,6 +59,14 @@ export default function AdminMaterials() {
                             <div className="m-footer">
                                 <span>{item.file_size || 'N/A'}</span>
                                 <div className="m-actions">
+                                    <button
+                                        className="edit-btn"
+                                        style={{ marginRight: '6px' }}
+                                        onClick={() => setReviewModalMaterial(item)}
+                                        title={t('review_extracted_text', 'Review & Correct Extracted Text')}
+                                    >
+                                        <FiEdit2 />
+                                    </button>
                                     <button className="del-btn"><FiTrash2 /></button>
                                     <button className="dl-btn"><FiDownload /></button>
                                 </div>
@@ -64,6 +75,13 @@ export default function AdminMaterials() {
                     </div>
                 ))}
             </div>
+
+            <MaterialExtractedTextModal
+                materialId={reviewModalMaterial?.id}
+                materialTitle={reviewModalMaterial?.title}
+                isOpen={!!reviewModalMaterial}
+                onClose={() => setReviewModalMaterial(null)}
+            />
         </div>
     )
 }

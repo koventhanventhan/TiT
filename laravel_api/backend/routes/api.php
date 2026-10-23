@@ -72,6 +72,9 @@ Route::middleware([\App\Http\Middleware\OptionalSanctumAuth::class, \App\Http\Mi
 
 // Protected routes
 Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
+    // Extracted-text review & correction (Material teacher owner or admin)
+    Route::get('/materials/{id}/pages', [\App\Http\Controllers\Api\MaterialPageCorrectionController::class, 'index']);
+    Route::put('/materials/{id}/pages/{pageNumber}', [\App\Http\Controllers\Api\MaterialPageCorrectionController::class, 'update']);
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::get('/auth/profiles', [AuthController::class, 'getProfiles']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);

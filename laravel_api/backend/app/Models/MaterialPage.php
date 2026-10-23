@@ -18,6 +18,9 @@ class MaterialPage extends Model
         'text',
         'is_ocr',
         'ocr_uncertain',
+        'teacher_verified',
+        'last_edited_by',
+        'last_edited_at',
         'file_hash',
     ];
 
@@ -25,10 +28,17 @@ class MaterialPage extends Model
         'page_number' => 'integer',
         'is_ocr' => 'boolean',
         'ocr_uncertain' => 'boolean',
+        'teacher_verified' => 'boolean',
+        'last_edited_at' => 'datetime',
     ];
 
     public function material(): BelongsTo
     {
         return $this->belongsTo(LearningMaterial::class, 'material_id');
+    }
+
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_edited_by');
     }
 }

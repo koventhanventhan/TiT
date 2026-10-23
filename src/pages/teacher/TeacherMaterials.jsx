@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { FiUpload, FiFolder, FiFile, FiVideo, FiLink } from 'react-icons/fi'
+import { FiUpload, FiFolder, FiFile, FiVideo, FiLink, FiEdit2 } from 'react-icons/fi'
 import { getTeacherMaterials } from '../../services/dashboardService'
+import { useLanguage } from '../../context/LanguageContext'
+import MaterialExtractedTextModal from '../../components/MaterialExtractedTextModal'
 import './TeacherSections.css'
 
 export default function TeacherMaterials() {
+    const { t } = useLanguage()
     const [materials, setMaterials] = useState([])
     const [loading, setLoading] = useState(true)
+    const [reviewModalMaterial, setReviewModalMaterial] = useState(null)
 
     useEffect(() => {
         async function load() {
@@ -57,6 +61,13 @@ export default function TeacherMaterials() {
                                     <p>{item.subject} • {item.grade}</p>
                                 </div>
                                 <div className="item-actions">
+                                    <button
+                                        className="btn-action"
+                                        onClick={() => setReviewModalMaterial(item)}
+                                        title={t('review_extracted_text', 'Review & Correct Extracted Text')}
+                                    >
+                                        <FiEdit2 /> Review Text
+                                    </button>
                                     <button className="btn-action">Download</button>
                                 </div>
                             </div>
@@ -64,6 +75,13 @@ export default function TeacherMaterials() {
                     </div>
                 </div>
             )}
+
+            <MaterialExtractedTextModal
+                materialId={reviewModalMaterial?.id}
+                materialTitle={reviewModalMaterial?.title}
+                isOpen={!!reviewModalMaterial}
+                onClose={() => setReviewModalMaterial(null)}
+            />
         </div>
     )
 }

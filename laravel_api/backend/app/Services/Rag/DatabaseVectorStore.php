@@ -88,8 +88,17 @@ class DatabaseVectorStore implements VectorStoreInterface
                 continue;
             }
 
+            // Ensure chunk vector is L2-normalized so dot product is true cosine similarity in [-1, 1]
+            $chunkNorm = $this->computeNorm($chunkVector);
+            if ($chunkNorm <= 1e-12) {
+                continue;
+            }
+            if (abs($chunkNorm - 1.0) > 1e-4) {
+                $chunkVector = array_map(fn($v) => $v / $chunkNorm, $chunkVector);
+            }
+
             // Since both vectors are L2-normalized, cosine similarity is exactly the dot product
-            $similarity = $this->dotProduct($normalizedQuery, $chunkVector);
+            $similarity = min(1.0, max(-1.0, $this->dotProduct($normalizedQuery, $chunkVector)));
 
             if ($similarity >= $threshold) {
                 $scoredResults[] = [

@@ -68,7 +68,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => 'required|date',
             'subject' => 'nullable|string|max:100',
             'grade' => 'nullable|string|max:50',
-            'medium' => 'required|in:english,tamil,both',
+            'medium' => 'required|in:english,tamil,sinhala,both,all',
             'teacher_ids' => 'nullable|array',
             'teacher_ids.*' => 'exists:users,id',
         ]);
@@ -176,7 +176,7 @@ class ZoomScheduleController extends Controller
             'scheduled_at' => 'required|date',
             'subject' => 'nullable|string|max:100',
             'grade' => 'nullable|string|max:50',
-            'medium' => 'required|in:english,tamil,both',
+            'medium' => 'required|in:english,tamil,sinhala,both,all',
             'teacher_ids' => 'nullable|array',
             'teacher_ids.*' => 'exists:users,id',
         ]);

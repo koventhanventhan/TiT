@@ -64,8 +64,8 @@ class RetrievalService
             });
         }
 
-        $allMaterials = $query->get();
-
+                $allMaterials = $query->get();
+        
         // 3. Filter using GradeMatcher
         $matchedMaterials = $allMaterials->filter(function ($m) use ($student) {
             return GradeMatcher::matches($student->current_grade, $m->grade);
@@ -164,7 +164,10 @@ class RetrievalService
                 $chunk = $hit['chunk'];
                 $embSim = (float) $hit['similarity'];
                 $kwScore = $this->normalizer->keywordOverlapScore($chunk->content ?? '', $keywords);
-                $hybridScore = (1.0 - $this->keywordWeight) * $embSim + ($this->keywordWeight * $kwScore);
+                // Formula that NEVER lowers a chunk score: boost with headroom
+                // score = emb + w * overlap * (1 - emb)
+                $boost = $this->keywordWeight * $kwScore * (1.0 - $embSim);
+                $hybridScore = min(1.0, max($embSim, $embSim + $boost));
                 $hybridHits[] = [
                     'chunk' => $chunk,
                     'similarity' => round($hybridScore, 4),

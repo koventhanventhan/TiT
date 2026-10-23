@@ -64,6 +64,16 @@ return [
         'min_similarity' => (float) env('RAG_MIN_SIMILARITY', 0.70),
         'top_k' => (int) env('RAG_TOP_K', 5),
         'hybrid_keyword_weight' => (float) env('RAG_HYBRID_KEYWORD_WEIGHT', 0.20),
+        'normalizer' => [
+            'suffix_stripping_enabled' => filter_var(env('RAG_NORMALIZER_SUFFIX_STRIPPING', true), FILTER_VALIDATE_BOOLEAN),
+            'variants_enabled' => filter_var(env('RAG_NORMALIZER_VARIANTS', true), FILTER_VALIDATE_BOOLEAN),
+            'fuzzy_matching_enabled' => filter_var(env('RAG_NORMALIZER_FUZZY', true), FILTER_VALIDATE_BOOLEAN),
+            'min_fuzzy_word_length' => (int) env('RAG_NORMALIZER_MIN_FUZZY_LEN', 5),
+            'variants' => [
+                'மங்கல' => 'மங்கள',
+                'மங்கள' => 'மங்கல',
+            ],
+        ],
     ],
 
     /*

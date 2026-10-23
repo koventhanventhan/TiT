@@ -16,6 +16,7 @@ class TrustedProxiesRateLimitTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Config::set('rag.public_enabled', true);
         RateLimiter::clear('assistant_ip_min:127.0.0.1');
         RateLimiter::clear('assistant_ip_day:127.0.0.1');
         Http::fake([

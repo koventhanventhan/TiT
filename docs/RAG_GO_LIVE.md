@@ -23,6 +23,7 @@ php artisan migrate --path=database/migrations/2026_10_21_040000_create_material
 php artisan migrate --path=database/migrations/2026_10_22_010000_add_public_assistant_enabled_to_institutes_table.php
 php artisan migrate --path=database/migrations/2026_10_22_020000_create_faqs_table.php
 php artisan migrate --path=database/migrations/2026_10_22_030000_create_assistant_visitor_logs_table.php
+php artisan migrate --path=database/migrations/2026_10_22_040000_widen_learning_materials_medium_enum.php
 ```
 
 ### Verification Script
@@ -119,7 +120,7 @@ RAG_HELPLINE_SECONDARY_NUMBER="" # Note: Verify contact numbers with local autho
 RAG_HELPLINE_SECONDARY_HOURS="9:00 AM - 8:00 PM Daily"
 
 RAG_HELPLINE_INSTITUTE_NAME="TiT Institute Student Support Desk"
-RAG_HELPLINE_INSTITUTE_NUMBER="+94 77 123 4567"
+RAG_HELPLINE_INSTITUTE_NUMBER="" # Leave empty or populate with institute's real verified telephone number
 RAG_HELPLINE_INSTITUTE_HOURS="Monday - Saturday 8:00 AM - 5:00 PM"
 ```
 
@@ -202,7 +203,7 @@ This produces optimized production assets in `laravel_api/dist/`.
 
 ### Step 2: Upload Files to Server
 1. Copy the contents of `laravel_api/dist/assets/` to your public server assets directory (e.g. `/home/<cpanel_user>/public_html/assets/` or `laravel_api/public/assets/`).
-2. Verify `index.html` or the Laravel blade view `resources/views/app.blade.php` references the latest generated JS and CSS hash bundles.
+2. Verify `index.html` references the latest generated JS and CSS hash bundles (the SPA is served directly from the root `index.html`, there is no `app.blade.php`).
 
 ---
 
@@ -228,7 +229,7 @@ To immediately hide the Study Assistant from students without rolling back code 
 If you need to revert the database tables:
 ```bash
 cd /home/<cpanel_user>/public_html/laravel_api/backend
-php artisan migrate:rollback --step=8
+php artisan migrate:rollback --step=12
 ```
 
 ---
@@ -273,11 +274,16 @@ RAG_ASSISTANT_VISITOR_MAX_CHARS=200
 ### 7.2 Reverse Proxy & TrustProxies Verification
 
 In shared hosting, Cloudflare, or reverse-proxy architectures, client IP addresses arrive via headers such as `X-Forwarded-For`. To ensure accurate visitor rate limiting and prevent rate-limit poisoning across shared Sri Lankan mobile carrier networks:
-- In `bootstrap/app.php`, TrustProxies is configured via:
+- In `bootstrap/app.php`, TrustProxies is driven by the `TRUSTED_PROXIES` environment variable:
   ```php
-  $middleware->trustProxies(at: '*');
+  $trustedProxiesEnv = env('TRUSTED_PROXIES');
+  $trustedProxies = !empty($trustedProxiesEnv)
+      ? array_map('trim', explode(',', $trustedProxiesEnv))
+      : [];
+
+  $middleware->trustProxies(at: $trustedProxies);
   ```
-- This instructs Symfony/Laravel to inspect trusted proxy headers and return the true originating client IP from `$request->ip()`.
+- When `TRUSTED_PROXIES` is empty on cPanel/Apache, Laravel uses `$_SERVER['REMOTE_ADDR']` directly. For Cloudflare, populate `TRUSTED_PROXIES` with Cloudflare's published IP CIDRs.
 
 ### 7.3 Per-Institute Public Assistant Toggle & Safety Gates
 

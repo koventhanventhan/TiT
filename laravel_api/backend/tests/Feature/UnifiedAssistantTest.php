@@ -91,6 +91,11 @@ class UnifiedAssistantTest extends TestCase
     {
         parent::setUp();
 
+        config([
+            'rag.enabled' => true,
+            'rag.public_enabled' => true,
+        ]);
+
         $this->app->instance(GeminiClientInterface::class, new FakeUnifiedGeminiClient());
 
         $this->institute = Institute::create([

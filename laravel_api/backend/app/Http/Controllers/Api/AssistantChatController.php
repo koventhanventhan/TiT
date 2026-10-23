@@ -106,12 +106,24 @@ class AssistantChatController extends Controller
 
         // Verify public assistant availability when in public tier
         if ($tier === 'public') {
-            $globalEnabled = filter_var(config('rag.public_enabled', true), FILTER_VALIDATE_BOOLEAN);
+            $globalEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);
             if (!$globalEnabled || empty($institute->public_assistant_enabled)) {
                 return response()->json([
                     'message' => 'The public website assistant is currently disabled for this institute.',
                     'public_enabled' => false,
                 ], 403);
+            }
+
+            // reCAPTCHA fail closed: in production / non-local environments, if RECAPTCHA_SECRET_KEY is empty, fail closed (503)
+            $env = config('app.env') ?: app()->environment();
+            if (!in_array($env, ['local', 'testing'], true)) {
+                $recaptchaSecret = config('services.recaptcha.secret_key');
+                if (empty($recaptchaSecret)) {
+                    return response()->json([
+                        'message' => 'The public website assistant is temporarily undergoing maintenance.',
+                        'public_enabled' => false,
+                    ], 503);
+                }
             }
         }
 
@@ -165,9 +177,16 @@ class AssistantChatController extends Controller
                 ], 422);
             }
 
-            // reCAPTCHA verification
+            // reCAPTCHA verification (fail closed in production/staging environments)
             $secretKey = config('services.recaptcha.secret_key');
-            if (!app()->environment('testing') && !empty($secretKey)) {
+            if (!app()->environment(['local', 'testing'])) {
+                if (empty($secretKey)) {
+                    return response()->json([
+                        'message' => 'Visitor assistant is temporarily unavailable due to security configuration.',
+                        'public_enabled' => false,
+                    ], 503);
+                }
+
                 $recaptchaToken = $request->input('recaptcha_token');
                 if (empty($recaptchaToken)) {
                     return response()->json([
@@ -176,6 +195,14 @@ class AssistantChatController extends Controller
                     ], 422);
                 }
                 if (!$this->verifyRecaptcha($recaptchaToken, $request->ip())) {
+                    return response()->json([
+                        'message' => 'Bot verification failed. Please refresh and try again.',
+                        'errors' => ['recaptcha' => ['Verification failed.']],
+                    ], 422);
+                }
+            } elseif (!empty($secretKey) && !app()->environment('testing')) {
+                $recaptchaToken = $request->input('recaptcha_token');
+                if (!empty($recaptchaToken) && !$this->verifyRecaptcha($recaptchaToken, $request->ip())) {
                     return response()->json([
                         'message' => 'Bot verification failed. Please refresh and try again.',
                         'errors' => ['recaptcha' => ['Verification failed.']],

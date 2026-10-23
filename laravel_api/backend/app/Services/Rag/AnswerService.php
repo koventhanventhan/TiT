@@ -11,19 +11,24 @@ class AnswerService
     protected RetrievalService $retrievalService;
     protected GeminiClientInterface $geminiClient;
     protected LanguageDetector $languageDetector;
+    protected TextNormalizer $normalizer;
     protected float $minCandidateSimilarity;
     protected float $similarityThreshold;
+    protected string $groundingAction;
 
     public function __construct(
         RetrievalService $retrievalService,
         GeminiClientInterface $geminiClient,
-        LanguageDetector $languageDetector
+        LanguageDetector $languageDetector,
+        ?TextNormalizer $normalizer = null
     ) {
         $this->retrievalService = $retrievalService;
         $this->geminiClient = $geminiClient;
         $this->languageDetector = $languageDetector;
+        $this->normalizer = $normalizer ?? new TextNormalizer();
         $this->minCandidateSimilarity = (float) config('rag.retrieval.min_candidate_similarity', 0.50);
         $this->similarityThreshold = (float) config('rag.retrieval.similarity_threshold', config('rag.retrieval.min_similarity', 0.70));
+        $this->groundingAction = (string) config('rag.grounding.action', 'replace');
     }
 
     /**
@@ -177,7 +182,7 @@ EOT;
         $cleanContext = mb_strtolower($contextText . ' ' . $question, 'UTF-8');
         $cleanAnswer = preg_replace('/\[\d+\]/', ' ', $answer);
 
-        preg_match_all('/[\p{L}\p{M}]{4,}/u', mb_strtolower($cleanAnswer, 'UTF-8'), $matches);
+        preg_match_all('/[\p{L}\p{M}]{3,}/u', mb_strtolower($cleanAnswer, 'UTF-8'), $matches);
         $words = array_unique($matches[0] ?? []);
 
         $commonStopWords = [
@@ -185,7 +190,7 @@ EOT;
             'paper', 'contain', 'contains', 'please', 'asking', 'student', 'could', 'would', 'should',
             'about', 'there', 'their', 'which', 'where', 'these', 'those', 'because', 'without',
             'provided', 'correct', 'options', 'regarding', 'following', 'mentioned', 'stated',
-            // Tamil conversational & meta-instructional words
+            // Tamil conversational & meta-instructional words & auxiliary vocabulary
             'இந்த', 'அந்த', 'குறிப்புகள்', 'ஆசிரியர்', 'ஆசிரியரிடம்', 'ஆசிரியரின்', 'விடை', 'விடைகள்', 'கேள்வி', 
             'கேள்விகள்', 'இல்லை', 'உள்ளது', 'காணப்படவில்லை', 'கேட்கவும்', 'அணுகவும்', 'தயவுசெய்து',
             'வழங்கப்படவில்லை', 'பரீட்சை', 'தாளில்', 'குறிப்பில்', 'தெரிவிக்கவும்', 'உதவி', 'பெறவும்',
@@ -198,8 +203,13 @@ EOT;
             'குறிப்பிடப்படவில்லை', 'அறிய', 'பதில்', 'என்பதற்கான', 'குறித்து',
             'மற்றும்', 'அல்லது', 'அறிந்துகொள்ள', 'கேட்டுப்', 'பெற்றுக்கொள்ளுமாறு',
             'ஆசிரியரைக்', 'வினாவிற்கான', 'தெரிந்துகொள்ளவும்', 'இதற்கான', 'உள்ள', 'ஆகிய', 'ஆனால்', 'என', 'உடன்', 'மட்டும்',
-            // Sinhala conversational & meta-instructional words
-            'මෙම', 'ගුරුතුමාගෙන්', 'සටහන්', 'පිළිතුර', 'ප්‍රශ්නය', 'නැත', 'ඇත', 'අසන්න', 'කාරුණිකව'
+            'பகுதி', 'பகுதிகள்', 'வகை', 'வகைகள்', 'முறை', 'முறைகள்', 'ஆகும்', 'உள்ளன',
+            'கூறப்படுகிறது', 'குறிப்பிடப்படுகிறது', 'காணப்படுகிறது', 'தெரிவிக்கப்படுகிறது',
+            'இசைக்கப்படுகிறது', 'வாசிக்கப்படுகிறது', 'வாசிக்கப்படும்', 'இசைக்கப்படும்',
+            // Sinhala conversational & meta-instructional words & auxiliary vocabulary
+            'මෙම', 'ගුරුතුමාගෙන්', 'ගුරුතුමාගේ', 'ගුරුතුමා', 'සටහන්', 'සටහන්වල', 'සටහන්වලින්',
+            'පිළිතුර', 'ප්‍රශ්නය', 'නැත', 'ඇත', 'අසන්න', 'කාරුණිකව', 'පැහැදිලි', 'කරයි',
+            'සඳහන්', 'වේ', 'වෙයි', 'ලබා', 'දී', 'දක්වා'
         ];
 
         $ungrounded = [];
@@ -207,9 +217,34 @@ EOT;
             if (in_array($word, $commonStopWords, true)) {
                 continue;
             }
-            if (mb_strpos($cleanContext, $word, 0, 'UTF-8') === false) {
-                $ungrounded[] = $word;
+
+            // 1. Verbatim substring check in context + question
+            if (mb_strpos($cleanContext, $word, 0, 'UTF-8') !== false) {
+                continue;
             }
+
+            // 2. Stemmed token check
+            $stem = $this->normalizer->stemToken($word);
+            if (in_array($stem, $commonStopWords, true) || mb_strlen($stem, 'UTF-8') < 2) {
+                continue;
+            }
+
+            if (mb_strpos($cleanContext, $stem, 0, 'UTF-8') !== false) {
+                continue;
+            }
+
+            // 3. Prefix matching for agglutinative inflections (Tamil & Sinhala case markers / verb endings)
+            $prefixLen = min(mb_strlen($stem, 'UTF-8'), 4);
+            if ($prefixLen >= 3 && mb_strpos($cleanContext, mb_substr($stem, 0, $prefixLen, 'UTF-8'), 0, 'UTF-8') !== false) {
+                continue;
+            }
+
+            $rawPrefixLen = min(mb_strlen($word, 'UTF-8'), 4);
+            if ($rawPrefixLen >= 3 && mb_strpos($cleanContext, mb_substr($word, 0, $rawPrefixLen, 'UTF-8'), 0, 'UTF-8') !== false) {
+                continue;
+            }
+
+            $ungrounded[] = $word;
         }
 
         $isFlagged = !empty($ungrounded);
@@ -308,8 +343,17 @@ EOT;
 
         $grounding = $this->verifyGrounding($rawAnswer, $context['context_text'], $question);
 
+        $finalAnswer = $rawAnswer;
+        if ($grounding['flagged'] && $this->groundingAction === 'replace') {
+            Log::warning("RAG Answer Post-Check: answer contains ungrounded terms; replacing answer with safe not-found message", [
+                'student_id' => $student->id,
+                'ungrounded_terms' => $grounding['ungrounded_terms'],
+            ]);
+            $finalAnswer = $this->getNotFoundMessage($language);
+        }
+
         return [
-            'answer' => $rawAnswer,
+            'answer' => $finalAnswer,
             'language' => $language,
             'citations' => $validCitations,
             'sources' => $context['sources'],

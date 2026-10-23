@@ -181,7 +181,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function isRagEnabled(): bool
     {
-        if (!config('rag.enabled', true)) {
+        if (!config('rag.enabled', false)) {
             return false;
         }
         return (bool) optional($this->institute)->rag_enabled;

@@ -57,6 +57,7 @@ class StudentAiChatEndpointTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['rag.enabled' => true]);
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         \Illuminate\Support\Facades\Mail::fake();
         \Illuminate\Support\Facades\Queue::fake();

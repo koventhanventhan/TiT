@@ -36,7 +36,17 @@ class RagPublicToggleCommand extends Command
         }
 
         // Safety gate before enabling 'on':
-        // Refuse to enable unless the helpline/phone and institute contact details are configured!
+        // 1. Refuse to enable if not in local/testing and RECAPTCHA_SECRET_KEY is missing
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        $env = config('app.env') ?: app()->environment();
+        if (!in_array($env, ['local', 'testing'], true) && empty($recaptchaSecret)) {
+            $this->error("Refusing to activate Public Assistant without RECAPTCHA_SECRET_KEY in production.");
+            $this->warn("RECAPTCHA_SECRET_KEY is missing or empty. In production/non-local environments, reCAPTCHA must fail closed.");
+            $this->line("Please configure RECAPTCHA_SECRET_KEY in your .env file before enabling the public assistant.");
+            return 1;
+        }
+
+        // 2. Refuse to enable unless the helpline/phone and institute contact details are configured!
         $phone = trim((string) SiteSetting::get('assistant_public_contact_phone', ''));
         $email = trim((string) SiteSetting::get('assistant_public_contact_email', ''));
         $address = trim((string) SiteSetting::get('assistant_public_contact_address', ''));

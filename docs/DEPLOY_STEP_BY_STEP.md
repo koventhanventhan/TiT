@@ -72,8 +72,10 @@ tar -czvf /backups/app_pre_rag/assets_backup.tar.gz index.html assets/
 ## Step 2: Deploy the Two Hotfix Controllers First
 
 Deploy the two field-whitelisting hotfix controllers before anything else so active student zoom join requests and assignment submissions remain completely stable:
-1. `laravel_api/backend/app/Http/Controllers/Api/ZoomMeetingController.php`
-2. `laravel_api/backend/app/Http/Controllers/Api/AssignmentController.php`
+1. `laravel_api/backend/app/Http/Controllers/Api/StudentZoomController.php`
+2. `laravel_api/backend/app/Http/Controllers/Api/StudentAssignmentController.php`
+
+*(Source: branch `hotfix/zoom-link-leak`, commit `75eca66`)*
 
 *Why:* These controllers whitelist incoming client fields, preventing validation failures on active student requests.
 
@@ -150,7 +152,7 @@ composer install --no-dev --optimize-autoloader --no-interaction
 cd laravel_api/backend
 php artisan migrate --force
 ```
-All tables and columns are safely created. `learning_materials.medium` is widened to `enum('english','tamil','sinhala','all','both')` via an instant MySQL/MariaDB metadata operation (< 10ms, no table rebuild).
+All tables and columns are safely created. `learning_materials.medium` is widened to `enum('english','tamil','both','sinhala','all')` via an `INPLACE` MySQL/MariaDB metadata operation. Note that while this does not rebuild table data rows, it typically takes ~0.15s–0.25s (around 0.2s) due to MariaDB acquiring an exclusive metadata lock and updating the table definition cache.
 
 ---
 
@@ -275,7 +277,9 @@ $middleware->trustProxies(at: $trustedProxies);
        "errors": { "recaptcha": ["Verification failed."] }
      }
      ```
-   - **Local Development Bypass:** If `RECAPTCHA_SECRET_KEY` is left empty in `laravel_api/backend/.env`, backend verification is automatically skipped for easy local development.
+   - **Local Development Bypass vs Production Fail-Closed:**
+     - In local development (`APP_ENV=local` or `testing`), if `RECAPTCHA_SECRET_KEY` is left empty in `laravel_api/backend/.env`, backend verification is bypassed for easy testing.
+     - In production and staging (`APP_ENV != 'local' && APP_ENV != 'testing'`), leaving `RECAPTCHA_SECRET_KEY` empty will cause public assistant endpoints to **fail-closed** with HTTP `503 Service Unavailable` (`public_assistant_enabled: false`) to safeguard against bot spam and abuse.
 
 ---
 
@@ -287,15 +291,19 @@ $middleware->trustProxies(at: $trustedProxies);
    ```bash
    php artisan rag:public 1 on
    ```
-3. Configure public contact and FAQs:
+3. Configure public contact (5 dedicated keys) and FAQs:
    ```bash
    php artisan tinker --execute="
-   AppModelsSiteSetting::updateOrCreate(['key' => 'assistant_public_contact'], ['value' => '+94 77 123 4567']);
-   AppModelsFaq::updateOrCreate(['institute_id' => 1, 'question' => 'How do I register?'], ['answer' => 'Visit /register to enroll in courses.', 'is_published' => true]);
+   \App\Models\SiteSetting::updateOrCreate(['key' => 'assistant_public_contact_phone'], ['value' => '0212223344', 'group' => 'assistant_public_contact']);
+   \App\Models\SiteSetting::updateOrCreate(['key' => 'assistant_public_contact_whatsapp'], ['value' => '0771234567', 'group' => 'assistant_public_contact']);
+   \App\Models\SiteSetting::updateOrCreate(['key' => 'assistant_public_contact_email'], ['value' => 'info@tit.edu', 'group' => 'assistant_public_contact']);
+   \App\Models\SiteSetting::updateOrCreate(['key' => 'assistant_public_contact_address'], ['value' => 'Jaffna, Sri Lanka', 'group' => 'assistant_public_contact']);
+   \App\Models\SiteSetting::updateOrCreate(['key' => 'assistant_public_contact_hours'], ['value' => 'Monday - Saturday 8:00 AM - 5:00 PM', 'group' => 'assistant_public_contact']);
+   \App\Models\Faq::updateOrCreate(['institute_id' => 1, 'question' => 'How do I register?'], ['answer' => 'Visit /register to enroll in courses.', 'is_published' => true]);
    "
    ```
 4. Open an Incognito / Private browser window.
-5. Visit **Exact URL:** `http://localhost:5173/` (or `http://localhost/`).
+5. Visit **Exact URL:** `http://localhost:4000/` (or `http://localhost/`).
 6. Click the floating circular widget at the bottom right.
 7. Ask: *"How do I register?"* -> Verify instant answer from FAQs.
 8. Rate Limit Test: Submit 11 rapid messages -> Verify 429 "Too Many Requests" rate limit kicks in after 10 requests per minute.
@@ -304,14 +312,14 @@ $middleware->trustProxies(at: $trustedProxies);
 1. Ensure Institute 1 and existing test student are enabled:
    ```bash
    php artisan rag:institute 1 on
-   php artisan tinker --execute="
-   AppModelsUser::where('email', 'kamal@example.com')->update(['rag_enabled' => true, 'role' => 'user', 'admin_confirmed_at' => now()]);
-   "
+   php artisan tinker --execute=\"
+   \App\Models\User::where('email', 'test_rag_student_g8@tit.edu')->update(['rag_enabled' => true, 'role' => 'user', 'admin_confirmed_at' => now()]);
+   \"
    ```
 2. Log in with existing test student:
-   - Email: `kamal@example.com`
+   - Email: `test_rag_student_g8@tit.edu`
    - Password: `password`
-3. Visit **Exact URL:** `http://localhost:5173/student/study-assistant` (or `http://localhost/student/study-assistant`).
+3. Visit **Exact URL:** `http://localhost:4000/student/study-assistant` (or `http://localhost/student/study-assistant`).
 4. Ask a syllabus question:
    - Verify word-by-word streaming.
    - Verify numbered citation chips ([1], [2]) appear under the answer.

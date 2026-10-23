@@ -47,11 +47,23 @@ return [
     | - similarity_threshold / min_similarity: confident answer threshold (default 0.70).
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Global Master Feature Switch
+    |--------------------------------------------------------------------------
+    |
+    | Global switch for RAG Study Assistant. Defaults to false (OFF) when missing.
+    | Enabled only when explicitly turned on by admin or env.
+    |
+    */
+    'enabled' => filter_var(env('RAG_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+
     'retrieval' => [
         'min_candidate_similarity' => (float) env('RAG_MIN_CANDIDATE_SIMILARITY', 0.50),
         'similarity_threshold' => (float) env('RAG_SIMILARITY_THRESHOLD', 0.70),
         'min_similarity' => (float) env('RAG_MIN_SIMILARITY', 0.70),
         'top_k' => (int) env('RAG_TOP_K', 5),
+        'hybrid_keyword_weight' => (float) env('RAG_HYBRID_KEYWORD_WEIGHT', 0.20),
     ],
 
     /*
@@ -198,7 +210,7 @@ return [
     | and caching settings for the unified public website assistant.
     |
     */
-    'public_enabled' => filter_var(env('RAG_PUBLIC_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+    'public_enabled' => filter_var(env('RAG_PUBLIC_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 
     'assistant' => [
         'public_cache_ttl' => (int) env('RAG_ASSISTANT_CACHE_TTL', 300),
@@ -208,6 +220,21 @@ return [
         'visitor_daily_cap' => (int) env('RAG_VISITOR_DAILY_CAP', 500),
         'visitor_max_chars' => (int) env('RAG_VISITOR_MAX_CHARS', 200),
         'visitor_log_retention_days' => (int) env('RAG_VISITOR_RETENTION_DAYS', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grounding Post-Check Settings
+    |--------------------------------------------------------------------------
+    |
+    | Action to take when an answer contains ungrounded terms not found in
+    | retrieved context or student question:
+    | - 'replace': replaces the answer with the safe localized "notes contain only..." message.
+    | - 'log': logs warning only and preserves the generated answer.
+    |
+    */
+    'grounding' => [
+        'action' => env('RAG_GROUNDING_ACTION', 'replace'),
     ],
 
     'vector_store' => env('RAG_VECTOR_STORE', 'database'),

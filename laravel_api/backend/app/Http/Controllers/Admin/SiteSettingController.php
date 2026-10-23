@@ -607,9 +607,25 @@ class SiteSettingController extends Controller
     /**
      * API endpoint to get all settings.
      */
-    public function getSettings()
+    public function getSettings(\Illuminate\Http\Request $request)
     {
-        $settings = SiteSetting::all()->pluck('value', 'key');
+        $settings = SiteSetting::all()->pluck('value', 'key')->toArray();
+
+        $instituteId = $request->header('X-Institute-Id', 1);
+        $institute = \App\Models\Institute::find($instituteId);
+
+        $globalPublicEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        $env = config('app.env') ?: app()->environment();
+        $isLocalOrTesting = in_array($env, ['local', 'testing'], true);
+
+        // reCAPTCHA fail closed: If not local or testing and RECAPTCHA_SECRET_KEY is empty, public widget is hidden.
+        if (!$isLocalOrTesting && empty($recaptchaSecret)) {
+            $settings['public_assistant_enabled'] = false;
+        } else {
+            $settings['public_assistant_enabled'] = (bool) ($globalPublicEnabled && ($institute?->public_assistant_enabled ?? false));
+        }
+
         return response()->json($settings);
     }
 

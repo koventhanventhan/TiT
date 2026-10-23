@@ -13,17 +13,22 @@ class RetrievalService
     protected VectorStoreInterface $vectorStore;
     protected GeminiClientInterface $geminiClient;
     protected LanguageDetector $languageDetector;
+    protected TextNormalizer $normalizer;
     protected int $topK;
+    protected float $keywordWeight;
 
     public function __construct(
         VectorStoreInterface $vectorStore,
         GeminiClientInterface $geminiClient,
-        LanguageDetector $languageDetector
+        LanguageDetector $languageDetector,
+        ?TextNormalizer $normalizer = null
     ) {
         $this->vectorStore = $vectorStore;
         $this->geminiClient = $geminiClient;
         $this->languageDetector = $languageDetector;
+        $this->normalizer = $normalizer ?? new TextNormalizer();
         $this->topK = (int) config('rag.retrieval.top_k', 5);
+        $this->keywordWeight = (float) config('rag.retrieval.hybrid_keyword_weight', 0.20);
     }
 
     /**
@@ -151,6 +156,26 @@ class RetrievalService
             ];
         }
 
+        // Hybrid keyword/embedding scoring if keywordWeight > 0
+        $keywords = $this->normalizer->extractKeywords($question);
+        if ($this->keywordWeight > 0.0 && !empty($keywords)) {
+            $hybridHits = [];
+            foreach ($hits as $hit) {
+                $chunk = $hit['chunk'];
+                $embSim = (float) $hit['similarity'];
+                $kwScore = $this->normalizer->keywordOverlapScore($chunk->content ?? '', $keywords);
+                $hybridScore = (1.0 - $this->keywordWeight) * $embSim + ($this->keywordWeight * $kwScore);
+                $hybridHits[] = [
+                    'chunk' => $chunk,
+                    'similarity' => round($hybridScore, 4),
+                    'embedding_similarity' => round($embSim, 4),
+                    'keyword_score' => round($kwScore, 4),
+                ];
+            }
+            usort($hybridHits, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+            $hits = $hybridHits;
+        }
+
         $chunks = [];
         $seenHashes = [];
 
@@ -180,6 +205,8 @@ class RetrievalService
                 'page_number' => $chunk->page_number ?? 1,
                 'content' => $chunk->content,
                 'similarity' => (float) $hit['similarity'],
+                'embedding_similarity' => (float) ($hit['embedding_similarity'] ?? $hit['similarity']),
+                'keyword_score' => (float) ($hit['keyword_score'] ?? 0.0),
                 'is_ocr' => (bool) ($chunk->is_ocr ?? false),
                 'ocr_used' => (bool) ($chunk->is_ocr ?? false),
             ];

@@ -39,7 +39,7 @@ const defaultStudentUser = {
   admin_confirmed_at: '2026-01-01 10:00:00',
   is_paid: true,
   is_deactivated: false,
-  rag_enabled: true,
+  rag_enabled: false,
 };
 
 export async function setupStudentMocks(page, userOverrides = {}, customHandlers = {}) {

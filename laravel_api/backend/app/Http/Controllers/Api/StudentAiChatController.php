@@ -55,7 +55,7 @@ class StudentAiChatController extends Controller
         }
 
         // 3. Global feature switch
-        if (!config('rag.enabled', true)) {
+        if (!config('rag.enabled', false)) {
             return response()->json([
                 'message' => 'The AI Study Assistant is temporarily disabled.',
             ], 503);

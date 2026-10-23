@@ -14,7 +14,7 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
 ---
 
 ### Step 2: Database Migrations (In Chronological Sequence)
-- [ ] 2.1 Run all 8 RAG migrations sequentially from the backend directory:
+- [ ] 2.1 Run all 12 RAG migrations sequentially from the backend directory:
   ```bash
   cd /home/<cpanel_user>/public_html/laravel_api/backend
 
@@ -29,12 +29,13 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
   php artisan migrate --path=database/migrations/2026_10_22_010000_add_public_assistant_enabled_to_institutes_table.php
   php artisan migrate --path=database/migrations/2026_10_22_020000_create_faqs_table.php
   php artisan migrate --path=database/migrations/2026_10_22_030000_create_assistant_visitor_logs_table.php
+  php artisan migrate --path=database/migrations/2026_10_22_040000_widen_learning_materials_medium_enum.php
   ```
 - [ ] 2.2 Verify migration status:
   ```bash
   php artisan migrate:status
   ```
-  Ensure all 8 RAG migrations are marked `Ran`.
+  Ensure all 12 RAG migrations are marked `Ran`.
 
 ---
 
@@ -105,28 +106,15 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
   ```bash
   php artisan rag:status --list
   ```
-- [ ] 6.4 Log in as an active student and ask a sample question in Tamil/Sinhala/English.
+- [ ] 6.4 Log in as active test student (`test_rag_student_g8@tit.edu`) at `http://localhost:4000/student/study-assistant` and ask a sample question in Tamil/Sinhala/English.
   Verify citations, OCR notice badges, and answer quality.
 
----
-
-### Step 7: Emergency Procedures & Rollback
-- [ ] 7.1 **Single Institute Kill Switch**:
-  ```bash
-  php artisan rag:institute 1 off
-  ```
-- [ ] 7.2 **Global Master Kill Switch**:
-  In `.env`: `RAG_ENABLED=false` then `php artisan config:clear`.
-- [ ] 7.3 **Database Rollback**:
-  ```bash
-  php artisan migrate:rollback --step=8
-  ```
 ---
 
 ### Step 7: Unified Public Assistant Rollout & Verification
 - [ ] 7.1 Verify environment variables in `.env`:
   ```ini
-  RAG_PUBLIC_ENABLED=true
+  RAG_PUBLIC_ENABLED=false # Kept false until verified below
   RECAPTCHA_SITE_KEY=your_recaptcha_v3_site_key
   RECAPTCHA_SECRET_KEY=your_recaptcha_v3_secret_key
   RECAPTCHA_SCORE_THRESHOLD=0.5
@@ -147,10 +135,25 @@ An ordered, step-by-step numbered checklist for launching the Student AI Study A
   php artisan rag:public 1 on
   ```
   *(Verify command succeeds and passes the contact / helpline validation gate)*
-- [ ] 7.4 Test public floating chat widget on Home, About, Classes, and Contact pages:
+- [ ] 7.4 Test public floating chat widget on Home, About, Classes, and Contact pages (`http://localhost:4000/`):
   - Test general questions (fee inquiries, timetable, registration at `/register`).
   - Test academic question in public mode (must return state-specific locked message with link to `/register`, no hallucinated academic answers).
   - Test crisis helpline trigger (must show 1926/1333 crisis numbers without logging raw text).
 - [ ] 7.5 Verify emergency kill switches:
   - Disable single institute: `php artisan rag:public 1 off` (widget disappears immediately).
   - Global master kill switch: `RAG_PUBLIC_ENABLED=false` in `.env`.
+
+---
+
+### Step 8: Emergency Procedures & Rollback
+- [ ] 8.1 **Single Institute Kill Switch**:
+  ```bash
+  php artisan rag:institute 1 off
+  php artisan rag:public 1 off
+  ```
+- [ ] 8.2 **Global Master Kill Switch**:
+  In `.env`: `RAG_ENABLED=false` and `RAG_PUBLIC_ENABLED=false` then `php artisan config:clear`.
+- [ ] 8.3 **Database Rollback**:
+  ```bash
+  php artisan migrate:rollback --step=12
+  ```

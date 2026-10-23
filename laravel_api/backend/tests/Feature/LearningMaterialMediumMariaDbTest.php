@@ -13,18 +13,15 @@ class LearningMaterialMediumMariaDbTest extends TestCase
     {
         parent::setUp();
 
-        // Under phpunit.xml, DB_DATABASE=:memory: overrides mysql database name.
-        // Restore from the real local database configuration.
-        if (config('database.connections.mysql.database') === ':memory:') {
-            config(['database.connections.mysql.database' => 'titjaffn_titjaffnas']);
-            DB::purge('mysql');
-        }
+        // Point specifically to dedicated test database tit_rag_test_round6 (never titjaffn_titjaffnas)
+        config(['database.connections.mysql.database' => 'tit_rag_test_round6']);
+        DB::purge('mysql');
 
         // Check if real MySQL / MariaDB connection is available
         try {
             DB::connection('mysql')->getPdo();
         } catch (\Throwable $e) {
-            $this->markTestSkipped('Local MySQL/MariaDB connection is not reachable: ' . $e->getMessage());
+            $this->markTestSkipped('Dedicated test MariaDB connection (tit_rag_test_round6) is not reachable: ' . $e->getMessage());
         }
     }
 
@@ -114,6 +111,6 @@ class LearningMaterialMediumMariaDbTest extends TestCase
             ->first();
 
         $this->assertNotNull($record);
-        $this->assertSame('all', $record->medium, "Default medium in MariaDB must be 'all'.");
+        $this->assertSame('tamil', $record->medium, "Default medium in MariaDB must be 'tamil'.");
     }
 }

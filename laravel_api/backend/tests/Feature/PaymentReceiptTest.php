@@ -516,6 +516,226 @@ class PaymentReceiptTest extends TestCase
         $this->assertEquals('—', $this->service->formatPaymentMethod(''));
     }
 
+    public function test_pdf_failure_still_sends_email_with_signed_link_and_records_error(): void
+    {
+        Mail::fake();
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Failing PDF Student',
+            'email' => 'pdf_fail@example.com',
+            'phone_number' => null,
+            'current_grade' => '09',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 1500,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+        ]);
+
+        $serviceMock = Mockery::mock(PaymentReceiptService::class)->makePartial();
+        $serviceMock->shouldReceive('pdf')->andThrow(new \RuntimeException('Simulated mPDF failure on live server'));
+        $this->app->instance(PaymentReceiptService::class, $serviceMock);
+
+        $serviceMock->ensureReceipt($payment);
+        $serviceMock->deliverNotifications($payment, $student, $student);
+
+        $payment->refresh();
+
+        // 1. Mail must still have been sent to student
+        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
+            return $mail->hasTo($student->email) && empty($mail->rawAttachments);
+        });
+
+        // 2. Error must be logged on payment
+        $this->assertNotNull($payment->receipt_last_error);
+        $this->assertStringContainsString('Simulated mPDF failure on live server', $payment->receipt_last_error);
+        $this->assertNotNull($payment->receipt_attempted_at);
+
+        // 3. receipt_sent_at must still be set because email succeeded
+        $this->assertNotNull($payment->receipt_sent_at);
+    }
+
+    public function test_resend_receipt_runs_synchronously_and_reports_real_outcome(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Resend Test Student',
+            'email' => 'resend_student@example.com',
+            'phone_number' => null,
+            'current_grade' => '10',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 1800,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+        ]);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.students.payments.resend-receipt', ['id' => $student->id, 'payment' => $payment->id])
+        );
+
+        $response->assertSessionHas('success');
+        $flash = session('success');
+        $this->assertStringContainsString('Receipt #', $flash);
+        $this->assertStringContainsString('email to resend_student@example.com', $flash);
+
+        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
+            return $mail->hasTo($student->email);
+        });
+    }
+
+    public function test_download_receipt_catches_exception_and_redirects_with_error(): void
+    {
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Download Exception Student',
+            'email' => 'download_error@example.com',
+            'current_grade' => '10',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 2000,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'year_month' => '2026-10',
+        ]);
+
+        $serviceMock = Mockery::mock(PaymentReceiptService::class)->makePartial();
+        $serviceMock->shouldReceive('pdf')->andThrow(new \RuntimeException('Missing font NotoSansTamil'));
+        $this->app->instance(PaymentReceiptService::class, $serviceMock);
+
+        $response = $this->actingAs($admin)->get(
+            route('admin.students.payments.receipt', ['id' => $student->id, 'payment' => $payment->id])
+        );
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('Receipt PDF engine problem: Missing font NotoSansTamil', session('error'));
+    }
+
+    public function test_admin_payment_update_to_paid_triggers_receipt(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Update Paid Student',
+            'email' => 'update_paid@example.com',
+            'phone_number' => null,
+            'current_grade' => '07',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 2200,
+            'status' => 'pending',
+            'year_month' => '2026-10',
+        ]);
+
+        $response = $this->actingAs($admin)->put(
+            route('admin.students.payments.update', ['id' => $student->id, 'payment' => $payment->id]),
+            [
+                'amount' => 2200,
+                'year_month' => '2026-10',
+                'status' => 'paid',
+                'payment_method' => 'cash',
+            ]
+        );
+
+        $response->assertSessionHas('success');
+        $payment->refresh();
+        $this->assertEquals('paid', $payment->status);
+        $this->assertNotNull($payment->receipt_no);
+
+        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
+            return $mail->hasTo($student->email);
+        });
+    }
+
+    public function test_admin_confirm_student_marks_payment_paid_and_triggers_receipt(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Newly Registered Student',
+            'email' => 'new_student@example.com',
+            'phone_number' => null,
+            'current_grade' => '08',
+            'registration_status' => 'payment_completed',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'year_month' => '2026-10',
+        ]);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.students.confirm', ['id' => $student->id]),
+            ['batch_year' => 26]
+        );
+
+        $response->assertSessionHas('success');
+        $payment->refresh();
+        $this->assertEquals('paid', $payment->status);
+        $this->assertNotNull($payment->receipt_no);
+
+        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
+            return $mail->hasTo($student->email);
+        });
+    }
+
+    public function test_receipts_diagnose_command_executes_successfully(): void
+    {
+        $this->artisan('receipts:diagnose')
+            ->expectsOutputToContain('Payment Receipt Diagnostic')
+            ->expectsOutputToContain('PHP Version')
+            ->expectsOutputToContain('mPDF Class Autoload')
+            ->assertExitCode(0);
+    }
+
     private function resolvePdftoppmPath(): ?string
     {
         if (file_exists('C:\\poppler\\bin\\pdftoppm.exe')) {

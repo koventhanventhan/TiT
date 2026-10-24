@@ -400,6 +400,88 @@ class PaymentReceiptService
      * @param bool $force
      * @return bool
      */
+    /**
+     * Cheap synchronous preflight check before delivery or response.
+     * Returns null if everything looks healthy, or a specific error message.
+     *
+     * @param Payment $payment
+     * @return string|null
+     */
+    public function preflightCheck(Payment $payment): ?string
+    {
+        if (!class_exists(\Mpdf\Mpdf::class)) {
+            return 'mPDF library is missing (run composer install --no-dev on server)';
+        }
+
+        if (!extension_loaded('mbstring')) {
+            return 'PHP mbstring extension is not loaded';
+        }
+
+        if (!extension_loaded('gd')) {
+            return 'PHP gd extension is not loaded';
+        }
+
+        $tempDir = storage_path('app/mpdf');
+        if (!is_dir($tempDir)) {
+            @mkdir($tempDir, 0777, true);
+        }
+        if (!is_dir($tempDir) || !is_writable($tempDir)) {
+            return 'storage/app/mpdf directory is missing or not writable';
+        }
+
+        $requiredFonts = [
+            'NotoSansTamil-Regular.ttf',
+            'NotoSansTamil-Bold.ttf',
+            'Montserrat-ExtraBold.ttf',
+        ];
+        foreach ($requiredFonts as $fontFile) {
+            if (!file_exists(resource_path('fonts/' . $fontFile))) {
+                return "Required font file resources/fonts/{$fontFile} is missing";
+            }
+        }
+
+        $student = $payment->user;
+        if (!$student) {
+            return 'Payment has no associated student';
+        }
+
+        $targetUser = $this->resolveTargetUser($student);
+        $hasEmail = $targetUser->email && !str_contains($targetUser->email, '@child.local') && $this->isValidEmailForSending($targetUser->email);
+        $hasPhone = !empty($targetUser->phone_number);
+
+        if (!$hasEmail && !$hasPhone) {
+            return 'Student/parent has no deliverable email or phone number';
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve target user for notifications (handling sibling parent fallback).
+     *
+     * @param User $student
+     * @return User
+     */
+    public function resolveTargetUser(User $student): User
+    {
+        $targetUser = $student;
+        if ($student->parent_id && $student->parent) {
+            $isPlaceholderEmail = str_contains($student->email ?? '', '@child.local');
+            if (empty($student->phone_number) || $isPlaceholderEmail) {
+                $targetUser = $student->parent;
+            }
+        }
+        return $targetUser;
+    }
+
+    /**
+     * Dispatch receipt delivery (Email + WhatsApp) after response.
+     * Idempotent: does not resend if receipt_sent_at is already set unless $force is true.
+     *
+     * @param Payment $payment
+     * @param bool $force
+     * @return bool
+     */
     public function sendReceiptNotifications(Payment $payment, bool $force = false): bool
     {
         if (!$force && !empty($payment->receipt_sent_at)) {
@@ -413,13 +495,15 @@ class PaymentReceiptService
             return false;
         }
 
-        // Handle siblings: if student has placeholder email or no phone, fallback to parent
-        $targetUser = $student;
-        if ($student->parent_id && $student->parent) {
-            $isPlaceholderEmail = str_contains($student->email ?? '', '@child.local');
-            if (empty($student->phone_number) || $isPlaceholderEmail) {
-                $targetUser = $student->parent;
-            }
+        $targetUser = $this->resolveTargetUser($student);
+
+        // Preflight check synchronously: record failure if any
+        $preflight = $this->preflightCheck($payment);
+        if ($preflight !== null) {
+            $payment->update([
+                'receipt_attempted_at' => now(),
+                'receipt_last_error' => $preflight,
+            ]);
         }
 
         // Asynchronously dispatch delivery so response to admin / student is instantaneous
@@ -436,18 +520,39 @@ class PaymentReceiptService
     }
 
     /**
-     * Actual delivery execution of Email with PDF and WhatsApp notification.
+     * Synchronous direct receipt delivery (used by resend and internal delivery).
+     * Never silently succeeds; returns detailed delivery report.
      *
      * @param Payment $payment
-     * @param User $student
-     * @param User $targetUser
-     * @return void
+     * @param bool $force
+     * @return array
      */
-    public function deliverNotifications(Payment $payment, User $student, User $targetUser): void
+    public function deliverDirect(Payment $payment, bool $force = false): array
     {
-        $pdfContent = $this->pdf($payment);
-        $signedUrl = $this->signedUrl($payment);
-        $receiptNo = $payment->receipt_no;
+        if (!$force && !empty($payment->receipt_sent_at)) {
+            return [
+                'success' => true,
+                'delivered_any' => true,
+                'message' => "Receipt #{$payment->receipt_no} was already sent on " . $payment->receipt_sent_at->format('Y-m-d H:i') . '.',
+            ];
+        }
+
+        $this->ensureReceipt($payment);
+        $student = $payment->user;
+        if (!$student) {
+            $err = 'Payment has no associated student';
+            $payment->update([
+                'receipt_attempted_at' => now(),
+                'receipt_last_error' => $err,
+            ]);
+            return [
+                'success' => false,
+                'delivered_any' => false,
+                'message' => $err,
+            ];
+        }
+
+        $targetUser = $this->resolveTargetUser($student);
 
         $monthName = $payment->year_month;
         if (!empty($payment->year_month)) {
@@ -461,9 +566,37 @@ class PaymentReceiptService
         }
 
         $studentName = $student->full_name ?: ($student->name ?: 'Student');
-        $deliveredAny = false;
+        $signedUrl = $this->signedUrl($payment);
+        $receiptNo = $payment->receipt_no;
 
-        // 1. Send Email with PDF attachment
+        $payment->update(['receipt_attempted_at' => now()]);
+
+        // 1. Build PDF safely
+        $pdfContent = null;
+        $pdfError = null;
+        try {
+            $pdfContent = $this->pdf($payment);
+        } catch (\Throwable $e) {
+            $pdfError = get_class($e) . ': ' . $e->getMessage();
+            Log::error('Receipt PDF failed', [
+                'payment_id' => $payment->id,
+                'exception' => $e->getMessage(),
+                'class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            $payment->update([
+                'receipt_last_error' => 'Receipt PDF failed: ' . $e->getMessage(),
+            ]);
+        }
+
+        $deliveredAny = false;
+        $emailSent = false;
+        $emailError = null;
+        $whatsappSent = false;
+        $whatsappError = null;
+
+        // 2. Send Email (with or without PDF)
         $targetEmail = $targetUser->email;
         if ($targetEmail && !str_contains($targetEmail, '@child.local') && $this->isValidEmailForSending($targetEmail)) {
             try {
@@ -476,18 +609,21 @@ class PaymentReceiptService
                     $signedUrl
                 ));
                 $deliveredAny = true;
-                Log::info("PaymentReceiptService: Sent receipt email with PDF to {$targetEmail} for Payment #{$payment->id}");
+                $emailSent = true;
+                Log::info("PaymentReceiptService: Sent receipt email to {$targetEmail} for Payment #{$payment->id}" . ($pdfContent ? ' with PDF' : ' without PDF attachment'));
             } catch (\Throwable $e) {
+                $emailError = $e->getMessage();
                 Log::error("PaymentReceiptService: Failed to send receipt email to {$targetEmail}: " . $e->getMessage());
             }
+        } else {
+            $emailError = $targetEmail ? 'Email format invalid or placeholder' : 'No email address registered';
         }
 
-        // 2. Send WhatsApp message with secure signed link
+        // 3. Send WhatsApp
         $targetPhone = $targetUser->phone_number;
         if ($targetPhone) {
             try {
                 $whatsApp = app(WhatsAppService::class);
-                // Template: tit_payment_receipt with variables [student_name, month_name, signed_receipt_url]
                 $sent = $whatsApp->sendTemplate(
                     $targetPhone,
                     'tit_payment_receipt',
@@ -496,15 +632,78 @@ class PaymentReceiptService
                 );
                 if ($sent) {
                     $deliveredAny = true;
+                    $whatsappSent = true;
                     Log::info("PaymentReceiptService: Sent receipt WhatsApp notification to {$targetPhone} for Payment #{$payment->id}");
+                } else {
+                    $whatsappError = 'WhatsApp template not approved or delivery failed';
                 }
             } catch (\Throwable $e) {
+                $whatsappError = $e->getMessage();
                 Log::error("PaymentReceiptService: Failed to send receipt WhatsApp to {$targetPhone}: " . $e->getMessage());
             }
+        } else {
+            $whatsappError = 'No phone number registered';
         }
 
+        // Update payment record based on delivery outcome
         if ($deliveredAny) {
-            $payment->update(['receipt_sent_at' => now()]);
+            $payment->update([
+                'receipt_sent_at' => now(),
+                'receipt_last_error' => $pdfError ? ('Receipt PDF failed: ' . $pdfError) : null,
+            ]);
+        } else {
+            $combinedError = implode(' | ', array_filter([
+                $pdfError ? 'PDF engine problem: ' . $pdfError : null,
+                'Email: ' . ($emailError ?: 'failed'),
+                'WhatsApp: ' . ($whatsappError ?: 'failed'),
+            ]));
+            $payment->update([
+                'receipt_last_error' => $combinedError,
+            ]);
         }
+
+        // Build clear, specific outcome message
+        if ($emailSent && $whatsappSent) {
+            $msg = "Receipt #{$receiptNo} sent via email to {$targetEmail} and WhatsApp to {$targetPhone}.";
+        } elseif ($emailSent) {
+            $waSkipReason = $targetPhone ? ($whatsappError ?? 'template not approved') : 'no phone number registered';
+            $msg = "Receipt #{$receiptNo} sent via email to {$targetEmail}. WhatsApp skipped ({$waSkipReason}).";
+        } elseif ($whatsappSent) {
+            $emailSkipReason = $targetEmail ? ($emailError ?? 'delivery error') : 'no email address registered';
+            $msg = "Receipt #{$receiptNo} sent via WhatsApp to {$targetPhone}. Email skipped ({$emailSkipReason}).";
+        } else {
+            $failReason = $emailError ?: ($whatsappError ?: ($pdfError ?: 'all delivery channels failed'));
+            $msg = "Receipt delivery failed: {$failReason}.";
+        }
+
+        if ($pdfError && $deliveredAny) {
+            $msg .= " (Note: PDF generation failed; receipt link included instead: {$pdfError})";
+        }
+
+        return [
+            'success' => $deliveredAny,
+            'delivered_any' => $deliveredAny,
+            'email_sent' => $emailSent,
+            'email_to' => $targetEmail,
+            'email_error' => $emailError,
+            'whatsapp_sent' => $whatsappSent,
+            'whatsapp_to' => $targetPhone,
+            'whatsapp_error' => $whatsappError,
+            'pdf_error' => $pdfError,
+            'message' => $msg,
+        ];
+    }
+
+    /**
+     * Actual delivery execution of Email with PDF and WhatsApp notification.
+     *
+     * @param Payment $payment
+     * @param User $student
+     * @param User $targetUser
+     * @return void
+     */
+    public function deliverNotifications(Payment $payment, User $student, User $targetUser): void
+    {
+        $this->deliverDirect($payment, true);
     }
 }

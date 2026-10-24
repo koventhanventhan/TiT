@@ -85,8 +85,12 @@
 
         <div class="content">
             <p>Dear <strong>{{ $student->full_name ?? $student->name }}</strong>,</p>
-            <p>Your payment for <strong>{{ $monthName }}</strong> has been approved. Your official payment receipt is attached to this email as a PDF.</p>
-            <p>You can also download or view your receipt online at any time:</p>
+            @if(!empty($hasAttachment))
+                <p>Your payment for <strong>{{ $monthName }}</strong> has been approved. Your official payment receipt is attached to this email as a PDF.</p>
+                <p>You can also download or view your receipt online at any time:</p>
+            @else
+                <p>Your payment for <strong>{{ $monthName }}</strong> has been approved. Your receipt is available at the link below.</p>
+            @endif
 
             @if(!empty($downloadUrl))
             <div class="btn-wrapper">
@@ -96,7 +100,11 @@
 
             <div class="ta-section">
                 <p>அன்பான <strong>{{ $student->full_name ?? $student->name }}</strong>,</p>
-                <p>{{ $monthName }} மாதத்திற்கான உங்கள் கல்விக்கட்டணம் வெற்றிகரமாக ஏற்றுக்கொள்ளப்பட்டது. உங்கள் உத்தியோகபூர்வ பற்றுச்சீட்டு (Receipt) இத்துடன் இணைக்கப்பட்டுள்ளது.</p>
+                @if(!empty($hasAttachment))
+                    <p>{{ $monthName }} மாதத்திற்கான உங்கள் கல்விக்கட்டணம் வெற்றிகரமாக ஏற்றுக்கொள்ளப்பட்டது. உங்கள் உத்தியோகபூர்வ பற்றுச்சீட்டு (Receipt) இத்துடன் இணைக்கப்பட்டுள்ளது.</p>
+                @else
+                    <p>{{ $monthName }} மாதத்திற்கான உங்கள் கல்விக்கட்டணம் வெற்றிகரமாக ஏற்றுக்கொள்ளப்பட்டது. உங்கள் உத்தியோகபூர்வ பற்றுச்சீட்டை (Receipt) கீழேயுள்ள இணைப்பில் பதிவிறக்கம் செய்து கொள்ளலாம்.</p>
+                @endif
             </div>
         </div>
 

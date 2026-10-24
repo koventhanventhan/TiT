@@ -91,9 +91,15 @@ class UnifiedAssistantTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\Http::fake();
+
         config([
             'rag.enabled' => true,
             'rag.public_enabled' => true,
+            'rag.safety.helplines' => [
+                ['name' => 'Mental Health Hotline', 'number' => '1926'],
+                ['name' => 'CCCline', 'number' => '1333'],
+            ],
         ]);
 
         $this->app->instance(GeminiClientInterface::class, new FakeUnifiedGeminiClient());

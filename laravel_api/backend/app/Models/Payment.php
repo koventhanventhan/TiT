@@ -24,6 +24,8 @@ class Payment extends Model
         'gateway_ref',
         'receipt_no',
         'receipt_sent_at',
+        'receipt_last_error',
+        'receipt_attempted_at',
     ];
 
     protected function casts(): array
@@ -31,6 +33,7 @@ class Payment extends Model
         return [
             'paid_at' => 'datetime',
             'receipt_sent_at' => 'datetime',
+            'receipt_attempted_at' => 'datetime',
             'amount' => 'decimal:2',
         ];
     }

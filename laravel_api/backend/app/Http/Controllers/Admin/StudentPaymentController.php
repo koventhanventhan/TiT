@@ -117,10 +117,31 @@ class StudentPaymentController extends Controller
             // If the edit turns a row into PAID and the student is deactivated -> reactivate
             if ($status === 'paid' && $student->deactivated_at) {
                 $student->update(['deactivated_at' => null]);
-                return redirect()->back()->with('success', 'Payment updated for ' . $yearMonth . ' and student account reactivated.');
             }
 
-            return redirect()->back()->with('success', 'Payment updated.');
+            // If the edit turned a previously unpaid row into PAID -> trigger receipt
+            $preflightWarning = null;
+            if ($status === 'paid' && ($oldSnapshot['status'] ?? null) !== 'paid') {
+                try {
+                    $receiptService = app(\App\Services\PaymentReceiptService::class);
+                    $receiptService->ensureReceipt($payment);
+                    $preflightWarning = $receiptService->preflightCheck($payment);
+                    $receiptService->sendReceiptNotifications($payment);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to trigger receipt on payment update: ' . $e->getMessage());
+                    $preflightWarning = $e->getMessage();
+                }
+            }
+
+            $successMsg = ($status === 'paid' && $student->deactivated_at)
+                ? 'Payment updated for ' . $yearMonth . ' and student account reactivated.'
+                : 'Payment updated.';
+
+            $response = redirect()->back()->with('success', $successMsg);
+            if ($preflightWarning) {
+                $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+            }
+            return $response;
         });
     }
 
@@ -180,19 +201,26 @@ class StudentPaymentController extends Controller
             }
 
             // Assign receipt number & dispatch receipt notifications (Email + WhatsApp)
+            $preflightWarning = null;
             try {
                 $receiptService = app(\App\Services\PaymentReceiptService::class);
                 $receiptService->ensureReceipt($payment);
+                $preflightWarning = $receiptService->preflightCheck($payment);
                 $receiptService->sendReceiptNotifications($payment);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to trigger receipt on markPaid: ' . $e->getMessage());
+                $preflightWarning = $e->getMessage();
             }
 
-            if ($student->deactivated_at) {
-                return redirect()->back()->with('success', 'Payment marked for ' . $payment->year_month . ' and student account reactivated.');
-            }
+            $successMsg = $student->deactivated_at
+                ? 'Payment marked for ' . $payment->year_month . ' and student account reactivated.'
+                : 'Payment marked for ' . $payment->year_month . '.';
 
-            return redirect()->back()->with('success', 'Payment marked for ' . $payment->year_month . '.');
+            $response = redirect()->back()->with('success', $successMsg);
+            if ($preflightWarning) {
+                $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+            }
+            return $response;
         });
     }
 
@@ -235,18 +263,23 @@ class StudentPaymentController extends Controller
     {
         [$student, $payment] = $this->resolveStudentAndPayment($studentId, $paymentId);
 
-        $receiptService = app(\App\Services\PaymentReceiptService::class);
-        $pdfBinary = $receiptService->pdf($payment);
-        $receiptNo = $payment->receipt_no ?: "payment-{$payment->id}";
+        try {
+            $receiptService = app(\App\Services\PaymentReceiptService::class);
+            $pdfBinary = $receiptService->pdf($payment);
+            $receiptNo = $payment->receipt_no ?: "payment-{$payment->id}";
 
-        return response($pdfBinary, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="receipt-' . $receiptNo . '.pdf"',
-        ]);
+            return response($pdfBinary, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="receipt-' . $receiptNo . '.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Receipt download failed for payment #{$payment->id}: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Receipt PDF engine problem: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Resend receipt email & WhatsApp message.
+     * Resend receipt email & WhatsApp message synchronously and report exact outcome.
      * POST /admin/students/{id}/payments/{payment}/resend-receipt
      */
     public function resendReceipt(Request $request, $studentId, $paymentId)
@@ -258,10 +291,13 @@ class StudentPaymentController extends Controller
         }
 
         $receiptService = app(\App\Services\PaymentReceiptService::class);
-        $receiptService->ensureReceipt($payment);
-        $receiptService->sendReceiptNotifications($payment, force: true);
+        $result = $receiptService->deliverDirect($payment, force: true);
 
-        return redirect()->back()->with('success', "Receipt #{$payment->receipt_no} has been queued for delivery to the student/parent.");
+        if ($result['delivered_any']) {
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        return redirect()->back()->with('error', $result['message']);
     }
 
     /**

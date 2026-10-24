@@ -21,6 +21,7 @@ class LearningMaterialStoreTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        \Illuminate\Support\Facades\Http::fake();
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         Config::set('services.firebase.web.storageBucket', self::TEST_BUCKET);
         $this->institute = \App\Models\Institute::create([

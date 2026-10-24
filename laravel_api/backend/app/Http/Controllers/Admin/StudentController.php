@@ -282,10 +282,50 @@ class StudentController extends Controller
             $indexAssigned = true;
         }
 
+        $oldRegStatus = $student->registration_status;
         $student->update([
             'admin_confirmed_at' => now(),
             'registration_status' => 'confirmed',
         ]);
+
+        // Check for pending or offline registration payment to confirm and issue receipt
+        $preflightWarning = null;
+        $confirmedPayment = Payment::where('user_id', $student->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        if ($confirmedPayment) {
+            $confirmedPayment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+                'payment_method' => $confirmedPayment->payment_method ?: 'offline',
+            ]);
+        } elseif ($oldRegStatus === 'payment_completed' || $oldRegStatus === 'pending_payment') {
+            $yearMonth = now()->format('Y-m');
+            $amount = (float) $this->calculateUserAmount($student);
+            $confirmedPayment = Payment::create([
+                'user_id' => $student->id,
+                'year_month' => $yearMonth,
+                'amount' => $amount,
+                'status' => 'paid',
+                'paid_at' => now(),
+                'payment_method' => 'offline',
+                'institute_id' => $student->institute_id ?? 1,
+            ]);
+        }
+
+        if ($confirmedPayment) {
+            try {
+                $receiptService = app(\App\Services\PaymentReceiptService::class);
+                $receiptService->ensureReceipt($confirmedPayment);
+                $preflightWarning = $receiptService->preflightCheck($confirmedPayment);
+                $receiptService->sendReceiptNotifications($confirmedPayment);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in confirm: ' . $e->getMessage());
+                $preflightWarning = $e->getMessage();
+            }
+        }
 
         // Notify student (WhatsApp with email fallback)
         $this->notifier->notifyUser(
@@ -303,12 +343,20 @@ class StudentController extends Controller
 
         if (!$indexAssigned) {
             $gradeDisplay = $student->current_grade ?: 'unknown';
-            return redirect()->route('admin.students.index')
+            $response = redirect()->route('admin.students.index')
                 ->with('warning', "No batch year for Grade {$gradeDisplay} – set it in Index Number Batches, the number was not assigned");
+            if ($preflightWarning) {
+                $response->with('error', "Payment saved, but receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+            }
+            return $response;
         }
 
-        return redirect()->route('admin.students.index')
+        $response = redirect()->route('admin.students.index')
             ->with('success', 'Student confirmed and index number assigned.');
+        if ($preflightWarning) {
+            $response->with('warning', "Payment saved, but receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+        }
+        return $response;
     }
 
     /**
@@ -440,18 +488,36 @@ class StudentController extends Controller
         }
 
         // Handle Quick Payment (current month)
+        $createdPayment = null;
         if ($request->boolean('quick_payment')) {
-            $this->markMonthPaid($user, now()->format('Y-m'), now()->format('Y-m-d H:i:s'), null);
+            $createdPayment = $this->markMonthPaid($user, now()->format('Y-m'), now()->format('Y-m-d H:i:s'), null);
         }
 
         // Handle Custom Payment Date
         if (!empty($validated['custom_payment_month'])) {
             $customDate = $validated['custom_payment_month'];
             $yearMonth = substr($customDate, 0, 7); // Extract YYYY-MM from YYYY-MM-DD
-            $this->markMonthPaid($user, $yearMonth, $customDate, null);
+            $createdPayment = $this->markMonthPaid($user, $yearMonth, $customDate, null);
         }
 
-        return redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
+        $preflightWarning = null;
+        if ($createdPayment) {
+            try {
+                $receiptService = app(\App\Services\PaymentReceiptService::class);
+                $receiptService->ensureReceipt($createdPayment);
+                $preflightWarning = $receiptService->preflightCheck($createdPayment);
+                $receiptService->sendReceiptNotifications($createdPayment);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in student store: ' . $e->getMessage());
+                $preflightWarning = $e->getMessage();
+            }
+        }
+
+        $response = redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
+        if ($preflightWarning) {
+            $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+        }
+        return $response;
     }
 
     public function deactivate($id)
@@ -576,21 +642,31 @@ class StudentController extends Controller
         }
 
         // Trigger receipt generation and notifications
+        $preflightWarning = null;
         try {
             $receiptService = app(\App\Services\PaymentReceiptService::class);
             $receiptService->ensureReceipt($payment);
+            $preflightWarning = $receiptService->preflightCheck($payment);
             $receiptService->sendReceiptNotifications($payment);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Receipt trigger failed in markPaid: ' . $e->getMessage());
+            $preflightWarning = $e->getMessage();
         }
 
         // If student was deactivated, automatically reactivate them now that payment is made
+        $successMsg = $student->deactivated_at
+            ? 'Payment marked for ' . $yearMonth . ' and student account reactivated.'
+            : 'Payment marked for ' . $yearMonth . '.';
+
         if ($student->deactivated_at) {
             $student->update(['deactivated_at' => null]);
-            return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . ' and student account reactivated.');
         }
 
-        return redirect()->back()->with('success', 'Payment marked for ' . $yearMonth . '.');
+        $response = redirect()->back()->with('success', $successMsg);
+        if ($preflightWarning) {
+            $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+        }
+        return $response;
     }
 
     /**
@@ -902,16 +978,19 @@ class StudentController extends Controller
             }
 
             // Assign receipts to approved payments and send receipt notification
+            $preflightWarning = null;
             try {
                 $receiptService = app(\App\Services\PaymentReceiptService::class);
                 foreach ($approvedPayments as $p) {
                     $receiptService->ensureReceipt($p);
-                }
-                if (!empty($approvedPayments[0])) {
-                    $receiptService->sendReceiptNotifications($approvedPayments[0]);
+                    if ($preflightWarning === null) {
+                        $preflightWarning = $receiptService->preflightCheck($p);
+                    }
+                    $receiptService->sendReceiptNotifications($p);
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Receipt trigger failed in approveAdvancePayment: ' . $e->getMessage());
+                $preflightWarning = $e->getMessage();
             }
 
             // If student was deactivated, automatically reactivate them now that payment is approved
@@ -927,7 +1006,11 @@ class StudentController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Advance payment approved for ' . $monthsCount . ' months.');
+        $response = redirect()->back()->with('success', 'Advance payment approved for ' . $monthsCount . ' months.');
+        if ($preflightWarning) {
+            $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+        }
+        return $response;
     }
 
     public function rejectAdvancePayment($id)

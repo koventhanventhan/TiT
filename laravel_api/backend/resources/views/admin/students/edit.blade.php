@@ -108,6 +108,24 @@
     </div>
 @endif
 
+@if (session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ session('warning') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <ul class="mb-0">
@@ -578,6 +596,21 @@
                                         <td>
                                             @if($payment->status === 'paid')
                                                 <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID</span>
+                                                <div class="mt-1">
+                                                    @if($payment->receipt_sent_at)
+                                                        <span class="badge badge-success" style="font-size: 10px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4);" title="Delivered: {{ $payment->receipt_sent_at->format('Y-m-d H:i') }}">
+                                                            <i class="fa fa-check-circle mr-1"></i> Receipt sent {{ $payment->receipt_sent_at->format('d M Y') }}
+                                                        </span>
+                                                    @elseif($payment->receipt_last_error)
+                                                        <span class="badge badge-danger" style="font-size: 10px; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.4);" title="{{ $payment->receipt_last_error }}">
+                                                            <i class="fa fa-exclamation-circle mr-1"></i> Receipt failed – {{ \Illuminate\Support\Str::limit($payment->receipt_last_error, 24) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-secondary" style="font-size: 10px; background: rgba(156, 163, 175, 0.2); color: #d1d5db; border: 1px solid rgba(209, 213, 219, 0.3);">
+                                                            <i class="fa fa-clock-o mr-1"></i> Not sent yet
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             @elseif($payment->status === 'pending')
                                                 <span class="badge" style="background: #ffab2d; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PENDING</span>
                                             @elseif($payment->status === 'cancelled')

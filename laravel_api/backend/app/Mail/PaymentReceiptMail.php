@@ -17,7 +17,7 @@ class PaymentReceiptMail extends Mailable
 
     public User $student;
     public Payment $payment;
-    public string $pdfContent;
+    public ?string $pdfContent;
     public string $receiptNo;
     public string $monthName;
     public string $downloadUrl;
@@ -25,7 +25,7 @@ class PaymentReceiptMail extends Mailable
     public function __construct(
         User $student,
         Payment $payment,
-        string $pdfContent,
+        ?string $pdfContent,
         string $receiptNo,
         string $monthName,
         string $downloadUrl = ''
@@ -55,12 +55,17 @@ class PaymentReceiptMail extends Mailable
                 'receiptNo' => $this->receiptNo,
                 'monthName' => $this->monthName,
                 'downloadUrl' => $this->downloadUrl,
+                'hasAttachment' => !empty($this->pdfContent),
             ]
         );
     }
 
     public function attachments(): array
     {
+        if (empty($this->pdfContent)) {
+            return [];
+        }
+
         return [
             Attachment::fromData(fn () => $this->pdfContent, "receipt-{$this->receiptNo}.pdf")
                 ->withMime('application/pdf'),

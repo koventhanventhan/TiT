@@ -25,7 +25,14 @@ class PaymentReceiptController extends Controller
             abort(403, 'Invalid or expired receipt link.');
         }
 
-        $pdfBinary = $this->receiptService->pdf($payment);
+        try {
+            $pdfBinary = $this->receiptService->pdf($payment);
+        } catch (\Throwable $e) {
+            return response('Receipt PDF engine problem: ' . $e->getMessage(), 500, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ]);
+        }
+
         $receiptNo = $payment->receipt_no ?: "payment-{$payment->id}";
 
         return response($pdfBinary, 200, [
@@ -50,7 +57,14 @@ class PaymentReceiptController extends Controller
             abort(403, 'Unauthorized to view this receipt.');
         }
 
-        $pdfBinary = $this->receiptService->pdf($payment);
+        try {
+            $pdfBinary = $this->receiptService->pdf($payment);
+        } catch (\Throwable $e) {
+            return response('Receipt PDF engine problem: ' . $e->getMessage(), 500, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ]);
+        }
+
         $receiptNo = $payment->receipt_no ?: "payment-{$payment->id}";
 
         return response($pdfBinary, 200, [

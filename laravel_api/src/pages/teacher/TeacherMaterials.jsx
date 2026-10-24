@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
     FiUpload,
     FiFolder,
@@ -92,6 +92,14 @@ export default function TeacherMaterials() {
         { id: 'video', label: 'Videos' },
         { id: 'link', label: 'Links' },
     ]
+
+    const tabRefs = useRef({})
+
+    useEffect(() => {
+        if (tabRefs.current[activeTab]) {
+            tabRefs.current[activeTab].scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' })
+        }
+    }, [activeTab])
 
     const filteredMaterials = (materials || []).filter(m => {
         const matchesTab = activeTab === 'all' || (m.type && m.type.toLowerCase() === activeTab);
@@ -371,7 +379,7 @@ export default function TeacherMaterials() {
     }
 
     return (
-        <div style={{ paddingBottom: 40 }}>
+        <div style={{ paddingBottom: 88 }}>
             {/* Header Section */}
             <div className="teacher-page-header">
                 <div>
@@ -399,76 +407,230 @@ export default function TeacherMaterials() {
             </div>
 
             {/* Toolbar */}
-            <div style={{
-                display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24,
-                background: 'var(--t-surface)', padding: 16, borderRadius: 16,
-                border: '1px solid var(--t-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                alignItems: 'center', justifyContent: 'space-between'
-            }}>
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', paddingBottom: 4 }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            className="t-btn"
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                padding: '8px 16px', borderRadius: 8,
-                                border: activeTab === tab.id ? '1px solid var(--t-primary)' : '1px solid var(--t-border)',
-                                background: activeTab === tab.id ? 'var(--t-primary-soft)' : 'var(--t-bg)',
-                                color: activeTab === tab.id ? 'var(--t-primary)' : 'var(--t-text-2)',
-                                fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
-                            }}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+            <div className="materials-toolbar-card">
+                <div
+                    className="materials-tab-strip"
+                    role="tablist"
+                    aria-label="Teaching material categories"
+                >
+                    {tabs.map(tab => {
+                        const isActive = activeTab === tab.id
+                        return (
+                            <button
+                                key={tab.id}
+                                ref={el => { tabRefs.current[tab.id] = el }}
+                                role="tab"
+                                aria-selected={isActive ? 'true' : 'false'}
+                                className={`materials-tab-pill ${isActive ? 'active' : ''}`}
+                                onClick={() => setActiveTab(tab.id)}
+                            >
+                                {tab.label}
+                            </button>
+                        )
+                    })}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 250px', justifyContent: 'flex-end' }}>
-                    <div style={{ position: 'relative', width: '100%', maxWidth: 300 }}>
-                        <FiSearch style={{ position: 'absolute', left: 14, top: 12, color: 'var(--t-text-3)' }} />
+                <div className="materials-controls-row">
+                    <div className="materials-search-wrap">
+                        <FiSearch className="materials-search-icon" />
                         <input
                             type="text"
+                            className="materials-search-input"
                             placeholder="Search materials..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            style={{
-                                width: '100%', padding: '10px 16px 10px 40px', borderRadius: 10,
-                                border: '1px solid var(--t-border)', background: 'var(--t-bg)', fontSize: 14,
-                                outline: 'none', boxSizing: 'border-box', color: 'var(--t-text)'
-                            }}
                         />
                     </div>
-                    <div style={{ display: 'flex', background: 'var(--t-bg)', borderRadius: 10, padding: 4, border: '1px solid var(--t-border)' }}>
+                    <div className="materials-view-toggle">
                         <button
-                            className="t-icon-btn"
+                            type="button"
+                            className={`t-icon-btn ${viewMode === 'grid' ? 'active' : ''}`}
                             onClick={() => setViewMode('grid')}
                             aria-label="Grid view"
-                            style={{
-                                width: 36, height: 36, minWidth: 36, minHeight: 36, border: 'none', borderRadius: 6,
-                                background: viewMode === 'grid' ? 'var(--t-surface)' : 'transparent',
-                                color: viewMode === 'grid' ? 'var(--t-primary)' : 'var(--t-text-3)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
                         >
-                            <FiGrid />
+                            <FiGrid size={18} />
                         </button>
                         <button
-                            className="t-icon-btn"
+                            type="button"
+                            className={`t-icon-btn ${viewMode === 'list' ? 'active' : ''}`}
                             onClick={() => setViewMode('list')}
                             aria-label="List view"
-                            style={{
-                                width: 36, height: 36, minWidth: 36, minHeight: 36, border: 'none', borderRadius: 6,
-                                background: viewMode === 'list' ? 'var(--t-surface)' : 'transparent',
-                                color: viewMode === 'list' ? 'var(--t-primary)' : 'var(--t-text-3)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
                         >
-                            <FiList />
+                            <FiList size={18} />
                         </button>
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                .materials-toolbar-card {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    margin-bottom: 24px;
+                    background: var(--t-surface);
+                    padding: 16px;
+                    border-radius: 16px;
+                    border: 1px solid var(--t-border);
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                }
+                @media (min-width: 1024px) {
+                    .materials-toolbar-card {
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: space-between;
+                    }
+                }
+                .materials-tab-strip {
+                    display: flex;
+                    gap: 8px;
+                    overflow-x: auto;
+                    scroll-snap-type: x proximity;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+                    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+                    padding: 4px 0;
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    max-width: 100%;
+                }
+                .materials-tab-strip::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                }
+                .materials-tab-pill {
+                    flex: 0 0 auto;
+                    min-height: 44px;
+                    height: 44px;
+                    padding: 0 16px;
+                    border-radius: 999px;
+                    white-space: nowrap;
+                    font-size: 14px;
+                    line-height: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    box-sizing: border-box;
+                    transition: background 0.2s, color 0.2s, border-color 0.2s;
+                }
+                .materials-tab-pill.active {
+                    background: var(--t-primary-soft, #f5f3ff);
+                    border: 1px solid var(--t-primary-border, #ddd6fe);
+                    color: var(--t-primary, #4f0bd9);
+                    font-weight: 600;
+                }
+                .materials-tab-pill:not(.active) {
+                    background: transparent;
+                    border: 1px solid transparent;
+                    color: var(--t-text-muted, #64748b);
+                    font-weight: 500;
+                }
+                .materials-controls-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                @media (min-width: 1024px) {
+                    .materials-controls-row {
+                        width: auto;
+                        justify-content: flex-end;
+                        flex: 0 0 auto;
+                    }
+                }
+                .materials-search-wrap {
+                    position: relative;
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    height: 44px;
+                }
+                @media (min-width: 1024px) {
+                    .materials-search-wrap {
+                        width: 260px;
+                        flex: 0 0 260px;
+                    }
+                }
+                .materials-search-icon {
+                    position: absolute;
+                    left: 14px;
+                    top: 14px;
+                    color: var(--t-text-3, #94a3b8);
+                    pointer-events: none;
+                }
+                .materials-search-input {
+                    width: 100%;
+                    height: 44px;
+                    min-height: 44px;
+                    box-sizing: border-box;
+                    padding: 10px 14px 10px 38px;
+                    border-radius: 10px;
+                    border: 1px solid var(--t-border);
+                    background: var(--t-bg);
+                    font-size: 14px;
+                    outline: none;
+                    color: var(--t-text);
+                    transition: border-color 0.2s;
+                }
+                .materials-search-input:focus {
+                    border-color: var(--t-primary, #4f0bd9);
+                }
+                .materials-view-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    height: 44px;
+                    min-height: 44px;
+                    background: var(--t-bg);
+                    border-radius: 10px;
+                    padding: 2px;
+                    border: 1px solid var(--t-border);
+                    box-sizing: border-box;
+                    flex-shrink: 0;
+                    gap: 2px;
+                }
+                .materials-view-toggle button {
+                    width: 40px;
+                    height: 40px;
+                    min-width: 40px;
+                    min-height: 40px;
+                    border: none;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    background: transparent;
+                    color: var(--t-text-3, #94a3b8);
+                    transition: background 0.15s, color 0.15s;
+                    box-sizing: border-box;
+                }
+                .materials-view-toggle button.active {
+                    background: var(--t-surface);
+                    color: var(--t-primary, #4f0bd9);
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                }
+                .materials-empty-state {
+                    background: var(--t-surface);
+                    border-radius: 16px;
+                    border: 1px dashed var(--t-border);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    box-sizing: border-box;
+                    padding: 32px 16px;
+                }
+                @media (min-width: 640px) {
+                    .materials-empty-state {
+                        padding: 56px 24px;
+                    }
+                }
+            `}</style>
 
             {/* Content Area */}
             {loading ? (
@@ -476,10 +638,7 @@ export default function TeacherMaterials() {
                     <div style={{ width: 40, height: 40, border: '4px solid var(--t-border)', borderTopColor: 'var(--t-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 </div>
             ) : filteredMaterials.length === 0 ? (
-                <div style={{
-                    background: 'var(--t-surface)', borderRadius: 16, border: '1px dashed var(--t-border)',
-                    padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center'
-                }}>
+                <div className="materials-empty-state">
                     <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--t-primary-soft)', color: 'var(--t-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}>
                         <FiFolder />
                     </div>

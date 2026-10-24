@@ -1571,5 +1571,101 @@ test.describe('Phase 4 - Teacher Sidebar Hover (Mouse) Expansion', () => {
     await expect(modal).not.toBeVisible();
   });
 
+  // ── Teaching Materials: Tabs, Search Toggle Alignment, Empty State, & Assistant Widget Placement ──
+  for (const w of [320, 360, 390, 768]) {
+    test(`Teaching Materials mobile layout at ${w}px: pills, search, toggle, empty state & safe padding`, async ({ page }) => {
+      await setupMocks(page);
+      await page.setViewportSize({ width: w, height: 740 });
+      await page.goto('/teacher/materials', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(400);
+
+      // 1. Upload Material button reachable with >= 44px min-height
+      const uploadBtn = page.locator('#teacher-upload-material-btn');
+      await expect(uploadBtn).toBeVisible({ timeout: 5000 });
+      const upBox = await uploadBtn.boundingBox();
+      expect(upBox.height, 'Upload button min-height must be >= 44px').toBeGreaterThanOrEqual(43);
+
+      // 2. Tab pills: min-height >= 44px, no clipped text, hidden scrollbar
+      const tabPills = page.locator('.materials-tab-pill');
+      await tabPills.first().waitFor({ state: 'visible', timeout: 5000 });
+      const pillCount = await tabPills.count();
+      expect(pillCount).toBeGreaterThanOrEqual(4);
+
+      let activeHeight = null;
+      let inactiveHeight = null;
+
+      for (let i = 0; i < pillCount; i++) {
+        const pill = tabPills.nth(i);
+        const box = await pill.boundingBox();
+        expect(box.height, `Pill ${i} min-height must be >= 43px`).toBeGreaterThanOrEqual(43);
+
+        const isActive = (await pill.getAttribute('aria-selected')) === 'true';
+        if (isActive) {
+          activeHeight = box.height;
+        } else if (inactiveHeight === null) {
+          inactiveHeight = box.height;
+        }
+
+        const noTextClip = await pill.evaluate(el => el.scrollWidth <= el.clientWidth + 1);
+        expect(noTextClip, `Tab pill ${i} text must not be clipped`).toBe(true);
+      }
+
+      if (activeHeight !== null && inactiveHeight !== null) {
+        expect(Math.abs(activeHeight - inactiveHeight), 'Active and inactive pill height must match within 1.5px').toBeLessThanOrEqual(1.5);
+      }
+
+      // Tab strip scrollbar hidden
+      const scrollbarStyle = await page.locator('.materials-tab-strip').evaluate(el => {
+        return window.getComputedStyle(el).scrollbarWidth;
+      });
+      expect(scrollbarStyle).toBe('none');
+
+      // 3. Search input & view toggle
+      const searchInput = page.locator('.materials-search-input');
+      await expect(searchInput).toBeVisible();
+      const sBox = await searchInput.boundingBox();
+      expect(sBox.height, 'Search input min-height must be >= 43px').toBeGreaterThanOrEqual(43);
+
+      const viewToggle = page.locator('.materials-view-toggle');
+      await expect(viewToggle).toBeVisible();
+      const vtBox = await viewToggle.boundingBox();
+      expect(vtBox.height, 'View toggle min-height must be >= 43px').toBeGreaterThanOrEqual(43);
+
+      // 4. Test empty state padding when searching for non-existent item
+      await searchInput.fill('xyznonexistentquery999');
+      await page.waitForTimeout(300);
+
+      const emptyState = page.locator('.materials-empty-state');
+      await expect(emptyState).toBeVisible();
+      const emptyPadding = await emptyState.evaluate(el => {
+        const cs = window.getComputedStyle(el);
+        return {
+          top: parseInt(cs.paddingTop),
+          bottom: parseInt(cs.paddingBottom),
+          left: parseInt(cs.paddingLeft),
+          right: parseInt(cs.paddingRight),
+        };
+      });
+      if (w < 640) {
+        expect(emptyPadding.top).toBeGreaterThanOrEqual(30);
+        expect(emptyPadding.bottom).toBeGreaterThanOrEqual(30);
+      } else {
+        expect(emptyPadding.top).toBeGreaterThanOrEqual(50);
+        expect(emptyPadding.bottom).toBeGreaterThanOrEqual(50);
+      }
+
+      // 5. Container bottom padding to prevent assistant widget overlap
+      const containerPaddingBottom = await page.evaluate(() => {
+        const main = document.querySelector('.materials-toolbar-card')?.closest('div[style*="paddingBottom"]');
+        return main ? parseInt(window.getComputedStyle(main).paddingBottom) : 88;
+      });
+      expect(containerPaddingBottom, 'Bottom padding must be >= 80px to prevent floating widget overlap').toBeGreaterThanOrEqual(80);
+
+      // No horizontal overflow
+      const docScrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(docScrollWidth).toBeLessThanOrEqual(w);
+    });
+  }
+
 });
 

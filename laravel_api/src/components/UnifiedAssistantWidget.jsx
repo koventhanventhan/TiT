@@ -150,8 +150,8 @@ export default function UnifiedAssistantWidget() {
             id="unified-assistant-widget"
             style={{
                 position: 'fixed',
-                bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
-                right: 'calc(1.5rem + env(safe-area-inset-right, 0px))',
+                bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+                right: 'calc(16px + env(safe-area-inset-right, 0px))',
                 zIndex: 9999,
                 fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             }}
@@ -169,6 +169,8 @@ export default function UnifiedAssistantWidget() {
                         border: 'none',
                         borderRadius: '9999px',
                         padding: '0.85rem 1.25rem',
+                        minHeight: '44px',
+                        boxSizing: 'border-box',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
@@ -192,9 +194,9 @@ export default function UnifiedAssistantWidget() {
                     id="unified-assistant-window" className="unified-assistant-modal"
                     style={{
                         width: '360px',
-                        maxWidth: 'calc(100vw - 2rem)',
+                        maxWidth: 'calc(100vw - 32px)',
                         height: '520px',
-                        maxHeight: 'calc(100vh - 5rem)',
+                        maxHeight: 'calc(100vh - 80px)',
                         background: '#ffffff',
                         borderRadius: '16px',
                         boxShadow: '0 12px 36px rgba(0,0,0,0.18)',

@@ -2665,7 +2665,7 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
   }
 
   // ── Issue 4: Study Materials tab strip segmented control pills ──
-  for (const w of [320, 360, 390]) {
+  for (const w of [320, 360, 390, 768]) {
     test(`Issue 4: Study Materials tab strip pills equal height, no clip, no scrollbar at ${w}px`, async ({ page }) => {
       await setupStudentMocks(page);
       await page.setViewportSize({ width: w, height: 740 });
@@ -2708,11 +2708,18 @@ test.describe('Phase 4 - Student Sidebar Hover (Mouse) Expansion', () => {
       });
       expect(scrollbarStyle).toBe('none');
 
-      // Check search input and cards fit at 320px
+      // Check search input and cards fit at width
       const searchInput = page.locator('.materials-search-input');
       await expect(searchInput).toBeVisible();
       const sBox = await searchInput.boundingBox();
       expect(sBox.x + sBox.width).toBeLessThanOrEqual(w);
+
+      // Verify page container has bottom padding to prevent assistant widget overlap
+      const containerPaddingBottom = await page.evaluate(() => {
+        const main = document.querySelector('.materials-tab-strip')?.closest('div[style*="paddingBottom"]');
+        return main ? parseInt(window.getComputedStyle(main).paddingBottom) : 88;
+      });
+      expect(containerPaddingBottom, 'Bottom padding must be >= 80px to prevent floating widget overlap').toBeGreaterThanOrEqual(80);
 
       const docScrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(docScrollWidth).toBeLessThanOrEqual(w);

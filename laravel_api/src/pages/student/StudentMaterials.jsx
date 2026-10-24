@@ -97,7 +97,7 @@ export default function StudentMaterials() {
     })
 
     return (
-        <div style={{ paddingBottom: 40 }}>
+        <div style={{ paddingBottom: 88 }}>
             {/* Header */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
                 <div>
@@ -113,13 +113,20 @@ export default function StudentMaterials() {
                 border: '1px solid var(--t-border)', boxShadow: 'var(--t-shadow-sm)'
             }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div className="materials-tab-strip" style={{ flex: '1 1 auto', minWidth: 0, maxWidth: '100%' }}>
+                    <div
+                        className="materials-tab-strip"
+                        role="tablist"
+                        aria-label="Study material categories"
+                        style={{ flex: '1 1 auto', minWidth: 0, maxWidth: '100%' }}
+                    >
                         {tabs.map(tab => {
                             const isActive = activeTab === tab.id
                             return (
                                 <button
                                     key={tab.id}
                                     ref={el => { tabRefs.current[tab.id] = el }}
+                                    role="tab"
+                                    aria-selected={isActive ? 'true' : 'false'}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`materials-tab-pill ${isActive ? 'active' : ''}`}
                                 >
@@ -159,7 +166,7 @@ export default function StudentMaterials() {
                     -ms-overflow-style: none;
                     mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
                     -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
-                    padding: 2px 0;
+                    padding: 4px 0;
                 }
                 .materials-tab-strip::-webkit-scrollbar {
                     display: none !important;
@@ -204,6 +211,23 @@ export default function StudentMaterials() {
                         width: 100%;
                     }
                 }
+                .materials-empty-state {
+                    background: #fff;
+                    border-radius: 16px;
+                    border: 1px dashed var(--t-border);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    box-sizing: border-box;
+                    padding: 32px 16px;
+                }
+                @media (min-width: 640px) {
+                    .materials-empty-state {
+                        padding: 56px 24px;
+                    }
+                }
             `}</style>
 
             {loading ? (
@@ -227,7 +251,7 @@ export default function StudentMaterials() {
                     </button>
                 </div>
             ) : filteredMaterials.length === 0 ? (
-                <div style={{ background: '#fff', borderRadius: 16, border: '1px dashed var(--t-border)', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                <div className="materials-empty-state">
                     <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--t-bg)', color: 'var(--t-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 16 }}><FiFolder /></div>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>No materials found</h3>
                     <p style={{ margin: 0, color: 'var(--t-text-muted)', fontSize: 14 }}>

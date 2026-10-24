@@ -154,10 +154,11 @@ class AdminIndexPagesRenderTest extends TestCase
             if (in_array('GET', $route->methods()) && str_starts_with($name, 'admin.students.')) {
                 if (empty($route->parameterNames())) {
                     $response = $this->actingAs($this->admin, 'web')->get(route($name));
+                    $statusCode = method_exists($response, 'status') ? $response->status() : $response->getStatusCode();
                     $this->assertEquals(
                         200,
-                        $response->status(),
-                        "Route [{$name}] ({$route->uri()}) returned {$response->status()} instead of 200."
+                        $statusCode,
+                        "Route [{$name}] ({$route->uri()}) returned {$statusCode} instead of 200."
                     );
                     $testedCount++;
                 }

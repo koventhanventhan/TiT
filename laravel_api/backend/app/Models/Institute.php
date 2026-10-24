@@ -21,7 +21,35 @@ class Institute extends Model
         'expires_at',
         'index_prefix',
         'index_seq_start',
+        'index_format',
     ];
+
+    public function getIndexFormat(): string
+    {
+        if ($this->index_format === 'batch') {
+            return 'batch';
+        }
+        if ($this->index_format === 'grade') {
+            return 'grade';
+        }
+        if (($this->index_seq_start ?? 0) >= 100) {
+            return 'batch';
+        }
+        return 'grade';
+    }
+
+    public function getIndexPrefix(): string
+    {
+        return $this->index_prefix ?: 'TIT';
+    }
+
+    public function getIndexSeqStart(): int
+    {
+        if ($this->getIndexFormat() === 'grade') {
+            return $this->index_seq_start ?? 1;
+        }
+        return $this->index_seq_start ?? 100;
+    }
 
     protected $casts = [
         'rag_enabled' => 'boolean',

@@ -50,6 +50,9 @@
                 <p class="text-muted mb-0">Import pre-assigned index numbers (e.g. from paper records or Excel) without colliding with auto-generated sequences.</p>
             </div>
             <div class="d-flex gap-2">
+                <a href="{{ route('admin.students.import-index.template') }}" class="btn btn-outline-success btn-sm">
+                    <i class="flaticon-381-download"></i> Download CSV Template
+                </a>
                 <a href="{{ route('admin.students.assign-index-tool') }}" class="btn btn-outline-info btn-sm">
                     <i class="flaticon-381-layer-1"></i> Auto Assign Tool
                 </a>
@@ -89,19 +92,17 @@
                 <hr style="border-color: rgba(255,255,255,0.1);" class="my-4">
 
                 <h6 class="text-white font-weight-bold mb-2">CSV Column Requirements:</h6>
-                <p class="text-muted small mb-2">The CSV must include headers and at least two columns:</p>
+                <p class="text-muted small mb-2">The CSV must include headers with one of the following formats:</p>
                 <ul class="text-muted small pl-3 mb-3">
-                    <li><strong>Student identifier</strong>: One of <code>student_id</code>, <code>username</code>, <code>phone</code>, or <code>email</code> (checked in this order).</li>
-                    <li><strong>Index number</strong>: <code>index_number</code> (format <code>PREFIX/YY/SEQ</code>, e.g. <code>TiT/28/105</code>).</li>
+                    <li><strong>Owner's Format (Recommended)</strong>: Columns <code>grade, medium, student_name, index_number</code> (e.g. <code>Grade 8, English, M. Nidhuran, TIT/08/001</code>). Unassigned/reserved sequence rows can use <code>-</code> for name.</li>
+                    <li><strong>Identifier Format</strong>: <code>index_number</code> plus one of <code>student_id</code>, <code>username</code>, <code>phone</code>, or <code>email</code>.</li>
                 </ul>
 
                 <div class="p-3 rounded" style="background: rgba(0,0,0,0.3); font-family: monospace; font-size: 0.8rem; color: #cbd5e1;">
-                    student_id,index_number<br>
-                    101,TiT/28/101<br>
-                    102,TiT/28/102<br>
-                    # OR using email:<br>
-                    email,index_number<br>
-                    student@test.com,TiT/28/103
+                    grade,medium,student_name,index_number<br>
+                    Grade 8,English,A. Student Name,TIT/08/001<br>
+                    Grade 8,English,-,TIT/08/003<br>
+                    Grade 8,Tamil,M. Tamil Student,TIT/08/015
                 </div>
             </div>
         </div>
@@ -286,17 +287,40 @@
         res.rows.forEach(r => {
             const tr = document.createElement('tr');
             const isValid = (r.status === 'valid');
+            let nameHtml = `<span class="font-weight-bold text-white">${r.student_name || '—'}</span>`;
+            if (r.is_reserved) {
+                nameHtml += ` <span class="badge badge-warning text-dark ml-1" style="font-size: 0.7rem;">RESERVED</span>`;
+            } else if (r.candidates && r.candidates.length > 1) {
+                nameHtml += `
+                    <div class="mt-1">
+                        <select class="form-control form-control-sm text-white" style="background: #1f2937; border-color: #f59e0b; font-size: 0.75rem;" onchange="onCandidateSelected(${r.row_number}, this.value)">
+                            <option value="">-- Ambiguous match: select student (${r.candidates.length} candidates) --</option>
+                            ${r.candidates.map(c => `<option value="${c.id}" ${c.id === r.student_id ? 'selected' : ''}>#${c.id} - ${c.full_name || c.name} (${c.current_grade || ''}, ${c.medium || ''})</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            } else if (r.student_id) {
+                nameHtml += ` <small class="text-muted">(#${r.student_id})</small>`;
+            } else {
+                nameHtml += ` <small class="text-muted">(Unmatched)</small>`;
+            }
+
+            let msgHtml = isValid ? '<span class="text-muted">Ready to import</span>' : `<span class="text-danger">${r.error_message}</span>`;
+            if (r.warnings && r.warnings.length) {
+                msgHtml += `<div class="small text-warning mt-1">${r.warnings.join('<br>')}</div>`;
+            }
+
             tr.innerHTML = `
                 <td>${r.row_number}</td>
-                <td class="font-weight-bold text-white">${r.student_name} <small class="text-muted">(${r.student_id ? '#' + r.student_id : 'Not Found'})</small></td>
+                <td>${nameHtml}</td>
                 <td style="font-family: monospace; color: #38bdf8;">${r.index_number || 'N/A'}</td>
                 <td>
                     <span class="${isValid ? 'status-badge-valid' : 'status-badge-error'}">
                         ${isValid ? 'VALID' : 'ERROR'}
                     </span>
                 </td>
-                <td class="small ${isValid ? 'text-muted' : 'text-danger'}">
-                    ${isValid ? 'Ready to import' : r.error_message}
+                <td class="small">
+                    ${msgHtml}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -304,6 +328,17 @@
 
         const execBtn = document.getElementById('btnExecuteImport');
         execBtn.disabled = (res.valid_count === 0);
+    }
+
+    function onCandidateSelected(rowNumber, studentId) {
+        if (!validationResult || !validationResult.rows) return;
+        const row = validationResult.rows.find(r => r.row_number === rowNumber);
+        if (!row) return;
+        row.student_id = studentId ? parseInt(studentId, 10) : null;
+        const candidate = (row.candidates || []).find(c => c.id === row.student_id);
+        if (candidate) {
+            row.student_name = candidate.full_name || candidate.name;
+        }
     }
 
     function confirmAndExecuteImport() {

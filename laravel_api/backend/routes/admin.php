@@ -50,11 +50,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
         Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');
+        Route::get('/students/index-lists', [StudentIndexBulkController::class, 'indexLists'])->name('admin.students.index-lists');
+        Route::get('/students/index-lists/pdf', [StudentIndexBulkController::class, 'indexListsPdf'])->name('admin.students.index-lists.pdf');
         Route::get('/students/assign-index-tool', [StudentIndexBulkController::class, 'index'])->name('admin.students.assign-index-tool');
         Route::post('/students/assign-index-tool/preview', [StudentIndexBulkController::class, 'preview'])->name('admin.students.assign-index-tool.preview');
         Route::post('/students/assign-index-tool/run-chunk', [StudentIndexBulkController::class, 'runChunk'])->name('admin.students.assign-index-tool.run-chunk');
         Route::post('/students/assign-index-tool/export-preview', [StudentIndexBulkController::class, 'exportPreview'])->name('admin.students.assign-index-tool.export-preview');
         Route::get('/students/import-index', [StudentIndexBulkController::class, 'importView'])->name('admin.students.import-index');
+        Route::get('/students/import-index/template', [StudentIndexBulkController::class, 'downloadTemplate'])->name('admin.students.import-index.template');
         Route::post('/students/import-index/preview', [StudentIndexBulkController::class, 'importPreview'])->name('admin.students.import-index.preview');
         Route::post('/students/import-index/run', [StudentIndexBulkController::class, 'importRun'])->name('admin.students.import-index.run');
         Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');

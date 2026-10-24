@@ -27,6 +27,9 @@
                     <li class="{{ request()->routeIs('admin.students.create') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.students.create') }}">Add Student</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.students.index-lists') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.students.index-lists') }}">Index Number Lists</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.students.medium-changes') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.students.medium-changes') }}">Medium Changes</a>
                     </li>
@@ -122,9 +125,11 @@
                     <li class="{{ request()->routeIs('admin.settings.grade-promotion-schedule') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.grade-promotion-schedule') }}">Grade Promotion Schedule</a>
                     </li>
-                    <li class="{{ request()->routeIs('admin.settings.index-batches') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.settings.index-batches') }}">Index Number Batches</a>
-                    </li>
+                    @if(optional(auth()->user()->institute)->getIndexFormat() === 'batch')
+                        <li class="{{ request()->routeIs('admin.settings.index-batches') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.settings.index-batches') }}">Index Number Batches</a>
+                        </li>
+                    @endif
                     <li class="{{ request()->routeIs('admin.settings.admission-fees') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.admission-fees') }}">Admission Fees</a>
                     </li>

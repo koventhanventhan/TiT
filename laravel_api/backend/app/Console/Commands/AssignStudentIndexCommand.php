@@ -139,6 +139,9 @@ class AssignStudentIndexCommand extends Command
 
         $this->info(($isDryRun ? "[DRY RUN] " : "") . "Found " . $students->count() . " student(s) to process.");
 
+        $inst = \App\Models\Institute::find($instituteId);
+        $format = $inst?->getIndexFormat() ?? 'grade';
+
         // If Dry Run: run deterministic preview
         if ($isDryRun) {
             $batchMode = $batchOption ? 'single' : 'mapping';
@@ -152,7 +155,7 @@ class AssignStudentIndexCommand extends Command
                 $mapping
             );
 
-            $headers = ['ID', 'Name', 'Grade', 'Batch Year', 'Index Number', 'Status'];
+            $headers = ['ID', 'Name', 'Grade', 'Batch/Series', 'Index Number', 'Status'];
             $rows = [];
 
             foreach ($preview['preview_rows'] as $row) {
@@ -160,7 +163,7 @@ class AssignStudentIndexCommand extends Command
                     $row['student_id'],
                     $row['name'],
                     $row['grade'],
-                    $row['batch'],
+                    $row['series'] ?? $row['batch'],
                     $row['index_number'],
                     'PREVIEW (DRY RUN)',
                 ];
@@ -180,9 +183,10 @@ class AssignStudentIndexCommand extends Command
             $this->table($headers, $rows);
 
             if (!empty($preview['grade_summaries'])) {
-                $this->info("\nBatch breakdown:");
+                $this->info("\nGrade/Batch breakdown:");
                 foreach ($preview['grade_summaries'] as $gs) {
-                    $this->line("  Grade {$gs['grade']} -> Batch '{$gs['batch_year']}: {$gs['count']} student(s) ({$gs['first_index']} ... {$gs['last_index']})");
+                    $seriesLabel = $gs['series'] ?? $gs['batch_year'];
+                    $this->line("  Grade {$gs['grade']} -> Series '{$seriesLabel}': {$gs['count']} student(s) ({$gs['first_index']} ... {$gs['last_index']})");
                 }
             }
 
@@ -191,7 +195,7 @@ class AssignStudentIndexCommand extends Command
         }
 
         // Real Execution (in chunks)
-        $headers = ['ID', 'Name', 'Grade', 'Batch Year', 'Index Number', 'Status'];
+        $headers = ['ID', 'Name', 'Grade', 'Batch/Series', 'Index Number', 'Status'];
         $rows = [];
         $assignedCount = 0;
         $skippedCount = 0;
@@ -208,7 +212,24 @@ class AssignStudentIndexCommand extends Command
                     continue;
                 }
 
-                // Determine batch year (NO SILENT CURRENT YEAR FALLBACK)
+                if ($format === 'grade') {
+                    try {
+                        $series = $batchOption ?: null;
+                        $assigned = $indexService->assign($student, $series);
+                        $rows[] = [$student->id, $student->full_name ?? $student->name, $student->current_grade, $student->batch_year, $assigned, 'ASSIGNED'];
+                        $assignedCount++;
+                        if (!$firstAssigned) {
+                            $firstAssigned = $assigned;
+                        }
+                        $lastAssigned = $assigned;
+                    } catch (\Throwable $e) {
+                        $rows[] = [$student->id, $student->full_name ?? $student->name, $student->current_grade, 'N/A', 'N/A', 'FAILED: ' . $e->getMessage()];
+                        $errorCount++;
+                    }
+                    continue;
+                }
+
+                // Determine batch year for legacy batch mode
                 $batchYear = null;
                 if ($batchOption) {
                     try {

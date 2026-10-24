@@ -119,39 +119,61 @@
                         </div>
                     </div>
 
-                    <!-- Batch Year Source -->
+                    <!-- Medium Filter -->
                     <div class="section-box">
-                        <label class="text-white font-weight-bold mb-2">Batch Year Source</label>
-                        
-                        <div class="radio-card selected" onclick="selectBatchSource('mapping')">
-                            <div class="custom-control custom-radio">
-                                <input type="radio" id="batchSourceMapping" name="batch_source" value="mapping" class="custom-control-input" checked>
-                                <label class="custom-control-label font-weight-bold text-white" for="batchSourceMapping">
-                                    Use Grade Mapping (Default & Recommended)
-                                </label>
-                            </div>
-                            <small class="text-muted d-block ml-4">
-                                Each student's batch year is resolved automatically from the 
-                                <a href="{{ route('admin.settings.index-batches') }}" target="_blank" class="text-primary">Grade &rarr; Batch settings</a>. Unmapped grades will be skipped safely.
-                            </small>
-                        </div>
-
-                        <div class="radio-card" onclick="selectBatchSource('single')">
-                            <div class="custom-control custom-radio">
-                                <input type="radio" id="batchSourceSingle" name="batch_source" value="single" class="custom-control-input">
-                                <label class="custom-control-label font-weight-bold text-white" for="batchSourceSingle">
-                                    One Single Batch Year for Everyone
-                                </label>
-                            </div>
-                            <div class="mt-2 ml-4" id="singleBatchContainer" style="display: none;">
-                                <div class="d-flex align-items-center">
-                                    <span class="mr-2 text-white">Batch YY:</span>
-                                    <input type="number" name="single_batch_year" id="singleBatchInput" class="form-control" style="width: 100px; font-weight: bold; font-size: 1.1rem; color: #fff; background: #1f2937; border-color: #4b5563;" min="20" max="99" placeholder="e.g. 28">
-                                </div>
-                                <small class="text-warning d-block mt-1">Caution: All selected students will receive this identical batch year.</small>
-                            </div>
-                        </div>
+                        <label class="text-white font-weight-bold mb-2">Medium</label>
+                        <select name="medium" id="mediumFilter" class="form-control" style="background: #1f2937; color: #fff; border-color: #4b5563;">
+                            <option value="all">All Media (English, Tamil, Both)</option>
+                            <option value="english">English Medium (including Both)</option>
+                            <option value="tamil">Tamil Medium (including Both)</option>
+                            <option value="both">Both Media Only</option>
+                        </select>
                     </div>
+
+                    @if(optional($institute)->getIndexFormat() === 'grade')
+                        <!-- Grade Mode Numbering Format -->
+                        <div class="section-box">
+                            <label class="text-white font-weight-bold mb-2">Numbering Format</label>
+                            <div class="alert alert-primary py-2 px-3 mb-0" style="background: rgba(79, 70, 229, 0.15); border-color: rgba(79, 70, 229, 0.4); color: #a5b4fc;">
+                                Index numbers will be generated as <strong>{{ $institute->getIndexPrefix() }}/&lt;Grade&gt;/&lt;Seq&gt;</strong> (e.g. <code>{{ $institute->getIndexPrefix() }}/08/001</code>). Each grade has its own independent counter.
+                            </div>
+                            <input type="hidden" name="batch_source" value="mapping">
+                        </div>
+                    @else
+                        <!-- Batch Year Source (Legacy Batch Mode) -->
+                        <div class="section-box">
+                            <label class="text-white font-weight-bold mb-2">Batch Year Source</label>
+                            
+                            <div class="radio-card selected" onclick="selectBatchSource('mapping')">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="batchSourceMapping" name="batch_source" value="mapping" class="custom-control-input" checked>
+                                    <label class="custom-control-label font-weight-bold text-white" for="batchSourceMapping">
+                                        Use Grade Mapping (Default & Recommended)
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block ml-4">
+                                    Each student's batch year is resolved automatically from the 
+                                    <a href="{{ route('admin.settings.index-batches') }}" target="_blank" class="text-primary">Grade &rarr; Batch settings</a>. Unmapped grades will be skipped safely.
+                                </small>
+                            </div>
+
+                            <div class="radio-card" onclick="selectBatchSource('single')">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="batchSourceSingle" name="batch_source" value="single" class="custom-control-input">
+                                    <label class="custom-control-label font-weight-bold text-white" for="batchSourceSingle">
+                                        One Single Batch Year for Everyone
+                                    </label>
+                                </div>
+                                <div class="mt-2 ml-4" id="singleBatchContainer" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2 text-white">Batch YY:</span>
+                                        <input type="number" name="single_batch_year" id="singleBatchInput" class="form-control" style="width: 100px; font-weight: bold; font-size: 1.1rem; color: #fff; background: #1f2937; border-color: #4b5563;" min="20" max="99" placeholder="e.g. 28">
+                                    </div>
+                                    <small class="text-warning d-block mt-1">Caution: All selected students will receive this identical batch year.</small>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- Sequence Numbering Order -->
                     <div class="section-box">
@@ -385,13 +407,18 @@
     function getFormData() {
         const form = document.getElementById('filterForm');
         const selectedGrades = Array.from(form.querySelectorAll('input[name="grades[]"]:checked')).map(cb => cb.value);
-        const batchSource = form.querySelector('input[name="batch_source"]:checked').value;
-        const singleBatchYear = document.getElementById('singleBatchInput').value;
+        const batchSourceInput = form.querySelector('input[name="batch_source"]:checked') || form.querySelector('input[name="batch_source"]');
+        const batchSource = batchSourceInput ? batchSourceInput.value : 'mapping';
+        const singleBatchInput = document.getElementById('singleBatchInput');
+        const singleBatchYear = singleBatchInput ? singleBatchInput.value : '';
         const order = form.querySelector('input[name="order"]:checked').value;
         const includeDeactivated = document.getElementById('includeDeactivated').checked ? 1 : 0;
+        const mediumInput = document.getElementById('mediumFilter');
+        const medium = mediumInput ? mediumInput.value : 'all';
 
         return {
             grades: selectedGrades,
+            medium: medium,
             batch_source: batchSource,
             single_batch_year: singleBatchYear,
             order: order,

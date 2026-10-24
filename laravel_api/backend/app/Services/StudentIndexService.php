@@ -192,25 +192,160 @@ class StudentIndexService
     }
 
     /**
-     * Assign a unique student index number in format <PREFIX>/<BATCH YY>/<SEQ>.
+     * Derive 2-digit grade series (e.g. '08', '10') from grade string.
+     * Parses "Grade 8", "Grade 08", "8", "Grade 10" -> "08", "10".
+     * Unknown/non-numeric grades such as "A/L" throw a clear exception.
+     *
+     * @param string|int|null $grade
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function deriveGradeSeries($grade): string
+    {
+        if ($grade === null || trim((string) $grade) === '') {
+            throw new \InvalidArgumentException("Cannot derive grade series from '' – set the series manually");
+        }
+
+        $gradeStr = trim((string) $grade);
+        if (preg_match('/(?:grade\s*)?0*([1-9]|1[0-3])\b/i', $gradeStr, $m)) {
+            return str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
+        }
+
+        throw new \InvalidArgumentException("Cannot derive grade series from '{$gradeStr}' – set the series manually");
+    }
+
+    /**
+     * Normalize an explicit grade series into 2 digits (e.g. 8 -> '08', '10' -> '10').
+     *
+     * @param mixed $series
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function normalizeGradeSeries($series): string
+    {
+        if ($series === null || trim((string) $series) === '') {
+            throw new \InvalidArgumentException("Cannot derive grade series from '' – set the series manually");
+        }
+
+        $intVal = (int) $series;
+        if ($intVal >= 1 && $intVal <= 99) {
+            return str_pad((string) $intVal, 2, '0', STR_PAD_LEFT);
+        }
+
+        throw new \InvalidArgumentException("Cannot derive grade series from '{$series}' – set the series manually");
+    }
+
+    /**
+     * Assign a unique student index number.
+     * In 'grade' mode: <PREFIX>/<GG>/<NNN> e.g. TIT/08/001.
+     * In 'batch' mode: <PREFIX>/<BATCH YY>/<SEQ> e.g. TiT/28/100.
      *
      * @param User $student
-     * @param int|string $batchYear
+     * @param int|string|null $seriesOrBatch
      * @return string
      * @throws \InvalidArgumentException
      * @throws \Throwable
      */
-    public function assign(User $student, $batchYear): string
+    public function assign(User $student, $seriesOrBatch = null): string
     {
         // Idempotent: return unchanged if already assigned
         if (!empty($student->index_number)) {
             return $student->index_number;
         }
 
-        $batchYear = $this->normalizeBatchYear($batchYear);
         $instituteId = (int) ($student->institute_id ?: 1);
-
         $institute = Institute::find($instituteId);
+        $format = $institute?->getIndexFormat() ?? 'grade';
+
+        if ($format === 'grade') {
+            $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+            $seqStart = $institute?->getIndexSeqStart() ?? 1;
+
+            if ($seriesOrBatch !== null && trim((string) $seriesOrBatch) !== '') {
+                $seriesStr = $this->normalizeGradeSeries($seriesOrBatch);
+            } else {
+                $seriesStr = $this->deriveGradeSeries($student->current_grade);
+            }
+            $seriesInt = (int) $seriesStr;
+
+            $attempts = 0;
+            $maxAttempts = 2;
+
+            while ($attempts < $maxAttempts) {
+                $attempts++;
+                try {
+                    return DB::transaction(function () use ($student, $instituteId, $seriesInt, $seriesStr, $prefix, $seqStart) {
+                        $lockedStudent = User::where('id', $student->id)->lockForUpdate()->first();
+                        if (!$lockedStudent) {
+                            throw new \RuntimeException("Student record #{$student->id} not found.");
+                        }
+
+                        if (!empty($lockedStudent->index_number)) {
+                            $student->batch_year = $lockedStudent->batch_year;
+                            $student->index_seq = $lockedStudent->index_seq;
+                            $student->index_number = $lockedStudent->index_number;
+                            return $lockedStudent->index_number;
+                        }
+
+                        $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                            ->where('batch_year', $seriesInt)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if (!$counter) {
+                            try {
+                                $counter = StudentIndexCounter::create([
+                                    'institute_id' => $instituteId,
+                                    'batch_year' => $seriesInt,
+                                    'last_seq' => max(0, $seqStart - 1),
+                                ]);
+                            } catch (QueryException $qe) {
+                                $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                                    ->where('batch_year', $seriesInt)
+                                    ->lockForUpdate()
+                                    ->firstOrFail();
+                            }
+                        }
+
+                        $nextSeq = max((int) $counter->last_seq + 1, $seqStart);
+                        $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
+                        $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                        $counter->last_seq = $nextSeq;
+                        $counter->save();
+
+                        $lockedStudent->update([
+                            'institute_id' => $instituteId,
+                            'batch_year' => $seriesInt,
+                            'index_seq' => $nextSeq,
+                            'index_number' => $indexNumber,
+                        ]);
+
+                        $student->institute_id = $instituteId;
+                        $student->batch_year = $seriesInt;
+                        $student->index_seq = $nextSeq;
+                        $student->index_number = $indexNumber;
+
+                        return $indexNumber;
+                    }, 3);
+                } catch (QueryException $e) {
+                    if ($attempts >= $maxAttempts) {
+                        Log::error("Failed assigning student index number after {$attempts} attempts", [
+                            'student_id' => $student->id,
+                            'institute_id' => $instituteId,
+                            'series' => $seriesStr,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+                }
+            }
+
+            throw new \RuntimeException("Unable to assign student index number.");
+        }
+
+        // Legacy batch mode
+        $batchYear = $this->normalizeBatchYear($seriesOrBatch ?? $this->calculateDefaultBatchYear($student));
         $prefix = $institute?->index_prefix ?: 'TiT';
         $seqStart = (int) ($institute?->index_seq_start ?: 100);
 
@@ -248,7 +383,6 @@ class StudentIndexService
                                 'last_seq' => max(0, $seqStart - 1),
                             ]);
                         } catch (QueryException $qe) {
-                            // In case of a concurrent race where another process created it
                             $counter = StudentIndexCounter::where('institute_id', $instituteId)
                                 ->where('batch_year', $batchYear)
                                 ->lockForUpdate()
@@ -260,11 +394,9 @@ class StudentIndexService
                     $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
                     $indexNumber = "{$prefix}/{$batchYear}/{$paddedSeq}";
 
-                    // Increment and persist counter
                     $counter->last_seq = $nextSeq;
                     $counter->save();
 
-                    // Persist student
                     $lockedStudent->update([
                         'institute_id' => $instituteId,
                         'batch_year' => $batchYear,
@@ -280,7 +412,6 @@ class StudentIndexService
                     return $indexNumber;
                 }, 3);
             } catch (QueryException $e) {
-                // If unique constraint collided, retry on the next attempt
                 if ($attempts >= $maxAttempts) {
                     Log::error("Failed assigning student index number after {$attempts} attempts", [
                         'student_id' => $student->id,
@@ -300,14 +431,38 @@ class StudentIndexService
      * Preview upcoming index numbers without incrementing the counter.
      *
      * @param int $instituteId
-     * @param int|string $batchYear
+     * @param int|string $seriesOrBatch
      * @param int $count
      * @return array<string>
      */
-    public function previewNext(int $instituteId, $batchYear, int $count = 1): array
+    public function previewNext(int $instituteId, $seriesOrBatch, int $count = 1): array
     {
-        $batchYear = $this->normalizeBatchYear($batchYear);
         $institute = Institute::find($instituteId);
+        $format = $institute?->getIndexFormat() ?? 'grade';
+
+        if ($format === 'grade') {
+            $seriesStr = $this->normalizeGradeSeries($seriesOrBatch);
+            $seriesInt = (int) $seriesStr;
+            $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+            $seqStart = $institute?->getIndexSeqStart() ?? 1;
+
+            $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                ->where('batch_year', $seriesInt)
+                ->first();
+
+            $startSeq = $counter ? max((int) $counter->last_seq + 1, $seqStart) : $seqStart;
+
+            $results = [];
+            for ($i = 0; $i < $count; $i++) {
+                $seq = $startSeq + $i;
+                $paddedSeq = str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+                $results[] = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+            }
+
+            return $results;
+        }
+
+        $batchYear = $this->normalizeBatchYear($seriesOrBatch);
         $prefix = $institute?->index_prefix ?: 'TiT';
         $seqStart = (int) ($institute?->index_seq_start ?: 100);
 
@@ -331,13 +486,13 @@ class StudentIndexService
      * Re-assign an index number to a student (creates activity log).
      *
      * @param User $student
-     * @param int|string $newBatchYear
+     * @param int|string $newSeriesOrBatch
      * @param User|int|string|null $adminUser
      * @param string|null $reason
      * @return string
      * @throws \Throwable
      */
-    public function reassign(User $student, $newBatchYear, $adminUser = null, ?string $reason = null): string
+    public function reassign(User $student, $newSeriesOrBatch, $adminUser = null, ?string $reason = null): string
     {
         $oldIndex = $student->index_number;
         $oldBatch = $student->batch_year;
@@ -348,7 +503,7 @@ class StudentIndexService
         $student->batch_year = null;
         $student->save();
 
-        $newIndex = $this->assign($student, $newBatchYear);
+        $newIndex = $this->assign($student, $newSeriesOrBatch);
 
         $adminUserId = null;
         if ($adminUser instanceof User) {
@@ -363,7 +518,7 @@ class StudentIndexService
             'institute_id' => $student->institute_id ?: 1,
             'user_id' => $adminUserId,
             'action' => 'student_index_reassigned',
-            'description' => "Reassigned student index from {$oldIndex} (batch {$oldBatch}) to {$newIndex} for student #{$student->id} ({$student->full_name})",
+            'description' => "Reassigned student index from {$oldIndex} to {$newIndex} for student #{$student->id} ({$student->full_name})",
             'metadata' => [
                 'student_id' => $student->id,
                 'old_index_number' => $oldIndex,
@@ -380,11 +535,11 @@ class StudentIndexService
     }
 
     /**
-     * Parse index number string into parts (prefix, batch_year, index_seq).
+     * Parse index number string into parts (prefix, series/batch_year, index_seq).
      * Format: ^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$
      *
      * @param string|null $indexNumber
-     * @return array{prefix: string, batch_year: int, index_seq: int, normalized: string}|null
+     * @return array{prefix: string, series: string, series_int: int, batch_year: int, index_seq: int, normalized: string}|null
      */
     public function parseIndexNumber(?string $indexNumber): ?array
     {
@@ -392,12 +547,14 @@ class StudentIndexService
             return null;
         }
         $trimmed = trim($indexNumber);
-        if (!preg_match('/^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$/', $trimmed, $matches)) {
+        if (!preg_match('/^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$/i', $trimmed, $matches)) {
             return null;
         }
 
         return [
             'prefix' => $matches[1],
+            'series' => $matches[2],
+            'series_int' => (int) $matches[2],
             'batch_year' => (int) $matches[2],
             'index_seq' => (int) $matches[3],
             'normalized' => "{$matches[1]}/{$matches[2]}/{$matches[3]}",
@@ -405,7 +562,113 @@ class StudentIndexService
     }
 
     /**
-     * Find a student in an institute by student_id, username, phone, or email (in priority order).
+     * Normalize name for matching by lowering case, removing punctuation, and collapsing whitespace.
+     *
+     * @param string|null $name
+     * @return string
+     */
+    public function normalizeNameForMatching(?string $name): string
+    {
+        if ($name === null) {
+            return '';
+        }
+        $str = mb_strtolower(trim($name), 'UTF-8');
+        // Remove dots, dashes, underscores, commas, apostrophes, slashes, ampersands
+        $str = preg_replace('/[.\-_,\'\/&]/u', '', $str);
+        // Collapse all spaces
+        $str = preg_replace('/\s+/u', '', $str);
+        return $str;
+    }
+
+    /**
+     * Find candidate students in an institute by full_name or name matching.
+     *
+     * @param string $name
+     * @param string|null $grade
+     * @param string|null $medium
+     * @param int $instituteId
+     * @return array{student: User|null, candidates: array<User>, confidence: string}
+     */
+    public function findStudentByName(string $name, ?string $grade, ?string $medium, int $instituteId): array
+    {
+        $normalizedInput = $this->normalizeNameForMatching($name);
+        if ($normalizedInput === '' || trim($name) === '-' || trim($name) === '—') {
+            return ['student' => null, 'candidates' => [], 'confidence' => 'none'];
+        }
+
+        $query = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId);
+
+        // Grade series filter if available
+        $gradeSeries = null;
+        if (!empty($grade)) {
+            try {
+                $gradeSeries = $this->deriveGradeSeries($grade);
+            } catch (\Throwable $e) {
+                // Ignore
+            }
+        }
+
+        // Medium filter if available
+        $cleanMedium = $medium ? strtolower(trim($medium)) : null;
+
+        $allStudents = $query->get();
+        $candidates = [];
+        $exactMatches = [];
+
+        foreach ($allStudents as $candidate) {
+            // Check grade match if grade specified
+            if ($gradeSeries !== null) {
+                try {
+                    $candGradeSeries = $this->deriveGradeSeries($candidate->current_grade);
+                    if ($candGradeSeries !== $gradeSeries) {
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    continue;
+                }
+            }
+
+            // Check medium match: medium equals or is 'both'
+            if ($cleanMedium && !in_array($cleanMedium, ['all', 'both', ''])) {
+                $candMedium = strtolower(trim((string) $candidate->medium));
+                if ($candMedium !== '' && $candMedium !== 'both' && $candMedium !== $cleanMedium) {
+                    continue;
+                }
+            }
+
+            $normFull = $this->normalizeNameForMatching($candidate->full_name);
+            $normName = $this->normalizeNameForMatching($candidate->name);
+
+            if ($normalizedInput === $normFull || $normalizedInput === $normName) {
+                $exactMatches[] = $candidate;
+            } elseif (
+                ($normFull !== '' && (str_contains($normalizedInput, $normFull) || str_contains($normFull, $normalizedInput))) ||
+                (levenshtein($normalizedInput, $normFull) <= 2 && strlen($normalizedInput) >= 5)
+            ) {
+                $candidates[] = $candidate;
+            }
+        }
+
+        if (count($exactMatches) === 1) {
+            return ['student' => $exactMatches[0], 'candidates' => [$exactMatches[0]], 'confidence' => 'exact'];
+        }
+
+        if (count($exactMatches) === 0 && count($candidates) === 1) {
+            return ['student' => $candidates[0], 'candidates' => [$candidates[0]], 'confidence' => 'high'];
+        }
+
+        $allMerged = array_merge($exactMatches, $candidates);
+        return [
+            'student' => null,
+            'candidates' => $allMerged,
+            'confidence' => count($allMerged) > 0 ? 'ambiguous' : 'none',
+        ];
+    }
+
+    /**
+     * Find a student in an institute by student_id, username, phone, email, or name.
      *
      * @param array $row Associative array with lowercase header keys
      * @param int $instituteId
@@ -475,11 +738,25 @@ class StudentIndexService
             }
         }
 
+        // 4. student_name / name
+        $name = $row['student_name'] ?? $row['name'] ?? $row['full_name'] ?? null;
+        if (!empty($name) && trim($name) !== '-' && trim($name) !== '—') {
+            $grade = $row['grade'] ?? $row['current_grade'] ?? null;
+            $medium = $row['medium'] ?? null;
+            $match = $this->findStudentByName($name, $grade, $medium, $instituteId);
+            if ($match['student']) {
+                return $match['student'];
+            }
+        }
+
         return null;
     }
 
     /**
      * Parse and validate CSV rows for index import.
+     * Supports owner's columns: grade, medium, student_name, index_number
+     * as well as student_id|username|phone|email variants.
+     * Merges duplicate entries with name variants (e.g. M.Nidhuran | M.Nidhursan).
      *
      * @param array $rawRows List of associative arrays with columns
      * @param int $instituteId
@@ -487,11 +764,12 @@ class StudentIndexService
      */
     public function previewAndValidateImport(array $rawRows, int $instituteId): array
     {
-        $seenIndexNumbers = [];
-        $seenStudentIds = [];
+        $seenIndexMap = [];
         $rows = [];
         $validCount = 0;
         $errorCount = 0;
+        $institute = Institute::find($instituteId);
+        $expectedPrefix = strtoupper($institute?->getIndexPrefix() ?? 'TIT');
 
         foreach ($rawRows as $idx => $rawRow) {
             $rowNum = $idx + 1;
@@ -501,12 +779,17 @@ class StudentIndexService
             }
 
             $rawIndex = $row['index_number'] ?? $row['index'] ?? null;
-            $student = $this->findStudentForImport($row, $instituteId);
+            $studentName = $row['student_name'] ?? $row['name'] ?? $row['full_name'] ?? null;
+            $gradeCol = $row['grade'] ?? $row['current_grade'] ?? null;
+            $mediumCol = $row['medium'] ?? null;
 
             $status = 'valid';
             $errors = [];
+            $warnings = [];
+            $isReserved = false;
             $parsedIndex = null;
 
+            // 1. Index number validation
             if (empty($rawIndex)) {
                 $status = 'error';
                 $errors[] = 'Index number is missing';
@@ -514,43 +797,123 @@ class StudentIndexService
                 $parsedIndex = $this->parseIndexNumber($rawIndex);
                 if (!$parsedIndex) {
                     $status = 'error';
-                    $errors[] = "Invalid index number format '{$rawIndex}' (must match PREFIX/YY/SEQ e.g. TiT/28/105)";
+                    $errors[] = "Invalid index number format '{$rawIndex}' (must match PREFIX/GG/SEQ e.g. TIT/08/001)";
                 } else {
                     $canonicalIndex = $parsedIndex['normalized'];
-                    if (isset($seenIndexNumbers[$canonicalIndex])) {
+
+                    // Prefix equals institute prefix case-insensitively
+                    if (strtoupper($parsedIndex['prefix']) !== $expectedPrefix) {
                         $status = 'error';
-                        $errors[] = "Duplicate index number '{$rawIndex}' in CSV (also in row {$seenIndexNumbers[$canonicalIndex]})";
-                    } else {
-                        $seenIndexNumbers[$canonicalIndex] = $rowNum;
+                        $errors[] = "Prefix '{$parsedIndex['prefix']}' does not match institute prefix '{$expectedPrefix}'";
                     }
 
-                    // Check if already assigned to ANOTHER student in DB
-                    $existingUserWithIndex = User::withoutGlobalScopes()
-                        ->where('institute_id', $instituteId)
-                        ->where('index_number', $canonicalIndex)
-                        ->first();
-                    if ($existingUserWithIndex && (!$student || $existingUserWithIndex->id !== $student->id)) {
+                    // Format-aware series validation
+                    $format = $institute?->getIndexFormat() ?? 'grade';
+                    $seriesInt = $parsedIndex['series_int'];
+
+                    if ($format === 'batch') {
+                        if ($seriesInt < 20 || $seriesInt > 99) {
+                            $status = 'error';
+                            $errors[] = "Batch year '{$parsedIndex['series']}' must be between 20 and 99";
+                        }
+                    } else {
+                        if ($seriesInt < 1 || $seriesInt > 99) {
+                            $status = 'error';
+                            $errors[] = "Grade series '{$parsedIndex['series']}' must be between 01 and 99";
+                        }
+
+                        // Validate GG equals grade column if grade column provided
+                        if (!empty($gradeCol)) {
+                            try {
+                                $expectedSeries = $this->deriveGradeSeries($gradeCol);
+                                if ($parsedIndex['series'] !== $expectedSeries) {
+                                    $status = 'error';
+                                    $errors[] = "Grade series '{$parsedIndex['series']}' does not match grade column '{$gradeCol}'";
+                                }
+                            } catch (\Throwable $e) {
+                                $status = 'error';
+                                $errors[] = $e->getMessage();
+                            }
+                        }
+                    }
+
+                    // NNN >= 1
+                    if ($parsedIndex['index_seq'] < 1) {
                         $status = 'error';
-                        $errors[] = "Index number '{$canonicalIndex}' is already assigned to student #{$existingUserWithIndex->id} ({$existingUserWithIndex->full_name})";
+                        $errors[] = "Sequence number must be at least 1";
                     }
                 }
             }
 
-            if (!$student) {
-                $status = 'error';
-                $errors[] = 'Student not found by ID, username, phone, or email';
+            // 2. Reserved number or student matching
+            $student = null;
+            $candidates = [];
+            $trimmedName = is_string($studentName) ? trim($studentName) : '';
+            $hasExplicitReserve = ($trimmedName === '-' || $trimmedName === '—');
+
+            if ($hasExplicitReserve) {
+                $isReserved = true;
+                $resolvedName = '-';
             } else {
-                if (isset($seenStudentIds[$student->id])) {
-                    $status = 'error';
-                    $errors[] = "Student #{$student->id} appears multiple times in CSV";
-                } else {
-                    $seenStudentIds[$student->id] = $rowNum;
+                // Try direct identifiers first (student_id, username, email, phone)
+                $student = $this->findStudentForImport($row, $instituteId);
+
+                // If not found and student_name is provided, run name matching
+                if (!$student && !empty($trimmedName)) {
+                    $matchResult = $this->findStudentByName($trimmedName, $gradeCol, $mediumCol, $instituteId);
+                    $student = $matchResult['student'];
+                    $candidates = $matchResult['candidates'];
                 }
 
-                if (!empty($student->index_number)) {
-                    $status = 'error';
-                    $errors[] = "Student already has index number: {$student->index_number}";
+                if ($student) {
+                    $resolvedName = $student->full_name ?? $student->name;
+                } elseif (empty($trimmedName) && empty($row['student_id']) && empty($row['email']) && empty($row['phone']) && empty($row['phone_number']) && empty($row['username']) && empty($row['user_name'])) {
+                    $isReserved = true;
+                    $resolvedName = '-';
+                } else {
+                    $resolvedName = $studentName ?: 'Unknown';
                 }
+            }
+
+            // 3. Duplicate handling within the CSV file
+            if ($parsedIndex) {
+                $canonicalIndex = $parsedIndex['normalized'];
+                if (isset($seenIndexMap[$canonicalIndex])) {
+                    $prevRowIndex = $seenIndexMap[$canonicalIndex];
+                    $prevRow = &$rows[$prevRowIndex];
+
+                    // Check if duplicate for same student or name variant (e.g. M.Nidhuran | M.Nidhursan)
+                    $isSameStudent = ($student && $prevRow['student_id'] && $student->id === $prevRow['student_id']);
+                    $isNameVariant = (!$isSameStudent && $studentName && $prevRow['raw_name'] && 
+                        levenshtein($this->normalizeNameForMatching($studentName), $this->normalizeNameForMatching($prevRow['raw_name'])) <= 3);
+
+                    if ($isSameStudent || $isNameVariant) {
+                        // Merge duplicate into existing row with warning
+                        $prevRow['warnings'][] = "Merged duplicate row with name variant: {$prevRow['raw_name']} | {$studentName}";
+                        $prevRow['warning_message'] = implode('; ', $prevRow['warnings']);
+                        if ($mediumCol && strtolower($mediumCol) !== strtolower((string)$prevRow['medium'])) {
+                            $prevRow['medium'] = 'Both';
+                        }
+                        continue; // Do not add a separate duplicate row
+                    } else {
+                        $status = 'error';
+                        $errors[] = "Duplicate index number '{$rawIndex}' in CSV (also in row {$prevRow['row_number']})";
+                    }
+                }
+            }
+
+            // If not reserved and no student matched
+            if (!$isReserved && !$student) {
+                $status = 'error';
+                $errors[] = count($candidates) > 1 
+                    ? "Multiple students match name '{$trimmedName}' (select student from dropdown)"
+                    : (!empty($trimmedName) ? "Student '{$trimmedName}' not found" : "Student not found");
+            }
+
+            // Check if student already has a different index number
+            if ($student && !empty($student->index_number) && $parsedIndex && $student->index_number !== $parsedIndex['normalized']) {
+                $status = 'error';
+                $errors[] = "Student already has a different index number: {$student->index_number}";
             }
 
             if ($status === 'valid') {
@@ -559,22 +922,43 @@ class StudentIndexService
                 $errorCount++;
             }
 
-            $rows[] = [
+            $rowEntry = [
                 'row_number' => $rowNum,
                 'student_id' => $student?->id,
-                'student_name' => $student ? ($student->full_name ?? $student->name) : ($row['name'] ?? 'Unknown'),
+                'student_name' => $isReserved ? 'Reserved Number' : $resolvedName,
+                'raw_name' => $studentName,
+                'grade' => $gradeCol ?: ($student?->current_grade ?? 'Grade ' . ($parsedIndex['series_int'] ?? '')),
+                'medium' => $mediumCol ?: ($student?->medium ?? 'English'),
                 'current_grade' => $student?->current_grade,
                 'index_number' => $parsedIndex['normalized'] ?? $rawIndex,
-                'batch_year' => $parsedIndex['batch_year'] ?? null,
+                'batch_year' => $parsedIndex['series_int'] ?? null,
+                'series' => $parsedIndex['series'] ?? null,
                 'index_seq' => $parsedIndex['index_seq'] ?? null,
+                'is_reserved' => $isReserved,
+                'candidates' => array_map(function ($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->full_name ?? $c->name,
+                        'current_grade' => $c->current_grade,
+                        'medium' => $c->medium,
+                        'username' => $c->name,
+                    ];
+                }, $candidates),
                 'status' => $status,
                 'errors' => $errors,
+                'warnings' => $warnings,
                 'error_message' => implode('; ', $errors),
+                'warning_message' => implode('; ', $warnings),
             ];
+
+            if ($parsedIndex && !isset($seenIndexMap[$parsedIndex['normalized']])) {
+                $seenIndexMap[$parsedIndex['normalized']] = count($rows);
+            }
+            $rows[] = $rowEntry;
         }
 
         return [
-            'total' => count($rawRows),
+            'total' => count($rows),
             'valid_count' => $validCount,
             'error_count' => $errorCount,
             'has_errors' => $errorCount > 0,
@@ -584,6 +968,7 @@ class StudentIndexService
 
     /**
      * Execute the index import for validated rows.
+     * Advances counter to max(existing last_seq, highest imported seq) in the same transaction.
      *
      * @param array $validatedRows Rows array from previewAndValidateImport
      * @param int $instituteId
@@ -615,6 +1000,25 @@ class StudentIndexService
                     continue;
                 }
 
+                $seriesInt = (int) ($row['batch_year'] ?? 0);
+                $seq = (int) ($row['index_seq'] ?? 0);
+                $indexNumber = $row['index_number'];
+
+                // Always track highest imported seq per series (even for reserved numbers)
+                if (!isset($maxSeqPerBatch[$seriesInt]) || $seq > $maxSeqPerBatch[$seriesInt]) {
+                    $maxSeqPerBatch[$seriesInt] = $seq;
+                }
+
+                // If reserved row: advance counter, no student record updated
+                if (!empty($row['is_reserved'])) {
+                    $importedCount++;
+                    $results[] = array_merge($row, [
+                        'import_status' => 'imported',
+                        'result_message' => 'Reserved Number',
+                    ]);
+                    continue;
+                }
+
                 $student = User::withoutGlobalScopes()
                     ->where('id', $row['student_id'])
                     ->lockForUpdate()
@@ -629,7 +1033,7 @@ class StudentIndexService
                     continue;
                 }
 
-                if (!empty($student->index_number)) {
+                if (!empty($student->index_number) && $student->index_number !== $indexNumber) {
                     $skippedCount++;
                     $results[] = array_merge($row, [
                         'import_status' => 'skipped',
@@ -638,19 +1042,11 @@ class StudentIndexService
                     continue;
                 }
 
-                $batchYear = (int) $row['batch_year'];
-                $seq = (int) $row['index_seq'];
-                $indexNumber = $row['index_number'];
-
                 $student->update([
-                    'batch_year' => $batchYear,
+                    'batch_year' => $seriesInt,
                     'index_seq' => $seq,
                     'index_number' => $indexNumber,
                 ]);
-
-                if (!isset($maxSeqPerBatch[$batchYear]) || $seq > $maxSeqPerBatch[$batchYear]) {
-                    $maxSeqPerBatch[$batchYear] = $seq;
-                }
 
                 $importedCount++;
                 $results[] = array_merge($row, [
@@ -659,9 +1055,9 @@ class StudentIndexService
                 ]);
             }
 
-            // CRITICAL: Advance the counter to max(existing last_seq, highest imported seq) for each batch
+            // CRITICAL: Advance the counter to max(existing last_seq, highest imported seq) for each series/batch
             $institute = Institute::find($instituteId);
-            $seqStart = (int) ($institute?->index_seq_start ?: 100);
+            $seqStart = $institute?->getIndexSeqStart() ?? 1;
 
             foreach ($maxSeqPerBatch as $batch => $highestImportedSeq) {
                 $counter = StudentIndexCounter::where('institute_id', $instituteId)
@@ -686,7 +1082,7 @@ class StudentIndexService
             // Activity Log
             ActivityLogService::log(
                 'student_index_imported',
-                "Imported {$importedCount} existing student index numbers from CSV",
+                "Imported {$importedCount} student index numbers from CSV",
                 [
                     'imported_count' => $importedCount,
                     'skipped_count' => $skippedCount,
@@ -721,29 +1117,97 @@ class StudentIndexService
         array $mapping = []
     ): array {
         $institute = Institute::find($instituteId);
-        $prefix = $institute?->index_prefix ?: 'TiT';
-        $seqStart = (int) ($institute?->index_seq_start ?: 100);
+        $format = $institute?->getIndexFormat() ?? 'grade';
 
         // Preload DB counters for institute
         $dbCounters = StudentIndexCounter::where('institute_id', $instituteId)
             ->pluck('last_seq', 'batch_year')
             ->toArray();
 
-        // In-memory simulated counters per batch_year
         $simulatedSeqs = [];
-
         $previewRows = [];
         $skipped = [];
         $gradeGroupSummaries = [];
         $unmappedGradesCount = [];
 
+        if ($format === 'grade') {
+            $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+            $seqStart = $institute?->getIndexSeqStart() ?? 1;
+
+            foreach ($students as $student) {
+                if (!empty($student->index_number)) {
+                    continue;
+                }
+
+                $g = $student->current_grade ?: 'Unknown';
+                try {
+                    $seriesStr = $this->deriveGradeSeries($student->current_grade);
+                } catch (\InvalidArgumentException $e) {
+                    $unmappedGradesCount[$g] = ($unmappedGradesCount[$g] ?? 0) + 1;
+                    $skipped[] = [
+                        'student_id' => $student->id,
+                        'name' => $student->full_name ?? $student->name,
+                        'grade' => $g,
+                        'reason' => $e->getMessage(),
+                    ];
+                    continue;
+                }
+                $seriesInt = (int) $seriesStr;
+
+                if (!isset($simulatedSeqs[$seriesInt])) {
+                    $currentLastSeq = isset($dbCounters[$seriesInt]) ? (int) $dbCounters[$seriesInt] : 0;
+                    $simulatedSeqs[$seriesInt] = max($currentLastSeq + 1, $seqStart);
+                }
+
+                $seq = $simulatedSeqs[$seriesInt]++;
+                $paddedSeq = str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+                $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                if (!isset($gradeGroupSummaries[$g])) {
+                    $gradeGroupSummaries[$g] = [
+                        'grade' => $g,
+                        'batch_year' => $seriesInt,
+                        'series' => $seriesStr,
+                        'count' => 0,
+                        'first_index' => $indexNumber,
+                        'last_index' => $indexNumber,
+                        'first_number' => $indexNumber,
+                        'last_number' => $indexNumber,
+                    ];
+                }
+                $gradeGroupSummaries[$g]['count']++;
+                $gradeGroupSummaries[$g]['last_index'] = $indexNumber;
+                $gradeGroupSummaries[$g]['last_number'] = $indexNumber;
+
+                $previewRows[] = [
+                    'student_id' => $student->id,
+                    'name' => $student->full_name ?? $student->name,
+                    'grade' => $g,
+                    'batch' => $seriesInt,
+                    'series' => $seriesStr,
+                    'index_number' => $indexNumber,
+                ];
+            }
+
+            return [
+                'total_students' => count($previewRows),
+                'skipped_count' => count($skipped),
+                'preview_rows' => $previewRows,
+                'skipped' => $skipped,
+                'unmapped_grades' => $unmappedGradesCount,
+                'grade_summaries' => array_values($gradeGroupSummaries),
+            ];
+        }
+
+        // Legacy batch mode
+        $prefix = $institute?->index_prefix ?: 'TiT';
+        $seqStart = (int) ($institute?->index_seq_start ?: 100);
+
         foreach ($students as $student) {
-            // Already assigned?
             if (!empty($student->index_number)) {
                 continue;
             }
 
-            // Determine batch year
             $batchYear = null;
             if ($batchMode === 'single' && $singleBatchYear) {
                 try {
@@ -767,7 +1231,6 @@ class StudentIndexService
                 continue;
             }
 
-            // Initialize simulated counter if not set yet
             if (!isset($simulatedSeqs[$batchYear])) {
                 $currentLastSeq = isset($dbCounters[$batchYear]) ? (int) $dbCounters[$batchYear] : 0;
                 $simulatedSeqs[$batchYear] = max($currentLastSeq + 1, $seqStart);
@@ -812,3 +1275,4 @@ class StudentIndexService
         ];
     }
 }
+

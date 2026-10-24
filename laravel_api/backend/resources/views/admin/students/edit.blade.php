@@ -180,11 +180,20 @@
                                         <span class="badge badge-xs badge-warning" style="font-size: 10px;">Pending Assignment</span>
                                     @endif
                                 </label>
+                                @php
+                                    $instituteFormat = optional($student->institute)->getIndexFormat() ?? 'grade';
+                                    $seriesLabel = $instituteFormat === 'grade'
+                                        ? 'Grade ' . ($student->batch_year ? sprintf('%02d', $student->batch_year) : ($student->current_grade ?? ''))
+                                        : 'Batch \'' . $student->batch_year;
+                                @endphp
                                 @if($student->index_number)
                                     <div class="input-group">
-                                        <input type="text" class="form-control" value="{{ $student->index_number }} (Batch '{{ $student->batch_year }})" readonly style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; letter-spacing: 0.5px;">
+                                        <input type="text" class="form-control" value="{{ $student->index_number }} ({{ $seriesLabel }})" readonly style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; letter-spacing: 0.5px;">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="promptReassignIndex({{ $student->id }}, '{{ $student->index_number }}', {{ $student->batch_year ?? 28 }})" title="Re-assign Index Number">
+                                            @php
+                                                $reassignDefaultBatch = $student->batch_year ?? ($instituteFormat === 'grade' ? (preg_replace('/[^0-9]/', '', $student->current_grade) ?: '08') : 28);
+                                            @endphp
+                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="promptReassignIndex({{ $student->id }}, '{{ $student->index_number }}', '{{ $reassignDefaultBatch }}', '{{ $instituteFormat }}')" title="Re-assign Index Number">
                                                 <i class="flaticon-381-edit"></i> Re-assign
                                             </button>
                                         </div>
@@ -195,9 +204,17 @@
                                         <input type="text" class="form-control" value="Pending / Not Assigned" readonly style="background: rgba(255, 255, 255, 0.05); color: #9ca3af;">
                                         <div class="input-group-append">
                                             @php
-                                                $editSuggestedBatch = $student->batch_year ?? ($gradeMapping[$student->current_grade] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', $student->current_grade)] ?? ''));
+                                                if ($instituteFormat === 'grade') {
+                                                    try {
+                                                        $editSuggestedBatch = app(\App\Services\StudentIndexService::class)->deriveGradeSeries($student->current_grade);
+                                                    } catch (\Throwable $e) {
+                                                        $editSuggestedBatch = $student->batch_year ? sprintf('%02d', $student->batch_year) : '';
+                                                    }
+                                                } else {
+                                                    $editSuggestedBatch = $student->batch_year ?? ($gradeMapping[$student->current_grade] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', $student->current_grade)] ?? ''));
+                                                }
                                             @endphp
-                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $editSuggestedBatch }}')">
+                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $editSuggestedBatch }}', '{{ $instituteFormat }}')">
                                                 <i class="flaticon-381-id-card"></i> Assign Index
                                             </button>
                                         </div>
@@ -1110,23 +1127,35 @@
         });
     }
 
-    function promptAssignIndex(studentId, defaultBatch) {
-        const val = defaultBatch ? defaultBatch : '';
+    function promptAssignIndex(studentId, defaultBatch, format) {
+        const isGrade = (format === 'grade');
+        const val = defaultBatch ? (isGrade ? String(defaultBatch).padStart(2, '0') : defaultBatch) : '';
+        const labelText = isGrade ? 'Enter the 2-digit grade series (e.g. 08 for Grade 8):' : 'Enter the 2-digit batch year (e.g. 28 for A/L 2028):';
+        const placeholderText = isGrade ? 'e.g. 08' : 'e.g. 28';
         Swal.fire({
             title: 'Assign Student Index Number',
-            html: `Enter the 2-digit batch year (e.g. 28 for A/L 2028):<br><br>
-                   <input id="swal-batch-year" type="number" min="20" max="99" value="${val}" placeholder="e.g. 28" class="form-control text-center" style="width: 140px; margin: 0 auto; font-size: 1.2rem; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">`,
+            html: `${labelText}<br><br>
+                   <input id="swal-batch-year" type="text" value="${val}" placeholder="${placeholderText}" class="form-control text-center" style="width: 140px; margin: 0 auto; font-size: 1.2rem; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">`,
             showCancelButton: true,
             confirmButtonText: 'Generate Number',
             confirmButtonColor: '#38bdf8',
             customClass: 'swal-dark-popup',
             preConfirm: () => {
-                const batch = document.getElementById('swal-batch-year').value;
-                if (!batch || batch < 20 || batch > 99) {
-                    Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
-                    return false;
+                const batch = document.getElementById('swal-batch-year').value.trim();
+                const num = parseInt(batch, 10);
+                if (isGrade) {
+                    if (!batch || isNaN(num) || num < 1 || num > 99) {
+                        Swal.showValidationMessage('Please enter a valid grade series between 01 and 99');
+                        return false;
+                    }
+                    return String(num).padStart(2, '0');
+                } else {
+                    if (!batch || isNaN(num) || num < 20 || num > 99) {
+                        Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
+                        return false;
+                    }
+                    return String(num);
                 }
-                return batch;
             }
         }).then((res) => {
             if (res.value) {
@@ -1143,29 +1172,41 @@
         });
     }
 
-    function promptReassignIndex(studentId, currentIndex, currentBatch) {
+    function promptReassignIndex(studentId, currentIndex, currentBatch, format) {
+        const isGrade = (format === 'grade');
+        const batchVal = currentBatch ? (isGrade ? String(currentBatch).padStart(2, '0') : currentBatch) : '';
+        const labelText = isGrade ? 'New Grade Series (01-99):' : 'New Batch Year (20-99):';
         Swal.fire({
             title: 'Re-assign Index Number?',
             html: `<div style="text-align: left; font-size: 0.9rem;">
                      <p style="color: #fca5a5; margin-bottom: 8px;">⚠️ WARNING: This student already has index number <strong>${currentIndex}</strong>. Receipts and exam records may reference this number.</p>
                      <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This action will be recorded in the system audit logs.</p>
-                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">New Batch Year (20-99):</label>
-                     <input id="swal-new-batch" type="number" min="20" max="99" value="${currentBatch}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${labelText}</label>
+                     <input id="swal-new-batch" type="text" value="${batchVal}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">
                      <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Reason for Change:</label>
-                     <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected batch year / repeat exam" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                     <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected grade or batch / repeat exam" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
                    </div>`,
             showCancelButton: true,
             confirmButtonText: 'Confirm & Re-assign',
             confirmButtonColor: '#eab308',
             customClass: 'swal-dark-popup',
             preConfirm: () => {
-                const batch = document.getElementById('swal-new-batch').value;
-                const reason = document.getElementById('swal-reassign-reason').value;
-                if (!batch || batch < 20 || batch > 99) {
-                    Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
-                    return false;
+                const batch = document.getElementById('swal-new-batch').value.trim();
+                const reason = document.getElementById('swal-reassign-reason').value.trim();
+                const num = parseInt(batch, 10);
+                if (isGrade) {
+                    if (!batch || isNaN(num) || num < 1 || num > 99) {
+                        Swal.showValidationMessage('Please enter a valid grade series between 01 and 99');
+                        return false;
+                    }
+                } else {
+                    if (!batch || isNaN(num) || num < 20 || num > 99) {
+                        Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
+                        return false;
+                    }
                 }
-                return { batch, reason };
+                const formattedBatch = isGrade ? String(num).padStart(2, '0') : String(num);
+                return { batch: formattedBatch, reason };
             }
         }).then((res) => {
             if (res.value) {

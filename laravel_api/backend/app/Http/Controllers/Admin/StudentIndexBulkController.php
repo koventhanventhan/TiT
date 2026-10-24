@@ -10,6 +10,9 @@ use App\Services\StudentIndexService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
+use Mpdf\Mpdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentIndexBulkController extends Controller
@@ -107,6 +110,21 @@ class StudentIndexBulkController extends Controller
             }
         }
 
+        if ($request->filled('medium') && $request->medium !== 'all') {
+            $med = strtolower(trim((string) $request->medium));
+            if ($med === 'both') {
+                $query->where('medium', 'both');
+            } elseif ($med === 'english') {
+                $query->where(function ($q) {
+                    $q->where('medium', 'english')->orWhere('medium', 'both');
+                });
+            } elseif ($med === 'tamil') {
+                $query->where(function ($q) {
+                    $q->where('medium', 'tamil')->orWhere('medium', 'both');
+                });
+            }
+        }
+
         $order = $request->input('order', 'registered');
         if ($order === 'name') {
             $query->orderBy('full_name', 'asc')->orderBy('id', 'asc');
@@ -175,6 +193,21 @@ class StudentIndexBulkController extends Controller
             }
         }
 
+        if ($request->filled('medium') && $request->medium !== 'all') {
+            $med = strtolower(trim((string) $request->medium));
+            if ($med === 'both') {
+                $query->where('medium', 'both');
+            } elseif ($med === 'english') {
+                $query->where(function ($q) {
+                    $q->where('medium', 'english')->orWhere('medium', 'both');
+                });
+            } elseif ($med === 'tamil') {
+                $query->where(function ($q) {
+                    $q->where('medium', 'tamil')->orWhere('medium', 'both');
+                });
+            }
+        }
+
         $order = $request->input('order', 'registered');
         if ($order === 'name') {
             $query->orderBy('full_name', 'asc')->orderBy('id', 'asc');
@@ -183,6 +216,9 @@ class StudentIndexBulkController extends Controller
         }
 
         $students = $query->limit($chunkSize)->get();
+
+        $institute = Institute::find($instituteId);
+        $format = $institute?->getIndexFormat() ?? 'grade';
 
         $batchMode = $request->input('batch_source', 'mapping');
         $singleBatch = $request->filled('single_batch_year') ? (int) $request->single_batch_year : null;
@@ -196,7 +232,45 @@ class StudentIndexBulkController extends Controller
         $newlyExcludedIds = [];
 
         foreach ($students as $student) {
-            // Determine batch year
+            if ($format === 'grade') {
+                try {
+                    $series = $this->indexService->deriveGradeSeries($student->current_grade);
+                } catch (\Throwable $e) {
+                    $skippedInChunk++;
+                    $newlyExcludedIds[] = $student->id;
+                    $skippedList[] = [
+                        'student_id' => $student->id,
+                        'name' => $student->full_name ?? $student->name,
+                        'grade' => $student->current_grade,
+                        'reason' => "Cannot derive grade series from {$student->current_grade}",
+                    ];
+                    continue;
+                }
+
+                try {
+                    $indexNumber = $this->indexService->assign($student, $series);
+                    $assignedInChunk++;
+                    $assignedList[] = [
+                        'student_id' => $student->id,
+                        'name' => $student->full_name ?? $student->name,
+                        'grade' => $student->current_grade,
+                        'batch' => $series,
+                        'index_number' => $indexNumber,
+                    ];
+                } catch (\Throwable $e) {
+                    $errorsInChunk++;
+                    $newlyExcludedIds[] = $student->id;
+                    $skippedList[] = [
+                        'student_id' => $student->id,
+                        'name' => $student->full_name ?? $student->name,
+                        'grade' => $student->current_grade,
+                        'reason' => "Assignment error: " . $e->getMessage(),
+                    ];
+                }
+                continue;
+            }
+
+            // Determine batch year (legacy batch mode)
             $batchYear = null;
             if ($batchMode === 'single' && $singleBatch) {
                 try {
@@ -388,11 +462,12 @@ class StudentIndexBulkController extends Controller
         }
 
         $request->validate([
-            'rows' => 'required|array',
+            'rows' => 'nullable|array',
+            'validated_rows' => 'nullable|array',
             'abort_on_error' => 'nullable|boolean',
         ]);
 
-        $rows = $request->input('rows', []);
+        $rows = $request->input('validated_rows') ?: $request->input('rows', []);
         $abortOnError = $request->boolean('abort_on_error', false);
         $instituteId = (int) (auth()->user()->institute_id ?: 1);
 
@@ -416,5 +491,220 @@ class StudentIndexBulkController extends Controller
                 'error' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Download CSV template for index number import.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $fileName = 'student_index_import_template.csv';
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['grade', 'medium', 'student_name', 'index_number']);
+            fputcsv($handle, ['Grade 8', 'English', 'A. Example Student', 'TIT/08/001']);
+            fputcsv($handle, ['Grade 8', 'English', 'B. Second Student', 'TIT/08/002']);
+            fputcsv($handle, ['Grade 8', 'English', '-', 'TIT/08/003']);
+            fputcsv($handle, ['Grade 8', 'Tamil', 'C. Third Student', 'TIT/08/015']);
+            fclose($handle);
+        }, $fileName, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * Display formal Index Number Lists grouped by Grade and Medium.
+     */
+    public function indexLists(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $instituteId = (int) (auth()->user()->institute_id ?: 1);
+        $institute = Institute::find($instituteId);
+
+        $grades = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->whereNotNull('current_grade')
+            ->where('current_grade', '!=', '')
+            ->distinct()
+            ->orderBy('current_grade')
+            ->pluck('current_grade')
+            ->values()
+            ->all();
+
+        $selectedGrade = $request->input('grade');
+        if (!$selectedGrade) {
+            foreach ($grades as $g) {
+                if (str_contains($g, '8')) {
+                    $selectedGrade = $g;
+                    break;
+                }
+            }
+            if (!$selectedGrade && !empty($grades)) {
+                $selectedGrade = $grades[0];
+            }
+            if (!$selectedGrade) {
+                $selectedGrade = 'Grade 8';
+            }
+        }
+
+        $students = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->where(function ($q) use ($selectedGrade) {
+                $q->where('current_grade', $selectedGrade);
+                $num = preg_replace('/[^0-9]/', '', $selectedGrade);
+                if ($num) {
+                    $q->orWhere('current_grade', 'Grade ' . $num)
+                      ->orWhere('current_grade', (string) ((int) $num))
+                      ->orWhere('current_grade', sprintf('%02d', (int) $num));
+                }
+            })
+            ->where(function ($q) {
+                $q->whereNull('registration_status')
+                  ->orWhereNotIn('registration_status', ['pending', 'rejected']);
+            })
+            ->orderBy('index_number')
+            ->orderBy('full_name')
+            ->get();
+
+        $englishStudents = $students->filter(function ($s) {
+            return !empty($s->index_number) && in_array(strtolower($s->medium ?? ''), ['english', 'both']);
+        })->sortBy(function ($s) {
+            return $s->index_number;
+        })->values();
+
+        $tamilStudents = $students->filter(function ($s) {
+            return !empty($s->index_number) && in_array(strtolower($s->medium ?? ''), ['tamil', 'both']);
+        })->sortBy(function ($s) {
+            return $s->index_number;
+        })->values();
+
+        $unassignedStudents = $students->filter(function ($s) {
+            return empty($s->index_number);
+        })->values();
+
+        return view('admin.students.index_lists', compact(
+            'institute',
+            'grades',
+            'selectedGrade',
+            'englishStudents',
+            'tamilStudents',
+            'unassignedStudents'
+        ));
+    }
+
+    /**
+     * Download PDF list of index numbers for a specific grade and medium.
+     */
+    public function indexListsPdf(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $instituteId = (int) (auth()->user()->institute_id ?: 1);
+        $institute = Institute::find($instituteId) ?: new Institute(['index_prefix' => 'TiT', 'name' => 'TiT Institute']);
+
+        $grade = $request->input('grade', 'Grade 8');
+        $medium = strtolower($request->input('medium', 'english'));
+        if (!in_array($medium, ['english', 'tamil'])) {
+            $medium = 'english';
+        }
+
+        $students = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->where(function ($q) use ($grade) {
+                $q->where('current_grade', $grade);
+                $num = preg_replace('/[^0-9]/', '', $grade);
+                if ($num) {
+                    $q->orWhere('current_grade', 'Grade ' . $num)
+                      ->orWhere('current_grade', (string) ((int) $num))
+                      ->orWhere('current_grade', sprintf('%02d', (int) $num));
+                }
+            })
+            ->whereNotNull('index_number')
+            ->where(function ($q) use ($medium) {
+                $q->where('medium', $medium)->orWhere('medium', 'both');
+            })
+            ->where(function ($q) {
+                $q->whereNull('registration_status')
+                  ->orWhereNotIn('registration_status', ['pending', 'rejected']);
+            })
+            ->orderBy('index_number')
+            ->get();
+
+        $gradeNum = preg_replace('/[^0-9]/', '', $grade);
+        $gradeDisplay = $gradeNum ? 'GRADE ' . sprintf('%02d', (int) $gradeNum) : strtoupper($grade);
+        $mediumDisplay = strtoupper($medium) . ' MEDIUM';
+
+        $pdfContent = $this->renderIndexListPdf($institute, $gradeDisplay, $mediumDisplay, $students);
+
+        $filename = "Index_Numbers_{$gradeDisplay}_{$mediumDisplay}.pdf";
+        $filename = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $filename);
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Render the index list PDF using mPDF with Noto Sans Tamil.
+     */
+    protected function renderIndexListPdf(Institute $institute, string $gradeDisplay, string $mediumDisplay, $students): string
+    {
+        $html = view('pdf.index_list', [
+            'institute' => $institute,
+            'gradeDisplay' => $gradeDisplay,
+            'mediumDisplay' => $mediumDisplay,
+            'students' => $students,
+        ])->render();
+
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $tempDir = storage_path('app/mpdf');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'tempDir' => $tempDir,
+            'fontDir' => array_merge($fontDirs, [resource_path('fonts')]),
+            'fontdata' => $fontData + [
+                'notosanstamil' => [
+                    'R' => 'NotoSansTamil-Regular.ttf',
+                    'B' => 'NotoSansTamil-Bold.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 75,
+                ],
+                'montserrat' => [
+                    'B' => 'Montserrat-ExtraBold.ttf',
+                ],
+            ],
+            'default_font' => 'notosanstamil',
+            'autoScriptToLang' => false,
+            'autoLangToFont' => false,
+            'useSubstitutions' => true,
+            'margin_left' => 15,
+            'margin_right' => 15,
+            'margin_top' => 18,
+            'margin_bottom' => 18,
+        ]);
+
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('', 'S');
     }
 }

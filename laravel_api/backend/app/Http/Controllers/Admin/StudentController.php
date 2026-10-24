@@ -265,21 +265,38 @@ class StudentController extends Controller
             ->whereNotNull('full_name')
             ->firstOrFail();
 
-        $batchYear = null;
-        if ($request->filled('batch_year')) {
-            try {
-                $batchYear = $this->indexService->normalizeBatchYear($request->batch_year);
-            } catch (\InvalidArgumentException $e) {
-                // Invalid batch year
-            }
-        } else {
-            $batchYear = $this->indexService->getBatchForGrade($student->current_grade, $student->institute_id);
-        }
+        $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+        $format = $institute?->getIndexFormat() ?? 'grade';
 
         $indexAssigned = false;
-        if ($batchYear !== null) {
-            $this->indexService->assign($student, $batchYear);
-            $indexAssigned = true;
+        $batchYear = null;
+        if ($format === 'grade') {
+            $seriesInput = $request->input('series') ?: ($request->input('batch_year') ?: null);
+            try {
+                $this->indexService->assign($student, $seriesInput);
+                $indexAssigned = true;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not auto-assign index in confirm: " . $e->getMessage());
+            }
+        } else {
+            if ($request->filled('batch_year')) {
+                try {
+                    $batchYear = $this->indexService->normalizeBatchYear($request->batch_year);
+                } catch (\InvalidArgumentException $e) {
+                    // Invalid batch year
+                }
+            } else {
+                $batchYear = $this->indexService->getBatchForGrade($student->current_grade, $student->institute_id);
+            }
+
+            if ($batchYear !== null) {
+                try {
+                    $this->indexService->assign($student, $batchYear);
+                    $indexAssigned = true;
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not auto-assign index in confirm: " . $e->getMessage());
+                }
+            }
         }
 
         $oldRegStatus = $student->registration_status;
@@ -341,7 +358,7 @@ class StudentController extends Controller
             ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
         );
 
-        if (!$indexAssigned) {
+        if (!$indexAssigned && $format === 'batch') {
             $gradeDisplay = $student->current_grade ?: 'unknown';
             $response = redirect()->route('admin.students.index')
                 ->with('warning', "No batch year for Grade {$gradeDisplay} – set it in Index Number Batches, the number was not assigned");
@@ -1044,15 +1061,25 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $student = User::where('role', 'user')->findOrFail($id);
+        try {
+            $student = User::where('role', 'user')->findOrFail($id);
+            $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+            $format = $institute?->getIndexFormat() ?? 'grade';
 
-        $batchYear = $request->filled('batch_year')
-            ? $this->indexService->normalizeBatchYear($request->batch_year)
-            : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
+            if ($format === 'grade') {
+                $series = $request->input('series') ?: ($request->input('batch_year') ?: null);
+                $indexNumber = $this->indexService->assign($student, $series);
+            } else {
+                $batchYear = $request->filled('batch_year')
+                    ? $this->indexService->normalizeBatchYear($request->batch_year)
+                    : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
+                $indexNumber = $this->indexService->assign($student, $batchYear);
+            }
 
-        $indexNumber = $this->indexService->assign($student, $batchYear);
-
-        return back()->with('success', "Assigned index number {$indexNumber} to " . ($student->full_name ?? $student->name) . ".");
+            return back()->with('success', "Assigned index number {$indexNumber} to " . ($student->full_name ?? $student->name) . ".");
+        } catch (\Throwable $e) {
+            return back()->with('error', "Could not assign index number: " . $e->getMessage());
+        }
     }
 
     /**
@@ -1064,16 +1091,23 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request->validate([
-            'batch_year' => 'required|integer',
-            'reason' => 'nullable|string|max:255',
-        ]);
+        try {
+            $student = User::where('role', 'user')->findOrFail($id);
+            $oldIndex = $student->index_number;
+            $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+            $format = $institute?->getIndexFormat() ?? 'grade';
 
-        $student = User::where('role', 'user')->findOrFail($id);
-        $oldIndex = $student->index_number;
-        $newIndex = $this->indexService->reassign($student, $request->batch_year, auth()->user(), $request->input('reason'));
+            $newSeries = $request->input('series') ?: ($request->input('batch_year') ?: null);
+            if (!$newSeries) {
+                throw new \InvalidArgumentException($format === 'grade' ? 'Grade series is required' : 'Batch year is required');
+            }
 
-        return back()->with('success', "Reassigned index number from {$oldIndex} to {$newIndex}.");
+            $newIndex = $this->indexService->reassign($student, $newSeries, auth()->user(), $request->input('reason'));
+
+            return back()->with('success', "Reassigned index number from {$oldIndex} to {$newIndex}.");
+        } catch (\Throwable $e) {
+            return back()->with('error', "Could not reassign index number: " . $e->getMessage());
+        }
     }
 
     /**

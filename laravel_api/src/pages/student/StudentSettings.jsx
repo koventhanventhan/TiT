@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react'
+import { FiAlertCircle } from 'react-icons/fi'
 import StudentRegistrationForm from '../../components/StudentRegistrationForm'
-import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
+import SubjectUpdateModal, { formatPendingMediumMessage } from '../../components/student/SubjectUpdateModal'
 import { getStudentStats } from '../../services/dashboardService'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function StudentSettings() {
     const [isAddSiblingModalOpen, setIsAddSiblingModalOpen] = useState(false)
     const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false)
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    let t = (k, def) => def
+    let language = 'en'
+    try {
+        const lang = useLanguage()
+        if (lang) {
+            t = lang.t
+            language = lang.language
+        }
+    } catch (_) {}
 
     useEffect(() => {
         async function loadData() {
@@ -41,6 +53,34 @@ export default function StudentSettings() {
                 {/* Subjects & Medium */}
                 <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
                     <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Subjects & Medium</h3>
+                    
+                    {stats?.user?.pending_medium && (
+                        <div
+                            className="status-card-pending-medium"
+                            data-testid="settings-pending-medium-card"
+                            style={{
+                                background: '#fffbeb',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                borderRadius: 12,
+                                padding: '14px 16px',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                marginBottom: 20,
+                                lineHeight: 1.5,
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            <FiAlertCircle style={{ flexShrink: 0, fontSize: 18, color: '#d97706' }} />
+                            <span>
+                                {formatPendingMediumMessage(stats.user.medium, language, t)}
+                            </span>
+                        </div>
+                    )}
+
                     <div style={{ marginBottom: 24 }}>
                         <p style={{ fontSize: 14, color: 'var(--t-text-muted)' }}>
                             Update your medium of learning and manage the subjects you are enrolled in. Any changes to your subjects may affect your monthly fee.
@@ -91,15 +131,17 @@ export default function StudentSettings() {
                     onClose={() => setIsSubjectModalOpen(false)}
                     currentGrade={stats.user.current_grade}
                     medium={stats.user.medium}
+                    pendingMedium={stats.user.pending_medium}
                     stream={stats.user.stream}
                     initialSubjects={stats.user.selected_subjects}
-                    onUpdateSuccess={(newSubjects) => {
+                    onUpdateSuccess={(newSubjects, newPendingMedium) => {
                         setStats(prev => ({
                             ...prev,
                             user: {
                                 ...prev.user,
                                 needs_subject_review: false,
-                                selected_subjects: newSubjects
+                                selected_subjects: newSubjects,
+                                ...(newPendingMedium ? { pending_medium: newPendingMedium } : {})
                             }
                         }))
                         setIsSubjectModalOpen(false)

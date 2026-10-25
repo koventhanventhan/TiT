@@ -875,7 +875,7 @@ test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
             contentType: 'application/json',
             body: JSON.stringify({
               success: true,
-              already_paid: true,
+              already_paid: false,
               paid_until: '2026-11',
               monthly_fee: 1500,
               amount: 1500
@@ -899,9 +899,9 @@ test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
     await saveBtn.click();
     await page.waitForTimeout(400);
 
-    const advanceCheckboxLabel = page.locator('label:has-text("I want to pay for advance months")');
-    await expect(advanceCheckboxLabel).toBeVisible();
-    await advanceCheckboxLabel.click();
+    const advanceToggle = page.locator('[data-testid="pay-advance-toggle-btn"], button:has-text("Pay for Advance Months")').first();
+    await expect(advanceToggle).toBeVisible();
+    await advanceToggle.click();
     await page.waitForTimeout(200);
 
     const monthsInput = page.locator('input[aria-label="Number of advance months"]');
@@ -940,7 +940,7 @@ test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
             contentType: 'application/json',
             body: JSON.stringify({
               success: true,
-              already_paid: true,
+              already_paid: false,
               paid_until: '2026-11',
               monthly_fee: 1500,
               amount: 1500
@@ -973,10 +973,12 @@ test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
     await saveBtn.click();
     await page.waitForTimeout(400);
 
-    await page.locator('label:has-text("I want to pay for advance months")').click();
+    const advanceToggle = page.locator('[data-testid="pay-advance-toggle-btn"], button:has-text("Pay for Advance Months")').first();
+    await expect(advanceToggle).toBeVisible();
+    await advanceToggle.click();
     await page.waitForTimeout(200);
 
-    const offlineBtn = page.locator('button:has-text("I WILL PAY OFFLINE")');
+    const offlineBtn = page.locator('button:has-text("I WILL PAY OFFLINE (CASH/BANK)"), [data-testid="submit-advance-payment-btn"]').first();
     await expect(offlineBtn).toBeVisible();
     await offlineBtn.scrollIntoViewIfNeeded();
 
@@ -988,7 +990,7 @@ test.describe('Student Mobile Bug-Fix Round Probe Tests (Phases 1-8)', () => {
     const feedbackTime = Date.now() - t0;
     expect(feedbackTime, 'Offline-pay button must give feedback in < 400ms').toBeLessThan(400);
 
-    const submittingBtn = page.locator('button:has-text("Submitting")');
+    const submittingBtn = page.locator('[data-testid="submit-advance-payment-btn"]:has-text("Submitting"), button:has-text("Submitting")').first();
     await expect(submittingBtn).toBeVisible();
     await expect(submittingBtn).toBeDisabled();
 

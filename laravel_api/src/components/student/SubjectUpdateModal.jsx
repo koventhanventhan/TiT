@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiX, FiCheck, FiMinus, FiPlus, FiLoader, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiX, FiCheck, FiMinus, FiPlus, FiLoader, FiClock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline, getStudentPaymentStatus } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
 import { formatRs } from '../../utils/format';
+import { useLanguage } from '../../context/LanguageContext';
 
 const formatDate = (isoString) => {
   if (!isoString) return new Date().toISOString().split('T')[0];
@@ -13,12 +14,50 @@ const formatDate = (isoString) => {
   return String(isoString).substring(0, 10);
 };
 
-const formatAmount = (amt) => {
+export const formatAmount = (amt) => {
   const num = typeof amt === 'number' ? amt : (parseFloat(amt) || 0);
   return num % 1 === 0 ? num : num.toFixed(2);
 };
 
-export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, stream, initialSubjects = [], onUpdateSuccess }) {
+export const formatPendingMediumMessage = (medium, lang = 'en', t = (k, def) => def) => {
+  let mediumStr = 'current medium';
+  const lower = String(medium || '').toLowerCase();
+  if (lower === 'tamil') {
+    mediumStr = lang === 'ta' ? 'தமிழ்' : lang === 'si' ? 'දෙමළ' : 'Tamil';
+  } else if (lower === 'english') {
+    mediumStr = lang === 'ta' ? 'ஆங்கில' : lang === 'si' ? 'ඉංග්‍රීසි' : 'English';
+  }
+
+  if (lang === 'en') {
+    return `Medium change requested – waiting for admin approval; until then you keep ${mediumStr} materials.`;
+  }
+  const template = t('subj_update_pending_medium_msg', 'Medium change requested – waiting for admin approval; until then you keep {medium} materials.');
+  return template.replace('{medium}', mediumStr);
+};
+
+export const formatAlreadyPaidMessage = (currentMonth, nextMonth, fee, lang = 'en', t = (k, def) => def) => {
+  const feeStr = formatAmount(fee);
+  if (lang === 'en') {
+    return `Subjects saved. This month (${currentMonth}) is already paid – nothing more to pay now. Your new monthly fee Rs ${feeStr} starts from ${nextMonth}.`;
+  }
+  const template = t('subj_update_already_paid_msg', 'Subjects saved. This month ({month}) is already paid – nothing more to pay now. Your new monthly fee Rs {fee} starts from {nextMonth}.');
+  return template
+    .replace('{month}', currentMonth)
+    .replace('{fee}', feeStr)
+    .replace('{nextMonth}', nextMonth);
+};
+
+export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, pendingMedium, stream, initialSubjects = [], onUpdateSuccess }) {
+  let t = (k, def) => def;
+  let language = 'en';
+  try {
+    const lang = useLanguage();
+    if (lang) {
+      t = lang.t;
+      language = lang.language;
+    }
+  } catch (_) {}
+
   const [serverAmount, setServerAmount] = useState(null);
   const [serverMonthly, setServerMonthly] = useState(null);
   const [serverAdmission, setServerAdmission] = useState(0);
@@ -27,6 +66,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [saved, setSaved] = useState(false);
   const [paymentDone, setPaymentDone] = useState(false);
   const [existingPayment, setExistingPayment] = useState(null);
+  const [isMediumChangePending, setIsMediumChangePending] = useState(Boolean(pendingMedium));
   const [step, setStep] = useState(1);
   const [localMedium, setLocalMedium] = useState(medium || '');
   const [availableSubjects, setAvailableSubjects] = useState([]);
@@ -89,6 +129,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     if (isOpen) {
       setStep(1);
       setLocalMedium(medium || '');
+      setIsMediumChangePending(Boolean(pendingMedium));
       setError('');
       setSuccessMessage('');
       setServerAmount(null);
@@ -108,7 +149,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
         document.body.style.overflow = prevOverflow;
       };
     }
-  }, [isOpen, medium]);
+  }, [isOpen, medium, pendingMedium]);
 
   // Normalize initialSubjects if it comes as JSON string
   const normalizedInitialSubjects = useMemo(() => {
@@ -281,7 +322,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const handleClose = () => {
     // Subjects are already persisted once saved, so refresh the parent even if payment is skipped
     if (saved || successMessage) {
-      onUpdateSuccess(selectedSubjects);
+      onUpdateSuccess(selectedSubjects, isMediumChangePending ? localMedium : null);
     } else {
       onClose();
     }
@@ -304,6 +345,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     try {
       const resp = await updateStudentSubjects(selectedSubjects, localMedium);
       if (resp && resp.mediumChangeRequested) {
+        setIsMediumChangePending(true);
         setSuccessMessage('Subjects updated. Your medium change request is pending admin approval.');
       }
       setServerAmount(resp && typeof resp.amount === 'number' ? resp.amount : null);
@@ -581,288 +623,419 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
             </>
           )}
 
-          {step === 2 && (
-            <div style={{ padding: '10px 0' }}>
-              <div style={{
-                background: 'var(--t-primary-soft)', padding: '20px', borderRadius: '16px',
-                border: '1px solid var(--t-primary-border)', marginBottom: '24px'
-              }}>
-                {hasDiscount ? (
-                  <>
-                    <FeeRow
-                      label="Subjects Total:"
-                      value={formatRs(originalAmount)}
-                      isStrikethrough={true}
-                    />
-                    <FeeRow
-                      label="Monthly Fee:"
-                      value={formatRs(serverMonthly ?? monthlyAmount)}
-                      isDiscount={true}
-                    />
-                  </>
-                ) : (
-                  <FeeRow
-                    label="Monthly Fee:"
-                    value={formatRs(serverMonthly ?? monthlyAmount)}
-                  />
-                )}
+          {step === 2 && (() => {
+            const now = new Date();
+            const nextDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const locale = language === 'ta' ? 'ta-LK' : language === 'si' ? 'si-LK' : 'en-US';
+            let curMonth = now.toLocaleString(locale, { month: 'long' });
+            let nextMonth = nextDate.toLocaleString(locale, { month: 'long' });
+            if (!curMonth || curMonth.includes('T') || /^\d+$/.test(curMonth)) {
+              curMonth = now.toLocaleString('en-US', { month: 'long' });
+              nextMonth = nextDate.toLocaleString('en-US', { month: 'long' });
+            }
+            if (paidUntil && typeof paidUntil === 'string') {
+              const parts = paidUntil.trim().split(' ');
+              if (parts.length > 0 && isNaN(parseInt(parts[0], 10))) {
+                curMonth = parts[0];
+              }
+            }
 
-                {serverAdmission > 0 && (
-                  <FeeRow
-                    label="Admission Fee (First Time):"
-                    value={formatRs(serverAdmission)}
-                  />
-                )}
-
-                <FeeRow
-                  label="Total Amount:"
-                  value={formatRs(serverAmount ?? monthlyAmount)}
-                  isTotal={true}
-                />
-
-              </div>
-
-              {alreadyPaid ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ background: 'var(--t-success-bg)', color: 'var(--t-success)', padding: '14px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500 }}>
-                    {paidUntil ? (
-                      <>You have already paid up to <strong>{paidUntil}</strong>. Your updated subjects are saved and the new fee will apply from next month's payment.</>
-                    ) : (
-                      <>You have already paid for this month. Your updated subjects are saved and the new fee will apply from next month's payment.</>
-                    )}
-                  </div>
-                  
-                  <div style={{ marginTop: 8 }}>
-                    <label style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      minHeight: 48,
-                      padding: '8px 0',
-                      cursor: 'pointer',
-                      fontSize: 14,
-                      color: 'var(--t-text-2)',
-                      fontWeight: 600,
-                      touchAction: 'manipulation',
-                      WebkitTapHighlightColor: 'transparent',
-                      userSelect: 'none'
-                    }}>
-                      <input 
-                        type="checkbox" 
-                        checked={wantAdvancePayment} 
-                        onChange={(e) => setWantAdvancePayment(e.target.checked)} 
-                      />
-                      <span>I want to pay for advance months (Offline)</span>
-                    </label>
-                  </div>
-
-                  {wantAdvancePayment ? (
-                    <div style={{ background: 'var(--t-bg)', padding: 16, borderRadius: 12, border: '1px solid var(--t-border)', marginTop: 8 }}>
-                      <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 8, fontWeight: 600 }}>Number of Months:</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                        <button
-                          type="button"
-                          onClick={handleStepDown}
-                          disabled={!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone}
-                          aria-label="Decrease months"
-                          className="t-tap"
-                          style={{
-                            width: 48,
-                            height: 48,
-                            minWidth: 48,
-                            minHeight: 48,
-                            borderRadius: 10,
-                            border: '1px solid var(--t-border)',
-                            background: '#fff',
-                            color: 'var(--t-text)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: (!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone) ? 'not-allowed' : 'pointer',
-                            opacity: (!isAdvanceValid || numericAdvanceMonths <= 1) ? 0.4 : 1,
-                            fontSize: 18,
-                            touchAction: 'manipulation',
-                            WebkitTapHighlightColor: 'transparent',
-                            boxSizing: 'border-box'
-                          }}
-                        >
-                          <FiMinus />
-                        </button>
-
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={advanceMonths}
-                          onChange={handleMonthsChange}
-                          onBlur={handleMonthsBlur}
-                          aria-label="Number of advance months"
-                          style={{
-                            flex: 1,
-                            height: 48,
-                            minHeight: 48,
-                            borderRadius: 10,
-                            border: '1px solid var(--t-border)',
-                            textAlign: 'center',
-                            fontSize: 16,
-                            fontWeight: 600,
-                            color: 'var(--t-text)',
-                            background: '#fff',
-                            boxSizing: 'border-box'
-                          }}
-                        />
-
-                        <button
-                          type="button"
-                          onClick={handleStepUp}
-                          disabled={(isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone}
-                          aria-label="Increase months"
-                          className="t-tap"
-                          style={{
-                            width: 48,
-                            height: 48,
-                            minWidth: 48,
-                            minHeight: 48,
-                            borderRadius: 10,
-                            border: '1px solid var(--t-border)',
-                            background: '#fff',
-                            color: 'var(--t-text)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: ((isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone) ? 'not-allowed' : 'pointer',
-                            opacity: (isAdvanceValid && numericAdvanceMonths >= 12) ? 0.4 : 1,
-                            fontSize: 18,
-                            touchAction: 'manipulation',
-                            WebkitTapHighlightColor: 'transparent',
-                            boxSizing: 'border-box'
-                          }}
-                        >
-                          <FiPlus />
-                        </button>
-                      </div>
-
-                      <FeeRow
-                        label="Total Advance Amount:"
-                        value={isAdvanceValid ? formatRs((serverMonthly ?? monthlyAmount) * numericAdvanceMonths) : '—'}
-                        isTotal={true}
-                        style={{ marginBottom: 16 }}
-                      />
-                      
-                      <button 
-                        onClick={handlePayAdvanceOffline} 
-                        disabled={loading || paymentDone || !isAdvanceValid}
-                        style={{
-                          width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
-                          background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                          cursor: (loading || paymentDone || !isAdvanceValid) ? 'not-allowed' : 'pointer',
-                          opacity: !isAdvanceValid ? 0.5 : 1,
-                          transition: 'all 0.2s', textAlign: 'center',
-                          minHeight: 48, touchAction: 'manipulation',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                        }}
-                      >
-                        {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE (CASH/BANK)'}
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={handleClose} style={{
-                      padding: '14px 20px', borderRadius: '12px', border: 'none',
-                      background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
-                    }}>Done</button>
-                  )}
-                </div>
-              ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {existingPayment && existingPayment.status === 'pending' && existingPayment.payment_method === 'offline' && (
+            return (
+              <div style={{ padding: '10px 0' }}>
+                {/* Yellow Card: Medium change requested */}
+                {isMediumChangePending && (
                   <div
-                    className="status-card-pending"
-                    data-testid="status-card-pending"
+                    className="status-card-pending-medium"
+                    data-testid="modal-pending-medium-card"
                     style={{
                       background: '#fffbeb',
-                      color: '#b45309',
+                      color: '#92400e',
                       border: '1px solid #fde68a',
                       borderRadius: 12,
                       padding: '14px 16px',
                       fontSize: 14,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
-                      textAlign: 'left'
+                      gap: 10,
+                      marginBottom: 16,
+                      lineHeight: 1.5,
+                      boxSizing: 'border-box'
                     }}
                   >
-                    <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
-                    <span>Request received on {formatDate(existingPayment.created_at)}, waiting for admin confirmation – Rs {formatAmount(existingPayment.amount || serverMonthly || monthlyAmount)}</span>
+                    <FiAlertCircle style={{ flexShrink: 0, fontSize: 18, color: '#d97706' }} />
+                    <span>{formatPendingMediumMessage(medium || localMedium, language, t)}</span>
                   </div>
                 )}
 
-                {existingPayment && existingPayment.status === 'cancelled' && (
-                  <div
-                    className="status-card-cancelled"
-                    data-testid="status-card-cancelled"
-                    style={{
-                      background: '#fef2f2',
-                      color: '#b91c1c',
-                      border: '1px solid #fecaca',
-                      borderRadius: 12,
-                      padding: '14px 16px',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      textAlign: 'left'
-                    }}
-                  >
-                    <FiAlertCircle style={{ flexShrink: 0, fontSize: 18 }} />
-                    <span>Request cancelled – please contact the institute or submit again</span>
-                  </div>
-                )}
+                {/* Pricing Summary Card */}
+                <div style={{
+                  background: 'var(--t-primary-soft)', padding: '20px', borderRadius: '16px',
+                  border: '1px solid var(--t-primary-border)', marginBottom: '24px'
+                }}>
+                  {hasDiscount ? (
+                    <>
+                      <FeeRow
+                        label="Subjects Total:"
+                        value={formatRs(originalAmount)}
+                        isStrikethrough={true}
+                      />
+                      <FeeRow
+                        label="Monthly Fee:"
+                        value={formatRs(serverMonthly ?? monthlyAmount)}
+                        isDiscount={true}
+                      />
+                    </>
+                  ) : (
+                    <FeeRow
+                      label="Monthly Fee:"
+                      value={formatRs(serverMonthly ?? monthlyAmount)}
+                    />
+                  )}
 
-                {(!existingPayment || existingPayment.status !== 'pending' || existingPayment.payment_method !== 'offline') ? (
-                  <>
-                    <button 
-                      onClick={handlePayOffline} 
-                      disabled={loading || paymentDone}
+                  {serverAdmission > 0 && (
+                    <FeeRow
+                      label="Admission Fee (First Time):"
+                      value={formatRs(serverAdmission)}
+                    />
+                  )}
+
+                  <FeeRow
+                    label="Total Amount:"
+                    value={formatRs(serverAmount ?? monthlyAmount)}
+                    isTotal={true}
+                  />
+                </div>
+
+                {alreadyPaid ? (
+                  /* State 1: Current month is ALREADY paid */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div
+                      className="status-card-already-paid"
+                      data-testid="status-card-already-paid"
                       style={{
-                        padding: '14px 20px', borderRadius: '12px',
-                        background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                        cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
-                        transition: 'all 0.2s', textAlign: 'center', minHeight: 48,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        touchAction: 'manipulation'
+                        background: '#ecfdf5',
+                        color: '#065f46',
+                        border: '1px solid #a7f3d0',
+                        borderRadius: 12,
+                        padding: '16px 18px',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        lineHeight: 1.5,
+                        boxSizing: 'border-box'
                       }}
                     >
-                      {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE'}
-                    </button>
-                    <button 
-                      onClick={handlePayOnline} 
-                      disabled={loading || paymentDone}
+                      <FiCheckCircle style={{ flexShrink: 0, fontSize: 20, color: '#059669', marginTop: 2 }} />
+                      <div style={{ flex: 1 }}>
+                        {formatAlreadyPaidMessage(curMonth, nextMonth, serverMonthly ?? monthlyAmount, language, t)}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleClose}
+                      data-testid="modal-already-paid-done-btn"
                       style={{
-                        padding: '14px 20px', borderRadius: '12px', border: 'none',
-                        background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s', textAlign: 'center'
+                        width: '100%',
+                        padding: '14px 20px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: 'var(--t-primary, #4f0bd9)',
+                        color: '#fff',
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        minHeight: 48,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxSizing: 'border-box'
                       }}
                     >
-                      {loading ? 'Processing...' : 'PAY ONLINE'}
+                      Done
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <button onClick={handleClose} style={{
-                    padding: '14px 20px', borderRadius: '12px', border: 'none',
-                    background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
-                  }}>Done</button>
+                  /* State 2: Current month is NOT paid */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {existingPayment && existingPayment.status === 'pending' && existingPayment.payment_method === 'offline' && (
+                      <div
+                        className="status-card-pending"
+                        data-testid="status-card-pending"
+                        style={{
+                          background: '#fffbeb',
+                          color: '#b45309',
+                          border: '1px solid #fde68a',
+                          borderRadius: 12,
+                          padding: '14px 16px',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          textAlign: 'left'
+                        }}
+                      >
+                        <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Request received on {formatDate(existingPayment.created_at)}, waiting for admin confirmation – Rs {formatAmount(existingPayment.amount || serverMonthly || monthlyAmount)}</span>
+                      </div>
+                    )}
+
+                    {existingPayment && existingPayment.status === 'cancelled' && (
+                      <div
+                        className="status-card-cancelled"
+                        data-testid="status-card-cancelled"
+                        style={{
+                          background: '#fef2f2',
+                          color: '#b91c1c',
+                          border: '1px solid #fecaca',
+                          borderRadius: 12,
+                          padding: '14px 16px',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          textAlign: 'left'
+                        }}
+                      >
+                        <FiAlertCircle style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Request cancelled – please contact the institute or submit again</span>
+                      </div>
+                    )}
+
+                    {(!existingPayment || existingPayment.status !== 'pending' || existingPayment.payment_method !== 'offline') ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        {/* Option 1: Pay online */}
+                        <div style={{
+                          border: '1px solid var(--t-border, #e2e8f0)',
+                          borderRadius: 14,
+                          padding: 14,
+                          background: '#fff',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 6
+                        }}>
+                          <button 
+                            onClick={handlePayOnline} 
+                            disabled={loading || paymentDone}
+                            data-testid="pay-online-btn"
+                            style={{
+                              width: '100%',
+                              padding: '12px 20px', borderRadius: '12px', border: 'none',
+                              background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
+                              cursor: loading ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s', textAlign: 'center', minHeight: 46,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                          >
+                            {loading ? 'Processing...' : 'PAY ONLINE'}
+                          </button>
+                          <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
+                            {t('subj_update_pay_online_desc', 'Pay online – receipt is sent immediately')}
+                          </div>
+                        </div>
+
+                        {/* Option 2: Pay offline */}
+                        <div style={{
+                          border: '1px solid var(--t-border, #e2e8f0)',
+                          borderRadius: 14,
+                          padding: 14,
+                          background: '#fff',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 6
+                        }}>
+                          <button 
+                            onClick={handlePayOffline} 
+                            disabled={loading || paymentDone}
+                            data-testid="pay-offline-btn"
+                            style={{
+                              width: '100%',
+                              padding: '12px 20px', borderRadius: '12px',
+                              background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
+                              cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
+                              transition: 'all 0.2s', textAlign: 'center', minHeight: 46,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                              touchAction: 'manipulation'
+                            }}
+                          >
+                            {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE'}
+                          </button>
+                          <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
+                            {t('subj_update_pay_offline_desc', 'Pay offline – the admin marks it paid, then you receive the receipt and your access opens')}
+                          </div>
+                        </div>
+
+                        {/* Option 3: Advance months */}
+                        <div style={{
+                          border: '1px solid var(--t-border, #e2e8f0)',
+                          borderRadius: 14,
+                          padding: 14,
+                          background: '#fff',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => setWantAdvancePayment(prev => !prev)}
+                            data-testid="pay-advance-toggle-btn"
+                            style={{
+                              width: '100%',
+                              padding: '12px 18px',
+                              borderRadius: '12px',
+                              border: '1px solid var(--t-border, #cbd5e1)',
+                              background: wantAdvancePayment ? 'var(--t-primary-soft, #f1f5f9)' : '#fff',
+                              color: 'var(--t-text, #1e293b)',
+                              fontSize: '15px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              minHeight: 46,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <span>{t('subj_update_pay_advance_title', 'Pay for Advance Months')}</span>
+                            <span style={{ fontSize: 16 }}>{wantAdvancePayment ? '▲' : '▼'}</span>
+                          </button>
+                          <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
+                            {t('subj_update_pay_advance_desc', 'Advance months – pay for multiple months in advance offline')}
+                          </div>
+
+                          {wantAdvancePayment && (
+                            <div style={{ background: 'var(--t-bg)', padding: 16, borderRadius: 12, border: '1px solid var(--t-border)', marginTop: 8 }}>
+                              <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 8, fontWeight: 600 }}>Number of Months:</label>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                                <button
+                                  type="button"
+                                  onClick={handleStepDown}
+                                  disabled={!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone}
+                                  aria-label="Decrease months"
+                                  className="t-tap"
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    minWidth: 48,
+                                    minHeight: 48,
+                                    borderRadius: 10,
+                                    border: '1px solid var(--t-border)',
+                                    background: '#fff',
+                                    color: 'var(--t-text)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: (!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone) ? 'not-allowed' : 'pointer',
+                                    opacity: (!isAdvanceValid || numericAdvanceMonths <= 1) ? 0.4 : 1,
+                                    fontSize: 18,
+                                    touchAction: 'manipulation',
+                                    WebkitTapHighlightColor: 'transparent',
+                                    boxSizing: 'border-box'
+                                  }}
+                                >
+                                  <FiMinus />
+                                </button>
+
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={advanceMonths}
+                                  onChange={handleMonthsChange}
+                                  onBlur={handleMonthsBlur}
+                                  aria-label="Number of advance months"
+                                  data-testid="advance-months-input"
+                                  style={{
+                                    flex: 1,
+                                    height: 48,
+                                    minHeight: 48,
+                                    borderRadius: 10,
+                                    border: '1px solid var(--t-border)',
+                                    textAlign: 'center',
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    color: 'var(--t-text)',
+                                    background: '#fff',
+                                    boxSizing: 'border-box'
+                                  }}
+                                />
+
+                                <button
+                                  type="button"
+                                  onClick={handleStepUp}
+                                  disabled={(isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone}
+                                  aria-label="Increase months"
+                                  className="t-tap"
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    minWidth: 48,
+                                    minHeight: 48,
+                                    borderRadius: 10,
+                                    border: '1px solid var(--t-border)',
+                                    background: '#fff',
+                                    color: 'var(--t-text)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: ((isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone) ? 'not-allowed' : 'pointer',
+                                    opacity: (isAdvanceValid && numericAdvanceMonths >= 12) ? 0.4 : 1,
+                                    fontSize: 18,
+                                    touchAction: 'manipulation',
+                                    WebkitTapHighlightColor: 'transparent',
+                                    boxSizing: 'border-box'
+                                  }}
+                                >
+                                  <FiPlus />
+                                </button>
+                              </div>
+
+                              <FeeRow
+                                label="Total Advance Amount:"
+                                value={isAdvanceValid ? formatRs((serverMonthly ?? monthlyAmount) * numericAdvanceMonths) : '—'}
+                                isTotal={true}
+                                style={{ marginBottom: 16 }}
+                              />
+                              
+                              <button 
+                                onClick={handlePayAdvanceOffline} 
+                                disabled={loading || paymentDone || !isAdvanceValid}
+                                data-testid="submit-advance-payment-btn"
+                                style={{
+                                  width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
+                                  background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
+                                  cursor: (loading || paymentDone || !isAdvanceValid) ? 'not-allowed' : 'pointer',
+                                  opacity: !isAdvanceValid ? 0.5 : 1,
+                                  transition: 'all 0.2s', textAlign: 'center',
+                                  minHeight: 48, touchAction: 'manipulation',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                }}
+                              >
+                                {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE (CASH/BANK)'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={handleClose} style={{
+                        padding: '14px 20px', borderRadius: '12px', border: 'none',
+                        background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+                      }}>Done</button>
+                    )}
+                  </div>
                 )}
               </div>
-              )}
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         <div style={{ padding: '20px', borderTop: '1px solid var(--t-border)', background: 'var(--t-bg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {step === 2 ? (
+          {step === 2 && !alreadyPaid ? (
             <button onClick={() => setStep(1)} style={{
               padding: '10px 16px', border: 'none', background: 'transparent',
               color: 'var(--t-text-3)', fontSize: 14, fontWeight: 600, cursor: 'pointer'

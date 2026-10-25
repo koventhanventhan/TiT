@@ -52,6 +52,9 @@ class StudentController extends Controller
             $query->where('needs_subject_review', true);
         }
 
+        $institute = auth()->check() ? auth()->user()->institute : null;
+        $instituteFormat = $institute?->getIndexFormat() ?? 'grade';
+
         if ($request->filled('grade')) {
             $query->where(function ($q) use ($request) {
                 $q->where('current_grade', $request->grade)
@@ -59,7 +62,15 @@ class StudentController extends Controller
             });
         }
 
-        if ($request->filled('batch_year')) {
+        if ($request->filled('medium') && $request->medium !== 'all') {
+            $medium = strtolower(trim($request->medium));
+            if (in_array($medium, ['english', 'tamil', 'both'], true)) {
+                $query->where('medium', $medium);
+            }
+        }
+
+        // In grade mode, ignore stray batch_year parameter; only apply in legacy batch mode
+        if ($instituteFormat === 'batch' && $request->filled('batch_year')) {
             $query->where('batch_year', (int) $request->batch_year);
         }
 
@@ -90,6 +101,10 @@ class StudentController extends Controller
                   ->orWhere('index_number', 'like', "%{$term}%");
             });
         }
+
+        // Filtered counts matching current filters for the strip
+        $filteredTotalCount = (clone $query)->count();
+        $filteredAssignedCount = (clone $query)->whereNotNull('index_number')->where('index_number', '!=', '')->count();
             
         $currentYearMonth = now()->format('Y-m');
         $students = $query->with(['payments' => function ($q) use ($currentYearMonth) {
@@ -113,6 +128,9 @@ class StudentController extends Controller
             'students',
             'totalStudentsCount',
             'assignedIndexCount',
+            'filteredTotalCount',
+            'filteredAssignedCount',
+            'instituteFormat',
             'gradeMapping',
             'pendingPaymentsCount',
             'currentYearMonth'
@@ -869,7 +887,15 @@ class StudentController extends Controller
                       ->orWhere('current_grade', 'Grade ' . $request->grade);
                 });
             }
-            if ($request->filled('batch_year')) {
+            if ($request->filled('medium') && $request->medium !== 'all') {
+                $medium = strtolower(trim($request->medium));
+                if (in_array($medium, ['english', 'tamil', 'both'], true)) {
+                    $query->where('medium', $medium);
+                }
+            }
+            $inst = auth()->check() ? auth()->user()->institute : null;
+            $format = $inst?->getIndexFormat() ?? 'grade';
+            if ($format === 'batch' && $request->filled('batch_year')) {
                 $query->where('batch_year', (int) $request->batch_year);
             }
             if ($request->has('has_index') && $request->has_index !== '') {

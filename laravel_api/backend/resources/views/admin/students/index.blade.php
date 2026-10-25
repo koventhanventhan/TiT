@@ -297,19 +297,26 @@
             <div>
                 <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
                 <div class="d-inline-flex align-items-center mt-1 flex-wrap gap-2">
-                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px;">
-                        <i class="flaticon-381-layer-1 mr-1"></i> {{ $assignedIndexCount ?? 0 }} of {{ $totalStudentsCount ?? 0 }} students have an index number
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px;"
+                          title="Students matching the current filters that already have a number">
+                        <i class="flaticon-381-layer-1 mr-1"></i> {{ $filteredAssignedCount ?? $assignedIndexCount ?? 0 }} of {{ $filteredTotalCount ?? $totalStudentsCount ?? 0 }} students have an index number
                     </span>
-                    <a href="{{ request('pending_payments') == '1' ? route('admin.students.index', request()->except('pending_payments')) : route('admin.students.index', array_merge(request()->query(), ['pending_payments' => 1])) }}"
+                    <a href="{{ request('pending_payments') == '1' ? route('admin.students.index', request()->except('pending_payments'), false) : route('admin.students.index', array_merge(request()->query(), ['pending_payments' => 1]), false) }}"
                        class="badge {{ request('pending_payments') == '1' ? 'badge-warning' : '' }}"
                        style="{{ request('pending_payments') == '1' ? 'background: #f59e0b; color: #fff; font-weight: 700;' : 'background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600;' }} font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
-                       title="Click to filter students with pending payments for current month">
+                       title="Pending Payments: students with a PENDING payment for the current month (offline payment requested, waiting for Mark Paid) – clicking filters the list to them">
                         <i class="flaticon-381-diamond mr-1"></i> Pending Payments: {{ $pendingPaymentsCount ?? 0 }}
                     </a>
+                    <span class="badge badge-light" style="background: rgba(255, 255, 255, 0.08); color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: help;"
+                          data-toggle="tooltip"
+                          data-html="true"
+                          title="<strong>Strip Legend:</strong><br>• <em>N of M students have an index number:</em> Students matching the current filters that already have a number.<br>• <em>Pending Payments:</em> Students with a PENDING payment for the current month (offline payment requested, waiting for Mark Paid) – clicking filters the list to them.">
+                        ?
+                    </span>
                 </div>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <form action="{{ route('admin.students.index') }}" method="GET" class="mb-0 mr-3">
+                <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-3">
                     <div class="premium-filter-group">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid rgba(235, 129, 83, 0.5) !important; color: #fff !important; padding: 4px 12px;">
 
@@ -320,6 +327,14 @@
                             @endfor
                         </select>
 
+                        <select name="medium" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                            <option value="">Medium: All</option>
+                            <option value="english" {{ request('medium') === 'english' ? 'selected' : '' }}>English</option>
+                            <option value="tamil" {{ request('medium') === 'tamil' ? 'selected' : '' }}>Tamil</option>
+                            <option value="both" {{ request('medium') === 'both' ? 'selected' : '' }}>Both</option>
+                        </select>
+
+                        @if(($instituteFormat ?? 'grade') === 'batch')
                         <select name="batch_year" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
                             <option value=""> All Batches</option>
                             @php
@@ -329,6 +344,7 @@
                                 <option value="{{ $b }}" {{ request('batch_year') == $b ? 'selected' : '' }}>Batch '{{ $b }}</option>
                             @endfor
                         </select>
+                        @endif
 
                         <select name="has_index" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
                             <option value="">Index: All</option>
@@ -384,6 +400,7 @@
     <input type="hidden" name="ids" id="bulkDeleteIds">
     <input type="hidden" name="select_all_matching" id="bulkDeleteSelectAll">
     <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
     <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
@@ -395,6 +412,7 @@
     <input type="hidden" name="ids" id="bulkPromoteIds">
     <input type="hidden" name="select_all_matching" id="bulkPromoteSelectAll">
     <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
     <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
@@ -407,6 +425,7 @@
     <input type="hidden" name="batch_year" id="bulkIndexBatchYear">
     <input type="hidden" name="select_all_matching" id="bulkIndexSelectAll">
     <input type="hidden" name="grade" value="{{ request('grade') }}">
+    <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year_filter" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
     <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">

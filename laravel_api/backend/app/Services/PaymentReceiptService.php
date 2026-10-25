@@ -507,10 +507,10 @@ class PaymentReceiptService
         }
 
         // Asynchronously dispatch delivery so response to admin / student is instantaneous
-        dispatch(function () use ($payment, $student, $targetUser) {
+        dispatch(function () use ($payment, $student, $targetUser, $force) {
             try {
                 $service = app(PaymentReceiptService::class);
-                $service->deliverNotifications($payment, $student, $targetUser);
+                $service->deliverNotifications($payment, $student, $targetUser, $force);
             } catch (\Throwable $e) {
                 Log::error("PaymentReceiptService: Error delivering receipt for Payment #{$payment->id}: " . $e->getMessage());
             }
@@ -529,11 +529,12 @@ class PaymentReceiptService
      */
     public function deliverDirect(Payment $payment, bool $force = false): array
     {
-        if (!$force && !empty($payment->receipt_sent_at)) {
+        $freshSentAt = Payment::where('id', $payment->id)->value('receipt_sent_at');
+        if (!$force && !empty($freshSentAt)) {
             return [
                 'success' => true,
                 'delivered_any' => true,
-                'message' => "Receipt #{$payment->receipt_no} was already sent on " . $payment->receipt_sent_at->format('Y-m-d H:i') . '.',
+                'message' => "Receipt #{$payment->receipt_no} was already sent.",
             ];
         }
 
@@ -702,8 +703,8 @@ class PaymentReceiptService
      * @param User $targetUser
      * @return void
      */
-    public function deliverNotifications(Payment $payment, User $student, User $targetUser): void
+    public function deliverNotifications(Payment $payment, User $student, User $targetUser, bool $force = false): void
     {
-        $this->deliverDirect($payment, true);
+        $this->deliverDirect($payment, $force);
     }
 }

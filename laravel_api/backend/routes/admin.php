@@ -68,6 +68,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('admin.students.edit')->whereNumber('id');
         Route::put('/students/{id}', [StudentController::class, 'update'])->name('admin.students.update')->whereNumber('id');
         Route::post('/students/{id}/confirm', [StudentController::class, 'confirm'])->name('admin.students.confirm')->whereNumber('id');
+        Route::post('/students/{id}/confirm-and-mark-paid', [StudentController::class, 'confirmAndMarkPaid'])->name('admin.students.confirm-and-mark-paid')->whereNumber('id');
         Route::post('/students/{id}/assign-index', [StudentController::class, 'assignIndexNumber'])->name('admin.students.assign-index')->whereNumber('id');
         Route::post('/students/{id}/reassign-index', [StudentController::class, 'reassignIndexNumber'])->name('admin.students.reassign-index')->whereNumber('id');
         Route::post('/students/{id}/reject', [StudentController::class, 'reject'])->name('admin.students.reject')->whereNumber('id');

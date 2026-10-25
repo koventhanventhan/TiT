@@ -615,9 +615,16 @@
                                                  <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}')">
                                                      Confirm Registration
                                                  </button>
+                                                 <button type="button" class="dropdown-item text-primary" onclick="promptConfirmAndMarkPaid({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}')">
+                                                     Confirm + Mark Paid (money received)
+                                                 </button>
                                                  <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST" id="confirm-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
                                                      <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="{{ $suggestedBatch }}">
+                                                 </form>
+                                                 <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" id="confirm-and-mark-paid-form-{{ $student->id }}" style="display: none;">
+                                                     @csrf
+                                                     <input type="hidden" name="batch_year" id="confirm-and-mark-paid-batch-{{ $student->id }}" value="{{ $suggestedBatch }}">
                                                  </form>
                                                  <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
                                                      @csrf
@@ -929,6 +936,11 @@
                 <p style="color: #d1d5db; font-size: 0.9rem;">
                     Confirm registration for <strong>${studentName}</strong>?
                 </p>
+                <div style="background: rgba(245, 158, 11, 0.15); border-left: 3px solid #f59e0b; padding: 0.5rem 0.75rem; margin: 0.75rem 0; border-radius: 4px; text-align: left;">
+                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 500;">
+                        Confirming approves the registration only. The student gets access after you mark the payment as paid.
+                    </span>
+                </div>
                 <div style="text-align: left; margin-top: 1rem;">
                     <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
                     <input type="text" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="${placeholderText}" style="width: 100%; margin: 0.5rem 0;">
@@ -966,6 +978,62 @@
             if (result.value !== undefined && result.value !== false) {
                 document.getElementById('confirm-batch-' + studentId).value = result.value;
                 document.getElementById('confirm-form-' + studentId).submit();
+            }
+        });
+    }
+
+    function promptConfirmAndMarkPaid(studentId, studentName, defaultBatch, format) {
+        const isGrade = (format === 'grade');
+        const labelText = isGrade ? 'Grade Series (Optional override, e.g. 08):' : 'A/L or O/L Batch Year (Optional override):';
+        const placeholderText = isGrade ? "Leave empty to use student's grade" : 'Leave empty to use grade mapping';
+        Swal.fire({
+            title: 'Confirm Registration & Mark Paid',
+            html: `
+                <p style="color: #d1d5db; font-size: 0.9rem;">
+                    Confirm registration and record payment as received for <strong>${studentName}</strong>?
+                </p>
+                <div style="background: rgba(16, 185, 129, 0.15); border-left: 3px solid #10b981; padding: 0.5rem 0.75rem; margin: 0.75rem 0; border-radius: 4px; text-align: left;">
+                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 500;">
+                        This approves the registration, assigns an index number, marks this month's payment as PAID, sends the payment receipt, and grants immediate student access.
+                    </span>
+                </div>
+                <div style="text-align: left; margin-top: 1rem;">
+                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
+                    <input type="text" id="swalConfirmAndPayBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="${placeholderText}" style="width: 100%; margin: 0.5rem 0;">
+                    <small style="color: #9ca3af;">Index number will be automatically generated. Leave empty to use default.</small>
+                </div>
+            `,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Confirm & Mark Paid',
+            cancelButtonText: 'Cancel',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const batch = document.getElementById('swalConfirmAndPayBatch').value.trim();
+                if (batch !== '') {
+                    const num = parseInt(batch, 10);
+                    if (isGrade) {
+                        if (isNaN(num) || num < 1 || num > 99) {
+                            Swal.showValidationMessage('Please enter a valid grade series (01 to 99) or leave empty');
+                            return false;
+                        }
+                        return String(num).padStart(2, '0');
+                    } else {
+                        if (isNaN(num) || num < 20 || num > 99) {
+                            Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99) or leave empty');
+                            return false;
+                        }
+                        return String(num);
+                    }
+                }
+                return batch;
+            }
+        }).then((result) => {
+            if (result.value !== undefined && result.value !== false) {
+                document.getElementById('confirm-and-mark-paid-batch-' + studentId).value = result.value;
+                document.getElementById('confirm-and-mark-paid-form-' + studentId).submit();
             }
         });
     }

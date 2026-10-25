@@ -321,50 +321,10 @@ class StudentController extends Controller
             }
         }
 
-        $oldRegStatus = $student->registration_status;
         $student->update([
             'admin_confirmed_at' => now(),
             'registration_status' => 'confirmed',
         ]);
-
-        // Check for pending or offline registration payment to confirm and issue receipt
-        $preflightWarning = null;
-        $confirmedPayment = Payment::where('user_id', $student->id)
-            ->where('status', 'pending')
-            ->latest()
-            ->first();
-
-        if ($confirmedPayment) {
-            $confirmedPayment->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-                'payment_method' => $confirmedPayment->payment_method ?: 'offline',
-            ]);
-        } elseif ($oldRegStatus === 'payment_completed' || $oldRegStatus === 'pending_payment') {
-            $yearMonth = now()->format('Y-m');
-            $amount = (float) $this->calculateUserAmount($student);
-            $confirmedPayment = Payment::create([
-                'user_id' => $student->id,
-                'year_month' => $yearMonth,
-                'amount' => $amount,
-                'status' => 'paid',
-                'paid_at' => now(),
-                'payment_method' => 'offline',
-                'institute_id' => $student->institute_id ?? 1,
-            ]);
-        }
-
-        if ($confirmedPayment) {
-            try {
-                $receiptService = app(\App\Services\PaymentReceiptService::class);
-                $receiptService->ensureReceipt($confirmedPayment);
-                $preflightWarning = $receiptService->preflightCheck($confirmedPayment);
-                $receiptService->sendReceiptNotifications($confirmedPayment);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in confirm: ' . $e->getMessage());
-                $preflightWarning = $e->getMessage();
-            }
-        }
 
         // Notify student (WhatsApp with email fallback)
         $this->notifier->notifyUser(
@@ -380,10 +340,120 @@ class StudentController extends Controller
             ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
         );
 
+        $currentMonth = now()->format('Y-m');
+        $hasPaidCurrentMonth = Payment::where('user_id', $student->id)
+            ->where('year_month', $currentMonth)
+            ->where('status', 'paid')
+            ->exists();
+
         if (!$indexAssigned && $format === 'batch') {
             $gradeDisplay = $student->current_grade ?: 'unknown';
             $response = redirect()->route('admin.students.index')
                 ->with('warning', "No batch year for Grade {$gradeDisplay} – set it in Index Number Batches, the number was not assigned");
+            if (!$hasPaidCurrentMonth) {
+                $response->with('info', 'Payment is still PENDING – use Mark Paid when the money is received.');
+            }
+            return $response;
+        }
+
+        if (!$hasPaidCurrentMonth) {
+            return redirect()->route('admin.students.index')
+                ->with('success', 'Registration confirmed. Payment is still PENDING – use Mark Paid when the money is received.');
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', 'Student confirmed and index number assigned.');
+    }
+
+    /**
+     * Confirm a registration AND mark current month payment as paid (money received).
+     */
+    public function confirmAndMarkPaid(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $student = User::where('role', 'user')
+            ->where('id', $id)
+            ->whereNotNull('full_name')
+            ->firstOrFail();
+
+        $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+        $format = $institute?->getIndexFormat() ?? 'grade';
+
+        $indexAssigned = false;
+        $batchYear = null;
+        if ($format === 'grade') {
+            $seriesInput = $request->filled('series') ? $request->input('series') : null;
+            try {
+                $this->indexService->assign($student, $seriesInput);
+                $indexAssigned = true;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not auto-assign index in confirmAndMarkPaid: " . $e->getMessage());
+            }
+        } else {
+            if ($request->filled('batch_year')) {
+                try {
+                    $batchYear = $this->indexService->normalizeBatchYear($request->batch_year);
+                } catch (\InvalidArgumentException $e) {
+                    // Invalid batch year
+                }
+            } else {
+                $batchYear = $this->indexService->getBatchForGrade($student->current_grade, $student->institute_id);
+            }
+
+            if ($batchYear !== null) {
+                try {
+                    $this->indexService->assign($student, $batchYear);
+                    $indexAssigned = true;
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not auto-assign index in confirmAndMarkPaid: " . $e->getMessage());
+                }
+            }
+        }
+
+        $student->update([
+            'admin_confirmed_at' => now(),
+            'registration_status' => 'confirmed',
+        ]);
+
+        // Notify student (WhatsApp with email fallback)
+        $this->notifier->notifyUser(
+            $student, 'admin_approved', 'tit_admin_approved',
+            [$student->full_name ?? $student->name, 'admin'],
+            ['student_name' => $student->full_name ?? $student->name]
+        );
+
+        // Notify Admin
+        $this->notifier->notifyAdmin(
+            'admin_alert', 'tit_admin_approved',
+            ["ADMIN ALERT: Approved student " . ($student->full_name ?? $student->name), "admin"],
+            ['alert_title' => 'Student Approved', 'alert_message' => 'Approved student: ' . ($student->full_name ?? $student->name)]
+        );
+
+        $yearMonth = now()->format('Y-m');
+        $paidAt = now()->toDateString();
+        $amount = $request->filled('amount') ? (float) $request->amount : null;
+        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount);
+
+        $preflightWarning = null;
+        if ($payment) {
+            try {
+                $receiptService = app(\App\Services\PaymentReceiptService::class);
+                $receiptService->ensureReceipt($payment);
+                $preflightWarning = $receiptService->preflightCheck($payment);
+                $receiptService->sendReceiptNotifications($payment);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in confirmAndMarkPaid: ' . $e->getMessage());
+                $preflightWarning = $e->getMessage();
+            }
+        }
+
+        if (!$indexAssigned && $format === 'batch') {
+            $gradeDisplay = $student->current_grade ?: 'unknown';
+            $response = redirect()->route('admin.students.index')
+                ->with('warning', "No batch year for Grade {$gradeDisplay} – set it in Index Number Batches, the number was not assigned. Payment was marked as paid.");
             if ($preflightWarning) {
                 $response->with('error', "Payment saved, but receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
             }
@@ -391,9 +461,9 @@ class StudentController extends Controller
         }
 
         $response = redirect()->route('admin.students.index')
-            ->with('success', 'Student confirmed and index number assigned.');
+            ->with('success', 'Student confirmed, index number assigned, and payment marked as paid.');
         if ($preflightWarning) {
-            $response->with('warning', "Payment saved, but receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
+            $response->with('warning', "Payment marked, but receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
         }
         return $response;
     }

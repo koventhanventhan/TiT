@@ -685,7 +685,7 @@ class PaymentReceiptTest extends TestCase
         });
     }
 
-    public function test_admin_confirm_student_marks_payment_paid_and_triggers_receipt(): void
+    public function test_offline_registrant_confirm_keeps_payment_pending_and_needs_payment_until_mark_paid(): void
     {
         Mail::fake();
 
@@ -697,19 +697,87 @@ class PaymentReceiptTest extends TestCase
         $student = User::factory()->create([
             'institute_id' => $this->institute->id,
             'role' => 'user',
-            'full_name' => 'Newly Registered Student',
-            'email' => 'new_student@example.com',
+            'full_name' => 'Offline Registered Student',
+            'email' => 'offline_student@example.com',
             'phone_number' => null,
             'current_grade' => '08',
             'registration_status' => 'payment_completed',
+            'admin_confirmed_at' => null,
         ]);
 
+        $currentMonth = now()->format('Y-m');
         $payment = Payment::create([
             'user_id' => $student->id,
             'institute_id' => $this->institute->id,
             'amount' => 1500,
             'status' => 'pending',
-            'year_month' => '2026-10',
+            'year_month' => $currentMonth,
+            'payment_method' => 'offline',
+        ]);
+
+        // 1. Confirm approves registration ONLY
+        $response = $this->actingAs($admin)->post(
+            route('admin.students.confirm', ['id' => $student->id]),
+            ['batch_year' => 26]
+        );
+
+        $response->assertSessionHas('success', 'Registration confirmed. Payment is still PENDING – use Mark Paid when the money is received.');
+        $payment->refresh();
+        $student->refresh();
+        $this->assertEquals('pending', $payment->status);
+        $this->assertNull($payment->receipt_no);
+
+        // Student accesses student route -> gets 403 needs_payment
+        $accessCheck = $this->actingAs($student)->getJson('/api/student/zoom-classes');
+        $accessCheck->assertStatus(403)
+            ->assertJson([
+                'needs_payment' => true,
+            ]);
+
+        // No receipt mail sent on confirm
+        Mail::assertNotSent(PaymentReceiptMail::class);
+
+        // 2. Admin explicitly marks payment as paid
+        $markPaidResponse = $this->actingAs($admin, 'web')->from('/admin/students')->post(
+            route('admin.students.mark-paid', ['id' => $student->id]),
+            ['year_month' => $currentMonth]
+        );
+        $markPaidResponse->assertSessionHas('success');
+
+        $payment->refresh();
+        $student->refresh();
+        $this->assertEquals('paid', $payment->status);
+        $this->assertNotNull($payment->receipt_no);
+
+        // Student accesses student route -> 200 OK
+        $accessCheckAfterPaid = $this->actingAs($student)->getJson('/api/student/zoom-classes');
+        $accessCheckAfterPaid->assertStatus(200);
+
+        // Exactly one PaymentReceiptMail sent
+        Mail::assertSent(PaymentReceiptMail::class, 1);
+        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
+            return $mail->hasTo($student->email);
+        });
+    }
+
+    public function test_registrant_with_no_payment_row_confirm_creates_no_payment(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'No Payment Student',
+            'email' => 'nopay@example.com',
+            'phone_number' => null,
+            'current_grade' => '08',
+            'registration_status' => 'pending',
+            'admin_confirmed_at' => null,
         ]);
 
         $response = $this->actingAs($admin)->post(
@@ -718,13 +786,111 @@ class PaymentReceiptTest extends TestCase
         );
 
         $response->assertSessionHas('success');
+        $student->refresh();
+        $this->assertNotNull($student->admin_confirmed_at);
+        $this->assertEquals('confirmed', $student->registration_status);
+
+        // Assert NO payment row was created
+        $this->assertEquals(0, Payment::where('user_id', $student->id)->count());
+        Mail::assertNotSent(PaymentReceiptMail::class);
+    }
+
+    public function test_online_paid_student_confirm_keeps_access_and_no_duplicate_receipt(): void
+    {
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Online Paid Student',
+            'email' => 'online_paid@example.com',
+            'phone_number' => null,
+            'current_grade' => '08',
+            'registration_status' => 'payment_completed',
+            'admin_confirmed_at' => null,
+        ]);
+
+        $currentMonth = now()->format('Y-m');
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 1500,
+            'status' => 'paid',
+            'year_month' => $currentMonth,
+            'payment_method' => 'online',
+            'receipt_no' => 'TIT-REC-2026-9999',
+            'paid_at' => now(),
+        ]);
+
+        Mail::fake();
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.students.confirm', ['id' => $student->id]),
+            ['batch_year' => 26]
+        );
+
+        $response->assertSessionHas('success', 'Student confirmed and index number assigned.');
+        $student->refresh();
+        $this->assertNotNull($student->admin_confirmed_at);
+
+        // Student route returns 200 OK
+        $accessCheck = $this->actingAs($student)->getJson('/api/student/zoom-classes');
+        $accessCheck->assertStatus(200);
+
+        // No duplicate receipt sent
+        Mail::assertNotSent(PaymentReceiptMail::class);
+    }
+
+    public function test_admin_confirm_and_mark_paid_approves_student_and_sends_receipt(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'admin',
+        ]);
+
+        $student = User::factory()->create([
+            'institute_id' => $this->institute->id,
+            'role' => 'user',
+            'full_name' => 'Direct Pay Student',
+            'email' => 'directpay@example.com',
+            'phone_number' => null,
+            'current_grade' => '08',
+            'registration_status' => 'payment_completed',
+            'admin_confirmed_at' => null,
+        ]);
+
+        $currentMonth = now()->format('Y-m');
+        $payment = Payment::create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'year_month' => $currentMonth,
+            'payment_method' => 'offline',
+        ]);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.students.confirm-and-mark-paid', ['id' => $student->id]),
+            ['batch_year' => 26]
+        );
+
+        $response->assertSessionHas('success');
+        $student->refresh();
         $payment->refresh();
+
+        $this->assertNotNull($student->admin_confirmed_at);
         $this->assertEquals('paid', $payment->status);
         $this->assertNotNull($payment->receipt_no);
 
-        Mail::assertSent(PaymentReceiptMail::class, function ($mail) use ($student) {
-            return $mail->hasTo($student->email);
-        });
+        $accessCheck = $this->actingAs($student)->getJson('/api/student/zoom-classes');
+        $accessCheck->assertStatus(200);
+
+        Mail::assertSent(PaymentReceiptMail::class, 1);
     }
 
     public function test_receipts_diagnose_command_executes_successfully(): void

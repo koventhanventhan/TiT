@@ -1,0 +1,71 @@
+#,Question,Language,Grade,Medium,Subject,"Should Answer","Expected Material ID","Retrieved IDs","Top Score",Route,Result
+1,"பரத நாட்டியத்திற்கு பயன்படும் முக்கிய தோல் வாத்தியம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.7650,LLM,HIT
+2,"பரதநாட்டிய தோல் வாத்தியம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.7576,LLM,HIT
+3,"மங்கல வாத்தியம் எனப்படுவது எது?",ta,grade-10,tamil,Dance,YES,12,12,0.7821,LLM,HIT
+4,"மங்கள வாத்தியம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.7881,LLM,HIT
+5,"தலையை வட்டமாக சுழலும் சிரபேதம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.6893,LLM,HIT
+6,"தலையை சுழற்றுதல் எந்த சிரபேதம்?",ta,grade-10,tamil,Dance,YES,12,12,0.6922,LLM,HIT
+7,"தவில் செய்ய பயன்படும் மரம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.6727,LLM,HIT
+8,"தவில் செய்யப்படும் மரம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.6824,LLM,HIT
+9,"தஞ்சைப் பெருங்கோயிலில் உள்ள சிற்பங்களின் எண்ணிக்கை யாது?",ta,grade-10,tamil,Dance,YES,12,12,0.7464,LLM,HIT
+10,"நவராத்திரி எத்தனை நாட்கள் கொண்டாடப்படுகிறது?",ta,grade-10,tamil,Dance,YES,12,12,0.7111,LLM,HIT
+11,"சிவபெருமானின் திருக்கரத்தில் உள்ள வாத்தியம் எது?",ta,grade-10,tamil,Dance,YES,12,12,0.7448,LLM,HIT
+12,"நாட்டியப் பெண்ணிற்கு இருக்க வேண்டிய குணங்கள் எவை?",ta,grade-10,tamil,Dance,YES,12,12,0.7479,LLM,HIT
+13,"ஜவத் என்பதன் பொருள் யாது?",ta,grade-10,tamil,Dance,YES,12,12,0.6871,LLM,HIT
+14,"கடைக்கண் பார்வை எந்த திருஷ்டி பேதத்தை குறிக்கும்?",ta,grade-10,tamil,Dance,YES,12,12,0.6955,LLM,HIT
+15,"தித் தெய்யித் தா தெய் என்பது எந்த அடவு?",ta,grade-10,tamil,Dance,YES,12,12,0.7385,LLM,HIT
+16,"Which is the main percussion skin instrument used in Bharatanatyam?",en,grade-10,tamil,Dance,YES,12,12,0.7052,LLM,HIT
+17,"Which wood is used to make the thavil instrument?",en,grade-10,tamil,Dance,YES,12,12,0.6398,LLM,HIT
+18,"Which instrument is known as the auspicious mangala vaathiyam?",en,grade-10,tamil,Dance,YES,12,12,0.7065,LLM,HIT
+19,"භරත නාට්‍යම් සඳහා භාවිත කරන ප්‍රධාන වාද්‍ය භාණ්ඩය කුමක්ද?",si,grade-10,tamil,Dance,YES,12,12,0.7098,LLM,HIT
+20,"තවිල් සෑදීමට ගන්නා ලී වර්ගය කුමක්ද?",si,grade-10,tamil,Dance,YES,12,12,0.6144,LLM,HIT
+21,"கதகளி நடனத்தில் பயன்படுத்தப்படும் முக்கிய பக்கவாத்தியங்கள் எவை?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6624,LLM,"N/A (Negative)"
+22,"வீணை செய்வதற்கு எந்த மரம் பயன்படுத்தப்படுகிறது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6026,LLM,"N/A (Negative)"
+23,"மோகினியாட்டம் எந்த மாநிலத்தில் தோன்றியது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6477,LLM,"N/A (Negative)"
+24,"கர்நாடக இசையின் மும்மூர்த்திகள் யார்?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6437,LLM,"N/A (Negative)"
+25,"பஞ்ச மரபு என்ற தமிழ் இசை நூல் யாரால் எழுதப்பட்டது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6331,LLM,"N/A (Negative)"
+26,"சிதம்பரம் நடராஜர் கோயிலின் தங்கக் கூரை அமைப்பு வரலாறு என்ன?",ta,grade-10,tamil,Dance,NO,N/A,12,0.5771,LLM,"N/A (Negative)"
+27,"புல்லாங்குழல் செய்ய பயன்படும் மூங்கில் வகை எது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6097,LLM,"N/A (Negative)"
+28,"நாதஸ்வரத்தின் சீவாளி எந்த புல்லில் செய்யப்படுகிறது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6562,LLM,"N/A (Negative)"
+29,"சிலப்பதிகாரத்தில் மாதவியின் நாட்டிய அரங்கேற்றம் எவ்வாறு விவரிக்கப்பட்டுள்ளது?",ta,grade-10,tamil,Dance,NO,N/A,12,0.6366,LLM,"N/A (Negative)"
+30,"Which wood is traditionally used to carve the Saraswati Veena?",en,grade-10,tamil,Dance,NO,N/A,12,0.6026,LLM,"N/A (Negative)"
+31,"How many talas exist in the Carnatic Suladi Sapta Tala system?",en,grade-10,tamil,Dance,NO,N/A,12,0.6894,LLM,"N/A (Negative)"
+32,"What are the characteristic mudras used in Kathak dance footwork?",en,grade-10,tamil,Dance,NO,N/A,12,0.6352,LLM,"N/A (Negative)"
+33,"කන්ද උඩරට නැටුම් සම්ප්‍රදායේ ප්‍රධාන බෙරය කුමක්ද?",si,grade-10,tamil,Dance,NO,N/A,12,0.6546,LLM,"N/A (Negative)"
+34,"රුක්මණී දේවි අරුන්ඩේල් විසින් ආරම්භ කරන ලද කලායතනය කුමක්ද?",si,grade-10,tamil,Dance,NO,N/A,12,0.6069,LLM,"N/A (Negative)"
+35,"சுவையான சாக்லேட் கேக் செய்வது எப்படி?",ta,grade-10,tamil,Dance,NO,N/A,12,0.5268,LLM,"N/A (Negative)"
+36,"கொழும்பிலிருந்து யாழ்ப்பாணத்திற்கான புகையிரத நேர அட்டவணை என்ன?",ta,grade-10,tamil,Dance,NO,N/A,12,0.5757,LLM,"N/A (Negative)"
+37,"பைத்தான் நிரலாக்க மொழியில் List மற்றும் Tuple இடையிலான வித்தியாசம் என்ன?",ta,grade-10,tamil,Dance,NO,N/A,12,0.5460,LLM,"N/A (Negative)"
+38,"தாவரங்களில் ஒளிச்சேர்க்கை நடைபெறும் விதம் பற்றி விளக்குக.",ta,grade-10,tamil,Dance,NO,N/A,12,0.6098,LLM,"N/A (Negative)"
+39,"How do you calculate compound interest using the standard mathematical formula?",en,grade-10,tamil,Dance,NO,N/A,12,0.4681,static,"N/A (Negative)"
+40,"Who won the ICC Men Cricket World Cup in 2023?",en,grade-10,tamil,Dance,NO,N/A,12,0.5158,LLM,"N/A (Negative)"
+41,"පයිතන් ක්‍රමලේඛනයේ ශ්‍රිතයක් ලියන්නේ කෙසේද?",si,grade-10,tamil,Dance,NO,N/A,12,0.4920,static,"N/A (Negative)"
+42,"ශ්‍රී ලංකාවේ උසම කන්ද කුමක්ද?",si,grade-10,tamil,Dance,NO,N/A,12,0.5408,LLM,"N/A (Negative)"
+
+"--- SUMMARY METRICS ---"
+Metric,Value
+"Total Questions",42
+"Answerable Questions",20
+"Expected Material Retrieved (Hits)",20
+"Hit Rate (%)",100
+"Answerable Avg Score",0.7138
+"Answerable Min Score",0.6144
+"Answerable Max Score",0.7881
+"Negative Questions",22
+"Negative Avg Score",0.5969
+"Negative Min Score",0.4681
+"Negative Max Score",0.6894
+"Total Embedding API Calls",42
+"Total LLM Generation Calls",0
+
+"--- THRESHOLD CALIBRATION SWEEP ---"
+Threshold,"False Negatives","Total Answerable","False Positives","Total Negative","Total Errors","Error Rate","Is Current Threshold"
+0.50,0,20,20,22,20,47.6%,NO
+0.55,0,20,16,22,16,38.1%,NO
+0.60,0,20,14,22,14,33.3%,NO
+0.65,2,20,4,22,6,14.3%,NO
+0.70,8,20,0,22,8,19%,YES
+0.75,16,20,0,22,16,38.1%,NO
+0.80,20,20,0,22,20,47.6%,NO
+0.85,20,20,0,22,20,47.6%,NO
+0.90,20,20,0,22,20,47.6%,NO

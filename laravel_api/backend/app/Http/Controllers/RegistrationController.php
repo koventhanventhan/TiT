@@ -845,6 +845,7 @@ class RegistrationController extends Controller
                 'gateway_ref'    => $payment->gateway_ref,
                 'payment_method' => $payment->payment_method,
                 'receipt_no'     => $payment->receipt_no,
+                'created_at'     => $payment->created_at ? (is_string($payment->created_at) ? $payment->created_at : $payment->created_at->toIso8601String()) : null,
             ] : null,
             'history'    => $history,
         ]);
@@ -913,11 +914,20 @@ class RegistrationController extends Controller
 
     /**
      * Initiate an offline monthly payment.
+     *
+     * Subject/Medium Updates & Fees Policy:
+     * - When a student updates their subjects AFTER paying for the current month:
+     *   1. The new subject list ($user->selected_subjects) takes effect immediately for learning materials and classes.
+     *   2. The already-paid month is NOT re-charged (no duplicate or additional payment row is created).
+     *   3. The newly calculated monthly fee will apply only from the NEXT unpaid month.
+     *   4. Any requested change to medium creates a pending MediumChangeRequest requiring admin approval;
+     *      the student continues on their current medium (and sees current-medium materials) until approved.
      */
     public function offlineMonthlyPayment(Request $request)
     {
         $user = $request->user();
         $yearMonth = now()->format('Y-m');
+        $monthName = now()->format('F Y');
 
         // Check if already paid
         $existingPaid = Payment::where('user_id', $user->id)
@@ -931,47 +941,138 @@ class RegistrationController extends Controller
             ], 400);
         }
 
-        // Cancel any pending payments for this month
-        Payment::where('user_id', $user->id)
-            ->where('year_month', $yearMonth)
-            ->where('status', 'pending')
-            ->update(['status' => 'cancelled']);
-
         $amount = $this->calculateUserAmount($user);
 
-        $payment = Payment::create([
-            'user_id'        => $user->id,
-            'amount'         => $amount,
-            'status'         => 'pending',
-            'payment_method' => 'offline',
-            'year_month'     => $yearMonth,
-            'gateway_ref'    => 'OFFLINE_' . strtoupper(uniqid()),
-            'institute_id'   => $user->institute_id ?? 1,
-        ]);
+        // De-duplicate: if a PENDING offline row for the same month already exists, reuse it
+        $existingPending = Payment::where('user_id', $user->id)
+            ->where('year_month', $yearMonth)
+            ->where('payment_method', 'offline')
+            ->where('status', 'pending')
+            ->latest('id')
+            ->first();
 
-        // Notify user about offline payment submission asynchronously after response
-        dispatch(function () use ($user) {
+        $shouldAlertAdmin = false;
+        $cacheKey = "offline_monthly_admin_alert_{$user->id}_{$yearMonth}";
+
+        if ($existingPending) {
+            $payment = $existingPending;
+            if ((float) $payment->amount !== (float) $amount) {
+                $payment->amount = $amount;
+                $payment->save();
+            }
+
+            // Check if created or alerted within 10 minutes (600 seconds)
+            $createdAtTs = $payment->created_at ? \Carbon\Carbon::parse($payment->created_at)->timestamp : 0;
+            $isRecent = ($createdAtTs > 0 && abs(now()->timestamp - $createdAtTs) < 600)
+                || \Illuminate\Support\Facades\Cache::has($cacheKey);
+
+            if (!$isRecent) {
+                $shouldAlertAdmin = true;
+                \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(10));
+            }
+        } else {
+            // Cancel any old non-offline pending payments for this month
+            Payment::where('user_id', $user->id)
+                ->where('year_month', $yearMonth)
+                ->where('status', 'pending')
+                ->where('payment_method', '!=', 'offline')
+                ->update(['status' => 'cancelled']);
+
+            $payment = Payment::create([
+                'user_id'        => $user->id,
+                'amount'         => $amount,
+                'status'         => 'pending',
+                'payment_method' => 'offline',
+                'year_month'     => $yearMonth,
+                'gateway_ref'    => 'OFFLINE_' . strtoupper(uniqid()),
+                'institute_id'   => $user->institute_id ?? 1,
+            ]);
+
+            $shouldAlertAdmin = true;
+            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(10));
+        }
+
+        // Student details for notifications
+        $studentName = $user->full_name ?? $user->name;
+        $grade = $user->current_grade ?? 'N/A';
+        $medium = $user->medium ?? 'N/A';
+        $contactInfo = $user->phone_number;
+        if (empty($contactInfo) && $user->parent_id && $user->parent) {
+            $contactInfo = 'via Parent: ' . ($user->parent->full_name ?? $user->parent->name);
+        } elseif (empty($contactInfo)) {
+            $contactInfo = str_ends_with($user->email, '@child.local') ? 'No Contact' : $user->email;
+        }
+
+        // Notify user and admin asynchronously after response
+        $job = dispatch(function () use ($user, $studentName, $grade, $medium, $contactInfo, $monthName, $amount, $shouldAlertAdmin) {
             try {
                 $notifier = app(\App\Services\NotificationService::class);
+
+                // 1. Send student request received notification (with email fallback)
+                $studentMessage = "We received your offline payment request for {$monthName} – Rs " . number_format($amount, 2) . ". Please pay at the institute / bank and send the slip; your access opens as soon as the admin confirms. You will get your receipt by e-mail and WhatsApp.";
+
                 $notifier->notifyUser(
-                    $user, 'payment_reminder', 'tit_payment_reminder',
-                    [$user->full_name ?? $user->name, now()->format('F Y')],
-                    ['student_name' => $user->full_name ?? $user->name, 'month' => now()->format('F Y')]
+                    $user,
+                    'payment_request_received',
+                    'tit_payment_request_received',
+                    [$studentName, $monthName, number_format($amount, 2)],
+                    [
+                        'student_name' => $studentName,
+                        'month'        => $monthName,
+                        'amount'       => $amount,
+                        'message'      => $studentMessage,
+                    ]
                 );
+
+                // 2. Alert Admin (if not duplicate within 10 min)
+                if ($shouldAlertAdmin) {
+                    $editUrl = route('admin.students.edit', $user->id);
+                    $adminAlertText = "Student {$studentName} (Grade: {$grade}, Medium: {$medium}, Contact: {$contactInfo}) requested offline payment for {$monthName} (Rs " . number_format($amount, 2) . "). Edit: {$editUrl}";
+
+                    $notifier->notifyAdmin(
+                        'admin_alert',
+                        'tit_admin_approved',
+                        ["ADMIN ALERT: Offline Payment Request from {$studentName}", "admin"],
+                        [
+                            'alert_title'   => 'Monthly Offline Payment Request',
+                            'alert_message' => $adminAlertText,
+                            'student_name'  => $studentName,
+                            'grade'         => $grade,
+                            'medium'        => $medium,
+                            'month'         => $monthName,
+                            'amount'        => $amount,
+                            'contact'       => $contactInfo,
+                            'link'          => $editUrl,
+                        ]
+                    );
+                }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Offline monthly payment notification failed: ' . $e->getMessage());
             }
-        })->afterResponse();
+        });
+
+        if (!app()->environment('testing')) {
+            $job->afterResponse();
+        }
 
         Log::info('Offline monthly payment initialized', [
             'user_id'    => $user->id,
             'order_id'   => $payment->gateway_ref,
             'amount'     => $amount,
             'year_month' => $yearMonth,
+            'reused'     => (bool) $existingPending,
         ]);
 
         return response()->json([
             'message' => 'Offline payment initiated. Please pay offline. Admin will confirm and you will receive a WhatsApp message.',
+            'payment' => [
+                'id'             => $payment->id,
+                'status'         => $payment->status,
+                'amount'         => (float) $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'year_month'     => $payment->year_month,
+                'created_at'     => $payment->created_at ? $payment->created_at->toIso8601String() : now()->toIso8601String(),
+            ],
         ]);
     }
 

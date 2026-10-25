@@ -72,6 +72,14 @@ class StudentController extends Controller
             }
         }
 
+        if ($request->has('pending_payments') && $request->pending_payments === '1') {
+            $currentYearMonth = now()->format('Y-m');
+            $query->whereHas('payments', function ($q) use ($currentYearMonth) {
+                $q->where('year_month', $currentYearMonth)
+                  ->where('status', 'pending');
+            });
+        }
+
         if ($request->filled('search')) {
             $term = trim($request->search);
             $query->where(function ($q) use ($term) {
@@ -83,7 +91,10 @@ class StudentController extends Controller
             });
         }
             
-        $students = $query->latest()->paginate(15)->appends($request->query());
+        $currentYearMonth = now()->format('Y-m');
+        $students = $query->with(['payments' => function ($q) use ($currentYearMonth) {
+            $q->where('year_month', $currentYearMonth);
+        }])->latest()->paginate(15)->appends($request->query());
         
         $instituteId = auth()->check() ? auth()->user()->institute_id : null;
         $countQuery = User::where('role', 'user')->whereNotNull('full_name');
@@ -92,9 +103,20 @@ class StudentController extends Controller
         }
         $totalStudentsCount = (clone $countQuery)->count();
         $assignedIndexCount = (clone $countQuery)->whereNotNull('index_number')->count();
+        $pendingPaymentsCount = (clone $countQuery)->whereHas('payments', function ($q) use ($currentYearMonth) {
+            $q->where('year_month', $currentYearMonth)
+              ->where('status', 'pending');
+        })->count();
         $gradeMapping = $this->indexService->getGradeBatchMapping($instituteId);
 
-        return view('admin.students.index', compact('students', 'totalStudentsCount', 'assignedIndexCount', 'gradeMapping'));
+        return view('admin.students.index', compact(
+            'students',
+            'totalStudentsCount',
+            'assignedIndexCount',
+            'gradeMapping',
+            'pendingPaymentsCount',
+            'currentYearMonth'
+        ));
     }
 
     /**

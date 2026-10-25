@@ -36,9 +36,10 @@ class NotificationMail extends Mailable
 
         $subjects = [
             'general_update'       => 'Update - TiT Education',
-            'welcome'              => 'Welcome to TiT Education! 🎓',
-            'payment_reminder'     => 'Payment Reminder - TiT Education',
-            'payment_success'      => 'Payment Confirmed ✅ - TiT Education',
+            'welcome'                  => 'Welcome to TiT Education! 🎓',
+            'payment_reminder'         => 'Payment Reminder - TiT Education',
+            'payment_request_received' => 'Offline Payment Request Received 📋 - TiT Education',
+            'payment_success'          => 'Payment Confirmed ✅ - TiT Education',
             'admin_approved'       => 'Account Approved! 🎉 - TiT Education',
             'account_deactivated'  => 'Account Deactivated - TiT Education',
             'account_suspended'    => 'Account Suspended - TiT Education',

@@ -372,6 +372,13 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
+                'latest_monthly_payment' => ($latestP = \App\Models\Payment::where('user_id', $profile->id)->where('year_month', now()->format('Y-m'))->latest('id')->first()) ? [
+                    'id' => $latestP->id,
+                    'status' => $latestP->status,
+                    'amount' => (float) $latestP->amount,
+                    'payment_method' => $latestP->payment_method,
+                    'created_at' => $latestP->created_at ? $latestP->created_at->toIso8601String() : null,
+                ] : null,
                 'rag_enabled' => $profile->isRagEnabled(),
                 'avatar' => $profile->avatar ? (str_starts_with($profile->avatar, 'http') || str_starts_with($profile->avatar, '/api/') ? $profile->avatar : '/api/' . $profile->avatar) : null,
             ];
@@ -575,6 +582,11 @@ class AuthController extends Controller
         if ($u->current_grade) { $data['current_grade'] = $u->current_grade; }
         if ($u->stream) { $data['stream'] = $u->stream; }
 
+        $latestPaymentRow = \App\Models\Payment::where('user_id', $u->id)
+            ->where('year_month', now()->format('Y-m'))
+            ->latest('id')
+            ->first();
+
         return response()->json([
             'user' => array_merge($data, [
                 'is_deactivated' => !$u->isActive(),
@@ -582,6 +594,13 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $u->admin_confirmed_at,
                 'registration_status' => $u->registration_status,
                 'is_paid' => $u->hasPaidForMonth(now()->format('Y-m')),
+                'latest_monthly_payment' => $latestPaymentRow ? [
+                    'id' => $latestPaymentRow->id,
+                    'status' => $latestPaymentRow->status,
+                    'amount' => (float) $latestPaymentRow->amount,
+                    'payment_method' => $latestPaymentRow->payment_method,
+                    'created_at' => $latestPaymentRow->created_at ? $latestPaymentRow->created_at->toIso8601String() : null,
+                ] : null,
                 'rag_enabled' => $u->isRagEnabled(),
             ])
         ]);

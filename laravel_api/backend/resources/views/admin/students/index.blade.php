@@ -296,10 +296,16 @@
         <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
                 <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Entries</h4>
-                <div class="d-inline-flex align-items-center mt-1">
+                <div class="d-inline-flex align-items-center mt-1 flex-wrap gap-2">
                     <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px;">
                         <i class="flaticon-381-layer-1 mr-1"></i> {{ $assignedIndexCount ?? 0 }} of {{ $totalStudentsCount ?? 0 }} students have an index number
                     </span>
+                    <a href="{{ request('pending_payments') == '1' ? route('admin.students.index', request()->except('pending_payments')) : route('admin.students.index', array_merge(request()->query(), ['pending_payments' => 1])) }}"
+                       class="badge {{ request('pending_payments') == '1' ? 'badge-warning' : '' }}"
+                       style="{{ request('pending_payments') == '1' ? 'background: #f59e0b; color: #fff; font-weight: 700;' : 'background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600;' }} font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
+                       title="Click to filter students with pending payments for current month">
+                        <i class="flaticon-381-diamond mr-1"></i> Pending Payments: {{ $pendingPaymentsCount ?? 0 }}
+                    </a>
                 </div>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
@@ -330,6 +336,14 @@
                             <option value="0" {{ request('has_index') === '0' ? 'selected' : '' }}>Index: Not Assigned</option>
                         </select>
                         
+                        <div class="premium-toggle-wrapper">
+                            <input type="checkbox" id="pendingPaymentsFilter" name="pending_payments" value="1" class="premium-toggle-input" {{ request('pending_payments') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
+                            <label for="pendingPaymentsFilter" class="premium-toggle-btn mb-0" style="{{ request('pending_payments') == '1' ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-color: #f59e0b; color: #fff;' : 'background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); color: #fcd34d;' }}" title="Toggle to filter students with pending payment for current month">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Pending ({{ $pendingPaymentsCount ?? 0 }})
+                            </label>
+                        </div>
+
                         <div class="premium-toggle-wrapper">
                             <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
                             <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
@@ -372,6 +386,7 @@
     <input type="hidden" name="grade" value="{{ request('grade') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -382,6 +397,7 @@
     <input type="hidden" name="grade" value="{{ request('grade') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -393,6 +409,7 @@
     <input type="hidden" name="grade" value="{{ request('grade') }}">
     <input type="hidden" name="batch_year_filter" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
+    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -463,7 +480,9 @@
                          <tbody>
                              @forelse($students as $student)
                              @php
-                                 $latestPayment = $student->payments()->where('year_month', now()->format('Y-m'))->where('status', 'paid')->first();
+                                 $currYM = $currentYearMonth ?? now()->format('Y-m');
+                                 $latestPayment = $student->payments->where('year_month', $currYM)->where('status', 'paid')->first();
+                                 $pendingPayment = $student->payments->where('year_month', $currYM)->where('status', 'pending')->first();
                                  $paidThisMonth = $latestPayment !== null;
                                  
                                  $subjectsArray = [];
@@ -545,16 +564,29 @@
                                              <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">{{ $student->registration_status ?? 'pending' }}</span>
                                          @endif
                                      </div>
-                                     <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                         @if($paidThisMonth)
+                                     @if($paidThisMonth)
+                                         <div style="display: flex; align-items: center; gap: 0.25rem;">
                                              <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Paid</span>
                                              @if($latestPayment && $latestPayment->paid_at)
                                                  <span style="color: #4caf50; font-size: 0.55rem; font-weight: 500;">{{ $latestPayment->paid_at->format('M d') }}</span>
                                              @endif
-                                         @else
+                                         </div>
+                                     @elseif($pendingPayment)
+                                         <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
+                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;" title="Pending payment requested {{ $pendingPayment->created_at ? $pendingPayment->created_at->format('Y-m-d H:i') : '' }}">
+                                                 Pending ({{ $pendingPayment->created_at ? $pendingPayment->created_at->diffForHumans(null, true) : 'recent' }})
+                                             </span>
+                                             <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" style="display: inline-block; margin: 0;">
+                                                 @csrf
+                                                 <input type="hidden" name="year_month" value="{{ $currYM }}">
+                                                 <button type="submit" class="btn btn-xs btn-success py-0 px-1" style="font-size: 0.55rem; line-height: 1.2; border-radius: 3px;" title="Mark Paid for {{ $currYM }} (Receipt follows)">Mark Paid</button>
+                                             </form>
+                                         </div>
+                                     @else
+                                         <div style="display: flex; align-items: center; gap: 0.25rem;">
                                              <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Not paid</span>
-                                         @endif
-                                     </div>
+                                         </div>
+                                     @endif
                                  </td>
                                  <td class="text-center">
                                      <div style="font-weight: 800; color: #4f46e5; font-size: 0.75rem;">

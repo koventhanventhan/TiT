@@ -80,6 +80,23 @@
             </div>
         </div>
     </div>
+    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+        <a href="{{ route('admin.students.index', ['pending_payments' => 1]) }}" style="text-decoration: none;">
+            <div class="widget-stat card" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="card-body p-4">
+                    <div class="media ai-icon">
+                        <span class="mr-3 bgl-warning text-warning" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(245, 158, 11, 0.1);">
+                            <i class="flaticon-381-clock" style="font-size: 1.75rem;"></i>
+                        </span>
+                        <div class="media-body">
+                            <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Pending Payments</p>
+                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">{{ number_format($pendingPayments ?? 0) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 <!-- Charts Section -->

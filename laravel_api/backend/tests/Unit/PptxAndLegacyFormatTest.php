@@ -31,6 +31,7 @@ class PptxAndLegacyFormatTest extends TestCase
         };
 
         $this->extractor = new PdfTextExtractor($geminiClient);
+        $this->app->instance(GeminiClientInterface::class, $geminiClient);
         $this->institute = Institute::create([
             'name' => 'Test Institute',
             'slug' => 'test-' . uniqid(),

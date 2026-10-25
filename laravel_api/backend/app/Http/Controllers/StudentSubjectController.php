@@ -85,6 +85,16 @@ class StudentSubjectController extends Controller
             }
         }
 
+        /**
+         * Subject/Medium Updates & Fees Policy:
+         * - When a student updates their subjects AFTER paying for the current month:
+         *   1. The new subject list ($user->selected_subjects) takes effect immediately for learning materials and classes.
+         *   2. The already-paid month is NOT re-charged (no duplicate or additional payment row is created).
+         *   3. The newly calculated monthly fee will apply only from the NEXT unpaid month.
+         *   4. Any requested change to medium creates a pending MediumChangeRequest requiring admin approval;
+         *      the student continues on their current medium (and sees current-medium materials) until approved.
+         *   5. Updating subjects does not create any new payment row and does not unlock or lock the student's access.
+         */
         $user->selected_subjects = json_encode(array_values(array_unique($request->subjects)));
         $user->needs_subject_review = false; // Clear the flag upon update
         $user->save();

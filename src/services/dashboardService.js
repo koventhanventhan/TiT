@@ -128,6 +128,22 @@ export const initializeMonthlyPayment = async () => {
   return res.json()
 }
 
+export const initializeOfflineMonthlyPayment = async (options = {}) => {
+  const res = await fetch(`${API_BASE_URL}/student/pay-monthly-offline`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    signal: options.signal,
+  })
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to initialize offline monthly payment')
+  }
+  
+  return res.json()
+}
+
 export const downloadStudentReceipt = async (paymentId, receiptNo) => {
   const token = localStorage.getItem('authToken')
   const user = JSON.parse(localStorage.getItem('user') || '{}')

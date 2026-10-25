@@ -1,16 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader, FiDownload } from 'react-icons/fi';
-import { getStudentPaymentStatus, initializeMonthlyPayment, downloadStudentReceipt } from '../../services/dashboardService';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader, FiClock } from 'react-icons/fi';
+import { getStudentPaymentStatus, initializeMonthlyPayment, initializeOfflineMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
 import './StudentPaymentModule.css';
+import { formatRs } from '../../utils/format';
+
+const formatDate = (isoString) => {
+    if (!isoString) return new Date().toISOString().split('T')[0];
+    if (typeof isoString === 'string' && isoString.includes('T')) {
+        return isoString.split('T')[0];
+    }
+    return String(isoString).substring(0, 10);
+};
+
+const formatAmount = (amt) => {
+    const num = typeof amt === 'number' ? amt : (parseFloat(amt) || 0);
+    return num % 1 === 0 ? num : num.toFixed(2);
+};
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
-    const [downloadingId, setDownloadingId] = useState(null);
+    const [payingOffline, setPayingOffline] = useState(false);
+    const [offlineSuccess, setOfflineSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const submittingOfflineRef = useRef(false);
 
     const fetchStatus = async () => {
         try {
@@ -30,9 +46,23 @@ const StudentPaymentModule = () => {
     }, []);
 
     const handlePayment = async () => {
+        if (paying) return;
         try {
             setPaying(true);
             setError(null);
+
+            // Dynamically load PayHere script if not loaded
+            if (!window.payhere) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.payhere.lk/lib/payhere.js';
+                    script.async = true;
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load PayHere'));
+                    document.body.appendChild(script);
+                });
+            }
+
             const resp = await initializeMonthlyPayment();
             
             if (!window.payhere) {
@@ -69,17 +99,31 @@ const StudentPaymentModule = () => {
         }
     };
 
-    const handleDownloadReceipt = async (paymentId, receiptNo) => {
-        if (!paymentId) return;
+    const handleOfflinePayment = async () => {
+        if (submittingOfflineRef.current || paying || payingOffline) return;
+        submittingOfflineRef.current = true;
+        setPayingOffline(true);
+        setError(null);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
         try {
-            setDownloadingId(paymentId);
-            setError(null);
-            await downloadStudentReceipt(paymentId, receiptNo);
+            await initializeOfflineMonthlyPayment({ signal: controller.signal });
+            clearTimeout(timeoutId);
+            setOfflineSuccess(true);
+            await fetchStatus();
+            setTimeout(() => {
+                setPayingOffline(false);
+                submittingOfflineRef.current = false;
+            }, 1500);
         } catch (err) {
-            console.error('Download receipt error:', err);
-            setError(err.message || 'Failed to download receipt');
-        } finally {
-            setDownloadingId(null);
+            clearTimeout(timeoutId);
+            setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed to submit offline payment'));
+            setTimeout(() => {
+                setPayingOffline(false);
+                submittingOfflineRef.current = false;
+            }, 1500);
         }
     };
 
@@ -100,8 +144,10 @@ const StudentPaymentModule = () => {
 
     if (!status) return null;
 
-    const { is_paid, amount, year_month, payment: currentPayment, history } = status;
+    const { is_paid, amount, year_month, payment, paid_until } = status;
     const monthName = new Date(year_month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' });
+    const isPendingOffline = payment && payment.status === 'pending' && payment.payment_method === 'offline';
+    const isCancelled = payment && payment.status === 'cancelled';
 
     return (
         <section className="dashboard-payment-section">
@@ -112,115 +158,107 @@ const StudentPaymentModule = () => {
                 </div>
                 <div className="payment-card-content">
                     <div className="payment-status-label">
-                        {is_paid ? t('payment_status_paid') || 'Payment Completed' : t('payment_status_pending') || 'Monthly Fee Due'}
+                        {is_paid ? (t('payment_status_paid') || 'Payment Completed') : 
+                         (isPendingOffline ? 'Offline Payment Pending Admin Confirmation' : (t('payment_status_pending') || 'Monthly Fee Due'))}
                     </div>
-                    <div className="payment-period">{monthName}</div>
-                    {!is_paid ? (
-                        <div className="payment-amount">LKR {parseFloat(amount).toFixed(2)}</div>
-                    ) : (
-                        currentPayment?.receipt_no && (
-                            <div className="payment-receipt-no">
-                                {t('receipt_no') || 'Receipt'}: <strong>{currentPayment.receipt_no}</strong>
-                            </div>
-                        )
+                    <div className="payment-period">{paid_until ? `Paid up to ${paid_until}` : monthName}</div>
+                    {!is_paid && (
+                        <div className="payment-amount" style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                            {formatRs(amount)}
+                        </div>
                     )}
                 </div>
+
+                {isPendingOffline && (
+                    <div
+                        className="status-card-pending"
+                        data-testid="status-card-pending"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#fffbeb',
+                            color: '#b45309',
+                            border: '1px solid #fde68a',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Request received on {formatDate(payment.created_at)}, waiting for admin confirmation – Rs {formatAmount(payment.amount || amount)}</span>
+                    </div>
+                )}
+
+                {isCancelled && (
+                    <div
+                        className="status-card-cancelled"
+                        data-testid="status-card-cancelled"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#fef2f2',
+                            color: '#b91c1c',
+                            border: '1px solid #fecaca',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiAlertCircle style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Request cancelled – please contact the institute or submit again</span>
+                    </div>
+                )}
                 
-                <div className="payment-card-actions">
-                    {!is_paid && (
+                {!is_paid && !isPendingOffline && (
+                    <div className="payment-actions-stack">
                         <button 
-                            type="button"
                             className="pay-now-btn" 
                             onClick={handlePayment}
-                            disabled={paying}
+                            disabled={paying || payingOffline}
+                            style={{ touchAction: 'manipulation' }}
                         >
                             {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
                         </button>
-                    )}
-
-                    {is_paid && currentPayment && (
                         <button
                             type="button"
-                            className="receipt-btn"
-                            onClick={() => handleDownloadReceipt(currentPayment.id, currentPayment.receipt_no)}
-                            disabled={downloadingId === currentPayment.id}
-                            title={t('download_receipt') || 'Download Receipt'}
+                            onClick={handleOfflinePayment}
+                            disabled={paying || payingOffline}
+                            className="pay-offline-btn t-tap"
+                            style={{ touchAction: 'manipulation' }}
                         >
-                            {downloadingId === currentPayment.id ? (
-                                <><FiLoader className="spin-icon" /> {t('downloading') || 'Downloading...'}</>
-                            ) : (
-                                <><FiDownload /> {t('receipt') || 'Receipt'}</>
-                            )}
+                            {payingOffline ? <><FiLoader className="spin-icon" /> {t('submitting') || 'Submitting...'}</> : (t('pay_offline') || 'I WILL PAY OFFLINE')}
                         </button>
-                    )}
-                </div>
+                    </div>
+                )}
+
+                {offlineSuccess && !isPendingOffline && (
+                    <div style={{
+                        marginTop: 10,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        background: 'var(--t-success-bg)',
+                        color: 'var(--t-success)',
+                        fontSize: 13,
+                        fontWeight: 500
+                    }}>
+                        {t('pay_offline_success') || 'Offline payment submitted. Admin will confirm shortly.'}
+                    </div>
+                )}
 
                 {error && <div className="payment-error-toast">{error}</div>}
             </div>
-
-            {history && history.length > 0 && (
-                <div className="payment-history-card">
-                    <h4 className="payment-history-title">{t('payment_history') || 'Payment History'}</h4>
-                    <div className="payment-history-table-wrapper">
-                        <table className="payment-history-table">
-                            <thead>
-                                <tr>
-                                    <th>{t('month') || 'Month'}</th>
-                                    <th>{t('amount') || 'Amount'}</th>
-                                    <th>{t('status') || 'Status'}</th>
-                                    <th className="text-right">{t('receipt') || 'Receipt'}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {history.map((item) => {
-                                    const itemMonth = new Date(item.year_month + '-01').toLocaleString('default', { month: 'short', year: 'numeric' });
-                                    const itemIsPaid = item.status === 'paid';
-                                    return (
-                                        <tr key={item.id}>
-                                            <td>
-                                                <div className="history-month">{itemMonth}</div>
-                                                {item.paid_at && (
-                                                    <div className="history-date">
-                                                        {new Date(item.paid_at).toLocaleDateString()}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="history-amount">
-                                                LKR {parseFloat(item.amount).toFixed(2)}
-                                            </td>
-                                            <td>
-                                                <span className={`history-badge ${itemIsPaid ? 'paid' : 'pending'}`}>
-                                                    {itemIsPaid ? (t('paid') || 'Paid') : (t('pending') || 'Pending')}
-                                                </span>
-                                            </td>
-                                            <td className="text-right">
-                                                {itemIsPaid ? (
-                                                    <button
-                                                        type="button"
-                                                        className="history-receipt-btn"
-                                                        onClick={() => handleDownloadReceipt(item.id, item.receipt_no)}
-                                                        disabled={downloadingId === item.id}
-                                                        aria-label={`Download receipt for ${itemMonth}`}
-                                                    >
-                                                        {downloadingId === item.id ? (
-                                                            <FiLoader className="spin-icon" />
-                                                        ) : (
-                                                            <FiDownload />
-                                                        )}
-                                                        <span>{t('receipt') || 'Receipt'}</span>
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-muted">—</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
         </section>
     );
 };

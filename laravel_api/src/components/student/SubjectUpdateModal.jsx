@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiX, FiCheck, FiMinus, FiPlus, FiLoader } from 'react-icons/fi';
-import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline } from '../../services/dashboardService';
+import { FiX, FiCheck, FiMinus, FiPlus, FiLoader, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline, getStudentPaymentStatus } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
 import { formatRs } from '../../utils/format';
+
+const formatDate = (isoString) => {
+  if (!isoString) return new Date().toISOString().split('T')[0];
+  if (typeof isoString === 'string' && isoString.includes('T')) {
+    return isoString.split('T')[0];
+  }
+  return String(isoString).substring(0, 10);
+};
+
+const formatAmount = (amt) => {
+  const num = typeof amt === 'number' ? amt : (parseFloat(amt) || 0);
+  return num % 1 === 0 ? num : num.toFixed(2);
+};
 
 export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, stream, initialSubjects = [], onUpdateSuccess }) {
   const [serverAmount, setServerAmount] = useState(null);
@@ -13,6 +26,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [paidUntil, setPaidUntil] = useState(null);
   const [saved, setSaved] = useState(false);
   const [paymentDone, setPaymentDone] = useState(false);
+  const [existingPayment, setExistingPayment] = useState(null);
   const [step, setStep] = useState(1);
   const [localMedium, setLocalMedium] = useState(medium || '');
   const [availableSubjects, setAvailableSubjects] = useState([]);
@@ -24,6 +38,16 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [wantAdvancePayment, setWantAdvancePayment] = useState(false);
   const [advanceMonths, setAdvanceMonths] = useState(3);
   const submittingOfflineRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && step === 2) {
+      getStudentPaymentStatus().then(status => {
+        if (status && status.payment) {
+          setExistingPayment(status.payment);
+        }
+      }).catch(console.error);
+    }
+  }, [isOpen, step]);
 
   // Stepper handlers
   const handleMonthsChange = (e) => {
@@ -310,16 +334,29 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     try {
       const resp = await initializeOfflineMonthlyPayment({ signal: controller.signal });
       clearTimeout(timeoutId);
+      if (resp && resp.payment) {
+        setExistingPayment(resp.payment);
+      } else {
+        setExistingPayment({
+          status: 'pending',
+          payment_method: 'offline',
+          created_at: new Date().toISOString(),
+          amount: serverMonthly ?? monthlyAmount
+        });
+      }
       setSuccessMessage(resp.message || 'Offline payment initiated.');
       setPaymentDone(true);
       setTimeout(() => {
-        onUpdateSuccess(selectedSubjects);
-      }, 2000);
+        setLoading(false);
+        submittingOfflineRef.current = false;
+      }, 1500);
     } catch (err) {
       clearTimeout(timeoutId);
       setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed to initialize offline payment'));
-      setLoading(false);
-      submittingOfflineRef.current = false;
+      setTimeout(() => {
+        setLoading(false);
+        submittingOfflineRef.current = false;
+      }, 1500);
     }
   };
 
@@ -737,32 +774,87 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                 </div>
               ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button 
-                  onClick={handlePayOffline} 
-                  disabled={loading || paymentDone}
-                  style={{
-                    padding: '14px 20px', borderRadius: '12px',
-                    background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                    cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
-                    transition: 'all 0.2s', textAlign: 'center', minHeight: 48,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    touchAction: 'manipulation'
-                  }}
-                >
-                  {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE'}
-                </button>
-                <button 
-                  onClick={handlePayOnline} 
-                  disabled={loading || paymentDone}
-                  style={{
+                {existingPayment && existingPayment.status === 'pending' && existingPayment.payment_method === 'offline' && (
+                  <div
+                    className="status-card-pending"
+                    data-testid="status-card-pending"
+                    style={{
+                      background: '#fffbeb',
+                      color: '#b45309',
+                      border: '1px solid #fde68a',
+                      borderRadius: 12,
+                      padding: '14px 16px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      textAlign: 'left'
+                    }}
+                  >
+                    <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
+                    <span>Request received on {formatDate(existingPayment.created_at)}, waiting for admin confirmation – Rs {formatAmount(existingPayment.amount || serverMonthly || monthlyAmount)}</span>
+                  </div>
+                )}
+
+                {existingPayment && existingPayment.status === 'cancelled' && (
+                  <div
+                    className="status-card-cancelled"
+                    data-testid="status-card-cancelled"
+                    style={{
+                      background: '#fef2f2',
+                      color: '#b91c1c',
+                      border: '1px solid #fecaca',
+                      borderRadius: 12,
+                      padding: '14px 16px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      textAlign: 'left'
+                    }}
+                  >
+                    <FiAlertCircle style={{ flexShrink: 0, fontSize: 18 }} />
+                    <span>Request cancelled – please contact the institute or submit again</span>
+                  </div>
+                )}
+
+                {(!existingPayment || existingPayment.status !== 'pending' || existingPayment.payment_method !== 'offline') ? (
+                  <>
+                    <button 
+                      onClick={handlePayOffline} 
+                      disabled={loading || paymentDone}
+                      style={{
+                        padding: '14px 20px', borderRadius: '12px',
+                        background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
+                        cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer', border: '2px solid var(--t-danger)',
+                        transition: 'all 0.2s', textAlign: 'center', minHeight: 48,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        touchAction: 'manipulation'
+                      }}
+                    >
+                      {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE'}
+                    </button>
+                    <button 
+                      onClick={handlePayOnline} 
+                      disabled={loading || paymentDone}
+                      style={{
+                        padding: '14px 20px', borderRadius: '12px', border: 'none',
+                        background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s', textAlign: 'center'
+                      }}
+                    >
+                      {loading ? 'Processing...' : 'PAY ONLINE'}
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={handleClose} style={{
                     padding: '14px 20px', borderRadius: '12px', border: 'none',
-                    background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s', textAlign: 'center'
-                  }}
-                >
-                  {loading ? 'Processing...' : 'PAY ONLINE'}
-                </button>
+                    background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+                  }}>Done</button>
+                )}
               </div>
               )}
             </div>

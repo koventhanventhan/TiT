@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Contracts\Rag\GeminiClientInterface;
 use App\Models\User;
+use App\Services\Rag\AnswerService;
 use App\Services\Rag\GeminiRagClient;
 use App\Services\Rag\RetrievalService;
 use Illuminate\Console\Command;
@@ -52,6 +53,7 @@ class RagEvalCommand extends Command
         }
 
         $retrievalService = app(RetrievalService::class);
+        $answerService = app(AnswerService::class);
         $this->info("Evaluating " . count($testCases) . " benchmark questions for Institute #{$instituteId}...\n");
 
         $tableRows = [];
@@ -61,6 +63,8 @@ class RagEvalCommand extends Command
         $answerableScores = [];
         $negativeScores = [];
         $evalRecords = [];
+        $embeddingCallsCount = 0;
+        $llmCallsCount = 0;
 
         foreach ($testCases as $index => $case) {
             $question = (string) ($case['question'] ?? '');
@@ -78,9 +82,19 @@ class RagEvalCommand extends Command
                 'role' => 'user',
             ]);
 
-            $result = $retrievalService->retrieve($student, $question, $subject);
-            $chunks = $result['chunks'];
-            $topScore = !empty($chunks) ? round($chunks[0]['similarity'], 4) : 0.0;
+            // Production code path via AnswerService prepareContext
+            $context = $answerService->prepareContext($student, $question, $subject);
+            $embeddingCallsCount++; // 1 embedding call made during retrieval
+
+            $topScore = (float) $context['top_score'];
+            $qualifiedChunks = $context['qualified_chunks'];
+            $chunks = $context['qualified_chunks'] ?: ($retrievalService->retrieve($student, $question, $subject)['chunks'] ?? []);
+            
+            // Route decided by real AnswerService:
+            // If qualified_chunks are present above min_candidate_similarity -> LLM
+            // If no candidate chunks qualify -> static (not found message)
+            $route = !empty($qualifiedChunks) ? 'LLM' : 'static';
+
             $retrievedMaterialIds = array_values(array_unique(array_column($chunks, 'material_id')));
 
             $hit = false;
@@ -99,27 +113,29 @@ class RagEvalCommand extends Command
                 'should_answer' => $shouldAnswer,
                 'top_score' => $topScore,
                 'hit' => $hit,
+                'route' => $route,
             ];
 
-            $questionSnippet = mb_strlen($question) > 35 ? mb_substr($question, 0, 32) . '...' : $question;
+            $questionSnippet = mb_strlen($question) > 32 ? mb_substr($question, 0, 30) . '...' : $question;
             $retrievedList = implode(', ', $retrievedMaterialIds) ?: 'None';
 
             $tableRows[] = [
                 $index + 1,
                 $questionSnippet,
-                $result['language'],
+                $context['language'] ?? 'ta',
                 $grade,
                 $shouldAnswer ? 'YES' : '<comment>NO (neg)</comment>',
                 $expectedMaterialId ?? 'N/A',
                 $retrievedList,
                 number_format($topScore, 4),
+                $route === 'LLM' ? '<info>LLM</info>' : '<comment>static</comment>',
                 $shouldAnswer ? ($hit ? '<info>HIT</info>' : '<error>MISS</error>') : '-',
             ];
 
             $csvRows[] = [
                 $index + 1,
                 $question,
-                $result['language'],
+                $context['language'] ?? 'ta',
                 $grade,
                 $medium,
                 $subject ?? 'General',
@@ -127,12 +143,13 @@ class RagEvalCommand extends Command
                 $expectedMaterialId ?? 'N/A',
                 $retrievedList,
                 number_format($topScore, 4),
+                $route,
                 $shouldAnswer ? ($hit ? 'HIT' : 'MISS') : 'N/A (Negative)',
             ];
         }
 
         $this->table(
-            ['#', 'Question', 'Lang', 'Grade', 'Should Ans?', 'Exp ID', 'Retrieved IDs', 'Top Score', 'Result'],
+            ['#', 'Question', 'Lang', 'Grade', 'Should Ans?', 'Exp ID', 'Retrieved IDs', 'Top Score', 'Route', 'Result'],
             $tableRows
         );
 
@@ -213,14 +230,25 @@ class RagEvalCommand extends Command
             $sweepRows
         );
 
-        $this->info("==================================================================================");
+        // 4. API Telemetry Summary
+        $this->newLine();
+        $this->info("=================== API CALLS TELEMETRY ===================");
+        $this->line("Total Questions Evaluated: " . count($testCases));
+        $this->line("Total Embedding API Calls: {$embeddingCallsCount}");
+        $this->line("Total LLM Generation Calls: {$llmCallsCount} (Routing decided via AnswerService candidate filtering without generation)");
 
-        // 4. Write CSV report if requested
+        // 5. Write CSV report if requested
         if ($csvPath) {
+            // Ensure target directory exists
+            $dir = dirname($csvPath);
+            if (!empty($dir) && !is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+
             $fp = fopen($csvPath, 'w');
             if ($fp) {
                 // Section 1: Detailed Question Results
-                fputcsv($fp, ['#', 'Question', 'Language', 'Grade', 'Medium', 'Subject', 'Should Answer', 'Expected Material ID', 'Retrieved IDs', 'Top Score', 'Result']);
+                fputcsv($fp, ['#', 'Question', 'Language', 'Grade', 'Medium', 'Subject', 'Should Answer', 'Expected Material ID', 'Retrieved IDs', 'Top Score', 'Route', 'Result']);
                 foreach ($csvRows as $r) {
                     fputcsv($fp, $r);
                 }
@@ -240,6 +268,8 @@ class RagEvalCommand extends Command
                 fputcsv($fp, ['Negative Avg Score', $negAvg]);
                 fputcsv($fp, ['Negative Min Score', $negMin]);
                 fputcsv($fp, ['Negative Max Score', $negMax]);
+                fputcsv($fp, ['Total Embedding API Calls', $embeddingCallsCount]);
+                fputcsv($fp, ['Total LLM Generation Calls', $llmCallsCount]);
 
                 // Section 3: Threshold Sweep Table
                 fputcsv($fp, []);
@@ -250,9 +280,9 @@ class RagEvalCommand extends Command
                 }
 
                 fclose($fp);
-                $this->info("CSV evaluation report successfully written to: {$csvPath}");
+                $this->info("\nEvaluation CSV report successfully written to: {$csvPath}");
             } else {
-                $this->error("Failed to open CSV report file for writing: {$csvPath}");
+                $this->error("\nFailed to open CSV output file: {$csvPath}");
             }
         }
 

@@ -12,19 +12,58 @@ class RagInspectCommand extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'rag:inspect {material_id : Learning material ID to inspect}';
+    protected $signature = 'rag:inspect {material_id? : Learning material ID to inspect} {--chunk= : Specific chunk ID to inspect} {--all : Print all chunks}';
 
     /**
      * The console command description.
      */
-    protected $description = 'Inspect learning material indexing status, page count, chunk count, pages using OCR, readability score, and share of Tamil letters';
+    protected $description = 'Inspect learning material indexing status, page count, chunk count, pages using OCR, readability score, and chunk text';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
+        $specificChunkId = $this->option('chunk');
+
+        if (!empty($specificChunkId)) {
+            $chunk = MaterialChunk::withoutGlobalScopes()->with('material')->find((int) $specificChunkId);
+            if (!$chunk) {
+                $this->error("Material chunk #{$specificChunkId} not found.");
+                return self::FAILURE;
+            }
+
+            $ocrLabel = $chunk->is_ocr ? 'YES (OCR Fallback)' : 'NO (Direct Text)';
+            $this->info("=== Chunk #{$chunk->id} Inspection ===");
+            $this->table(
+                ['Property', 'Value'],
+                [
+                    ['Chunk ID', $chunk->id],
+                    ['Material ID', $chunk->material_id],
+                    ['Material Title', $chunk->material?->title ?? 'N/A'],
+                    ['Grade', $chunk->grade ?? 'N/A'],
+                    ['Medium', $chunk->medium ?? 'N/A'],
+                    ['Subject', $chunk->subject ?? 'N/A'],
+                    ['Page Number', $chunk->page_number ?? 'N/A'],
+                    ['Question Range', $chunk->question_number ?? 'None'],
+                    ['Word Count', $chunk->word_count ?? 0],
+                    ['Is OCR', $ocrLabel],
+                    ['Embedding Model', $chunk->embedding_model ?? 'N/A'],
+                    ['Dimensions', $chunk->dimensions ?? 'N/A'],
+                ]
+            );
+
+            $this->newLine();
+            $this->info("=== Chunk #{$chunk->id} Full Text ===");
+            $this->line($chunk->content);
+            return self::SUCCESS;
+        }
+
         $materialId = (int) $this->argument('material_id');
+        if (empty($materialId)) {
+            $this->error("Please provide either a material_id or --chunk=<id>.");
+            return self::FAILURE;
+        }
 
         $material = LearningMaterial::withoutGlobalScopes()->find($materialId);
         if (!$material) {
@@ -98,21 +137,18 @@ class RagInspectCommand extends Command
             ]
         );
 
-        $mediumNorm = strtolower(trim((string) $material->medium));
-        $detectedNorm = strtolower(trim((string) $material->detected_language));
-        if (!empty($mediumNorm) && !empty($detectedNorm) && !in_array($mediumNorm, ['both', 'all'], true) && $mediumNorm !== $detectedNorm) {
-            $this->warn("⚠️  Warning: Medium/script mismatch — configured medium is '{$material->medium}', but detected document language is '{$material->detected_language}'.");
-        }
-
         $this->newLine();
 
-        $this->info("=== First 3 Chunks in Full ===");
+        $chunksToShow = $this->option('all') ? $chunks : $chunks->take(3);
+        $header = $this->option('all') ? "=== All Chunks in Full ({$chunkCount} chunks) ===" : "=== First 3 Chunks in Full ===";
+        $this->info($header);
+
         if ($chunks->isEmpty()) {
             $this->comment("No chunks have been generated or indexed for this material.");
         } else {
-            foreach ($chunks->take(3) as $i => $chunk) {
-                $ocrLabel = $chunk->is_ocr ? '<error>YES (OCR Fallback)</error>' : '<info>NO (Direct Text)</info>';
-                $this->line("<comment>--- Chunk #" . ($i + 1) . " (Page: {$chunk->page_number}, Words: {$chunk->word_count}, OCR: {$ocrLabel}) ---</comment>");
+            foreach ($chunksToShow as $i => $chunk) {
+                $ocrLabel = $chunk->is_ocr ? 'YES (OCR Fallback)' : 'NO (Direct Text)';
+                $this->line("<comment>--- Chunk #{$chunk->id} (Page: {$chunk->page_number}, Questions: {$chunk->question_number}, Words: {$chunk->word_count}, OCR: {$ocrLabel}) ---</comment>");
                 $this->line($chunk->content);
                 $this->newLine();
             }

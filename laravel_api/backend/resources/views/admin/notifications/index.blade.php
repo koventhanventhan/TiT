@@ -69,7 +69,7 @@
 
 <script>
 function markAsRead(id) {
-    fetch('/admin/notifications/mark-as-read', {
+    fetch('{{ route('admin.notifications.mark-as-read', [], false) }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -80,7 +80,7 @@ function markAsRead(id) {
 }
 
 function markAllNotificationsAsRead() {
-    fetch('/admin/notifications/mark-all-as-read', {
+    fetch('{{ route('admin.notifications.mark-all-as-read', [], false) }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

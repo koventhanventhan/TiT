@@ -19,6 +19,9 @@
     RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|sitemap\.xml) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
+    # Safety net: redirect requests with internal script prefix to clean root URLs (307 preserves POST)
+    RewriteRule ^laravel_api/backend/public/(admin|api|super-panel|livewire)(/.*)?$ /$1$2 [R=307,L]
+
     # 3. Everything else (Frontend, Student Dashboard, Teacher Dashboard) goes to React
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

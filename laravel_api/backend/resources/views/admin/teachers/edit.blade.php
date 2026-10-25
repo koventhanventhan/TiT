@@ -156,7 +156,7 @@
                 btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
                 btn.disabled = true;
 
-                fetch(`/admin/${type}s/${id}/reset-password`, {
+                fetch('{{ route('admin.teachers.reset-password', $teacher->id, false) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',

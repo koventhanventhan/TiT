@@ -64,6 +64,23 @@
     </div>
 </div>
 
+@php
+    $hasFirstImport = \App\Models\ActivityLog::where('action', 'student_index_imported')->exists();
+@endphp
+@if(!$hasFirstImport)
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-center" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d; border-radius: 8px; padding: 16px 20px;">
+            <i class="flaticon-381-warning-1 mr-3" style="font-size: 1.8rem; color: #f59e0b;"></i>
+            <div>
+                <strong style="font-size: 1rem; color: #fff; display: block; margin-bottom: 4px;">Important Order of Operations: Import CSV Before Auto-Assigning</strong>
+                <span>If you have existing paper records (e.g. Grade 08 students 001–065), you <strong>MUST import the CSV first</strong> before running any bulk or auto-assignment. The CSV import records those pre-assigned numbers and advances the sequence counter so new students automatically start from the next number (e.g. 066).</span>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row">
     <!-- Left Column: File Upload & Format Guidelines -->
     <div class="col-xl-5 col-lg-5">

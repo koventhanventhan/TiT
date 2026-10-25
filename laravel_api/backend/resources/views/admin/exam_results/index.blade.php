@@ -180,7 +180,7 @@
 
 @push('scripts')
 <script>
-    var API_URL = '/admin/exam-results/data';
+    var API_URL = '{{ route('admin.exam-results.data', [], false) }}';
     var results = [];
 
     // Setup CSRF and AJAX headers

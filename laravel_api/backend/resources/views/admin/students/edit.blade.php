@@ -187,8 +187,20 @@
                                         : 'Batch \'' . $student->batch_year;
                                 @endphp
                                 @if($student->index_number)
+                                    @php
+                                        $isOldFormat = ($instituteFormat === 'grade' && !preg_match('/^TIT\/(0[1-9]|1[0-3])\/\d{3,}$/', $student->index_number));
+                                        $suggestedConvertSeries = $instituteFormat === 'grade' ? (preg_replace('/[^0-9]/', '', $student->current_grade) ? sprintf('%02d', (int) preg_replace('/[^0-9]/', '', $student->current_grade)) : '08') : '';
+                                    @endphp
                                     <div class="input-group">
                                         <input type="text" class="form-control" value="{{ $student->index_number }} ({{ $seriesLabel }})" readonly style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; letter-spacing: 0.5px;">
+                                        @if($isOldFormat)
+                                            <div class="input-group-append">
+                                                <span class="badge badge-warning d-flex align-items-center px-2 mr-1" style="font-size: 0.75rem;">old format</span>
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="promptConvertToNewFormat({{ $student->id }}, '{{ $student->index_number }}', '{{ $suggestedConvertSeries }}', '{{ $instituteFormat }}')">
+                                                    <i class="flaticon-381-refresh-1"></i> Convert to new format
+                                                </button>
+                                            </div>
+                                        @endif
                                         <div class="input-group-append">
                                             @php
                                                 $reassignDefaultBatch = $student->batch_year ?? ($instituteFormat === 'grade' ? (preg_replace('/[^0-9]/', '', $student->current_grade) ?: '08') : 28);
@@ -1067,7 +1079,7 @@
                 btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
                 btn.disabled = true;
 
-                fetch(`/admin/${type}s/${id}/reset-password`, {
+                fetch('{{ route('admin.students.reset-password', $student->id, false) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1161,7 +1173,7 @@
             if (res.value) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = `/admin/students/${studentId}/assign-index`;
+                form.action = '{{ route('admin.students.assign-index', $student->id, false) }}';
                 form.innerHTML = `
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="batch_year" value="${res.value}">
@@ -1212,11 +1224,49 @@
             if (res.value) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = `/admin/students/${studentId}/reassign-index`;
+                form.action = '{{ route('admin.students.reassign-index', $student->id, false) }}';
                 form.innerHTML = `
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="batch_year" value="${res.value.batch}">
                     <input type="hidden" name="reason" value="${res.value.reason || ''}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function promptConvertToNewFormat(studentId, currentIndex, suggestedSeries, format) {
+        Swal.fire({
+            title: 'Convert to New Format?',
+            html: `<div style="text-align: left; font-size: 0.9rem;">
+                     <p style="color: #cbd5e1; margin-bottom: 8px;">Current Index: <strong style="color: #f59e0b;">${currentIndex}</strong> (legacy format)</p>
+                     <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This will convert the index number to the official <strong>TIT/GG/NNN</strong> format and record an audit log.</p>
+                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Grade Series (01-13):</label>
+                     <input id="swal-convert-series" type="text" value="${suggestedSeries || '08'}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                   </div>`,
+            showCancelButton: true,
+            confirmButtonText: 'Convert Now',
+            confirmButtonColor: '#10b981',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const series = document.getElementById('swal-convert-series').value.trim();
+                const num = parseInt(series, 10);
+                if (!series || isNaN(num) || num < 1 || num > 13) {
+                    Swal.showValidationMessage('Please enter a valid grade series between 01 and 13');
+                    return false;
+                }
+                return String(num).padStart(2, '0');
+            }
+        }).then((res) => {
+            if (res.value) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('admin.students.reassign-index', $student->id, false) }}';
+                form.innerHTML = `
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="batch_year" value="${res.value}">
+                    <input type="hidden" name="reason" value="Convert legacy index to standard grade format">
                 `;
                 document.body.appendChild(form);
                 form.submit();

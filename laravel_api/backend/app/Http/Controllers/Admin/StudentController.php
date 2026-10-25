@@ -1163,6 +1163,9 @@ class StudentController extends Controller
 
         try {
             $student = User::where('role', 'user')->findOrFail($id);
+            if (!empty($student->index_number)) {
+                return back()->with('warning', "This student already has {$student->index_number} – use Re-assign to change it");
+            }
             $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
             $format = $institute?->getIndexFormat() ?? 'grade';
 

@@ -96,7 +96,7 @@ class PaymentReceiptService
     public function getReceiptData(Payment $payment): array
     {
         $this->ensureReceipt($payment);
-        $student = $payment->user;
+        $student = $payment->user?->fresh() ?: $payment->user;
 
         // Student Name
         $studentName = $student?->full_name ?: ($student?->name ?: 'Student');

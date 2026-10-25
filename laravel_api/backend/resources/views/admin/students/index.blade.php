@@ -514,10 +514,14 @@
                                                 $seriesDesc = ($instFormat === 'grade')
                                                     ? 'Grade ' . ($student->batch_year ? sprintf('%02d', $student->batch_year) : ($student->current_grade ?? ''))
                                                     : 'Batch \'' . $student->batch_year;
+                                                $isOldFormat = ($instFormat === 'grade' && !preg_match('/^TIT\/(0[1-9]|1[0-3])\/\d{3,}$/', $student->index_number));
                                             @endphp
                                             <div style="font-weight: 800; font-size: 0.72rem; color: #38bdf8; font-family: monospace; letter-spacing: 0.3px;" title="Index Number: {{ $student->index_number }} ({{ $seriesDesc }})">
                                                 {{ $student->index_number }}
                                             </div>
+                                            @if($isOldFormat)
+                                                <span class="badge badge-warning" style="font-size: 0.55rem; padding: 1px 4px; display: inline-block; margin-top: 1px;" title="Legacy index format">old format</span>
+                                            @endif
                                         @else
                                             <span class="badge" style="font-size: 0.6rem; font-weight: 700; background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.35); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;" title="Index number not assigned yet">Index: not assigned</span>
                                         @endif
@@ -637,7 +641,7 @@
                                                  <button type="button" class="dropdown-item text-info" onclick="promptAssignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}')">
                                                      Assign Index Number
                                                  </button>
-                                                 <form action="{{ route('admin.students.assign-index', $student->id) }}" method="POST" id="assign-index-form-{{ $student->id }}" style="display: none;">
+                                                 <form action="{{ route('admin.students.assign-index', $student->id, false) }}" method="POST" id="assign-index-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
                                                      <input type="hidden" name="batch_year" id="assign-batch-{{ $student->id }}">
                                                  </form>
@@ -645,7 +649,12 @@
                                                  <button type="button" class="dropdown-item text-warning" onclick="promptReassignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', '{{ $student->batch_year ?? $suggestedBatch }}', '{{ $instFormat }}')">
                                                      Change Index Number
                                                  </button>
-                                                 <form action="{{ route('admin.students.reassign-index', $student->id) }}" method="POST" id="reassign-index-form-{{ $student->id }}" style="display: none;">
+                                                 @if($isOldFormat ?? false)
+                                                     <button type="button" class="dropdown-item text-warning font-weight-bold" onclick="promptConvertToNewFormatIndex({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', '{{ $suggestedBatch }}')">
+                                                         <i class="flaticon-381-refresh-1 mr-1"></i> Convert to new format
+                                                     </button>
+                                                 @endif
+                                                 <form action="{{ route('admin.students.reassign-index', $student->id, false) }}" method="POST" id="reassign-index-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
                                                      <input type="hidden" name="batch_year" id="reassign-batch-{{ $student->id }}">
                                                      <input type="hidden" name="reason" id="reassign-reason-{{ $student->id }}">
@@ -1135,6 +1144,42 @@
             if (result.value) {
                 document.getElementById('reassign-batch-' + studentId).value = result.value.batch;
                 document.getElementById('reassign-reason-' + studentId).value = result.value.reason;
+                document.getElementById('reassign-index-form-' + studentId).submit();
+            }
+        });
+    }
+
+    function promptConvertToNewFormatIndex(studentId, studentName, currentIndex, suggestedSeries) {
+        Swal.fire({
+            title: 'Convert to New Format?',
+            html: `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <p style="color: #cbd5e1; margin-bottom: 8px;">Student: <strong>${studentName}</strong></p>
+                    <p style="color: #cbd5e1; margin-bottom: 8px;">Current Index: <strong style="color: #f59e0b;">${currentIndex}</strong> (legacy format)</p>
+                    <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This will convert the index number to the official <strong>TIT/GG/NNN</strong> format and record an audit log.</p>
+                    <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Grade Series (01-13):</label>
+                    <input id="swalConvertIndexSeries" type="text" value="${suggestedSeries || '08'}" class="swal2-input" style="width: 100%; margin: 0.5rem 0 1rem 0;">
+                </div>
+            `,
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Convert Now',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#374151',
+            customClass: 'swal-dark-popup',
+            preConfirm: () => {
+                const series = document.getElementById('swalConvertIndexSeries').value.trim();
+                const num = parseInt(series, 10);
+                if (!series || isNaN(num) || num < 1 || num > 13) {
+                    Swal.showValidationMessage('Please enter a valid grade series between 01 and 13');
+                    return false;
+                }
+                return String(num).padStart(2, '0');
+            }
+        }).then((res) => {
+            if (res.value) {
+                document.getElementById('reassign-batch-' + studentId).value = res.value;
+                document.getElementById('reassign-reason-' + studentId).value = 'Convert legacy index to standard grade format';
                 document.getElementById('reassign-index-form-' + studentId).submit();
             }
         });

@@ -50,8 +50,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Normalize base URL if request arrives with internal script prefix
+        $baseUrl = rtrim(request()->getBaseUrl(), '/');
+        if (str_ends_with($baseUrl, '/laravel_api/backend/public') || $baseUrl === '/laravel_api/backend/public') {
+            \Illuminate\Support\Facades\URL::forceRootUrl(request()->getSchemeAndHttpHost());
+        }
+
         // Fix for cPanel subfolder API routing
-        if (request()->is('api/*') || str_contains(request()->getRequestUri(), '/api/')) {
+        if (request()->is('api/*') || request()->is('api')) {
             config(['app.url' => config('app.url') . '/api']);
         }
 

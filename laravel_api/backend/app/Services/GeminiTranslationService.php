@@ -37,8 +37,11 @@ class GeminiTranslationService
         $prompt = "Translate the following word/phrase to {$languageName}. Return ONLY the translated text, no explanation or extra characters. Text: \"{$text}\"";
 
         try {
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $this->apiKey;
-            $response = Http::timeout(15)->post($url, [
+            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(15)->post($url, [
                 'contents' => [
                     [
                         'parts' => [
@@ -53,19 +56,19 @@ class GeminiTranslationService
             ]);
 
             if (!$response->successful()) {
-                Log::error('Gemini API Error: ' . $response->body());
+                $cleanBody = preg_replace('/(\?|&)(key|apiKey)=[A-Za-z0-9._-]+/i', '', $response->body());
+                $cleanBody = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $cleanBody);
+                Log::error('Gemini API Error: ' . $cleanBody);
+                return $text;
             }
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $translated = $data['candidates'][0]['content']['parts'][0]['text'] ?? $text;
-                return trim($translated);
-            }
-
-            Log::error('Gemini API Error: ' . $response->body());
-            return $text;
+            $data = $response->json();
+            $translated = $data['candidates'][0]['content']['parts'][0]['text'] ?? $text;
+            return trim($translated);
         } catch (\Exception $e) {
-            Log::error('Gemini Translation Exception: ' . $e->getMessage());
+            $cleanMsg = preg_replace('/(\?|&)(key|apiKey)=[A-Za-z0-9._-]+/i', '', $e->getMessage());
+            $cleanMsg = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $cleanMsg);
+            Log::error('Gemini Translation Exception: ' . $cleanMsg);
             return $text;
         }
     }

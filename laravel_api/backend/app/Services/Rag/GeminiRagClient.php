@@ -66,7 +66,7 @@ class GeminiRagClient implements GeminiClientInterface
         }
 
         $batchSize = (int) config('rag.chunking.embedding_batch_size', 25);
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->embeddingModel}:batchEmbedContents?key={$this->apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->embeddingModel}:batchEmbedContents";
         $textChunks = array_chunk($texts, $batchSize);
         $allEmbeddings = [];
 
@@ -99,7 +99,10 @@ class GeminiRagClient implements GeminiClientInterface
 
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
                 try {
-                    $response = Http::timeout($this->timeout)->post($url, [
+                    $response = Http::withHeaders([
+                        'x-goog-api-key' => $this->apiKey,
+                        'Content-Type' => 'application/json',
+                    ])->timeout($this->timeout)->post($url, [
                         'requests' => $requests,
                     ]);
 
@@ -122,9 +125,9 @@ class GeminiRagClient implements GeminiClientInterface
                     $status = $response->status();
                     if ($attempt === $maxAttempts || !in_array($status, [429, 500, 502, 503, 504])) {
                         Log::error("Gemini batchEmbedContents failed permanently with status {$status}", [
-                            'body' => $response->body(),
+                            'body' => $this->sanitizeErrorMessage($response->body()),
                         ]);
-                        throw new RuntimeException("Gemini batchEmbedContents failed ({$status}): " . $response->body());
+                        throw new RuntimeException("Gemini batchEmbedContents failed ({$status}): " . $this->sanitizeErrorMessage($response->body()));
                     }
 
                     Log::warning("Gemini batchEmbedContents throttled/errored (status {$status}), retrying attempt {$attempt}/{$maxAttempts} in {$delayMs}ms...");
@@ -132,9 +135,10 @@ class GeminiRagClient implements GeminiClientInterface
                     $delayMs *= 2;
 
                 } catch (\Throwable $e) {
-                    $lastException = $e;
+                    $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
+                    $lastException = new RuntimeException($cleanMsg, 0, $e);
                     if ($attempt === $maxAttempts) {
-                        throw $e;
+                        throw $lastException;
                     }
                     usleep($delayMs * 1000);
                     $delayMs *= 2;
@@ -320,7 +324,7 @@ class GeminiRagClient implements GeminiClientInterface
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:generateContent?key={$this->apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:generateContent";
 
         $payload = [
             'contents' => [
@@ -359,7 +363,10 @@ class GeminiRagClient implements GeminiClientInterface
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
-                $response = Http::timeout($timeout)->post($url, $payload);
+                $response = Http::withHeaders([
+                    'x-goog-api-key' => $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ])->timeout($timeout)->post($url, $payload);
                 if ($response->successful()) {
                     break;
                 }
@@ -432,13 +439,14 @@ class GeminiRagClient implements GeminiClientInterface
                         continue;
                     }
                 }
-                throw $e;
+                $cleanMsg = $this->sanitizeErrorMessage($e->getMessage());
+                throw new RuntimeException($cleanMsg, 0, $e);
             }
         }
 
         if (!$response || !$response->successful()) {
             $status = $response ? $response->status() : 500;
-            $body = $response ? $response->body() : 'No response';
+            $body = $response ? $this->sanitizeErrorMessage($response->body()) : 'No response';
             Log::error('Gemini GenerateContent API Error', [
                 'status' => $status,
                 'body' => $body,
@@ -492,7 +500,7 @@ class GeminiRagClient implements GeminiClientInterface
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:streamGenerateContent?alt=sse&key={$this->apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->llmModel}:streamGenerateContent?alt=sse";
 
         $payload = [
             'contents' => [
@@ -524,13 +532,22 @@ class GeminiRagClient implements GeminiClientInterface
         }
 
         $timeout = (int) config('rag.llm.request_timeout', $this->timeout);
-        $response = Http::withOptions(['stream' => true])
-            ->timeout($timeout)
-            ->post($url, $payload);
+        try {
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->withOptions(['stream' => true])
+                ->timeout($timeout)
+                ->post($url, $payload);
+        } catch (\Throwable $e) {
+            $clean = $this->sanitizeErrorMessage($e->getMessage());
+            Log::error("Gemini streamGenerateContent network error: {$clean}");
+            throw new RuntimeException("Gemini streaming failed: {$clean}", 0, $e);
+        }
 
         if (!$response->successful()) {
             $status = $response->status();
-            $body = $response->body();
+            $body = $this->sanitizeErrorMessage($response->body());
             Log::error("Gemini streamGenerateContent Error ({$status}): {$body}");
             throw new RuntimeException("Gemini streaming failed ({$status}): {$body}");
         }
@@ -657,6 +674,16 @@ class GeminiRagClient implements GeminiClientInterface
             'label' => 'Unspecified 429 Quota Exhaustion',
             'detail' => "HTTP 429 RESOURCE_EXHAUSTED returned. Google's response body did not distinguish whether this is a per-minute burst rate limit or a daily/billing quota.",
         ];
+    }
+
+    /**
+     * Sanitize error message to ensure API key is NEVER logged or thrown.
+     */
+    protected function sanitizeErrorMessage(string $message): string
+    {
+        $sanitized = preg_replace('/(\?|&)(key|apiKey)=[A-Za-z0-9._-]+/i', '', $message);
+        $sanitized = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $sanitized);
+        return $sanitized;
     }
 }
 

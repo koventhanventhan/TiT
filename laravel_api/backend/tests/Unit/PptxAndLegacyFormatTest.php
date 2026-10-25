@@ -8,6 +8,7 @@ use App\Models\LearningMaterial;
 use App\Services\Rag\PdfTextExtractor;
 use App\Services\Rag\UnsupportedFileTypeException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -22,9 +23,18 @@ class PptxAndLegacyFormatTest extends TestCase
     {
         parent::setUp();
 
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response(['embeddings' => []], 200),
+            '*' => Http::response([], 200),
+        ]);
+
         $geminiClient = new class implements GeminiClientInterface {
-            public function embedContent(string $text, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array { return []; }
-            public function batchEmbedContents(array $texts, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array { return []; }
+            public function embedContent(string $text, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array {
+                return array_fill(0, 768, 0.01);
+            }
+            public function batchEmbedContents(array $texts, string $taskType = 'RETRIEVAL_DOCUMENT', ?string $title = null): array {
+                return array_fill(0, count($texts), array_fill(0, 768, 0.01));
+            }
             public function ocrPage(string $binaryData, string $mimeType = 'image/jpeg'): string { return ''; }
             public function generateAnswer(string $prompt, ?string $systemInstruction = null): string { return ''; }
             public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void {}

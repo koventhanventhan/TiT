@@ -40,8 +40,11 @@ class TranslateController extends Controller
         $prompt = "Translate the following text to {$langName}. Output only the translation, nothing else. No explanations.\n\n" . $text;
 
         try {
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey;
-            $response = Http::timeout(15)->post($url, [
+            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $apiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(15)->post($url, [
                 'contents' => [
                     [
                         'parts' => [
@@ -56,9 +59,11 @@ class TranslateController extends Controller
             ]);
 
             if (!$response->successful()) {
+                $cleanBody = preg_replace('/(\?|&)(key|apiKey)=[A-Za-z0-9._-]+/i', '', $response->body());
+                $cleanBody = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $cleanBody);
                 Log::error('Gemini API error', [
                     'status' => $response->status(),
-                    'body' => $response->body(),
+                    'body' => $cleanBody,
                 ]);
                 return response()->json(['translated_text' => $text], 200);
             }
@@ -71,7 +76,9 @@ class TranslateController extends Controller
 
             return response()->json(['translated_text' => $translated]);
         } catch (\Throwable $e) {
-            Log::error('Gemini translate exception: ' . $e->getMessage());
+            $cleanMsg = preg_replace('/(\?|&)(key|apiKey)=[A-Za-z0-9._-]+/i', '', $e->getMessage());
+            $cleanMsg = preg_replace('/key=[A-Za-z0-9._-]+/i', 'key=***', $cleanMsg);
+            Log::error('Gemini translate exception: ' . $cleanMsg);
             return response()->json(['translated_text' => $text], 200);
         }
     }

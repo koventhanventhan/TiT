@@ -28,7 +28,7 @@ class SubjectController extends Controller
             'name' => 'required|string',
             'price' => 'required|numeric|min:0',
             'category' => 'required|in:grade_1_to_2,grade_3,grade_4,grade_5,grade_6_to_9,grade_10_to_11,arts_stream,bio_maths_stream',
-            'medium' => 'required|in:english,tamil,sinhala,both,all',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         // Check for medium overlap: "both" conflicts with "english" and "tamil"
@@ -72,7 +72,7 @@ class SubjectController extends Controller
             'name' => 'required|string',
             'price' => 'required|numeric|min:0',
             'category' => 'required|in:grade_1_to_2,grade_3,grade_4,grade_5,grade_6_to_9,grade_10_to_11,arts_stream,bio_maths_stream',
-            'medium' => 'required|in:english,tamil,sinhala,both,all',
+            'medium' => 'required|in:english,tamil,both',
         ]);
 
         // Check for medium overlap: "both" conflicts with "english" and "tamil"

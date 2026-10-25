@@ -28,7 +28,7 @@ class PackageController extends Controller
         $request->validate([
             'name' => 'required|string',
             'category' => 'required|string',
-            'medium' => 'required|in:english,tamil,sinhala,both,all',
+            'medium' => 'required|in:english,tamil,both',
             'package_price' => 'required|numeric|min:0',
             'original_price' => 'required|numeric|min:0',
             'addon_price' => 'nullable|numeric|min:0',
@@ -70,7 +70,7 @@ class PackageController extends Controller
         $request->validate([
             'name' => 'required|string',
             'category' => 'required|string',
-            'medium' => 'required|in:english,tamil,sinhala,both,all',
+            'medium' => 'required|in:english,tamil,both',
             'package_price' => 'required|numeric|min:0',
             'original_price' => 'required|numeric|min:0',
             'addon_price' => 'nullable|numeric|min:0',

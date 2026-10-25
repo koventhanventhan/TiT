@@ -219,7 +219,7 @@ class RegistrationController extends Controller
                 } elseif ($field === 'gender') {
                     $rules[$field] = 'required|in:male,female';
                 } elseif ($field === 'medium') {
-                    $rules[$field] = 'required|in:english,tamil,sinhala';
+                    $rules[$field] = 'required|in:english,tamil';
                 } elseif ($field === 'online_experience') {
                     $rules[$field] = 'required|boolean';
                 } else {

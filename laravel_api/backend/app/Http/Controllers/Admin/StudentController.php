@@ -271,7 +271,7 @@ class StudentController extends Controller
         $indexAssigned = false;
         $batchYear = null;
         if ($format === 'grade') {
-            $seriesInput = $request->input('series') ?: ($request->input('batch_year') ?: null);
+            $seriesInput = $request->filled('series') ? $request->input('series') : null;
             try {
                 $this->indexService->assign($student, $seriesInput);
                 $indexAssigned = true;
@@ -483,11 +483,19 @@ class StudentController extends Controller
 
         // Assign automatic student index number
         try {
-            $batchYear = $request->filled('batch_year')
-                ? $this->indexService->normalizeBatchYear($request->batch_year)
-                : $this->indexService->getBatchForGrade($user->current_grade, $user->institute_id);
-            if ($batchYear !== null) {
-                $this->indexService->assign($user, $batchYear);
+            $institute = $user->institute ?: \App\Models\Institute::find($user->institute_id ?: 1);
+            $format = $institute?->getIndexFormat() ?? 'grade';
+
+            if ($format === 'grade') {
+                $seriesInput = $request->filled('series') ? $request->input('series') : null;
+                $this->indexService->assign($user, $seriesInput);
+            } else {
+                $batchYear = $request->filled('batch_year')
+                    ? $this->indexService->normalizeBatchYear($request->batch_year)
+                    : $this->indexService->getBatchForGrade($user->current_grade, $user->institute_id);
+                if ($batchYear !== null) {
+                    $this->indexService->assign($user, $batchYear);
+                }
             }
         } catch (\Throwable $e) {
             \Log::warning("Could not auto-assign index number in student store(): " . $e->getMessage());
@@ -1067,7 +1075,7 @@ class StudentController extends Controller
             $format = $institute?->getIndexFormat() ?? 'grade';
 
             if ($format === 'grade') {
-                $series = $request->input('series') ?: ($request->input('batch_year') ?: null);
+                $series = $request->filled('series') ? $request->input('series') : null;
                 $indexNumber = $this->indexService->assign($student, $series);
             } else {
                 $batchYear = $request->filled('batch_year')
@@ -1097,9 +1105,13 @@ class StudentController extends Controller
             $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
             $format = $institute?->getIndexFormat() ?? 'grade';
 
-            $newSeries = $request->input('series') ?: ($request->input('batch_year') ?: null);
-            if (!$newSeries) {
-                throw new \InvalidArgumentException($format === 'grade' ? 'Grade series is required' : 'Batch year is required');
+            if ($format === 'grade') {
+                $newSeries = $request->filled('series') ? $request->input('series') : null;
+            } else {
+                $newSeries = $request->filled('batch_year') ? $request->input('batch_year') : null;
+            }
+            if (!$newSeries && $format !== 'grade') {
+                throw new \InvalidArgumentException('Batch year is required');
             }
 
             $newIndex = $this->indexService->reassign($student, $newSeries, auth()->user(), $request->input('reason'));
@@ -1149,45 +1161,80 @@ class StudentController extends Controller
             ]);
         }
 
+        $instituteId = (int) ($students->first()?->institute_id ?: (auth()->user()->institute_id ?: 1));
+        $firstInst = \App\Models\Institute::find($instituteId);
+        $format = $firstInst?->getIndexFormat() ?? 'grade';
+
         $unassignedStudents = $students->whereNull('index_number');
         if ($unassignedStudents->isNotEmpty()) {
             $canDetermineAny = false;
             foreach ($unassignedStudents as $student) {
-                $batchYear = $request->filled('batch_year')
-                    ? $this->indexService->normalizeBatchYear($request->batch_year)
-                    : $this->indexService->calculateDefaultBatchYear($student);
-                if ($batchYear !== null) {
-                    $canDetermineAny = true;
-                    break;
+                if ($format === 'grade') {
+                    if ($request->filled('series')) {
+                        $canDetermineAny = true;
+                        break;
+                    }
+                    try {
+                        $this->indexService->deriveGradeSeries($student->current_grade);
+                        $canDetermineAny = true;
+                        break;
+                    } catch (\Throwable $e) {
+                        // cannot derive
+                    }
+                } else {
+                    $batchYear = $request->filled('batch_year')
+                        ? $this->indexService->normalizeBatchYear($request->batch_year)
+                        : $this->indexService->calculateDefaultBatchYear($student);
+                    if ($batchYear !== null) {
+                        $canDetermineAny = true;
+                        break;
+                    }
                 }
             }
 
             if (!$canDetermineAny) {
+                $errKey = $format === 'grade' ? 'series' : 'batch_year';
+                $errMsg = $format === 'grade'
+                    ? 'No valid grade found for selected students. Set a grade or pass a series.'
+                    : 'No batch year found for selected students. Set the grade mapping or pass a batch year.';
                 if ($request->expectsJson()) {
                     return response()->json([
                         'message' => 'The given data was invalid.',
                         'errors' => [
-                            'batch_year' => ['No batch year found for selected students. Set the grade mapping or pass a batch year.']
+                            $errKey => [$errMsg]
                         ]
                     ], 422);
                 }
-                return back()->withErrors(['batch_year' => 'No batch year found for selected students. Set the grade mapping or pass a batch year.']);
+                return back()->withErrors([$errKey => $errMsg]);
             }
         }
 
         $assignedCount = 0;
         foreach ($students as $student) {
             if (empty($student->index_number)) {
-                $batchYear = $request->filled('batch_year')
-                    ? $this->indexService->normalizeBatchYear($request->batch_year)
-                    : $this->indexService->calculateDefaultBatchYear($student);
+                $inst = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+                $stFormat = $inst?->getIndexFormat() ?? 'grade';
 
-                if ($batchYear === null) {
-                    continue;
+                if ($stFormat === 'grade') {
+                    $series = $request->filled('series') ? $request->input('series') : null;
+                    try {
+                        $this->indexService->assign($student, $series);
+                        $assignedCount++;
+                    } catch (\Throwable $e) {
+                        \Log::warning("Bulk assign skipping student {$student->id}: " . $e->getMessage());
+                    }
+                } else {
+                    $batchYear = $request->filled('batch_year')
+                        ? $this->indexService->normalizeBatchYear($request->batch_year)
+                        : $this->indexService->calculateDefaultBatchYear($student);
+
+                    if ($batchYear === null) {
+                        continue;
+                    }
+
+                    $this->indexService->assign($student, $batchYear);
+                    $assignedCount++;
                 }
-
-                $this->indexService->assign($student, $batchYear);
-                $assignedCount++;
             }
         }
 

@@ -500,7 +500,7 @@
                                                 {{ $student->index_number }}
                                             </div>
                                         @else
-                                            <div style="font-size: 0.6rem; color: #6b7280; font-style: italic;">No Index</div>
+                                            <span class="badge" style="font-size: 0.6rem; font-weight: 700; background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.35); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;" title="Index number not assigned yet">Index: not assigned</span>
                                         @endif
                                         <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
                                     </td>

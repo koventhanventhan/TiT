@@ -248,7 +248,7 @@ class StudentIndexBulkController extends Controller
                 }
 
                 try {
-                    $indexNumber = $this->indexService->assign($student, $series);
+                    $indexNumber = $this->indexService->assign($student, null);
                     $assignedInChunk++;
                     $assignedList[] = [
                         'student_id' => $student->id,

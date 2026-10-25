@@ -224,15 +224,15 @@ class StudentIndexService
     public function normalizeGradeSeries($series): string
     {
         if ($series === null || trim((string) $series) === '') {
-            throw new \InvalidArgumentException("Cannot derive grade series from '' – set the series manually");
+            throw new \InvalidArgumentException("Series must be a grade 01–13");
         }
 
-        $intVal = (int) $series;
-        if ($intVal >= 1 && $intVal <= 99) {
-            return str_pad((string) $intVal, 2, '0', STR_PAD_LEFT);
+        $trimmed = trim((string) $series);
+        if (preg_match('/^(?:grade\s*)?0*([1-9]|1[0-3])$/i', $trimmed, $m)) {
+            return str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
         }
 
-        throw new \InvalidArgumentException("Cannot derive grade series from '{$series}' – set the series manually");
+        throw new \InvalidArgumentException("Series must be a grade 01–13");
     }
 
     /**
@@ -267,6 +267,11 @@ class StudentIndexService
                 $seriesStr = $this->deriveGradeSeries($student->current_grade);
             }
             $seriesInt = (int) $seriesStr;
+
+            // Guard: in grade mode never silently accept a 2-digit year-like value or anything outside 01-13
+            if ($seriesInt < 1 || $seriesInt > 13) {
+                throw new \InvalidArgumentException("Series must be a grade 01–13");
+            }
 
             $attempts = 0;
             $maxAttempts = 2;
@@ -492,18 +497,27 @@ class StudentIndexService
      * @return string
      * @throws \Throwable
      */
-    public function reassign(User $student, $newSeriesOrBatch, $adminUser = null, ?string $reason = null): string
+    public function reassign(User $student, $newSeriesOrBatch = null, $adminUser = null, ?string $reason = null): string
     {
         $oldIndex = $student->index_number;
+        $oldSeq = $student->index_seq;
         $oldBatch = $student->batch_year;
 
-        // Temporarily reset to allow new assignment
-        $student->index_number = null;
-        $student->index_seq = null;
-        $student->batch_year = null;
-        $student->save();
+        try {
+            // Temporarily reset to allow new assignment
+            $student->index_number = null;
+            $student->index_seq = null;
+            $student->batch_year = null;
+            $student->save();
 
-        $newIndex = $this->assign($student, $newSeriesOrBatch);
+            $newIndex = $this->assign($student, $newSeriesOrBatch);
+        } catch (\Throwable $e) {
+            $student->index_number = $oldIndex;
+            $student->index_seq = $oldSeq;
+            $student->batch_year = $oldBatch;
+            $student->save();
+            throw $e;
+        }
 
         $adminUserId = null;
         if ($adminUser instanceof User) {
@@ -817,9 +831,9 @@ class StudentIndexService
                             $errors[] = "Batch year '{$parsedIndex['series']}' must be between 20 and 99";
                         }
                     } else {
-                        if ($seriesInt < 1 || $seriesInt > 99) {
+                        if ($seriesInt < 1 || $seriesInt > 13) {
                             $status = 'error';
-                            $errors[] = "Grade series '{$parsedIndex['series']}' must be between 01 and 99";
+                            $errors[] = "Grade series '{$parsedIndex['series']}' must be between 01 and 13";
                         }
 
                         // Validate GG equals grade column if grade column provided

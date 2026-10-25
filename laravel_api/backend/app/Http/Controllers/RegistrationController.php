@@ -568,8 +568,15 @@ class RegistrationController extends Controller
                     if (empty($user->index_number)) {
                         try {
                             $indexSvc = app(\App\Services\StudentIndexService::class);
-                            $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
-                            $indexSvc->assign($user, $batch);
+                            $institute = $user->institute ?: \App\Models\Institute::find($user->institute_id ?: 1);
+                            $format = $institute?->getIndexFormat() ?? 'grade';
+
+                            if ($format === 'grade') {
+                                $indexSvc->assign($user, null);
+                            } else {
+                                $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
+                                $indexSvc->assign($user, $batch);
+                            }
                         } catch (\Throwable $e) {
                             Log::warning("Could not auto-assign index number in online payment callback: " . $e->getMessage());
                         }
@@ -693,8 +700,15 @@ class RegistrationController extends Controller
             if (empty($user->index_number)) {
                 try {
                     $indexSvc = app(\App\Services\StudentIndexService::class);
-                    $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
-                    $indexSvc->assign($user, $batch);
+                    $institute = $user->institute ?: \App\Models\Institute::find($user->institute_id ?: 1);
+                    $format = $institute?->getIndexFormat() ?? 'grade';
+
+                    if ($format === 'grade') {
+                        $indexSvc->assign($user, null);
+                    } else {
+                        $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
+                        $indexSvc->assign($user, $batch);
+                    }
                 } catch (\Throwable $e) {
                     Log::warning("Could not auto-assign index number in paymentSuccess: " . $e->getMessage());
                 }

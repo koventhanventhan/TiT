@@ -81,12 +81,10 @@ Schedule::call($guard('alerts:pending-approvals', fn() => Artisan::call('alerts:
 Schedule::call($guard('alerts:daily-summary', fn() => Artisan::call('alerts:daily-summary')))->dailyAt('20:00');
 
 // Daily privacy pruning for student RAG query text
-Schedule::command('rag:prune-queries')->dailyAt('03:00');
+Schedule::call($guard('rag:prune-queries', fn() => Artisan::call('rag:prune-queries')))->dailyAt('03:00');
 
 // Clean up queries stuck in 'processing' status for over 5 minutes
-Schedule::command('rag:cleanup-stuck-queries')->everyFiveMinutes();
-
-
+Schedule::call($guard('rag:cleanup-stuck-queries', fn() => Artisan::call('rag:cleanup-stuck-queries')))->everyFiveMinutes();
 
 // Clean up materials stuck in 'processing' status for over 15 minutes
-Schedule::command('rag:cleanup-stuck-materials')->everyTenMinutes();
+Schedule::call($guard('rag:cleanup-stuck-materials', fn() => Artisan::call('rag:cleanup-stuck-materials')))->everyTenMinutes();

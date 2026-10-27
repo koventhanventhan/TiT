@@ -569,20 +569,22 @@ class StudentIndexBulkController extends Controller
                 $q->whereNull('registration_status')
                   ->orWhereNotIn('registration_status', ['pending', 'rejected']);
             })
-            ->orderBy('index_number')
-            ->orderBy('full_name')
+            ->orderBy('batch_year', 'asc')
+            ->orderBy('index_seq', 'asc')
+            ->orderBy('index_number', 'asc')
+            ->orderBy('full_name', 'asc')
             ->get();
 
         $englishStudents = $students->filter(function ($s) {
             return !empty($s->index_number) && in_array(strtolower($s->medium ?? ''), ['english', 'both']);
         })->sortBy(function ($s) {
-            return $s->index_number;
+            return [(int) ($s->batch_year ?? 0), (int) ($s->index_seq ?? 0)];
         })->values();
 
         $tamilStudents = $students->filter(function ($s) {
             return !empty($s->index_number) && in_array(strtolower($s->medium ?? ''), ['tamil', 'both']);
         })->sortBy(function ($s) {
-            return $s->index_number;
+            return [(int) ($s->batch_year ?? 0), (int) ($s->index_seq ?? 0)];
         })->values();
 
         $unassignedStudents = $students->filter(function ($s) {
@@ -637,7 +639,9 @@ class StudentIndexBulkController extends Controller
                 $q->whereNull('registration_status')
                   ->orWhereNotIn('registration_status', ['pending', 'rejected']);
             })
-            ->orderBy('index_number')
+            ->orderBy('batch_year', 'asc')
+            ->orderBy('index_seq', 'asc')
+            ->orderBy('index_number', 'asc')
             ->get();
 
         $gradeNum = preg_replace('/[^0-9]/', '', $grade);

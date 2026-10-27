@@ -533,7 +533,7 @@
                                                 $seriesDesc = ($instFormat === 'grade')
                                                     ? 'Grade ' . ($student->batch_year ? sprintf('%02d', $student->batch_year) : ($student->current_grade ?? ''))
                                                     : 'Batch \'' . $student->batch_year;
-                                                $isOldFormat = ($instFormat === 'grade' && !preg_match('/^TIT\/(0[1-9]|1[0-3])\/\d{3,}$/', $student->index_number));
+                                                $isOldFormat = \App\Services\StudentIndexService::isOldOrWrongFormat($student->index_number, optional(auth()->user()->institute) ?: \App\Models\Institute::find($student->institute_id ?: 1));
                                             @endphp
                                             <div style="font-weight: 800; font-size: 0.72rem; color: #38bdf8; font-family: monospace; letter-spacing: 0.3px;" title="Index Number: {{ $student->index_number }} ({{ $seriesDesc }})">
                                                 {{ $student->index_number }}

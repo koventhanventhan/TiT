@@ -73,16 +73,12 @@ class StudentIndexStatusCommand extends Command
             $index = trim((string) $student->index_number);
             $isStandard = false;
 
-            if ($format === 'grade') {
-                if (preg_match('/^' . preg_quote($prefix, '/') . '\/(0[1-9]|1[0-3])\/(\d{3,})$/', $index, $m)) {
-                    $isStandard = true;
-                    $sKey = $m[1];
-                    $seriesCounts[$sKey] = ($seriesCounts[$sKey] ?? 0) + 1;
-                }
-            } else {
-                if (preg_match('/^' . preg_quote($prefix, '/') . '\/(\d{2})\/(\d{3,})$/', $index, $m)) {
-                    $isStandard = true;
-                    $sKey = $m[1];
+            $isStandard = StudentIndexService::isValidIndexNumber($index, $prefix);
+
+            if ($isStandard) {
+                $parsed = $indexService->parseIndexNumber($index);
+                if ($parsed) {
+                    $sKey = $parsed['series'];
                     $seriesCounts[$sKey] = ($seriesCounts[$sKey] ?? 0) + 1;
                 }
             }
@@ -103,8 +99,14 @@ class StudentIndexStatusCommand extends Command
         $seriesRows = [];
 
         if ($format === 'grade') {
-            for ($g = 1; $g <= 13; $g++) {
-                $sKey = sprintf('%02d', $g);
+            $existingCounters = StudentIndexCounter::where('institute_id', $instituteId)->pluck('batch_year')->all();
+            $allKeys = array_unique(array_merge(
+                array_map(fn($g) => sprintf('%02d', $g), range(1, 13)),
+                array_map(fn($b) => sprintf('%02d', (int) $b), $existingCounters),
+                array_keys($seriesCounts)
+            ));
+            sort($allKeys);
+            foreach ($allKeys as $sKey) {
                 $count = $seriesCounts[$sKey] ?? 0;
 
                 $seriesInt = (int) $sKey;
@@ -115,10 +117,11 @@ class StudentIndexStatusCommand extends Command
                 $lastSeq = $counter ? (int) $counter->last_seq : 0;
                 $nextSeq = $counter ? max($lastSeq + 1, $seqStart) : $seqStart;
                 $nextIndex = sprintf('%s/%s/%03d', $prefix, $sKey, $nextSeq);
+                $label = $seriesInt <= 13 ? "Grade " . $seriesInt : "Series " . $sKey;
 
                 $seriesRows[] = [
                     $sKey,
-                    "Grade " . (int) $sKey,
+                    $label,
                     $count,
                     $lastSeq > 0 ? $lastSeq : '—',
                     $nextSeq,

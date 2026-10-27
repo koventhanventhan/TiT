@@ -37,13 +37,27 @@ class OnlineRegistrationIndexTest extends TestCase
     }
 
     /**
-     * Test normalizeGradeSeries(26) throws InvalidArgumentException.
+     * Test normalizeGradeSeries accepts 01-99 and rejects out of range.
      */
-    public function test_normalize_grade_series_rejects_year_like_series(): void
+    public function test_normalize_grade_series_accepts_01_to_99_and_rejects_out_of_range(): void
+    {
+        $this->assertEquals('26', $this->indexService->normalizeGradeSeries(26));
+        $this->assertEquals('08', $this->indexService->normalizeGradeSeries(8));
+        $this->assertEquals('58', $this->indexService->normalizeGradeSeries('58'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Series must be a number 01–99');
+        $this->indexService->normalizeGradeSeries(100);
+    }
+
+    /**
+     * Test automatic derivation rejects year-like values.
+     */
+    public function test_automatic_derivation_rejects_year_like_series(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Series must be a grade 01–13');
-        $this->indexService->normalizeGradeSeries(26);
+        $this->expectExceptionMessage("Cannot derive grade series from '26' – set the series manually");
+        $this->indexService->deriveGradeSeries(26);
     }
 
     /**
@@ -169,18 +183,18 @@ class OnlineRegistrationIndexTest extends TestCase
     }
 
     /**
-     * Test data repair command dry run lists seeded TIT/26/001 Grade 8 student and --apply fixes it.
+     * Test data repair command dry run lists seeded TiT/28/100 Grade 8 student and --apply fixes it.
      */
     public function test_repair_command_dry_run_lists_mismatch_and_apply_fixes(): void
     {
-        // Seed Grade 8 student with wrong index TIT/26/001
+        // Seed Grade 8 student with wrong prefix index TiT/28/100
         $student = User::factory()->create([
             'institute_id' => 1,
             'role' => 'user',
             'current_grade' => 'Grade 8',
-            'index_number' => 'TIT/26/001',
-            'batch_year' => 26,
-            'index_seq' => 1,
+            'index_number' => 'TiT/28/100',
+            'batch_year' => 28,
+            'index_seq' => 100,
         ]);
 
         // 1. Dry run
@@ -188,12 +202,12 @@ class OnlineRegistrationIndexTest extends TestCase
         $output = Artisan::output();
 
         $this->assertEquals(0, $exitCode);
-        $this->assertStringContainsString('TIT/26/001', $output);
+        $this->assertStringContainsString('TiT/28/100', $output);
         $this->assertStringContainsString('Grade 8', $output);
         $this->assertStringContainsString('MISMATCH', $output);
 
         // Student's number remains unchanged after dry-run
-        $this->assertEquals('TIT/26/001', $student->fresh()->index_number);
+        $this->assertEquals('TiT/28/100', $student->fresh()->index_number);
 
         // 2. Apply fix
         $applyExitCode = Artisan::call('students:fix-wrong-index-series', ['--apply' => true]);

@@ -25,7 +25,7 @@ class FixWrongIndexSeriesCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Find and repair students with non-standard index numbers (does not match PREFIX/GG/NNN with GG 01-13 or case-sensitive prefix)';
+    protected $description = 'Find and repair students with non-standard index numbers (does not match PREFIX/GG/NNN with series 01-99 or case-sensitive prefix)';
 
     public function handle(StudentIndexService $indexService): int
     {
@@ -86,31 +86,13 @@ class FixWrongIndexSeriesCommand extends Command
             $oldIndex = trim((string) $student->index_number);
 
             // A number is "wrong" ONLY if:
-            // (a) it does not parse as PREFIX/GG/NNN with GG in 01–13, OR
-            // (b) the prefix differs from the institute prefix (case-sensitive 'TIT'), OR
-            // (c) GG is outside 01–13 (e.g. TIT/26/001, TiT/28/100).
-            // It must NEVER compare GG with the student's current grade.
-            $isWrong = false;
+            // (a) unparsable (does not match ^<PREFIX>/(\d{2})/(\d{3,})$ with series 01–99), OR
+            // (b) the prefix differs from the institute prefix (case-sensitive) – not by series range.
+            // It must NEVER compare series with the student's current grade.
+            $isWrong = !StudentIndexService::isValidIndexNumber($oldIndex, $institutePrefix);
             $oldExtractedSeries = null;
-
             if (preg_match('/^([^\/]+)\/([^\/]+)\/([^\/]+)$/', $oldIndex, $parts)) {
-                $rawPrefix = $parts[1];
-                $rawSeries = $parts[2];
-                $rawNum = $parts[3];
-                $oldExtractedSeries = $rawSeries;
-
-                // Case-sensitive prefix check
-                if ($rawPrefix !== $institutePrefix) {
-                    $isWrong = true;
-                } elseif (!preg_match('/^0[1-9]|1[0-3]$/', $rawSeries)) {
-                    // GG is outside 01-13
-                    $isWrong = true;
-                } elseif (!preg_match('/^\d{3,}$/', $rawNum)) {
-                    // Running number not at least 3 digits
-                    $isWrong = true;
-                }
-            } else {
-                $isWrong = true;
+                $oldExtractedSeries = $parts[2];
             }
 
             if (!$isWrong) {

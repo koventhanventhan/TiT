@@ -157,8 +157,8 @@ class StudentIndexService
             $intYear = $intYear % 100;
         }
 
-        if ($intYear < 20 || $intYear > 99) {
-            throw new \InvalidArgumentException("Batch year must be between 20 and 99, got: {$batchYear}");
+        if ($intYear < 1 || $intYear > 99) {
+            throw new \InvalidArgumentException("Batch year must be between 01 and 99, got: {$batchYear}");
         }
 
         return $intYear;
@@ -207,7 +207,7 @@ class StudentIndexService
         }
 
         $gradeStr = trim((string) $grade);
-        if (preg_match('/(?:grade\s*)?0*([1-9]|1[0-3])\b/i', $gradeStr, $m)) {
+        if (preg_match('/^(?:grade[\s\-]*)?0*([1-9]|1[0-3])$/i', $gradeStr, $m)) {
             return str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
         }
 
@@ -224,15 +224,18 @@ class StudentIndexService
     public function normalizeGradeSeries($series): string
     {
         if ($series === null || trim((string) $series) === '') {
-            throw new \InvalidArgumentException("Series must be a grade 01–13");
+            throw new \InvalidArgumentException("Series must be a number 01–99");
         }
 
         $trimmed = trim((string) $series);
-        if (preg_match('/^(?:grade\s*)?0*([1-9]|1[0-3])$/i', $trimmed, $m)) {
-            return str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
+        if (preg_match('/^(?:grade\s*)?0*([1-9]|[1-9][0-9])$/i', $trimmed, $m)) {
+            $num = (int) $m[1];
+            if ($num >= 1 && $num <= 99) {
+                return str_pad((string) $num, 2, '0', STR_PAD_LEFT);
+            }
         }
 
-        throw new \InvalidArgumentException("Series must be a grade 01–13");
+        throw new \InvalidArgumentException("Series must be a number 01–99");
     }
 
     /**
@@ -268,9 +271,8 @@ class StudentIndexService
             }
             $seriesInt = (int) $seriesStr;
 
-            // Guard: in grade mode never silently accept a 2-digit year-like value or anything outside 01-13
-            if ($seriesInt < 1 || $seriesInt > 13) {
-                throw new \InvalidArgumentException("Series must be a grade 01–13");
+            if ($seriesInt < 1 || $seriesInt > 99) {
+                throw new \InvalidArgumentException("Series must be a number 01–99");
             }
 
             $attempts = 0;
@@ -397,7 +399,8 @@ class StudentIndexService
 
                     $nextSeq = max((int) $counter->last_seq + 1, $seqStart);
                     $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
-                    $indexNumber = "{$prefix}/{$batchYear}/{$paddedSeq}";
+                    $seriesStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
+                    $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
 
                     $counter->last_seq = $nextSeq;
                     $counter->save();
@@ -478,10 +481,11 @@ class StudentIndexService
         $startSeq = $counter ? max((int) $counter->last_seq + 1, $seqStart) : $seqStart;
 
         $results = [];
+        $batchYearStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
         for ($i = 0; $i < $count; $i++) {
             $seq = $startSeq + $i;
             $paddedSeq = str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
-            $results[] = "{$prefix}/{$batchYear}/{$paddedSeq}";
+            $results[] = "{$prefix}/{$batchYearStr}/{$paddedSeq}";
         }
 
         return $results;
@@ -549,8 +553,58 @@ class StudentIndexService
     }
 
     /**
+     * Check if an index number matches the standard format: ^<PREFIX>/(\d{2})/(\d{3,})$
+     * with series 01–99. If $expectedPrefix is provided, matches case-sensitive prefix.
+     *
+     * @param string|null $indexNumber
+     * @param string|null $expectedPrefix
+     * @return bool
+     */
+    public static function isValidIndexNumber(?string $indexNumber, ?string $expectedPrefix = null): bool
+    {
+        if ($indexNumber === null || trim((string) $indexNumber) === '') {
+            return false;
+        }
+
+        $trimmed = trim((string) $indexNumber);
+
+        if ($expectedPrefix !== null && $expectedPrefix !== '') {
+            $escaped = preg_quote($expectedPrefix, '/');
+            if (!preg_match('/^' . $escaped . '\/(\d{2})\/(\d{3,})$/', $trimmed, $m)) {
+                return false;
+            }
+            $seriesInt = (int) $m[1];
+            return $seriesInt >= 1 && $seriesInt <= 99;
+        }
+
+        if (!preg_match('/^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$/', $trimmed, $m)) {
+            return false;
+        }
+
+        $seriesInt = (int) $m[2];
+        return $seriesInt >= 1 && $seriesInt <= 99;
+    }
+
+    /**
+     * Check if an index number is considered old/wrong format for an institute.
+     * Returns true if not null/empty but fails the standard format or prefix match.
+     *
+     * @param string|null $indexNumber
+     * @param Institute|null $institute
+     * @return bool
+     */
+    public static function isOldOrWrongFormat(?string $indexNumber, ?Institute $institute = null): bool
+    {
+        if ($indexNumber === null || trim((string) $indexNumber) === '') {
+            return false;
+        }
+        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+        return !self::isValidIndexNumber($indexNumber, $prefix);
+    }
+
+    /**
      * Parse index number string into parts (prefix, series/batch_year, index_seq).
-     * Format: ^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$
+     * Format: ^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$ with series 01-99.
      *
      * @param string|null $indexNumber
      * @return array{prefix: string, series: string, series_int: int, batch_year: int, index_seq: int, normalized: string}|null
@@ -561,15 +615,20 @@ class StudentIndexService
             return null;
         }
         $trimmed = trim($indexNumber);
-        if (!preg_match('/^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$/i', $trimmed, $matches)) {
+        if (!preg_match('/^([A-Za-z0-9]+)\/(\d{2})\/(\d{3,})$/', $trimmed, $matches)) {
+            return null;
+        }
+
+        $seriesInt = (int) $matches[2];
+        if ($seriesInt < 1 || $seriesInt > 99) {
             return null;
         }
 
         return [
             'prefix' => $matches[1],
             'series' => $matches[2],
-            'series_int' => (int) $matches[2],
-            'batch_year' => (int) $matches[2],
+            'series_int' => $seriesInt,
+            'batch_year' => $seriesInt,
             'index_seq' => (int) $matches[3],
             'normalized' => "{$matches[1]}/{$matches[2]}/{$matches[3]}",
         ];
@@ -821,33 +880,29 @@ class StudentIndexService
                         $errors[] = "Prefix '{$parsedIndex['prefix']}' does not match institute prefix '{$expectedPrefix}'";
                     }
 
-                    // Format-aware series validation
-                    $format = $institute?->getIndexFormat() ?? 'grade';
+                    // Series validation: accept any series 01-99
                     $seriesInt = $parsedIndex['series_int'];
 
-                    if ($format === 'batch') {
-                        if ($seriesInt < 20 || $seriesInt > 99) {
-                            $status = 'error';
-                            $errors[] = "Batch year '{$parsedIndex['series']}' must be between 20 and 99";
-                        }
-                    } else {
-                        if ($seriesInt < 1 || $seriesInt > 13) {
-                            $status = 'error';
-                            $errors[] = "Grade series '{$parsedIndex['series']}' must be between 01 and 13";
-                        }
+                    if ($seriesInt < 1 || $seriesInt > 99) {
+                        $status = 'error';
+                        $errors[] = "Series '{$parsedIndex['series']}' must be between 01 and 99";
+                    }
 
-                        // Validate GG equals grade column if grade column provided
-                        if (!empty($gradeCol)) {
+                    // Validate series equals grade column if grade column provided
+                    if (!empty($gradeCol)) {
+                        try {
+                            $expectedSeries = null;
                             try {
                                 $expectedSeries = $this->deriveGradeSeries($gradeCol);
-                                if ($parsedIndex['series'] !== $expectedSeries) {
-                                    $status = 'error';
-                                    $errors[] = "Grade series '{$parsedIndex['series']}' does not match grade column '{$gradeCol}'";
-                                }
                             } catch (\Throwable $e) {
-                                $status = 'error';
-                                $errors[] = $e->getMessage();
+                                $expectedSeries = $this->normalizeGradeSeries($gradeCol);
                             }
+                            if ($expectedSeries !== null && $parsedIndex['series'] !== $expectedSeries) {
+                                $status = 'error';
+                                $errors[] = "Grade series '{$parsedIndex['series']}' does not match grade column '{$gradeCol}'";
+                            }
+                        } catch (\Throwable $e) {
+                            // Non-standard grade text, ignore equality check
                         }
                     }
 

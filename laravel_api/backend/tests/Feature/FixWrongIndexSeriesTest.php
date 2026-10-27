@@ -73,7 +73,7 @@ class FixWrongIndexSeriesTest extends TestCase
             'index_seq' => 4,
         ]);
 
-        // 2. Student with old casing and batch series (TiT/28/100)
+        // 2. Student with old casing and batch series (TiT/28/100) -> prefix mismatch
         $oldFormatStudent = User::factory()->create([
             'institute_id' => 1,
             'role' => 'user',
@@ -84,21 +84,32 @@ class FixWrongIndexSeriesTest extends TestCase
             'index_seq' => 100,
         ]);
 
-        // 3. Student with series 26 (outside 01-13)
-        $outOfRangeStudent = User::factory()->create([
+        // 3. Student with unparsable single-digit series (TIT/8/100)
+        $unparsableStudent = User::factory()->create([
             'institute_id' => 1,
             'role' => 'user',
-            'name' => 'out_of_range_student',
+            'name' => 'unparsable_student',
             'current_grade' => 'Grade 8',
-            'index_number' => 'TIT/26/001',
-            'batch_year' => 26,
-            'index_seq' => 1,
+            'index_number' => 'TIT/8/100',
+            'batch_year' => 8,
+            'index_seq' => 100,
+        ]);
+
+        // 4. Student with custom series 58 (TIT/58/110) - VALID, should NOT be touched
+        $validCustomStudent = User::factory()->create([
+            'institute_id' => 1,
+            'role' => 'user',
+            'name' => 'valid_custom_student',
+            'current_grade' => 'Grade 8',
+            'index_number' => 'TIT/58/110',
+            'batch_year' => 58,
+            'index_seq' => 110,
         ]);
 
         // Initialize series 08 counter at seq 4
         StudentIndexCounter::updateOrCreate(
-            ['institute_id' => 1, 'series' => '08'],
-            ['batch_year' => 8, 'last_seq' => 4]
+            ['institute_id' => 1, 'batch_year' => 8],
+            ['last_seq' => 4]
         );
 
         // Dry-run
@@ -110,8 +121,9 @@ class FixWrongIndexSeriesTest extends TestCase
 
         $this->assertEquals(0, $exitCode);
         $this->assertStringContainsString('TiT/28/100', $output);
-        $this->assertStringContainsString('TIT/26/001', $output);
+        $this->assertStringContainsString('TIT/8/100', $output);
         $this->assertStringNotContainsString('TIT/08/004', $output);
+        $this->assertStringNotContainsString('TIT/58/110', $output);
 
         // Apply fix
         $applyCode = Artisan::call('students:fix-wrong-index-series', [
@@ -125,12 +137,14 @@ class FixWrongIndexSeriesTest extends TestCase
         $this->assertStringContainsString('FIXED -> TIT/08/006', $applyOutput);
 
         $freshOld = $oldFormatStudent->fresh();
-        $freshOutOfRange = $outOfRangeStudent->fresh();
+        $freshUnparsable = $unparsableStudent->fresh();
         $freshPromoted = $promoted->fresh();
+        $freshValidCustom = $validCustomStudent->fresh();
 
         $this->assertEquals('TIT/08/004', $freshPromoted->index_number);
         $this->assertEquals('TIT/08/005', $freshOld->index_number);
-        $this->assertEquals('TIT/08/006', $freshOutOfRange->index_number);
+        $this->assertEquals('TIT/08/006', $freshUnparsable->index_number);
+        $this->assertEquals('TIT/58/110', $freshValidCustom->index_number);
 
         // Counter moved to 6
         $counter = StudentIndexCounter::where('institute_id', 1)->where('batch_year', 8)->first();

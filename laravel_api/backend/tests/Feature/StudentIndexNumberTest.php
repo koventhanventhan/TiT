@@ -203,9 +203,10 @@ class StudentIndexNumberTest extends TestCase
         $this->assertEquals(28, $this->service->normalizeBatchYear('28'));
         $this->assertEquals(28, $this->service->normalizeBatchYear(2028));
         $this->assertEquals(28, $this->service->normalizeBatchYear('2028'));
+        $this->assertEquals(15, $this->service->normalizeBatchYear(15));
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->service->normalizeBatchYear(15); // < 20
+        $this->service->normalizeBatchYear(0);
     }
 
     public function test_default_batch_returns_existing_or_null(): void

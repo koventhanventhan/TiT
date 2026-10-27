@@ -188,7 +188,7 @@
                                 @endphp
                                 @if($student->index_number)
                                     @php
-                                        $isOldFormat = ($instituteFormat === 'grade' && !preg_match('/^TIT\/(0[1-9]|1[0-3])\/\d{3,}$/', $student->index_number));
+                                        $isOldFormat = \App\Services\StudentIndexService::isOldOrWrongFormat($student->index_number, $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1));
                                         $suggestedConvertSeries = $instituteFormat === 'grade' ? (preg_replace('/[^0-9]/', '', $student->current_grade) ? sprintf('%02d', (int) preg_replace('/[^0-9]/', '', $student->current_grade)) : '08') : '';
                                     @endphp
                                     <div class="input-group">

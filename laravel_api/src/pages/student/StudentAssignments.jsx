@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
     FiFileText, FiClock, FiCheckCircle, FiUpload, FiAlertCircle,
-    FiX, FiExternalLink, FiRefreshCw
+    FiX, FiExternalLink, FiRefreshCw, FiLock
 } from 'react-icons/fi'
 import { getStudentAssignments, submitStudentAssignment } from '../../services/dashboardService'
+import { getCurrentUser } from '../../services/authService'
 import { useToast } from '../../components/shared/ToastContext'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -180,6 +181,7 @@ function SubmitModal({ assignment, isOpen, onClose, onSuccess }) {
 
 export default function StudentAssignments() {
     const [assignments, setAssignments] = useState([])
+    const [lockedSubjects, setLockedSubjects] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [selectedAssignment, setSelectedAssignment] = useState(null)
@@ -199,6 +201,11 @@ export default function StudentAssignments() {
     }
 
     useEffect(() => {
+        getCurrentUser().then(u => {
+            if (u && Array.isArray(u.locked_subjects)) {
+                setLockedSubjects(u.locked_subjects)
+            }
+        }).catch(() => {})
         load()
     }, [])
 
@@ -215,10 +222,23 @@ export default function StudentAssignments() {
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Assignments</h1>
                     <p style={{ color: 'var(--t-text-muted)', margin: 0, fontSize: 14 }}>Track and submit your class homework</p>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--t-warning-bg)', color: 'var(--t-warning)', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--t-warning)' }} /> {pendingCount} Pending
                     </div>
+                    {lockedSubjects.map(sub => (
+                        <div
+                            key={sub}
+                            data-testid={`chip-subject-locked-${sub}`}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '6px 12px', background: '#fef3c7', color: '#92400e',
+                                border: '1px solid #fde68a', borderRadius: 20, fontSize: 12, fontWeight: 700
+                            }}
+                        >
+                            <FiLock size={12} /> {sub}: Locked (Top-up pending)
+                        </div>
+                    ))}
                 </div>
             </div>
 

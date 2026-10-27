@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
     FiFolder, FiFileText, FiVideo, FiLink, FiDownload,
-    FiSearch, FiExternalLink, FiRefreshCw, FiAlertCircle
+    FiSearch, FiExternalLink, FiRefreshCw, FiAlertCircle, FiLock
 } from 'react-icons/fi'
 import { getStudentMaterials } from '../../services/dashboardService'
+import { getCurrentUser } from '../../services/authService'
 import { useToast } from '../../components/shared/ToastContext'
 
 export default function StudentMaterials() {
     const toast = useToast()
 
     const [materials, setMaterials] = useState([])
+    const [lockedSubjects, setLockedSubjects] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [activeTab, setActiveTab] = useState('all')
@@ -30,6 +32,11 @@ export default function StudentMaterials() {
     }
 
     useEffect(() => {
+        getCurrentUser().then(u => {
+            if (u && Array.isArray(u.locked_subjects)) {
+                setLockedSubjects(u.locked_subjects)
+            }
+        }).catch(() => {})
         load()
     }, [])
 
@@ -104,6 +111,24 @@ export default function StudentMaterials() {
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Study Materials</h1>
                     <p style={{ color: 'var(--t-text-muted)', margin: 0, fontSize: 14 }}>Access your class notes, videos, and resources</p>
                 </div>
+                {lockedSubjects.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {lockedSubjects.map(sub => (
+                            <span
+                                key={sub}
+                                data-testid={`chip-subject-locked-${sub}`}
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 14px', borderRadius: 20,
+                                    background: '#fef3c7', color: '#92400e',
+                                    border: '1px solid #fde68a', fontSize: 12, fontWeight: 700
+                                }}
+                            >
+                                <FiLock size={13} /> {sub}: Locked (Top-up pending)
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Toolbar */}

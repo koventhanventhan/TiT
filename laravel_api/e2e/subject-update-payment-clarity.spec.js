@@ -524,5 +524,182 @@ VIEWPORTS.forEach(({ width, height, name }) => {
       });
       expect(overflow).toBe(true);
     });
+
+    test(`Part B: when current month is paid and subjects added, shows Amber Top-Up card and handles offline pay (${name})`, async ({ page }) => {
+      let offlineTopupRequested = false;
+      let topupCancelled = false;
+
+      await page.route('**/api/**', async (route) => {
+        const url = route.request().url();
+        const method = route.request().method();
+
+        if (url.includes('/auth/user')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              user: {
+                ...mockBaseUser,
+                selected_subjects: ['Mathematics'],
+                active_subjects: ['Mathematics'],
+                locked_subjects: [],
+              }
+            }),
+          });
+        }
+
+        if (url.includes('/subjects/prices')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(mockSubjectsPrices),
+          });
+        }
+
+        if (url.includes('/student/stats')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              user: {
+                ...mockBaseUser,
+                selected_subjects: ['Mathematics'],
+                active_subjects: ['Mathematics'],
+                locked_subjects: [],
+                pending_topup: null,
+              },
+              today_classes: 0,
+              upcoming_classes: 0,
+              pending_assignments: 0,
+            }),
+          });
+        }
+
+        if (method === 'POST' && (url.includes('/student/update-subjects') || url.includes('/student/subjects'))) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              message: 'Subjects updated successfully.',
+              mediumChangeRequested: false,
+              already_paid: true,
+              paid_amount: 1500,
+              paid_until: 'October 2026',
+              amount: 2700,
+              admission_fee: 0,
+              monthly_fee: 2700,
+              diff: 1200,
+              no_extra_needed: false,
+              topup: {
+                id: 99,
+                user_id: 201,
+                year_month: '2026-10',
+                amount: '1200.00',
+                added_subjects: ['Science'],
+                previous_subjects: ['Mathematics'],
+                status: 'pending',
+                payment_method: null,
+              },
+              locked_subjects: ['Science'],
+            }),
+          });
+        }
+
+        if (method === 'POST' && url.includes('/student/subject-topups/99/pay-offline')) {
+          offlineTopupRequested = true;
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              message: 'Top-up offline payment requested. Added subjects will unlock once admin confirms.',
+              topup: {
+                id: 99,
+                status: 'pending',
+                payment_method: 'offline',
+                amount: '1200.00',
+                added_subjects: ['Science'],
+              },
+              deduped: false,
+            }),
+          });
+        }
+
+        if (method === 'POST' && url.includes('/student/subject-topups/99/cancel')) {
+          topupCancelled = true;
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              message: 'Top-up cancelled and added subjects removed.',
+              user: {
+                ...mockBaseUser,
+                selected_subjects: ['Mathematics'],
+              },
+            }),
+          });
+        }
+
+        if (url.includes('/settings')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ site_name: 'TiT Education' }),
+          });
+        }
+
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+      });
+
+      await page.goto('/student/settings');
+
+      // Click Edit Subjects & Medium
+      const editBtn = page.getByRole('button', { name: /Edit Subjects & Medium/i });
+      await expect(editBtn).toBeVisible({ timeout: 10000 });
+      await editBtn.click();
+
+      // Modal opens on Step 1: select Science
+      const scienceCheckbox = page.locator('text=Science').first();
+      await expect(scienceCheckbox).toBeVisible({ timeout: 5000 });
+      await scienceCheckbox.click();
+
+      // Click Save Subjects
+      const saveBtn = page.getByRole('button', { name: /Save Subjects/i });
+      await saveBtn.click();
+
+      // Step 2 in Modal: Verify Amber Top-Up card is shown
+      const topupCard = page.locator('[data-testid="status-card-topup-required"]');
+      await expect(topupCard).toBeVisible({ timeout: 5000 });
+      await expect(topupCard).toContainText('Subject Top-Up Required');
+      await expect(topupCard).toContainText('You added subjects (Science)');
+      await expect(topupCard).toContainText('Top-up amount for the remainder of this month: Rs 1200');
+      await expect(topupCard).toContainText('Added subjects remain locked until this top-up is paid.');
+
+      // Verify all 3 action buttons exist
+      const payOnlineBtn = page.locator('[data-testid="btn-topup-pay-online"]');
+      const payOfflineBtn = page.locator('[data-testid="btn-topup-pay-offline"]');
+      const cancelBtn = page.locator('[data-testid="btn-topup-cancel"]');
+
+      await expect(payOnlineBtn).toBeVisible();
+      await expect(payOnlineBtn).toContainText('Pay Online (Rs 1200)');
+      await expect(payOfflineBtn).toBeVisible();
+      await expect(payOfflineBtn).toContainText('Pay Offline');
+      await expect(cancelBtn).toBeVisible();
+      await expect(cancelBtn).toContainText('Remove added subjects');
+
+      // Click Pay Offline
+      await payOfflineBtn.click();
+      expect(offlineTopupRequested).toBe(true);
+
+      // Verify button updates to requested state
+      await expect(payOfflineBtn).toContainText('Offline payment requested');
+
+      // No horizontal overflow
+      const overflow = await page.evaluate(() => {
+        return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1;
+      });
+      expect(overflow).toBe(true);
+    });
   });
 });

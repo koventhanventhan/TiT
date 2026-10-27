@@ -210,11 +210,54 @@ class User extends Authenticatable implements FilamentUser
         return $this->isPlaceholderEmail() ? null : $this->email;
     }
 
+    public function subjectTopups()
+    {
+        return $this->hasMany(\App\Models\SubjectTopup::class);
+    }
+
+    public function pendingSubjectTopup(?string $yearMonth = null): ?\App\Models\SubjectTopup
+    {
+        $ym = $yearMonth ?: now()->format('Y-m');
+        return $this->subjectTopups()
+            ->where('year_month', $ym)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+    }
+
+    public function lockedSubjects(?string $yearMonth = null): array
+    {
+        $topup = $this->pendingSubjectTopup($yearMonth);
+        if (!$topup || empty($topup->added_subjects)) {
+            return [];
+        }
+        return is_array($topup->added_subjects) ? array_values($topup->added_subjects) : [];
+    }
+
+    public function activeSubjects(?string $yearMonth = null): array
+    {
+        $all = $this->selected_subjects ?: [];
+        if (is_string($all)) {
+            $all = json_decode($all, true) ?: [];
+        }
+        if (!is_array($all)) {
+            $all = [];
+        }
+        $locked = $this->lockedSubjects($yearMonth);
+        if (empty($locked)) {
+            return array_values($all);
+        }
+        return array_values(array_diff($all, $locked));
+    }
+
     public function hasPaidForMonth(string $yearMonth): bool
     {
         return $this->payments()
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+            })
             ->exists();
     }
 
@@ -415,7 +458,9 @@ class User extends Authenticatable implements FilamentUser
             $amount = $fallbackAmount ?? config('payment.monthly_amount', 500.0);
         }
 
-        $isFirstPayment = !$this->payments()->where('status', 'paid')->exists();
+        $isFirstPayment = !$this->payments()->where('status', 'paid')->where(function ($q) {
+            $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+        })->exists();
         if ($isFirstPayment && $this->current_grade) {
             $gradeNum = 0;
             if (preg_match('/(\d+)/', $this->current_grade, $m)) {
@@ -440,7 +485,10 @@ class User extends Authenticatable implements FilamentUser
      */
     public function getAdmissionFeeAmount(): float
     {
-        if ($this->payments()->where('status', 'paid')->exists() || !$this->current_grade) {
+        $hasPaidFirst = $this->payments()->where('status', 'paid')->where(function ($q) {
+            $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+        })->exists();
+        if ($hasPaidFirst || !$this->current_grade) {
             return 0.0;
         }
         $gradeNum = preg_match('/(\d+)/', $this->current_grade, $m) ? (int) $m[1] : 0;

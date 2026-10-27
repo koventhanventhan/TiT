@@ -399,7 +399,15 @@ export const translations = {
     "subj_update_pay_online_desc": "Pay online – receipt is sent immediately",
     "subj_update_pay_offline_desc": "Pay offline – the admin marks it paid, then you receive the receipt and your access opens",
     "subj_update_pay_advance_desc": "Advance months – pay for multiple months in advance offline",
-    "subj_update_pay_advance_title": "Pay for Advance Months"
+    "subj_update_pay_advance_title": "Pay for Advance Months",
+    "subj_topup_title": "Subject Top-Up Required",
+    "subj_topup_desc": "You added subjects ({subjects}). This month ({month}) was already paid for Rs {paid}. Top-up amount for the remainder of this month: Rs {diff}.",
+    "subj_topup_locked_notice": "Added subjects remain locked until this top-up is paid.",
+    "subj_topup_pay_online": "Pay Online (Rs {diff})",
+    "subj_topup_pay_offline": "Pay Offline (Bank/Cash)",
+    "subj_topup_cancel": "Remove added subjects / Cancel top-up",
+    "subj_topup_banner": "Subject Top-up Pending (Rs {diff} for {subjects}): Added subjects remain locked until paid.",
+    "subj_topup_chip_locked": "Locked (Top-up pending)"
   },
   "ta": {
     "nav_home": "முகப்பு",
@@ -826,7 +834,15 @@ export const translations = {
     "subj_update_pay_online_desc": "ஆன்லைனில் செலுத்துங்கள் – ரசீது உடனடியாக அனுப்பப்படும்",
     "subj_update_pay_offline_desc": "வங்கி/நேரடியாக செலுத்துங்கள் – நிர்வாகி செலுத்தியதாக குறித்ததும், நீங்கள் ரசீதைப் பெற்று உங்கள் அணுகல் திறக்கப்படும்",
     "subj_update_pay_advance_desc": "முன்கூட்டிய மாதங்கள் – பல மாதங்களுக்கு முன்கூட்டியே வங்கி/நேரடியாக செலுத்துங்கள்",
-    "subj_update_pay_advance_title": "முன்கூட்டிய மாதங்களுக்கான கட்டணம்"
+    "subj_update_pay_advance_title": "முன்கூட்டிய மாதங்களுக்கான கட்டணம்",
+    "subj_topup_title": "பாட மேல்நிரப்பு (Top-Up) தேவை",
+    "subj_topup_desc": "நீங்கள் கூடுதல் பாடங்களை சேர்த்துள்ளீர்கள் ({subjects}). இந்த மாதம் ({month}) ஏற்கனவே Rs {paid} செலுத்தப்பட்டுள்ளது. இந்த மாதத்திற்கான மீதமுள்ள மேல்நிரப்புத் தொகை: Rs {diff}.",
+    "subj_topup_locked_notice": "இந்த மேல்நிரப்பு தொகை செலுத்தப்படும் வரை சேர்க்கப்பட்ட பாடங்கள் பூட்டப்பட்டிருக்கும்.",
+    "subj_topup_pay_online": "ஆன்லைனில் செலுத்துங்கள் (Rs {diff})",
+    "subj_topup_pay_offline": "வங்கி/நேரடியாக செலுத்துங்கள்",
+    "subj_topup_cancel": "சேர்க்கப்பட்ட பாடங்களை நீக்குக / மேல்நிரப்பை ரத்து செய்க",
+    "subj_topup_banner": "பாட மேல்நிரப்பு நிலுவையில் உள்ளது ({subjects} பாடங்களுக்கு Rs {diff}): கட்டணம் செலுத்தும் வரை சேர்க்கப்பட்ட பாடங்கள் பூட்டப்பட்டிருக்கும்.",
+    "subj_topup_chip_locked": "பூட்டப்பட்டது (மேல்நிரப்பு நிலுவையில்)"
   },
   "si": {
     "nav_home": "මුල් පිටුව",
@@ -1252,7 +1268,15 @@ export const translations = {
     "subj_update_pay_online_desc": "මාර්ගගතව ගෙවන්න – රිසිට්පත වහාම එවනු ලැබේ",
     "subj_update_pay_offline_desc": "නොබැඳිව ගෙවන්න – පරිපාලක ගෙවූ බව සලකුණු කළ පසු, ඔබට රිසිට්පත ලැබෙන අතර ප්‍රවේශය විවෘත වේ",
     "subj_update_pay_advance_desc": "අත්තිකාරම් මාස – නොබැඳිව මාස කිහිපයක් සඳහා කලින් ගෙවන්න",
-    "subj_update_pay_advance_title": "අත්තිකාරම් මාස සඳහා ගෙවීම් කරන්න"
+    "subj_update_pay_advance_title": "අත්තිකාරම් මාස සඳහා ගෙවීම් කරන්න",
+    "subj_topup_title": "විෂය අමතර ගෙවීමක් (Top-Up) අවශ්‍යයි",
+    "subj_topup_desc": "ඔබ අමතර විෂයයන් එක් කළා ({subjects}). මෙම මාසය ({month}) සඳහා දැනටමත් Rs {paid} ගෙවා ඇත. මෙම මාසයේ ඉතිරි කාලය සඳහා අමතර ගෙවීම: Rs {diff}.",
+    "subj_topup_locked_notice": "මෙම අමතර මුදල ගෙවන තුරු එක් කළ විෂයයන් අගුලු දමා පවතී.",
+    "subj_topup_pay_online": "මාර්ගගතව ගෙවන්න (Rs {diff})",
+    "subj_topup_pay_offline": "නොබැඳිව ගෙවන්න (බැංකු/මුදල්)",
+    "subj_topup_cancel": "එක් කළ විෂයයන් ඉවත් කරන්න / අවලංගු කරන්න",
+    "subj_topup_banner": "විෂය අමතර ගෙවීමක් අපේක්ෂිතයි ({subjects} සඳහා Rs {diff}): ගෙවන තුරු එක් කළ විෂයයන් අගුලු දමා ඇත.",
+    "subj_topup_chip_locked": "අගුලු දමා ඇත (අමතර ගෙවීම අපේක්ෂිත)"
   }
 };
 

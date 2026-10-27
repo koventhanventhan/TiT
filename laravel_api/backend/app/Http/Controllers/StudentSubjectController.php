@@ -95,18 +95,82 @@ class StudentSubjectController extends Controller
          *      the student continues on their current medium (and sees current-medium materials) until approved.
          *   5. Updating subjects does not create any new payment row and does not unlock or lock the student's access.
          */
-        $user->selected_subjects = json_encode(array_values(array_unique($request->subjects)));
-        $user->needs_subject_review = false; // Clear the flag upon update
-        $user->save();
+        $oldSubjects = $user->selected_subjects;
+        if (is_string($oldSubjects)) {
+            $oldSubjects = json_decode($oldSubjects, true) ?: [];
+        }
+        $oldSubjects = is_array($oldSubjects) ? array_values($oldSubjects) : [];
 
-        // Authoritative fee + whether this month is already paid
+        $newSubjects = array_values(array_unique($request->subjects));
         $yearMonth = now()->format('Y-m');
+
+        // Auto-close any pending topups from past months
+        \App\Models\SubjectTopup::where('user_id', $user->id)
+            ->where('year_month', '<', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'superseded']);
+
         $currentMonthPayment = \App\Models\Payment::where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+            })
             ->first();
+
         $alreadyPaid = (bool) $currentMonthPayment;
         $paidAmount = $currentMonthPayment ? (float) $currentMonthPayment->amount : null;
+
+        $existingTopup = $user->pendingSubjectTopup($yearMonth);
+        $baseSubjects = ($existingTopup && !empty($existingTopup->previous_subjects))
+            ? (is_array($existingTopup->previous_subjects) ? $existingTopup->previous_subjects : json_decode($existingTopup->previous_subjects, true))
+            : $oldSubjects;
+
+        $user->selected_subjects = json_encode($newSubjects);
+        $user->needs_subject_review = false;
+        $user->save();
+
+        $totalAmount = $user->calculateMonthlyFee();
+        $admissionFee = $user->getAdmissionFeeAmount();
+        $monthlyFee = $totalAmount - $admissionFee;
+
+        $topup = null;
+        $lockedSubjects = [];
+        $noExtraNeeded = true;
+        $diff = 0;
+
+        if ($alreadyPaid) {
+            $diff = round($monthlyFee - $paidAmount, 2);
+            if ($diff > 0) {
+                $addedSubjects = array_values(array_diff($newSubjects, $baseSubjects));
+                $topup = \App\Models\SubjectTopup::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'year_month' => $yearMonth,
+                        'status' => 'pending',
+                    ],
+                    [
+                        'institute_id' => $user->institute_id ?? 1,
+                        'added_subjects' => $addedSubjects,
+                        'previous_subjects' => $baseSubjects,
+                        'amount' => $diff,
+                        'payment_method' => null,
+                    ]
+                );
+                $lockedSubjects = $addedSubjects;
+                $noExtraNeeded = false;
+            } else {
+                if ($existingTopup) {
+                    $existingTopup->markCancelled();
+                }
+                $diff = 0;
+                $noExtraNeeded = true;
+            }
+        } else {
+            if ($existingTopup) {
+                $existingTopup->markCancelled();
+            }
+        }
 
         // Get the last paid month
         $lastPaidPayment = \App\Models\Payment::where('user_id', $user->id)
@@ -119,9 +183,6 @@ class StudentSubjectController extends Controller
             $paidUntil = \Carbon\Carbon::createFromFormat('Y-m', $lastPaidPayment->year_month)->format('F Y');
         }
 
-        $totalAmount = $user->calculateMonthlyFee();
-        $admissionFee = $user->getAdmissionFeeAmount();
-
         return response()->json([
             'success' => true,
             'message' => 'Subjects updated successfully.',
@@ -131,8 +192,12 @@ class StudentSubjectController extends Controller
             'paid_until' => $paidUntil,
             'amount' => $totalAmount,
             'admission_fee' => $admissionFee,
-            'monthly_fee' => $totalAmount - $admissionFee,
-            'user' => $user
+            'monthly_fee' => $monthlyFee,
+            'no_extra_needed' => $noExtraNeeded,
+            'diff' => $diff,
+            'topup' => $topup,
+            'locked_subjects' => $lockedSubjects,
+            'user' => $user->fresh()
         ]);
     }
 }

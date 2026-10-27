@@ -15,11 +15,28 @@ class StudentAssignmentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Direct subject query access check
+        if ($request->has('subject') && !empty($request->input('subject'))) {
+            $requestedSubject = trim((string) $request->input('subject'));
+            if ($user && in_array($requestedSubject, $user->lockedSubjects())) {
+                return response()->json([
+                    'error' => 'subject_locked',
+                    'subject' => $requestedSubject,
+                    'message' => "Subject {$requestedSubject} is locked pending top-up payment.",
+                ], 403);
+            }
+        }
         
+        $lockedSubjects = $user ? $user->lockedSubjects() : [];
+
         $assignments = Assignment::with(['teacher:id,name,full_name', 'submissions' => fn($q) => $q->where('student_id', $user->id)])
             ->orderBy('due_date', 'asc')
             ->get()
-            ->filter(function ($assignment) use ($user) {
+            ->filter(function ($assignment) use ($user, $lockedSubjects) {
+                if (!empty($assignment->subject) && in_array($assignment->subject, $lockedSubjects)) {
+                    return false;
+                }
                 $assignGrade = $assignment->grade;
                 if (empty($assignGrade)) {
                     return true;
@@ -101,6 +118,14 @@ class StudentAssignmentController extends Controller
             if (empty($userGrade) || GradeMatcher::normalize($assignGrade) !== GradeMatcher::normalize($userGrade)) {
                 return response()->json(['message' => 'Unauthorized or assignment not visible.'], 403);
             }
+        }
+
+        if ($user && !empty($assignment->subject) && in_array($assignment->subject, $user->lockedSubjects())) {
+            return response()->json([
+                'error' => 'subject_locked',
+                'subject' => $assignment->subject,
+                'message' => "Subject {$assignment->subject} is locked pending top-up payment.",
+            ], 403);
         }
 
         $existing = AssignmentSubmission::where('assignment_id', $assignmentId)

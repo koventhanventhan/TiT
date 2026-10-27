@@ -91,6 +91,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/students-requests/advance-payments', [StudentController::class, 'pendingAdvancePayments'])->name('admin.students.advance-payments');
         Route::post('/students-requests/advance-payments/{id}/approve', [StudentController::class, 'approveAdvancePayment'])->name('admin.students.advance-payments.approve')->whereNumber('id');
         Route::post('/students-requests/advance-payments/{id}/reject', [StudentController::class, 'rejectAdvancePayment'])->name('admin.students.advance-payments.reject')->whereNumber('id');
+        Route::post('/students-requests/subject-topups/{id}/mark-paid', [\App\Http\Controllers\StudentTopupController::class, 'markPaidByAdmin'])->name('admin.students.subject-topups.mark-paid')->whereNumber('id');
 
         // Teachers
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');

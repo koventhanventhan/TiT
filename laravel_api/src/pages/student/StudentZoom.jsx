@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch } from 'react-icons/fi'
+import { FiVideo, FiClock, FiCalendar, FiExternalLink, FiSearch, FiLock } from 'react-icons/fi'
 import { getStudentZoomClasses } from '../../services/dashboardService'
+import { getCurrentUser } from '../../services/authService'
 import useJoinClass from '../../hooks/useJoinClass'
 
 const UPCOMING_DAYS = 2
@@ -9,12 +10,19 @@ const UPCOMING_DAYS = 2
 export default function StudentZoom() {
     const [todayList, setTodayList] = useState([])
     const [upcomingList, setUpcomingList] = useState([])
+    const [lockedSubjects, setLockedSubjects] = useState([])
     const [hasAny, setHasAny] = useState(false)
     const [loading, setLoading] = useState(true)
     const [paymentRequired, setPaymentRequired] = useState(false)
     const { joinClass, isJoining } = useJoinClass()
 
     useEffect(() => {
+        getCurrentUser().then(u => {
+            if (u && Array.isArray(u.locked_subjects)) {
+                setLockedSubjects(u.locked_subjects)
+            }
+        }).catch(() => {})
+
         async function load() {
             try {
                 const response = await getStudentZoomClasses().catch(() => null)
@@ -161,6 +169,24 @@ export default function StudentZoom() {
                     <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Zoom Classes</h1>
                     <p style={{ color: 'var(--t-text-muted)', margin: 0, fontSize: 14 }}>Join your live online classes</p>
                 </div>
+                {lockedSubjects.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {lockedSubjects.map(sub => (
+                            <span
+                                key={sub}
+                                data-testid={`chip-subject-locked-${sub}`}
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 14px', borderRadius: 20,
+                                    background: '#fef3c7', color: '#92400e',
+                                    border: '1px solid #fde68a', fontSize: 12, fontWeight: 700
+                                }}
+                            >
+                                <FiLock size={13} /> {sub}: Locked (Top-up pending)
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}

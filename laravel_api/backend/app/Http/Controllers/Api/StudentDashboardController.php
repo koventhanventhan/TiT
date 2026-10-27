@@ -33,7 +33,11 @@ class StudentDashboardController extends Controller
             $q->where('student_id', $user->id);
         }])->get();
 
-        $visibleAssignments = $allAssignments->filter(function ($assignment) use ($user) {
+        $lockedSubjects = $user ? $user->lockedSubjects() : [];
+        $visibleAssignments = $allAssignments->filter(function ($assignment) use ($user, $lockedSubjects) {
+            if (!empty($assignment->subject) && in_array($assignment->subject, $lockedSubjects)) {
+                return false;
+            }
             $assignGrade = $assignment->grade;
             if (empty($assignGrade)) {
                 return true;
@@ -213,6 +217,9 @@ class StudentDashboardController extends Controller
                 'pending_medium' => \App\Models\MediumChangeRequest::where('user_id', $user->id)
                     ->where('status', 'pending')->latest()->value('requested_medium'),
                 'selected_subjects' => $user->selected_subjects,
+                'active_subjects' => $user->activeSubjects(),
+                'locked_subjects' => $user->lockedSubjects(),
+                'pending_topup' => $user->pendingSubjectTopup(),
             ],
             'today_classes' => $todayClasses,
             'upcoming_classes' => $upcomingClasses,

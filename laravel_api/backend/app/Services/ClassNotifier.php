@@ -53,8 +53,10 @@ class ClassNotifier
 
             // 3. Subject filter
             if ($classSubject !== '') {
-                $selected = $student->selected_subjects;
-                $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string)$selected));
+                $selectedArr = method_exists($student, 'activeSubjects') ? $student->activeSubjects() : ($student->selected_subjects ?: []);
+                if (is_string($selectedArr)) {
+                    $selectedArr = json_decode($selectedArr, true) ?: explode(',', $selectedArr);
+                }
                 $selectedArr = array_filter(array_map('trim', (array)$selectedArr), fn($val) => $val !== '');
 
                 if (empty($selectedArr)) {

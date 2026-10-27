@@ -11,6 +11,19 @@ class StudentMaterialController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Direct subject query access check
+        if ($request->has('subject') && !empty($request->input('subject'))) {
+            $requestedSubject = trim((string) $request->input('subject'));
+            if ($user && in_array($requestedSubject, $user->lockedSubjects())) {
+                return response()->json([
+                    'error' => 'subject_locked',
+                    'subject' => $requestedSubject,
+                    'message' => "Subject {$requestedSubject} is locked pending top-up payment.",
+                ], 403);
+            }
+        }
+
         $query = LearningMaterial::orderBy('created_at', 'desc');
 
         // Filter by student's medium (Tamil / English / Sinhala / all / both)
@@ -38,6 +51,13 @@ class StudentMaterialController extends Controller
         $materials = $materials->filter(function ($m) use ($user) {
             return \App\Support\GradeMatcher::matches($user?->current_grade, $m->grade);
         });
+
+        $lockedSubjects = $user ? $user->lockedSubjects() : [];
+        if (!empty($lockedSubjects)) {
+            $materials = $materials->reject(function ($m) use ($lockedSubjects) {
+                return !empty($m->subject) && in_array($m->subject, $lockedSubjects);
+            });
+        }
 
         return response()->json($materials->values());
     }

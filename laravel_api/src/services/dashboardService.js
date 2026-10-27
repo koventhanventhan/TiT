@@ -704,3 +704,43 @@ export const retryTeacherMaterial = async (id) => {
   }
   return res.json()
 }
+
+export const paySubjectTopupOnline = async (topupId, params = {}) => {
+  const res = await fetch(`${API_BASE_URL}/student/subject-topups/${topupId}/pay-online`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(params),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to initiate online top-up payment')
+  }
+  return res.json()
+}
+
+export const paySubjectTopupOffline = async (topupId) => {
+  const res = await fetch(`${API_BASE_URL}/student/subject-topups/${topupId}/pay-offline`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to request offline top-up payment')
+  }
+  return res.json()
+}
+
+export const cancelSubjectTopup = async (topupId) => {
+  const res = await fetch(`${API_BASE_URL}/student/subject-topups/${topupId}/cancel`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || 'Failed to cancel top-up')
+  }
+  return res.json()
+}

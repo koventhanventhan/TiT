@@ -41,16 +41,22 @@ class StudentClassVisibility
             return false;
         }
 
-        // 3. Filter by student's selected subjects (Robust substring match)
-        $selected = $user->selected_subjects;
-        if (!empty($selected)) {
-            $selectedArr = is_array($selected) ? $selected : (json_decode($selected, true) ?: explode(',', (string) $selected));
-            $selectedArr = array_map('trim', (array) $selectedArr);
+        // 3. Filter by student's active subjects (selected minus locked top-up subjects)
+        $lockedSubjects = $user->lockedSubjects();
+        $classSub = trim((string) $schedule->subject);
+        if (!empty($classSub) && !empty($lockedSubjects)) {
+            foreach ($lockedSubjects as $locked) {
+                if (strcasecmp(trim($locked), $classSub) === 0) {
+                    return false;
+                }
+            }
+        }
 
-            $classSub = trim((string) $schedule->subject);
+        $activeArr = $user->activeSubjects();
+        if (!empty($activeArr)) {
             if (!empty($classSub)) {
                 $matched = false;
-                foreach ($selectedArr as $studentSub) {
+                foreach ($activeArr as $studentSub) {
                     $studentSub = trim((string) $studentSub);
                     if ($studentSub === '') {
                         continue;

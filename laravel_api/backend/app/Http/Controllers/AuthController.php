@@ -602,6 +602,9 @@ class AuthController extends Controller
                     'created_at' => $latestPaymentRow->created_at ? $latestPaymentRow->created_at->toIso8601String() : null,
                 ] : null,
                 'rag_enabled' => $u->isRagEnabled(),
+                'active_subjects' => $u->activeSubjects(),
+                'locked_subjects' => $u->lockedSubjects(),
+                'pending_topup' => $u->pendingSubjectTopup(),
             ])
         ]);
     }

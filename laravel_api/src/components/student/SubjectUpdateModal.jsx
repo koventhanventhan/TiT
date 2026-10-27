@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiX, FiCheck, FiLoader, FiClock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
-import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline, getStudentPaymentStatus } from '../../services/dashboardService';
+import { FiX, FiCheck, FiLoader, FiClock, FiAlertCircle, FiCheckCircle, FiLock } from 'react-icons/fi';
+import {
+  updateStudentSubjects,
+  initializeMonthlyPayment,
+  initializeOfflineMonthlyPayment,
+  requestAdvancePaymentOffline,
+  getStudentPaymentStatus,
+  paySubjectTopupOnline,
+  paySubjectTopupOffline,
+  cancelSubjectTopup
+} from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
 import AdvanceMonthsBlock from './AdvanceMonthsBlock';
@@ -100,6 +109,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [paidAmount, setPaidAmount] = useState(null);
+  const [topupDiff, setTopupDiff] = useState(0);
+  const [pendingTopup, setPendingTopup] = useState(null);
+  const [lockedSubjects, setLockedSubjects] = useState([]);
+  const [topupOfflineRequested, setTopupOfflineRequested] = useState(false);
   const submittingOfflineRef = useRef(false);
 
   useEffect(() => {
@@ -126,6 +139,10 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setAlreadyPaid(false);
       setPaidUntil(null);
       setPaidAmount(null);
+      setTopupDiff(0);
+      setPendingTopup(null);
+      setLockedSubjects([]);
+      setTopupOfflineRequested(false);
       setSaved(false);
       setPaymentDone(false);
       submittingOfflineRef.current = false;
@@ -343,10 +360,111 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       if (resp && resp.paid_until) {
         setPaidUntil(resp.paid_until);
       }
+      if (resp && resp.topup) {
+        setPendingTopup(resp.topup);
+      } else {
+        setPendingTopup(null);
+      }
+      setTopupDiff(resp && typeof resp.diff === 'number' ? resp.diff : 0);
+      setLockedSubjects(resp && Array.isArray(resp.locked_subjects) ? resp.locked_subjects : []);
       setSaved(true);
       setStep(2); // Move to payment step
     } catch (err) {
       setError(err.message || 'Failed to update subjects.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayTopupOnline = async () => {
+    if (!pendingTopup || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const resp = await paySubjectTopupOnline(pendingTopup.id);
+      if (resp && resp.success && resp.message) {
+        setSuccessMessage(resp.message);
+        setPaymentDone(true);
+        setPendingTopup(null);
+        setTopupDiff(0);
+        setLockedSubjects([]);
+        setTimeout(() => {
+          onUpdateSuccess(selectedSubjects);
+        }, 1500);
+        return;
+      }
+      if (resp && resp.payhere) {
+        if (!window.payhere) {
+          throw new Error('PayHere SDK not loaded');
+        }
+        const payment = {
+          sandbox: resp.payhere.payhere_url?.includes('sandbox'),
+          ...resp.payhere.params
+        };
+        window.payhere.onCompleted = function onCompleted() {
+          setSuccessMessage('Top-up payment completed successfully! Your subjects are unlocked.');
+          setPaymentDone(true);
+          setPendingTopup(null);
+          setTopupDiff(0);
+          setLockedSubjects([]);
+          setTimeout(() => {
+            onUpdateSuccess(selectedSubjects);
+          }, 1500);
+        };
+        window.payhere.onDismissed = function onDismissed() {
+          setLoading(false);
+        };
+        window.payhere.onError = function onError(errStr) {
+          setError('Payment failed: ' + errStr);
+          setLoading(false);
+        };
+        window.payhere.startPayment(payment);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to initiate online top-up payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayTopupOffline = async () => {
+    if (!pendingTopup || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const resp = await paySubjectTopupOffline(pendingTopup.id);
+      setSuccessMessage(resp.message || 'Top-up offline payment requested. Added subjects will unlock once admin confirms.');
+      setTopupOfflineRequested(true);
+      if (resp.topup) {
+        setPendingTopup(resp.topup);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to request offline top-up');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelTopup = async () => {
+    if (!pendingTopup || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const resp = await cancelSubjectTopup(pendingTopup.id);
+      setSuccessMessage(resp.message || 'Top-up cancelled and added subjects removed.');
+      setPendingTopup(null);
+      setTopupDiff(0);
+      setLockedSubjects([]);
+      if (resp.user && resp.user.selected_subjects) {
+        const subs = typeof resp.user.selected_subjects === 'string' ? JSON.parse(resp.user.selected_subjects) : resp.user.selected_subjects;
+        setSelectedSubjects(subs);
+        onUpdateSuccess(subs);
+      }
+      setTimeout(() => {
+        handleClose();
+      }, 800);
+    } catch (err) {
+      setError(err.message || 'Failed to cancel top-up');
     } finally {
       setLoading(false);
     }
@@ -696,38 +814,169 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                 {alreadyPaid ? (
                   /* State 1: Current month is ALREADY paid */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div
-                      className="status-card-already-paid"
-                      data-testid="status-card-already-paid"
-                      style={{
-                        background: '#ecfdf5',
-                        color: '#065f46',
-                        border: '1px solid #a7f3d0',
-                        borderRadius: 12,
-                        padding: '16px 18px',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 12,
-                        lineHeight: 1.5,
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <FiCheckCircle style={{ flexShrink: 0, fontSize: 20, color: '#059669', marginTop: 2 }} />
-                      <div style={{ flex: 1 }}>
-                        {(() => {
-                          const fee = serverMonthly ?? monthlyAmount;
-                          if (paidAmount !== null && fee < paidAmount) {
-                            return formatPaidFeeLowerMessage(curMonth, nextMonth, fee, language, t);
-                          }
-                          if (paidAmount === null || fee <= paidAmount) {
-                            return formatPaidFeeStaysMessage(curMonth, fee, language, t);
-                          }
-                          return formatAlreadyPaidMessage(curMonth, nextMonth, fee, language, t);
-                        })()}
+                    {topupDiff > 0 && pendingTopup ? (
+                      <div
+                        className="status-card-topup-required"
+                        data-testid="status-card-topup-required"
+                        style={{
+                          background: '#fffbeb',
+                          color: '#92400e',
+                          border: '1px solid #fde68a',
+                          borderRadius: 14,
+                          padding: '18px 20px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 14,
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                          <FiAlertCircle style={{ flexShrink: 0, fontSize: 22, color: '#d97706', marginTop: 2 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>
+                              {t('subj_topup_title', 'Subject Top-Up Required')}
+                            </div>
+                            <div style={{ fontSize: 14, lineHeight: 1.5, color: '#78350f' }}>
+                              {(() => {
+                                const addedStr = (pendingTopup.added_subjects || []).join(', ');
+                                const template = t('subj_topup_desc', 'You added subjects ({subjects}). This month ({month}) was already paid for Rs {paid}. Top-up amount for the remainder of this month: Rs {diff}.');
+                                return template
+                                  .replace('{subjects}', addedStr)
+                                  .replace('{month}', curMonth)
+                                  .replace('{paid}', formatAmount(paidAmount))
+                                  .replace('{diff}', formatAmount(topupDiff));
+                              })()}
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#b45309', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <FiLock size={14} />
+                              <span>{t('subj_topup_locked_notice', 'Added subjects remain locked until this top-up is paid.')}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top-up Action Buttons */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                          <button
+                            type="button"
+                            onClick={handlePayTopupOnline}
+                            disabled={loading || paymentDone}
+                            data-testid="btn-topup-pay-online"
+                            style={{
+                              width: '100%',
+                              padding: '12px 18px',
+                              borderRadius: 10,
+                              border: 'none',
+                              background: '#d97706',
+                              color: '#fff',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 8,
+                              opacity: (loading || paymentDone) ? 0.6 : 1,
+                              minHeight: 44
+                            }}
+                          >
+                            <FiCheck size={16} />
+                            <span>
+                              {t('subj_topup_pay_online', 'Pay Online (Rs {diff})').replace('{diff}', formatAmount(topupDiff))}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handlePayTopupOffline}
+                            disabled={loading || paymentDone || topupOfflineRequested || pendingTopup.payment_method === 'offline'}
+                            data-testid="btn-topup-pay-offline"
+                            style={{
+                              width: '100%',
+                              padding: '12px 18px',
+                              borderRadius: 10,
+                              border: '1px solid #d97706',
+                              background: '#fff',
+                              color: '#92400e',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: (loading || paymentDone || topupOfflineRequested || pendingTopup.payment_method === 'offline') ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 8,
+                              opacity: (topupOfflineRequested || pendingTopup.payment_method === 'offline') ? 0.7 : 1,
+                              minHeight: 44
+                            }}
+                          >
+                            <FiClock size={16} />
+                            <span>
+                              {(topupOfflineRequested || pendingTopup.payment_method === 'offline')
+                                ? 'Offline payment requested (awaiting admin approval)'
+                                : t('subj_topup_pay_offline', 'Pay Offline (Bank/Cash)')}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleCancelTopup}
+                            disabled={loading || paymentDone}
+                            data-testid="btn-topup-cancel"
+                            style={{
+                              width: '100%',
+                              padding: '10px 16px',
+                              borderRadius: 10,
+                              border: '1px solid #e5e7eb',
+                              background: '#fff',
+                              color: '#4b5563',
+                              fontSize: 13,
+                              fontWeight: 500,
+                              cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 6,
+                              minHeight: 38
+                            }}
+                          >
+                            <FiX size={15} />
+                            <span>{t('subj_topup_cancel', 'Remove added subjects / Cancel top-up')}</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div
+                        className="status-card-already-paid"
+                        data-testid="status-card-already-paid"
+                        style={{
+                          background: '#ecfdf5',
+                          color: '#065f46',
+                          border: '1px solid #a7f3d0',
+                          borderRadius: 12,
+                          padding: '16px 18px',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 12,
+                          lineHeight: 1.5,
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <FiCheckCircle style={{ flexShrink: 0, fontSize: 20, color: '#059669', marginTop: 2 }} />
+                        <div style={{ flex: 1 }}>
+                          {(() => {
+                            const fee = serverMonthly ?? monthlyAmount;
+                            if (paidAmount !== null && fee < paidAmount) {
+                              return formatPaidFeeLowerMessage(curMonth, nextMonth, fee, language, t);
+                            }
+                            if (paidAmount === null || fee <= paidAmount) {
+                              return formatPaidFeeStaysMessage(curMonth, fee, language, t);
+                            }
+                            return formatAlreadyPaidMessage(curMonth, nextMonth, fee, language, t);
+                          })()}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Advance months stay available even when this month is already paid */}
                     <AdvanceMonthsBlock

@@ -26,6 +26,8 @@ class Payment extends Model
         'receipt_sent_at',
         'receipt_last_error',
         'receipt_attempted_at',
+        'kind',
+        'meta',
     ];
 
     protected function casts(): array
@@ -35,6 +37,7 @@ class Payment extends Model
             'receipt_sent_at' => 'datetime',
             'receipt_attempted_at' => 'datetime',
             'amount' => 'decimal:2',
+            'meta' => 'array',
         ];
     }
 
@@ -43,8 +46,25 @@ class Payment extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function subjectTopup()
+    {
+        return $this->hasOne(SubjectTopup::class, 'payment_id');
+    }
+
     public function isPaid(): bool
     {
         return $this->status === 'paid';
+    }
+
+    public function scopeMonthly($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+        });
+    }
+
+    public function scopeTopup($query)
+    {
+        return $query->where('kind', 'topup');
     }
 }

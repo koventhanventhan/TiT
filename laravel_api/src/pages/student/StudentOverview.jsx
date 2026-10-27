@@ -5,7 +5,7 @@ import {
     FiArrowRight, FiBook, FiPlay, FiAlertCircle, FiClock,
     FiTrendingUp
 } from 'react-icons/fi'
-import { getStudentStats, getStudentUpcomingSchedules } from '../../services/dashboardService'
+import { getStudentStats, getStudentUpcomingSchedules, cancelSubjectTopup } from '../../services/dashboardService'
 import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
 import useJoinClass from '../../hooks/useJoinClass'
@@ -175,6 +175,67 @@ export default function StudentOverview() {
                     }}>
                         Review Subjects
                     </button>
+                </div>
+            )}
+
+            {/* Subject Top-up Pending Banner */}
+            {stats?.user?.pending_topup && (
+                <div
+                    data-testid="student-topup-pending-banner"
+                    style={{
+                        background: '#fffbeb',
+                        borderRadius: 16, padding: '18px 22px', marginBottom: 24,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        border: '1px solid #fde68a', gap: 16, flexWrap: 'wrap'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{
+                            width: 42, height: 42, borderRadius: '50%', background: '#f59e0b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0
+                        }}>
+                            <FiAlertCircle size={22} />
+                        </div>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#92400e' }}>
+                                Subject Top-up Pending (Rs {parseFloat(stats.user.pending_topup.amount || 0).toFixed(0)} for {(stats.user.pending_topup.added_subjects || []).join(', ')})
+                            </h3>
+                            <p style={{ margin: '3px 0 0', fontSize: 13, color: '#b45309' }}>
+                                Added subjects remain locked until paid.
+                            </p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <button
+                            onClick={() => setShowSubjectModal(true)}
+                            data-testid="banner-pay-topup-btn"
+                            style={{
+                                padding: '9px 18px', borderRadius: 8, border: 'none', background: '#d97706',
+                                color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Pay Top-up
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (window.confirm('Are you sure you want to remove the added subjects and cancel this top-up?')) {
+                                    try {
+                                        await cancelSubjectTopup(stats.user.pending_topup.id);
+                                        loadStats();
+                                    } catch (e) {
+                                        alert(e.message || 'Failed to cancel');
+                                    }
+                                }
+                            }}
+                            data-testid="banner-cancel-topup-btn"
+                            style={{
+                                padding: '8px 16px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff',
+                                color: '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Remove Added Subjects
+                        </button>
+                    </div>
                 </div>
             )}
 

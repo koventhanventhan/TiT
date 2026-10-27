@@ -111,7 +111,7 @@ class PaymentReceiptService
         }
 
         // Classes / Teachers breakdown
-        $classes = $this->resolveStudentClassesWithTeachers($student, (int) ($payment->institute_id ?: 1));
+        $classes = $this->resolveStudentClassesWithTeachers($student, (int) ($payment->institute_id ?: 1), $payment);
 
         // Payment Month
         $paymentMonth = $payment->year_month;
@@ -123,6 +123,13 @@ class PaymentReceiptService
             }
         } else {
             $paymentMonth = ($payment->paid_at ?? now())->format('F Y');
+        }
+
+        if ($payment->kind === 'topup') {
+            $addedList = !empty($payment->meta['added_subjects'])
+                ? (is_array($payment->meta['added_subjects']) ? implode(', ', $payment->meta['added_subjects']) : (string)$payment->meta['added_subjects'])
+                : 'Extra Subjects';
+            $paymentMonth = "Subject top-up – {$paymentMonth} – {$addedList} – LKR " . number_format((float) $payment->amount, 2);
         }
 
         // Payment Date
@@ -166,24 +173,29 @@ class PaymentReceiptService
      *
      * @param User|null $student
      * @param int $instituteId
+     * @param Payment|null $payment
      * @return array
      */
-    protected function resolveStudentClassesWithTeachers(?User $student, int $instituteId): array
+    protected function resolveStudentClassesWithTeachers(?User $student, int $instituteId, ?Payment $payment = null): array
     {
         if (!$student) {
             return [];
         }
 
         $selectedSubjects = [];
-        $raw = $student->selected_subjects;
-        if (is_array($raw)) {
-            $selectedSubjects = $raw;
-        } elseif (is_string($raw)) {
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded)) {
-                $selectedSubjects = $decoded;
-            } else {
-                $selectedSubjects = array_map('trim', explode(',', $raw));
+        if ($payment && $payment->kind === 'topup' && !empty($payment->meta['added_subjects'])) {
+            $selectedSubjects = is_array($payment->meta['added_subjects']) ? $payment->meta['added_subjects'] : [$payment->meta['added_subjects']];
+        } else {
+            $raw = $student->selected_subjects;
+            if (is_array($raw)) {
+                $selectedSubjects = $raw;
+            } elseif (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded)) {
+                    $selectedSubjects = $decoded;
+                } else {
+                    $selectedSubjects = array_map('trim', explode(',', $raw));
+                }
             }
         }
         $selectedSubjects = array_values(array_filter($selectedSubjects));
@@ -564,6 +576,13 @@ class PaymentReceiptService
             }
         } else {
             $monthName = ($payment->paid_at ?? now())->format('F Y');
+        }
+
+        if ($payment->kind === 'topup') {
+            $addedList = !empty($payment->meta['added_subjects'])
+                ? (is_array($payment->meta['added_subjects']) ? implode(', ', $payment->meta['added_subjects']) : (string)$payment->meta['added_subjects'])
+                : 'Extra Subjects';
+            $monthName = "Subject top-up – {$monthName} – {$addedList} – LKR " . number_format((float) $payment->amount, 2);
         }
 
         $studentName = $student->full_name ?: ($student->name ?: 'Student');

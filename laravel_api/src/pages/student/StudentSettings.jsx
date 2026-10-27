@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FiAlertCircle } from 'react-icons/fi'
 import StudentRegistrationForm from '../../components/StudentRegistrationForm'
 import SubjectUpdateModal, { formatPendingMediumMessage } from '../../components/student/SubjectUpdateModal'
-import { getStudentStats } from '../../services/dashboardService'
+import { getStudentStats, cancelSubjectTopup } from '../../services/dashboardService'
 import { useLanguage } from '../../context/LanguageContext'
 
 export default function StudentSettings() {
@@ -53,6 +53,74 @@ export default function StudentSettings() {
                 {/* Subjects & Medium */}
                 <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
                     <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Subjects & Medium</h3>
+
+                    {stats?.user?.pending_topup && (
+                        <div
+                            className="status-card-topup-pending"
+                            data-testid="settings-topup-pending-card"
+                            style={{
+                                background: '#fffbeb',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                borderRadius: 12,
+                                padding: '16px 18px',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 14,
+                                marginBottom: 20,
+                                lineHeight: 1.5,
+                                boxSizing: 'border-box',
+                                flexWrap: 'wrap'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <FiAlertCircle style={{ flexShrink: 0, fontSize: 20, color: '#d97706' }} />
+                                <div>
+                                    <div style={{ fontWeight: 700, color: '#92400e' }}>
+                                        Subject Top-up Pending (Rs {parseFloat(stats.user.pending_topup.amount || 0).toFixed(0)} for {(stats.user.pending_topup.added_subjects || []).join(', ')})
+                                    </div>
+                                    <div style={{ fontSize: 13, color: '#b45309', marginTop: 2 }}>
+                                        Added subjects remain locked until paid.
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <button
+                                    onClick={() => setIsSubjectModalOpen(true)}
+                                    data-testid="settings-pay-topup-btn"
+                                    style={{
+                                        padding: '8px 16px', borderRadius: 8, border: 'none', background: '#d97706',
+                                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Pay Top-up
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (window.confirm('Remove added subjects and cancel top-up?')) {
+                                            try {
+                                                await cancelSubjectTopup(stats.user.pending_topup.id);
+                                                const refreshed = await getStudentStats();
+                                                setStats(refreshed);
+                                            } catch (e) {
+                                                alert(e.message || 'Failed to cancel');
+                                            }
+                                        }
+                                    }}
+                                    data-testid="settings-cancel-topup-btn"
+                                    style={{
+                                        padding: '7px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff',
+                                        color: '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Remove Added Subjects
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     
                     {stats?.user?.pending_medium && (
                         <div

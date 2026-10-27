@@ -87,13 +87,18 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
     // Student Dashboard Routes (Tenant Aware + Role: student)
     Route::middleware(['role:user', 'tenant'])->prefix('student')->group(function () {
-        // Monthly Payment Routes (Must be accessible even if reg_status check fails)
+        // Monthly Payment & Subject Choice Routes (Must be accessible even if reg_status check fails)
         Route::get('/payment-status', [RegistrationController::class, 'checkMonthlyPaymentStatus']);
         Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\PaymentReceiptController::class, 'downloadStudent']);
         Route::post('/pay-monthly', [RegistrationController::class, 'initializeMonthlyPayment']);
         Route::post('/pay-monthly-offline', [RegistrationController::class, 'offlineMonthlyPayment']);
         Route::post('/advance-payment-offline', [RegistrationController::class, 'offlineAdvancePayment']);
         Route::get('/payment-details', [RegistrationController::class, 'getPaymentDetails']);
+        Route::post('/update-subjects', [\App\Http\Controllers\StudentSubjectController::class, 'updateSubjects']);
+        Route::post('/subjects', [\App\Http\Controllers\StudentSubjectController::class, 'updateSubjects']);
+        Route::post('/subject-topups/{id}/pay-online', [\App\Http\Controllers\StudentTopupController::class, 'payOnline'])->whereNumber('id');
+        Route::post('/subject-topups/{id}/pay-offline', [\App\Http\Controllers\StudentTopupController::class, 'payOffline'])->whereNumber('id');
+        Route::post('/subject-topups/{id}/cancel', [\App\Http\Controllers\StudentTopupController::class, 'cancel'])->whereNumber('id');
 
         // Restricted Dashboard Routes
         Route::middleware(['reg_status'])->group(function () {
@@ -107,7 +112,6 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
             Route::get('/assignments', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'index']);
             Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Api\StudentAssignmentController::class, 'submit']);
             Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
-            Route::post('/update-subjects', [\App\Http\Controllers\StudentSubjectController::class, 'updateSubjects']);
 
             // Student AI Study Assistant (RAG Chatbot)
             Route::post('/ai-chat', [\App\Http\Controllers\Api\StudentAiChatController::class, 'chat']);

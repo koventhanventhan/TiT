@@ -249,7 +249,7 @@ class StudentIndexService
      * @throws \InvalidArgumentException
      * @throws \Throwable
      */
-    public function assign(User $student, $seriesOrBatch = null): string
+    public function assign(User $student, $seriesOrBatch = null, ?int $exactSeq = null): string
     {
         // Idempotent: return unchanged if already assigned
         if (!empty($student->index_number)) {
@@ -281,7 +281,7 @@ class StudentIndexService
             while ($attempts < $maxAttempts) {
                 $attempts++;
                 try {
-                    return DB::transaction(function () use ($student, $instituteId, $seriesInt, $seriesStr, $prefix, $seqStart) {
+                    return DB::transaction(function () use ($student, $instituteId, $seriesInt, $seriesStr, $prefix, $seqStart, $exactSeq) {
                         $lockedStudent = User::where('id', $student->id)->lockForUpdate()->first();
                         if (!$lockedStudent) {
                             throw new \RuntimeException("Student record #{$student->id} not found.");
@@ -299,27 +299,65 @@ class StudentIndexService
                             ->lockForUpdate()
                             ->first();
 
-                        if (!$counter) {
-                            try {
-                                $counter = StudentIndexCounter::create([
-                                    'institute_id' => $instituteId,
-                                    'batch_year' => $seriesInt,
-                                    'last_seq' => max(0, $seqStart - 1),
-                                ]);
-                            } catch (QueryException $qe) {
-                                $counter = StudentIndexCounter::where('institute_id', $instituteId)
-                                    ->where('batch_year', $seriesInt)
-                                    ->lockForUpdate()
-                                    ->firstOrFail();
+                        if ($exactSeq !== null && (int) $exactSeq > 0) {
+                            $nextSeq = (int) $exactSeq;
+                            $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
+                            $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                            // Exact number must be unique per institute
+                            $conflict = User::withoutGlobalScopes()
+                                ->where('institute_id', $instituteId)
+                                ->where('index_number', $indexNumber)
+                                ->where('id', '!=', $student->id)
+                                ->first();
+
+                            if ($conflict) {
+                                $conflictName = $conflict->full_name ?: ($conflict->name ?: "Student #{$conflict->id}");
+                                throw new \InvalidArgumentException("{$indexNumber} is already used by {$conflictName}");
                             }
+
+                            if (!$counter) {
+                                try {
+                                    $counter = StudentIndexCounter::create([
+                                        'institute_id' => $instituteId,
+                                        'batch_year' => $seriesInt,
+                                        'last_seq' => $nextSeq,
+                                    ]);
+                                } catch (QueryException $qe) {
+                                    $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                                        ->where('batch_year', $seriesInt)
+                                        ->lockForUpdate()
+                                        ->firstOrFail();
+                                    $counter->last_seq = max((int) $counter->last_seq, $nextSeq);
+                                    $counter->save();
+                                }
+                            } else {
+                                $counter->last_seq = max((int) $counter->last_seq, $nextSeq);
+                                $counter->save();
+                            }
+                        } else {
+                            if (!$counter) {
+                                try {
+                                    $counter = StudentIndexCounter::create([
+                                        'institute_id' => $instituteId,
+                                        'batch_year' => $seriesInt,
+                                        'last_seq' => max(0, $seqStart - 1),
+                                    ]);
+                                } catch (QueryException $qe) {
+                                    $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                                        ->where('batch_year', $seriesInt)
+                                        ->lockForUpdate()
+                                        ->firstOrFail();
+                                }
+                            }
+
+                            $nextSeq = (int) $counter->last_seq + 1;
+                            $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
+                            $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                            $counter->last_seq = $nextSeq;
+                            $counter->save();
                         }
-
-                        $nextSeq = max((int) $counter->last_seq + 1, $seqStart);
-                        $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
-                        $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
-
-                        $counter->last_seq = $nextSeq;
-                        $counter->save();
 
                         $lockedStudent->update([
                             'institute_id' => $instituteId,
@@ -362,7 +400,7 @@ class StudentIndexService
         while ($attempts < $maxAttempts) {
             $attempts++;
             try {
-                return DB::transaction(function () use ($student, $instituteId, $batchYear, $prefix, $seqStart) {
+                return DB::transaction(function () use ($student, $instituteId, $batchYear, $prefix, $seqStart, $exactSeq) {
                     // Lock student row to prevent concurrent assignment
                     $lockedStudent = User::where('id', $student->id)->lockForUpdate()->first();
                     if (!$lockedStudent) {
@@ -382,28 +420,66 @@ class StudentIndexService
                         ->lockForUpdate()
                         ->first();
 
-                    if (!$counter) {
-                        try {
-                            $counter = StudentIndexCounter::create([
-                                'institute_id' => $instituteId,
-                                'batch_year' => $batchYear,
-                                'last_seq' => max(0, $seqStart - 1),
-                            ]);
-                        } catch (QueryException $qe) {
-                            $counter = StudentIndexCounter::where('institute_id', $instituteId)
-                                ->where('batch_year', $batchYear)
-                                ->lockForUpdate()
-                                ->firstOrFail();
+                    if ($exactSeq !== null && (int) $exactSeq > 0) {
+                        $nextSeq = (int) $exactSeq;
+                        $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
+                        $seriesStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
+                        $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                        $conflict = User::withoutGlobalScopes()
+                            ->where('institute_id', $instituteId)
+                            ->where('index_number', $indexNumber)
+                            ->where('id', '!=', $student->id)
+                            ->first();
+
+                        if ($conflict) {
+                            $conflictName = $conflict->full_name ?: ($conflict->name ?: "Student #{$conflict->id}");
+                            throw new \InvalidArgumentException("{$indexNumber} is already used by {$conflictName}");
                         }
+
+                        if (!$counter) {
+                            try {
+                                $counter = StudentIndexCounter::create([
+                                    'institute_id' => $instituteId,
+                                    'batch_year' => $batchYear,
+                                    'last_seq' => $nextSeq,
+                                ]);
+                            } catch (QueryException $qe) {
+                                $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                                    ->where('batch_year', $batchYear)
+                                    ->lockForUpdate()
+                                    ->firstOrFail();
+                                $counter->last_seq = max((int) $counter->last_seq, $nextSeq);
+                                $counter->save();
+                            }
+                        } else {
+                            $counter->last_seq = max((int) $counter->last_seq, $nextSeq);
+                            $counter->save();
+                        }
+                    } else {
+                        if (!$counter) {
+                            try {
+                                $counter = StudentIndexCounter::create([
+                                    'institute_id' => $instituteId,
+                                    'batch_year' => $batchYear,
+                                    'last_seq' => max(0, $seqStart - 1),
+                                ]);
+                            } catch (QueryException $qe) {
+                                $counter = StudentIndexCounter::where('institute_id', $instituteId)
+                                    ->where('batch_year', $batchYear)
+                                    ->lockForUpdate()
+                                    ->firstOrFail();
+                            }
+                        }
+
+                        $nextSeq = (int) $counter->last_seq + 1;
+                        $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
+                        $seriesStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
+                        $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
+
+                        $counter->last_seq = $nextSeq;
+                        $counter->save();
                     }
-
-                    $nextSeq = max((int) $counter->last_seq + 1, $seqStart);
-                    $paddedSeq = str_pad((string) $nextSeq, 3, '0', STR_PAD_LEFT);
-                    $seriesStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
-                    $indexNumber = "{$prefix}/{$seriesStr}/{$paddedSeq}";
-
-                    $counter->last_seq = $nextSeq;
-                    $counter->save();
 
                     $lockedStudent->update([
                         'institute_id' => $instituteId,
@@ -458,7 +534,7 @@ class StudentIndexService
                 ->where('batch_year', $seriesInt)
                 ->first();
 
-            $startSeq = $counter ? max((int) $counter->last_seq + 1, $seqStart) : $seqStart;
+            $startSeq = $counter ? ((int) $counter->last_seq + 1) : $seqStart;
 
             $results = [];
             for ($i = 0; $i < $count; $i++) {
@@ -478,7 +554,7 @@ class StudentIndexService
             ->where('batch_year', $batchYear)
             ->first();
 
-        $startSeq = $counter ? max((int) $counter->last_seq + 1, $seqStart) : $seqStart;
+        $startSeq = $counter ? ((int) $counter->last_seq + 1) : $seqStart;
 
         $results = [];
         $batchYearStr = str_pad((string) $batchYear, 2, '0', STR_PAD_LEFT);
@@ -495,13 +571,14 @@ class StudentIndexService
      * Re-assign an index number to a student (creates activity log).
      *
      * @param User $student
-     * @param int|string $newSeriesOrBatch
+     * @param int|string|null $newSeriesOrBatch
      * @param User|int|string|null $adminUser
      * @param string|null $reason
+     * @param int|null $exactSeq
      * @return string
      * @throws \Throwable
      */
-    public function reassign(User $student, $newSeriesOrBatch = null, $adminUser = null, ?string $reason = null): string
+    public function reassign(User $student, $newSeriesOrBatch = null, $adminUser = null, ?string $reason = null, ?int $exactSeq = null): string
     {
         $oldIndex = $student->index_number;
         $oldSeq = $student->index_seq;
@@ -514,7 +591,7 @@ class StudentIndexService
             $student->batch_year = null;
             $student->save();
 
-            $newIndex = $this->assign($student, $newSeriesOrBatch);
+            $newIndex = $this->assign($student, $newSeriesOrBatch, $exactSeq);
         } catch (\Throwable $e) {
             $student->index_number = $oldIndex;
             $student->index_seq = $oldSeq;
@@ -543,6 +620,7 @@ class StudentIndexService
                 'new_index_number' => $newIndex,
                 'old_batch_year' => $oldBatch,
                 'new_batch_year' => $student->batch_year,
+                'exact_seq' => $exactSeq,
                 'reason' => $reason,
             ],
             'ip_address' => request()?->ip(),
@@ -898,8 +976,7 @@ class StudentIndexService
                                 $expectedSeries = $this->normalizeGradeSeries($gradeCol);
                             }
                             if ($expectedSeries !== null && $parsedIndex['series'] !== $expectedSeries) {
-                                $status = 'error';
-                                $errors[] = "Grade series '{$parsedIndex['series']}' does not match grade column '{$gradeCol}'";
+                                $warnings[] = "Grade series '{$parsedIndex['series']}' differs from grade column '{$gradeCol}'";
                             }
                         } catch (\Throwable $e) {
                             // Non-standard grade text, ignore equality check

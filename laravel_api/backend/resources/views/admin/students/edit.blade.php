@@ -182,6 +182,7 @@
                                 </label>
                                 @php
                                     $instituteFormat = optional($student->institute)->getIndexFormat() ?? 'grade';
+                                    $institutePrefix = optional($student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1))->getIndexPrefix() ?? 'TIT';
                                     $seriesLabel = $instituteFormat === 'grade'
                                         ? 'Grade ' . ($student->batch_year ? sprintf('%02d', $student->batch_year) : ($student->current_grade ?? ''))
                                         : 'Batch \'' . $student->batch_year;
@@ -205,7 +206,7 @@
                                             @php
                                                 $reassignDefaultBatch = $student->batch_year ?? ($instituteFormat === 'grade' ? (preg_replace('/[^0-9]/', '', $student->current_grade) ?: '08') : 28);
                                             @endphp
-                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="promptReassignIndex({{ $student->id }}, '{{ $student->index_number }}', '{{ $reassignDefaultBatch }}', '{{ $instituteFormat }}')" title="Re-assign Index Number">
+                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="promptReassignIndex({{ $student->id }}, '{{ $student->index_number }}', '{{ $reassignDefaultBatch }}', '{{ $instituteFormat }}', '{{ $institutePrefix }}')" title="Re-assign Index Number">
                                                 <i class="flaticon-381-edit"></i> Re-assign
                                             </button>
                                         </div>
@@ -226,7 +227,7 @@
                                                     $editSuggestedBatch = $student->batch_year ?? ($gradeMapping[$student->current_grade] ?? ($gradeMapping[preg_replace('/[^0-9]/', '', $student->current_grade)] ?? ''));
                                                 }
                                             @endphp
-                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $editSuggestedBatch }}', '{{ $instituteFormat }}')">
+                                            <button type="button" class="btn btn-info btn-sm" onclick="promptAssignIndex({{ $student->id }}, '{{ $editSuggestedBatch }}', '{{ $instituteFormat }}', '{{ $institutePrefix }}')">
                                                 <i class="flaticon-381-id-card"></i> Assign Index
                                             </button>
                                         </div>
@@ -1139,35 +1140,81 @@
         });
     }
 
-    function promptAssignIndex(studentId, defaultBatch, format) {
+    function promptAssignIndex(studentId, defaultBatch, format, prefix) {
+        prefix = prefix || 'TIT';
         const isGrade = (format === 'grade');
-        const val = defaultBatch ? (isGrade ? String(defaultBatch).padStart(2, '0') : defaultBatch) : '';
-        const labelText = isGrade ? 'Enter the 2-digit grade series (e.g. 08 for Grade 8):' : 'Enter the 2-digit batch year (e.g. 28 for A/L 2028):';
-        const placeholderText = isGrade ? 'e.g. 08' : 'e.g. 28';
+        const defaultSeriesNum = defaultBatch ? parseInt(defaultBatch, 10) : '';
+        const val = (!isNaN(defaultSeriesNum) && defaultSeriesNum >= 1 && defaultSeriesNum <= 99) ? String(defaultSeriesNum).padStart(2, '0') : '';
+        const seriesLabel = isGrade ? 'Series (01–99, default = grade):' : 'Batch Year (01–99):';
+
         Swal.fire({
             title: 'Assign Student Index Number',
-            html: `${labelText}<br><br>
-                   <input id="swal-batch-year" type="text" value="${val}" placeholder="${placeholderText}" class="form-control text-center" style="width: 140px; margin: 0 auto; font-size: 1.2rem; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">`,
+            html: `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <div class="form-group mb-2">
+                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
+                        <input id="swal-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563; font-weight: bold;">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
+                        <input id="swal-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                        <small style="color: #9ca3af; font-size: 0.8rem;">Leave empty for next automatic number, or type an exact number.</small>
+                    </div>
+                    <div style="margin-top: 12px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
+                        <span style="color: #cbd5e1; font-size: 0.85rem;">Preview: </span>
+                        <strong id="swal-preview-index" style="color: #38bdf8; font-size: 1.15rem; letter-spacing: 0.5px;">${prefix}/${val || '01'}/...</strong>
+                    </div>
+                </div>
+            `,
             showCancelButton: true,
-            confirmButtonText: 'Generate Number',
+            confirmButtonText: 'Assign Index Number',
             confirmButtonColor: '#38bdf8',
             customClass: 'swal-dark-popup',
-            preConfirm: () => {
-                const batch = document.getElementById('swal-batch-year').value.trim();
-                const num = parseInt(batch, 10);
-                if (isGrade) {
-                    if (!batch || isNaN(num) || num < 1 || num > 99) {
-                        Swal.showValidationMessage('Please enter a valid grade series between 01 and 99');
-                        return false;
+            onOpen: () => {
+                const seriesInput = document.getElementById('swal-series');
+                const seqInput = document.getElementById('swal-seq');
+                const previewEl = document.getElementById('swal-preview-index');
+
+                function updatePreview() {
+                    const sRaw = seriesInput.value.trim();
+                    const sNum = parseInt(sRaw, 10);
+                    const sStr = (!isNaN(sNum) && sNum >= 1 && sNum <= 99) ? String(sNum).padStart(2, '0') : (sRaw || '??');
+                    const seqRaw = seqInput.value.trim();
+                    let seqStr = '<next>';
+                    if (seqRaw) {
+                        const seqNum = parseInt(seqRaw, 10);
+                        if (!isNaN(seqNum) && seqNum > 0) {
+                            seqStr = String(seqNum).padStart(3, '0');
+                        } else {
+                            seqStr = seqRaw;
+                        }
                     }
-                    return String(num).padStart(2, '0');
-                } else {
-                    if (!batch || isNaN(num) || num < 20 || num > 99) {
-                        Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
-                        return false;
-                    }
-                    return String(num);
+                    previewEl.textContent = `${prefix}/${sStr}/${seqStr}`;
                 }
+
+                seriesInput.addEventListener('input', updatePreview);
+                seqInput.addEventListener('input', updatePreview);
+                updatePreview();
+            },
+            preConfirm: () => {
+                const series = document.getElementById('swal-series').value.trim();
+                const seq = document.getElementById('swal-seq').value.trim();
+                const num = parseInt(series, 10);
+                if (!series || isNaN(num) || num < 1 || num > 99) {
+                    Swal.showValidationMessage('Series must be a number 01–99');
+                    return false;
+                }
+                if (seq) {
+                    const seqNum = parseInt(seq, 10);
+                    if (isNaN(seqNum) || seqNum < 1) {
+                        Swal.showValidationMessage('Running number must be at least 1');
+                        return false;
+                    }
+                }
+                return {
+                    series: String(num).padStart(2, '0'),
+                    seq: seq ? parseInt(seq, 10) : ''
+                };
             }
         }).then((res) => {
             if (res.value) {
@@ -1176,7 +1223,8 @@
                 form.action = '{{ route('admin.students.assign-index', $student->id, false) }}';
                 form.innerHTML = `
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="batch_year" value="${res.value}">
+                    <input type="hidden" name="batch_year" value="${res.value.series}">
+                    <input type="hidden" name="running_number" value="${res.value.seq}">
                 `;
                 document.body.appendChild(form);
                 form.submit();
@@ -1184,41 +1232,93 @@
         });
     }
 
-    function promptReassignIndex(studentId, currentIndex, currentBatch, format) {
+    function promptReassignIndex(studentId, currentIndex, currentBatch, format, prefix) {
+        prefix = prefix || 'TIT';
         const isGrade = (format === 'grade');
-        const batchVal = currentBatch ? (isGrade ? String(currentBatch).padStart(2, '0') : currentBatch) : '';
-        const labelText = isGrade ? 'New Grade Series (01-99):' : 'New Batch Year (20-99):';
+        const defaultSeriesNum = currentBatch ? parseInt(currentBatch, 10) : '';
+        const val = (!isNaN(defaultSeriesNum) && defaultSeriesNum >= 1 && defaultSeriesNum <= 99) ? String(defaultSeriesNum).padStart(2, '0') : '';
+        const seriesLabel = isGrade ? 'New Series (01–99):' : 'New Batch Year (01–99):';
+
         Swal.fire({
             title: 'Re-assign Index Number?',
-            html: `<div style="text-align: left; font-size: 0.9rem;">
-                     <p style="color: #fca5a5; margin-bottom: 8px;">⚠️ WARNING: This student already has index number <strong>${currentIndex}</strong>. Receipts and exam records may reference this number.</p>
-                     <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This action will be recorded in the system audit logs.</p>
-                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${labelText}</label>
-                     <input id="swal-new-batch" type="text" value="${batchVal}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">
-                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Reason for Change:</label>
-                     <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected grade or batch / repeat exam" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
-                   </div>`,
+            html: `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <p style="color: #fca5a5; margin-bottom: 8px;">⚠️ WARNING: Student currently has <strong>${currentIndex}</strong>. Receipts and exam records may reference this number.</p>
+                    <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This action will be recorded in the system audit logs.</p>
+                    <div class="form-group mb-2">
+                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
+                        <input id="swal-new-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563; font-weight: bold;">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
+                        <input id="swal-new-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                        <small style="color: #9ca3af; font-size: 0.8rem;">Leave empty for next automatic number, or type an exact number.</small>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Reason for Change (Required):</label>
+                        <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected grade or batch / repeat exam" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                    </div>
+                    <div style="margin-top: 12px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
+                        <span style="color: #cbd5e1; font-size: 0.85rem;">Preview: </span>
+                        <strong id="swal-reassign-preview-index" style="color: #38bdf8; font-size: 1.15rem; letter-spacing: 0.5px;">${prefix}/${val || '01'}/...</strong>
+                    </div>
+                </div>
+            `,
             showCancelButton: true,
             confirmButtonText: 'Confirm & Re-assign',
             confirmButtonColor: '#eab308',
             customClass: 'swal-dark-popup',
-            preConfirm: () => {
-                const batch = document.getElementById('swal-new-batch').value.trim();
-                const reason = document.getElementById('swal-reassign-reason').value.trim();
-                const num = parseInt(batch, 10);
-                if (isGrade) {
-                    if (!batch || isNaN(num) || num < 1 || num > 99) {
-                        Swal.showValidationMessage('Please enter a valid grade series between 01 and 99');
-                        return false;
+            onOpen: () => {
+                const seriesInput = document.getElementById('swal-new-series');
+                const seqInput = document.getElementById('swal-new-seq');
+                const previewEl = document.getElementById('swal-reassign-preview-index');
+
+                function updatePreview() {
+                    const sRaw = seriesInput.value.trim();
+                    const sNum = parseInt(sRaw, 10);
+                    const sStr = (!isNaN(sNum) && sNum >= 1 && sNum <= 99) ? String(sNum).padStart(2, '0') : (sRaw || '??');
+                    const seqRaw = seqInput.value.trim();
+                    let seqStr = '<next>';
+                    if (seqRaw) {
+                        const seqNum = parseInt(seqRaw, 10);
+                        if (!isNaN(seqNum) && seqNum > 0) {
+                            seqStr = String(seqNum).padStart(3, '0');
+                        } else {
+                            seqStr = seqRaw;
+                        }
                     }
-                } else {
-                    if (!batch || isNaN(num) || num < 20 || num > 99) {
-                        Swal.showValidationMessage('Please enter a valid batch year between 20 and 99');
+                    previewEl.textContent = `${prefix}/${sStr}/${seqStr}`;
+                }
+
+                seriesInput.addEventListener('input', updatePreview);
+                seqInput.addEventListener('input', updatePreview);
+                updatePreview();
+            },
+            preConfirm: () => {
+                const series = document.getElementById('swal-new-series').value.trim();
+                const seq = document.getElementById('swal-new-seq').value.trim();
+                const reason = document.getElementById('swal-reassign-reason').value.trim();
+                const num = parseInt(series, 10);
+                if (!series || isNaN(num) || num < 1 || num > 99) {
+                    Swal.showValidationMessage('Series must be a number 01–99');
+                    return false;
+                }
+                if (seq) {
+                    const seqNum = parseInt(seq, 10);
+                    if (isNaN(seqNum) || seqNum < 1) {
+                        Swal.showValidationMessage('Running number must be at least 1');
                         return false;
                     }
                 }
-                const formattedBatch = isGrade ? String(num).padStart(2, '0') : String(num);
-                return { batch: formattedBatch, reason };
+                if (!reason) {
+                    Swal.showValidationMessage('Reason is required for audit log');
+                    return false;
+                }
+                return {
+                    series: String(num).padStart(2, '0'),
+                    seq: seq ? parseInt(seq, 10) : '',
+                    reason
+                };
             }
         }).then((res) => {
             if (res.value) {
@@ -1227,8 +1327,9 @@
                 form.action = '{{ route('admin.students.reassign-index', $student->id, false) }}';
                 form.innerHTML = `
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="batch_year" value="${res.value.batch}">
-                    <input type="hidden" name="reason" value="${res.value.reason || ''}">
+                    <input type="hidden" name="batch_year" value="${res.value.series}">
+                    <input type="hidden" name="running_number" value="${res.value.seq}">
+                    <input type="hidden" name="reason" value="${res.value.reason.replace(/"/g, '&quot;')}">
                 `;
                 document.body.appendChild(form);
                 form.submit();

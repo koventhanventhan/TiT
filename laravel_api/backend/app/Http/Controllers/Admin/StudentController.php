@@ -1195,19 +1195,21 @@ class StudentController extends Controller
             $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
             $format = $institute?->getIndexFormat() ?? 'grade';
 
+            $exactSeq = $request->filled('running_number') ? (int) $request->input('running_number') : ($request->filled('index_seq') ? (int) $request->input('index_seq') : null);
+
             if ($format === 'grade') {
-                $series = $request->filled('series') ? $request->input('series') : null;
-                $indexNumber = $this->indexService->assign($student, $series);
+                $series = $request->filled('series') ? $request->input('series') : ($request->filled('batch_year') ? $request->input('batch_year') : null);
+                $indexNumber = $this->indexService->assign($student, $series, $exactSeq);
             } else {
                 $batchYear = $request->filled('batch_year')
                     ? $this->indexService->normalizeBatchYear($request->batch_year)
-                    : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y'));
-                $indexNumber = $this->indexService->assign($student, $batchYear);
+                    : ($request->filled('series') ? $this->indexService->normalizeBatchYear($request->series) : ($this->indexService->calculateDefaultBatchYear($student) ?? (int) date('y')));
+                $indexNumber = $this->indexService->assign($student, $batchYear, $exactSeq);
             }
 
             return back()->with('success', "Assigned index number {$indexNumber} to " . ($student->full_name ?? $student->name) . ".");
         } catch (\Throwable $e) {
-            return back()->with('error', "Could not assign index number: " . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -1226,20 +1228,22 @@ class StudentController extends Controller
             $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
             $format = $institute?->getIndexFormat() ?? 'grade';
 
+            $exactSeq = $request->filled('running_number') ? (int) $request->input('running_number') : ($request->filled('index_seq') ? (int) $request->input('index_seq') : null);
+
             if ($format === 'grade') {
-                $newSeries = $request->filled('series') ? $request->input('series') : null;
+                $newSeries = $request->filled('series') ? $request->input('series') : ($request->filled('batch_year') ? $request->input('batch_year') : null);
             } else {
-                $newSeries = $request->filled('batch_year') ? $request->input('batch_year') : null;
+                $newSeries = $request->filled('batch_year') ? $request->input('batch_year') : ($request->filled('series') ? $request->input('series') : null);
             }
             if (!$newSeries && $format !== 'grade') {
                 throw new \InvalidArgumentException('Batch year is required');
             }
 
-            $newIndex = $this->indexService->reassign($student, $newSeries, auth()->user(), $request->input('reason'));
+            $newIndex = $this->indexService->reassign($student, $newSeries, auth()->user(), $request->input('reason'), $exactSeq);
 
             return back()->with('success', "Reassigned index number from {$oldIndex} to {$newIndex}.");
         } catch (\Throwable $e) {
-            return back()->with('error', "Could not reassign index number: " . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

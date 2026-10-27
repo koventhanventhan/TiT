@@ -125,6 +125,9 @@
                     <li class="{{ request()->routeIs('admin.settings.grade-promotion-schedule') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.grade-promotion-schedule') }}">Grade Promotion Schedule</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.settings.index-series*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.index-series') }}">Index Number Series</a>
+                    </li>
                     @if(optional(auth()->user()->institute)->getIndexFormat() === 'batch')
                         <li class="{{ request()->routeIs('admin.settings.index-batches') ? 'mm-active' : '' }}">
                             <a href="{{ route('admin.settings.index-batches') }}">Index Number Batches</a>

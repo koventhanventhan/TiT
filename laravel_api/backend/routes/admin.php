@@ -139,6 +139,10 @@ Route::prefix('admin')->group(function () {
         Route::post('/settings/delete-image', [SiteSettingController::class, 'deleteImage'])->name('admin.settings.delete-image');
         Route::get('/settings/index-batches', [SiteSettingController::class, 'indexBatches'])->name('admin.settings.index-batches');
         Route::post('/settings/index-batches', [SiteSettingController::class, 'storeIndexBatches'])->name('admin.settings.index-batches.store');
+        Route::get('/settings/index-series', [SiteSettingController::class, 'indexSeries'])->name('admin.settings.index-series');
+        Route::post('/settings/index-series/update-config', [SiteSettingController::class, 'updateIndexConfig'])->name('admin.settings.index-series.update-config');
+        Route::post('/settings/index-series/update-counter', [SiteSettingController::class, 'updateIndexCounter'])->name('admin.settings.index-series.update-counter');
+        Route::post('/settings/index-series/add-series', [SiteSettingController::class, 'addIndexSeries'])->name('admin.settings.index-series.add-series');
         Route::get('/firebase-token', [SiteSettingController::class, 'firebaseToken'])->name('admin.firebase-token');
 
         // Zoom classes

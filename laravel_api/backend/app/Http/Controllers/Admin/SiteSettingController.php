@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Institute;
 use App\Models\SiteSetting;
+use App\Models\StudentIndexCounter;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\StudentIndexService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -689,5 +692,223 @@ class SiteSettingController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'Image not found or invalid path.']);
+    }
+
+    /**
+     * Display Index Number Series management page.
+     */
+    public function indexSeries()
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $instituteId = auth()->user()->institute_id ?: 1;
+        $institute = Institute::findOrFail($instituteId);
+
+        $counters = StudentIndexCounter::where('institute_id', $instituteId)
+            ->orderBy('batch_year', 'asc')
+            ->get();
+
+        $studentsPerSeries = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->whereNotNull('batch_year')
+            ->select('batch_year', DB::raw('count(*) as count'), DB::raw('max(index_seq) as max_seq'))
+            ->groupBy('batch_year')
+            ->get()
+            ->keyBy('batch_year');
+
+        $seriesData = [];
+        foreach ($counters as $c) {
+            $bYear = (int) $c->batch_year;
+            $seriesStr = str_pad((string) $bYear, 2, '0', STR_PAD_LEFT);
+            $stRow = $studentsPerSeries->get($bYear);
+            $stCount = $stRow ? (int) $stRow->count : 0;
+            $highestIssued = $stRow ? (int) $stRow->max_seq : 0;
+
+            $seriesData[] = [
+                'id' => $c->id,
+                'batch_year' => $bYear,
+                'series' => $seriesStr,
+                'last_seq' => (int) $c->last_seq,
+                'next_seq' => (int) $c->last_seq + 1,
+                'students_count' => $stCount,
+                'highest_issued' => $highestIssued,
+            ];
+        }
+
+        // Summary of how many students would be in "old format" after the switch
+        $allStudents = User::withoutGlobalScopes()
+            ->where('role', 'user')
+            ->where('institute_id', $instituteId)
+            ->whereNotNull('index_number')
+            ->where('index_number', '!=', '')
+            ->get(['id', 'index_number']);
+
+        $prefix = $institute->getIndexPrefix();
+
+        $dummyGradeInst = new Institute([
+            'index_format' => 'grade',
+            'index_prefix' => $prefix,
+            'index_seq_start' => 1,
+        ]);
+
+        $dummyBatchInst = new Institute([
+            'index_format' => 'batch',
+            'index_prefix' => $prefix,
+            'index_seq_start' => 100,
+        ]);
+
+        $oldIfGrade = 0;
+        $oldIfBatch = 0;
+        foreach ($allStudents as $st) {
+            if (StudentIndexService::isOldOrWrongFormat($st->index_number, $dummyGradeInst)) {
+                $oldIfGrade++;
+            }
+            if (StudentIndexService::isOldOrWrongFormat($st->index_number, $dummyBatchInst)) {
+                $oldIfBatch++;
+            }
+        }
+
+        return view('admin.settings.index_series', [
+            'institute' => $institute,
+            'seriesList' => $seriesData,
+            'totalStudentsWithIndex' => $allStudents->count(),
+            'oldIfGrade' => $oldIfGrade,
+            'oldIfBatch' => $oldIfBatch,
+        ]);
+    }
+
+    /**
+     * Update institute index configuration (format, prefix, start number).
+     */
+    public function updateIndexConfig(Request $request)
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate([
+            'index_format' => 'required|in:grade,batch',
+            'index_prefix' => 'required|string|max:10',
+            'index_seq_start' => 'required|integer|min:1',
+        ]);
+
+        $instituteId = auth()->user()->institute_id ?: 1;
+        $institute = Institute::findOrFail($instituteId);
+
+        $oldConfig = [
+            'format' => $institute->index_format,
+            'prefix' => $institute->index_prefix,
+            'start' => $institute->index_seq_start,
+        ];
+
+        $institute->update([
+            'index_format' => $request->input('index_format'),
+            'index_prefix' => trim($request->input('index_prefix')),
+            'index_seq_start' => (int) $request->input('index_seq_start'),
+        ]);
+
+        ActivityLogService::log(
+            'index_config_updated',
+            "Updated index config: format={$request->input('index_format')}, prefix={$request->input('index_prefix')}, start={$request->input('index_seq_start')}",
+            ['old' => $oldConfig, 'new' => $institute->only(['index_format', 'index_prefix', 'index_seq_start'])]
+        );
+
+        return redirect()->back()->with('success', 'Index configuration updated successfully.');
+    }
+
+    /**
+     * Update next automatic number for a series counter.
+     */
+    public function updateIndexCounter(Request $request)
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate([
+            'series' => 'required',
+            'next' => 'required|integer|min:1',
+        ]);
+
+        $seriesInt = (int) $request->input('series');
+        if ($seriesInt < 1 || $seriesInt > 99) {
+            return redirect()->back()->with('error', 'Series must be a number between 01 and 99.');
+        }
+
+        $next = (int) $request->input('next');
+        $instituteId = auth()->user()->institute_id ?: 1;
+        $seriesStr = str_pad((string) $seriesInt, 2, '0', STR_PAD_LEFT);
+
+        $highestIssued = $this->getHighestIssuedSeq($instituteId, $seriesInt);
+
+        if ($highestIssued > 0 && $next <= $highestIssued) {
+            return redirect()->back()->with('error', "Next number must be greater than highest number issued in series {$seriesStr} ({$highestIssued}). Provided: {$next}.");
+        }
+
+        $counter = StudentIndexCounter::firstOrNew([
+            'institute_id' => $instituteId,
+            'batch_year' => $seriesInt,
+        ]);
+
+        $oldLast = $counter->exists ? $counter->last_seq : null;
+        $oldNext = $counter->exists ? ((int) $counter->last_seq + 1) : null;
+
+        $counter->last_seq = $next - 1;
+        $counter->save();
+
+        ActivityLogService::log(
+            'index_counter_updated',
+            "Updated next automatic index number for series {$seriesStr} from {$oldNext} to {$next}",
+            [
+                'series' => $seriesStr,
+                'old_last_seq' => $oldLast,
+                'new_last_seq' => $counter->last_seq,
+                'next' => $next,
+                'highest_issued' => $highestIssued,
+            ]
+        );
+
+        return redirect()->back()->with('success', "Series {$seriesStr} next automatic number set to {$next}.");
+    }
+
+    /**
+     * Add a new series counter.
+     */
+    public function addIndexSeries(Request $request)
+    {
+        return $this->updateIndexCounter($request);
+    }
+
+    /**
+     * Helper to find highest issued sequence number in a series for an institute.
+     */
+    private function getHighestIssuedSeq(int $instituteId, int $seriesInt): int
+    {
+        $seriesStr = str_pad((string) $seriesInt, 2, '0', STR_PAD_LEFT);
+        $users = User::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where(function ($q) use ($seriesInt, $seriesStr) {
+                $q->where('batch_year', $seriesInt)
+                  ->orWhere('index_number', 'LIKE', "%/{$seriesStr}/%")
+                  ->orWhere('index_number', 'LIKE', "%/{$seriesInt}/%");
+            })
+            ->get(['id', 'index_seq', 'index_number']);
+
+        $highest = 0;
+        foreach ($users as $u) {
+            if ($u->index_seq && (int) $u->index_seq > $highest) {
+                $highest = (int) $u->index_seq;
+            }
+            if ($u->index_number && preg_match('/\/(\d{3,})$/', $u->index_number, $m)) {
+                $seqVal = (int) $m[1];
+                if ($seqVal > $highest) {
+                    $highest = $seqVal;
+                }
+            }
+        }
+        return $highest;
     }
 }

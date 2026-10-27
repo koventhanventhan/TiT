@@ -101,10 +101,12 @@ class StudentSubjectController extends Controller
 
         // Authoritative fee + whether this month is already paid
         $yearMonth = now()->format('Y-m');
-        $alreadyPaid = \App\Models\Payment::where('user_id', $user->id)
+        $currentMonthPayment = \App\Models\Payment::where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
-            ->exists();
+            ->first();
+        $alreadyPaid = (bool) $currentMonthPayment;
+        $paidAmount = $currentMonthPayment ? (float) $currentMonthPayment->amount : null;
 
         // Get the last paid month
         $lastPaidPayment = \App\Models\Payment::where('user_id', $user->id)
@@ -125,6 +127,7 @@ class StudentSubjectController extends Controller
             'message' => 'Subjects updated successfully.',
             'mediumChangeRequested' => $mediumChangeRequested,
             'already_paid' => $alreadyPaid,
+            'paid_amount' => $paidAmount,
             'paid_until' => $paidUntil,
             'amount' => $totalAmount,
             'admission_fee' => $admissionFee,

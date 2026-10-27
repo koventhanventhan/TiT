@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiX, FiCheck, FiMinus, FiPlus, FiLoader, FiClock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiX, FiCheck, FiLoader, FiClock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { updateStudentSubjects, initializeMonthlyPayment, initializeOfflineMonthlyPayment, requestAdvancePaymentOffline, getStudentPaymentStatus } from '../../services/dashboardService';
 import useSubjectPricing from '../../hooks/useSubjectPricing';
 import FeeRow from '../shared/FeeRow';
+import AdvanceMonthsBlock from './AdvanceMonthsBlock';
 import { formatRs } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -47,6 +48,30 @@ export const formatAlreadyPaidMessage = (currentMonth, nextMonth, fee, lang = 'e
     .replace('{nextMonth}', nextMonth);
 };
 
+/**
+ * Paid month, no extra money due, fee unchanged (e.g. the monthly maximum / package price).
+ */
+export const formatPaidFeeStaysMessage = (currentMonth, fee, lang = 'en', t = (k, def) => def) => {
+  const feeStr = formatAmount(fee);
+  const template = t(
+    'subj_update_paid_stays_msg',
+    'Subjects saved. This month ({month}) is already paid. Your fee stays Rs {fee} (the monthly maximum / package price). Next month\'s fee: Rs {fee}.'
+  );
+  return template.split('{month}').join(currentMonth).split('{fee}').join(feeStr);
+};
+
+/**
+ * Paid month, the new fee is LOWER than what was paid: no refund, new fee from next month.
+ */
+export const formatPaidFeeLowerMessage = (currentMonth, nextMonth, fee, lang = 'en', t = (k, def) => def) => {
+  const feeStr = formatAmount(fee);
+  const template = t(
+    'subj_update_paid_lower_msg',
+    'Subjects saved. This month ({month}) is already paid. Your new fee Rs {fee} starts from {nextMonth}; no refund for this month.'
+  );
+  return template.split('{month}').join(currentMonth).split('{fee}').join(feeStr).split('{nextMonth}').join(nextMonth);
+};
+
 export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medium, pendingMedium, stream, initialSubjects = [], onUpdateSuccess }) {
   let t = (k, def) => def;
   let language = 'en';
@@ -74,9 +99,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
-  const [wantAdvancePayment, setWantAdvancePayment] = useState(false);
-  const [advanceMonths, setAdvanceMonths] = useState(3);
+  const [paidAmount, setPaidAmount] = useState(null);
   const submittingOfflineRef = useRef(false);
 
   useEffect(() => {
@@ -88,41 +111,6 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       }).catch(console.error);
     }
   }, [isOpen, step]);
-
-  // Stepper handlers
-  const handleMonthsChange = (e) => {
-    const val = e.target.value;
-    if (val === '') {
-      setAdvanceMonths('');
-      return;
-    }
-    if (/^\d+$/.test(val)) {
-      setAdvanceMonths(val);
-    }
-  };
-
-  const handleMonthsBlur = () => {
-    const parsed = parseInt(advanceMonths, 10);
-    if (isNaN(parsed) || parsed < 1) {
-      setAdvanceMonths(1);
-    } else if (parsed > 12) {
-      setAdvanceMonths(12);
-    } else {
-      setAdvanceMonths(parsed);
-    }
-  };
-
-  const handleStepDown = () => {
-    const parsed = parseInt(advanceMonths, 10);
-    const current = isNaN(parsed) ? 1 : parsed;
-    setAdvanceMonths(Math.max(1, current - 1));
-  };
-
-  const handleStepUp = () => {
-    const parsed = parseInt(advanceMonths, 10);
-    const current = isNaN(parsed) ? 1 : parsed;
-    setAdvanceMonths(Math.min(12, current + 1));
-  };
 
   // Reset state and lock body scroll when opened
   useEffect(() => {
@@ -137,10 +125,9 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setServerAdmission(0);
       setAlreadyPaid(false);
       setPaidUntil(null);
+      setPaidAmount(null);
       setSaved(false);
       setPaymentDone(false);
-      setWantAdvancePayment(false);
-      setAdvanceMonths(3);
       submittingOfflineRef.current = false;
 
       const prevOverflow = document.body.style.overflow;
@@ -352,6 +339,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
       setServerMonthly(resp && typeof resp.monthly_fee === 'number' ? resp.monthly_fee : null);
       setServerAdmission(resp && typeof resp.admission_fee === 'number' ? resp.admission_fee : 0);
       setAlreadyPaid(!!(resp && resp.already_paid));
+      setPaidAmount(resp && resp.paid_amount !== undefined && resp.paid_amount !== null ? Number(resp.paid_amount) : null);
       if (resp && resp.paid_until) {
         setPaidUntil(resp.paid_until);
       }
@@ -402,8 +390,8 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     }
   };
 
-  const handlePayAdvanceOffline = async () => {
-    const num = parseInt(advanceMonths, 10);
+  const handlePayAdvanceOffline = async (monthsArg) => {
+    const num = parseInt(monthsArg, 10);
     if (isNaN(num) || num < 1 || num > 12) {
       setError('Please select a valid number of months (1-12).');
       return;
@@ -473,8 +461,6 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
   if (!isOpen) return null;
 
-  const numericAdvanceMonths = parseInt(advanceMonths, 10);
-  const isAdvanceValid = !isNaN(numericAdvanceMonths) && numericAdvanceMonths >= 1 && numericAdvanceMonths <= 12;
   const effectiveMonthly = step === 2 ? (serverMonthly ?? monthlyAmount) : monthlyAmount;
   const hasDiscount = appliedPackage && effectiveMonthly < originalAmount;
   const savings = originalAmount - monthlyAmount;
@@ -730,9 +716,27 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                     >
                       <FiCheckCircle style={{ flexShrink: 0, fontSize: 20, color: '#059669', marginTop: 2 }} />
                       <div style={{ flex: 1 }}>
-                        {formatAlreadyPaidMessage(curMonth, nextMonth, serverMonthly ?? monthlyAmount, language, t)}
+                        {(() => {
+                          const fee = serverMonthly ?? monthlyAmount;
+                          if (paidAmount !== null && fee < paidAmount) {
+                            return formatPaidFeeLowerMessage(curMonth, nextMonth, fee, language, t);
+                          }
+                          if (paidAmount === null || fee <= paidAmount) {
+                            return formatPaidFeeStaysMessage(curMonth, fee, language, t);
+                          }
+                          return formatAlreadyPaidMessage(curMonth, nextMonth, fee, language, t);
+                        })()}
                       </div>
                     </div>
+
+                    {/* Advance months stay available even when this month is already paid */}
+                    <AdvanceMonthsBlock
+                      monthlyFee={serverMonthly ?? monthlyAmount}
+                      disabled={loading || paymentDone}
+                      loading={loading}
+                      onSubmit={handlePayAdvanceOffline}
+                      t={t}
+                    />
 
                     <button
                       onClick={handleClose}
@@ -870,156 +874,13 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                         </div>
 
                         {/* Option 3: Advance months */}
-                        <div style={{
-                          border: '1px solid var(--t-border, #e2e8f0)',
-                          borderRadius: 14,
-                          padding: 14,
-                          background: '#fff',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 8
-                        }}>
-                          <button
-                            type="button"
-                            onClick={() => setWantAdvancePayment(prev => !prev)}
-                            data-testid="pay-advance-toggle-btn"
-                            style={{
-                              width: '100%',
-                              padding: '12px 18px',
-                              borderRadius: '12px',
-                              border: '1px solid var(--t-border, #cbd5e1)',
-                              background: wantAdvancePayment ? 'var(--t-primary-soft, #f1f5f9)' : '#fff',
-                              color: 'var(--t-text, #1e293b)',
-                              fontSize: '15px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              minHeight: 46,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            <span>{t('subj_update_pay_advance_title', 'Pay for Advance Months')}</span>
-                            <span style={{ fontSize: 16 }}>{wantAdvancePayment ? '▲' : '▼'}</span>
-                          </button>
-                          <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
-                            {t('subj_update_pay_advance_desc', 'Advance months – pay for multiple months in advance offline')}
-                          </div>
-
-                          {wantAdvancePayment && (
-                            <div style={{ background: 'var(--t-bg)', padding: 16, borderRadius: 12, border: '1px solid var(--t-border)', marginTop: 8 }}>
-                              <label style={{ display: 'block', fontSize: 13, color: 'var(--t-text-3)', marginBottom: 8, fontWeight: 600 }}>Number of Months:</label>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                                <button
-                                  type="button"
-                                  onClick={handleStepDown}
-                                  disabled={!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone}
-                                  aria-label="Decrease months"
-                                  className="t-tap"
-                                  style={{
-                                    width: 48,
-                                    height: 48,
-                                    minWidth: 48,
-                                    minHeight: 48,
-                                    borderRadius: 10,
-                                    border: '1px solid var(--t-border)',
-                                    background: '#fff',
-                                    color: 'var(--t-text)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: (!isAdvanceValid || numericAdvanceMonths <= 1 || loading || paymentDone) ? 'not-allowed' : 'pointer',
-                                    opacity: (!isAdvanceValid || numericAdvanceMonths <= 1) ? 0.4 : 1,
-                                    fontSize: 18,
-                                    touchAction: 'manipulation',
-                                    WebkitTapHighlightColor: 'transparent',
-                                    boxSizing: 'border-box'
-                                  }}
-                                >
-                                  <FiMinus />
-                                </button>
-
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  value={advanceMonths}
-                                  onChange={handleMonthsChange}
-                                  onBlur={handleMonthsBlur}
-                                  aria-label="Number of advance months"
-                                  data-testid="advance-months-input"
-                                  style={{
-                                    flex: 1,
-                                    height: 48,
-                                    minHeight: 48,
-                                    borderRadius: 10,
-                                    border: '1px solid var(--t-border)',
-                                    textAlign: 'center',
-                                    fontSize: 16,
-                                    fontWeight: 600,
-                                    color: 'var(--t-text)',
-                                    background: '#fff',
-                                    boxSizing: 'border-box'
-                                  }}
-                                />
-
-                                <button
-                                  type="button"
-                                  onClick={handleStepUp}
-                                  disabled={(isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone}
-                                  aria-label="Increase months"
-                                  className="t-tap"
-                                  style={{
-                                    width: 48,
-                                    height: 48,
-                                    minWidth: 48,
-                                    minHeight: 48,
-                                    borderRadius: 10,
-                                    border: '1px solid var(--t-border)',
-                                    background: '#fff',
-                                    color: 'var(--t-text)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: ((isAdvanceValid && numericAdvanceMonths >= 12) || loading || paymentDone) ? 'not-allowed' : 'pointer',
-                                    opacity: (isAdvanceValid && numericAdvanceMonths >= 12) ? 0.4 : 1,
-                                    fontSize: 18,
-                                    touchAction: 'manipulation',
-                                    WebkitTapHighlightColor: 'transparent',
-                                    boxSizing: 'border-box'
-                                  }}
-                                >
-                                  <FiPlus />
-                                </button>
-                              </div>
-
-                              <FeeRow
-                                label="Total Advance Amount:"
-                                value={isAdvanceValid ? formatRs((serverMonthly ?? monthlyAmount) * numericAdvanceMonths) : '—'}
-                                isTotal={true}
-                                style={{ marginBottom: 16 }}
-                              />
-                              
-                              <button 
-                                onClick={handlePayAdvanceOffline} 
-                                disabled={loading || paymentDone || !isAdvanceValid}
-                                data-testid="submit-advance-payment-btn"
-                                style={{
-                                  width: '100%', padding: '14px 20px', borderRadius: '12px', border: '2px solid var(--t-danger)',
-                                  background: '#fff', color: 'var(--t-danger)', fontSize: '15px', fontWeight: 600,
-                                  cursor: (loading || paymentDone || !isAdvanceValid) ? 'not-allowed' : 'pointer',
-                                  opacity: !isAdvanceValid ? 0.5 : 1,
-                                  transition: 'all 0.2s', textAlign: 'center',
-                                  minHeight: 48, touchAction: 'manipulation',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                                }}
-                              >
-                                {loading ? <><FiLoader className="spin-icon" /> Submitting...</> : 'I WILL PAY OFFLINE (CASH/BANK)'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <AdvanceMonthsBlock
+                          monthlyFee={serverMonthly ?? monthlyAmount}
+                          disabled={loading || paymentDone}
+                          loading={loading}
+                          onSubmit={handlePayAdvanceOffline}
+                          t={t}
+                        />
                       </div>
                     ) : (
                       <button onClick={handleClose} style={{

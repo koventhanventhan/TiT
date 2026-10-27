@@ -671,12 +671,19 @@ class StudentIndexService
      * @param Institute|null $institute
      * @return bool
      */
-    public static function isOldOrWrongFormat(?string $indexNumber, ?Institute $institute = null): bool
+    public static function isOldOrWrongFormat(?string $indexNumber, $institute = null): bool
     {
         if ($indexNumber === null || trim((string) $indexNumber) === '') {
             return false;
         }
-        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+        $prefix = 'TIT';
+        if (is_object($institute)) {
+            if (method_exists($institute, 'getIndexPrefix')) {
+                $prefix = $institute->getIndexPrefix();
+            } elseif (isset($institute->index_prefix) && !empty($institute->index_prefix)) {
+                $prefix = $institute->index_prefix;
+            }
+        }
         return !self::isValidIndexNumber($indexNumber, $prefix);
     }
 

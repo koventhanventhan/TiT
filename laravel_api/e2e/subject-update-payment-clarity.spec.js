@@ -701,5 +701,64 @@ VIEWPORTS.forEach(({ width, height, name }) => {
       });
       expect(overflow).toBe(true);
     });
+
+    test(`Part C: monthly payment rules card is visible in Settings (${name})`, async ({ page }) => {
+      await page.route('**/api/**', async (route) => {
+        const url = route.request().url();
+        if (url.includes('/auth/user')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ user: mockBaseUser }),
+          });
+        }
+        if (url.includes('/subjects/prices')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(mockSubjectsPrices),
+          });
+        }
+        if (url.includes('/student/dashboard-stats') || url.includes('/student/stats')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              user: mockBaseUser,
+              today_classes: 0,
+              total_classes: 0,
+              pending_assignments: 0,
+              attendance_rate: 100,
+            }),
+          });
+        }
+        if (url.includes('/settings')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ site_name: 'TiT Education' }),
+          });
+        }
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+      });
+
+      await page.goto('/student/settings');
+
+      // Verify Payments & Policy card in Settings
+      const settingsPaymentsCard = page.locator('[data-testid="settings-payments-card"]');
+      await expect(settingsPaymentsCard).toBeVisible({ timeout: 10000 });
+      await expect(settingsPaymentsCard).toContainText('Monthly Payments & Policy');
+      await expect(settingsPaymentsCard).toContainText('How Monthly Payment Works');
+      await expect(settingsPaymentsCard).toContainText('1st of Every Month');
+      await expect(settingsPaymentsCard).toContainText('Day 2');
+      await expect(settingsPaymentsCard).toContainText('Day 5');
+      await expect(settingsPaymentsCard).toContainText('Receipts & Confirmation');
+
+      // No horizontal overflow
+      const overflow = await page.evaluate(() => {
+        return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1;
+      });
+      expect(overflow).toBe(true);
+    });
   });
 });

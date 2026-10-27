@@ -131,6 +131,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/settings/register', [SiteSettingController::class, 'register'])->name('admin.settings.register');
         Route::post('/settings', [SiteSettingController::class, 'store'])->name('admin.settings.store');
         Route::get('/settings/admission-fees', [SiteSettingController::class, 'admissionFees'])->name('admin.settings.admission-fees');
+        Route::get('/settings/payments', [SiteSettingController::class, 'admissionFees'])->name('admin.settings.payments');
         Route::post('/settings/admission-fees', [SiteSettingController::class, 'storeAdmissionFees'])->name('admin.settings.admission-fees.store');
         Route::get('/settings/grade-promotion-schedule', [SiteSettingController::class, 'gradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule');
         Route::post('/settings/grade-promotion-schedule', [SiteSettingController::class, 'storeGradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule.store');

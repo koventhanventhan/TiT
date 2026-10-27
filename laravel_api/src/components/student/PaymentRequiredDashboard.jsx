@@ -2,6 +2,7 @@ import React from 'react';
 import { FiDollarSign, FiCalendar, FiArrowRight, FiX } from 'react-icons/fi';
 import { logout } from '../../services/authService';
 import StudentPaymentModule from './StudentPaymentModule';
+import MonthlyPaymentRulesCard from './MonthlyPaymentRulesCard';
 import '../StudentRegistrationForm.css';
 
 const PaymentRequiredDashboard = ({ user }) => {
@@ -54,6 +55,10 @@ const PaymentRequiredDashboard = ({ user }) => {
 
                     <div style={{ marginBottom: '1.5rem' }}>
                         <StudentPaymentModule />
+                    </div>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <MonthlyPaymentRulesCard isDark={true} compact={true} />
                     </div>
 
                     <button

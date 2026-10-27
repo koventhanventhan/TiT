@@ -131,6 +131,94 @@
 
 <div class="row">
     <div class="col-xl-8 offset-xl-2">
+        <div class="card mb-4" data-testid="admin-payment-rules-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 text-primary">
+                    <i class="fa fa-info-circle mr-2"></i> How Monthly Payment Works (System Policy & Automation Rules)
+                </h5>
+                <span class="badge badge-warning text-dark font-weight-bold">Policy & Automation</span>
+            </div>
+            <div class="card-body">
+                <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem; line-height: 1.6;">
+                    The platform enforces automated monthly billing, access gating, reminders, and deactivations based on real-time payment states:
+                </p>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-primary mr-1">Day 1</span> 1st of the Month – Due Date
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                From the 1st of each month, students without a <code>PAID</code> payment row for the current month enter <code>payment_due</code> access state. Access to learning materials, Zoom classes, and recordings is gated until paid.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-warning mr-1">Day 2</span> Automated Payment Reminder
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                The <code>app:check-payments</code> command executes on Day 2 and sends automated payment reminders via WhatsApp and Email to all unpaid active students.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-danger mr-1">Day 5</span> Automated Account Deactivation
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                On Day 5, <code>app:check-payments</code> deactivates students who remain unpaid (<code>deactivated_at = now()</code>), issues suspension notices via WhatsApp/Email, and sends a deactivation summary alert to Admin.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-info mr-1">Methods</span> Payment Channels
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                <strong>Online:</strong> Paid instantly via PayHere; unlocks access immediately. <br/>
+                                <strong>Offline:</strong> Student submits bank/cash slip; unlocks once Admin clicks "Mark Paid". <br/>
+                                <strong>Advance:</strong> Student requests 1–12 advance months offline; approved by Admin.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-success mr-1">Receipts</span> Instant Digital Receipts
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                Official digital receipts are automatically generated and dispatched via Email and WhatsApp immediately after a payment is confirmed (online gateway or admin "Mark Paid").
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
+                            <h6 class="text-white font-weight-bold mb-2">
+                                <span class="badge badge-secondary mr-1">Top-Up</span> Subject Top-Up (Added Subjects)
+                            </h6>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
+                                When an enrolled student who already paid for the month adds extra subjects, a single pending top-up is created for the fee difference. Added subjects remain locked until the top-up is paid.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark mt-2 mb-0" style="background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); font-size: 0.85rem;">
+                    <strong>Implementation Note:</strong> In <code>app:check-payments</code>, the reminder block condition checks <code>$day === 2 || ($day &gt; 2 &amp;&amp; $day &lt; 5)</code>. However, the command exits early at line 34 if <code>$day !== 2 &amp;&amp; $day !== 5</code> (unless <code>--force</code> is passed). Therefore, Day 3 and Day 4 reminders are unreachable during standard automated cron execution.
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <form action="{{ route('admin.settings.admission-fees.store') }}" method="POST">

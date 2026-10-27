@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FiAlertCircle } from 'react-icons/fi'
 import StudentRegistrationForm from '../../components/StudentRegistrationForm'
 import SubjectUpdateModal, { formatPendingMediumMessage } from '../../components/student/SubjectUpdateModal'
+import MonthlyPaymentRulesCard from '../../components/student/MonthlyPaymentRulesCard'
 import { getStudentStats, cancelSubjectTopup } from '../../services/dashboardService'
 import { useLanguage } from '../../context/LanguageContext'
 
@@ -168,6 +169,25 @@ export default function StudentSettings() {
                             {loading ? 'Loading...' : 'Edit Subjects & Medium'}
                         </button>
                     </div>
+                </div>
+
+                {/* Payments */}
+                <div
+                    className="t-card"
+                    id="payments"
+                    data-testid="settings-payments-card"
+                    style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}
+                >
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>
+                        {t('settings_payments_title', 'Monthly Payments & Policy')}
+                    </h3>
+                    <div style={{ marginBottom: 20 }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)', margin: 0 }}>
+                            {t('settings_payments_desc', 'Rules and schedule for monthly fees, automated reminders, suspensions, and receipts.')}
+                        </p>
+                    </div>
+                    
+                    <MonthlyPaymentRulesCard isDark={false} compact={false} />
                 </div>
 
                 {/* Siblings */}

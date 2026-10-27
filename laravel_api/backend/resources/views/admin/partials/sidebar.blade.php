@@ -133,8 +133,8 @@
                             <a href="{{ route('admin.settings.index-batches') }}">Index Number Batches</a>
                         </li>
                     @endif
-                    <li class="{{ request()->routeIs('admin.settings.admission-fees') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.settings.admission-fees') }}">Admission Fees</a>
+                    <li class="{{ request()->routeIs('admin.settings.admission-fees') || request()->routeIs('admin.settings.payments') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.admission-fees') }}">Admission & Payments</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.settings.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.index') }}">Frontend Page</a>

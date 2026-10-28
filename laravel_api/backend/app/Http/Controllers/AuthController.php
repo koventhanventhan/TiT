@@ -372,7 +372,7 @@ class AuthController extends Controller
                 'admin_confirmed_at' => $profile->admin_confirmed_at,
                 'registration_status' => $profile->registration_status,
                 'is_paid' => $profile->hasPaidForMonth(now()->format('Y-m')),
-                'latest_monthly_payment' => ($latestP = \App\Models\Payment::where('user_id', $profile->id)->where('year_month', now()->format('Y-m'))->latest('id')->first()) ? [
+                'latest_monthly_payment' => ($latestP = \App\Models\Payment::monthly()->where('user_id', $profile->id)->where('year_month', now()->format('Y-m'))->latest('id')->first()) ? [
                     'id' => $latestP->id,
                     'status' => $latestP->status,
                     'amount' => (float) $latestP->amount,
@@ -582,7 +582,8 @@ class AuthController extends Controller
         if ($u->current_grade) { $data['current_grade'] = $u->current_grade; }
         if ($u->stream) { $data['stream'] = $u->stream; }
 
-        $latestPaymentRow = \App\Models\Payment::where('user_id', $u->id)
+        $latestPaymentRow = \App\Models\Payment::monthly()
+            ->where('user_id', $u->id)
             ->where('year_month', now()->format('Y-m'))
             ->latest('id')
             ->first();

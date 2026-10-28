@@ -60,7 +60,10 @@ class AdminController extends Controller
         // Pending Approvals & Payments (Notifications)
         $currentYearMonth = now()->format('Y-m');
         $pendingApprovals = User::where('role', 'user')->whereNull('admin_confirmed_at')->count();
-        $pendingPayments = \App\Models\Payment::where('status', 'pending')->where('year_month', $currentYearMonth)->count();
+        $pendingPaymentsQuery = \App\Models\Payment::where('status', 'pending')->where('year_month', $currentYearMonth);
+        $pendingPayments = (clone $pendingPaymentsQuery)->count();
+        $pendingTopups = (clone $pendingPaymentsQuery)->where('kind', 'topup')->count();
+        $pendingMonthly = $pendingPayments - $pendingTopups;
 
         return view('admin.dashboard', compact(
             'totalStudents', 
@@ -73,7 +76,9 @@ class AdminController extends Controller
             'chartLabels',
             'chartData',
             'pendingApprovals',
-            'pendingPayments'
+            'pendingPayments',
+            'pendingMonthly',
+            'pendingTopups'
         ));
     }
 

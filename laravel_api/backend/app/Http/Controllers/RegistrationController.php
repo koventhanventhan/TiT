@@ -845,13 +845,15 @@ class RegistrationController extends Controller
         $user = $request->user();
         $yearMonth = now()->format('Y-m');
 
-        $payment = Payment::where('user_id', $user->id)
+        $payment = Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->orderBy('created_at', 'desc')
             ->first();
 
         // Get the last paid month
-        $lastPaidPayment = \App\Models\Payment::where('user_id', $user->id)
+        $lastPaidPayment = \App\Models\Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('status', 'paid')
             ->orderBy('year_month', 'desc')
             ->first();
@@ -936,7 +938,8 @@ class RegistrationController extends Controller
         $yearMonth = now()->format('Y-m');
 
         // Check if already paid
-        $existingPaid = Payment::where('user_id', $user->id)
+        $existingPaid = Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
             ->exists();
@@ -947,11 +950,18 @@ class RegistrationController extends Controller
             ], 400);
         }
 
-        // Cancel any pending payments for this month
-        Payment::where('user_id', $user->id)
+        // Cancel any pending monthly payments for this month
+        Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('status', 'pending')
             ->update(['status' => 'cancelled']);
+
+        // Auto-supersede any pending top-ups from past months
+        \App\Models\SubjectTopup::where('user_id', $user->id)
+            ->where('year_month', '<', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'superseded']);
 
         $amount = $this->calculateUserAmount($user);
 
@@ -959,6 +969,7 @@ class RegistrationController extends Controller
             'user_id'        => $user->id,
             'amount'         => $amount,
             'status'         => 'pending',
+            'kind'           => 'monthly',
             'payment_method' => 'online',
             'year_month'     => $yearMonth,
             'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
@@ -1006,7 +1017,8 @@ class RegistrationController extends Controller
         $monthName = now()->format('F Y');
 
         // Check if already paid
-        $existingPaid = Payment::where('user_id', $user->id)
+        $existingPaid = Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('status', 'paid')
             ->exists();
@@ -1017,10 +1029,17 @@ class RegistrationController extends Controller
             ], 400);
         }
 
+        // Auto-supersede any pending top-ups from past months
+        \App\Models\SubjectTopup::where('user_id', $user->id)
+            ->where('year_month', '<', $yearMonth)
+            ->where('status', 'pending')
+            ->update(['status' => 'superseded']);
+
         $amount = $this->calculateUserAmount($user);
 
         // De-duplicate: if a PENDING offline row for the same month already exists, reuse it
-        $existingPending = Payment::where('user_id', $user->id)
+        $existingPending = Payment::monthly()
+            ->where('user_id', $user->id)
             ->where('year_month', $yearMonth)
             ->where('payment_method', 'offline')
             ->where('status', 'pending')
@@ -1048,7 +1067,8 @@ class RegistrationController extends Controller
             }
         } else {
             // Cancel any old non-offline pending payments for this month
-            Payment::where('user_id', $user->id)
+            Payment::monthly()
+                ->where('user_id', $user->id)
                 ->where('year_month', $yearMonth)
                 ->where('status', 'pending')
                 ->where('payment_method', '!=', 'offline')
@@ -1058,6 +1078,7 @@ class RegistrationController extends Controller
                 'user_id'        => $user->id,
                 'amount'         => $amount,
                 'status'         => 'pending',
+                'kind'           => 'monthly',
                 'payment_method' => 'offline',
                 'year_month'     => $yearMonth,
                 'gateway_ref'    => 'OFFLINE_' . strtoupper(uniqid()),

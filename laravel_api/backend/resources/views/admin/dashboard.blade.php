@@ -91,6 +91,9 @@
                         <div class="media-body">
                             <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Pending Payments</p>
                             <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">{{ number_format($pendingPayments ?? 0) }}</h4>
+                            @if(isset($pendingMonthly) && isset($pendingTopups))
+                                <div style="font-size: 0.72rem; color: #9ca3af; margin-top: 2px;">{{ $pendingMonthly }} monthly + {{ $pendingTopups }} top-ups</div>
+                            @endif
                         </div>
                     </div>
                 </div>

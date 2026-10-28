@@ -620,7 +620,22 @@
                                     @endphp
                                     <tr style="border-bottom: 1.0px solid rgba(255,255,255,0.1);">
                                         <td>{{ $index + 1 }}</td>
-                                        <td><strong>{{ $payment->year_month }}</strong></td>
+                                        <td>
+                                            <strong>{{ $payment->year_month }}</strong>
+                                            @if($payment->kind === 'topup')
+                                                <div class="mt-1">
+                                                    <span class="badge" style="background: #f59e0b; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;">Subject top-up</span>
+                                                    @php
+                                                        $topupSubs = $payment->meta['added_subjects'] ?? [];
+                                                    @endphp
+                                                    @if(!empty($topupSubs))
+                                                        <small class="d-block text-truncate" style="color: #cbd5e1; font-size: 0.7rem; max-width: 160px;" title="{{ is_array($topupSubs) ? implode(', ', $topupSubs) : $topupSubs }}">
+                                                            + {{ is_array($topupSubs) ? implode(', ', $topupSubs) : $topupSubs }}
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td>{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-' }}</td>
                                         <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                                         <td>
@@ -773,11 +788,18 @@
                                                             <small class="text-muted">Cleared automatically if status is not Paid. Defaults to today if status is Paid and date is empty.</small>
                                                         </div>
 
+                                                        @if($payment->kind === 'topup')
+                                                            <div class="alert alert-warning py-1 px-2 mb-3" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fcd34d;">
+                                                                <i class="fa fa-info-circle mr-1"></i> Subject top-up payment. Amount can only be edited while pending.
+                                                            </div>
+                                                        @endif
+
                                                         <div class="form-group mb-3">
                                                             <label class="text-white font-weight-bold">Amount (Rs.) <span class="text-danger">*</span></label>
                                                             <input type="number" step="0.01" min="0" class="form-control" name="amount" 
                                                                 value="{{ old('payment_id') == $payment->id ? old('amount', $payment->amount) : $payment->amount }}" 
                                                                 required
+                                                                {{ ($payment->kind === 'topup' && $payment->status !== 'pending') ? 'readonly' : '' }}
                                                                 style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
                                                         </div>
 

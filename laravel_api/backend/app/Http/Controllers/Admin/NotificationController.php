@@ -18,13 +18,18 @@ class NotificationController extends Controller
             // System Alerts
             $pendingApprovals = \App\Models\User::where('role', 'user')->whereNull('admin_confirmed_at')->count();
             $pendingPayments = \App\Models\Payment::where('status', 'pending')->count();
+            $pendingTopups = \App\Models\Payment::where('status', 'pending')->where('kind', 'topup')->count();
+            $pendingMonthly = $pendingPayments - $pendingTopups;
 
             return response()->json([
                 'notifications' => $notifications->take(10)->get(),
                 'unreadCount' => $unreadCount,
                 'systemAlerts' => [
                     'pendingApprovals' => $pendingApprovals,
-                    'pendingPayments' => $pendingPayments
+                    'pendingPayments' => $pendingPayments,
+                    'pendingMonthly' => $pendingMonthly,
+                    'pendingTopups' => $pendingTopups,
+                    'pendingPaymentsSplit' => "{$pendingMonthly} monthly + {$pendingTopups} top-ups",
                 ]
             ]);
         }

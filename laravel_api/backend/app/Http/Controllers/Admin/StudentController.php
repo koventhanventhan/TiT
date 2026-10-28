@@ -109,6 +109,8 @@ class StudentController extends Controller
         $currentYearMonth = now()->format('Y-m');
         $students = $query->with(['payments' => function ($q) use ($currentYearMonth) {
             $q->where('year_month', $currentYearMonth);
+        }, 'subjectTopups' => function ($q) use ($currentYearMonth) {
+            $q->where('year_month', $currentYearMonth);
         }])->latest()->paginate(15)->appends($request->query());
         
         $instituteId = auth()->check() ? auth()->user()->institute_id : null;
@@ -122,6 +124,12 @@ class StudentController extends Controller
             $q->where('year_month', $currentYearMonth)
               ->where('status', 'pending');
         })->count();
+        $pendingTopupsCount = (clone $countQuery)->whereHas('payments', function ($q) use ($currentYearMonth) {
+            $q->where('year_month', $currentYearMonth)
+              ->where('status', 'pending')
+              ->where('kind', 'topup');
+        })->count();
+        $pendingMonthlyCount = $pendingPaymentsCount - $pendingTopupsCount;
         $gradeMapping = $this->indexService->getGradeBatchMapping($instituteId);
 
         return view('admin.students.index', compact(
@@ -133,6 +141,8 @@ class StudentController extends Controller
             'instituteFormat',
             'gradeMapping',
             'pendingPaymentsCount',
+            'pendingMonthlyCount',
+            'pendingTopupsCount',
             'currentYearMonth'
         ));
     }
@@ -811,7 +821,8 @@ class StudentController extends Controller
     private function markMonthPaid(User $student, string $yearMonth, string $paidAt, ?float $amount = null): ?Payment
     {
         return DB::transaction(function () use ($student, $yearMonth, $paidAt, $amount) {
-            $existingPayments = Payment::where('user_id', $student->id)
+            $existingPayments = Payment::monthly()
+                ->where('user_id', $student->id)
                 ->where('year_month', $yearMonth)
                 ->lockForUpdate()
                 ->orderByDesc('id')
@@ -820,6 +831,18 @@ class StudentController extends Controller
             if ($existingPayments->where('status', 'paid')->isNotEmpty()) {
                 return null;
             }
+
+            // Auto-supersede any pending top-ups from past months
+            \App\Models\SubjectTopup::where('user_id', $student->id)
+                ->where('year_month', '<', $yearMonth)
+                ->where('status', 'pending')
+                ->update(['status' => 'superseded']);
+
+            \App\Models\Payment::where('user_id', $student->id)
+                ->where('kind', 'topup')
+                ->where('year_month', '<', $yearMonth)
+                ->where('status', 'pending')
+                ->update(['status' => 'cancelled']);
 
             $pendingPayments = $existingPayments->where('status', 'pending');
 
@@ -839,6 +862,7 @@ class StudentController extends Controller
                     'status' => 'paid',
                     'paid_at' => $paidAt,
                     'amount' => $finalAmount,
+                    'kind' => $newestPending->kind ?: 'monthly',
                 ];
 
                 if (empty($newestPending->payment_method)) {
@@ -858,6 +882,7 @@ class StudentController extends Controller
                 'amount' => $finalAmount,
                 'status' => 'paid',
                 'paid_at' => $paidAt,
+                'kind' => 'monthly',
                 'payment_method' => 'offline',
                 'institute_id' => $student->institute_id ?? 1,
             ]);
@@ -1081,7 +1106,8 @@ class StudentController extends Controller
             $monthlyAmount = $amount / $monthsCount;
             
             // Find the last paid month, or use current month if none
-            $lastPaid = \App\Models\Payment::where('user_id', $request->user->id)
+            $lastPaid = \App\Models\Payment::monthly()
+                ->where('user_id', $request->user->id)
                 ->where('status', 'paid')
                 ->orderBy('year_month', 'desc')
                 ->first();
@@ -1100,18 +1126,21 @@ class StudentController extends Controller
                     [
                         'user_id' => $request->user->id,
                         'year_month' => $yearMonth,
+                        'kind' => 'advance',
                     ],
                     [
                         'amount' => $monthlyAmount,
                         'status' => 'paid',
                         'payment_method' => 'offline',
                         'paid_at' => now(),
+                        'kind' => 'advance',
                         'institute_id' => $request->user->institute_id ?? 1,
                         'gateway_ref' => 'ADVANCE_APP_' . $request->id . '_' . $i
                     ]
                 );
 
-                \App\Models\Payment::where('user_id', $request->user->id)
+                \App\Models\Payment::monthly()
+                    ->where('user_id', $request->user->id)
                     ->where('year_month', $yearMonth)
                     ->where('status', 'pending')
                     ->where('id', '!=', $payment->id)

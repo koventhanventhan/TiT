@@ -306,6 +306,9 @@
                        style="{{ request('pending_payments') == '1' ? 'background: #f59e0b; color: #fff; font-weight: 700;' : 'background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600;' }} font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
                        title="Pending Payments: students with a PENDING payment for the current month (offline payment requested, waiting for Mark Paid) – clicking filters the list to them">
                         <i class="flaticon-381-diamond mr-1"></i> Pending Payments: {{ $pendingPaymentsCount ?? 0 }}
+                        @if(isset($pendingMonthlyCount) && isset($pendingTopupsCount))
+                            <span style="opacity: 0.85; font-size: 0.72rem; margin-left: 2px;">({{ $pendingMonthlyCount }} monthly + {{ $pendingTopupsCount }} top-ups)</span>
+                        @endif
                     </a>
                     <span class="badge badge-light" style="background: rgba(255, 255, 255, 0.08); color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: help;"
                           data-toggle="tooltip"
@@ -500,9 +503,15 @@
                              @forelse($students as $student)
                              @php
                                  $currYM = $currentYearMonth ?? now()->format('Y-m');
-                                 $latestPayment = $student->payments->where('year_month', $currYM)->where('status', 'paid')->first();
-                                 $pendingPayment = $student->payments->where('year_month', $currYM)->where('status', 'pending')->first();
+                                 $latestPayment = $student->payments->where('year_month', $currYM)->where('status', 'paid')->filter(function($p) {
+                                     return empty($p->kind) || in_array($p->kind, ['monthly', 'advance']);
+                                 })->first();
+                                 $pendingPayment = $student->payments->where('year_month', $currYM)->where('status', 'pending')->filter(function($p) {
+                                     return empty($p->kind) || in_array($p->kind, ['monthly', 'advance']);
+                                 })->first();
                                  $paidThisMonth = $latestPayment !== null;
+                                 $pendingTopup = ($student->relationLoaded('subjectTopups') && $student->subjectTopups ? $student->subjectTopups->where('year_month', $currYM)->where('status', 'pending')->first() : null)
+                                     ?? $student->pendingSubjectTopup($currYM);
                                  
                                  $subjectsArray = [];
                                  if ($student->selected_subjects) {
@@ -608,6 +617,28 @@
                                      @else
                                          <div style="display: flex; align-items: center; gap: 0.25rem;">
                                              <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Not paid</span>
+                                         </div>
+                                     @endif
+
+                                     @if($pendingTopup)
+                                         <div class="mt-1 p-1 rounded" style="background: rgba(245, 158, 11, 0.1); border: 1px dashed rgba(245, 158, 11, 0.4); font-size: 0.65rem;">
+                                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap;">
+                                                 <span class="badge badge-xs badge-warning" style="background: #f59e0b; color: #fff; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px;">Subject top-up</span>
+                                                 <span style="font-weight: 700; color: #f59e0b;">Rs {{ number_format((float) $pendingTopup->amount, 2) }}</span>
+                                             </div>
+                                             @php
+                                                 $topupSubs = is_array($pendingTopup->added_subjects) ? $pendingTopup->added_subjects : (json_decode($pendingTopup->added_subjects, true) ?: []);
+                                             @endphp
+                                             <div class="text-truncate" style="max-width: 140px; color: #d1d5db; font-size: 0.6rem; margin-top: 1px;" title="{{ implode(', ', $topupSubs) }}">
+                                                 + {{ implode(', ', $topupSubs) }}
+                                             </div>
+                                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                                                 <span style="color: #9ca3af; font-size: 0.55rem;">{{ $pendingTopup->created_at ? $pendingTopup->created_at->format('M d') : '' }}</span>
+                                                 <form action="{{ route('admin.students.subject-topups.mark-paid', $pendingTopup->id) }}" method="POST" style="display: inline-block; margin: 0;" onsubmit="return confirm('Money received for Rs {{ number_format((float) $pendingTopup->amount, 2) }}?');">
+                                                     @csrf
+                                                     <button type="submit" class="btn btn-xs btn-success py-0 px-1" style="font-size: 0.55rem; line-height: 1.2; border-radius: 3px;" title="Mark Top-up Paid">Mark Paid</button>
+                                                 </form>
+                                             </div>
                                          </div>
                                      @endif
                                  </td>

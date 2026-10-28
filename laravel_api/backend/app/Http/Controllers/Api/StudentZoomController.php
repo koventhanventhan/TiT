@@ -80,7 +80,7 @@ class StudentZoomController extends Controller
         });
 
         // Get payment info
-        $lastPayment = Payment::where('user_id', $user->id)->where('status', 'paid')->latest('paid_at')->first();
+        $lastPayment = Payment::monthly()->where('user_id', $user->id)->where('status', 'paid')->latest('paid_at')->first();
         $nextPaymentDate = Carbon::now()->addMonth()->startOfMonth()->toDateString();
 
         return response()->json([

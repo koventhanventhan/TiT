@@ -69,14 +69,29 @@ class StudentPaymentController extends Controller
             $paidAt = null;
         }
 
+        if ($payment->kind === 'topup' && $payment->status !== 'pending') {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Top-up payment amount can only be edited while pending.');
+        }
+
         return DB::transaction(function () use ($request, $student, $payment, $yearMonth, $status, $amount, $paymentMethod, $paidAt) {
-            // Lock relevant rows for update
+            $isTopup = ($payment->kind === 'topup');
+
+            // Lock relevant rows for update within the same kind group
             $existingRows = Payment::where('user_id', $student->id)
                 ->where('year_month', $yearMonth)
+                ->when($isTopup, function ($q) {
+                    $q->where('kind', 'topup');
+                }, function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+                    });
+                })
                 ->lockForUpdate()
                 ->get();
 
-            // Never allow two PAID rows for the same student+month
+            // Never allow two PAID rows for the same student+month in the same kind group
             if ($status === 'paid') {
                 $otherPaid = $existingRows->where('status', 'paid')->where('id', '!=', $payment->id);
                 if ($otherPaid->isNotEmpty()) {
@@ -87,7 +102,7 @@ class StudentPaymentController extends Controller
                 }
             }
 
-            // Changing the month of a row to a month that already has a PENDING row cancels that older pending row
+            // Changing the month of a row to a month that already has a PENDING row cancels that older pending row in the same kind group
             $otherPending = $existingRows->where('status', 'pending')->where('id', '!=', $payment->id);
             if ($otherPending->isNotEmpty()) {
                 Payment::whereIn('id', $otherPending->pluck('id'))->update(['status' => 'cancelled']);
@@ -102,6 +117,14 @@ class StudentPaymentController extends Controller
                 'payment_method' => $paymentMethod,
                 'paid_at' => $paidAt,
             ]);
+
+            if ($payment->kind === 'topup') {
+                $topup = \App\Models\SubjectTopup::where('payment_id', $payment->id)->first()
+                    ?? (!empty($payment->meta['topup_id']) ? \App\Models\SubjectTopup::find($payment->meta['topup_id']) : null);
+                if ($topup) {
+                    $topup->update(['amount' => $amount]);
+                }
+            }
 
             ActivityLogService::log(
                 'payment_updated',
@@ -160,18 +183,27 @@ class StudentPaymentController extends Controller
         $paidAt = $request->filled('paid_date') ? $request->paid_date : now()->format('Y-m-d');
 
         return DB::transaction(function () use ($student, $payment, $paidAt) {
+            $isTopup = ($payment->kind === 'topup');
+
             $existingRows = Payment::where('user_id', $student->id)
                 ->where('year_month', $payment->year_month)
+                ->when($isTopup, function ($q) {
+                    $q->where('kind', 'topup');
+                }, function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+                    });
+                })
                 ->lockForUpdate()
                 ->get();
 
-            // Cannot mark paid if a paid row already exists for that month
+            // Cannot mark paid if a paid row already exists for that month within same kind group
             $otherPaid = $existingRows->where('status', 'paid')->where('id', '!=', $payment->id);
             if ($otherPaid->isNotEmpty()) {
                 return redirect()->back()->with('error', 'Payment for ' . $payment->year_month . ' is already marked as paid!');
             }
 
-            // Cancel any other pending rows for that month
+            // Cancel any other pending rows for that month within same kind group
             $otherPending = $existingRows->where('status', 'pending')->where('id', '!=', $payment->id);
             if ($otherPending->isNotEmpty()) {
                 Payment::whereIn('id', $otherPending->pluck('id'))->update(['status' => 'cancelled']);
@@ -184,6 +216,20 @@ class StudentPaymentController extends Controller
                 'paid_at' => $paidAt,
                 'payment_method' => $payment->payment_method ?: 'offline',
             ]);
+
+            if ($payment->kind === 'topup') {
+                \App\Models\SubjectTopup::markPaid($payment->id, $payment->payment_method ?: 'offline');
+                try {
+                    $notifier = app(\App\Services\NotificationService::class);
+                    $notifier->notifyUser(
+                        $student, 'general_update', 'tit_general_update',
+                        [$student->full_name ?? $student->name, 'admin'],
+                        ['update_details' => 'Your subject top-up has been approved. Your new subjects are now unlocked!']
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Top-up approval notification to student failed: ' . $e->getMessage());
+                }
+            }
 
             ActivityLogService::log(
                 'payment_marked_paid',
@@ -239,6 +285,17 @@ class StudentPaymentController extends Controller
                 'status' => 'pending',
                 'paid_at' => null,
             ]);
+
+            if ($payment->kind === 'topup') {
+                $topup = \App\Models\SubjectTopup::where('payment_id', $payment->id)->first()
+                    ?? (!empty($payment->meta['topup_id']) ? \App\Models\SubjectTopup::find($payment->meta['topup_id']) : null);
+                if ($topup) {
+                    $topup->update([
+                        'status' => 'pending',
+                        'paid_at' => null,
+                    ]);
+                }
+            }
 
             ActivityLogService::log(
                 'payment_reverted',
@@ -310,6 +367,19 @@ class StudentPaymentController extends Controller
 
         return DB::transaction(function () use ($student, $payment) {
             $snapshot = $payment->toArray();
+
+            if ($payment->kind === 'topup') {
+                $topup = \App\Models\SubjectTopup::where('payment_id', $payment->id)->first()
+                    ?? (!empty($payment->meta['topup_id']) ? \App\Models\SubjectTopup::find($payment->meta['topup_id']) : null);
+                if ($topup) {
+                    $topup->update([
+                        'status' => 'pending',
+                        'payment_id' => null,
+                        'payment_method' => null,
+                        'paid_at' => null,
+                    ]);
+                }
+            }
 
             ActivityLogService::log(
                 'payment_deleted',

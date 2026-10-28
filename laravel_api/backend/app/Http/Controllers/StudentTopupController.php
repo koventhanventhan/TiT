@@ -137,23 +137,44 @@ class StudentTopupController extends Controller
 
         // Send admin notification
         $studentName = $user->full_name ?? $user->name;
+        $grade = $user->current_grade ?? 'N/A';
         $contactInfo = $user->phone_number ?: ($user->email ?: 'No contact');
         $subjectsStr = implode(', ', $topup->added_subjects ?: []);
         $amountStr = number_format((float) $topup->amount, 2);
+        $editUrl = route('admin.students.edit', $user->id);
 
         if ($this->notifier) {
             try {
                 $this->notifier->notifyAdmin(
                     'admin_alert', 'tit_admin_approved',
-                    ["Subject Top-up: {$studentName} added {$subjectsStr} (Rs {$amountStr})", "admin"],
+                    ["Subject Top-up: {$studentName} (Grade {$grade}) added {$subjectsStr} (Rs {$amountStr})", "admin"],
                     [
                         'alert_title' => 'Subject Top-up Request',
-                        'alert_message' => "Subject Top-up: Student {$studentName} ({$contactInfo}) added {$subjectsStr} (Rs {$amountStr}) for {$topup->year_month}.",
+                        'alert_message' => "Subject Top-up: Student {$studentName} (Grade: {$grade}, Contact: {$contactInfo}) added {$subjectsStr} (Rs {$amountStr}) for {$topup->year_month}. View: {$editUrl}",
+                        'student_name' => $studentName,
+                        'grade' => $grade,
+                        'subjects' => $subjectsStr,
+                        'amount' => (float) $topup->amount,
+                        'link' => $editUrl,
                     ]
                 );
             } catch (\Throwable $e) {
                 Log::error('Top-up offline notification failed: ' . $e->getMessage());
             }
+        }
+
+        try {
+            $adminUser = User::where('role', 'admin')->first();
+            if ($adminUser) {
+                $adminUser->notify(new \App\Notifications\AdminNotification(
+                    "Subject Top-up: {$studentName} (Grade {$grade}) added {$subjectsStr} (Rs {$amountStr})",
+                    'warning',
+                    $editUrl,
+                    'topup_request'
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('AdminNotification for top-up offline request failed: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -214,13 +235,34 @@ class StudentTopupController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
-        $payment = Payment::updateOrCreate(
-            [
-                'id' => $topup->payment_id,
-            ],
-            [
+        $payment = null;
+        if ($topup->payment_id) {
+            $payment = Payment::find($topup->payment_id);
+        }
+        if (!$payment) {
+            $payment = Payment::where('user_id', $topup->user_id)
+                ->where('year_month', $topup->year_month)
+                ->where('kind', 'topup')
+                ->where('status', 'pending')
+                ->latest('id')
+                ->first();
+        }
+
+        if ($payment) {
+            $payment->update([
+                'status' => 'paid',
+                'amount' => $topup->amount,
+                'paid_at' => now(),
+                'payment_method' => $topup->payment_method ?: ($payment->payment_method ?: 'offline'),
+                'meta' => array_merge((array) ($payment->meta ?? []), [
+                    'topup_id' => $topup->id,
+                    'added_subjects' => $topup->added_subjects,
+                ]),
+            ]);
+        } else {
+            $payment = Payment::create([
                 'user_id' => $topup->user_id,
-                'institute_id' => $topup->institute_id,
+                'institute_id' => $topup->institute_id ?: 1,
                 'amount' => $topup->amount,
                 'year_month' => $topup->year_month,
                 'status' => 'paid',
@@ -232,10 +274,10 @@ class StudentTopupController extends Controller
                     'added_subjects' => $topup->added_subjects,
                 ],
                 'gateway_ref' => 'TOPUP_ADMIN_' . $topup->id . '_' . time(),
-            ]
-        );
+            ]);
+        }
 
-        $topup->markPaid($payment->id, $topup->payment_method ?: 'offline');
+        $topup->markPaid($payment->id, $payment->payment_method ?: 'offline');
 
         // Issue receipt
         try {

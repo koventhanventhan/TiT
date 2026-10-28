@@ -54,6 +54,7 @@ class StudentPaymentController extends Controller
             'amount' => ['required', 'numeric', 'min:0'],
             'status' => ['required', Rule::in(['paid', 'pending', 'cancelled', 'failed'])],
             'payment_method' => ['nullable', 'string', Rule::in(['offline', 'online', 'bank_transfer', 'cash'])],
+            'received_by' => ['nullable', Rule::in(array_keys(Payment::RECEIVED_BY_OPTIONS))],
             'paid_date' => ['nullable', 'date'],
         ]);
 
@@ -110,13 +111,31 @@ class StudentPaymentController extends Controller
 
             $oldSnapshot = $payment->toArray();
 
-            $payment->update([
+            $updates = [
                 'year_month' => $yearMonth,
                 'amount' => $amount,
                 'status' => $status,
                 'payment_method' => $paymentMethod,
                 'paid_at' => $paidAt,
-            ]);
+            ];
+
+            // Explicitly changing the method invalidates an older "received by" choice
+            if ($request->filled('payment_method') && $request->payment_method !== $payment->payment_method) {
+                $meta = (array) ($payment->meta ?? []);
+                unset($meta['received_by']);
+                $updates['meta'] = $meta ?: null;
+            }
+
+            // A paid row can only be labelled online when the gateway confirmed it
+            if ($status === 'paid') {
+                $payment->payment_method = $paymentMethod;
+                if (isset($updates['meta'])) {
+                    $payment->meta = $updates['meta'];
+                }
+                $updates = array_merge($updates, $payment->adminPaidAttributes($request->input('received_by'), auth()->id()));
+            }
+
+            $payment->update($updates);
 
             if ($payment->kind === 'topup') {
                 $topup = \App\Models\SubjectTopup::where('payment_id', $payment->id)->first()
@@ -161,6 +180,10 @@ class StudentPaymentController extends Controller
                 : 'Payment updated.';
 
             $response = redirect()->back()->with('success', $successMsg);
+            if ($request->payment_method === 'online' && $status === 'paid' && $payment->payment_method !== 'online') {
+                $response->with('info', 'The payment gateway never confirmed this payment, so it was saved as Offline instead of Online.');
+            }
+
             if ($preflightWarning) {
                 $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
             }
@@ -178,11 +201,13 @@ class StudentPaymentController extends Controller
 
         $request->validate([
             'paid_date' => ['nullable', 'date'],
+            'received_by' => ['nullable', Rule::in(array_keys(Payment::RECEIVED_BY_OPTIONS))],
         ]);
 
         $paidAt = $request->filled('paid_date') ? $request->paid_date : now()->format('Y-m-d');
+        $receivedBy = $request->input('received_by');
 
-        return DB::transaction(function () use ($student, $payment, $paidAt) {
+        return DB::transaction(function () use ($student, $payment, $paidAt, $receivedBy) {
             $isTopup = ($payment->kind === 'topup');
 
             $existingRows = Payment::where('user_id', $student->id)
@@ -211,11 +236,13 @@ class StudentPaymentController extends Controller
 
             $oldSnapshot = $payment->toArray();
 
-            $payment->update([
+            $payment->update(array_merge([
                 'status' => 'paid',
                 'paid_at' => $paidAt,
-                'payment_method' => $payment->payment_method ?: 'offline',
-            ]);
+            ], $payment->adminPaidAttributes($receivedBy, auth()->id())));
+
+            // adminPaidAttributes() already ran against the pre-update status, refresh the model
+            $payment->refresh();
 
             if ($payment->kind === 'topup') {
                 \App\Models\SubjectTopup::markPaid($payment->id, $payment->payment_method ?: 'offline');

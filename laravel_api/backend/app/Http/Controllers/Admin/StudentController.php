@@ -463,7 +463,7 @@ class StudentController extends Controller
         $yearMonth = now()->format('Y-m');
         $paidAt = now()->toDateString();
         $amount = $request->filled('amount') ? (float) $request->amount : null;
-        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount);
+        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount, $request->input('received_by'));
 
         $preflightWarning = null;
         if ($payment) {
@@ -765,7 +765,10 @@ class StudentController extends Controller
         $student = User::where('role', 'user')->where('id', $id)->whereNotNull('full_name')->firstOrFail();
 
         // Accept either a full date (YYYY-MM-DD) or year_month (YYYY-MM)
-        $request->validate(['year_month' => 'required|string']);
+        $request->validate([
+            'year_month' => 'required|string',
+            'received_by' => ['nullable', Rule::in(array_keys(Payment::RECEIVED_BY_OPTIONS))],
+        ]);
 
         $inputValue = $request->year_month;
 
@@ -780,7 +783,7 @@ class StudentController extends Controller
 
         $amount = $request->filled('amount') ? (float) $request->amount : null;
 
-        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount);
+        $payment = $this->markMonthPaid($student, $yearMonth, $paidAt, $amount, $request->input('received_by'));
 
         if (!$payment) {
             return redirect()->back()->with('error', 'Payment for ' . $yearMonth . ' is already marked as paid!');
@@ -818,9 +821,9 @@ class StudentController extends Controller
      * Mark a month as paid for a student, updating any existing pending row or creating a new row.
      * Prevents duplicate rows using transactions and row locking.
      */
-    private function markMonthPaid(User $student, string $yearMonth, string $paidAt, ?float $amount = null): ?Payment
+    private function markMonthPaid(User $student, string $yearMonth, string $paidAt, ?float $amount = null, ?string $receivedBy = null): ?Payment
     {
-        return DB::transaction(function () use ($student, $yearMonth, $paidAt, $amount) {
+        return DB::transaction(function () use ($student, $yearMonth, $paidAt, $amount, $receivedBy) {
             $existingPayments = Payment::monthly()
                 ->where('user_id', $student->id)
                 ->where('year_month', $yearMonth)
@@ -865,9 +868,11 @@ class StudentController extends Controller
                     'kind' => $newestPending->kind ?: 'monthly',
                 ];
 
-                if (empty($newestPending->payment_method)) {
-                    $updateData['payment_method'] = 'offline';
-                }
+                // A pending PayHere checkout the gateway never confirmed becomes OFFLINE money
+                $updateData = array_merge(
+                    $updateData,
+                    $newestPending->adminPaidAttributes($receivedBy, auth()->id())
+                );
 
                 $newestPending->update($updateData);
 
@@ -875,6 +880,14 @@ class StudentController extends Controller
             }
 
             $finalAmount = $amount !== null ? $amount : (float) $this->calculateUserAmount($student);
+
+            $meta = ['marked_paid_at' => now()->toDateTimeString()];
+            if (auth()->id()) {
+                $meta['marked_paid_by'] = auth()->id();
+            }
+            if ($receivedBy) {
+                $meta['received_by'] = array_key_exists($receivedBy, Payment::RECEIVED_BY_OPTIONS) ? $receivedBy : 'other';
+            }
 
             return Payment::create([
                 'user_id' => $student->id,
@@ -884,6 +897,7 @@ class StudentController extends Controller
                 'paid_at' => $paidAt,
                 'kind' => 'monthly',
                 'payment_method' => 'offline',
+                'meta' => $meta,
                 'institute_id' => $student->institute_id ?? 1,
             ]);
         });
@@ -1085,7 +1099,7 @@ class StudentController extends Controller
         return view('admin.students.advance-payments', compact('requests'));
     }
 
-    public function approveAdvancePayment($id)
+    public function approveAdvancePayment(Request $httpRequest, $id)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
@@ -1122,6 +1136,14 @@ class StudentController extends Controller
             for ($i = 0; $i < $monthsCount; $i++) {
                 $yearMonth = $startMonth->copy()->addMonths($i)->format('Y-m');
                 
+                $advanceMeta = array_filter([
+                    'advance_request_id' => $request->id,
+                    'received_by' => in_array($httpRequest->input('received_by'), array_keys(Payment::RECEIVED_BY_OPTIONS), true)
+                        ? $httpRequest->input('received_by') : null,
+                    'marked_paid_by' => auth()->id(),
+                    'marked_paid_at' => now()->toDateTimeString(),
+                ], fn ($v) => $v !== null);
+
                 $payment = \App\Models\Payment::updateOrCreate(
                     [
                         'user_id' => $request->user->id,
@@ -1135,7 +1157,8 @@ class StudentController extends Controller
                         'paid_at' => now(),
                         'kind' => 'advance',
                         'institute_id' => $request->user->institute_id ?? 1,
-                        'gateway_ref' => 'ADVANCE_APP_' . $request->id . '_' . $i
+                        'gateway_ref' => 'ADVANCE_APP_' . $request->id . '_' . $i,
+                        'meta' => $advanceMeta,
                     ]
                 );
 

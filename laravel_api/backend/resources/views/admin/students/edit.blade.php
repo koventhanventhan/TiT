@@ -556,6 +556,19 @@
 
                 <div class="payment-management-section mt-5 border-top pt-4">
                     <h4 class="mb-4" style="color: #ffab2d; font-weight: 700;"><i class="flaticon-381-layer-1 mr-2"></i> MONTHLY PAYMENT STATUS</h4>
+
+                    @if(empty($student->admin_confirmed_at) && $student->registration_status !== 'rejected')
+                    <div class="p-4 rounded mb-4" id="confirm-and-mark-paid-card" style="background: rgba(56, 189, 248, 0.08); border-left: 0.3125rem solid #38bdf8;">
+                        <h5 class="mb-2" style="color: #fff;">Confirm registration + mark paid</h5>
+                        <p class="mb-3 small text-muted">Use this when the money for {{ now()->format('F Y') }} has already been received: the registration is confirmed, an index number is assigned (if missing) and the payment is marked as paid with a receipt.</p>
+                        <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" onsubmit="if(!confirm('Money received? This confirms the registration and marks {{ now()->format('F Y') }} as paid.')) { return false; } this.querySelector('button[type=submit]').disabled=true;">
+                            @csrf
+                            @include('admin.partials.received-by-select', ['dark' => true])
+                            <button type="submit" class="btn btn-info font-weight-bold" style="border-radius: 0.5rem;">CONFIRM + MARK PAID (MONEY RECEIVED)</button>
+                        </form>
+                    </div>
+                    @endif
+
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -565,6 +578,7 @@
                                 <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                                     @csrf
                                     <input type="hidden" name="year_month" value="{{ now()->format('Y-m-d') }}">
+                                    @include('admin.partials.received-by-select', ['dark' => true])
                                     <button type="submit" class="btn btn-success font-weight-bold btn-block" style="border-radius: 0.5rem;">
                                         MARK PAID: {{ strtoupper(now()->format('F Y')) }}
                                     </button>
@@ -587,6 +601,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @include('admin.partials.received-by-select', ['dark' => true])
                                 </form>
                                 <small class="text-muted d-block mt-2">Select a date to mark payment 
                                      </small>
@@ -641,6 +656,13 @@
                                         <td>
                                             @if($payment->status === 'paid')
                                                 <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID</span>
+                                                <div class="small mt-1 payment-method-hint" style="color: #cbd5e1;">
+                                                    @if($payment->displayMethod() === 'online')
+                                                        Online (PayHere){{ $payment->transaction_id ? ' · ' . $payment->transaction_id : '' }}
+                                                    @else
+                                                        Offline{{ $payment->receivedByLabel() ? ' · ' . $payment->receivedByLabel() : '' }}
+                                                    @endif
+                                                </div>
                                                 <div class="mt-1">
                                                     @if($payment->receipt_sent_at)
                                                         <span class="badge badge-success" style="font-size: 10px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4);" title="Delivered: {{ $payment->receipt_sent_at->format('Y-m-d H:i') }}">
@@ -920,6 +942,9 @@
                                                                 <label class="text-white font-weight-bold">Paid Date</label>
                                                                 <input type="date" class="form-control" name="paid_date" value="{{ date('Y-m-d') }}" required
                                                                     style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                            </div>
+                                                            <div class="mt-3">
+                                                                @include('admin.partials.received-by-select', ['dark' => true])
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">

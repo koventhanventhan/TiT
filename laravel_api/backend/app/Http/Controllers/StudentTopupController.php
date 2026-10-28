@@ -248,17 +248,23 @@ class StudentTopupController extends Controller
                 ->first();
         }
 
+        $receivedBy = $request->input('received_by');
+        if ($receivedBy !== null && !array_key_exists($receivedBy, Payment::RECEIVED_BY_OPTIONS)) {
+            $receivedBy = 'other';
+        }
+
         if ($payment) {
-            $payment->update([
+            $adminAttrs = $payment->adminPaidAttributes($receivedBy, auth()->id());
+            $payment->update(array_merge([
                 'status' => 'paid',
                 'amount' => $topup->amount,
                 'paid_at' => now(),
-                'payment_method' => $topup->payment_method ?: ($payment->payment_method ?: 'offline'),
-                'meta' => array_merge((array) ($payment->meta ?? []), [
+            ], $adminAttrs, [
+                'meta' => array_merge((array) ($adminAttrs['meta'] ?? []), [
                     'topup_id' => $topup->id,
                     'added_subjects' => $topup->added_subjects,
                 ]),
-            ]);
+            ]));
         } else {
             $payment = Payment::create([
                 'user_id' => $topup->user_id,
@@ -266,13 +272,16 @@ class StudentTopupController extends Controller
                 'amount' => $topup->amount,
                 'year_month' => $topup->year_month,
                 'status' => 'paid',
-                'payment_method' => $topup->payment_method ?: 'offline',
+                'payment_method' => 'offline',
                 'paid_at' => now(),
                 'kind' => 'topup',
-                'meta' => [
+                'meta' => array_filter([
                     'topup_id' => $topup->id,
                     'added_subjects' => $topup->added_subjects,
-                ],
+                    'received_by' => $receivedBy,
+                    'marked_paid_by' => auth()->id(),
+                    'marked_paid_at' => now()->toDateTimeString(),
+                ], fn ($v) => $v !== null),
                 'gateway_ref' => 'TOPUP_ADMIN_' . $topup->id . '_' . time(),
             ]);
         }

@@ -72,9 +72,10 @@
                                 <td>{{ $req->created_at->format('M d, Y h:i A') }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <form action="{{ route('admin.students.advance-payments.approve', $req->id) }}" method="POST">
+                                        <form action="{{ route('admin.students.advance-payments.approve', $req->id) }}" method="POST" class="d-flex align-items-end" style="gap: 6px;" onsubmit="return confirm('Money received for {{ $req->months_count }} month(s)?');">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">Approve ({{ $req->months_count }} Months)</button>
+                                            @include('admin.partials.received-by-select')
+                                            <button type="submit" class="btn btn-sm btn-success mb-2">Approve ({{ $req->months_count }} Months)</button>
                                         </form>
                                         <form action="{{ route('admin.students.advance-payments.reject', $req->id) }}" method="POST">
                                             @csrf

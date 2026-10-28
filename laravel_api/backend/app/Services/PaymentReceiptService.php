@@ -135,15 +135,15 @@ class PaymentReceiptService
         // Payment Date
         $paymentDate = ($payment->paid_at ?? now())->format('d-m-Y');
 
-        // Payment Method
-        $paymentMethod = $this->formatPaymentMethod($payment->payment_method);
+        // Payment Method (online only when the gateway really confirmed it)
+        $paymentMethod = $this->methodLabelFor($payment);
 
         // Amount
         $amountFormatted = 'LKR ' . number_format((float) $payment->amount, 2);
 
-        // Transaction ID / Gateway Ref
-        // Transaction ID / Gateway Ref
-        $transactionId = $payment->transaction_id ?: $payment->gateway_ref;
+        // Transaction reference: gateway id for confirmed online payments,
+        // otherwise "Received by admin on <date>" (never a PH_ checkout reference).
+        $transactionId = $this->referenceFor($payment, $paymentDate);
 
         // Base64 Logo (overridable via public/images/receipt-logo.png or institute setting receipt_logo)
         $logoBase64 = $this->getLogoBase64($payment);
@@ -252,6 +252,38 @@ class PaymentReceiptService
         }
 
         return $result;
+    }
+
+    /**
+     * Receipt label for a payment row. 'online' is only possible for gateway-confirmed
+     * payments; offline money shows the "Received by" choice of the admin (Cash / Bank
+     * Transfer / Other) or the generic "Bank Transfer / Cash".
+     */
+    public function methodLabelFor(Payment $payment): string
+    {
+        $method = $payment->displayMethod();
+
+        if ($method === 'offline') {
+            return $payment->receivedByLabel() ?? $this->formatPaymentMethod('offline');
+        }
+
+        return $this->formatPaymentMethod($method);
+    }
+
+    /**
+     * Value for the receipt's "Transaction Ref" row.
+     */
+    public function referenceFor(Payment $payment, ?string $paymentDate = null): ?string
+    {
+        $method = $payment->displayMethod();
+
+        if ($method === 'online' || $method === '') {
+            return trim((string) $payment->transaction_id) ?: null;
+        }
+
+        $date = $paymentDate ?: (($payment->paid_at ?? now())->format('d-m-Y'));
+
+        return "Received by admin on {$date}";
     }
 
     /**

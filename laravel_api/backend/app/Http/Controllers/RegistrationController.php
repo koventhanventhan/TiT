@@ -550,6 +550,80 @@ class RegistrationController extends Controller
         // -3 = chargeback
         if ($statusCode == 2) {
             // Payment successful
+            if ($payment->kind === 'topup') {
+                $wasAlreadyPaid = ($payment->status === 'paid');
+
+                \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $data) {
+                    $payment->update([
+                        'status'         => 'paid',
+                        'paid_at'        => $payment->paid_at ?: now(),
+                        'transaction_id' => $data['payment_id'] ?? $payment->transaction_id,
+                    ]);
+                    \App\Models\SubjectTopup::markPaid($payment->id, 'online');
+                });
+
+                if (!$wasAlreadyPaid) {
+                    $user = $payment->user?->fresh();
+
+                    // Generate receipt and dispatch notifications (topup receipt format)
+                    try {
+                        $receiptSvc = app(\App\Services\PaymentReceiptService::class);
+                        $receiptSvc->ensureReceipt($payment);
+                        $receiptSvc->sendReceiptNotifications($payment);
+                    } catch (\Throwable $e) {
+                        Log::error('PayHere notify: Top-up receipt generation failed: ' . $e->getMessage());
+                    }
+
+                    // notify student ("Your new subjects are now open")
+                    if ($user) {
+                        $this->notifier->notifyUser(
+                            $user, 'general_update', 'tit_general_update',
+                            [$user->full_name ?? $user->name, 'system'],
+                            ['update_details' => 'Your new subjects are now open']
+                        );
+                    }
+
+                    // notify admin ("Subject top-up received: <student> – <subjects> – Rs X")
+                    $addedList = !empty($payment->meta['added_subjects'])
+                        ? (is_array($payment->meta['added_subjects']) ? implode(', ', $payment->meta['added_subjects']) : (string)$payment->meta['added_subjects'])
+                        : 'Added subjects';
+                    $studentName = $user ? ($user->full_name ?? $user->name) : 'Student';
+                    $amountStr = number_format((float) $payment->amount, 2);
+                    $adminMsg = "Subject top-up received: {$studentName} – {$addedList} – Rs {$amountStr}";
+
+                    $this->notifier->notifyAdmin(
+                        'admin_alert', 'tit_payment_success',
+                        [$adminMsg],
+                        ['alert_title' => 'Subject Top-up Received', 'alert_message' => $adminMsg]
+                    );
+
+                    $admin = User::where('role', 'admin')
+                        ->where('institute_id', $user?->institute_id ?? 1)
+                        ->first();
+                    if ($admin) {
+                        try {
+                            $admin->notify(new AdminNotification(
+                                $adminMsg,
+                                'success',
+                                route('admin.students.edit', $user?->id ?? 1),
+                                'subject_topups'
+                            ));
+                        } catch (\Throwable $e) {
+                            Log::error('PayHere notify: Admin notification failed: ' . $e->getMessage());
+                        }
+                    }
+
+                    Log::info('PayHere topup payment SUCCESS', [
+                        'order_id'   => $orderId,
+                        'user_id'    => $user?->id,
+                        'amount'     => $payment->amount,
+                        'payment_id' => $data['payment_id'] ?? 'N/A',
+                    ]);
+                }
+
+                return response('OK', 200);
+            }
+
             $payment->update([
                 'status'      => 'paid',
                 'paid_at'     => now(),
@@ -630,7 +704,7 @@ class RegistrationController extends Controller
                     'payment_id' => $data['payment_id'] ?? 'N/A',
                 ]);
             }
-        } elseif (in_array($statusCode, ['-1', '-2', '-3'])) {
+        } elseif (in_array((string) $statusCode, ['-1', '-2', '-3'])) {
             // Payment failed/canceled/chargeback
             $payment->update(['status' => 'failed']);
             $statusLabel = match ((string) $statusCode) {
@@ -639,12 +713,14 @@ class RegistrationController extends Controller
                 '-3' => 'Chargeback',
                 default => 'Failed',
             };
-            if ($payment->user) {
+            if ($payment->user && $payment->kind !== 'topup') {
                 \App\Services\EventNotifier::paymentFailed($payment->user, $payment, $statusLabel, $orderId);
             }
+            // For topup: topup stays pending so student can retry, subjects remain locked.
             Log::warning('PayHere payment FAILED/CANCELED', [
                 'order_id'    => $orderId,
                 'status_code' => $statusCode,
+                'kind'        => $payment->kind,
             ]);
         } else {
             // Pending (status_code = 0)

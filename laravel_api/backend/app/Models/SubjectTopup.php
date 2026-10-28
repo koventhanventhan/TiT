@@ -67,14 +67,59 @@ class SubjectTopup extends Model
         return $this->status === 'paid';
     }
 
-    public function markPaid(?int $paymentId = null, ?string $method = null): void
+    public static function markPaid($target = null, ?string $method = 'online'): ?self
     {
-        $this->update([
-            'status' => 'paid',
-            'payment_id' => $paymentId ?: $this->payment_id,
-            'payment_method' => $method ?: $this->payment_method,
-            'paid_at' => now(),
-        ]);
+        if ($target instanceof self) {
+            $target->update([
+                'status' => 'paid',
+                'payment_method' => $method ?: $target->payment_method,
+                'paid_at' => $target->paid_at ?: now(),
+            ]);
+            return $target;
+        }
+
+        $paymentId = $target instanceof Payment ? $target->id : (is_numeric($target) ? (int)$target : null);
+        $payment = $target instanceof Payment ? $target : ($paymentId ? Payment::find($paymentId) : null);
+
+        $topup = null;
+        if ($payment) {
+            $topupId = $payment->meta['topup_id'] ?? null;
+            if ($topupId) {
+                $topup = self::find($topupId);
+            }
+            if (!$topup) {
+                $topup = self::where('payment_id', $payment->id)->first();
+            }
+            if (!$topup && !empty($payment->gateway_ref) && preg_match('/^TOPUP_(\d+)_/', $payment->gateway_ref, $m)) {
+                $topup = self::find((int) $m[1]);
+            }
+            if (!$topup && !empty($payment->gateway_ref) && preg_match('/^TOPUP_ADMIN_(\d+)_/', $payment->gateway_ref, $m)) {
+                $topup = self::find((int) $m[1]);
+            }
+            if (!$topup && !empty($payment->gateway_ref) && preg_match('/^TOPUP_OFF_(\d+)_/', $payment->gateway_ref, $m)) {
+                $topup = self::find((int) $m[1]);
+            }
+            if (!$topup && $payment->user_id && $payment->year_month) {
+                $topup = self::where('user_id', $payment->user_id)
+                    ->where('year_month', $payment->year_month)
+                    ->where('status', 'pending')
+                    ->first();
+            }
+        } elseif (is_numeric($target)) {
+            $topup = self::find((int) $target);
+        }
+
+        if ($topup) {
+            $topup->update([
+                'status' => 'paid',
+                'payment_id' => $payment ? $payment->id : ($topup->payment_id ?: $paymentId),
+                'payment_method' => $method ?: ($payment?->payment_method ?: ($topup->payment_method ?: 'online')),
+                'paid_at' => $topup->paid_at ?: now(),
+            ]);
+            return $topup;
+        }
+
+        return null;
     }
 
     public function markCancelled(): void

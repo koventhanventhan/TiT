@@ -69,30 +69,7 @@ class StudentTopupController extends Controller
             'payment_method' => 'online',
         ]);
 
-        // If simulate_success is passed (e.g. in test environment or mock)
-        if ($request->boolean('simulate_success') || app()->environment('testing')) {
-            $payment->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-                'transaction_id' => 'SIM_' . $orderId,
-            ]);
-            $topup->markPaid($payment->id, 'online');
-
-            try {
-                $receiptService = app(PaymentReceiptService::class);
-                $receiptService->ensureReceipt($payment);
-                $receiptService->sendReceiptNotifications($payment);
-            } catch (\Throwable $e) {
-                Log::error('Receipt trigger failed in simulated payOnline: ' . $e->getMessage());
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Top-up payment successful. Your new subjects are now unlocked!',
-                'topup' => $topup->fresh(),
-                'user' => $user->fresh(),
-            ]);
-        }
+        // Online payments become paid ONLY through signed PayHere server notification or admin action.
 
         // Build PayHere checkout params
         $payhereData = null;

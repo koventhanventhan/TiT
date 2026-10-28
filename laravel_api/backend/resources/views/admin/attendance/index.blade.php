@@ -40,7 +40,7 @@
 <div class="card mb-4">
     <div class="card-header bg-light">
         <h4 class="card-title text-primary"><strong>{{ $s->title }}</strong></h4>
-        <span class="badge badge-outline-dark fs-12">{{ $s->scheduled_at->format('M d, Y @ H:i') }}</span>
+        <span class="badge badge-outline-dark fs-12">{{ $s->scheduled_at ? $s->scheduled_at->format('M d, Y @ H:i') : 'N/A' }}</span>
     </div>
     <div class="card-body px-0">
         <div class="table-responsive">
@@ -58,7 +58,7 @@
                     @foreach($s->attendances as $index => $att)
                     <tr>
                         <td class="pl-4"><strong>{{ $index + 1 }}</strong></td>
-                        <td>{{ $att->user->full_name ?? $att->user->name ?? $att->user->email }}</td>
+                        <td>{{ $att->user?->full_name ?? $att->user?->name ?? $att->user?->email ?? ('User not found (#' . $att->user_id . ')') }}</td>
                         <td>
                             <span class="badge badge-xs light badge-{{ $att->role === 'teacher' ? 'info' : 'secondary' }}">
                                 {{ strtoupper($att->role) }}

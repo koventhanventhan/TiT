@@ -19,6 +19,30 @@
         </button>
     </div>
 @endif
+@if (session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ session('warning') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+@if (isset($hiddenCount) && $hiddenCount > 0)
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ $hiddenCount }} request(s) hidden (student not found / other institute)
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
 
 <div class="row">
     <div class="col-xl-12">
@@ -44,22 +68,28 @@
                             <tr>
                                 <td>{{ $req->id }}</td>
                                 <td>
-                                    <div class="text-truncate" style="font-weight: 700; color: #ffab2d;">{{ $req->user->full_name ?? $req->user->name }}</div>
-                                    @if(empty($req->user->phone_number) && $req->user->parent_id && $req->user->parent)
-                                        <div style="font-size: 0.75rem; color: #9ca3af;" title="Contact via: {{ $req->user->parent->full_name ?? $req->user->parent->name }} ({{ $req->user->parent->email }})">Contact via: {{ $req->user->parent->full_name ?? $req->user->parent->name }}</div>
+                                    @if($req->user)
+                                        <div class="text-truncate" style="font-weight: 700; color: #ffab2d;">{{ $req->user->full_name ?? $req->user->name ?? ('Student #' . $req->user_id) }}</div>
+                                        @if(empty($req->user->phone_number) && $req->user->parent_id && $req->user->parent)
+                                            <div style="font-size: 0.75rem; color: #9ca3af;" title="Contact via: {{ $req->user->parent->full_name ?? $req->user->parent->name ?? 'Parent' }} ({{ $req->user->parent->email ?? '' }})">Contact via: {{ $req->user->parent->full_name ?? $req->user->parent->name ?? 'Parent' }}</div>
+                                        @else
+                                            <div style="font-size: 0.75rem; color: #9ca3af;">{{ $req->user->email ?? 'N/A' }}</div>
+                                        @endif
                                     @else
-                                        <div style="font-size: 0.75rem; color: #9ca3af;">{{ $req->user->email }}</div>
+                                        <div class="text-truncate font-weight-bold text-danger">Student not found (#{{ $req->user_id }})</div>
                                     @endif
                                 </td>
-                                <td>{{ strtoupper($req->current_medium) }}</td>
-                                <td><span class="text-warning">{{ strtoupper($req->requested_medium) }}</span></td>
-                                <td>{{ $req->created_at->format('M d, Y h:i A') }}</td>
+                                <td>{{ strtoupper($req->current_medium ?? 'N/A') }}</td>
+                                <td><span class="text-warning">{{ strtoupper($req->requested_medium ?? 'N/A') }}</span></td>
+                                <td>{{ $req->created_at ? $req->created_at->format('M d, Y h:i A') : 'N/A' }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <form action="{{ route('admin.students.medium-changes.approve', $req->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                        </form>
+                                        @if($req->user)
+                                            <form action="{{ route('admin.students.medium-changes.approve', $req->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                            </form>
+                                        @endif
                                         <form action="{{ route('admin.students.medium-changes.reject', $req->id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-danger ml-2">Reject</button>

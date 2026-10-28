@@ -1030,46 +1030,89 @@ class StudentController extends Controller
 
     public function pendingMediumChanges()
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $requests = \App\Models\MediumChangeRequest::with('user')->where('status', 'pending')->latest()->paginate(15);
-        return view('admin.students.medium-changes', compact('requests'));
+        $user = auth()->user();
+        $isSuperAdmin = $user && $user->role === 'super_admin';
+
+        $totalPending = \App\Models\MediumChangeRequest::withoutGlobalScopes()->where('status', 'pending')->count();
+
+        $query = \App\Models\MediumChangeRequest::where('status', 'pending');
+        if (!$isSuperAdmin) {
+            $instituteId = $user ? $user->institute_id : null;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $visibleCount = (clone $query)->count();
+        $hiddenCount = max(0, $totalPending - $visibleCount);
+
+        $requests = $query->with(['user.parent'])->latest()->paginate(15);
+        return view('admin.students.medium-changes', compact('requests', 'hiddenCount'));
     }
 
     public function approveMediumChange($id)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request = \App\Models\MediumChangeRequest::findOrFail($id);
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $query = \App\Models\MediumChangeRequest::query();
+        if (!$isSuperAdmin) {
+            $instituteId = auth()->user()->institute_id;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $request = $query->findOrFail($id);
+
+        if (!$request->user) {
+            return redirect()->back()->with('error', 'Student not found – request not approved');
+        }
+
         $request->status = 'approved';
         $request->save();
 
-        if ($request->user) {
-            $request->user->medium = $request->requested_medium;
-            $request->user->save();
+        $request->user->medium = $request->requested_medium;
+        $request->user->save();
 
-            // Notify user
-            $this->notifier->notifyUser(
-                $request->user, 'general_update', 'tit_general_update',
-                [$request->user->full_name ?? $request->user->name, 'admin'],
-                ['update_details' => 'Your request to change medium to ' . $request->requested_medium . ' has been approved.']
-            );
-        }
+        // Notify user
+        $this->notifier->notifyUser(
+            $request->user, 'general_update', 'tit_general_update',
+            [($request->user->full_name ?? $request->user->name) ?: 'Student', 'admin'],
+            ['update_details' => 'Your request to change medium to ' . $request->requested_medium . ' has been approved.']
+        );
 
         return redirect()->back()->with('success', 'Medium change approved.');
     }
 
     public function rejectMediumChange($id)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request = \App\Models\MediumChangeRequest::findOrFail($id);
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $query = \App\Models\MediumChangeRequest::query();
+        if (!$isSuperAdmin) {
+            $instituteId = auth()->user()->institute_id;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $request = $query->findOrFail($id);
         $request->status = 'rejected';
         $request->save();
 
@@ -1077,7 +1120,7 @@ class StudentController extends Controller
             // Notify user
             $this->notifier->notifyUser(
                 $request->user, 'general_update', 'tit_general_update',
-                [$request->user->full_name ?? $request->user->name, 'admin'],
+                [($request->user->full_name ?? $request->user->name) ?: 'Student', 'admin'],
                 ['update_details' => 'Your request to change medium to ' . $request->requested_medium . ' has been rejected.']
             );
         }
@@ -1087,34 +1130,67 @@ class StudentController extends Controller
 
     public function pendingAdvancePayments()
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $requests = \App\Models\AdvancePaymentRequest::with('user')->where('status', 'pending')->latest()->paginate(15);
-        return view('admin.students.advance-payments', compact('requests'));
+        $user = auth()->user();
+        $isSuperAdmin = $user && $user->role === 'super_admin';
+
+        $totalPending = \App\Models\AdvancePaymentRequest::withoutGlobalScopes()
+            ->where('status', 'pending')
+            ->count();
+
+        $query = \App\Models\AdvancePaymentRequest::where('status', 'pending');
+        if (!$isSuperAdmin) {
+            $instituteId = $user ? $user->institute_id : null;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $visibleCount = (clone $query)->count();
+        $hiddenCount = max(0, $totalPending - $visibleCount);
+
+        $requests = $query->with(['user.parent'])->latest()->paginate(15);
+        return view('admin.students.advance-payments', compact('requests', 'hiddenCount'));
     }
 
     public function approveAdvancePayment(Request $httpRequest, $id)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request = \App\Models\AdvancePaymentRequest::findOrFail($id);
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $query = \App\Models\AdvancePaymentRequest::query();
+        if (!$isSuperAdmin) {
+            $instituteId = auth()->user()->institute_id;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $request = $query->findOrFail($id);
         
         if ($request->status !== 'pending') {
             return redirect()->back()->with('error', 'Request is already processed.');
         }
 
-        $request->status = 'approved';
-        $request->save();
+        if (!$request->user) {
+            return redirect()->back()->with('error', 'Student not found – request not approved');
+        }
 
-        if ($request->user) {
-            $monthsCount = $request->months_count;
-            $amount = $request->amount;
-            $monthlyAmount = $amount / $monthsCount;
-            
+        $monthsCount = (int) ($request->months_count ?? 1);
+        $amount = (float) ($request->amount ?? 0);
+        $monthlyAmount = $monthsCount > 0 ? ($amount / $monthsCount) : $amount;
+
+        $approvedPayments = [];
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $httpRequest, $monthsCount, $monthlyAmount, &$approvedPayments) {
             // Find the last paid month, or use current month if none
             $lastPaid = \App\Models\Payment::monthly()
                 ->where('user_id', $request->user->id)
@@ -1128,7 +1204,6 @@ class StudentController extends Controller
                 $startMonth = now()->startOfMonth();
             }
 
-            $approvedPayments = [];
             for ($i = 0; $i < $monthsCount; $i++) {
                 $yearMonth = $startMonth->copy()->addMonths($i)->format('Y-m');
                 
@@ -1168,31 +1243,40 @@ class StudentController extends Controller
                 $approvedPayments[] = $payment;
             }
 
-            // Assign receipts to approved payments and send receipt notification
-            $preflightWarning = null;
-            try {
-                $receiptService = app(\App\Services\PaymentReceiptService::class);
-                foreach ($approvedPayments as $p) {
-                    $receiptService->ensureReceipt($p);
-                    if ($preflightWarning === null) {
-                        $preflightWarning = $receiptService->preflightCheck($p);
-                    }
-                    $receiptService->sendReceiptNotifications($p);
-                }
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Receipt trigger failed in approveAdvancePayment: ' . $e->getMessage());
-                $preflightWarning = $e->getMessage();
-            }
+            // Status flips to approved only after the payments exist
+            $request->status = 'approved';
+            $request->save();
 
             // If student was deactivated, automatically reactivate them now that payment is approved
             if ($request->user && $request->user->deactivated_at) {
                 $request->user->update(['deactivated_at' => null]);
             }
+        });
 
-            // Notify user
+        // Assign receipts to approved payments and send ONE receipt notification for the batch
+        $preflightWarning = null;
+        try {
+            $receiptService = app(\App\Services\PaymentReceiptService::class);
+            foreach ($approvedPayments as $p) {
+                $receiptService->ensureReceipt($p);
+            }
+            if (!empty($approvedPayments)) {
+                $firstPayment = $approvedPayments[0];
+                if ($preflightWarning === null) {
+                    $preflightWarning = $receiptService->preflightCheck($firstPayment);
+                }
+                $receiptService->sendReceiptNotifications($firstPayment);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Receipt trigger failed in approveAdvancePayment: ' . $e->getMessage());
+            $preflightWarning = $e->getMessage();
+        }
+
+        // Notify user
+        if ($request->user) {
             $this->notifier->notifyUser(
                 $request->user, 'general_update', 'tit_general_update',
-                [$request->user->full_name ?? $request->user->name, 'admin'],
+                [($request->user->full_name ?? $request->user->name) ?: 'Student', 'admin'],
                 ['update_details' => 'Your advance payment request for ' . $monthsCount . ' months has been approved.']
             );
         }
@@ -1206,11 +1290,22 @@ class StudentController extends Controller
 
     public function rejectAdvancePayment($id)
     {
-        if (auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
 
-        $request = \App\Models\AdvancePaymentRequest::findOrFail($id);
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $query = \App\Models\AdvancePaymentRequest::query();
+        if (!$isSuperAdmin) {
+            $instituteId = auth()->user()->institute_id;
+            $query->whereHas('user', function ($q) use ($instituteId) {
+                if ($instituteId) {
+                    $q->where('users.institute_id', $instituteId);
+                }
+            });
+        }
+
+        $request = $query->findOrFail($id);
         $request->status = 'rejected';
         $request->save();
 
@@ -1218,8 +1313,8 @@ class StudentController extends Controller
             // Notify user
             $this->notifier->notifyUser(
                 $request->user, 'general_update', 'tit_general_update',
-                [$request->user->full_name ?? $request->user->name, 'admin'],
-                ['update_details' => 'Your advance payment request for ' . $request->months_count . ' months has been rejected. Please contact the administrator.']
+                [($request->user->full_name ?? $request->user->name) ?: 'Student', 'admin'],
+                ['update_details' => 'Your advance payment request for ' . ($request->months_count ?? 1) . ' months has been rejected. Please contact the administrator.']
             );
         }
 

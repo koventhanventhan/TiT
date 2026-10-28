@@ -751,10 +751,70 @@ class RegistrationController extends Controller
             return response()->json(['message' => 'Payment record not found.'], 404);
         }
 
+        // Ownership check: payment.user_id must equal the authenticated profile
+        // (or be a child/sibling of the authenticated account, as the existing multi-profile logic defines); else 403.
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $allowedUserIds = collect([$user->id]);
+        if ($user->parent_id) {
+            $allowedUserIds->push($user->parent_id);
+            $siblingIds = User::where('parent_id', $user->parent_id)->pluck('id');
+            $allowedUserIds = $allowedUserIds->merge($siblingIds);
+        } else {
+            $childIds = User::where('parent_id', $user->id)->pluck('id');
+            $allowedUserIds = $allowedUserIds->merge($childIds);
+        }
+
+        $isAuthorized = in_array($user->role, ['admin', 'super_admin']) || $allowedUserIds->contains($payment->user_id);
+        if (!$isAuthorized) {
+            return response()->json(['message' => 'Unauthorized to access this payment.'], 403);
+        }
+
         // If already paid via server notification, just return success
         if ($payment->status === 'paid') {
             return response()->json([
+                'status' => 'paid',
                 'message' => 'Payment already confirmed.',
+                'registration_status' => $payment->user->registration_status ?? 'approved',
+            ]);
+        }
+
+        $trustClientCallback = (bool) (config('payhere.trust_client_callback') ?? env('PAYHERE_TRUST_CLIENT_CALLBACK', false));
+
+        // If still pending and client callback is not trusted, return 202
+        if (!$trustClientCallback) {
+            return response()->json([
+                'status' => 'pending',
+                'message' => 'Waiting for payment confirmation',
+                'registration_status' => $payment->user->registration_status ?? 'pending',
+            ], 202);
+        }
+
+        // If PAYHERE_TRUST_CLIENT_CALLBACK is true (dev/testing fallback):
+        if ($payment->kind === 'topup') {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $request) {
+                $payment->update([
+                    'status'         => 'paid',
+                    'paid_at'        => $payment->paid_at ?: now(),
+                    'transaction_id' => $request->payment_id ?: $payment->transaction_id,
+                ]);
+                \App\Models\SubjectTopup::markPaid($payment->id, 'online');
+            });
+
+            try {
+                $receiptSvc = app(\App\Services\PaymentReceiptService::class);
+                $receiptSvc->ensureReceipt($payment);
+                $receiptSvc->sendReceiptNotifications($payment);
+            } catch (\Throwable $e) {
+                Log::error('paymentSuccess (trusted): Top-up receipt generation failed: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'paid',
+                'message' => 'Payment successful. Top-up activated.',
                 'registration_status' => $payment->user->registration_status ?? 'approved',
             ]);
         }
@@ -766,40 +826,40 @@ class RegistrationController extends Controller
             'transaction_id' => $request->payment_id,
         ]);
 
-        $user = $payment->user;
-        if ($user) {
-            $user->update([
+        $payee = $payment->user;
+        if ($payee) {
+            $payee->update([
                 'registration_status' => 'approved',
                 'admin_confirmed_at'  => now(),
             ]);
 
-            if (empty($user->index_number)) {
+            if (empty($payee->index_number)) {
                 try {
                     $indexSvc = app(\App\Services\StudentIndexService::class);
-                    $institute = $user->institute ?: \App\Models\Institute::find($user->institute_id ?: 1);
+                    $institute = $payee->institute ?: \App\Models\Institute::find($payee->institute_id ?: 1);
                     $format = $institute?->getIndexFormat() ?? 'grade';
 
                     if ($format === 'grade') {
-                        $indexSvc->assign($user, null);
+                        $indexSvc->assign($payee, null);
                     } else {
-                        $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
-                        $indexSvc->assign($user, $batch);
+                        $batch = $indexSvc->calculateDefaultBatchYear($payee) ?? (int) date('y');
+                        $indexSvc->assign($payee, $batch);
                     }
                 } catch (\Throwable $e) {
                     Log::warning("Could not auto-assign index number in paymentSuccess: " . $e->getMessage());
                 }
             }
 
-            Log::info('paymentSuccess: User automatically approved', ['user_id' => $user->id]);
+            Log::info('paymentSuccess: User automatically approved', ['user_id' => $payee->id]);
 
             // Notify Admin
             $admin = User::where('role', 'admin')->first();
             if ($admin) {
                 try {
                     $admin->notify(new AdminNotification(
-                        "Registration Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
+                        "Registration Payment Received: " . ($payee->full_name ?? $payee->name) . " - LKR " . number_format($payment->amount, 2),
                         'success',
-                        route('admin.students.edit', $user->id),
+                        route('admin.students.edit', $payee->id),
                         'admission_payments'
                     ));
                 } catch (\Throwable $e) {
@@ -809,9 +869,9 @@ class RegistrationController extends Controller
 
             // Send Payment Success notification to Student
             $this->notifier->notifyUser(
-                $user, 'payment_success', 'tit_payment_success',
-                [$user->full_name ?? $user->name],
-                ['student_name' => $user->full_name ?? $user->name]
+                $payee, 'payment_success', 'tit_payment_success',
+                [$payee->full_name ?? $payee->name],
+                ['student_name' => $payee->full_name ?? $payee->name]
             );
 
             // Generate receipt and dispatch notifications
@@ -826,12 +886,13 @@ class RegistrationController extends Controller
             // Notify Admin
             $this->notifier->notifyAdmin(
                 'admin_alert', 'tit_payment_success',
-                ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)],
-                ['alert_title' => 'Payment Received', 'alert_message' => ($user->full_name ?? $user->name) . ' paid LKR ' . number_format($payment->amount, 2)]
+                ["PAYMENT ALERT: " . ($payee->full_name ?? $payee->name) . " paid LKR " . number_format($payment->amount, 2)],
+                ['alert_title' => 'Payment Received', 'alert_message' => ($payee->full_name ?? $payee->name) . ' paid LKR ' . number_format($payment->amount, 2)]
             );
         }
 
         return response()->json([
+            'status' => 'paid',
             'message' => 'Payment successful. Your account is now active.',
             'registration_status' => 'approved',
         ]);

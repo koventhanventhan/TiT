@@ -23,4 +23,7 @@ return [
 
     // Default currency (LKR for Sri Lanka)
     'currency'        => env('PAYHERE_CURRENCY', 'LKR'),
+
+    // Security: whether to trust frontend callback to mark payments paid (dev/sandbox only)
+    'trust_client_callback' => env('PAYHERE_TRUST_CLIENT_CALLBACK', false),
 ];

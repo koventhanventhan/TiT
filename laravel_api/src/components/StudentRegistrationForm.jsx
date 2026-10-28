@@ -74,6 +74,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const [otp, setOtp] = useState('')
   const [parentData, setParentData] = useState(null)
   const [newSiblingId, setNewSiblingId] = useState(null)
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false)
+  const [confirmingTimeout, setConfirmingTimeout] = useState(false)
 
   // Fetch subjects grouped by category from backend
   const [packages, setPackages] = useState([])
@@ -795,18 +797,42 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
 
       window.payhere.onCompleted = async function onCompleted(orderId) {
         console.log("Payment completed. OrderID:" + orderId)
-        try {
-          await registerPaymentSuccess(resp.params.order_id, orderId, newSiblingId)
-          toast.success(t('pay_online_success'))
-          if (onClose) onClose()
-          if (isAddSiblingMode) window.location.reload()
-          else window.location.href = '/student/dashboard'
-        } catch (err) {
-          console.error('Failed to notify backend of payment success:', err)
-          toast.info('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
-          if (onClose) onClose()
-          if (isAddSiblingMode) window.location.reload()
-          else window.location.href = '/student/dashboard'
+        setIsConfirmingPayment(true)
+        setConfirmingTimeout(false)
+
+        const targetOrderId = resp.params?.order_id || orderId
+        const pollInterval = 3000
+        const maxAttempts = 20
+        let attempts = 0
+        let isConfirmed = false
+
+        while (attempts < maxAttempts && !isConfirmed) {
+          attempts++
+          try {
+            const data = await registerPaymentSuccess(targetOrderId, orderId, newSiblingId)
+            if (data && (data.status === 'paid' || data.registration_status === 'approved')) {
+              isConfirmed = true
+              setIsConfirmingPayment(false)
+              toast.success(t('pay_online_success') || 'Payment confirmed successfully!')
+              setTimeout(() => {
+                if (onClose) onClose()
+                if (isAddSiblingMode) window.location.reload()
+                else window.location.href = '/student/dashboard'
+              }, 1500)
+              return
+            }
+          } catch (err) {
+            console.warn('Polling payment success error:', err)
+          }
+
+          if (attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, pollInterval))
+          }
+        }
+
+        if (!isConfirmed) {
+          setIsConfirmingPayment(false)
+          setConfirmingTimeout(true)
         }
       }
 
@@ -1173,7 +1199,38 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
             <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="tit-reg-error">{error}</div>}
             
-            {(settingsLoading || packagesLoading) ? (
+            {isConfirmingPayment ? (
+              <div className="tit-reg-confirming-payment" data-testid="reg-confirming-payment" style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                <FiLoader className="spin-icon" style={{ fontSize: '2.5rem', color: '#4f46e5', marginBottom: '1rem', animation: 'spin 1s linear infinite' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>
+                  Payment received – confirming…
+                </h3>
+                <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+                  Please wait while we confirm your payment...
+                </p>
+              </div>
+            ) : confirmingTimeout ? (
+              <div className="tit-reg-timeout-payment" data-testid="reg-timeout-payment" style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: '#b45309', marginBottom: '0.75rem' }}>
+                  Confirmation Pending
+                </h3>
+                <p style={{ color: '#374151', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+                  We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.
+                </p>
+                <button
+                  type="button"
+                  className="tit-reg-submit-btn"
+                  onClick={() => {
+                    if (onClose) onClose();
+                    if (isAddSiblingMode) window.location.reload();
+                    else window.location.href = '/student/dashboard';
+                  }}
+                >
+                  Continue to Dashboard
+                </button>
+              </div>
+            ) : (settingsLoading || packagesLoading) ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: '#4f46e5' }}>
                 Calculating payment details...
               </div>

@@ -401,15 +401,44 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
           sandbox: resp.payhere.payhere_url?.includes('sandbox'),
           ...resp.payhere.params
         };
-        window.payhere.onCompleted = function onCompleted() {
-          setSuccessMessage('Top-up payment completed successfully! Your subjects are unlocked.');
-          setPaymentDone(true);
-          setPendingTopup(null);
-          setTopupDiff(0);
-          setLockedSubjects([]);
-          setTimeout(() => {
-            onUpdateSuccess(selectedSubjects);
-          }, 1500);
+        window.payhere.onCompleted = async function onCompleted(orderId) {
+          setSuccessMessage('Payment received – confirming…');
+          setLoading(true);
+
+          const pollInterval = 3000;
+          const maxAttempts = 20;
+          let attempts = 0;
+          let confirmed = false;
+
+          while (attempts < maxAttempts && !confirmed) {
+            attempts++;
+            try {
+              const statusData = await getStudentPaymentStatus();
+              if (!statusData.pending_topup || statusData.pending_topup.status === 'paid') {
+                confirmed = true;
+                setSuccessMessage('Top-up payment completed successfully! Your subjects are unlocked.');
+                setPaymentDone(true);
+                setPendingTopup(null);
+                setTopupDiff(0);
+                setLockedSubjects([]);
+                setTimeout(() => {
+                  onUpdateSuccess(selectedSubjects);
+                }, 1500);
+                return;
+              }
+            } catch (e) {
+              console.warn('Polling top-up status error:', e);
+            }
+
+            if (attempts < maxAttempts) {
+              await new Promise((r) => setTimeout(r, pollInterval));
+            }
+          }
+
+          if (!confirmed) {
+            setLoading(false);
+            setError('We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.');
+          }
         };
         window.payhere.onDismissed = function onDismissed() {
           setLoading(false);
@@ -553,12 +582,41 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
         ...resp.params
       };
 
-      window.payhere.onCompleted = function onCompleted(orderId) {
-        setSuccessMessage('Payment completed successfully!');
-        setPaymentDone(true);
-        setTimeout(() => {
-          onUpdateSuccess(selectedSubjects);
-        }, 1500);
+      window.payhere.onCompleted = async function onCompleted(orderId) {
+        setSuccessMessage('Payment received – confirming…');
+        setLoading(true);
+
+        const pollInterval = 3000;
+        const maxAttempts = 20;
+        let attempts = 0;
+        let confirmed = false;
+
+        while (attempts < maxAttempts && !confirmed) {
+          attempts++;
+          try {
+            const statusData = await getStudentPaymentStatus();
+            if (statusData && (statusData.is_paid || statusData.has_paid || !statusData.pending_topup)) {
+              confirmed = true;
+              setSuccessMessage('Payment completed successfully!');
+              setPaymentDone(true);
+              setTimeout(() => {
+                onUpdateSuccess(selectedSubjects);
+              }, 1500);
+              return;
+            }
+          } catch (e) {
+            console.warn('Polling payment status error:', e);
+          }
+
+          if (attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, pollInterval));
+          }
+        }
+
+        if (!confirmed) {
+          setLoading(false);
+          setError('We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.');
+        }
       };
 
       window.payhere.onDismissed = function onDismissed() {

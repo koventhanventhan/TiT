@@ -25,6 +25,8 @@ const StudentPaymentModule = () => {
     const [paying, setPaying] = useState(false);
     const [payingOffline, setPayingOffline] = useState(false);
     const [offlineSuccess, setOfflineSuccess] = useState(false);
+    const [confirmingPayment, setConfirmingPayment] = useState(false);
+    const [confirmingTimeout, setConfirmingTimeout] = useState(false);
     const [error, setError] = useState(null);
     const submittingOfflineRef = useRef(false);
 
@@ -74,10 +76,41 @@ const StudentPaymentModule = () => {
                 ...resp.params
             };
 
-            window.payhere.onCompleted = function onCompleted(orderId) {
+            window.payhere.onCompleted = async function onCompleted(orderId) {
                 console.log("Payment completed. OrderID:" + orderId);
-                fetchStatus();
                 setPaying(false);
+                setConfirmingPayment(true);
+                setConfirmingTimeout(false);
+
+                const pollInterval = 3000;
+                const maxAttempts = 20;
+                let attempts = 0;
+                let confirmed = false;
+
+                while (attempts < maxAttempts && !confirmed) {
+                    attempts++;
+                    try {
+                        const newStatus = await getStudentPaymentStatus();
+                        if (newStatus && (newStatus.has_paid || newStatus.is_paid)) {
+                            confirmed = true;
+                            setStatus(newStatus);
+                            setConfirmingPayment(false);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Polling monthly payment status error:', e);
+                    }
+
+                    if (attempts < maxAttempts) {
+                        await new Promise((r) => setTimeout(r, pollInterval));
+                    }
+                }
+
+                if (!confirmed) {
+                    setConfirmingPayment(false);
+                    setConfirmingTimeout(true);
+                    fetchStatus();
+                }
             };
 
             window.payhere.onDismissed = function onDismissed() {
@@ -169,6 +202,58 @@ const StudentPaymentModule = () => {
                     )}
                 </div>
 
+                {confirmingPayment && (
+                    <div
+                        className="status-card-confirming"
+                        data-testid="status-card-confirming"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#eff6ff',
+                            color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiLoader className="spin-icon" style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Payment received – confirming…</span>
+                    </div>
+                )}
+
+                {confirmingTimeout && (
+                    <div
+                        className="status-card-timeout"
+                        data-testid="status-card-timeout"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#fffbeb',
+                            color: '#b45309',
+                            border: '1px solid #fde68a',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.</span>
+                    </div>
+                )}
+
                 {isPendingOffline && (
                     <div
                         className="status-card-pending"
@@ -225,6 +310,7 @@ const StudentPaymentModule = () => {
                     <div className="payment-actions-stack">
                         <button 
                             className="pay-now-btn" 
+                            data-testid="pay-now-btn"
                             onClick={handlePayment}
                             disabled={paying || payingOffline}
                             style={{ touchAction: 'manipulation' }}

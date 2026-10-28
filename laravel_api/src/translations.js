@@ -423,7 +423,8 @@ export const translations = {
     "payment_rule_receipts_title": "Receipts & Confirmation",
     "payment_rule_receipts_desc": "A digital receipt is automatically sent to your registered Email and WhatsApp upon payment confirmation.",
     "payment_rule_topup_title": "Subject Changes (Top-Up)",
-    "payment_rule_topup_desc": "Adding subjects during an already-paid month requires a top-up for the fee difference. Added subjects remain locked until the top-up is paid."
+    "payment_rule_topup_desc": "Adding subjects during an already-paid month requires a top-up for the fee difference. Added subjects remain locked until the top-up is paid.",
+    "for_grade": "For {grade}"
   },
   "ta": {
     "nav_home": "முகப்பு",
@@ -874,7 +875,8 @@ export const translations = {
     "payment_rule_receipts_title": "ரசீது மற்றும் உறுதிப்படுத்தல்",
     "payment_rule_receipts_desc": "கட்டணம் உறுதிப்படுத்தப்பட்டவுடன் அதிகாரப்பூர்வ டிஜிட்டல் ரசீது உங்கள் மின்னஞ்சல் மற்றும் WhatsApp இலக்கத்திற்கு உடனடியாக அனுப்பப்படும்.",
     "payment_rule_topup_title": "கூடுதல் பாடங்கள் (Top-Up)",
-    "payment_rule_topup_desc": "ஏற்கனவே கட்டணம் செலுத்திய மாதத்தில் புதிய பாடங்களைச் சேர்த்தால், கட்டண வேறுபாட்டை (Top-up) செலுத்த வேண்டும்; அதுவரை புதிய பாடங்கள் பூட்டப்பட்டிருக்கும்."
+    "payment_rule_topup_desc": "ஏற்கனவே கட்டணம் செலுத்திய மாதத்தில் புதிய பாடங்களைச் சேர்த்தால், கட்டண வேறுபாட்டை (Top-up) செலுத்த வேண்டும்; அதுவரை புதிய பாடங்கள் பூட்டப்பட்டிருக்கும்.",
+    "for_grade": "{grade} இற்கானது"
   },
   "si": {
     "nav_home": "මුල් පිටුව",
@@ -1324,7 +1326,8 @@ export const translations = {
     "payment_rule_receipts_title": "රිසිට්පත් සහ තහවුරු කිරීම",
     "payment_rule_receipts_desc": "ගෙවීම තහවුරු වූ වහාම ඔබගේ ලියාපදිංචි විද්‍යුත් තැපෑලට සහ WhatsApp වෙත නිල ඩිජිටල් රිසිට්පතක් එවනු ලැබේ.",
     "payment_rule_topup_title": "විෂයයන් එක් කිරීම (Top-Up)",
-    "payment_rule_topup_desc": "දැනටමත් ගෙවූ මාසයක අමතර විෂයයන් එක් කරන්නේ නම් වෙනස (Top-up) ගෙවිය යුතුය; අමතර මුදල ගෙවන තුරු නව විෂයයන් අගුලු දමා ඇත."
+    "payment_rule_topup_desc": "දැනටමත් ගෙවූ මාසයක අමතර විෂයයන් එක් කරන්නේ නම් වෙනස (Top-up) ගෙවිය යුතුය; අමතර මුදල ගෙවන තුරු නව විෂයයන් අගුලු දමා ඇත.",
+    "for_grade": "{grade} සඳහා"
   }
 };
 

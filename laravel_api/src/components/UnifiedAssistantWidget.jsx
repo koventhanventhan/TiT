@@ -148,11 +148,12 @@ export default function UnifiedAssistantWidget() {
     return (
         <div
             id="unified-assistant-widget"
+            className="unified-assistant-root"
             style={{
                 position: 'fixed',
                 bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
                 right: 'calc(16px + env(safe-area-inset-right, 0px))',
-                zIndex: 9999,
+                zIndex: 9990,
                 fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             }}
         >

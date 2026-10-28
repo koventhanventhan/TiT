@@ -404,7 +404,7 @@ export default function MessagingPage() {
                                 {composeType === 'individual' && (
                                     <div style={{ marginBottom: 20 }}>
                                         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--m-text)', marginBottom: 6 }}>Select Recipient</label>
-                                        <select value={composeId} onChange={e => setComposeId(e.target.value)} style={{ width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--m-border)', fontSize: 14, outline: 'none', background: '#fff', color: 'var(--m-text)', boxSizing: 'border-box' }}>
+                                        <select className="t-select" value={composeId} onChange={e => setComposeId(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }}>
                                             <option value="">-- Select --</option>
                                             {individualList.map(r => <option key={r.id} value={r.id}>{r.full_name || r.name} ({r.role}) — {r.email}</option>)}
                                         </select>
@@ -414,7 +414,7 @@ export default function MessagingPage() {
                                 {composeType === 'grade' && (
                                     <div style={{ marginBottom: 20 }}>
                                         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--m-text)', marginBottom: 6 }}>Select Grade</label>
-                                        <select value={composeGrade} onChange={e => setComposeGrade(e.target.value)} style={{ width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--m-border)', fontSize: 14, outline: 'none', background: '#fff', color: 'var(--m-text)', boxSizing: 'border-box' }}>
+                                        <select className="t-select" value={composeGrade} onChange={e => setComposeGrade(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }}>
                                             <option value="">-- Select Grade --</option>
                                             {gradeOptions.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                                         </select>

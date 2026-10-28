@@ -149,8 +149,19 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+
+      // Hide the floating assistant bubble while the modal is open so it doesn't overlap selects or buttons on mobile
+      const assistantWidget = document.getElementById('unified-assistant-widget');
+      const prevAssistantDisplay = assistantWidget ? assistantWidget.style.display : null;
+      if (assistantWidget) {
+        assistantWidget.style.display = 'none';
+      }
+
       return () => {
         document.body.style.overflow = prevOverflow;
+        if (assistantWidget) {
+          assistantWidget.style.display = prevAssistantDisplay || '';
+        }
       };
     }
   }, [isOpen, medium, pendingMedium]);
@@ -641,12 +652,22 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
   const hasDiscount = appliedPackage && effectiveMonthly < originalAmount;
   const savings = originalAmount - monthlyAmount;
 
+  const getGradeHeaderText = (grade) => {
+    if (!grade) return '';
+    const trimmed = String(grade).trim();
+    const isNumeric = /^\d+$/.test(trimmed);
+    const gradePrefix = t('grade_prefix', 'Grade');
+    const displayGrade = isNumeric ? `${gradePrefix} ${trimmed}` : trimmed;
+    const template = t('for_grade', language === 'ta' ? '{grade} இற்கானது' : (language === 'si' ? '{grade} සඳහා' : 'For {grade}'));
+    return template.replace('{grade}', displayGrade);
+  };
+
   return (
     <div className="shared-modal-overlay" style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       background: 'rgba(15,23,42,0.6)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9999, padding: 12
+      zIndex: 10000, padding: 12
     }}>
       <div className="shared-modal-dialog" style={{
         background: '#fff', borderRadius: 24, width: 'calc(100% - 24px)', maxWidth: 500,
@@ -662,7 +683,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--t-text)' }}>
               {step === 1 ? 'Update Your Subjects' : 'Monthly Payment'}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--t-text-3)' }}>For {currentGrade}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--t-text-3)' }}>{getGradeHeaderText(currentGrade)}</p>
           </div>
           <button onClick={handleClose} aria-label="Close" style={{
             background: 'var(--t-bg)', border: 'none', width: 44, height: 44, minWidth: 44, minHeight: 44,
@@ -692,12 +713,12 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                   Medium of Learning <span style={{ color: 'var(--t-danger)' }}>*</span>
                 </label>
                 <select
+                  id="subject-update-medium-select"
+                  className="t-select"
                   value={localMedium}
                   onChange={(e) => setLocalMedium(e.target.value)}
                   style={{
-                    width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--t-border)',
-                    fontSize: 16, color: 'var(--t-text)', outline: 'none', appearance: 'none',
-                    background: '#fff', minHeight: 44
+                    width: '100%', minHeight: 44
                   }}
                 >
                   <option value="">Select Medium</option>

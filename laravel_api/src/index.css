@@ -296,11 +296,70 @@ button.btn-register {
   }
 }
 
-/* â”€â”€ Hide Scrollbar Utility â”€â”€ */
+/* ── Hide Scrollbar Utility ── */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ── Shared Form Select with Chevron (Part C) ── */
+.t-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-height: 44px;
+  font-size: 16px; /* Avoids iOS auto-zoom on input focus */
+  line-height: 1.5;
+  padding: 10px 40px 10px 14px;
+  background-color: var(--t-surface, #ffffff);
+  color: var(--t-text, #0f172a);
+  border: 1px solid var(--t-border, #cbd5e1);
+  border-radius: var(--radius-md, 12px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px 16px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.t-select:focus {
+  outline: none;
+  border-color: var(--t-primary, #4f0bd9);
+  box-shadow: 0 0 0 3px rgba(79, 11, 217, 0.15);
+}
+
+.t-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--t-bg-muted, #f8fafc);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .t-select,
+.dark .t-select {
+  background-color: var(--t-surface, #1e293b);
+  color: var(--t-text, #f8fafc);
+  border-color: var(--t-border, #334155);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* RTL-safe */
+[dir="rtl"] .t-select,
+html[dir="rtl"] .t-select,
+body[dir="rtl"] .t-select {
+  background-position: left 14px center;
+  padding-left: 40px;
+  padding-right: 14px;
+}
+
+/* Modal open: hide floating assistant bubble so it doesn't overlap selects or buttons on mobile */
+body:has(.shared-modal-overlay) #unified-assistant-widget,
+body:has(.t-modal-container) #unified-assistant-widget {
+  display: none !important;
 }

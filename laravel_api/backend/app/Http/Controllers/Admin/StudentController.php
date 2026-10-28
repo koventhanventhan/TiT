@@ -83,12 +83,8 @@ class StudentController extends Controller
             }
         }
 
-        if ($request->has('pending_payments') && $request->pending_payments === '1') {
-            $currentYearMonth = now()->format('Y-m');
-            $query->whereHas('payments', function ($q) use ($currentYearMonth) {
-                $q->where('year_month', $currentYearMonth)
-                  ->where('status', 'pending');
-            });
+        if ($request->has('pending_payments') && (string) $request->pending_payments === '1') {
+            return redirect()->route('admin.students.pending-payments');
         }
 
         if ($request->filled('search')) {
@@ -1420,6 +1416,130 @@ class StudentController extends Controller
         }
 
         return back()->with('success', "Assigned index numbers to {$assignedCount} student(s).");
+    }
+
+    /**
+     * Dedicated page for pending payments (monthly and subject top-ups).
+     * GET /admin/students/pending-payments
+     */
+    public function pendingPayments(Request $request)
+    {
+        $type = $request->get('type', 'all'); // 'all', 'monthly', 'topup', 'advance'
+        $grade = $request->get('grade');
+        $search = trim((string) $request->get('search', ''));
+
+        if ($type === 'advance') {
+            return redirect()->route('admin.students.advance-payments');
+        }
+
+        // Auto-link any pending SubjectTopup that does not have a payment yet
+        $orphanTopups = \App\Models\SubjectTopup::where('status', 'pending')->whereNull('payment_id')->get();
+        foreach ($orphanTopups as $ot) {
+            $p = Payment::firstOrCreate(
+                [
+                    'user_id' => $ot->user_id,
+                    'year_month' => $ot->year_month,
+                    'kind' => 'topup',
+                    'status' => 'pending',
+                ],
+                [
+                    'institute_id' => $ot->institute_id,
+                    'amount' => $ot->amount,
+                    'payment_method' => $ot->payment_method ?: 'offline',
+                    'meta' => [
+                        'topup_id' => $ot->id,
+                        'added_subjects' => $ot->added_subjects,
+                    ],
+                ]
+            );
+            $ot->update(['payment_id' => $p->id]);
+        }
+
+        $query = Payment::with(['user', 'user.parent', 'subjectTopup'])
+            ->where('status', 'pending');
+
+        if ($type === 'monthly') {
+            $query->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+            });
+        } elseif ($type === 'topup') {
+            $query->where('kind', 'topup');
+        }
+
+        if ($grade) {
+            $query->whereHas('user', function ($q) use ($grade) {
+                $q->where('current_grade', $grade)
+                  ->orWhere('current_grade', 'Grade ' . $grade);
+            });
+        }
+
+        if ($search !== '') {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('index_number', 'like', "%{$search}%");
+            });
+        }
+
+        $payments = $query->latest('id')->paginate(15)->appends($request->query());
+
+        // Pending counts
+        $totalPendingCount = Payment::where('status', 'pending')->count();
+        $monthlyPendingCount = Payment::where('status', 'pending')
+            ->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+            })->count();
+        $topupPendingCount = Payment::where('status', 'pending')->where('kind', 'topup')->count();
+        $advanceRequestsCount = \App\Models\AdvancePaymentRequest::where('status', 'pending')->count();
+
+        return view('admin.students.pending-payments', compact(
+            'payments',
+            'type',
+            'grade',
+            'search',
+            'totalPendingCount',
+            'monthlyPendingCount',
+            'topupPendingCount',
+            'advanceRequestsCount'
+        ));
+    }
+
+    /**
+     * Cancel a pending payment.
+     * POST /admin/students/pending-payments/{payment}/cancel
+     */
+    public function cancelPendingPayment(Request $request, $paymentId)
+    {
+        $payment = Payment::where('id', $paymentId)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        \DB::transaction(function () use ($payment) {
+            $payment->update([
+                'status' => 'cancelled',
+            ]);
+
+            if ($payment->kind === 'topup') {
+                $topup = \App\Models\SubjectTopup::where('payment_id', $payment->id)->first()
+                    ?? (!empty($payment->meta['topup_id']) ? \App\Models\SubjectTopup::find($payment->meta['topup_id']) : null);
+                if ($topup && $topup->status === 'pending') {
+                    $topup->update(['status' => 'cancelled']);
+                    if ($topup->user) {
+                        $current = $topup->user->selected_subjects ?: [];
+                        if (is_string($current)) {
+                            $current = json_decode($current, true) ?: [];
+                        }
+                        $revert = $topup->previous_subjects ?: array_values(array_diff($current, $topup->added_subjects ?: []));
+                        $topup->user->selected_subjects = json_encode(array_values($revert));
+                        $topup->user->save();
+                    }
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Pending payment #' . $payment->id . ' for ' . $payment->year_month . ' has been cancelled.');
     }
 }
 

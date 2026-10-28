@@ -81,7 +81,7 @@
         </div>
     </div>
     <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
-        <a href="{{ route('admin.students.index', ['pending_payments' => 1]) }}" style="text-decoration: none;">
+        <a href="{{ route('admin.students.pending-payments') }}" style="text-decoration: none;">
             <div class="widget-stat card" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                 <div class="card-body p-4">
                     <div class="media ai-icon">

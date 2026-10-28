@@ -119,7 +119,7 @@
                                 <div class="flex-grow-1">
                                     <h6 class="mt-1 mb-1 font-weight-bold text-danger">Payment Notice</h6>
                                     <p class="mb-2 text-dark" style="font-size: 0.85rem; line-height: 1.4;">There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.</p>
-                                    <a href="#" class="btn btn-danger btn-sm px-3 py-1">Review Payments</a>
+                                    <a href="{{ route('admin.students.pending-payments') }}" class="btn btn-danger btn-sm px-3 py-1">Review Payments</a>
                                 </div>
                                 <div>
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="position: static; padding: 0;">

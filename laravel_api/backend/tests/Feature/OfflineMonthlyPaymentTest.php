@@ -202,17 +202,18 @@ class OfflineMonthlyPaymentTest extends TestCase
         $dashRes->assertStatus(200);
         $dashRes->assertSee('Pending Payments');
 
-        // Visit admin students list with filter ?pending_payments=1
+        // Visiting admin students list with old filter ?pending_payments=1 redirects to dedicated page
         $listRes = $this->actingAs($this->admin, 'web')->get(route('admin.students.index', ['pending_payments' => 1]));
-        $listRes->assertStatus(200);
+        $listRes->assertRedirect(route('admin.students.pending-payments'));
 
-        // Student 1 (pending) is visible with age and Mark Paid form
-        $listRes->assertSee('Koventhan Venthan');
-        $listRes->assertSee('Pending (');
-        $listRes->assertSee(route('admin.students.mark-paid', $this->student->id));
+        // On dedicated pending payments page, Student 1 (pending) is visible with Mark Paid action
+        $pendingPage = $this->actingAs($this->admin, 'web')->get(route('admin.students.pending-payments'));
+        $pendingPage->assertStatus(200);
+        $pendingPage->assertSee('Koventhan Venthan');
+        $pendingPage->assertSee('Mark Paid');
 
         // Student 2 (not pending) is not visible in the pending list
-        $listRes->assertDontSee('Paid Student');
+        $pendingPage->assertDontSee('Paid Student');
     }
 
     /**

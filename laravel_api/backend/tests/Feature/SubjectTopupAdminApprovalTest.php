@@ -116,8 +116,12 @@ class SubjectTopupAdminApprovalTest extends TestCase
             ],
         ]);
 
-        $res = $this->actingAs($this->admin, 'web')
+        $redirectRes = $this->actingAs($this->admin, 'web')
             ->get(route('admin.students.index', ['pending_payments' => 1]));
+        $redirectRes->assertRedirect(route('admin.students.pending-payments'));
+
+        $res = $this->actingAs($this->admin, 'web')
+            ->get(route('admin.students.pending-payments'));
 
         $res->assertStatus(200);
         $res->assertSee('Subject top-up');

@@ -301,10 +301,10 @@
                           title="Students matching the current filters that already have a number">
                         <i class="flaticon-381-layer-1 mr-1"></i> {{ $filteredAssignedCount ?? $assignedIndexCount ?? 0 }} of {{ $filteredTotalCount ?? $totalStudentsCount ?? 0 }} students have an index number
                     </span>
-                    <a href="{{ request('pending_payments') == '1' ? route('admin.students.index', request()->except('pending_payments'), false) : route('admin.students.index', array_merge(request()->query(), ['pending_payments' => 1]), false) }}"
-                       class="badge {{ request('pending_payments') == '1' ? 'badge-warning' : '' }}"
-                       style="{{ request('pending_payments') == '1' ? 'background: #f59e0b; color: #fff; font-weight: 700;' : 'background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600;' }} font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
-                       title="Pending Payments: students with a PENDING payment for the current month (offline payment requested, waiting for Mark Paid) – clicking filters the list to them">
+                    <a href="{{ route('admin.students.pending-payments') }}"
+                       class="badge"
+                       style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
+                       title="Pending Payments: students with a PENDING payment for the current month – click to open dedicated pending payments page">
                         <i class="flaticon-381-diamond mr-1"></i> Pending Payments: {{ $pendingPaymentsCount ?? 0 }}
                         @if(isset($pendingMonthlyCount) && isset($pendingTopupsCount))
                             <span style="opacity: 0.85; font-size: 0.72rem; margin-left: 2px;">({{ $pendingMonthlyCount }} monthly + {{ $pendingTopupsCount }} top-ups)</span>
@@ -313,7 +313,7 @@
                     <span class="badge badge-light" style="background: rgba(255, 255, 255, 0.08); color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: help;"
                           data-toggle="tooltip"
                           data-html="true"
-                          title="<strong>Strip Legend:</strong><br>• <em>N of M students have an index number:</em> Students matching the current filters that already have a number.<br>• <em>Pending Payments:</em> Students with a PENDING payment for the current month (offline payment requested, waiting for Mark Paid) – clicking filters the list to them.">
+                          title="<strong>Strip Legend:</strong><br>• <em>N of M students have an index number:</em> Students matching the current filters that already have a number.<br>• <em>Pending Payments:</em> Students with a PENDING payment for the current month – click to open dedicated pending payments page.">
                         ?
                     </span>
                 </div>
@@ -355,14 +355,6 @@
                             <option value="0" {{ request('has_index') === '0' ? 'selected' : '' }}>Index: Not Assigned</option>
                         </select>
                         
-                        <div class="premium-toggle-wrapper">
-                            <input type="checkbox" id="pendingPaymentsFilter" name="pending_payments" value="1" class="premium-toggle-input" {{ request('pending_payments') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
-                            <label for="pendingPaymentsFilter" class="premium-toggle-btn mb-0" style="{{ request('pending_payments') == '1' ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-color: #f59e0b; color: #fff;' : 'background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); color: #fcd34d;' }}" title="Toggle to filter students with pending payment for current month">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Pending ({{ $pendingPaymentsCount ?? 0 }})
-                            </label>
-                        </div>
-
                         <div class="premium-toggle-wrapper">
                             <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
                             <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
@@ -406,7 +398,6 @@
     <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
-    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -418,7 +409,6 @@
     <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
-    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -431,7 +421,6 @@
     <input type="hidden" name="medium" value="{{ request('medium') }}">
     <input type="hidden" name="batch_year_filter" value="{{ request('batch_year') }}">
     <input type="hidden" name="has_index" value="{{ request('has_index') }}">
-    <input type="hidden" name="pending_payments" value="{{ request('pending_payments') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
@@ -593,54 +582,19 @@
                                          @elseif($student->admin_confirmed_at)
                                              <span class="badge badge-xs badge-success" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Confirmed</span>
                                          @else
-                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">{{ $student->registration_status ?? 'pending' }}</span>
+                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Awaiting approval</span>
                                          @endif
                                      </div>
-                                     @if($paidThisMonth)
-                                         <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                     <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                         @if($paidThisMonth)
                                              <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Paid</span>
                                              @if($latestPayment && $latestPayment->paid_at)
                                                  <span style="color: #4caf50; font-size: 0.55rem; font-weight: 500;">{{ $latestPayment->paid_at->format('M d') }}</span>
                                              @endif
-                                         </div>
-                                     @elseif($pendingPayment)
-                                         <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
-                                             <span class="badge badge-xs badge-warning" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;" title="Pending payment requested {{ $pendingPayment->created_at ? $pendingPayment->created_at->format('Y-m-d H:i') : '' }}">
-                                                 Pending ({{ $pendingPayment->created_at ? $pendingPayment->created_at->diffForHumans(null, true) : 'recent' }})
-                                             </span>
-                                             <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" style="display: inline-block; margin: 0;">
-                                                 @csrf
-                                                 <input type="hidden" name="year_month" value="{{ $currYM }}">
-                                                 <button type="submit" class="btn btn-xs btn-success py-0 px-1" style="font-size: 0.55rem; line-height: 1.2; border-radius: 3px;" title="Mark Paid for {{ $currYM }} (Receipt follows)">Mark Paid</button>
-                                             </form>
-                                         </div>
-                                     @else
-                                         <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                         @else
                                              <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Not paid</span>
-                                         </div>
-                                     @endif
-
-                                     @if($pendingTopup)
-                                         <div class="mt-1 p-1 rounded" style="background: rgba(245, 158, 11, 0.1); border: 1px dashed rgba(245, 158, 11, 0.4); font-size: 0.65rem;">
-                                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap;">
-                                                 <span class="badge badge-xs badge-warning" style="background: #f59e0b; color: #fff; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px;">Subject top-up</span>
-                                                 <span style="font-weight: 700; color: #f59e0b;">Rs {{ number_format((float) $pendingTopup->amount, 2) }}</span>
-                                             </div>
-                                             @php
-                                                 $topupSubs = is_array($pendingTopup->added_subjects) ? $pendingTopup->added_subjects : (json_decode($pendingTopup->added_subjects, true) ?: []);
-                                             @endphp
-                                             <div class="text-truncate" style="max-width: 140px; color: #d1d5db; font-size: 0.6rem; margin-top: 1px;" title="{{ implode(', ', $topupSubs) }}">
-                                                 + {{ implode(', ', $topupSubs) }}
-                                             </div>
-                                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                                                 <span style="color: #9ca3af; font-size: 0.55rem;">{{ $pendingTopup->created_at ? $pendingTopup->created_at->format('M d') : '' }}</span>
-                                                 <form action="{{ route('admin.students.subject-topups.mark-paid', $pendingTopup->id) }}" method="POST" style="display: inline-block; margin: 0;" onsubmit="return confirm('Money received for Rs {{ number_format((float) $pendingTopup->amount, 2) }}?');">
-                                                     @csrf
-                                                     <button type="submit" class="btn btn-xs btn-success py-0 px-1" style="font-size: 0.55rem; line-height: 1.2; border-radius: 3px;" title="Mark Top-up Paid">Mark Paid</button>
-                                                 </form>
-                                             </div>
-                                         </div>
-                                     @endif
+                                         @endif
+                                     </div>
                                  </td>
                                  <td class="text-center">
                                      <div style="font-weight: 800; color: #4f46e5; font-size: 0.75rem;">
@@ -670,16 +624,9 @@
                                                  <button type="button" class="dropdown-item text-success" onclick="promptConfirmStudent({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}')">
                                                      Confirm Registration
                                                  </button>
-                                                 <button type="button" class="dropdown-item text-primary" onclick="promptConfirmAndMarkPaid({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}')">
-                                                     Confirm + Mark Paid (money received)
-                                                 </button>
                                                  <form action="{{ route('admin.students.confirm', $student->id) }}" method="POST" id="confirm-form-{{ $student->id }}" style="display: none;">
                                                      @csrf
                                                      <input type="hidden" name="batch_year" id="confirm-batch-{{ $student->id }}" value="{{ $suggestedBatch }}">
-                                                 </form>
-                                                 <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" id="confirm-and-mark-paid-form-{{ $student->id }}" style="display: none;">
-                                                     @csrf
-                                                     <input type="hidden" name="batch_year" id="confirm-and-mark-paid-batch-{{ $student->id }}" value="{{ $suggestedBatch }}">
                                                  </form>
                                                  <form action="{{ route('admin.students.reject', $student->id) }}" method="POST" id="reject-form-{{ $student->id }}">
                                                      @csrf
@@ -688,31 +635,6 @@
                                                  </form>
                                              @endif
                                              <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
-                                             @if(!$student->index_number)
-                                                 <button type="button" class="dropdown-item text-info" onclick="promptAssignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $suggestedBatch }}', '{{ $instFormat }}', '{{ $instPrefix }}')">
-                                                     Assign Index Number
-                                                 </button>
-                                                 <form action="{{ route('admin.students.assign-index', $student->id, false) }}" method="POST" id="assign-index-form-{{ $student->id }}" style="display: none;">
-                                                     @csrf
-                                                     <input type="hidden" name="batch_year" id="assign-batch-{{ $student->id }}">
-                                                     <input type="hidden" name="running_number" id="assign-seq-{{ $student->id }}">
-                                                 </form>
-                                             @else
-                                                 <button type="button" class="dropdown-item text-warning" onclick="promptReassignIndexSingle({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', '{{ $student->batch_year ?? $suggestedBatch }}', '{{ $instFormat }}', '{{ $instPrefix }}')">
-                                                     Change Index Number
-                                                 </button>
-                                                 @if($isOldFormat ?? false)
-                                                     <button type="button" class="dropdown-item text-warning font-weight-bold" onclick="promptConvertToNewFormatIndex({{ $student->id }}, '{{ addslashes($student->full_name ?? $student->name) }}', '{{ $student->index_number }}', '{{ $suggestedBatch }}')">
-                                                         <i class="flaticon-381-refresh-1 mr-1"></i> Convert to new format
-                                                     </button>
-                                                 @endif
-                                                 <form action="{{ route('admin.students.reassign-index', $student->id, false) }}" method="POST" id="reassign-index-form-{{ $student->id }}" style="display: none;">
-                                                     @csrf
-                                                     <input type="hidden" name="batch_year" id="reassign-batch-{{ $student->id }}">
-                                                     <input type="hidden" name="running_number" id="reassign-seq-{{ $student->id }}">
-                                                     <input type="hidden" name="reason" id="reassign-reason-{{ $student->id }}">
-                                                 </form>
-                                             @endif
                                             @if($student->deactivated_at)
                                                 <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" id="activate-form-{{ $student->id }}">
                                                     @csrf
@@ -1040,281 +962,6 @@
             if (result.value !== undefined && result.value !== false) {
                 document.getElementById('confirm-batch-' + studentId).value = result.value;
                 document.getElementById('confirm-form-' + studentId).submit();
-            }
-        });
-    }
-
-    function promptConfirmAndMarkPaid(studentId, studentName, defaultBatch, format) {
-        const isGrade = (format === 'grade');
-        const labelText = isGrade ? 'Grade Series (Optional override, e.g. 08):' : 'A/L or O/L Batch Year (Optional override):';
-        const placeholderText = isGrade ? "Leave empty to use student's grade" : 'Leave empty to use grade mapping';
-        Swal.fire({
-            title: 'Confirm Registration & Mark Paid',
-            html: `
-                <p style="color: #d1d5db; font-size: 0.9rem;">
-                    Confirm registration and record payment as received for <strong>${studentName}</strong>?
-                </p>
-                <div style="background: rgba(16, 185, 129, 0.15); border-left: 3px solid #10b981; padding: 0.5rem 0.75rem; margin: 0.75rem 0; border-radius: 4px; text-align: left;">
-                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 500;">
-                        This approves the registration, assigns an index number, marks this month's payment as PAID, sends the payment receipt, and grants immediate student access.
-                    </span>
-                </div>
-                <div style="text-align: left; margin-top: 1rem;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
-                    <input type="text" id="swalConfirmAndPayBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="${placeholderText}" style="width: 100%; margin: 0.5rem 0;">
-                    <small style="color: #9ca3af;">Index number will be automatically generated. Leave empty to use default.</small>
-                </div>
-            `,
-            type: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#374151',
-            confirmButtonText: 'Confirm & Mark Paid',
-            cancelButtonText: 'Cancel',
-            customClass: 'swal-dark-popup',
-            preConfirm: () => {
-                const batch = document.getElementById('swalConfirmAndPayBatch').value.trim();
-                if (batch !== '') {
-                    const num = parseInt(batch, 10);
-                    if (isGrade) {
-                        if (isNaN(num) || num < 1 || num > 99) {
-                            Swal.showValidationMessage('Please enter a valid grade series (01 to 99) or leave empty');
-                            return false;
-                        }
-                        return String(num).padStart(2, '0');
-                    } else {
-                        if (isNaN(num) || num < 20 || num > 99) {
-                            Swal.showValidationMessage('Please enter a valid 2-digit batch year (20-99) or leave empty');
-                            return false;
-                        }
-                        return String(num);
-                    }
-                }
-                return batch;
-            }
-        }).then((result) => {
-            if (result.value !== undefined && result.value !== false) {
-                document.getElementById('confirm-and-mark-paid-batch-' + studentId).value = result.value;
-                document.getElementById('confirm-and-mark-paid-form-' + studentId).submit();
-            }
-        });
-    }
-
-    function promptAssignIndexSingle(studentId, studentName, defaultBatch, format, prefix) {
-        prefix = prefix || 'TIT';
-        const isGrade = (format === 'grade');
-        const defaultSeriesNum = defaultBatch ? parseInt(defaultBatch, 10) : '';
-        const val = (!isNaN(defaultSeriesNum) && defaultSeriesNum >= 1 && defaultSeriesNum <= 99) ? String(defaultSeriesNum).padStart(2, '0') : '';
-        const labelText = isGrade ? 'Series (01–99, default = grade):' : 'Batch Year (01–99):';
-
-        Swal.fire({
-            title: 'Assign Index Number',
-            html: `
-                <p style="color: #d1d5db; font-size: 0.9rem;">
-                    Generate sequential index for <strong>${studentName}</strong>.
-                </p>
-                <div style="text-align: left; margin-top: 1rem;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
-                    <input type="text" id="swalAssignBatch" class="swal2-input" value="${val}" placeholder="e.g. 08" style="width: 100%; margin: 0.5rem 0 1rem 0;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Running Number (Optional):</label>
-                    <input type="number" min="1" id="swalAssignSeq" class="swal2-input" placeholder="Empty = next free number (e.g. 110 or 550)" style="width: 100%; margin: 0.5rem 0 0.5rem 0;">
-                    <small style="color: #9ca3af; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Leave empty for next automatic number, or type an exact number.</small>
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
-                        <span style="color: #cbd5e1; font-size: 0.85rem;">Preview: </span>
-                        <strong id="swalAssignPreview" style="color: #38bdf8; font-size: 1.15rem; letter-spacing: 0.5px;">${prefix}/${val || '01'}/...</strong>
-                    </div>
-                </div>
-            `,
-            type: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#0ea5e9',
-            cancelButtonColor: '#374151',
-            confirmButtonText: 'Assign Now',
-            cancelButtonText: 'Cancel',
-            customClass: 'swal-dark-popup',
-            onOpen: () => {
-                const seriesInput = document.getElementById('swalAssignBatch');
-                const seqInput = document.getElementById('swalAssignSeq');
-                const previewEl = document.getElementById('swalAssignPreview');
-
-                function updatePreview() {
-                    const sRaw = seriesInput.value.trim();
-                    const sNum = parseInt(sRaw, 10);
-                    const sStr = (!isNaN(sNum) && sNum >= 1 && sNum <= 99) ? String(sNum).padStart(2, '0') : (sRaw || '??');
-                    const seqRaw = seqInput.value.trim();
-                    let seqStr = '<next>';
-                    if (seqRaw) {
-                        const seqNum = parseInt(seqRaw, 10);
-                        if (!isNaN(seqNum) && seqNum > 0) {
-                            seqStr = String(seqNum).padStart(3, '0');
-                        } else {
-                            seqStr = seqRaw;
-                        }
-                    }
-                    previewEl.textContent = `${prefix}/${sStr}/${seqStr}`;
-                }
-
-                seriesInput.addEventListener('input', updatePreview);
-                seqInput.addEventListener('input', updatePreview);
-                updatePreview();
-            },
-            preConfirm: () => {
-                const batch = document.getElementById('swalAssignBatch').value.trim();
-                const seq = document.getElementById('swalAssignSeq').value.trim();
-                const num = parseInt(batch, 10);
-                if (!batch || isNaN(num) || num < 1 || num > 99) {
-                    Swal.showValidationMessage('Series must be a number 01–99');
-                    return false;
-                }
-                if (seq) {
-                    const seqNum = parseInt(seq, 10);
-                    if (isNaN(seqNum) || seqNum < 1) {
-                        Swal.showValidationMessage('Running number must be at least 1');
-                        return false;
-                    }
-                }
-                return {
-                    batch: String(num).padStart(2, '0'),
-                    seq: seq ? parseInt(seq, 10) : ''
-                };
-            }
-        }).then((result) => {
-            if (result.value) {
-                document.getElementById('assign-batch-' + studentId).value = result.value.batch;
-                document.getElementById('assign-seq-' + studentId).value = result.value.seq;
-                document.getElementById('assign-index-form-' + studentId).submit();
-            }
-        });
-    }
-
-    function promptReassignIndexSingle(studentId, studentName, currentIndex, currentBatch, format, prefix) {
-        prefix = prefix || 'TIT';
-        const isGrade = (format === 'grade');
-        const defaultSeriesNum = currentBatch ? parseInt(currentBatch, 10) : '';
-        const val = (!isNaN(defaultSeriesNum) && defaultSeriesNum >= 1 && defaultSeriesNum <= 99) ? String(defaultSeriesNum).padStart(2, '0') : '';
-        const labelText = isGrade ? 'New Series (01–99):' : 'New Batch Year (01–99):';
-
-        Swal.fire({
-            title: 'Change Index Number',
-            html: `
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; color: #fca5a5; font-size: 0.82rem; text-align: left;">
-                    <strong>Warning:</strong> Current index is <code>${currentIndex}</code>. Reassigning will allocate a NEW sequence number. The old number will NOT be reused.
-                </div>
-                <div style="text-align: left;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
-                    <input type="text" id="swalReassignBatch" class="swal2-input" value="${val}" style="width: 100%; margin: 0.5rem 0 1rem 0;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Running Number (Optional):</label>
-                    <input type="number" min="1" id="swalReassignSeq" class="swal2-input" placeholder="Empty = next free number (e.g. 110 or 550)" style="width: 100%; margin: 0.5rem 0 0.5rem 0;">
-                    <small style="color: #9ca3af; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Leave empty for next automatic number, or type an exact number.</small>
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Reason for change (Required):</label>
-                    <input type="text" id="swalReassignReason" class="swal2-input" placeholder="e.g. Corrected grade or batch" style="width: 100%; margin: 0.5rem 0 1rem 0;">
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
-                        <span style="color: #cbd5e1; font-size: 0.85rem;">Preview: </span>
-                        <strong id="swalReassignPreview" style="color: #38bdf8; font-size: 1.15rem; letter-spacing: 0.5px;">${prefix}/${val || '01'}/...</strong>
-                    </div>
-                </div>
-            `,
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#f59e0b',
-            cancelButtonColor: '#374151',
-            confirmButtonText: 'Confirm & Reassign',
-            cancelButtonText: 'Cancel',
-            customClass: 'swal-dark-popup',
-            onOpen: () => {
-                const seriesInput = document.getElementById('swalReassignBatch');
-                const seqInput = document.getElementById('swalReassignSeq');
-                const previewEl = document.getElementById('swalReassignPreview');
-
-                function updatePreview() {
-                    const sRaw = seriesInput.value.trim();
-                    const sNum = parseInt(sRaw, 10);
-                    const sStr = (!isNaN(sNum) && sNum >= 1 && sNum <= 99) ? String(sNum).padStart(2, '0') : (sRaw || '??');
-                    const seqRaw = seqInput.value.trim();
-                    let seqStr = '<next>';
-                    if (seqRaw) {
-                        const seqNum = parseInt(seqRaw, 10);
-                        if (!isNaN(seqNum) && seqNum > 0) {
-                            seqStr = String(seqNum).padStart(3, '0');
-                        } else {
-                            seqStr = seqRaw;
-                        }
-                    }
-                    previewEl.textContent = `${prefix}/${sStr}/${seqStr}`;
-                }
-
-                seriesInput.addEventListener('input', updatePreview);
-                seqInput.addEventListener('input', updatePreview);
-                updatePreview();
-            },
-            preConfirm: () => {
-                const batch = document.getElementById('swalReassignBatch').value.trim();
-                const seq = document.getElementById('swalReassignSeq').value.trim();
-                const reason = document.getElementById('swalReassignReason').value.trim();
-                const num = parseInt(batch, 10);
-                if (!batch || isNaN(num) || num < 1 || num > 99) {
-                    Swal.showValidationMessage('Series must be a number 01–99');
-                    return false;
-                }
-                if (seq) {
-                    const seqNum = parseInt(seq, 10);
-                    if (isNaN(seqNum) || seqNum < 1) {
-                        Swal.showValidationMessage('Running number must be at least 1');
-                        return false;
-                    }
-                }
-                if (!reason) {
-                    Swal.showValidationMessage('Reason is required for audit log');
-                    return false;
-                }
-                return {
-                    batch: String(num).padStart(2, '0'),
-                    seq: seq ? parseInt(seq, 10) : '',
-                    reason
-                };
-            }
-        }).then((result) => {
-            if (result.value) {
-                document.getElementById('reassign-batch-' + studentId).value = result.value.batch;
-                document.getElementById('reassign-seq-' + studentId).value = result.value.seq;
-                document.getElementById('reassign-reason-' + studentId).value = result.value.reason;
-                document.getElementById('reassign-index-form-' + studentId).submit();
-            }
-        });
-    }
-
-    function promptConvertToNewFormatIndex(studentId, studentName, currentIndex, suggestedSeries) {
-        Swal.fire({
-            title: 'Convert to New Format?',
-            html: `
-                <div style="text-align: left; font-size: 0.9rem;">
-                    <p style="color: #cbd5e1; margin-bottom: 8px;">Student: <strong>${studentName}</strong></p>
-                    <p style="color: #cbd5e1; margin-bottom: 8px;">Current Index: <strong style="color: #f59e0b;">${currentIndex}</strong> (legacy format)</p>
-                    <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This will convert the index number to the official <strong>TIT/GG/NNN</strong> format and record an audit log.</p>
-                    <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Grade Series (01-13):</label>
-                    <input id="swalConvertIndexSeries" type="text" value="${suggestedSeries || '08'}" class="swal2-input" style="width: 100%; margin: 0.5rem 0 1rem 0;">
-                </div>
-            `,
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Convert Now',
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#374151',
-            customClass: 'swal-dark-popup',
-            preConfirm: () => {
-                const series = document.getElementById('swalConvertIndexSeries').value.trim();
-                const num = parseInt(series, 10);
-                if (!series || isNaN(num) || num < 1 || num > 13) {
-                    Swal.showValidationMessage('Please enter a valid grade series between 01 and 13');
-                    return false;
-                }
-                return String(num).padStart(2, '0');
-            }
-        }).then((res) => {
-            if (res.value) {
-                document.getElementById('reassign-batch-' + studentId).value = res.value;
-                document.getElementById('reassign-reason-' + studentId).value = 'Convert legacy index to standard grade format';
-                document.getElementById('reassign-index-form-' + studentId).submit();
             }
         });
     }

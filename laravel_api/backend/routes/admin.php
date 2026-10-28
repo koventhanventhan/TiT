@@ -47,6 +47,8 @@ Route::prefix('admin')->group(function () {
         
         // Student management routes - static routes registered before {id} parameter routes
         Route::get('/students', [StudentController::class, 'index'])->name('admin.students.index');
+        Route::get('/students/pending-payments', [StudentController::class, 'pendingPayments'])->name('admin.students.pending-payments');
+        Route::post('/students/pending-payments/{payment}/cancel', [StudentController::class, 'cancelPendingPayment'])->name('admin.students.pending-payments.cancel')->whereNumber('payment');
         Route::get('/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
         Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');

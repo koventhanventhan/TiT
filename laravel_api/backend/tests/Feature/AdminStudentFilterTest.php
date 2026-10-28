@@ -121,9 +121,9 @@ class AdminStudentFilterTest extends TestCase
         $response->assertSee('Pending Payments: 1');
         $response->assertSee('Strip Legend:');
 
-        // Verify pending link is relative and does NOT contain laravel_api/backend/public
+        // Verify pending link is relative and points to dedicated pending-payments page
         $content = $response->getContent();
-        $this->assertStringNotContainsString('/laravel_api/backend/public/admin/students?pending_payments=1', $content);
-        $this->assertStringContainsString('/admin/students?pending_payments=1', $content);
+        $this->assertStringNotContainsString('/laravel_api/backend/public/admin/students/pending-payments', $content);
+        $this->assertStringContainsString('/admin/students/pending-payments', $content);
     }
 }

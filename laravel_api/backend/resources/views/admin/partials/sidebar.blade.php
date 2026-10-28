@@ -27,6 +27,9 @@
                     <li class="{{ request()->routeIs('admin.students.create') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.students.create') }}">Add Student</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.students.pending-payments') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.students.pending-payments') }}">Pending Payments</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.students.index-lists') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.students.index-lists') }}">Index Number Lists</a>
                     </li>

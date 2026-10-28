@@ -117,3 +117,39 @@ When configuring index number series or format from the cPanel terminal (SSH or 
    ```bash
    php artisan students:index-status
    ```
+
+---
+
+## 5. Frontend Bundle Build & Publishing Workflow
+
+When making any frontend changes in `laravel_api/src/`:
+
+1. **Build the bundle inside `laravel_api/`**:
+   ```bash
+   cd laravel_api
+   npm run build
+   cd ..
+   ```
+   This compiles assets into `laravel_api/dist/assets/` and `laravel_api/dist/index.html`.
+
+2. **Publish and verify bundle using `scripts/publish_bundle.cjs`**:
+   ```bash
+   node scripts/publish_bundle.cjs
+   ```
+   **What `publish_bundle.cjs` does:**
+   - Detects all newly generated bundle assets in `laravel_api/dist/assets`.
+   - Cleans up stale hashed files in root `assets/` that were replaced by the new build.
+   - Synchronizes dist assets into root `assets/` and copies `laravel_api/dist/index.html` to root `index.html`.
+   - **Recursive Asset Walker**: Validates that all static and dynamic JavaScript and CSS import references starting from root `index.html` exist on disk (verifying "0 missing").
+   - **Multi-Hash Verification**: Ensures no two conflicting hashes exist for the same chunk prefix in `assets/`.
+   - Guarantees `laravel_api/index.html` and `laravel_api/assets` are never tracked/dirtied in git, leaving only root `index.html` and root `assets/` published.
+
+---
+
+## 6. Payment Security & PayHere Environment Variables
+
+### `PAYHERE_TRUST_CLIENT_CALLBACK` (Default: `false`)
+- **Production Setting**: Must be unset or `false`.
+- **Purpose**: Previously, the frontend callback (`POST /api/register/payment-success`) directly set payments to `paid` upon client browser redirection. This created a security vulnerability where clients could forge payment confirmation.
+- **Secure Flow**: Online payments are only marked `paid` and unlocked via verified PayHere server webhooks (`POST /api/payhere/notify` with MD5 HMAC verification) or admin actions. The `payment-success` endpoint checks caller ownership and returns HTTP `202 { status: 'pending' }` while the frontend polls until the server webhook confirms it.
+- **Local/Sandbox Testing Only**: Set `PAYHERE_TRUST_CLIENT_CALLBACK=true` in `.env` only during offline local debugging if server-to-server webhook callbacks cannot reach localhost. Never enable this in production.

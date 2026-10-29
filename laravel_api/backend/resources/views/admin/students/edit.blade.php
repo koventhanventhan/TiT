@@ -650,6 +650,19 @@
                                                     @endif
                                                 </div>
                                             @endif
+                                            @php
+                                                $monthPaidPayments = $payments->where('year_month', $payment->year_month)->where('status', 'paid');
+                                                $monthlyPaid = (float) $monthPaidPayments->filter(fn($p) => $p->kind !== 'topup')->sum('amount');
+                                                $admFee = method_exists($student, 'admissionFeeForMonth') ? $student->admissionFeeForMonth($payment->year_month, $monthPaidPayments) : 0.0;
+                                                $monthlyNet = max(0.0, $monthlyPaid - $admFee);
+                                                $topupsPaid = (float) $monthPaidPayments->where('kind', 'topup')->sum('amount');
+                                                $totalPaidMonth = $monthlyNet + $topupsPaid;
+                                            @endphp
+                                            @if($monthPaidPayments->isNotEmpty())
+                                                <small class="d-block mt-1" style="color: #94a3b8; font-size: 0.7rem;">
+                                                    Paid this month: Rs {{ number_format($totalPaidMonth, 2) }} (monthly Rs {{ number_format($monthlyNet, 2) }} + top-ups Rs {{ number_format($topupsPaid, 2) }})
+                                                </small>
+                                            @endif
                                         </td>
                                         <td>{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-' }}</td>
                                         <td>Rs. {{ number_format($payment->amount, 2) }}</td>

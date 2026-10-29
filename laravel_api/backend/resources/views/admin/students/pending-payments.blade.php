@@ -190,6 +190,19 @@
                                             + {{ implode(', ', $addedSubjects) }}
                                         </div>
                                     @endif
+                                    @if($isTopup && $student)
+                                        @php
+                                            $stPaidPayments = $student->payments()->where('year_month', $payment->year_month)->where('status', 'paid')->get();
+                                            $stMonthly = (float) $stPaidPayments->filter(fn($p) => $p->kind !== 'topup')->sum('amount');
+                                            $stAdm = method_exists($student, 'admissionFeeForMonth') ? $student->admissionFeeForMonth($payment->year_month, $stPaidPayments) : 0.0;
+                                            $stMonthlyNet = max(0.0, $stMonthly - $stAdm);
+                                            $stTopups = (float) $stPaidPayments->where('kind', 'topup')->sum('amount');
+                                            $stTotal = $stMonthlyNet + $stTopups;
+                                        @endphp
+                                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 3px;">
+                                            Paid this month: Rs {{ number_format($stTotal, 2) }} (monthly Rs {{ number_format($stMonthlyNet, 2) }} + top-ups Rs {{ number_format($stTopups, 2) }})
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <span style="font-weight: 700; color: #10b981; font-size: 0.9rem;">

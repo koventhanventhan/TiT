@@ -262,6 +262,30 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Total amount paid so far for a given month (monthly + advance + topup + null kind),
+     * excluding any admission fee portion.
+     */
+    public function paidAmountForMonth(string $yearMonth): float
+    {
+        $payments = $this->payments()
+            ->where('year_month', $yearMonth)
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance', 'topup']);
+            })
+            ->get();
+
+        if ($payments->isEmpty()) {
+            return 0.0;
+        }
+
+        $totalPaid = (float) $payments->sum('amount');
+        $admissionFee = method_exists($this, 'admissionFeeForMonth') ? $this->admissionFeeForMonth($yearMonth, $payments) : 0.0;
+
+        return (float) max(0.0, round($totalPaid - $admissionFee, 2));
+    }
+
+    /**
      * Determine student eligibility state in one centralized place.
      * Returns one of:
      * - 'deactivated'

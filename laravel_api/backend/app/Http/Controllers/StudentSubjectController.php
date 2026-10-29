@@ -110,21 +110,15 @@ class StudentSubjectController extends Controller
             ->where('status', 'pending')
             ->update(['status' => 'superseded']);
 
-        $currentMonthPayment = \App\Models\Payment::where('user_id', $user->id)
-            ->where('year_month', $yearMonth)
-            ->where('status', 'paid')
-            ->where(function ($q) {
-                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
-            })
-            ->first();
-
-        $alreadyPaid = (bool) $currentMonthPayment;
-        $paidAmount = $currentMonthPayment ? (float) $currentMonthPayment->amount : null;
+        $alreadyPaid = $user->hasPaidForMonth($yearMonth);
+        $paidAmount = $alreadyPaid ? $user->paidAmountForMonth($yearMonth) : null;
 
         $existingTopup = $user->pendingSubjectTopup($yearMonth);
+        $activeSubjects = $user->activeSubjects($yearMonth);
         $baseSubjects = ($existingTopup && !empty($existingTopup->previous_subjects))
             ? (is_array($existingTopup->previous_subjects) ? $existingTopup->previous_subjects : json_decode($existingTopup->previous_subjects, true))
-            : $oldSubjects;
+            : $activeSubjects;
+        $baseSubjects = is_array($baseSubjects) ? array_values($baseSubjects) : [];
 
         $user->selected_subjects = json_encode($newSubjects);
         $user->needs_subject_review = false;
@@ -140,9 +134,11 @@ class StudentSubjectController extends Controller
         $diff = 0;
 
         if ($alreadyPaid) {
-            $diff = round($monthlyFee - $paidAmount, 2);
-            if ($diff > 0) {
-                $addedSubjects = array_values(array_diff($newSubjects, $baseSubjects));
+            $paidSoFar = (float) $paidAmount;
+            $diff = max(0.0, round($monthlyFee - $paidSoFar, 2));
+            $addedSubjects = array_values(array_diff($newSubjects, $baseSubjects));
+
+            if ($diff > 0 && !empty($addedSubjects)) {
                 $topup = \App\Models\SubjectTopup::updateOrCreate(
                     [
                         'user_id' => $user->id,
@@ -165,6 +161,8 @@ class StudentSubjectController extends Controller
                 }
                 $diff = 0;
                 $noExtraNeeded = true;
+                $lockedSubjects = [];
+                $topup = null;
             }
         } else {
             if ($existingTopup) {

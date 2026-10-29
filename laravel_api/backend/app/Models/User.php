@@ -262,6 +262,62 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Compute the admission fee portion embedded inside paid payments for a given month.
+     * Uses payments.meta.admission_fee if set; otherwise derives it for the student's first paid month.
+     */
+    public function admissionFeeForMonth(string $yearMonth, $monthPayments = null): float
+    {
+        $payments = $monthPayments ?: $this->payments()
+            ->where('year_month', $yearMonth)
+            ->where('status', 'paid')
+            ->get();
+
+        if ($payments->isEmpty()) {
+            return 0.0;
+        }
+
+        // 1. If any payment in this month explicitly recorded admission_fee in meta, sum those.
+        $explicitFee = 0.0;
+        $hasExplicit = false;
+        foreach ($payments as $p) {
+            $meta = $p->meta;
+            if (is_array($meta) && array_key_exists('admission_fee', $meta) && $meta['admission_fee'] !== null) {
+                $explicitFee += (float) $meta['admission_fee'];
+                $hasExplicit = true;
+            }
+        }
+        if ($hasExplicit) {
+            return round($explicitFee, 2);
+        }
+
+        // 2. Otherwise derive: Was the user's first paid monthly/advance/null payment in this month?
+        $firstPaidPayment = $this->payments()
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->whereNull('kind')->orWhereIn('kind', ['monthly', 'advance']);
+            })
+            ->orderBy('year_month', 'asc')
+            ->orderBy('id', 'asc')
+            ->first();
+
+        if ($firstPaidPayment && $firstPaidPayment->year_month === $yearMonth) {
+            $gradeNum = 0;
+            if ($this->current_grade && preg_match('/(\d+)/', $this->current_grade, $m)) {
+                $gradeNum = (int) $m[1];
+            }
+            if ($gradeNum > 0) {
+                $config = json_decode(\App\Models\SiteSetting::get('admission_fees_config', '{}'), true) ?? [];
+                if (isset($config[$gradeNum]) && !empty($config[$gradeNum]['enabled'])) {
+                    $configuredFee = (float) $config[$gradeNum]['amount'];
+                    return round(min((float) $firstPaidPayment->amount, $configuredFee), 2);
+                }
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
      * Total amount paid so far for a given month (monthly + advance + topup + null kind),
      * excluding any admission fee portion.
      */
@@ -280,7 +336,7 @@ class User extends Authenticatable implements FilamentUser
         }
 
         $totalPaid = (float) $payments->sum('amount');
-        $admissionFee = method_exists($this, 'admissionFeeForMonth') ? $this->admissionFeeForMonth($yearMonth, $payments) : 0.0;
+        $admissionFee = $this->admissionFeeForMonth($yearMonth, $payments);
 
         return (float) max(0.0, round($totalPaid - $admissionFee, 2));
     }

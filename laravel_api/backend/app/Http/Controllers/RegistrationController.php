@@ -466,6 +466,12 @@ class RegistrationController extends Controller
             ->where('status', 'pending')
             ->update(['status' => 'cancelled']);
 
+        $admFee = $user->getAdmissionFeeAmount();
+        $meta = [];
+        if ($admFee > 0) {
+            $meta['admission_fee'] = $admFee;
+        }
+
         $payment = Payment::create([
             'user_id'        => $user->id,
             'amount'         => $amount,
@@ -474,6 +480,7 @@ class RegistrationController extends Controller
             'year_month'     => $yearMonth,
             'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
             'institute_id'   => $user->institute_id ?? 1,
+            'meta'           => !empty($meta) ? $meta : null,
         ]);
 
         // Mark registration status
@@ -1026,6 +1033,12 @@ class RegistrationController extends Controller
 
         $amount = $this->calculateUserAmount($user);
 
+        $admFee = $user->getAdmissionFeeAmount();
+        $meta = [];
+        if ($admFee > 0) {
+            $meta['admission_fee'] = $admFee;
+        }
+
         $payment = Payment::create([
             'user_id'        => $user->id,
             'amount'         => $amount,
@@ -1035,6 +1048,7 @@ class RegistrationController extends Controller
             'year_month'     => $yearMonth,
             'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
             'institute_id'   => $user->institute_id ?? 1,
+            'meta'           => !empty($meta) ? $meta : null,
         ]);
 
         if (!$this->payHere->isConfigured()) {
@@ -1135,6 +1149,12 @@ class RegistrationController extends Controller
                 ->where('payment_method', '!=', 'offline')
                 ->update(['status' => 'cancelled']);
 
+            $admFee = $user->getAdmissionFeeAmount();
+            $meta = [];
+            if ($admFee > 0) {
+                $meta['admission_fee'] = $admFee;
+            }
+
             $payment = Payment::create([
                 'user_id'        => $user->id,
                 'amount'         => $amount,
@@ -1144,6 +1164,7 @@ class RegistrationController extends Controller
                 'year_month'     => $yearMonth,
                 'gateway_ref'    => 'OFFLINE_' . strtoupper(uniqid()),
                 'institute_id'   => $user->institute_id ?? 1,
+                'meta'           => !empty($meta) ? $meta : null,
             ]);
 
             $shouldAlertAdmin = true;

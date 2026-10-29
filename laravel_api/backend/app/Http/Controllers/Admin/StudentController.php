@@ -884,6 +884,10 @@ class StudentController extends Controller
             if ($receivedBy) {
                 $meta['received_by'] = array_key_exists($receivedBy, Payment::RECEIVED_BY_OPTIONS) ? $receivedBy : 'other';
             }
+            $admFee = $student->getAdmissionFeeAmount();
+            if ($admFee > 0) {
+                $meta['admission_fee'] = $admFee;
+            }
 
             return Payment::create([
                 'user_id' => $student->id,

@@ -46,8 +46,9 @@ The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) i
     RewriteRule ^ - [L]
 
     # 4. Route Laravel Backend routes to public/index.php
-    # Matches: /admin, /api, /super-panel, /livewire, /sitemap.xml
-    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|sitemap\.xml) [NC]
+    # Matches: /admin, /api, /super-panel, /livewire, /receipts, /sitemap.xml
+    # Public routes like /receipts serve signed PDF receipt downloads and must route directly to Laravel rather than the React SPA.
+    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|receipts|sitemap\.xml) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
     # 5. SPA Fallback: Route all other web routes to React index.html

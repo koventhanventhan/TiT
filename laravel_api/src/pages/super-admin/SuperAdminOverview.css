@@ -72,7 +72,7 @@
 }
 
 .super-purple {
-    background: #f5f3ff;
+    background: var(--t-primary-soft);
     color: #3b82f6;
 }
 

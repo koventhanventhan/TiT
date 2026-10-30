@@ -9,12 +9,12 @@
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
-                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(102, 126, 234, 0.1);">
+                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-primary-soft); color: var(--t-primary);">
                         <i class="flaticon-381-user-7" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
-                        <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Total Students</p>
-                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700;">{{ number_format($totalStudents ?? 0) }}</h4>
+                        <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Total Students</p>
+                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-text);">{{ number_format($totalStudents ?? 0) }}</h4>
                     </div>
                 </div>
             </div>
@@ -24,12 +24,12 @@
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
-                    <span class="mr-3 bgl-info text-info" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(6, 182, 212, 0.1);">
+                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-primary-soft); color: var(--t-primary);">
                         <i class="flaticon-381-user-8" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
-                        <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Total Teachers</p>
-                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700;">{{ number_format($totalTeachers ?? 0) }}</h4>
+                        <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Total Teachers</p>
+                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-text);">{{ number_format($totalTeachers ?? 0) }}</h4>
                     </div>
                 </div>
             </div>
@@ -39,12 +39,12 @@
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
-                    <span class="mr-3 bgl-warning text-warning" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(235, 129, 83, 0.1);">
+                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-primary-soft); color: var(--t-primary);">
                         <i class="flaticon-381-bookmark" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
-                        <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Total Courses</p>
-                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700;">{{ number_format($totalCourses ?? 0) }}</h4>
+                        <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Total Courses</p>
+                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-text);">{{ number_format($totalCourses ?? 0) }}</h4>
                     </div>
                 </div>
             </div>
@@ -54,12 +54,12 @@
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
-                    <span class="mr-3 bgl-danger text-danger" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1);">
+                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-primary-soft); color: var(--t-primary);">
                         <i class="flaticon-381-video-camera" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
-                        <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Active Classes (Today)</p>
-                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700;">{{ $activeClassesToday ?? 0 }}</h4>
+                        <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Active Classes (Today)</p>
+                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-text);">{{ $activeClassesToday ?? 0 }}</h4>
                     </div>
                 </div>
             </div>
@@ -69,12 +69,12 @@
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
-                    <span class="mr-3 bgl-success text-success" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(34, 197, 94, 0.1);">
+                    <span class="mr-3 bgl-primary text-primary" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-primary-soft); color: var(--t-primary);">
                         <i class="flaticon-381-diamond" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
-                        <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Total Revenue</p>
-                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700;">LKR {{ number_format($totalRevenue ?? 0, 2) }}</h4>
+                        <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Total Revenue</p>
+                        <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-text);">LKR {{ number_format($totalRevenue ?? 0, 2) }}</h4>
                     </div>
                 </div>
             </div>
@@ -85,14 +85,14 @@
             <div class="widget-stat card" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                 <div class="card-body p-4">
                     <div class="media ai-icon">
-                        <span class="mr-3 bgl-warning text-warning" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(245, 158, 11, 0.1);">
+                        <span class="mr-3 bgl-warning text-warning" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--t-radius-control, 0.5rem); background: var(--t-warning-bg); color: var(--t-warning);">
                             <i class="flaticon-381-clock" style="font-size: 1.75rem;"></i>
                         </span>
                         <div class="media-body">
-                            <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Pending Payments</p>
-                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">{{ number_format($pendingPayments ?? 0) }}</h4>
+                            <p class="mb-1" style="font-size: 0.8125rem; color: var(--t-text-2);">Pending Payments</p>
+                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: var(--t-warning);">{{ number_format($pendingPayments ?? 0) }}</h4>
                             @if(isset($pendingMonthly) && isset($pendingTopups))
-                                <div style="font-size: 0.72rem; color: #9ca3af; margin-top: 2px;">{{ $pendingMonthly }} monthly + {{ $pendingTopups }} top-ups</div>
+                                <div style="font-size: 0.72rem; color: var(--t-text-3); margin-top: 2px;">{{ $pendingMonthly }} monthly + {{ $pendingTopups }} top-ups</div>
                             @endif
                         </div>
                     </div>
@@ -106,7 +106,7 @@
 <div class="row">
     <div class="col-xl-8 col-lg-12">
         <div class="card">
-            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid #e5e5e5; background: #3b3363;">
+            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid var(--t-border); background: var(--t-sidebar); color: var(--t-sidebar-text);">
                 <h4 class="card-title text-white">Student Registration Trends (Last 7 Days)</h4>
             </div>
             <div class="card-body">
@@ -116,7 +116,7 @@
     </div>
     <div class="col-xl-4 col-lg-12">
         <div class="card">
-            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid #e5e5e5; background: #3b3363;">
+            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid var(--t-border); background: var(--t-sidebar); color: var(--t-sidebar-text);">
                 <h4 class="card-title text-white">Academic Breakdown</h4>
             </div>
             <div class="card-body p-0">
@@ -147,7 +147,7 @@
     <!-- Recent Activity Section -->
     <div class="col-xl-6">
         <div class="card">
-            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid #e5e5e5; background: #3b3363;">
+            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid var(--t-border); background: var(--t-sidebar); color: var(--t-sidebar-text);">
                 <h4 class="card-title text-white">Recent Student Registrations</h4>
             </div>
             <div class="card-body">
@@ -192,7 +192,7 @@
     <!-- Upcoming Classes Section -->
     <div class="col-xl-6">
         <div class="card">
-            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid #e5e5e5; background: #3b3363;">
+            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid var(--t-border); background: var(--t-sidebar); color: var(--t-sidebar-text);">
                 <h4 class="card-title text-white">Upcoming / Active Classes</h4>
             </div>
             <div class="card-body">
@@ -237,27 +237,27 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid #e5e5e5; background: #3b3363;">
+            <div class="card-header-1" style="padding: 1.25rem 1.5625rem; border-bottom: 1.0px solid var(--t-border); background: var(--t-sidebar); color: var(--t-sidebar-text);">
                 <h4 class="card-title text-white">Action Center</h4>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="p-3 text-center border-right">
-                            <h3 class="text-primary">{{ $pendingApprovals ?? 0 }}</h3>
-                            <span class="text-muted">Wait Confirmation</span>
+                            <h3 style="color: var(--t-primary);">{{ $pendingApprovals ?? 0 }}</h3>
+                            <span style="color: var(--t-text-3);">Wait Confirmation</span>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="p-3 text-center border-right">
-                            <h3 class="text-warning">{{ $pendingPayments ?? 0 }}</h3>
-                            <span class="text-muted">Payment Issues</span>
+                            <h3 style="color: var(--t-warning);">{{ $pendingPayments ?? 0 }}</h3>
+                            <span style="color: var(--t-text-3);">Payment Issues</span>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="p-3 text-center">
-                            <h3 class="text-info">{{ \App\Models\LearningMaterial::count() }}</h3>
-                            <span class="text-muted">Study Materials</span>
+                            <h3 style="color: var(--t-primary);">{{ $totalMaterials ?? 0 }}</h3>
+                            <span style="color: var(--t-text-3);">Study Materials</span>
                         </div>
                     </div>
                 </div>

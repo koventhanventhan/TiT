@@ -1,31 +1,7 @@
 /* Shared Dashboard Theme Tokens & Base Rules for Teacher and Student Consoles */
 @import './sidebar-shell.css';
 
-.teacher-console-layout,
-.student-console-layout {
-  /* Brand (reuses the site's existing purple tokens from index.css) */
-  --t-primary:        #4f0bd9;  /* = --primary-color; buttons, links, active nav, focus */
-  --t-primary-hover:  #4308b8;
-  --t-primary-soft:   #f5f3ff;  /* = --bg-light; tinted backgrounds, selected chips */
-  --t-primary-border: #ddd6fe;
-  --t-sidebar:        #1a103c;  /* = --primary-dark; sidebar + welcome banner */
-  --t-sidebar-text:   #cbd5e1;
-  --t-sidebar-active-bg: rgba(255,255,255,0.10);
-
-  /* Neutrals (slate) */
-  --t-bg:        #f8fafc;
-  --t-surface:   #ffffff;
-  --t-border:    #e2e8f0;
-  --t-text:      #0f172a;
-  --t-text-2:    #475569;
-  --t-text-3:    #64748b;   /* lightest allowed TEXT colour (4.76:1 on white) */
-  --t-muted:     #94a3b8;   /* for icons, borders, disabled only */
-
-  /* Status (only for semantic meaning) */
-  --t-success: #15803d;  --t-success-bg: #f0fdf4;
-  --t-warning: #b45309;  --t-warning-bg: #fffbeb;
-  --t-danger:  #b91c1c;  --t-danger-bg:  #fef2f2;
-}
+/* Console tokens inherited from :root / [data-theme-preset] */
 
 /* Universal focus rings for inputs & buttons in consoles */
 .teacher-console-layout button:focus-visible,
@@ -82,7 +58,7 @@
   min-width: 22px !important;
   min-height: 22px !important;
   flex: 0 0 22px;
-  accent-color: var(--t-primary, #4f0bd9);
+  accent-color: var(--t-primary);
   margin: 0;
   cursor: pointer;
 }
@@ -95,7 +71,7 @@
 .messaging-container input[type="radio"]:focus-visible,
 .tit-reg-overlay input[type="checkbox"]:focus-visible,
 .tit-reg-overlay input[type="radio"]:focus-visible {
-  outline: 2px solid var(--t-primary, #4f0bd9);
+  outline: 2px solid var(--t-primary);
   outline-offset: 2px;
 }
 
@@ -313,12 +289,12 @@
 }
 
 .fee-row.fee-row-total {
-  border-top: 1px solid var(--t-primary-border, #ddd6fe);
+  border-top: 1px solid var(--t-primary-border);
   margin-top: 8px;
   padding-top: 10px;
   font-size: clamp(15px, 4vw, 18px);
   font-weight: 700;
-  color: var(--t-primary, #4f0bd9);
+  color: var(--t-primary);
 }
 
 .fee-row.fee-row-total .fee-row-label {
@@ -328,7 +304,7 @@
 .fee-row.fee-row-total .fee-row-value {
   font-size: clamp(17px, 4.5vw, 22px);
   font-weight: 800;
-  color: var(--t-primary, #4f0bd9);
+  color: var(--t-primary);
 }
 
 /* In dark/overlay cards like .tit-reg-overlay */
@@ -383,7 +359,7 @@
 
 .t-select:focus {
   outline: none;
-  border-color: var(--t-primary, #4f0bd9);
+  border-color: var(--t-primary);
   box-shadow: 0 0 0 3px rgba(79, 11, 217, 0.15);
 }
 

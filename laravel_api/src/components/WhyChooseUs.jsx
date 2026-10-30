@@ -27,7 +27,7 @@ const WhyChooseUs = () => {
         icon: "https://cdn.lordicon.com/osuxyevn.json",
         title: t('benefit_instruction'),
         description: t('benefit_instruction_desc'),
-        color: '#4f0bd9'
+        color: 'var(--t-primary)'
       },
       {
         icon: "https://cdn.lordicon.com/qhviklyi.json",
@@ -39,7 +39,7 @@ const WhyChooseUs = () => {
         icon: "https://cdn.lordicon.com/hrjifpbq.json",
         title: t('benefit_support'),
         description: t('benefit_support_desc'),
-        color: '#8b5cf6'
+        color: 'var(--t-primary)'
       }
     ];
 

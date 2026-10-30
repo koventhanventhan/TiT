@@ -111,7 +111,7 @@
 }
 
 .pay-now-btn {
-    background: var(--t-primary, #4f0bd9);
+    background: var(--t-primary);
     color: #ffffff;
     font-weight: 700;
     font-size: 0.95rem;
@@ -130,7 +130,7 @@
 }
 
 .pay-now-btn:hover:not(:disabled) {
-    background: var(--t-primary-hover, #4308b8);
+    background: var(--t-primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 0.25rem 0.75rem -0.125rem rgba(79, 11, 217, 0.4);
 }
@@ -146,8 +146,8 @@
 
 .pay-offline-btn {
     background: transparent;
-    color: var(--t-primary, #4f0bd9);
-    border: 1.5px solid var(--t-primary, #4f0bd9);
+    color: var(--t-primary);
+    border: 1.5px solid var(--t-primary);
     font-weight: 700;
     font-size: 0.95rem;
     min-height: 48px;
@@ -164,7 +164,7 @@
 }
 
 .pay-offline-btn:hover:not(:disabled) {
-    background: var(--t-primary-soft, #f5f3ff);
+    background: var(--t-primary-soft);
 }
 
 .pay-offline-btn:active:not(:disabled) {

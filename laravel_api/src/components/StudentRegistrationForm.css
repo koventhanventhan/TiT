@@ -1,23 +1,7 @@
 /* Prefixed CSS for Student Registration Form: tit-reg- */
 
 .tit-reg-overlay {
-  --t-primary:        #4f0bd9;
-  --t-primary-hover:  #4308b8;
-  --t-primary-soft:   #f5f3ff;
-  --t-primary-border: #ddd6fe;
-  --t-sidebar:        #1a103c;
-  --t-sidebar-text:   #cbd5e1;
-  --t-sidebar-active-bg: rgba(255,255,255,0.10);
-  --t-bg:        #f8fafc;
-  --t-surface:   #ffffff;
-  --t-border:    #e2e8f0;
-  --t-text:      #0f172a;
-  --t-text-2:    #475569;
-  --t-text-3:    #64748b;
-  --t-muted:     #94a3b8;
-  --t-success: #15803d;  --t-success-bg: #f0fdf4;
-  --t-warning: #b45309;  --t-warning-bg: #fffbeb;
-  --t-danger:  #b91c1c;  --t-danger-bg:  #fef2f2;
+  /* Tokens inherited from :root / [data-theme-preset] */
 
   position: fixed;
   top: 0;
@@ -153,7 +137,7 @@
 .tit-reg-input:focus,
 .tit-reg-select:focus {
   outline: none;
-  border-color: #8b5cf6;
+  border-color: var(--t-primary-border);
   background: rgba(37, 99, 235, 0.15);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
@@ -200,13 +184,13 @@
   min-width: 22px;
   min-height: 22px;
   flex: 0 0 22px;
-  accent-color: var(--t-primary, #4f0bd9);
+  accent-color: var(--t-primary);
   margin: 0;
   cursor: pointer;
 }
 
 .tit-reg-checkbox-label.tit-reg-checked {
-  border-color: #8b5cf6;
+  border-color: var(--t-primary-border);
   background: rgba(139, 92, 246, 0.2);
 }
 
@@ -217,7 +201,7 @@
 
 .tit-reg-submit-btn {
   grid-column: 1 / -1;
-  background: var(--t-primary, #4f0bd9);
+  background: var(--t-primary);
   color: #ffffff;
   border: none;
   padding: 0.875rem 1.5rem;
@@ -239,7 +223,7 @@
 }
 
 .tit-reg-submit-btn:hover:not(:disabled) {
-  background: var(--t-primary-hover, #4308b8);
+  background: var(--t-primary-hover);
   transform: translateY(-2px);
 }
 
@@ -255,7 +239,7 @@
 
 .tit-reg-submit-btn.tit-reg-secondary {
   background: transparent;
-  border: 2px solid var(--t-primary, #4f0bd9);
+  border: 2px solid var(--t-primary);
   color: #c084fc;
   box-shadow: none;
 }

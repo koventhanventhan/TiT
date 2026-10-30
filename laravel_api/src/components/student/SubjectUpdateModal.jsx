@@ -1074,7 +1074,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
                         padding: '14px 20px',
                         borderRadius: '12px',
                         border: 'none',
-                        background: 'var(--t-primary, #4f0bd9)',
+                        background: 'var(--t-primary)',
                         color: '#fff',
                         fontSize: '15px',
                         fontWeight: 600,

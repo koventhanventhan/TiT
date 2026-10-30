@@ -87,6 +87,7 @@ class AdminController extends Controller
         $pendingPayments = (clone $pendingPaymentsQuery)->count();
         $pendingTopups = (clone $pendingPaymentsQuery)->where('kind', 'topup')->count();
         $pendingMonthly = $pendingPayments - $pendingTopups;
+        $totalMaterials = (clone $courseQuery)->count();
 
         // Academic Breakdown by Grade & Stream
         $academicBreakdown = [
@@ -110,6 +111,7 @@ class AdminController extends Controller
             'pendingPayments',
             'pendingMonthly',
             'pendingTopups',
+            'totalMaterials',
             'academicBreakdown'
         ));
     }

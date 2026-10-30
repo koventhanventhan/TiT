@@ -12,11 +12,11 @@
         justify-content: space-between;
         flex-wrap: wrap; /* allow wrapping on small screens */
         gap: 1rem;
-        background: #3b3363;/* Dark background */
+        background: var(--t-sidebar);/* Token background */
         padding: 0.9375rem 1.5625rem;
         border-bottom-left-radius: 0.5rem;
         border-bottom-right-radius: 0.5rem;
-        color: #9ca3af;
+        color: var(--t-sidebar-text);
         font-size: 0.875rem;
         margin: -1.5625rem -1.875rem -1.5625rem -1.875rem; /* Offset card padding */
         border-top: 1.0px solid #ffffff;

@@ -264,7 +264,7 @@ const Hero = () => {
             <div className="hero-stats" ref={statsRef}>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaCalendarAlt style={{ fontSize: '1.5rem', color: '#4f0bd9' }} />
+                  <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'var(--t-primary)' }} />
                 </div>
                 <div>
                   <div className="stat-number">
@@ -276,7 +276,7 @@ const Hero = () => {
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaGraduationCap style={{ fontSize: '1.75rem', color: '#4f0bd9' }} />
+                  <FaGraduationCap style={{ fontSize: '1.75rem', color: 'var(--t-primary)' }} />
                 </div>
                 <div>
                   <div className="stat-number">
@@ -288,7 +288,7 @@ const Hero = () => {
               </div>
               <div className="stat-item">
                 <div className="stat-icon-wrapper">
-                  <FaChalkboardTeacher style={{ fontSize: '1.5rem', color: '#4f0bd9' }} />
+                  <FaChalkboardTeacher style={{ fontSize: '1.5rem', color: 'var(--t-primary)' }} />
                 </div>
                 <div>
                   <div className="stat-number">

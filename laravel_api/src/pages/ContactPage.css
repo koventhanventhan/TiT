@@ -1,6 +1,6 @@
 ﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Contact Page â€” Premium Purple-Only Design
-   All boxes use project purple palette (#1a103c, #4f0bd9, #7c3aed)
+   All boxes use unified design tokens (--t-*)
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .cp {
@@ -700,7 +700,7 @@
 
 /* CTA card */
 .cp-side-cta {
-  background: linear-gradient(135deg, #1a103c 0%, #2e1065 100%) !important;
+  background: var(--gradient-1) !important;
   border: 1.0px solid rgba(124, 58, 237, 0.1) !important;
   position: relative;
   overflow: hidden;

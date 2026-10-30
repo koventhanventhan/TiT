@@ -518,9 +518,9 @@ export default function TeacherMaterials() {
                     transition: background 0.2s, color 0.2s, border-color 0.2s;
                 }
                 .materials-tab-pill.active {
-                    background: var(--t-primary-soft, #f5f3ff);
-                    border: 1px solid var(--t-primary-border, #ddd6fe);
-                    color: var(--t-primary, #4f0bd9);
+                    background: var(--t-primary-soft);
+                    border: 1px solid var(--t-primary-border);
+                    color: var(--t-primary);
                     font-weight: 600;
                 }
                 .materials-tab-pill:not(.active) {
@@ -577,7 +577,7 @@ export default function TeacherMaterials() {
                     transition: border-color 0.2s;
                 }
                 .materials-search-input:focus {
-                    border-color: var(--t-primary, #4f0bd9);
+                    border-color: var(--t-primary);
                 }
                 .materials-view-toggle {
                     display: inline-flex;
@@ -610,7 +610,7 @@ export default function TeacherMaterials() {
                 }
                 .materials-view-toggle button.active {
                     background: var(--t-surface);
-                    color: var(--t-primary, #4f0bd9);
+                    color: var(--t-primary);
                     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
                 }
                 .materials-empty-state {

@@ -22,7 +22,7 @@
         width: 6.25rem;
         height: 6.25rem;
         border-radius: 50%;
-        background: #EB8153;
+        background: var(--t-primary);
         color: white;
         display: flex;
         align-items: center;
@@ -32,8 +32,8 @@
     }
     
     .card {
-        background: #3b3363 !important;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        background: var(--t-surface) !important;
+        border: 1.0px solid var(--t-border);
     }
 
     .card-title {

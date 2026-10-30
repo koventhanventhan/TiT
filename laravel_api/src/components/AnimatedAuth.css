@@ -124,7 +124,7 @@
   left: -50%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(0deg, transparent, #1a103c, transparent, #4f0bd9);
+  background: linear-gradient(0deg, transparent, var(--t-sidebar), transparent, var(--t-primary));
   transform-origin: bottom right;
   animation: animate 6s linear infinite;
 }
@@ -143,11 +143,11 @@
 }
 
 .animated-box.register-mode::before {
-  background: linear-gradient(0deg, transparent, #7c3aed, transparent, #8b5cf6);
+  background: linear-gradient(0deg, transparent, var(--t-primary), transparent, var(--t-primary-border));
 }
 
 .animated-box.register-mode::after {
-  background: linear-gradient(0deg, transparent, #8b5cf6, transparent, #8b5cf6);
+  background: linear-gradient(0deg, transparent, var(--t-primary-border), transparent, var(--t-primary-border));
 }
 
 .animated-box.register-mode {
@@ -367,7 +367,7 @@
 
 .register-mode .form-field-label {
   color: #fff;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: var(--gradient-2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -490,11 +490,11 @@
   width: 22px;
   height: 22px;
   cursor: pointer;
-  accent-color: var(--primary-color, #4f0bd9);
+  accent-color: var(--primary-color);
 }
 
 .register-mode .checkbox-option input[type="checkbox"] {
-  accent-color: var(--primary-color, #4f0bd9);
+  accent-color: var(--primary-color);
 }
 
 .checkbox-option input[type="checkbox"]:checked+span {
@@ -664,7 +664,7 @@
   bottom: 0;
   width: 100%;
   height: 0.125rem;
-  background: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
+  background: var(--gradient-1);
   border-radius: 0.25rem;
   transition: 0.5s;
   pointer-events: none;

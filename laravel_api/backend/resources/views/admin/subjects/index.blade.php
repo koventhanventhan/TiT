@@ -7,7 +7,7 @@
     /* Fix Category dropdown visibility */
     select.form-control option {
         color: #ffffff !important;
-        background-color: #3b3363 !important;
+        background-color: var(--t-sidebar) !important;
     }
 </style>
 @include('admin.partials.pagination-styles')

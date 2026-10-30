@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import './theme/presets.css';
 @import "tailwindcss";
 
 * {
@@ -16,12 +17,12 @@ lord-icon {
 :root {
   color-scheme: only light;
   /* â”€â”€ Premium Purple Palette â”€â”€ */
-  --primary-color: #4f0bd9;
-  --primary-dark: #1a103c;
-  --primary-light: #6d28d9;
-  --secondary-color: #7c3aed;
-  --accent-color: #8b5cf6;
-  --accent-glow: rgba(79, 11, 217, 0.35);
+  --primary-color: var(--t-primary);
+  --primary-dark: var(--t-sidebar);
+  --primary-light: var(--t-primary-soft);
+  --secondary-color: var(--t-primary-hover);
+  --accent-color: var(--t-primary);
+  --accent-glow: var(--shadow-glow);
 
   /* â”€â”€ Text â”€â”€ */
   --text-dark: #0f172a;
@@ -30,20 +31,20 @@ lord-icon {
   --text-muted: #64748b;
 
   /* â”€â”€ Backgrounds â”€â”€ */
-  --bg-light: #f5f3ff;
+  --bg-light: var(--t-primary-soft);
   --bg-white: #ffffff;
   --bg-dark: #0c0a09;
-  --bg-navy: #1a103c;
+  --bg-navy: var(--t-sidebar);
 
   /* â”€â”€ Borders â”€â”€ */
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
 
   /* â”€â”€ Premium Gradients â”€â”€ */
-  --gradient-1: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
-  --gradient-2: linear-gradient(135deg, #4f0bd9 0%, #8b5cf6 100%);
-  --gradient-3: linear-gradient(135deg, #4f0bd9 0%, #4f0bd9 100%);
-  --gradient-hero: linear-gradient(90deg, #1a103c 0%, #4f0bd9 100%);
+  --gradient-1: var(--gradient-1);
+  --gradient-2: var(--gradient-2);
+  --gradient-3: var(--gradient-3);
+  --gradient-hero: var(--gradient-hero);
   --gradient-glass: linear-gradient(135deg, rgba(79, 11, 217, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
 
   /* â”€â”€ Glassmorphism â”€â”€ */
@@ -56,7 +57,7 @@ lord-icon {
   --shadow-md: 0 0.25rem 1rem rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 0.75rem 2.5rem rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 1.25rem 3.75rem rgba(15, 23, 42, 0.15);
-  --shadow-glow: 0 0 1.875rem rgba(79, 11, 217, 0.2);
+  --shadow-glow: var(--shadow-glow);
 
   /* â”€â”€ Radii â”€â”€ */
   --radius-sm: 0.5rem;
@@ -149,7 +150,7 @@ code {
 
 /* â”€â”€ Extreme Fix: Register Now Button â”€â”€ */
 .btn-register {
-  /* background: #1a103c !important; */
+  
   color: white !important;
   padding: 0.75rem 2rem !important;
   border: none !important;
@@ -330,7 +331,7 @@ button.btn-register {
 
 .t-select:focus {
   outline: none;
-  border-color: var(--t-primary, #4f0bd9);
+  border-color: var(--t-primary);
   box-shadow: 0 0 0 3px rgba(79, 11, 217, 0.15);
 }
 

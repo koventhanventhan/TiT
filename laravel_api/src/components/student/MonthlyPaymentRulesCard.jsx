@@ -46,7 +46,7 @@ export default function MonthlyPaymentRulesCard({ isDark = false, compact = fals
         },
         {
             icon: FiCreditCard,
-            iconColor: '#8b5cf6',
+            iconColor: 'var(--t-primary)',
             badge: 'Options',
             badgeBg: isDark ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe',
             badgeColor: isDark ? '#c4b5fd' : '#5b21b6',

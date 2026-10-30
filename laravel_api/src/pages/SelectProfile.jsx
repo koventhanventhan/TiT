@@ -87,7 +87,7 @@ const SelectProfile = () => {
               width: '100px',
               height: '100px',
               borderRadius: '20px',
-              background: `linear-gradient(135deg, ${profile.id % 2 === 0 ? '#3b82f6, #1d4ed8' : '#8b5cf6, #6d28d9'})`,
+              background: `linear-gradient(135deg, ${profile.id % 2 === 0 ? '#3b82f6, #1d4ed8' : 'var(--t-primary), var(--t-primary-hover)'})`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

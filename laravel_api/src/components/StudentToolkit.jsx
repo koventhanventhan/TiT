@@ -15,7 +15,7 @@ const StudentToolkit = () => {
       title: 'Resource Vault',
       description: 'Access a limitless library of study materials, past papers, and expert notes curated for your success.',
       tag: 'Academic',
-      color: '#4f0bd9'
+      color: 'var(--t-primary)'
     },
     {
       icon: (
@@ -81,8 +81,7 @@ const StudentToolkit = () => {
   //                   <lord-icon
   //                     src="https://cdn.lordicon.com/vduvxpxl.json"
   //                     trigger="hover"
-  //                     colors="primary:#4f0bd9"
-  //                     style={{ width: '1.125rem', height: '1.125rem' }}
+    //                     style={{ width: '1.125rem', height: '1.125rem' }}
   //                   />
   //                 </a>
   //               </div>

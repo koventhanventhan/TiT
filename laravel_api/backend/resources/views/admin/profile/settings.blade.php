@@ -7,18 +7,18 @@
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 <style>
     :root {
-        --settings-bg: #2c254a;
-        --card-bg: #3b3363;
-        --sidebar-active: rgba(235, 129, 83, 0.1);
-        --accent-orange: #EB8153;
-        --accent-blue: #4d44b5;
-        --text-muted: rgba(255, 255, 255, 0.7);
+        --settings-bg: var(--t-bg);
+        --card-bg: var(--t-surface);
+        --sidebar-active: var(--t-primary-soft);
+        --accent-orange: var(--t-primary);
+        --accent-blue: var(--t-primary);
+        --text-muted: var(--t-text-3);
     }
 
     .content-body {
         margin-top: 0 !important;
         padding-top: 1.25rem;
-        background: #2c254a !important;
+        background: var(--t-bg) !important;
     }
     
     .settings-container {
@@ -29,7 +29,8 @@
 
     .settings-sidebar {
         width: 17.5rem;
-        background: #3b3363;
+        background: var(--t-surface);
+        border: 1px solid var(--t-border);
         border-radius: 0.75rem;
         padding: 1.25rem;
         height: fit-content;
@@ -85,9 +86,9 @@
     }
 
     .settings-card {
-        background: #3b3363 !important;
+        background: var(--t-surface) !important;
         border-radius: 0.75rem;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        border: 1.0px solid var(--t-border);
         margin-bottom: 1.5rem;
         overflow: hidden;
     }
@@ -176,10 +177,10 @@
     }
 
     .calendar-main {
-        background: #3b3363;
+        background: var(--t-surface);
         border-radius: 1rem;
         padding: 1.5rem;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        border: 1.0px solid var(--t-border);
         display: flex;
         flex-direction: column;
     }
@@ -198,17 +199,17 @@
     .fc-button-active { background: var(--accent-orange) !important; }
     
     .mini-calendar {
-        background: #3b3363;
+        background: var(--t-surface);
         border-radius: 0.75rem;
         padding: 1.25rem;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        border: 1.0px solid var(--t-border);
     }
 
     .event-categories {
-        background: #3b3363;
+        background: var(--t-surface);
         border-radius: 0.75rem;
         padding: 1.25rem;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        border: 1.0px solid var(--t-border);
     }
 
     .category-item {
@@ -228,8 +229,8 @@
     }
 
     .modal-content.calendar-modal {
-        background: #3b3363;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
+        background: var(--t-surface);
+        border: 1.0px solid var(--t-border);
         border-radius: 1rem;
         color: #fff;
     }

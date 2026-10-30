@@ -234,7 +234,7 @@ export default function StudentSchedule() {
                                                             disabled={busy || !hasLink}
                                                             style={{
                                                                 width: '100%', minHeight: 48, borderRadius: 10,
-                                                                background: isLive ? 'var(--t-primary, #4f0bd9)' : 'var(--t-primary)',
+                                                                background: isLive ? 'var(--t-primary)' : 'var(--t-primary)',
                                                                 color: '#ffffff', border: 'none', fontWeight: 700, fontSize: 14,
                                                                 cursor: (busy || !hasLink) ? 'not-allowed' : 'pointer',
                                                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

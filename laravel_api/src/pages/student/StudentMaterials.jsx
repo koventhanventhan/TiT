@@ -215,9 +215,9 @@ export default function StudentMaterials() {
                     transition: background 0.2s, color 0.2s, border-color 0.2s;
                 }
                 .materials-tab-pill.active {
-                    background: var(--t-primary-soft, #f5f3ff);
-                    border: 1px solid var(--t-primary-border, #ddd6fe);
-                    color: var(--t-primary, #4f0bd9);
+                    background: var(--t-primary-soft);
+                    border: 1px solid var(--t-primary-border);
+                    color: var(--t-primary);
                     font-weight: 600;
                 }
                 .materials-tab-pill:not(.active) {

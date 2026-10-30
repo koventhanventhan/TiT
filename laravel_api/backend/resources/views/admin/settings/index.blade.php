@@ -162,14 +162,14 @@
     }
 
     .testimonial-item, .love-us-testimonial-item {
-        background: #3b3363;
-        border: 1.0px solid rgba(255,255,255,0.1);
+        background: var(--t-surface);
+        border: 1.0px solid var(--t-border);
         border-radius: 0.75rem;
         padding: 1.25rem;
         margin-bottom: 1.25rem;
         position: relative;
         transition: all 0.3s;
-        color: #fff;
+        color: var(--t-text);
     }
     .testimonial-item:hover, .love-us-testimonial-item:hover {
         box-shadow: 0 0.5rem 0.9375rem rgba(0,0,0,0.2);

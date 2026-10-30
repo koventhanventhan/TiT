@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme-preset="{{ $site_settings['theme_preset'] ?? 'royal' }}">
 
 <head>
     <meta charset="utf-8">
@@ -17,6 +17,7 @@
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/vendor/owl-carousel/owl.carousel.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/tit-theme.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
     <link href="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">

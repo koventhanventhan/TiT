@@ -55,7 +55,7 @@
             <div class="card-body p-4">
                 <div class="media ai-icon">
                     <span class="mr-3 bgl-danger text-danger" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1);">
-                        <i class="flaticon-381-video-camera-1" style="font-size: 1.75rem;"></i>
+                        <i class="flaticon-381-video-camera" style="font-size: 1.75rem;"></i>
                     </span>
                     <div class="media-body">
                         <p class="mb-1" style="font-size: 0.8125rem; color: #6b7280;">Active Classes (Today)</p>
@@ -123,19 +123,19 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 1.125rem 1.5625rem;">
                         <span><i class="flaticon-381-calendar-1 mr-3 text-primary"></i> Grade 12 Students</span>
-                        <span class="badge badge-primary light badge-pill">{{ \App\Models\User::where('role', 'user')->where('current_grade', '12')->count() }}</span>
+                        <span class="badge badge-primary light badge-pill">{{ $academicBreakdown['grade_12'] ?? 0 }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 1.125rem 1.5625rem;">
                         <span><i class="flaticon-381-calendar-1 mr-3 text-info"></i> Grade 13 Students</span>
-                        <span class="badge badge-info light badge-pill">{{ \App\Models\User::where('role', 'user')->where('current_grade', '13')->count() }}</span>
+                        <span class="badge badge-info light badge-pill">{{ $academicBreakdown['grade_13'] ?? 0 }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 1.125rem 1.5625rem;">
                         <span><i class="flaticon-381-star-1 mr-3 text-warning"></i> Arts Stream</span>
-                        <span class="badge badge-warning light badge-pill">{{ \App\Models\User::where('role', 'user')->where('stream', 'arts')->count() }}</span>
+                        <span class="badge badge-warning light badge-pill">{{ $academicBreakdown['arts'] ?? 0 }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 1.125rem 1.5625rem;">
                         <span><i class="flaticon-381-heart mr-3 text-danger"></i> Bio/Maths Stream</span>
-                        <span class="badge badge-danger light badge-pill">{{ \App\Models\User::where('role', 'user')->where('stream', 'bio_maths')->count() }}</span>
+                        <span class="badge badge-danger light badge-pill">{{ $academicBreakdown['bio_maths'] ?? 0 }}</span>
                     </li>
                 </ul>
             </div>

@@ -55,6 +55,10 @@ class StudentController extends Controller
         $institute = auth()->check() ? auth()->user()->institute : null;
         $instituteFormat = $institute?->getIndexFormat() ?? 'grade';
 
+        if ($institute && auth()->user()->role !== 'super_admin') {
+            $query->where('institute_id', $institute->id);
+        }
+
         if ($request->filled('grade')) {
             $query->where(function ($q) use ($request) {
                 $q->where('current_grade', $request->grade)

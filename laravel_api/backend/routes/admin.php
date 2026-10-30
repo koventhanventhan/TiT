@@ -35,7 +35,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     
     // Protected admin routes - only for admin role
-    Route::middleware(['auth:web'])->group(function () {
+    Route::middleware(['auth:web', 'role:admin,super_admin'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/', function () {
             // Check if user is admin or super_admin
@@ -202,10 +202,10 @@ Route::prefix('admin')->group(function () {
         
         // Exam Results View and built-in API calls for blade
         Route::get('/exam-results', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'view'])->name('admin.exam-results.index');
-        Route::get('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'index']);
-        Route::post('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'store']);
-        Route::delete('/exam-results/data/{id}', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'destroy']);
-        Route::post('/exam-results/data/import', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'import']);
+        Route::get('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'index'])->name('admin.exam-results.data');
+        Route::post('/exam-results/data', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'store'])->name('admin.exam-results.store');
+        Route::delete('/exam-results/data/{id}', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'destroy'])->name('admin.exam-results.destroy');
+        Route::post('/exam-results/data/import', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'import'])->name('admin.exam-results.import');
 
         // Zoom accounts management
         Route::resource('zoom-accounts', ZoomAccountController::class)->names([

@@ -13,57 +13,88 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // Check if user is admin
-        if (auth()->user()->role !== 'admin') {
+        // Check if user is admin or super_admin
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'], true)) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $user = auth()->user();
+        $instituteId = $user->institute_id;
+        $isSuperAdmin = $user->role === 'super_admin';
+
+        // Base scoped queries for strict tenant isolation
+        $studentQuery = User::where('role', 'user')->whereNotNull('full_name');
+        $teacherQuery = User::where('role', 'teacher');
+        $courseQuery = \App\Models\LearningMaterial::query();
+        $activeClassesQuery = \App\Models\ZoomSchedule::whereDate('scheduled_at', now()->toDateString());
+        $revenueQuery = \App\Models\Payment::where('status', 'paid');
+        $currentYearMonth = now()->format('Y-m');
+        $pendingPaymentsQuery = \App\Models\Payment::where('status', 'pending')->where('year_month', $currentYearMonth);
+        $upcomingClassesQuery = \App\Models\ZoomSchedule::where('scheduled_at', '>=', now())->orderBy('scheduled_at', 'asc');
+
+        if (!$isSuperAdmin && $instituteId) {
+            $studentQuery->where('institute_id', $instituteId);
+            $teacherQuery->where('institute_id', $instituteId);
+            $courseQuery->where('institute_id', $instituteId);
+            $activeClassesQuery->where('institute_id', $instituteId);
+            $revenueQuery->where('institute_id', $instituteId);
+            $pendingPaymentsQuery->where('institute_id', $instituteId);
+            $upcomingClassesQuery->where('institute_id', $instituteId);
         }
         
         // Summary Card Stats
-        $totalStudents = User::where('role', 'user')->whereNotNull('full_name')->count();
-        $totalTeachers = User::where('role', 'teacher')->count();
-        $totalCourses = \App\Models\LearningMaterial::count(); // Total materials count
-        $activeClassesToday = \App\Models\ZoomSchedule::whereDate('scheduled_at', now()->toDateString())->count();
-        $totalRevenue = \App\Models\Payment::where('status', 'paid')->sum('amount');
+        $totalStudents = (clone $studentQuery)->count();
+        $totalTeachers = (clone $teacherQuery)->count();
+        $totalCourses = (clone $courseQuery)->count();
+        $activeClassesToday = (clone $activeClassesQuery)->count();
+        $totalRevenue = (clone $revenueQuery)->sum('amount');
         
         // Recent Student Registrations
-        $recentStudents = User::where('role', 'user')
-            ->whereNotNull('full_name')
+        $recentStudents = (clone $studentQuery)
             ->latest()
             ->take(8)
             ->get();
             
         // Upcoming Classes
-        $upcomingClasses = \App\Models\ZoomSchedule::where('scheduled_at', '>=', now())
-            ->orderBy('scheduled_at', 'asc')
+        $upcomingClasses = (clone $upcomingClassesQuery)
             ->take(5)
             ->get();
             
-        // Registration Stats (Last 7 Days) for Chart
-        $registrationStats = User::where('role', 'user')
-            ->whereNotNull('full_name')
-            ->where('created_at', '>=', now()->subDays(6))
-            ->selectRaw('DATE(created_at) as date, count(*) as count')
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
-            
-        // Format chart data
+        // Registration Stats (Last 7 Days) for Chart in Asia/Colombo timezone
+        $tz = 'Asia/Colombo';
+        $nowColombo = now($tz);
+        $startDateUtc = $nowColombo->copy()->subDays(6)->startOfDay()->setTimezone('UTC');
+
+        $rawRegistrations = (clone $studentQuery)
+            ->where('created_at', '>=', $startDateUtc)
+            ->get(['created_at'])
+            ->groupBy(function ($u) use ($tz) {
+                return $u->created_at ? $u->created_at->setTimezone($tz)->format('Y-m-d') : null;
+            })
+            ->map(fn($group) => $group->count());
+
         $chartLabels = [];
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $chartLabels[] = now()->subDays($i)->format('M d');
-            $stat = $registrationStats->firstWhere('date', $date);
-            $chartData[] = $stat ? $stat->count : 0;
+            $day = $nowColombo->copy()->subDays($i);
+            $dateKey = $day->format('Y-m-d');
+            $chartLabels[] = $day->format('M d');
+            $chartData[] = $rawRegistrations->get($dateKey, 0);
         }
 
         // Pending Approvals & Payments (Notifications)
-        $currentYearMonth = now()->format('Y-m');
-        $pendingApprovals = User::where('role', 'user')->whereNull('admin_confirmed_at')->count();
-        $pendingPaymentsQuery = \App\Models\Payment::where('status', 'pending')->where('year_month', $currentYearMonth);
+        $pendingApprovals = (clone $studentQuery)->whereNull('admin_confirmed_at')->count();
         $pendingPayments = (clone $pendingPaymentsQuery)->count();
         $pendingTopups = (clone $pendingPaymentsQuery)->where('kind', 'topup')->count();
         $pendingMonthly = $pendingPayments - $pendingTopups;
+
+        // Academic Breakdown by Grade & Stream
+        $academicBreakdown = [
+            'grade_12' => (clone $studentQuery)->where(fn($q) => $q->where('current_grade', '12')->orWhere('current_grade', 'Grade 12'))->count(),
+            'grade_13' => (clone $studentQuery)->where(fn($q) => $q->where('current_grade', '13')->orWhere('current_grade', 'Grade 13'))->count(),
+            'arts' => (clone $studentQuery)->where('stream', 'arts')->count(),
+            'bio_maths' => (clone $studentQuery)->whereIn('stream', ['bio_maths', 'science', 'maths', 'biology'])->count(),
+        ];
 
         return view('admin.dashboard', compact(
             'totalStudents', 
@@ -78,7 +109,8 @@ class AdminController extends Controller
             'pendingApprovals',
             'pendingPayments',
             'pendingMonthly',
-            'pendingTopups'
+            'pendingTopups',
+            'academicBreakdown'
         ));
     }
 

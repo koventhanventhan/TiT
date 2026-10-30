@@ -19,7 +19,12 @@ class SiteSettingController extends Controller
      */
     public function index()
     {
-        $settings = SiteSetting::all()->groupBy('group');
+        $instituteId = auth()->user()?->institute_id;
+        $query = SiteSetting::query();
+        if (auth()->user()?->role !== 'super_admin' && $instituteId) {
+            $query->where('institute_id', $instituteId);
+        }
+        $settings = $query->get()->groupBy('group');
         return view('admin.settings.index', compact('settings'));
     }
 
@@ -388,8 +393,10 @@ class SiteSettingController extends Controller
         $tokenService = \App\Services\FirebaseTokenService::fromConfig();
         if (!$tokenService->isConfigured()) {
             return response()->json([
+                'configured' => false,
+                'token' => null,
                 'message' => 'Firebase service account is not configured.'
-            ], 503);
+            ], 200);
         }
 
         try {

@@ -14,7 +14,10 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!auth()->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            if ($request->expectsJson() || $request->is('admin/firebase-token') || $request->is('api/*')) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+            return redirect()->route('admin.login')->with('error', 'Authentication required');
         }
 
         $user = auth()->user();
@@ -28,6 +31,10 @@ class RoleMiddleware
             return $next($request);
         }
 
-        return response()->json(['message' => 'Forbidden: You do not have the required role.'], 403);
+        if ($request->expectsJson() || $request->is('admin/firebase-token') || $request->is('api/*')) {
+            return response()->json(['message' => 'Forbidden: You do not have the required role.'], 403);
+        }
+
+        return redirect()->route('admin.login')->with('error', 'Admin access required');
     }
 }

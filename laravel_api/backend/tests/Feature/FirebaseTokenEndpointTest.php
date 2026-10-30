@@ -40,7 +40,7 @@ class FirebaseTokenEndpointTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_admin_gets_503_when_firebase_unconfigured(): void
+    public function test_admin_gets_quiet_degradation_when_firebase_unconfigured(): void
     {
         Config::set('services.firebase.client_email', null);
         Config::set('services.firebase.private_key', null);
@@ -54,9 +54,10 @@ class FirebaseTokenEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin, 'web')->getJson('/admin/firebase-token');
-        $response->assertStatus(503)
+        $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Firebase service account is not configured.',
+                'configured' => false,
+                'token' => null,
             ]);
     }
 

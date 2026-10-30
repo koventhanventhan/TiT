@@ -72,7 +72,13 @@
                     </svg>
                 @endif
                 <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
-                    {{ $site_settings['admin_company_name'] ?? config('app.name') }}
+                    @php
+                        $brandName = auth()->user()?->institute?->name ?: ($site_settings['site_title'] ?? $site_settings['admin_company_name'] ?? null);
+                        if (!$brandName || $brandName === 'Laravel') {
+                            $brandName = 'TiT Institute';
+                        }
+                    @endphp
+                    {{ $brandName }}
                 </span>
             </a>
             <div class="nav-control">

@@ -824,6 +824,11 @@
         }
 
         const data = await res.json();
+        if (!data || !data.token || !data.web_config) {
+            const err = new Error('FIREBASE_NOT_CONFIGURED');
+            err.status = 503;
+            throw err;
+        }
         const { token, institute_id, web_config } = data;
 
         let app = getApps().length === 0 ? initializeApp(web_config) : getApp();

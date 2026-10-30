@@ -30,6 +30,16 @@
     rel="stylesheet">
   <script src="https://cdn.lordicon.com/lordicon.js" defer></script>
   <meta name="google-site-verification" content="4AJ5_F9Ho4pVFdEAUc7DCuGu9ZGnPYW03Rgm674osVk" />
+  <script>
+    (function() {
+      try {
+        var p = localStorage.getItem('tit_theme_preset');
+        if (p) {
+          document.documentElement.dataset.themePreset = p;
+        }
+      } catch(e) {}
+    })();
+  </script>
 </head>
 
 <body>

@@ -29,6 +29,40 @@ class SiteSettingController extends Controller
     }
 
     /**
+     * Display the Appearance settings page.
+     */
+    public function appearance()
+    {
+        $instituteId = auth()->user()?->institute_id ?: 1;
+        $currentPreset = SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
+        
+        $presetsJsonPath = resource_path('themes/presets.json');
+        $presets = file_exists($presetsJsonPath) 
+            ? json_decode(file_get_contents($presetsJsonPath), true) 
+            : [];
+
+        return view('admin.settings.appearance', compact('currentPreset', 'presets'));
+    }
+
+    /**
+     * Update the Appearance settings (theme preset).
+     */
+    public function updateAppearance(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'theme_preset' => 'required|string|in:royal,ocean,emerald,midnight',
+        ]);
+
+        $instituteId = auth()->user()?->institute_id ?: 1;
+        SiteSetting::setForInstitute('theme_preset', $request->theme_preset, $instituteId, 'appearance');
+
+        \Illuminate\Support\Facades\Cache::forget("site_settings_{$instituteId}");
+        \Illuminate\Support\Facades\Cache::forget("site_settings_all");
+
+        return redirect()->route('admin.settings.appearance')->with('success', 'Appearance theme updated successfully to ' . ucfirst($request->theme_preset) . '!');
+    }
+
+    /**
      * Display the About settings page.
      */
     public function about()
@@ -619,9 +653,15 @@ class SiteSettingController extends Controller
      */
     public function getSettings(\Illuminate\Http\Request $request)
     {
-        $settings = SiteSetting::all()->pluck('value', 'key')->toArray();
-
         $instituteId = $request->header('X-Institute-Id', 1);
+        $settings = SiteSetting::where('institute_id', $instituteId)->pluck('value', 'key')->toArray();
+        if (empty($settings)) {
+            $settings = SiteSetting::all()->pluck('value', 'key')->toArray();
+        }
+
+        if (!isset($settings['theme_preset'])) {
+            $settings['theme_preset'] = SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
+        }
         $institute = \App\Models\Institute::find($instituteId);
 
         $globalPublicEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);

@@ -124,6 +124,8 @@ Route::prefix('admin')->group(function () {
 
         // Site settings routes
         Route::get('/settings', [SiteSettingController::class, 'index'])->name('admin.settings.index');
+        Route::get('/settings/appearance', [SiteSettingController::class, 'appearance'])->name('admin.settings.appearance');
+        Route::post('/settings/appearance', [SiteSettingController::class, 'updateAppearance'])->name('admin.settings.appearance.update');
         Route::get('/settings/about', [SiteSettingController::class, 'about'])->name('admin.settings.about');
         Route::post('/settings/branding', [SiteSettingController::class, 'updateBranding'])->name('admin.settings.updateBranding');
         Route::get('/settings/contact', [SiteSettingController::class, 'contact'])->name('admin.settings.contact');

@@ -30,7 +30,17 @@
     rel="stylesheet">
   <script src="https://cdn.lordicon.com/lordicon.js" defer></script>
   <meta name="google-site-verification" content="4AJ5_F9Ho4pVFdEAUc7DCuGu9ZGnPYW03Rgm674osVk" />
-  <script type="module" crossorigin src="/assets/index-B5AkYwJr.js"></script>
+  <script>
+    (function() {
+      try {
+        var p = localStorage.getItem('tit_theme_preset');
+        if (p) {
+          document.documentElement.dataset.themePreset = p;
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/index-B_S3qABw.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-CnVbOg9W.css">
 </head>
 

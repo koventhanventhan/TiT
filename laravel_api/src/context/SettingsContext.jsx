@@ -26,6 +26,10 @@ export const SettingsProvider = ({ children }) => {
                 throw new Error('API URL is set to localhost in production. Please check Vercel environment variables.');
               }
             }
+            if (data?.theme_preset) {
+                document.documentElement.dataset.themePreset = data.theme_preset;
+                try { localStorage.setItem('tit_theme_preset', data.theme_preset); } catch (_) {}
+            }
             setSettings(data);
         } catch (error) {
             console.error('Failed to fetch settings:', error);
@@ -36,6 +40,10 @@ export const SettingsProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        try {
+            const cached = localStorage.getItem('tit_theme_preset');
+            if (cached) document.documentElement.dataset.themePreset = cached;
+        } catch (_) {}
         fetchSettings();
     }, []);
 

@@ -93,6 +93,34 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+        // Dedicated view composer for admin layout to inject tenant-isolated theme preset
+        \Illuminate\Support\Facades\View::composer(['layouts.admin', 'admin.*'], function ($view) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+                    $instituteId = auth()->check() ? auth()->user()->institute_id : null;
+                    $preset = \App\Models\SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
+                    $data = $view->getData();
+                    $settings = $data['site_settings'] ?? null;
+                    if ($settings instanceof \Illuminate\Support\Collection) {
+                        $settings->put('theme_preset', $preset);
+                    } elseif (is_array($settings)) {
+                        $settings['theme_preset'] = $preset;
+                        $view->with('site_settings', $settings);
+                    } else {
+                        $allSettings = \App\Models\SiteSetting::where('institute_id', $instituteId ?: 1)->pluck('value', 'key');
+                        if ($allSettings->isEmpty()) {
+                            $allSettings = \App\Models\SiteSetting::all()->pluck('value', 'key');
+                        }
+                        $allSettings->put('theme_preset', $preset);
+                        $view->with('site_settings', $allSettings);
+                    }
+                    $view->with('current_theme_preset', $preset);
+                }
+            } catch (\Exception $e) {
+                // Graceful fallback
+            }
+        });
+
         // Login alert listener is intentionally DISABLED (no email on login).
         // To re-enable, uncomment the lines below.
         // \Illuminate\Support\Facades\Event::listen(

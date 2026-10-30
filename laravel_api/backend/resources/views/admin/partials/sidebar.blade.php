@@ -142,6 +142,9 @@
                     <li class="{{ request()->routeIs('admin.settings.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.index') }}">Frontend Page</a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.settings.appearance') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.appearance') }}">Appearance</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.settings.about') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.about') }}">About Page</a>
                     </li>

@@ -97,9 +97,9 @@ class AdvancePaymentChainTest extends TestCase
         $this->assertEquals('approved', $advanceReq->status);
 
         // 4. Verify 3 future months of payments are created and marked paid
-        $expectedFirstAdvance = now()->startOfMonth()->addMonth();
+        $expectedFirstAdvance = now()->startOfMonth()->addMonthNoOverflow();
         for ($i = 0; $i < 3; $i++) {
-            $ym = $expectedFirstAdvance->copy()->addMonths($i)->format('Y-m');
+            $ym = $expectedFirstAdvance->copy()->addMonthsNoOverflow($i)->format('Y-m');
             $p = Payment::where('user_id', $this->student->id)
                 ->where('year_month', $ym)
                 ->where('status', 'paid')

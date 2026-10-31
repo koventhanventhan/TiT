@@ -1207,13 +1207,13 @@ class StudentController extends Controller
                 ->first();
 
             if ($lastPaid) {
-                $startMonth = \Carbon\Carbon::createFromFormat('Y-m', $lastPaid->year_month)->addMonth();
+                $startMonth = \Carbon\Carbon::parse($lastPaid->year_month . '-01')->addMonthNoOverflow();
             } else {
                 $startMonth = now()->startOfMonth();
             }
 
             for ($i = 0; $i < $monthsCount; $i++) {
-                $yearMonth = $startMonth->copy()->addMonths($i)->format('Y-m');
+                $yearMonth = $startMonth->copy()->addMonthsNoOverflow($i)->format('Y-m');
                 
                 $advanceMeta = array_filter([
                     'advance_request_id' => $request->id,

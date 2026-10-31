@@ -106,6 +106,7 @@ export default function SidebarShell({
         hoverIntentTimerRef.current = null;
         clearTimeout(hoverLeaveTimerRef.current);
         hoverLeaveTimerRef.current = null;
+        openedAtRef.current = 0;
         setIsExpanded(false);
         setOpenMode(null);
         document.body.style.overflow = '';
@@ -252,7 +253,14 @@ export default function SidebarShell({
     useEffect(() => {
         if (!isExpanded) return;
         const handleKeyDown = (e) => {
-            if (e.key === 'Escape') closeSidebar();
+            if (e.key === 'Escape') {
+                closeSidebar();
+                suppressHoverRef.current = true;
+                clearTimeout(suppressTimerRef.current);
+                suppressTimerRef.current = setTimeout(() => {
+                    suppressHoverRef.current = false;
+                }, 200);
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);

@@ -82,7 +82,7 @@ class StudentAccessStateAndMiddlewareTest extends TestCase
             'user_id' => $student->id,
             'amount' => 1500,
             'status' => 'paid',
-            'year_month' => now()->subMonth()->format('Y-m'),
+            'year_month' => now()->startOfMonth()->subMonth()->format('Y-m'),
             'payment_method' => 'online',
             'institute_id' => $this->institute->id,
         ]);

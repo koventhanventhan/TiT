@@ -401,7 +401,7 @@ class SubjectTopupAdminApprovalTest extends TestCase
 
     public function test_next_month_monthly_payment_supersedes_stale_topup()
     {
-        $pastYM = now()->subMonth()->format('Y-m');
+        $pastYM = now()->startOfMonth()->subMonth()->format('Y-m');
         $currentYM = now()->format('Y-m');
 
         $topup = SubjectTopup::create([

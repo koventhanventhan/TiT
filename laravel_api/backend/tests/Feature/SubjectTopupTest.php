@@ -355,7 +355,7 @@ class SubjectTopupTest extends TestCase
      */
     public function test_month_rollover_auto_closes_past_topup()
     {
-        $lastMonth = now()->subMonth()->format('Y-m');
+        $lastMonth = now()->startOfMonth()->subMonth()->format('Y-m');
         $oldTopup = SubjectTopup::create([
             'institute_id' => $this->institute->id,
             'user_id' => $this->student->id,

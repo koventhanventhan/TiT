@@ -52,7 +52,7 @@
             .header {
                 height: 65px !important;
                 background: #1f2937 !important;
-                border-bottom: 2px solid #4f46e5 !important;
+                border-bottom: 2px solid var(--t-primary, #4f46e5) !important;
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
                 width: 100% !important;
@@ -91,42 +91,56 @@
 
             /* Hamburger */
             .custom-hamburger {
-                display: flex !important;
+                display: inline-flex !important;
                 flex-direction: column !important;
-                justify-content: space-between !important;
-                width: 20px !important; height: 15px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 4px !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
                 cursor: pointer !important;
                 flex-shrink: 0 !important;
-                margin: 0 8px 0 10px !important;
+                margin: 0 4px !important;
                 background: none !important;
                 border: none !important;
-                padding: 0 !important; outline: none !important;
+                padding: 0 !important;
+                outline: none !important;
+                touch-action: manipulation !important;
             }
             .custom-hamburger span {
                 display: block !important;
-                width: 20px !important; height: 2px !important;
+                width: 20px !important;
+                height: 2px !important;
                 background: #ffffff !important;
                 border-radius: 2px !important;
                 transition: all 0.3s ease !important;
                 transform-origin: center !important;
             }
             .custom-hamburger.active span:nth-child(1) {
-                transform: translateY(6.5px) rotate(45deg) !important;
+                transform: translateY(6px) rotate(45deg) !important;
             }
             .custom-hamburger.active span:nth-child(2) {
-                opacity: 0 !important; transform: scaleX(0) !important;
+                opacity: 0 !important;
+                transform: scaleX(0) !important;
             }
             .custom-hamburger.active span:nth-child(3) {
-                transform: translateY(-6.5px) rotate(-45deg) !important;
+                transform: translateY(-6px) rotate(-45deg) !important;
             }
 
             /* Search */
             .header-left {
-                flex: 1 1 auto !important;
+                flex: 0 1 100px !important;
                 min-width: 0 !important;
-                max-width: 145px !important;
-                margin-right: 35px !important;
+                max-width: 100px !important;
+                margin-right: 6px !important;
                 padding: 0 !important;
+                transition: max-width 0.25s ease-in-out !important;
+            }
+            .header-left:focus-within {
+                flex: 1 1 auto !important;
+                max-width: 150px !important;
             }
             .header-left .search_bar { width: 100% !important; }
             .header-left .search_bar form {
@@ -177,13 +191,18 @@
                 align-items: center !important;
                 justify-content: center !important;
                 margin: 0 !important; padding: 0 !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
             }
             .header-right .nav-link {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 4px 5px !important;
+                padding: 4px 6px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
                 position: relative !important;
+                touch-action: manipulation !important;
             }
             .header-right .nav-item:not(.header-profile) .nav-link svg {
                 width: 18px !important; height: 18px !important;
@@ -196,7 +215,7 @@
             .header-profile .header-profile-initials {
                 width: 36px !important; height: 36px !important;
                 flex-shrink: 0 !important;
-                border: 2px solid rgba(79,70,229,0.55) !important;
+                border: 2px solid var(--t-primary, rgba(79,70,229,0.55)) !important;
                 border-radius: 50% !important;
             }
 
@@ -309,16 +328,23 @@
 
             /* Hamburger - TABLET */
             .custom-hamburger {
-                display: flex !important;
+                display: inline-flex !important;
                 flex-direction: column !important;
-                justify-content: space-between !important;
-                width: 20px !important; height: 15px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 4px !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
                 cursor: pointer !important;
                 flex-shrink: 0 !important;
-                margin: 0 6px 0 8px !important;
+                margin: 0 4px !important;
                 background: none !important;
                 border: none !important;
-                padding: 0 !important; outline: none !important;
+                padding: 0 !important;
+                outline: none !important;
+                touch-action: manipulation !important;
             }
             .custom-hamburger span {
                 display: block !important;
@@ -641,12 +667,12 @@
                             </div>
                             <a href="{{ route('admin.profile.settings') }}" class="dropdown-item"
                                style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#333;">
-                                <i class="la la-cog" style="font-size:1.1rem;color:#4f46e5;width:18px;text-align:center;"></i>
+                                <i class="la la-cog" style="font-size:1.1rem;color:var(--t-primary, #4f46e5);width:18px;text-align:center;"></i>
                                 Settings
                             </a>
                             <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item"
                                style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#333;">
-                                <i class="la la-calendar" style="font-size:1.1rem;color:#4f46e5;width:18px;text-align:center;"></i>
+                                <i class="la la-calendar" style="font-size:1.1rem;color:var(--t-primary, #4f46e5);width:18px;text-align:center;"></i>
                                 Calendar
                             </a>
                             <div style="border-top:1px solid #f0f0f0;margin:4px 0;"></div>
@@ -676,11 +702,23 @@
             }
             checkScreen();
             window.addEventListener('resize', checkScreen);
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
                 btn.classList.toggle('active');
                 var original = document.querySelector('.nav-control');
                 if (original) original.click();
                 else document.body.classList.toggle('menu-toggle');
+            });
+
+            // Tap outside sidebar on mobile to close off-canvas drawer
+            document.addEventListener('click', function (e) {
+                if (window.innerWidth < 768 && document.body.classList.contains('menu-toggle')) {
+                    var deznav = document.querySelector('.deznav');
+                    if (deznav && !deznav.contains(e.target) && !btn.contains(e.target)) {
+                        document.body.classList.remove('menu-toggle');
+                        btn.classList.remove('active');
+                    }
+                }
             });
         })();
     </script>

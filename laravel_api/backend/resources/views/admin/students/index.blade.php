@@ -168,19 +168,21 @@
     /* Premium Filter Styles */
     .premium-filter-group {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 16px;
+        gap: 8px;
         background: rgba(31, 41, 55, 0.4);
-        padding: 8px 16px;
-        border-radius: 30px;
+        padding: 8px 14px;
+        border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.05);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
     }
     
     .premium-select {
         appearance: none;
         background-color: rgba(17, 24, 39, 0.8) !important;
-        border: 1px solid rgba(235, 129, 83, 0.5) !important;
+        border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important;
         color: #fff !important;
         padding: 6px 36px 6px 16px !important;
         border-radius: 20px !important;
@@ -196,7 +198,7 @@
     }
     
     .premium-select:hover, .premium-select:focus {
-        border-color: #eb8153 !important;
+        border-color: var(--t-primary, #eb8153) !important;
         box-shadow: 0 0 0 3px rgba(235, 129, 83, 0.15);
         outline: none;
     }
@@ -318,10 +320,10 @@
                     </span>
                 </div>
             </div>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-3">
+            <div class="students-toolbar d-flex flex-wrap align-items-center gap-2">
+                <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-md-3">
                     <div class="premium-filter-group">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid rgba(235, 129, 83, 0.5) !important; color: #fff !important; padding: 4px 12px;">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important; color: #fff !important; padding: 4px 12px;">
 
                         <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
                             <option value=""> All Grades</option>
@@ -364,27 +366,29 @@
                         </div>
                     </div>
                 </form>
-                <button type="button" class="btn btn-info btn-sm mr-2" id="bulkIndexBtn" style="display: none;" onclick="submitBulkAssignIndex()">
-                    <i class="flaticon-381-layer-1"></i> Assign Index (<span id="indexSelectedCount">0</span>)
-                </button>
-                <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">
-                    <i class="flaticon-381-upload"></i> Promote Selected (<span id="promoteSelectedCount">0</span>)
-                </button>
-                <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
-                    <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
-                </button>
-                <a href="{{ route('admin.students.index-lists') }}" class="btn btn-outline-primary btn-sm mr-2">
-                    <i class="flaticon-381-list"></i> Index Number Lists
-                </a>
-                <a href="{{ route('admin.students.assign-index-tool') }}" class="btn btn-outline-info btn-sm mr-2">
-                    <i class="flaticon-381-layer-1"></i> Assign index numbers
-                </a>
-                <a href="{{ route('admin.students.import-index') }}" class="btn btn-outline-secondary btn-sm mr-2">
-                    <i class="flaticon-381-file"></i> Import CSV
-                </a>
-                <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
-                    <i class="flaticon-381-add-1"></i> Add Student
-                </a>
+                <div class="students-action-buttons d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" class="btn btn-info btn-sm mr-2" id="bulkIndexBtn" style="display: none;" onclick="submitBulkAssignIndex()">
+                        <i class="flaticon-381-layer-1"></i> Assign Index (<span id="indexSelectedCount">0</span>)
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm mr-2" id="bulkPromoteBtn" style="display: none;" onclick="submitBulkPromote()">
+                        <i class="flaticon-381-upload"></i> Promote Selected (<span id="promoteSelectedCount">0</span>)
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
+                        <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                    </button>
+                    <a href="{{ route('admin.students.index-lists') }}" class="btn btn-outline-primary btn-sm mr-2">
+                        <i class="flaticon-381-list"></i> Index Number Lists
+                    </a>
+                    <a href="{{ route('admin.students.assign-index-tool') }}" class="btn btn-outline-info btn-sm mr-2">
+                        <i class="flaticon-381-layer-1"></i> Assign index numbers
+                    </a>
+                    <a href="{{ route('admin.students.import-index') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                        <i class="flaticon-381-file"></i> Import CSV
+                    </a>
+                    <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
+                        <i class="flaticon-381-add-1"></i> Add Student
+                    </a>
+                </div>
             </div>
         </div>
     </div>

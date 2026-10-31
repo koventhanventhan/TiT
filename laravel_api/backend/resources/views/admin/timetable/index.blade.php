@@ -10,44 +10,45 @@
         margin-bottom: 1.25rem;
     }
     .timetable-header {
-        background: #f8fafc;
+        background: var(--adm-surface);
+        color: var(--adm-text);
         font-weight: bold;
         text-align: center;
         padding: 0.625rem;
-        border-bottom: 0.125rem solid #e2e8f0;
+        border-bottom: 0.125rem solid var(--adm-border);
     }
     .timetable-day {
         min-height: 12.5rem;
-        border-right: 1.0px solid #e2e8f0;
+        border-right: 1.0px solid var(--adm-border);
         padding: 0.625rem;
     }
     .timetable-day:last-child {
         border-right: none;
     }
     .timetable-slot {
-        background: #fff;
-        border-left: 0.25rem solid #EB8153;
+        background: var(--adm-input-bg);
+        border-left: 0.25rem solid var(--adm-accent);
         padding: 0.625rem;
         margin-bottom: 0.625rem;
         border-radius: 0.25rem;
-        box-shadow: 0 1.0px 0.1875rem rgba(0,0,0,0.1);
+        box-shadow: 0 1.0px 0.1875rem rgba(0,0,0,0.3);
         font-size: 0.8125rem;
     }
     .timetable-slot.inactive {
-        border-left-color: #cbd5e0;
+        border-left-color: var(--adm-border);
         opacity: 0.7;
     }
     .slot-time {
         font-weight: bold;
-        color: #4a5568;
+        color: var(--adm-accent);
     }
     .slot-title {
-        color: #2d3748;
+        color: var(--adm-text);
         margin: 0.125rem 0;
     }
     .slot-details {
         font-size: 0.6875rem;
-        color: #718096;
+        color: var(--adm-text-2);
     }
     .slot-actions {
         margin-top: 0.3125rem;
@@ -55,217 +56,47 @@
         gap: 0.3125rem;
     }
 
-    /* Dark Mode Specific Styles for Dropdowns */
-    [data-theme-version="dark"] .modal-content {
-        background-color: #1a152e;
-        color: #fff;
+    /* Modal & Select Theme Variables */
+    .modal-content {
+        background-color: var(--adm-surface);
+        color: var(--adm-text);
     }
-    [data-theme-version="dark"] .modal-header {
-        border-bottom: 1.0px solid rgba(255,255,255,0.1);
+    .modal-header {
+        border-bottom: 1.0px solid var(--adm-border);
     }
-    [data-theme-version="dark"] .modal-footer {
-        border-top: 1.0px solid rgba(255,255,255,0.1);
+    .modal-footer {
+        border-top: 1.0px solid var(--adm-border);
     }
-    [data-theme-version="dark"] .form-control {
-        background-color: rgba(255,255,255,0.05) !important;
-        border-color: #eb8153 !important;
-        color: #fff !important;
+    .form-group label {
+        color: var(--adm-text) !important;
     }
-    [data-theme-version="dark"] .bootstrap-select .dropdown-toggle {
-        background-color: rgba(255,255,255,0.05) !important;
-        border: 1.0px solid #eb8153 !important;
-        color: #fff !important;
+    .bootstrap-select .dropdown-toggle {
+        background-color: var(--adm-input-bg) !important;
+        border: 1.0px solid var(--adm-border) !important;
+        color: var(--adm-text) !important;
     }
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu {
-        background-color: #1a152e !important;
-        border: 1.0px solid rgba(255,255,255,0.2) !important;
+    .bootstrap-select .dropdown-menu,
+    .bootstrap-select .dropdown-menu .inner,
+    .dropdown-menu {
+        background-color: var(--adm-surface) !important;
+        border: 1.0px solid var(--adm-border) !important;
+        color: var(--adm-text) !important;
     }
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a {
-        color: #fff !important;
+    .bootstrap-select .dropdown-menu li a,
+    .dropdown-item {
+        color: var(--adm-text) !important;
         background-color: transparent !important;
     }
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover {
-        background-color: #eb8153 !important;
-        color: #fff !important;
-    }
-    [data-theme-version="dark"] .bootstrap-select .bs-searchbox input {
-        background-color: rgba(255,255,255,0.1) !important;
-        border-color: #eb8153 !important;
-        color: #fff !important;
-    }
-    [data-theme-version="dark"] .dropdown-menu .inner {
-        background-color: #1a152e !important;
-    }
-    [data-theme-version="dark"] .dropdown-menu {
-        background-color: #1a152e !important;
-        border: 1.0px solid rgba(255,255,255,0.2) !important;
-    }
-    /* Fix for search results white background in dark mode */
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
-        background-color: #1a152e !important;
-    }
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.selected a {
-        background-color: #eb8153 !important;
-        color: #fff !important;
-    }
-    /* Global dropdown menu fix for dark mode - VERY AGGRESSIVE */
-    [data-theme-version="dark"] .dropdown-menu,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu .dropdown-item,
-    [data-theme-version="dark"] .dropdown-item {
-        background-color: #1a152e !important;
-        color: #fff !important;
-    }
-
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li span {
-        color: #fff !important;
-        background-color: #1a152e !important;
-    }
-
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.active a,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.selected a {
-        background-color: #eb8153 !important;
-        color: #fff !important;
-    }
-
-    [data-theme-version="dark"] .bootstrap-select .dropdown-toggle:after {
-        color: #fff !important;
-    }
-
-    [data-theme-version="dark"] .bootstrap-select .bs-searchbox {
-        background-color: #1a152e !important;
-        padding: 0.625rem !important;
-    }
-
-    [data-theme-version="dark"] .bootstrap-select .bs-searchbox input {
-        background-color: rgba(255,255,255,0.1) !important;
-        border-color: #eb8153 !important;
-        color: #fff !important;
-    }
-
-    /* NUCLEAR FIX FOR WHITE DROPDOWNS */
-    [data-theme-version="dark"] .dropdown-menu,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu.inner,
-    [data-theme-version="dark"] .dropdown-menu.show,
-    [data-theme-version="dark"] .dropdown-menu .inner,
-    [data-theme-version="dark"] .dropdown-menu .inner.show,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu.show,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu .inner.show {
-        background-color: #1a152e !important;
-        background: #1a152e !important;
-        border: 1.0px solid rgba(255,255,255,0.2) !important;
-        color: #fff !important;
-    }
-
-    [data-theme-version="dark"] .dropdown-menu li,
-    [data-theme-version="dark"] .dropdown-menu li a,
-    [data-theme-version="dark"] .dropdown-menu li a span,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a span {
-        color: #fff !important;
-        background-color: #1a152e !important;
-    }
-
-    [data-theme-version="dark"] .dropdown-menu li a:hover,
-    [data-theme-version="dark"] .dropdown-menu li.active a,
-    [data-theme-version="dark"] .dropdown-menu li.selected a,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li a:hover,
-    [data-theme-version="dark"] .bootstrap-select .dropdown-menu li.active a,
-    [data-theme-version="dark"] .bootstrap-select .bootstrap-select .dropdown-menu li.selected a {
-        background-color: #eb8153 !important;
-        color: #fff !important;
-    }
-
-    /* Fix for the white gap often seen in bootstrap-select */
-    [data-theme-version="dark"] .bootstrap-select .inner {
-        background-color: #1a152e !important;
-    }
-    
-    /* Fix search box specifically */
-    [data-theme-version="dark"] .bs-searchbox {
-        background-color: #1a152e !important;
-        border-bottom: 1.0px solid rgba(255,255,255,0.1) !important;
-    }
-    
-    [data-theme-version="dark"] .bs-searchbox input {
-        color: #fff !important;
-        background-color: rgba(255,255,255,0.1) !important;
-    }
-
-    /* 
-       NUCLEAR FORCE FIX FOR ALL DROPDOWNS 
-       This targets EVERY potential dropdown element to force the dark #1a152e theme.
-    */
-    
-    /* 1. Target native select if it's used */
-    select.form-control, 
-    select.form-control option {
-        background-color: #1a152e !important;
-        color: #ffffff !important;
-    }
-
-    /* 2. Target Bootstrap Select custom UI */
-    .bootstrap-select .dropdown-menu,
-    .bootstrap-select .dropdown-menu.inner,
-    .bootstrap-select .dropdown-menu.inner.show,
-    .dropdown-menu,
-    .dropdown-menu.show,
-    .dropdown-menu.inner,
-    .dropdown-menu.inner.show,
-    .dropdown-menu[x-placement] {
-        background-color: #1a152e !important;
-        background: #1a152e !important;
-        border: 1.0px solid rgba(255,255,255,0.2) !important;
-        box-shadow: 0 0.625rem 1.875rem rgba(0,0,0,0.5) !important;
-    }
-
-    /* 3. Target the items inside the dropdown */
-    .bootstrap-select .dropdown-menu li,
-    .bootstrap-select .dropdown-menu li a,
-    .bootstrap-select .dropdown-menu li a span,
-    .dropdown-menu li,
-    .dropdown-menu li a,
-    .dropdown-menu li a span,
-    .dropdown-item,
-    .dropdown-item span {
-        color: #ffffff !important;
-        background-color: #1a152e !important;
-        background: #1a152e !important;
-    }
-
-    /* 4. Target Hover and Selection states */
-    .dropdown-menu li a:hover,
-    .dropdown-item:hover,
-    .dropdown-item:active,
-    .dropdown-item.active,
-    .dropdown-item.selected,
+    .bootstrap-select .dropdown-menu li a:hover,
     .bootstrap-select .dropdown-menu li.selected a,
-    .bootstrap-select .dropdown-menu li.active a {
-        background-color: #eb8153 !important;
-        color: #ffffff !important;
+    .dropdown-item:hover {
+        background-color: var(--adm-accent) !important;
+        color: #0f172a !important;
     }
-
-    /* 5. Fix the search box inside dropdowns */
-    .bs-searchbox,
-    .bs-searchbox input {
-        background-color: #1a152e !important;
-        color: #ffffff !important;
-        border-color: rgba(255,255,255,0.2) !important;
-    }
-
-    /* 6. Fix for specific container if bootstrap-select uses it */
-    .bs-container.dropdown.bootstrap-select.open .dropdown-menu {
-        background-color: #1a152e !important;
-        color: #ffffff !important;
-    }
-    
-    /* Fix the Grade/Subject/Teacher words appearing white on white */
-    [data-theme-version="dark"] .form-group label {
-        color: #ffffff !important;
+    .bootstrap-select .bs-searchbox input {
+        background-color: var(--adm-input-bg) !important;
+        border-color: var(--adm-border) !important;
+        color: var(--adm-text) !important;
     }
 </style>
 @endpush
@@ -274,7 +105,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Weekly Timetable</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Weekly Timetable</h4>
             <div>
                 <button type="button" onclick="runSync()" class="btn btn-info btn-sm mr-2" title="Manual sync for the next 90 days">
                     <i class="fa fa-sync"></i> Sync to Zoom (90 Days)

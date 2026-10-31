@@ -60,8 +60,8 @@
         <div class="card-body py-3">
             <form method="GET" action="{{ route('admin.students.index-lists') }}" id="gradeSelectForm" class="row align-items-center">
                 <div class="col-md-4 mb-2 mb-md-0">
-                    <label class="text-white font-weight-bold mr-2 mb-0">Select Grade:</label>
-                    <select name="grade" class="form-control" onchange="document.getElementById('gradeSelectForm').submit()" style="background: #1f2937; color: #fff; border-color: #4b5563; display: inline-block; width: auto; min-width: 180px;">
+                    <label class="font-weight-bold mr-2 mb-0">Select Grade:</label>
+                    <select name="grade" class="form-control" onchange="document.getElementById('gradeSelectForm').submit()" style="background: var(--adm-input-bg); color: var(--adm-text); border-color: var(--adm-border); display: inline-block; width: auto; min-width: 180px;">
                         @foreach($grades as $g)
                             <option value="{{ $g }}" {{ $selectedGrade === $g ? 'selected' : '' }}>{{ $g }}</option>
                         @endforeach
@@ -90,12 +90,12 @@
         <!-- English Medium Table -->
         <div class="col-xl-6 col-lg-6 mb-4">
             <div class="card h-100">
-                <div class="medium-card-header bg-primary text-white" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;">
+                <div class="medium-card-header" style="background: var(--adm-surface) !important; border-bottom: 1px solid var(--adm-border);">
                     <div>
-                        <h5 class="text-white mb-0 font-weight-bold">
+                        <h5 class="mb-0 font-weight-bold">
                             <i class="flaticon-381-file-1 mr-1"></i> English Medium
                         </h5>
-                        <small class="text-white-50">{{ $selectedGrade }}</small>
+                        <small class="text-muted">{{ $selectedGrade }}</small>
                     </div>
                     <div>
                         <span class="badge badge-light text-dark font-weight-bold px-2 py-1 mr-2">{{ $englishStudents->count() }} Students</span>
@@ -120,7 +120,7 @@
                                     <tr>
                                         <td style="text-align: center; color: #9ca3af;">{{ $idx + 1 }}</td>
                                         <td>
-                                            <span class="text-white font-weight-bold">{{ $s->full_name ?? $s->name }}</span>
+                                            <span class="font-weight-bold">{{ $s->full_name ?? $s->name }}</span>
                                             @if(strtolower($s->medium ?? '') === 'both')
                                                 <span class="both-badge" title="Student is enrolled in both English & Tamil media">Both Media</span>
                                             @endif
@@ -151,12 +151,12 @@
         <!-- Tamil Medium Table -->
         <div class="col-xl-6 col-lg-6 mb-4">
             <div class="card h-100">
-                <div class="medium-card-header bg-info text-white" style="background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;">
+                <div class="medium-card-header" style="background: var(--adm-surface) !important; border-bottom: 1px solid var(--adm-border);">
                     <div>
-                        <h5 class="text-white mb-0 font-weight-bold">
+                        <h5 class="mb-0 font-weight-bold">
                             <i class="flaticon-381-file-1 mr-1"></i> Tamil Medium
                         </h5>
-                        <small class="text-white-50">{{ $selectedGrade }}</small>
+                        <small class="text-muted">{{ $selectedGrade }}</small>
                     </div>
                     <div>
                         <span class="badge badge-light text-dark font-weight-bold px-2 py-1 mr-2">{{ $tamilStudents->count() }} Students</span>
@@ -181,7 +181,7 @@
                                     <tr>
                                         <td style="text-align: center; color: #9ca3af;">{{ $idx + 1 }}</td>
                                         <td>
-                                            <span class="text-white font-weight-bold">{{ $s->full_name ?? $s->name }}</span>
+                                            <span class="font-weight-bold">{{ $s->full_name ?? $s->name }}</span>
                                             @if(strtolower($s->medium ?? '') === 'both')
                                                 <span class="both-badge" title="Student is enrolled in both English & Tamil media">Both Media</span>
                                             @endif
@@ -240,7 +240,7 @@
                                     @foreach($unassignedStudents as $idx => $s)
                                         <tr>
                                             <td style="text-align: center; color: #9ca3af;">{{ $idx + 1 }}</td>
-                                            <td class="font-weight-bold text-white">{{ $s->full_name ?? $s->name }}</td>
+                                            <td class="font-weight-bold">{{ $s->full_name ?? $s->name }}</td>
                                             <td><span class="badge badge-dark text-capitalize">{{ $s->medium ?? 'N/A' }}</span></td>
                                             <td class="text-muted">{{ $s->created_at ? $s->created_at->format('Y-m-d') : '—' }}</td>
                                             <td style="text-align: right;">

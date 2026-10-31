@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -33,7 +33,7 @@
         border-radius: 0.75rem;
         padding: 1rem;
         margin-bottom: 1rem;
-        color: #fff;
+        color: var(--adm-text);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -53,7 +53,7 @@
     .form-control {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
         width: 180px;
     }

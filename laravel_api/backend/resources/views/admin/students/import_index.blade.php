@@ -44,7 +44,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 700; color: #fff;">
+                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 700; color: var(--adm-text);">
                     <i class="flaticon-381-file-1 text-primary mr-2"></i> Import Existing Index Numbers from CSV
                 </h4>
                 <p class="text-muted mb-0">Import pre-assigned index numbers (e.g. from paper records or Excel) without colliding with auto-generated sequences.</p>
@@ -73,7 +73,7 @@
         <div class="alert alert-warning d-flex align-items-center" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d; border-radius: 8px; padding: 16px 20px;">
             <i class="flaticon-381-warning-1 mr-3" style="font-size: 1.8rem; color: #f59e0b;"></i>
             <div>
-                <strong style="font-size: 1rem; color: #fff; display: block; margin-bottom: 4px;">Important Order of Operations: Import CSV Before Auto-Assigning</strong>
+                <strong style="font-size: 1rem; color: var(--adm-text); display: block; margin-bottom: 4px;">Important Order of Operations: Import CSV Before Auto-Assigning</strong>
                 <span>If you have existing paper records (e.g. Grade 08 students 001–065), you <strong>MUST import the CSV first</strong> before running any bulk or auto-assignment. The CSV import records those pre-assigned numbers and advances the sequence counter so new students automatically start from the next number (e.g. 066).</span>
             </div>
         </div>
@@ -86,13 +86,13 @@
     <div class="col-xl-5 col-lg-5">
         <div class="card">
             <div class="card-header border-0 pb-0">
-                <h5 class="card-title text-white">Upload CSV File</h5>
+                <h5 class="card-title">Upload CSV File</h5>
             </div>
             <div class="card-body">
                 <form id="uploadForm" enctype="multipart/form-data">
                     <div class="upload-box mb-3" onclick="document.getElementById('csvFileInput').click()">
                         <i class="flaticon-381-upload text-primary" style="font-size: 2.5rem;"></i>
-                        <h6 class="text-white mt-2 mb-1" id="fileLabel">Click to select CSV file</h6>
+                        <h6 class="mt-2 mb-1" id="fileLabel">Click to select CSV file</h6>
                         <span class="text-muted small">Max 5MB (.csv format)</span>
                         <input type="file" id="csvFileInput" name="csv_file" accept=".csv,text/csv" style="display: none;" onchange="onFileSelected(this)">
                     </div>
@@ -108,7 +108,7 @@
 
                 <hr style="border-color: rgba(255,255,255,0.1);" class="my-4">
 
-                <h6 class="text-white font-weight-bold mb-2">CSV Column Requirements:</h6>
+                <h6 class="font-weight-bold mb-2">CSV Column Requirements:</h6>
                 <p class="text-muted small mb-2">The CSV must include headers with one of the following formats:</p>
                 <ul class="text-muted small pl-3 mb-3">
                     <li><strong>Owner's Format (Recommended)</strong>: Columns <code>grade, medium, student_name, index_number</code> (e.g. <code>Grade 8, English, M. Nidhuran, TIT/08/001</code>). Unassigned/reserved sequence rows can use <code>-</code> for name.</li>
@@ -133,7 +133,7 @@
                 <div style="font-size: 3rem; color: #4b5563; margin-bottom: 1rem;">
                     <i class="flaticon-381-file-2"></i>
                 </div>
-                <h5 class="text-white">Validation Preview</h5>
+                <h5>Validation Preview</h5>
                 <p class="text-muted" style="max-width: 420px;">
                     Upload your CSV file on the left to preview parsed rows, test sequence conflicts, and verify student matches before importing.
                 </p>
@@ -143,7 +143,7 @@
         <!-- Preview Results Card -->
         <div class="card" id="previewResultsCard" style="display: none;">
             <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                <h5 class="card-title text-white">Validation Summary</h5>
+                <h5 class="card-title">Validation Summary</h5>
                 <span class="badge badge-dark" id="previewTotalBadge">0 Rows</span>
             </div>
             <div class="card-body">
@@ -165,16 +165,16 @@
 
                 <!-- Mode Selection -->
                 <div class="p-3 rounded mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-                    <label class="text-white font-weight-bold mb-2 small">Import Options:</label>
+                    <label class="font-weight-bold mb-2 small">Import Options:</label>
                     <div class="custom-control custom-radio mb-2">
                         <input type="radio" id="modeSkipErrors" name="import_mode" value="skip" class="custom-control-input" checked>
-                        <label class="custom-control-label text-white small" for="modeSkipErrors">
+                        <label class="custom-control-label small" for="modeSkipErrors">
                             <strong>Import valid rows only</strong> (skip rows with errors)
                         </label>
                     </div>
                     <div class="custom-control custom-radio">
                         <input type="radio" id="modeAbortErrors" name="import_mode" value="abort" class="custom-control-input">
-                        <label class="custom-control-label text-white small" for="modeAbortErrors">
+                        <label class="custom-control-label small" for="modeAbortErrors">
                             <strong>Abort entire import</strong> if any row fails validation (All-or-nothing)
                         </label>
                     </div>
@@ -182,7 +182,7 @@
 
                 <!-- Rows Preview Table -->
                 <div class="table-responsive mb-4" style="max-height: 280px; overflow-y: auto;">
-                    <table class="table table-sm text-white" id="validationTable">
+                    <table class="table table-sm" id="validationTable">
                         <thead class="text-muted" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <tr>
                                 <th>#</th>
@@ -208,13 +208,13 @@
         <!-- Success Result Card -->
         <div class="card" id="importSuccessCard" style="display: none;">
             <div class="card-header border-0 pb-0">
-                <h5 class="card-title text-white">
+                <h5 class="card-title">
                     <i class="flaticon-381-check-2 text-success mr-2"></i> Import Completed
                 </h5>
             </div>
             <div class="card-body text-center py-4">
                 <h2 class="text-success font-weight-bold mb-1" id="finalImportedCount">0</h2>
-                <p class="text-white mb-2">Index Numbers Successfully Imported & Sequence Advanced</p>
+                <p class="mb-2">Index Numbers Successfully Imported & Sequence Advanced</p>
                 <p class="text-muted small mb-4">
                     The sequence counter has been automatically updated so future auto-assigned index numbers will never collide with imported numbers.
                 </p>
@@ -304,13 +304,13 @@
         res.rows.forEach(r => {
             const tr = document.createElement('tr');
             const isValid = (r.status === 'valid');
-            let nameHtml = `<span class="font-weight-bold text-white">${r.student_name || '—'}</span>`;
+            let nameHtml = `<span class="font-weight-bold">${r.student_name || '—'}</span>`;
             if (r.is_reserved) {
                 nameHtml += ` <span class="badge badge-warning text-dark ml-1" style="font-size: 0.7rem;">RESERVED</span>`;
             } else if (r.candidates && r.candidates.length > 1) {
                 nameHtml += `
                     <div class="mt-1">
-                        <select class="form-control form-control-sm text-white" style="background: #1f2937; border-color: #f59e0b; font-size: 0.75rem;" onchange="onCandidateSelected(${r.row_number}, this.value)">
+                        <select class="form-control form-control-sm" style="background: var(--adm-input-bg); border-color: var(--adm-border); color: var(--adm-text); font-size: 0.75rem;" onchange="onCandidateSelected(${r.row_number}, this.value)">
                             <option value="">-- Ambiguous match: select student (${r.candidates.length} candidates) --</option>
                             ${r.candidates.map(c => `<option value="${c.id}" ${c.id === r.student_id ? 'selected' : ''}>#${c.id} - ${c.full_name || c.name} (${c.current_grade || ''}, ${c.medium || ''})</option>`).join('')}
                         </select>

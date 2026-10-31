@@ -17,28 +17,28 @@
         flex: 1; /* allow flex container to consume available space */
         height: calc(100vh - 120px) !important;
         min-height: 400px; /* reduced min-height to prevent cropping on smaller screens */
-        background: #ffffff;
+        background: var(--adm-surface);
         border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         overflow: hidden;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--adm-border);
     }
 
     /* ===== Sidebar ===== */
     #msgApp .chat-sidebar {
         width: 360px;
         min-width: 360px;
-        border-right: 1px solid #e2e8f0;
+        border-right: 1px solid var(--adm-border);
         display: flex;
         flex-direction: column;
-        background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
+        background: var(--adm-bg);
         flex-shrink: 0;
     }
 
     #msgApp .chat-header {
         padding: 1.25rem 1.25rem;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+        background: var(--adm-surface);
+        border-bottom: 1px solid var(--adm-border);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -47,28 +47,28 @@
     #msgApp .chat-title {
         font-size: 1.3rem;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--adm-text);
         margin: 0;
         letter-spacing: -0.02em;
     }
 
 #msgApp .chat-sidebar .chat-header .chat-title {
-    color: #6049e2ff !important;
+    color: var(--adm-accent) !important;
 }
 
 
 #composeOverlay .chat-main-name {
-    color: #6049e2ff !important;
+    color: var(--adm-accent) !important;
 }
 
 
 #msgApp #emptyState h3 {
-    color: #6049e2ff !important;
+    color: var(--adm-accent) !important;
 }
 
     #msgApp .compose-btn {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: #fff;
+        background: var(--adm-btn);
+        color: var(--adm-btn-text);
         border: none;
         padding: 0.5rem 1.1rem;
         border-radius: 10px;
@@ -88,8 +88,8 @@
 
     #msgApp .chat-search-bar {
         padding: 0.85rem 1.25rem;
-        border-bottom: 1px solid #e2e8f0;
-        background: #ffffff;
+        border-bottom: 1px solid var(--adm-border);
+        background: var(--adm-surface);
     }
     #msgApp .search-icon-wrapper { position: relative; }
     #msgApp .search-icon {
@@ -103,17 +103,17 @@
     #msgApp .chat-search-input {
         width: 100%;
         padding: 0.65rem 1rem 0.65rem 2.5rem;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid var(--adm-border);
         border-radius: 12px;
         font-size: 0.875rem;
-        color: #334155;
-        background: #f8fafc;
+        color: var(--adm-text);
+        background: var(--adm-input-bg);
         transition: all 0.2s;
     }
     #msgApp .chat-search-input:focus {
         outline: none;
-        border-color: #6366f1;
-        background: #fff;
+        border-color: var(--adm-accent);
+        background: var(--adm-input-bg);
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
@@ -238,7 +238,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: #ffffff;
+        background: var(--adm-surface);
         position: relative;
         min-width: 0;
         overflow: hidden;
@@ -283,8 +283,8 @@
     /* Active Chat Header */
     #msgApp .chat-main-header {
         padding: 1rem 1.5rem;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+        background: var(--adm-surface);
+        border-bottom: 1px solid var(--adm-border);
         display: flex;
         align-items: center;
         gap: 0.85rem;
@@ -293,7 +293,7 @@
     #msgApp .chat-main-name {
         font-size: 1.1rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--adm-text);
         margin: 0;
     }
     #msgApp .chat-main-meta {
@@ -306,7 +306,7 @@
         flex: 1;
         overflow-y: auto;
         padding: 1.5rem;
-        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        background: var(--adm-bg);
     }
     #msgApp .chat-messages::-webkit-scrollbar { width: 5px; }
     #msgApp .chat-messages::-webkit-scrollbar-track { background: transparent; }
@@ -328,16 +328,16 @@
         to { opacity: 1; transform: translateY(0); }
     }
     #msgApp .message-row.sent .message-bubble {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: #ffffff;
+        background: var(--adm-btn);
+        color: var(--adm-btn-text);
         border-bottom-right-radius: 4px;
         box-shadow: 0 2px 12px rgba(99, 102, 241, 0.2);
     }
     #msgApp .message-row.received .message-bubble {
-        background: #ffffff;
-        color: #1e293b;
+        background: var(--adm-surface);
+        color: var(--adm-text);
         border-bottom-left-radius: 4px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--adm-border);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
@@ -367,8 +367,8 @@
     /* ===== Chat Input Area ===== */
     #msgApp .chat-input-area {
         padding: 1rem 1.5rem;
-        background: #ffffff;
-        border-top: 1px solid #e2e8f0;
+        background: var(--adm-surface);
+        border-top: 1px solid var(--adm-border);
         display: flex;
         flex-direction: column;
         gap: 0.6rem;
@@ -377,36 +377,36 @@
     #msgApp .reply-subject-input {
         width: 100%;
         padding: 0.55rem 1rem;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid var(--adm-border);
         border-radius: 10px;
         font-size: 0.875rem;
-        color: #1e293b !important;
-        background: #f8fafc !important;
+        color: var(--adm-text) !important;
+        background: var(--adm-input-bg) !important;
         transition: all 0.2s;
     }
     #msgApp .reply-body-input {
         width: 100%;
         padding: 0.65rem 1rem;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid var(--adm-border);
         border-radius: 10px;
         font-size: 0.93rem;
         resize: none;
-        color: #1e293b !important;
-        background: #f8fafc !important;
+        color: var(--adm-text) !important;
+        background: var(--adm-input-bg) !important;
         transition: all 0.2s;
     }
     #msgApp .reply-subject-input:focus,
     #msgApp .reply-body-input:focus {
         outline: none;
-        border-color: #6366f1;
-        background: #ffffff !important;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: var(--adm-accent);
+        background: var(--adm-input-bg) !important;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
     }
 
     #msgApp .chat-input-actions { display: flex; justify-content: flex-end; }
     #msgApp .btn-send {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: #fff;
+        background: var(--adm-btn);
+        color: var(--adm-btn-text);
         border: none;
         padding: 0.6rem 1.5rem;
         border-radius: 10px;
@@ -432,7 +432,7 @@
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        background: #ffffff !important;
+        background: var(--adm-surface) !important;
         z-index: 50 !important;
         flex-direction: column !important;
         overflow: hidden;
@@ -444,8 +444,8 @@
 
     #msgApp .compose-header {
         padding: 1.1rem 1.5rem;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+        background: var(--adm-surface);
+        border-bottom: 1px solid var(--adm-border);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -468,13 +468,13 @@
         padding: 1.5rem;
         flex: 1;
         overflow-y: auto;
-        background: #f8fafc;
+        background: var(--adm-bg);
     }
     #msgApp .compose-body .form-group { margin-bottom: 1.25rem; }
     #msgApp .compose-body label {
         display: block;
         font-weight: 600;
-        color: #334155;
+        color: var(--adm-text);
         margin-bottom: 0.5rem;
         font-size: 0.875rem;
     }
@@ -486,11 +486,11 @@
         padding: 0.75rem 1rem;
         font-size: 0.93rem;
         color: #1e293b !important;
-        background-color: #ffffff !important;
+        background-color: var(--adm-input-bg) !important;
         transition: all 0.2s;
     }
     #msgApp .compose-body .form-control:focus {
-        border-color: #6366f1;
+        border-color: var(--adm-accent);
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         outline: none;
     }
@@ -500,18 +500,18 @@
     #msgApp .recipient-btns .rbtn {
         padding: 0.5rem 1rem;
         border-radius: 10px;
-        border: 1.5px solid #e2e8f0;
-        background: #fff;
-        color: #475569;
+        border: 1.5px solid var(--adm-border);
+        background: var(--adm-input-bg);
+        color: var(--adm-text);
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
     }
-    #msgApp .recipient-btns .rbtn:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
+    #msgApp .recipient-btns .rbtn:hover { border-color: var(--adm-accent); color: #6366f1; background: #f5f3ff; }
     #msgApp .recipient-btns .rbtn.active {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: #fff;
+        background: var(--adm-accent);
+        color: var(--adm-btn-text);
         border-color: transparent;
         box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
     }

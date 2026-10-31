@@ -84,7 +84,7 @@
                 <h4 class="card-title mb-0">Pending Payments Table</h4>
                 <form action="{{ route('admin.students.pending-payments') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2 mb-0">
                     <div class="mr-2">
-                        <select name="type" class="form-control form-control-sm" onchange="this.form.submit()" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(235, 129, 83, 0.5); color: #fff; border-radius: 20px; padding: 4px 12px; height: 32px;">
+                        <select name="type" class="form-control form-control-sm" onchange="this.form.submit()" style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text); border-radius: 20px; padding: 4px 12px; height: 32px;">
                             <option value="all" {{ ($type ?? 'all') === 'all' ? 'selected' : '' }}>Type: All Pending</option>
                             <option value="monthly" {{ ($type ?? '') === 'monthly' ? 'selected' : '' }}>Type: Monthly Only</option>
                             <option value="topup" {{ ($type ?? '') === 'topup' ? 'selected' : '' }}>Type: Subject Top-ups</option>
@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="mr-2">
-                        <select name="grade" class="form-control form-control-sm" onchange="this.form.submit()" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(235, 129, 83, 0.5); color: #fff; border-radius: 20px; padding: 4px 12px; height: 32px;">
+                        <select name="grade" class="form-control form-control-sm" onchange="this.form.submit()" style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text); border-radius: 20px; padding: 4px 12px; height: 32px;">
                             <option value="">All Grades</option>
                             @for($g = 1; $g <= 13; $g++)
                                 <option value="{{ $g }}" {{ (string)($grade ?? '') === (string)$g ? 'selected' : '' }}>Grade {{ $g }}</option>
@@ -102,7 +102,7 @@
                     </div>
 
                     <div class="mr-2">
-                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search student name, phone, index..." class="form-control form-control-sm" style="max-width: 220px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid rgba(235, 129, 83, 0.5) !important; color: #fff !important; padding: 4px 12px;">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search student name, phone, index..." class="form-control form-control-sm" style="max-width: 220px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: var(--adm-input-bg) !important; border: 1px solid var(--adm-border) !important; color: var(--adm-text) !important; padding: 4px 12px;">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 20px; padding: 4px 14px; height: 32px;">
@@ -178,7 +178,7 @@
                                 </td>
                                 <td>
                                     @if($isTopup)
-                                        <span class="badge badge-warning" style="background: #f59e0b; color: #fff; font-weight: 700; padding: 3px 8px; border-radius: 4px;">Subject top-up</span>
+                                        <span class="badge badge-warning" style="background: #f59e0b; color: #0f172a; font-weight: 700; padding: 3px 8px; border-radius: 4px;">Subject top-up</span>
                                     @else
                                         <span class="badge badge-primary" style="font-weight: 700; padding: 3px 8px; border-radius: 4px;">Monthly</span>
                                     @endif

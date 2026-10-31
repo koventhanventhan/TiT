@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -33,7 +33,7 @@
         border-radius: 0.75rem;
         padding: 1rem 1.25rem;
         margin-bottom: 0.75rem;
-        color: #fff;
+        color: var(--adm-text);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -137,7 +137,7 @@
                             @endphp
                             <div class="batch-row">
                                 <div class="d-flex align-items-center">
-                                    <span style="font-weight: 600; font-size: 1rem; color: #fff; min-width: 120px;">
+                                    <span style="font-weight: 600; font-size: 1rem; color: var(--adm-text); min-width: 120px;">
                                         {{ $g['display'] }}
                                     </span>
                                     <span class="grade-count-badge {{ $g['count'] > 0 ? 'has-students' : '' }}">

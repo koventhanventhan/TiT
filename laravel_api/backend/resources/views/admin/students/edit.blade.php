@@ -6,7 +6,7 @@
 <style>
     .form-group label {
         font-weight: 600;
-        color: #ffffff;
+        color: var(--adm-text);
         margin-bottom: 0.5rem;
     }
     .form-control {
@@ -17,17 +17,17 @@
     [data-theme-version="dark"] .form-control {
         background-color: transparent !important;
         border-color: #eb8153 !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control option {
         background-color: #1a152e !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control::placeholder {
         color: #938787;
     }
     [data-theme-version="dark"] .form-group label {
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     .form-control:focus {
         border-color: #6366f1;
@@ -559,7 +559,7 @@
 
                     @if(empty($student->admin_confirmed_at) && $student->registration_status !== 'rejected')
                     <div class="p-4 rounded mb-4" id="confirm-and-mark-paid-card" style="background: rgba(56, 189, 248, 0.08); border-left: 0.3125rem solid #38bdf8;">
-                        <h5 class="mb-2" style="color: #fff;">Confirm registration + mark paid</h5>
+                        <h5 class="mb-2" style="color: var(--adm-text);">Confirm registration + mark paid</h5>
                         <p class="mb-3 small text-muted">Use this when the money for {{ now()->format('F Y') }} has already been received: the registration is confirmed, an index number is assigned (if missing) and the payment is marked as paid with a receipt.</p>
                         <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" onsubmit="if(!confirm('Money received? This confirms the registration and marks {{ now()->format('F Y') }} as paid.')) { return false; } this.querySelector('button[type=submit]').disabled=true;">
                             @csrf
@@ -573,7 +573,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="p-4 rounded" style="background: rgba(255, 171, 45, 0.1); border-left: 0.3125rem solid #ffab2d; height: 100%;">
-                                <h5 class="mb-3" style="color: #fff;">Quick Payment (Current Month)</h5>
+                                <h5 class="mb-3" style="color: var(--adm-text);">Quick Payment (Current Month)</h5>
                                 <p class="mb-3">Mark student as paid for <strong>{{ now()->format('F Y') }}</strong></p>
                                 <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                                     @csrf
@@ -588,7 +588,7 @@
                         
                         <div class="col-md-6 mb-3">
                             <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1.0px dashed rgba(255, 255, 255, 0.2); height: 100%;">
-                                <h5 class="mb-3" style="color: #fff;">Custom Payment Month</h5>
+                                <h5 class="mb-3" style="color: var(--adm-text);">Custom Payment Month</h5>
                                 <form action="{{ route('admin.students.mark-paid', $student->id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                                     @csrf
                                     <div class="form-group">
@@ -617,7 +617,7 @@
                     <div class="mt-5 border-top pt-4">
                         <h4 class="mb-4" style="color: #4caf50; font-weight: 700;"><i class="flaticon-381-notepad mr-2"></i> PAYMENT HISTORY</h4>
                         <div class="table-responsive">
-                            <table class="table table-bordered" style="color: #fff;">
+                            <table class="table table-bordered" style="color: var(--adm-text);">
                                 <thead style="background: rgba(76, 175, 80, 0.2);">
                                     <tr>
                                         <th style="color: #4caf50; font-weight: 700;">#</th>
@@ -639,7 +639,7 @@
                                             <strong>{{ $payment->year_month }}</strong>
                                             @if($payment->kind === 'topup')
                                                 <div class="mt-1">
-                                                    <span class="badge" style="background: #f59e0b; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;">Subject top-up</span>
+                                                    <span class="badge" style="background: #f59e0b; color: #0f172a; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;">Subject top-up</span>
                                                     @php
                                                         $topupSubs = $payment->meta['added_subjects'] ?? [];
                                                     @endphp
@@ -783,22 +783,22 @@
                                     {{-- Edit Modal --}}
                                     <div class="modal fade" id="editPaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="editPaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered" role="document">
-                                            <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;">
+                                            <div class="modal-content" style="background: var(--adm-surface); color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: 12px;">
                                                 <form action="{{ route('admin.students.payments.update', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
                                                     @csrf
                                                     @method('PUT')
                                                     <input type="hidden" name="payment_id" value="{{ $payment->id }}">
                                                     <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                        <h5 class="modal-title text-white" id="editPaymentModalLabel_{{ $payment->id }}">
+                                                        <h5 class="modal-title" id="editPaymentModalLabel_{{ $payment->id }}">
                                                             <i class="fa fa-pencil text-warning mr-2"></i> Edit Payment — {{ $payment->year_month }}
                                                         </h5>
-                                                        <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                        <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                                                             <span aria-hidden="true">&times;</span>
                                                         </button>
                                                     </div>
                                                     <div class="modal-body text-left">
                                                         @if($errors->any() && old('payment_id') == $payment->id)
-                                                            <div class="alert alert-danger" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #f44336; color: #fff;">
+                                                            <div class="alert alert-danger" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #f44336; color: var(--adm-text);">
                                                                 <ul class="mb-0 pl-3">
                                                                     @foreach($errors->all() as $err)
                                                                         <li>{{ $err }}</li>
@@ -808,18 +808,18 @@
                                                         @endif
 
                                                         <div class="form-group mb-3">
-                                                            <label class="text-white font-weight-bold">Month (YYYY-MM) <span class="text-danger">*</span></label>
+                                                            <label class="font-weight-bold">Month (YYYY-MM) <span class="text-danger">*</span></label>
                                                             <input type="month" class="form-control" name="year_month" 
                                                                 value="{{ old('payment_id') == $payment->id ? old('year_month', $payment->year_month) : $payment->year_month }}" 
                                                                 required pattern="^\d{4}-(0[1-9]|1[0-2])$"
-                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                         </div>
 
                                                         <div class="form-group mb-3">
-                                                            <label class="text-white font-weight-bold">Paid Date</label>
+                                                            <label class="font-weight-bold">Paid Date</label>
                                                             <input type="date" class="form-control" name="paid_date" 
                                                                 value="{{ old('payment_id') == $payment->id ? old('paid_date', ($payment->paid_at ? $payment->paid_at->format('Y-m-d') : '')) : ($payment->paid_at ? $payment->paid_at->format('Y-m-d') : '') }}"
-                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                             <small class="text-muted">Cleared automatically if status is not Paid. Defaults to today if status is Paid and date is empty.</small>
                                                         </div>
 
@@ -830,18 +830,18 @@
                                                         @endif
 
                                                         <div class="form-group mb-3">
-                                                            <label class="text-white font-weight-bold">Amount (Rs.) <span class="text-danger">*</span></label>
+                                                            <label class="font-weight-bold">Amount (Rs.) <span class="text-danger">*</span></label>
                                                             <input type="number" step="0.01" min="0" class="form-control" name="amount" 
                                                                 value="{{ old('payment_id') == $payment->id ? old('amount', $payment->amount) : $payment->amount }}" 
                                                                 required
                                                                 {{ ($payment->kind === 'topup' && $payment->status !== 'pending') ? 'readonly' : '' }}
-                                                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                         </div>
 
                                                         <div class="form-group mb-3">
-                                                            <label class="text-white font-weight-bold">Status <span class="text-danger">*</span></label>
+                                                            <label class="font-weight-bold">Status <span class="text-danger">*</span></label>
                                                             @php $curStatus = old('payment_id') == $payment->id ? old('status', $payment->status) : $payment->status; @endphp
-                                                            <select class="form-control" name="status" required style="background: #1a103c; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                            <select class="form-control" name="status" required style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                                 <option value="paid" {{ $curStatus === 'paid' ? 'selected' : '' }}>Paid</option>
                                                                 <option value="pending" {{ $curStatus === 'pending' ? 'selected' : '' }}>Pending</option>
                                                                 <option value="cancelled" {{ $curStatus === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
@@ -850,9 +850,9 @@
                                                         </div>
 
                                                         <div class="form-group mb-3">
-                                                            <label class="text-white font-weight-bold">Payment Method</label>
+                                                            <label class="font-weight-bold">Payment Method</label>
                                                             @php $curMethod = old('payment_id') == $payment->id ? old('payment_method', $payment->payment_method) : $payment->payment_method; @endphp
-                                                            <select class="form-control" name="payment_method" style="background: #1a103c; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                            <select class="form-control" name="payment_method" style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                                 <option value="offline" {{ $curMethod === 'offline' ? 'selected' : '' }}>Offline</option>
                                                                 <option value="online" {{ $curMethod === 'online' ? 'selected' : '' }}>Online</option>
                                                                 <option value="bank_transfer" {{ $curMethod === 'bank_transfer' ? 'selected' : '' }}>Bank transfer</option>
@@ -872,15 +872,15 @@
                                     {{-- Delete Modal --}}
                                     <div class="modal fade" id="deletePaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="deletePaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered" role="document">
-                                            <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(244,67,54,0.3); border-radius: 12px;">
+                                            <div class="modal-content" style="background: var(--adm-surface); color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: 12px;">
                                                 <form action="{{ route('admin.students.payments.destroy', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                        <h5 class="modal-title text-white" id="deletePaymentModalLabel_{{ $payment->id }}">
+                                                        <h5 class="modal-title" id="deletePaymentModalLabel_{{ $payment->id }}">
                                                             <i class="fa fa-trash text-danger mr-2"></i> Delete Payment
                                                         </h5>
-                                                        <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                        <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                                                             <span aria-hidden="true">&times;</span>
                                                         </button>
                                                     </div>
@@ -908,14 +908,14 @@
                                         {{-- Revert to Pending Modal --}}
                                         <div class="modal fade" id="revertPaymentModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="revertPaymentModalLabel_{{ $payment->id }}" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered" role="document">
-                                                <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(255,152,0,0.3); border-radius: 12px;">
+                                                <div class="modal-content" style="background: var(--adm-surface); color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: 12px;">
                                                     <form action="{{ route('admin.students.payments.revert', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
                                                         @csrf
                                                         <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                            <h5 class="modal-title text-white" id="revertPaymentModalLabel_{{ $payment->id }}">
+                                                            <h5 class="modal-title" id="revertPaymentModalLabel_{{ $payment->id }}">
                                                                 <i class="fa fa-undo text-warning mr-2"></i> Revert to Pending
                                                             </h5>
-                                                            <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                            <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                                                                 <span aria-hidden="true">&times;</span>
                                                             </button>
                                                         </div>
@@ -926,7 +926,7 @@
                                                         </div>
                                                         <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
-                                                            <button type="submit" class="btn btn-warning" style="min-height: 36px; font-weight: 700; color: #fff; background: #ff9800; border-color: #ff9800;">Revert to Pending</button>
+                                                            <button type="submit" class="btn btn-warning" style="min-height: 36px; font-weight: 700; color: #0f172a; background: #ff9800; border-color: #ff9800;">Revert to Pending</button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -936,14 +936,14 @@
                                         {{-- Mark Paid Modal --}}
                                         <div class="modal fade" id="markPaidModal_{{ $payment->id }}" tabindex="-1" role="dialog" aria-labelledby="markPaidModalLabel_{{ $payment->id }}" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered" role="document">
-                                                <div class="modal-content" style="background: #1e1b4b; color: #fff; border: 1px solid rgba(76,175,80,0.3); border-radius: 12px;">
+                                                <div class="modal-content" style="background: var(--adm-surface); color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: 12px;">
                                                     <form action="{{ route('admin.students.payments.mark-paid', ['id' => $student->id, 'payment' => $payment->id]) }}" method="POST">
                                                         @csrf
                                                         <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                            <h5 class="modal-title text-white" id="markPaidModalLabel_{{ $payment->id }}">
+                                                            <h5 class="modal-title" id="markPaidModalLabel_{{ $payment->id }}">
                                                                 <i class="fa fa-check text-success mr-2"></i> Mark Month as Paid
                                                             </h5>
-                                                            <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                                                            <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                                                                 <span aria-hidden="true">&times;</span>
                                                             </button>
                                                         </div>
@@ -952,9 +952,9 @@
                                                                 Mark payment for <strong>{{ $payment->year_month }}</strong> (Rs. {{ number_format($payment->amount, 2) }}) as <strong>PAID</strong>?
                                                             </p>
                                                             <div class="form-group mb-0">
-                                                                <label class="text-white font-weight-bold">Paid Date</label>
+                                                                <label class="font-weight-bold">Paid Date</label>
                                                                 <input type="date" class="form-control" name="paid_date" value="{{ date('Y-m-d') }}" required
-                                                                    style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                                                                    style="background: var(--adm-input-bg); border: 1px solid var(--adm-border); color: var(--adm-text);">
                                                             </div>
                                                             <div class="mt-3">
                                                                 @include('admin.partials.received-by-select', ['dark' => true])
@@ -1172,7 +1172,7 @@
     function submitPromoteForm() {
         Swal.fire({
             title: 'Promote Student?',
-            html: "This will move the student to the next grade and carry forward matching subjects automatically.<br><br><label style='color:#fff;'><input type='checkbox' id='forceCheckbox'> Force promote (bypass 6-month safeguard)</label>",
+            html: "This will move the student to the next grade and carry forward matching subjects automatically.<br><br><label style='color:var(--adm-text);'><input type='checkbox' id='forceCheckbox'> Force promote (bypass 6-month safeguard)</label>",
             type: 'info',
             showCancelButton: true,
             confirmButtonColor: '#ffab2d',
@@ -1212,12 +1212,12 @@
             html: `
                 <div style="text-align: left; font-size: 0.9rem;">
                     <div class="form-group mb-2">
-                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
-                        <input id="swal-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563; font-weight: bold;">
+                        <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
+                        <input id="swal-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: bold;">
                     </div>
                     <div class="form-group mb-2">
-                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
-                        <input id="swal-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                        <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
+                        <input id="swal-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border);">
                         <small style="color: #9ca3af; font-size: 0.8rem;">Leave empty for next automatic number, or type an exact number.</small>
                     </div>
                     <div style="margin-top: 12px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
@@ -1306,17 +1306,17 @@
                     <p style="color: #fca5a5; margin-bottom: 8px;">⚠️ WARNING: Student currently has <strong>${currentIndex}</strong>. Receipts and exam records may reference this number.</p>
                     <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This action will be recorded in the system audit logs.</p>
                     <div class="form-group mb-2">
-                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
-                        <input id="swal-new-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563; font-weight: bold;">
+                        <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">${seriesLabel}</label>
+                        <input id="swal-new-series" type="text" value="${val}" placeholder="e.g. 08" class="form-control" style="background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: bold;">
                     </div>
                     <div class="form-group mb-2">
-                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
-                        <input id="swal-new-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                        <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">Running Number (Optional):</label>
+                        <input id="swal-new-seq" type="number" min="1" placeholder="Empty = next free number (e.g. 110 or 550)" class="form-control" style="background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border);">
                         <small style="color: #9ca3af; font-size: 0.8rem;">Leave empty for next automatic number, or type an exact number.</small>
                     </div>
                     <div class="form-group mb-2">
-                        <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Reason for Change (Required):</label>
-                        <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected grade or batch / repeat exam" style="background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                        <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">Reason for Change (Required):</label>
+                        <input id="swal-reassign-reason" type="text" class="form-control" placeholder="e.g. Corrected grade or batch / repeat exam" style="background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border);">
                     </div>
                     <div style="margin-top: 12px; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; text-align: center;">
                         <span style="color: #cbd5e1; font-size: 0.85rem;">Preview: </span>
@@ -1403,8 +1403,8 @@
             html: `<div style="text-align: left; font-size: 0.9rem;">
                      <p style="color: #cbd5e1; margin-bottom: 8px;">Current Index: <strong style="color: #f59e0b;">${currentIndex}</strong> (legacy format)</p>
                      <p style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.85rem;">This will convert the index number to the official <strong>TIT/GG/NNN</strong> format and record an audit log.</p>
-                     <label style="color: #fff; font-weight: 600; display: block; margin-bottom: 4px;">Grade Series (01-13):</label>
-                     <input id="swal-convert-series" type="text" value="${suggestedSeries || '08'}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: #1f2937; color: #fff; border: 1px solid #4b5563;">
+                     <label style="color: var(--adm-text); font-weight: 600; display: block; margin-bottom: 4px;">Grade Series (01-13):</label>
+                     <input id="swal-convert-series" type="text" value="${suggestedSeries || '08'}" class="form-control text-center mb-3" style="width: 120px; font-weight: bold; background: var(--adm-input-bg); color: var(--adm-text); border: 1px solid var(--adm-border);">
                    </div>`,
             showCancelButton: true,
             confirmButtonText: 'Convert Now',

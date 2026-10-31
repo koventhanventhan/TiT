@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -33,7 +33,7 @@
         border-radius: 0.75rem;
         padding: 1.5625rem;
         margin-bottom: 1.875rem;
-        color: #fff;
+        color: var(--adm-text);
         position: relative;
         transition: all 0.3s ease;
     }
@@ -54,7 +54,7 @@
     .form-control, .bootstrap-select .dropdown-toggle {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
     }
 
@@ -78,7 +78,7 @@
     .btn-info.btn-xs {
         background-color: #EB8153;
         border-color: #EB8153;
-        color: #fff;
+        color: var(--adm-text);
         border-radius: 0.375rem;
         padding: 0.3125rem 0.75rem;
     }

@@ -44,7 +44,7 @@
     .pagination-per-page select {
         background: #1f2937;
         border: 1.0px solid #374151;
-        color: #fff;
+        color: var(--adm-text);
         padding: 0.25rem 0.75rem;
         border-radius: 0.375rem;
         cursor: pointer;
@@ -88,7 +88,7 @@
 
     .pagination-item:hover:not(.disabled):not(.active) {
         background: #374151;
-        color: #fff;
+        color: var(--adm-text);
         text-decoration: none;
     }
 
@@ -155,11 +155,11 @@
     [data-theme-version="dark"] .form-control {
         background-color: transparent !important;
         border-color: #eb8153 !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control option {
         background-color: #1a152e !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control::placeholder {
         color: #938787;
@@ -183,7 +183,7 @@
         appearance: none;
         background-color: rgba(17, 24, 39, 0.8) !important;
         border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         padding: 6px 36px 6px 16px !important;
         border-radius: 20px !important;
         font-weight: 600;
@@ -231,7 +231,7 @@
     .premium-toggle-input:checked + .premium-toggle-btn {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         border-color: #ef4444;
-        color: #ffffff;
+        color: var(--adm-text);
         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
         transform: translateY(-1px);
     }
@@ -260,7 +260,7 @@
     .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option,
     .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option-inner,
     .premium-filter-group .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
-        color: #ffffff !important; 
+        color: var(--adm-text) !important; 
     }
     
     .premium-filter-group .bootstrap-select .dropdown-menu {
@@ -323,7 +323,7 @@
             <div class="students-toolbar d-flex flex-wrap align-items-center gap-2">
                 <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-md-3">
                     <div class="premium-filter-group">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important; color: #fff !important; padding: 4px 12px;">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important; color: var(--adm-text) !important; padding: 4px 12px;">
 
                         <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
                             <option value=""> All Grades</option>
@@ -464,7 +464,7 @@
                 <div id="selectAllMatchingBanner" class="alert alert-info py-2 px-3 text-center mb-3" style="display: none; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
                     <span id="selectAllMatchingPrompt">
                         All <strong id="pageSelectedCount">0</strong> students on this page are selected.
-                        <a href="javascript:void(0)" class="font-weight-bold ml-1 text-white text-decoration-underline" onclick="selectAllMatchingAcrossPages()">
+                        <a href="javascript:void(0)" class="font-weight-bold ml-1 text-decoration-underline" style="color: var(--adm-accent);" onclick="selectAllMatchingAcrossPages()">
                             Select all {{ $students->total() }} matching students
                         </a>
                     </span>
@@ -836,7 +836,7 @@
     function submitBulkPromote() {
         Swal.fire({
             title: 'Promote Students?',
-            html: "You are about to promote the selected students to their next grade. This will carry forward their subjects and may flag them for subject review.<br><br><label style='color:#fff;'><input type='checkbox' id='forcePromote'> Force promote (bypass 6-month safeguard)</label>",
+            html: "You are about to promote the selected students to their next grade. This will carry forward their subjects and may flag them for subject review.<br><br><label style='color: var(--adm-text);'><input type='checkbox' id='forcePromote'> Force promote (bypass 6-month safeguard)</label>",
             type: 'info',
             showCancelButton: true,
             confirmButtonColor: '#ffab2d',
@@ -890,7 +890,7 @@
                     Assign sequential Index Numbers (e.g. <code>TiT/YY/100</code>) to the selected students who do not have an index number yet.
                 </p>
                 <div style="text-align: left; margin-top: 1rem;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">Batch Year (2 digits, e.g. 28 for 2028):</label>
+                    <label style="color: var(--adm-text); font-size: 0.85rem; font-weight:600;">Batch Year (2 digits, e.g. 28 for 2028):</label>
                     <input type="number" id="swalBulkBatch" class="swal2-input" placeholder="Leave empty to auto-calculate from student grades" min="20" max="99" style="width: 100%; margin: 0.5rem 0;">
                     <small style="color: #9ca3af;">If left blank, each student's batch year will be derived from their current grade.</small>
                 </div>
@@ -930,7 +930,7 @@
                     </span>
                 </div>
                 <div style="text-align: left; margin-top: 1rem;">
-                    <label style="color:#fff; font-size: 0.85rem; font-weight:600;">${labelText}</label>
+                    <label style="color: var(--adm-text); font-size: 0.85rem; font-weight:600;">${labelText}</label>
                     <input type="text" id="swalConfirmBatch" class="swal2-input" value="${defaultBatch || ''}" placeholder="${placeholderText}" style="width: 100%; margin: 0.5rem 0;">
                     <small style="color: #9ca3af;">Index number will be automatically generated. Leave empty to use default.</small>
                 </div>

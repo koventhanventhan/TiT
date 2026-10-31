@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -33,7 +33,7 @@
         border-radius: 0.75rem;
         padding: 1.5625rem;
         margin-bottom: 1.875rem;
-        color: #fff;
+        color: var(--adm-text);
         position: relative;
         transition: all 0.3s ease;
     }
@@ -66,7 +66,7 @@
     .form-control, .bootstrap-select .dropdown-toggle, textarea {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
     }
 
@@ -89,7 +89,7 @@
 
     /* Prevent overrides from bootstrap text-dark/text-muted classes */
     form h5.text-dark {
-         color: #EB8153 !important;
+         color: var(--adm-accent) !important;
     }
     small.text-muted {
          color: rgba(255,255,255,0.6) !important;
@@ -99,7 +99,7 @@
     .btn-info.btn-xs, .btn-primary {
         background-color: #EB8153;
         border-color: #EB8153;
-        color: #fff;
+        color: var(--adm-text);
         border-radius: 0.375rem;
         padding: 0.3125rem 0.75rem;
     }
@@ -145,7 +145,7 @@
         width: 100%;
         height: 100%;
         background: rgba(0,0,0,0.6);
-        color: #fff;
+        color: var(--adm-text);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -192,7 +192,7 @@
     }
     .remove-testimonial:hover {
         background: #ff5e5e;
-        color: #fff;
+        color: var(--adm-text);
     }
     .testimonial-item label, .love-us-testimonial-item label {
         font-size: 0.6875rem;
@@ -241,7 +241,7 @@
     .form-control-sm {
         background: rgba(255,255,255,0.05) !important;
         border: 1.0px solid rgba(255,255,255,0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
     }
     .form-control-sm:focus {
         border-color: #EB8153 !important;
@@ -923,7 +923,7 @@
                                             @for($i = 1; $i <= 4; $i++)
                                             <div class="col-md-6 mb-3">
                                                 <div class="card p-3">
-                                                    <h6 style="color: #fff;">Stat {{ $i }}</h6>
+                                                    <h6 style="color: var(--adm-text);">Stat {{ $i }}</h6>
                                                     <div class="form-group">
                                                         <label>Number</label>
                                                         <input type="text" name="love_us_stat{{ $i }}_number" class="form-control" value="{{ \App\Models\SiteSetting::get('love_us_stat'.$i.'_number', '') }}">
@@ -1368,7 +1368,7 @@
             const html = `
                 <div class="testimonial-item class-type-item mb-4" id="cls-${id}" style="border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; position: relative; background: rgba(255,255,255,0.02);">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="text-white mb-0">Class Configuration</h6>
+                        <h6 class="mb-0">Class Configuration</h6>
                         <button type="button" class="btn btn-danger btn-xs" onclick="window.removeClassType('${id}')">
                             <i class="fa fa-trash mr-1"></i> 
                         </button>

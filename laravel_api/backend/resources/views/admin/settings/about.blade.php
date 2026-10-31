@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -61,7 +61,7 @@
     .form-control, .bootstrap-select .dropdown-toggle {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
     }
 
@@ -78,7 +78,7 @@
     .btn-info.btn-xs {
         background-color: #EB8153;
         border-color: #EB8153;
-        color: #fff;
+        color: var(--adm-text);
         border-radius: 0.375rem;
         padding: 0.3125rem 0.75rem;
     }
@@ -143,7 +143,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: var(--adm-text);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -622,7 +622,7 @@
             </div>
             <hr>
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="card-title mb-0" style="color:#fff;font-weight:600;">CTA Feature Boxes</h6>
+                <h6 class="card-title mb-0" style="color: var(--adm-text);font-weight:600;">CTA Feature Boxes</h6>
                 <button type="button" class="btn btn-info btn-xs" onclick="addRow('cta-boxes-container')">+ Add Box</button>
             </div>
             <small class="text-muted d-block mb-3">These are the 4 feature boxes displayed on the right side of the CTA banner (e.g. Live / Zoom Classes, Expert / Teachers).</small>

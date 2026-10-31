@@ -28,7 +28,7 @@
     .grade-chip.active {
         background: #eb8153;
         border-color: #eb8153;
-        color: #fff;
+        color: var(--adm-text);
         font-weight: 600;
         box-shadow: 0 2px 8px rgba(235, 129, 83, 0.4);
     }
@@ -62,7 +62,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 700; color: #fff;">
+                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 700; color: var(--adm-text);">
                     <i class="flaticon-381-layer-1 text-primary mr-2"></i> Assign Index Numbers in Bulk
                 </h4>
                 <p class="text-muted mb-0">Safely assign unique permanent index numbers across all matching students with instant preview and progress tracking.</p>
@@ -88,7 +88,7 @@
         <div class="alert alert-warning d-flex align-items-center" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d; border-radius: 8px; padding: 16px 20px;">
             <i class="flaticon-381-warning-1 mr-3" style="font-size: 1.8rem; color: #f59e0b;"></i>
             <div>
-                <strong style="font-size: 1rem; color: #fff; display: block; margin-bottom: 4px;">Important Order of Operations: Import CSV Before Auto-Assigning</strong>
+                <strong style="font-size: 1rem; color: var(--adm-text); display: block; margin-bottom: 4px;">Important Order of Operations: Import CSV Before Auto-Assigning</strong>
                 <span>If you have existing paper records (e.g. Grade 08 students 001–065), you <strong>MUST import the CSV first</strong> before running any bulk or auto-assignment. The CSV import records those pre-assigned numbers and advances the sequence counter so new students automatically start from the next number (e.g. 066).</span>
             </div>
         </div>
@@ -101,7 +101,7 @@
     <div class="col-xl-6 col-lg-6">
         <div class="card h-100">
             <div class="card-header border-0 pb-0">
-                <h5 class="card-title text-white">1. Configure Scope & Options</h5>
+                <h5 class="card-title">1. Configure Scope & Options</h5>
             </div>
             <div class="card-body">
                 <form id="filterForm">
@@ -116,7 +116,7 @@
 
                     <!-- Grade Filter -->
                     <div class="section-box">
-                        <label class="text-white font-weight-bold d-flex justify-content-between">
+                        <label class="font-weight-bold d-flex justify-content-between">
                             <span>Select Grades</span>
                             <span>
                                 <a href="javascript:void(0)" id="selectAllGrades" class="small text-primary mr-2">Select All</a>
@@ -138,8 +138,8 @@
 
                     <!-- Medium Filter -->
                     <div class="section-box">
-                        <label class="text-white font-weight-bold mb-2">Medium</label>
-                        <select name="medium" id="mediumFilter" class="form-control" style="background: #1f2937; color: #fff; border-color: #4b5563;">
+                        <label class="font-weight-bold mb-2">Medium</label>
+                        <select name="medium" id="mediumFilter" class="form-control" style="background: #1f2937; color: var(--adm-text); border-color: #4b5563;">
                             <option value="all">All Media (English, Tamil, Both)</option>
                             <option value="english">English Medium (including Both)</option>
                             <option value="tamil">Tamil Medium (including Both)</option>
@@ -150,7 +150,7 @@
                     @if(optional($institute)->getIndexFormat() === 'grade')
                         <!-- Grade Mode Numbering Format -->
                         <div class="section-box">
-                            <label class="text-white font-weight-bold mb-2">Numbering Format</label>
+                            <label class="font-weight-bold mb-2">Numbering Format</label>
                             <div class="alert alert-primary py-2 px-3 mb-0" style="background: rgba(79, 70, 229, 0.15); border-color: rgba(79, 70, 229, 0.4); color: #a5b4fc;">
                                 Index numbers will be generated as <strong>{{ $institute->getIndexPrefix() }}/&lt;Grade&gt;/&lt;Seq&gt;</strong> (e.g. <code>{{ $institute->getIndexPrefix() }}/08/001</code>). Each grade has its own independent counter.
                             </div>
@@ -159,12 +159,12 @@
                     @else
                         <!-- Batch Year Source (Legacy Batch Mode) -->
                         <div class="section-box">
-                            <label class="text-white font-weight-bold mb-2">Batch Year Source</label>
+                            <label class="font-weight-bold mb-2">Batch Year Source</label>
                             
                             <div class="radio-card selected" onclick="selectBatchSource('mapping')">
                                 <div class="custom-control custom-radio">
                                     <input type="radio" id="batchSourceMapping" name="batch_source" value="mapping" class="custom-control-input" checked>
-                                    <label class="custom-control-label font-weight-bold text-white" for="batchSourceMapping">
+                                    <label class="custom-control-label font-weight-bold" for="batchSourceMapping">
                                         Use Grade Mapping (Default & Recommended)
                                     </label>
                                 </div>
@@ -177,14 +177,14 @@
                             <div class="radio-card" onclick="selectBatchSource('single')">
                                 <div class="custom-control custom-radio">
                                     <input type="radio" id="batchSourceSingle" name="batch_source" value="single" class="custom-control-input">
-                                    <label class="custom-control-label font-weight-bold text-white" for="batchSourceSingle">
+                                    <label class="custom-control-label font-weight-bold" for="batchSourceSingle">
                                         One Single Batch Year for Everyone
                                     </label>
                                 </div>
                                 <div class="mt-2 ml-4" id="singleBatchContainer" style="display: none;">
                                     <div class="d-flex align-items-center">
-                                        <span class="mr-2 text-white">Batch YY:</span>
-                                        <input type="number" name="single_batch_year" id="singleBatchInput" class="form-control" style="width: 100px; font-weight: bold; font-size: 1.1rem; color: #fff; background: #1f2937; border-color: #4b5563;" min="20" max="99" placeholder="e.g. 28">
+                                        <span class="mr-2">Batch YY:</span>
+                                        <input type="number" name="single_batch_year" id="singleBatchInput" class="form-control" style="width: 100px; font-weight: bold; font-size: 1.1rem; color: var(--adm-text); background: #1f2937; border-color: #4b5563;" min="20" max="99" placeholder="e.g. 28">
                                     </div>
                                     <small class="text-warning d-block mt-1">Caution: All selected students will receive this identical batch year.</small>
                                 </div>
@@ -194,18 +194,18 @@
 
                     <!-- Sequence Numbering Order -->
                     <div class="section-box">
-                        <label class="text-white font-weight-bold mb-2">Numbering Sequence Order</label>
+                        <label class="font-weight-bold mb-2">Numbering Sequence Order</label>
                         <p class="small text-muted mb-2">Index numbers follow this order inside each (institute, batch year) sequence:</p>
                         
                         <div class="custom-control custom-radio mb-2">
                             <input type="radio" id="orderRegistered" name="order" value="registered" class="custom-control-input" checked>
-                            <label class="custom-control-label text-white" for="orderRegistered">
+                            <label class="custom-control-label" for="orderRegistered">
                                 <strong>Registration Order</strong> (users.created_at, then ID) &mdash; <span class="text-primary">Default</span>
                             </label>
                         </div>
                         <div class="custom-control custom-radio">
                             <input type="radio" id="orderName" name="order" value="name" class="custom-control-input">
-                            <label class="custom-control-label text-white" for="orderName">
+                            <label class="custom-control-label" for="orderName">
                                 <strong>Alphabetical Order</strong> by student full name
                             </label>
                         </div>
@@ -235,7 +235,7 @@
                 <div style="font-size: 3rem; color: #4b5563; margin-bottom: 1rem;">
                     <i class="flaticon-381-list-1"></i>
                 </div>
-                <h5 class="text-white">Ready to Preview</h5>
+                <h5>Ready to Preview</h5>
                 <p class="text-muted" style="max-width: 400px;">
                     Select your filters on the left and click <strong>Generate Preview & Validate</strong>. No database modifications are made until you confirm the run.
                 </p>
@@ -245,7 +245,7 @@
         <!-- Preview Card -->
         <div class="card" id="previewCard" style="display: none;">
             <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                <h5 class="card-title text-white">2. Preview & Validation Results</h5>
+                <h5 class="card-title">2. Preview & Validation Results</h5>
                 <button type="button" class="btn btn-outline-info btn-xs" id="btnDownloadPreviewCsv" onclick="downloadPreviewCsv()">
                     <i class="flaticon-381-download"></i> Download Preview CSV
                 </button>
@@ -279,9 +279,9 @@
                 </div>
 
                 <!-- Batch Breakdown Table -->
-                <h6 class="text-white font-weight-bold mb-2">Sequence Number Breakdown:</h6>
+                <h6 class="font-weight-bold mb-2">Sequence Number Breakdown:</h6>
                 <div class="table-responsive mb-4" style="max-height: 250px; overflow-y: auto;">
-                    <table class="table table-sm text-white" id="summaryTable">
+                    <table class="table table-sm" id="summaryTable">
                         <thead class="text-muted" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <tr>
                                 <th>Grade</th>
@@ -306,7 +306,7 @@
         <!-- Progress Card (Shown during execution) -->
         <div class="card" id="progressCard" style="display: none;">
             <div class="card-header border-0 pb-0">
-                <h5 class="card-title text-white">3. Assignment in Progress</h5>
+                <h5 class="card-title">3. Assignment in Progress</h5>
             </div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
@@ -335,19 +335,19 @@
         <!-- Completion Summary Card -->
         <div class="card" id="completeCard" style="display: none;">
             <div class="card-header border-0 pb-0">
-                <h5 class="card-title text-white">
+                <h5 class="card-title">
                     <i class="flaticon-381-check-2 text-success mr-2"></i> Bulk Assignment Complete
                 </h5>
             </div>
             <div class="card-body">
                 <div class="p-4 rounded text-center mb-4" style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25);">
                     <h3 class="text-success font-weight-bold mb-1" id="finalAssignedCount">0</h3>
-                    <p class="text-white mb-0">Index Numbers Successfully Assigned</p>
+                    <p class="mb-0">Index Numbers Successfully Assigned</p>
                     <small class="text-muted d-block mt-2" id="finalIndexRange"></small>
                 </div>
 
                 <div class="d-flex justify-content-between text-muted small mb-4 p-3 rounded" style="background: rgba(255,255,255,0.03);">
-                    <span>Skipped: <strong id="finalSkippedCount" class="text-white">0</strong></span>
+                    <span>Skipped: <strong id="finalSkippedCount" class="">0</strong></span>
                     <span>Errors: <strong id="finalErrorCount" class="text-danger">0</strong></span>
                 </div>
 
@@ -515,7 +515,7 @@
             res.grade_summaries.forEach(gs => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="font-weight-bold text-white">${gs.grade}</td>
+                    <td class="font-weight-bold">${gs.grade}</td>
                     <td><span class="badge badge-primary">'${gs.batch_year}</span></td>
                     <td>${gs.count}</td>
                     <td style="font-family: monospace; color: #38bdf8;">${gs.first_index} &hellip; ${gs.last_index}</td>

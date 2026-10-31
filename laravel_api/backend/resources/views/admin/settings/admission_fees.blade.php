@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -33,7 +33,7 @@
         border-radius: 0.75rem;
         padding: 1rem;
         margin-bottom: 1rem;
-        color: #fff;
+        color: var(--adm-text);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -48,7 +48,7 @@
     .form-control {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
         width: 150px;
     }
@@ -146,7 +146,7 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-primary mr-1">Day 1</span> 1st of the Month – Due Date
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
@@ -157,7 +157,7 @@
 
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-warning mr-1">Day 2</span> Automated Payment Reminder
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
@@ -168,7 +168,7 @@
 
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-danger mr-1">Day 5</span> Automated Account Deactivation
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
@@ -179,7 +179,7 @@
 
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-info mr-1">Methods</span> Payment Channels
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
@@ -192,7 +192,7 @@
 
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-success mr-1">Receipts</span> Instant Digital Receipts
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
@@ -203,7 +203,7 @@
 
                     <div class="col-md-6 mb-3">
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="text-white font-weight-bold mb-2">
+                            <h6 class="font-weight-bold mb-2">
                                 <span class="badge badge-secondary mr-1">Top-Up</span> Subject Top-Up (Added Subjects)
                             </h6>
                             <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">

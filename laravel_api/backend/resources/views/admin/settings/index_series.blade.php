@@ -23,7 +23,7 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
@@ -34,7 +34,7 @@
     }
 
     .series-table td {
-        color: #fff;
+        color: var(--adm-text);
         vertical-align: middle !important;
         border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
     }
@@ -42,7 +42,7 @@
     .form-control-dark {
         background: rgba(0, 0, 0, 0.3) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
     }
 
     .form-control-dark:focus {
@@ -59,7 +59,7 @@
         <div class="row page-titles mx-0 mb-3">
             <div class="col-sm-6 p-md-0">
                 <div class="welcome-text">
-                    <h4 class="text-white">Index Number Series & Format Settings</h4>
+                    <h4 class="">Index Number Series & Format Settings</h4>
                     <p class="mb-0 text-muted">Control index number series (01–99), running numbers, and format configuration for {{ $institute->name }}.</p>
                 </div>
             </div>
@@ -98,17 +98,17 @@
                     <div class="row">
                         <!-- Format Switch -->
                         <div class="col-md-6 mb-3">
-                            <label class="text-white font-weight-bold d-block mb-2">Index Format</label>
+                            <label class="font-weight-bold d-block mb-2">Index Format</label>
                             <div class="custom-control custom-radio mb-2">
                                 <input type="radio" id="format_grade" name="index_format" value="grade" class="custom-control-input" {{ $institute->getIndexFormat() === 'grade' ? 'checked' : '' }}>
-                                <label class="custom-control-label text-white" for="format_grade">
+                                <label class="custom-control-label" for="format_grade">
                                     <strong>Grade format <code>TIT/08/001</code> (recommended)</strong>
                                     <div class="text-muted small">Series represents student's grade (01–13 or custom 01–99), padded to at least 3 digits.</div>
                                 </label>
                             </div>
                             <div class="custom-control custom-radio">
                                 <input type="radio" id="format_batch" name="index_format" value="batch" class="custom-control-input" {{ $institute->getIndexFormat() === 'batch' ? 'checked' : '' }}>
-                                <label class="custom-control-label text-white" for="format_batch">
+                                <label class="custom-control-label" for="format_batch">
                                     <strong>Batch format (legacy)</strong>
                                     <div class="text-muted small">Series represents exam year (e.g. '28 for 2028), start sequence typically 100.</div>
                                 </label>
@@ -117,13 +117,13 @@
 
                         <!-- Prefix & Start Number -->
                         <div class="col-md-3 mb-3">
-                            <label class="text-white font-weight-bold">Index Prefix</label>
+                            <label class="font-weight-bold">Index Prefix</label>
                             <input type="text" name="index_prefix" class="form-control form-control-dark" value="{{ $institute->getIndexPrefix() }}" required maxlength="10">
                             <small class="text-muted">e.g. <code>TIT</code>. Warning: Changing prefix only affects newly issued numbers.</small>
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <label class="text-white font-weight-bold">Start Number for New Series</label>
+                            <label class="font-weight-bold">Start Number for New Series</label>
                             <input type="number" name="index_seq_start" class="form-control form-control-dark" value="{{ $institute->index_seq_start ?? ($institute->getIndexFormat() === 'grade' ? 1 : 100) }}" required min="1">
                             <small class="text-muted">Default start sequence when a series is first used (e.g. 1).</small>
                         </div>
@@ -134,7 +134,7 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap">
                             <div>
                                 <span class="text-warning font-weight-bold"><i class="flaticon-381-warning-1 mr-1"></i> Format Switch Summary:</span>
-                                <span class="text-white ml-2">
+                                <span class="ml-2">
                                     Switching format does <strong>NOT</strong> rewrite existing numbers.
                                     Total students with index: <strong>{{ $totalStudentsWithIndex }}</strong>.
                                     Under Grade format: <strong>{{ $oldIfGrade }}</strong> in legacy format.

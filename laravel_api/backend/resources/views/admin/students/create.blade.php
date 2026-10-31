@@ -6,7 +6,7 @@
 <style>
     .form-group label {
         font-weight: 600;
-        color: #ffffff;
+        color: var(--adm-text);
         margin-bottom: 0.5rem;
     }
     .form-control {
@@ -17,17 +17,17 @@
     [data-theme-version="dark"] .form-control {
         background-color: transparent !important;
         border-color: #eb8153 !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control option {
         background-color: #1a152e !important;
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     [data-theme-version="dark"] .form-control::placeholder {
         color: #938787;
     }
     [data-theme-version="dark"] .form-group label {
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
     }
     .form-control:focus {
         border-color: #6366f1;
@@ -446,7 +446,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="p-4 rounded" style="background: rgba(255, 171, 45, 0.1); border-left: 0.3125rem solid #ffab2d; height: 100%;">
-                                <h5 class="mb-3" style="color: #fff;">Quick Payment (Current Month)</h5>
+                                <h5 class="mb-3" style="color: var(--adm-text);">Quick Payment (Current Month)</h5>
                                 <p class="mb-3">Mark student as paid for <strong>{{ now()->format('F Y') }}</strong></p>
                                 <div class="custom-control custom-checkbox mb-3">
                                     <input type="checkbox" class="custom-control-input" id="quick_payment" name="quick_payment" value="1" form="studentCreateForm">
@@ -459,7 +459,7 @@
                         
                         <div class="col-md-6 mb-3">
                             <div class="p-4 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1.0px dashed rgba(255, 255, 255, 0.2); height: 100%;">
-                                <h5 class="mb-3" style="color: #fff;">Custom Payment Month</h5>
+                                <h5 class="mb-3" style="color: var(--adm-text);">Custom Payment Month</h5>
                                 <div class="form-group">
                                     <label class="small text-muted">Select Date </label>
                                     <input type="date" name="custom_payment_month" class="form-control" value="{{ now()->format('Y-m-d') }}" form="studentCreateForm">

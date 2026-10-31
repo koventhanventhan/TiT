@@ -8,7 +8,7 @@
 <style>
     :root {
         --settings-bg: var(--t-bg);
-        --card-bg: var(--t-surface);
+        --card-bg: var(--adm-surface);
         --sidebar-active: var(--t-primary-soft);
         --accent-orange: var(--t-primary);
         --accent-blue: var(--t-primary);
@@ -29,8 +29,8 @@
 
     .settings-sidebar {
         width: 17.5rem;
-        background: var(--t-surface);
-        border: 1px solid var(--t-border);
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
         border-radius: 0.75rem;
         padding: 1.25rem;
         height: fit-content;
@@ -72,7 +72,7 @@
     }
 
     .settings-nav-item:hover {
-        color: #fff;
+        color: var(--adm-text);
         background: rgba(255, 255, 255, 0.05);
     }
 
@@ -86,9 +86,9 @@
     }
 
     .settings-card {
-        background: var(--t-surface) !important;
+        background: var(--adm-surface) !important;
         border-radius: 0.75rem;
-        border: 1.0px solid var(--t-border);
+        border: 1.0px solid var(--adm-border);
         margin-bottom: 1.5rem;
         overflow: hidden;
     }
@@ -102,7 +102,7 @@
     .settings-card-title {
         font-size: 1.125rem;
         font-weight: 600;
-        color: #fff;
+        color: var(--adm-text);
         margin-bottom: 0.25rem;
     }
 
@@ -123,7 +123,7 @@
     }
 
     .settings-info h6 {
-        color: #fff;
+        color: var(--adm-text);
         margin-bottom: 0.25rem;
         font-size: 0.9375rem;
     }
@@ -177,17 +177,17 @@
     }
 
     .calendar-main {
-        background: var(--t-surface);
+        background: var(--adm-surface);
         border-radius: 1rem;
         padding: 1.5rem;
-        border: 1.0px solid var(--t-border);
+        border: 1.0px solid var(--adm-border);
         display: flex;
         flex-direction: column;
     }
 
     #calendar {
         flex: 1;
-        color: #fff;
+        color: var(--adm-text);
     }
 
     .fc-theme-standard td, .fc-theme-standard th { border-color: rgba(255, 255, 255, 0.05); }
@@ -199,17 +199,17 @@
     .fc-button-active { background: var(--accent-orange) !important; }
     
     .mini-calendar {
-        background: var(--t-surface);
+        background: var(--adm-surface);
         border-radius: 0.75rem;
         padding: 1.25rem;
-        border: 1.0px solid var(--t-border);
+        border: 1.0px solid var(--adm-border);
     }
 
     .event-categories {
-        background: var(--t-surface);
+        background: var(--adm-surface);
         border-radius: 0.75rem;
         padding: 1.25rem;
-        border: 1.0px solid var(--t-border);
+        border: 1.0px solid var(--adm-border);
     }
 
     .category-item {
@@ -229,16 +229,16 @@
     }
 
     .modal-content.calendar-modal {
-        background: var(--t-surface);
-        border: 1.0px solid var(--t-border);
+        background: var(--adm-surface);
+        border: 1.0px solid var(--adm-border);
         border-radius: 1rem;
-        color: #fff;
+        color: var(--adm-text);
     }
 
     .calendar-modal .form-control {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
+        background: var(--adm-input-bg);
+        border: 1.0px solid var(--adm-border);
+        color: var(--adm-text);
     }
 
     .calendar-modal .form-control:focus { background: rgba(255, 255, 255, 0.1); }
@@ -257,8 +257,8 @@
     }
 
     .btn-blue {
-        background: var(--accent-blue);
-        color: #fff;
+        background: var(--adm-btn);
+        color: var(--adm-btn-text);
         border: none;
         padding: 0.625rem 1.5rem;
         border-radius: 0.5rem;
@@ -310,7 +310,7 @@
     }
 </style>
 <div class="settings-header-section mb-4">
-    <h2 class="text-white font-w700 mb-1">Settings</h2>
+    <h2 class="font-w700 mb-1">Settings</h2>
     <p class="text-muted">Manage your account settings and preferences.</p>
 </div>
 
@@ -354,7 +354,7 @@
                     <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group mb-4">
-                            <label class="text-white font-w600">Profile Photo</label>
+                            <label class="font-w600">Profile Photo</label>
                             <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start mt-3">
                                 @php $user = Auth::user(); @endphp
                                 @if($user->avatar)
@@ -374,20 +374,20 @@
                         </div>
 
                         <div class="row">
-                            <div class="form-group col-md-6"><label class="text-white font-w600">First Name</label><input type="text" name="first_name" class="form-control bg-transparent text-white border-dark" value="{{ $user->first_name }}"></div>
-                            <div class="form-group col-md-6"><label class="text-white font-w600">Last Name</label><input type="text" name="last_name" class="form-control bg-transparent text-white border-dark" value="{{ $user->last_name }}"></div>
+                            <div class="form-group col-md-6"><label class="font-w600">First Name</label><input type="text" name="first_name" class="form-control" value="{{ $user->first_name }}"></div>
+                            <div class="form-group col-md-6"><label class="font-w600">Last Name</label><input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}"></div>
                         </div>
 
                         <div class="row mt-3">
-                            <div class="form-group col-md-12"><label class="text-white font-w600">Email Address</label><input type="email" name="email" class="form-control bg-transparent text-white border-dark" value="{{ $user->email }}"></div>
+                            <div class="form-group col-md-12"><label class="font-w600">Email Address</label><input type="email" name="email" class="form-control" value="{{ $user->email }}"></div>
                         </div>
 
-                        <h5 class="text-white mt-4 mb-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px;">System Notifications</h5>
+                        <h5 class="mt-4 mb-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px;">System Notifications</h5>
                         <div class="row">
                             <div class="form-group col-md-12">
-                                <label class="text-white font-w600">Admin Notification Email</label>
-                                <input type="email" name="admin_notification_email" class="form-control bg-transparent text-white border-dark" value="{{ \App\Models\SiteSetting::get('admin_notification_email', 'koventhanventhan153@gmail.com') }}">
-                                <small class="text-white-50 mt-1 d-block">Primary email address to receive system alerts, payment notifications, and registration alerts.</small>
+                                <label class="font-w600">Admin Notification Email</label>
+                                <input type="email" name="admin_notification_email" class="form-control" value="{{ \App\Models\SiteSetting::get('admin_notification_email', 'koventhanventhan153@gmail.com') }}">
+                                <small class="text-muted mt-1 d-block">Primary email address to receive system alerts, payment notifications, and registration alerts.</small>
                             </div>
                         </div>
 
@@ -521,26 +521,26 @@
                     <div class="settings-card-header"><h4 class="settings-card-title">Password Management</h4></div>
                     <div class="settings-card-body">
                         <div class="form-group mb-4">
-                            <label class="text-white">Current Password</label>
+                            <label>Current Password</label>
                             <div class="password-toggle-wrapper">
-                                <input type="password" name="current_password" class="form-control bg-transparent border-dark text-white" placeholder="Enter current password">
+                                <input type="password" name="current_password" class="form-control" placeholder="Enter current password">
                                 <i class="la la-eye toggle-password" onclick="togglePasswordVisibility(this)"></i>
                             </div>
                             <small class="text-muted">Required only if changing password</small>
                         </div>
                         <div class="row">
                             <div class="form-group col-md-6">
-                                <label class="text-white">New Password</label>
+                                <label>New Password</label>
                                 <div class="password-toggle-wrapper">
-                                    <input type="password" name="new_password" id="new_password" class="form-control bg-transparent border-dark text-white" placeholder="Enter new password">
+                                    <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Enter new password">
                                     <i class="la la-eye toggle-password" onclick="togglePasswordVisibility(this)"></i>
                                 </div>
                                 <small class="text-muted">Min 8 characters</small>
                             </div>
                             <div class="form-group col-md-6">
-                                <label class="text-white">Confirm New Password</label>
+                                <label>Confirm New Password</label>
                                 <div class="password-toggle-wrapper">
-                                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control bg-transparent border-dark text-white" placeholder="Confirm new password">
+                                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control" placeholder="Confirm new password">
                                     <i class="la la-eye toggle-password" onclick="togglePasswordVisibility(this)"></i>
                                 </div>
                                 <div id="passwordMatchMessage" class="mt-2 small"></div>
@@ -566,8 +566,8 @@
                     <div class="settings-card-header"><h4 class="settings-card-title">Session Management</h4></div>
                     <div class="settings-card-body">
                         <div class="form-group mb-4">
-                            <label class="text-white">Session Timeout</label>
-                            <select name="session_timeout" class="form-control bg-transparent border-dark text-white">
+                            <label>Session Timeout</label>
+                            <select name="session_timeout" class="form-control">
                                 <option value="30" {{ ($user->profile_settings['session_timeout'] ?? '30') == '30' ? 'selected' : '' }}>30 minutes</option>
                                 <option value="60" {{ ($user->profile_settings['session_timeout'] ?? '30') == '60' ? 'selected' : '' }}>1 hour</option>
                                 <option value="120" {{ ($user->profile_settings['session_timeout'] ?? '30') == '120' ? 'selected' : '' }}>2 hours</option>
@@ -593,7 +593,7 @@
         <div id="admin_tab" class="tab-pane-content d-none">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h3 class="text-white mb-0">Admin Management</h3>
+                    <h3 class="mb-0">Admin Management</h3>
                     <p class="text-muted small">Manage system administrators and their access</p>
                 </div>
                 <button class="btn btn-blue btn-sm" data-toggle="modal" data-target="#adminModal" onclick="prepareAdminModal('add')">
@@ -604,7 +604,7 @@
             <div class="settings-card">
                 <div class="settings-card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-responsive-md text-white mb-0">
+                        <table class="table table-responsive-md mb-0">
                             <thead>
                                 <tr>
                                     <th><strong>NAME</strong></th>
@@ -670,7 +670,7 @@
         <div id="calendar_tab" class="tab-pane-content d-none">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h3 class="text-white mb-0">Calendar</h3>
+                    <h3 class="mb-0">Calendar</h3>
                     <p class="text-muted small">Schedule and manage your events</p>
                 </div>
                 <div class="d-flex gap-2">
@@ -684,7 +684,7 @@
                     <div class="mini-calendar" id="miniCalendar"></div>
                     
                     <div class="event-categories">
-                        <h6 class="text-white mb-3">Event Categories</h6>
+                        <h6 class="mb-3">Event Categories</h6>
                         <div class="category-item">
                             <div class="d-flex align-items-center"><div class="category-dot bg-event"></div> Events</div>
                             <span id="count-event">0</span>
@@ -722,18 +722,18 @@
         <div class="modal-content calendar-modal">
             <div class="modal-header border-0">
                 <h5 class="modal-title font-w600"><i class="la la-calendar-plus mr-2"></i> Add New Event</h5>
-                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form id="addEventForm">
                 <div class="modal-body">
                     <div class="form-group mb-4">
-                        <label class="text-white small uppercase font-w500">Event Title *</label>
-                        <input type="text" name="title" class="form-control bg-transparent border-dark text-white" placeholder="Enter event title..." required>
+                        <label class="small uppercase font-w500">Event Title *</label>
+                        <input type="text" name="title" class="form-control" placeholder="Enter event title..." required>
                     </div>
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Event Type</label>
-                            <select name="type" class="form-control bg-transparent border-dark text-white">
+                            <label class="small uppercase font-w500">Event Type</label>
+                            <select name="type" class="form-control">
                                 <option value="event">Event</option>
                                 <option value="meeting">Meeting</option>
                                 <option value="task">Task</option>
@@ -742,8 +742,8 @@
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Priority</label>
-                            <select name="priority" class="form-control bg-transparent border-dark text-white">
+                            <label class="small uppercase font-w500">Priority</label>
+                            <select name="priority" class="form-control">
                                 <option value="low">Low Priority</option>
                                 <option value="medium">Medium Priority</option>
                                 <option value="high">High Priority</option>
@@ -752,18 +752,18 @@
                     </div>
                     <div class="row mt-3">
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Date *</label>
-                            <input type="date" name="event_date" class="form-control bg-transparent border-dark text-white" required>
+                            <label class="small uppercase font-w500">Date *</label>
+                            <input type="date" name="event_date" class="form-control" required>
                         </div>
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Start Time</label>
-                            <input type="time" name="start_time" class="form-control bg-transparent border-dark text-white">
+                            <label class="small uppercase font-w500">Start Time</label>
+                            <input type="time" name="start_time" class="form-control">
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Duration</label>
-                            <select name="duration" class="form-control bg-transparent border-dark text-white">
+                            <label class="small uppercase font-w500">Duration</label>
+                            <select name="duration" class="form-control">
                                 <option value="30m">30 minutes</option>
                                 <option value="1h" selected>1 hour</option>
                                 <option value="2h">2 hours</option>
@@ -771,22 +771,22 @@
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Location</label>
-                            <input type="text" name="location" class="form-control bg-transparent border-dark text-white" placeholder="Conference room, address, or link...">
+                            <label class="small uppercase font-w500">Location</label>
+                            <input type="text" name="location" class="form-control" placeholder="Conference room, address, or link...">
                         </div>
                     </div>
                     <div class="form-group mt-3">
-                        <label class="text-white small uppercase font-w500">Description</label>
-                        <textarea name="description" class="form-control bg-transparent border-dark text-white" rows="3" placeholder="Add event details, agenda, or notes..."></textarea>
+                        <label class="small uppercase font-w500">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Add event details, agenda, or notes..."></textarea>
                     </div>
                     <div class="form-group mt-3">
-                        <label class="text-white small uppercase font-w500">Attendees</label>
-                        <input type="text" name="attendees" class="form-control bg-transparent border-dark text-white" placeholder="Enter email addresses separated by commas...">
+                        <label class="small uppercase font-w500">Attendees</label>
+                        <input type="text" name="attendees" class="form-control" placeholder="Enter email addresses separated by commas...">
                         <small class="text-muted">Separate multiple email addresses with commas</small>
                     </div>
                     <div class="form-group mt-3">
-                        <label class="text-white small uppercase font-w500">Reminders</label>
-                        <select name="reminders[]" class="form-control bg-transparent border-dark text-white" multiple style="height: 6.25rem;">
+                        <label class="small uppercase font-w500">Reminders</label>
+                        <select name="reminders[]" class="form-control" multiple style="height: 6.25rem;">
                             <option value="at_time">At time of event</option>
                             <option value="5m">5 minutes before</option>
                             <option value="15m">15 minutes before</option>
@@ -799,7 +799,7 @@
                         <label class="custom-control custom-switch custom-switch-orange d-inline-flex align-items-center">
                             <input type="checkbox" name="is_recurring" class="custom-control-input" id="swRecurring">
                             <span class="custom-control-label" for="swRecurring"></span>
-                            <span class="ml-2 text-white">Recurring Event</span>
+                            <span class="ml-2">Recurring Event</span>
                         </label>
                     </div>
                 </div>
@@ -818,7 +818,7 @@
         <div class="modal-content calendar-modal">
             <div class="modal-header border-0">
                 <h5 class="modal-title font-w600" id="adminModalTitle">Add New Admin</h5>
-                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form id="adminForm" method="POST">
                 @csrf
@@ -826,22 +826,22 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">First Name *</label>
-                            <input type="text" name="first_name" id="admin_first_name" class="form-control bg-transparent border-dark text-white" required>
+                            <label class="small uppercase font-w500">First Name *</label>
+                            <input type="text" name="first_name" id="admin_first_name" class="form-control" required>
                         </div>
                         <div class="form-group col-md-6">
-                            <label class="text-white small uppercase font-w500">Last Name *</label>
-                            <input type="text" name="last_name" id="admin_last_name" class="form-control bg-transparent border-dark text-white" required>
+                            <label class="small uppercase font-w500">Last Name *</label>
+                            <input type="text" name="last_name" id="admin_last_name" class="form-control" required>
                         </div>
                     </div>
                     <div class="form-group mt-3">
-                        <label class="text-white small uppercase font-w500">Email Address *</label>
-                        <input type="email" name="email" id="admin_email" class="form-control bg-transparent border-dark text-white" required>
+                        <label class="small uppercase font-w500">Email Address *</label>
+                        <input type="email" name="email" id="admin_email" class="form-control" required>
                     </div>
                     <div class="form-group mt-3">
-                        <label class="text-white small uppercase font-w500">Password <span id="passwordRequiredStar">*</span></label>
+                        <label class="small uppercase font-w500">Password <span id="passwordRequiredStar">*</span></label>
                         <div class="password-toggle-wrapper">
-                            <input type="password" name="password" id="admin_password" class="form-control bg-transparent border-dark text-white" required>
+                            <input type="password" name="password" id="admin_password" class="form-control" required>
                             <i class="la la-eye toggle-password" onclick="togglePasswordVisibility(this)"></i>
                         </div>
                         <small class="text-muted" id="passwordHelpText">Min 8 characters.</small>

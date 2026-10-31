@@ -13,7 +13,7 @@
                 z-index: 10001 !important;
                 width: 4.5rem !important;
                 height: 65px !important;
-                background: #1f2937 !important;
+                background: var(--adm-sidebar) !important;
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
                 display: flex !important;
@@ -40,7 +40,7 @@
                 display: block !important;
                 font-size: 0.55rem !important;
                 font-weight: 700 !important;
-                color: #fff !important;
+                color: var(--adm-text) !important;
                 margin: 0 !important; padding: 0 !important;
                 white-space: nowrap !important;
                 letter-spacing: 0.8px !important;
@@ -51,8 +51,8 @@
 
             .header {
                 height: 65px !important;
-                background: #1f2937 !important;
-                border-bottom: 2px solid var(--t-primary, #4f46e5) !important;
+                background: var(--adm-sidebar) !important;
+                border-bottom: 1px solid var(--adm-border) !important;
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
                 width: 100% !important;
@@ -113,7 +113,7 @@
                 display: block !important;
                 width: 20px !important;
                 height: 2px !important;
-                background: #ffffff !important;
+                background: var(--adm-text) !important;
                 border-radius: 2px !important;
                 transition: all 0.3s ease !important;
                 transform-origin: center !important;
@@ -153,23 +153,23 @@
                 height: 32px !important;
                 font-size: 10px !important;
                 padding: 0 8px 0 26px !important;
-                background: rgba(255,255,255,0.1) !important;
-                border: 1px solid rgba(255,255,255,0.18) !important;
+                background: var(--adm-input-bg) !important;
+                border: 1px solid var(--adm-border) !important;
                 border-radius: 50px !important;
-                color: #fff !important;
+                color: var(--adm-text) !important;
                 box-shadow: none !important;
                 width: 100% !important;
                 outline: none !important;
             }
             .header-left .search_bar .form-control::placeholder {
-                color: rgba(255,255,255,0.38) !important;
+                color: var(--adm-text-3) !important;
                 font-size: 10px !important;
             }
             .header-left .search_bar .search_icon {
                 position: absolute !important;
                 left: 8px !important; top: 50% !important;
                 transform: translateY(-50%) !important;
-                color: rgba(255,255,255,0.55) !important;
+                color: var(--adm-text-3) !important;
                 font-size: 13px !important;
                 z-index: 10 !important;
                 pointer-events: none !important;
@@ -215,7 +215,7 @@
             .header-profile .header-profile-initials {
                 width: 36px !important; height: 36px !important;
                 flex-shrink: 0 !important;
-                border: 2px solid var(--t-primary, rgba(79,70,229,0.55)) !important;
+                border: 2px solid var(--adm-accent) !important;
                 border-radius: 50% !important;
             }
 
@@ -226,7 +226,7 @@
                 height: 0.55rem !important;
                 top: 3px !important;
                 right: 3px !important;
-                box-shadow: 0 0 0 2px #1f2937 !important;
+                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
             }
             #message-count,
             #notification-count {
@@ -248,7 +248,7 @@
                 z-index: 10001 !important;
                 width: 5rem !important;
                 height: 65px !important;
-                background: #1f2937 !important;
+                background: var(--adm-sidebar) !important;
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
                 display: flex !important;
@@ -275,7 +275,7 @@
                 display: block !important;
                 font-size: 0.55rem !important;
                 font-weight: 700 !important;
-                color: #fff !important;
+                color: var(--adm-text) !important;
                 margin: 0 !important; padding: 0 !important;
                 white-space: nowrap !important;
                 letter-spacing: 0.8px !important;
@@ -286,8 +286,8 @@
 
             .header {
                 height: 65px !important;
-                background: #1f2937 !important;
-                border-bottom: 2px solid #4f46e5 !important;
+                background: var(--adm-sidebar) !important;
+                border-bottom: 1px solid var(--adm-border) !important;
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
                 width: 100% !important;
@@ -349,7 +349,7 @@
             .custom-hamburger span {
                 display: block !important;
                 width: 20px !important; height: 2px !important;
-                background: #ffffff !important;
+                background: var(--adm-text) !important;
                 border-radius: 2px !important;
                 transition: all 0.3s ease !important;
                 transform-origin: center !important;
@@ -385,23 +385,23 @@
                 height: 30px !important;
                 font-size: 10px !important;
                 padding: 0 6px 0 24px !important;
-                background: rgba(255,255,255,0.1) !important;
-                border: 1px solid rgba(255,255,255,0.18) !important;
+                background: var(--adm-input-bg) !important;
+                border: 1px solid var(--adm-border) !important;
                 border-radius: 50px !important;
-                color: #fff !important;
+                color: var(--adm-text) !important;
                 box-shadow: none !important;
                 width: 100% !important;
                 outline: none !important;
             }
             .header-left .search_bar .form-control::placeholder {
-                color: rgba(255,255,255,0.38) !important;
+                color: var(--adm-text-3) !important;
                 font-size: 10px !important;
             }
             .header-left .search_bar .search_icon {
                 position: absolute !important;
                 left: 7px !important; top: 50% !important;
                 transform: translateY(-50%) !important;
-                color: rgba(255,255,255,0.55) !important;
+                color: var(--adm-text-3) !important;
                 font-size: 12px !important;
                 z-index: 10 !important;
                 pointer-events: none !important;
@@ -444,7 +444,7 @@
             .header-profile .header-profile-initials {
                 width: 34px !important; height: 34px !important;
                 flex-shrink: 0 !important;
-                border: 2px solid rgba(79,70,229,0.55) !important;
+                border: 2px solid var(--adm-accent) !important;
                 border-radius: 50% !important;
             }
 
@@ -455,7 +455,7 @@
                 height: 0.55rem !important;
                 top: 3px !important;
                 right: 3px !important;
-                box-shadow: 0 0 0 2px #1f2937 !important;
+                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
             }
             #message-count,
             #notification-count {
@@ -498,7 +498,7 @@
             .header-profile .header-profile-initials {
                 width: 52px !important;
                 height: 52px !important;
-                border: 2px solid rgba(79,70,229,0.55) !important;
+                border: 2px solid var(--adm-accent) !important;
                 border-radius: 50% !important;
             }
             .header-profile > .nav-link { padding: 5px !important; }
@@ -510,7 +510,7 @@
                 height: 0.80rem !important;
                 top: 4px !important;
                 right: 4px !important;
-                box-shadow: 0 0 0 2.5px #1f2937 !important;
+                box-shadow: 0 0 0 2.5px var(--adm-sidebar) !important;
             }
             #message-count,
             #notification-count {
@@ -523,8 +523,9 @@
             .header-profile .dropdown-menu {
                 min-width: 210px !important;
                 border-radius: 12px !important;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
-                border: 1px solid rgba(0,0,0,0.08) !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+                border: 1px solid var(--adm-border) !important;
+                background: var(--adm-surface) !important;
                 padding: 8px 0 !important;
                 right: 0 !important; left: auto !important;
                 top: calc(100% + 8px) !important;
@@ -535,10 +536,10 @@
                 gap: 10px !important;
                 padding: 9px 16px !important;
                 font-size: 0.82rem !important;
-                color: #333 !important;
+                color: var(--adm-text) !important;
                 transition: background 0.15s !important;
             }
-            .header-profile .dropdown-item:hover { background: #f0f4ff !important; }
+            .header-profile .dropdown-item:hover { background: rgba(255, 255, 255, 0.08) !important; color: var(--adm-accent) !important; }
             .header-profile .dropdown-item i {
                 font-size: 1.1rem !important;
                 width: 18px !important;
@@ -581,7 +582,7 @@
                         <a class="nav-link" href="{{ config('services.frontend_url') }}"
                            target="_blank" rel="noopener noreferrer" title="Home">
                             <svg viewBox="0 0 24 24" fill="none"
-                                 stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                                 <polyline points="9 22 9 12 15 12 15 22"/>
                             </svg>
@@ -594,13 +595,13 @@
                            style="position:relative!important;">
                             <svg viewBox="0 0 28 28" fill="none">
                                 <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z"
-                                      stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                      stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M3.5 8.16665L14 15.1666L24.5 8.16665"
-                                      stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                      stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <div class="pulse-css d-none" id="message-pulse"
-                                 style="background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="message-count" class="text-white d-none">0</span>
+                                 style="background:var(--adm-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="message-count" class="d-none" style="color:var(--adm-btn-text, #ffffff);font-weight:bold;">0</span>
                             </div>
                         </a>
                     </li>
@@ -611,22 +612,22 @@
                            style="position:relative!important;">
                             <svg viewBox="0 0 28 28" fill="none">
                                 <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75Z"
-                                      fill="#FFFFFF"/>
+                                      fill="var(--adm-text)"/>
                                 <path d="M16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z"
-                                      fill="#FFFFFF"/>
+                                      fill="var(--adm-text)"/>
                             </svg>
                             <div class="pulse-css d-none" id="notification-pulse"
-                                 style="background:#EB8153;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="notification-count" class="text-white d-none">0</span>
+                                 style="background:var(--adm-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="notification-count" class="d-none" style="color:var(--adm-btn-text, #ffffff);font-weight:bold;">0</span>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
                                 <ul class="timeline" id="notification-list">
-                                    <li class="text-center py-3">No new notifications</li>
+                                    <li class="text-center py-3" style="color:var(--adm-text-3);">No new notifications</li>
                                 </ul>
                             </div>
-                            <a class="all-notification" href="{{ route('admin.notifications.index') }}">
+                            <a class="all-notification" href="{{ route('admin.notifications.index') }}" style="color:var(--adm-accent);">
                                 See all notifications <i class="ti-arrow-right"></i>
                             </a>
                         </div>
@@ -640,47 +641,47 @@
                                      style="border-radius:50%;object-fit:cover;">
                             @else
                                 <div class="header-profile-initials"
-                                     style="background:linear-gradient(135deg,#EB8153,#e05a1e);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+                                     style="background:var(--adm-accent);color:var(--adm-btn-text, #ffffff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
                                     {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                 </div>
                             @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-right"
-                             style="min-width:210px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);border:1px solid rgba(0,0,0,0.08);padding:8px 0;right:0;left:auto;">
-                            <div style="padding:10px 16px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px;">
+                             style="min-width:210px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);border:1px solid var(--adm-border);background:var(--adm-surface);padding:8px 0;right:0;left:auto;">
+                            <div style="padding:10px 16px 12px;border-bottom:1px solid var(--adm-border);display:flex;align-items:center;gap:10px;">
                                 @if(Auth::user()->avatar)
                                     <img src="{{ asset(Auth::user()->avatar) }}" alt=""
                                          style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
                                 @else
-                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#EB8153,#e05a1e);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
+                                    <div style="width:36px;height:36px;border-radius:50%;background:var(--adm-accent);color:var(--adm-btn-text, #ffffff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
                                         {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                     </div>
                                 @endif
                                 <div style="min-width:0;">
-                                    <div style="font-size:0.85rem;font-weight:600;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <div style="font-size:0.85rem;font-weight:600;color:var(--adm-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                                         {{ Auth::user()->name }}
                                     </div>
-                                    <div style="font-size:0.7rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <div style="font-size:0.7rem;color:var(--adm-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                                         {{ Auth::user()->email }}
                                     </div>
                                 </div>
                             </div>
                             <a href="{{ route('admin.profile.settings') }}" class="dropdown-item"
-                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#333;">
-                                <i class="la la-cog" style="font-size:1.1rem;color:var(--t-primary, #4f46e5);width:18px;text-align:center;"></i>
+                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:var(--adm-text);">
+                                <i class="la la-cog" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
                                 Settings
                             </a>
                             <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item"
-                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#333;">
-                                <i class="la la-calendar" style="font-size:1.1rem;color:var(--t-primary, #4f46e5);width:18px;text-align:center;"></i>
+                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:var(--adm-text);">
+                                <i class="la la-calendar" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
                                 Calendar
                             </a>
-                            <div style="border-top:1px solid #f0f0f0;margin:4px 0;"></div>
+                            <div style="border-top:1px solid var(--adm-border);margin:4px 0;"></div>
                             <form method="POST" action="{{ route('admin.logout') }}">
                                 @csrf
                                 <button type="submit" class="dropdown-item"
-                                        style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#e53e3e;background:none;border:none;width:100%;text-align:left;cursor:pointer;">
-                                    <i class="la la-sign-out" style="font-size:1.1rem;color:#e53e3e;width:18px;text-align:center;"></i>
+                                        style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#f87171;background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+                                    <i class="la la-sign-out" style="font-size:1.1rem;color:#f87171;width:18px;text-align:center;"></i>
                                     Sign out
                                 </button>
                             </form>

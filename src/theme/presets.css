@@ -26,6 +26,19 @@
   --t-danger: #b91c1c;
   --t-danger-bg: #fef2f2;
 
+  /* Admin Dark Console Tokens */
+  --adm-bg: #2c254a;
+  --adm-surface: #3b3363;
+  --adm-sidebar: #3b3363;
+  --adm-border: #473f72;
+  --adm-text: #f1f5f9;
+  --adm-text-2: #cbd5e1;
+  --adm-text-3: #a8b3c7;
+  --adm-accent: #EB8153;
+  --adm-btn: #EB8153;
+  --adm-btn-text: #0f172a;
+  --adm-input-bg: #241e3d;
+
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
   --primary-color: var(--t-primary);
   --primary-dark: var(--t-sidebar);
@@ -78,6 +91,19 @@ html[data-theme-preset="royal"], [data-theme-preset="royal"] {
   --t-warning-bg: #fffbeb;
   --t-danger: #b91c1c;
   --t-danger-bg: #fef2f2;
+
+  /* Admin Dark Console Tokens */
+  --adm-bg: #2c254a;
+  --adm-surface: #3b3363;
+  --adm-sidebar: #3b3363;
+  --adm-border: #473f72;
+  --adm-text: #f1f5f9;
+  --adm-text-2: #cbd5e1;
+  --adm-text-3: #a8b3c7;
+  --adm-accent: #EB8153;
+  --adm-btn: #EB8153;
+  --adm-btn-text: #0f172a;
+  --adm-input-bg: #241e3d;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
   --primary-color: var(--t-primary);
@@ -132,6 +158,19 @@ html[data-theme-preset="ocean"], [data-theme-preset="ocean"] {
   --t-danger: #b91c1c;
   --t-danger-bg: #fef2f2;
 
+  /* Admin Dark Console Tokens */
+  --adm-bg: #0a1a33;
+  --adm-surface: #10264a;
+  --adm-sidebar: #0b2447;
+  --adm-border: #1f3a66;
+  --adm-text: #f1f5f9;
+  --adm-text-2: #cbd5e1;
+  --adm-text-3: #a3b6d1;
+  --adm-accent: #7cc4ff;
+  --adm-btn: #0b5fd9;
+  --adm-btn-text: #ffffff;
+  --adm-input-bg: #0c1e3a;
+
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
   --primary-color: var(--t-primary);
   --primary-dark: var(--t-sidebar);
@@ -185,6 +224,19 @@ html[data-theme-preset="emerald"], [data-theme-preset="emerald"] {
   --t-danger: #b91c1c;
   --t-danger-bg: #fef2f2;
 
+  /* Admin Dark Console Tokens */
+  --adm-bg: #062320;
+  --adm-surface: #0b3430;
+  --adm-sidebar: #052e2b;
+  --adm-border: #14504a;
+  --adm-text: #f1f5f9;
+  --adm-text-2: #cbd5e1;
+  --adm-text-3: #a7c4bd;
+  --adm-accent: #6ee7b7;
+  --adm-btn: #047857;
+  --adm-btn-text: #ffffff;
+  --adm-input-bg: #082825;
+
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
   --primary-color: var(--t-primary);
   --primary-dark: var(--t-sidebar);
@@ -237,6 +289,19 @@ html[data-theme-preset="midnight"], [data-theme-preset="midnight"] {
   --t-warning-bg: #33260a;
   --t-danger: #f87171;
   --t-danger-bg: #3b1212;
+
+  /* Admin Dark Console Tokens */
+  --adm-bg: #0b1020;
+  --adm-surface: #151b2e;
+  --adm-sidebar: #0b1020;
+  --adm-border: #2a3350;
+  --adm-text: #f1f5f9;
+  --adm-text-2: #cbd5e1;
+  --adm-text-3: #94a3b8;
+  --adm-accent: #a5b4fc;
+  --adm-btn: #4f46e5;
+  --adm-btn-text: #ffffff;
+  --adm-input-bg: #101524;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
   --primary-color: var(--t-primary);

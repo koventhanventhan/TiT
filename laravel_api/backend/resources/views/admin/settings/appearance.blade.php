@@ -12,40 +12,40 @@
     }
 
     .theme-card {
-        border: 2px solid var(--t-border, #e2e8f0);
+        border: 2px solid var(--adm-border);
         border-radius: var(--t-radius-card, 16px);
-        background: var(--t-surface, #ffffff);
+        background: var(--adm-surface);
         padding: 1.25rem;
         cursor: pointer;
         transition: all 0.2s ease-in-out;
         position: relative;
         display: flex;
         flex-direction: column;
+        color: var(--adm-text);
     }
 
     .theme-card:hover {
-        border-color: var(--t-primary, #4f0bd9);
+        border-color: var(--adm-accent);
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
 
     .theme-card.active {
-        border-color: var(--t-primary, #4f0bd9);
-        box-shadow: 0 0 0 2px var(--t-primary, #4f0bd9), 0 8px 24px rgba(0, 0, 0, 0.08);
+        border-color: var(--adm-accent, #EB8153);
+        box-shadow: 0 0 0 2px var(--adm-accent, #EB8153), 0 8px 24px rgba(0, 0, 0, 0.25);
     }
 
     .theme-preview-mockup {
         border-radius: 8px;
         overflow: hidden;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        height: 140px;
+        border: 1px solid var(--adm-border, #473f72);
+        height: 150px;
         display: flex;
         margin-bottom: 1rem;
-        background: #f8fafc;
     }
 
     .theme-mockup-sidebar {
-        width: 44px;
+        width: 48px;
         padding: 8px 6px;
         display: flex;
         flex-direction: column;
@@ -61,7 +61,7 @@
     }
 
     .theme-mockup-header {
-        height: 18px;
+        height: 22px;
         border-radius: 4px;
         display: flex;
         align-items: center;
@@ -81,7 +81,7 @@
         padding: 6px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
     }
 
     .swatch-group {
@@ -94,7 +94,7 @@
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
     .theme-badge-active {
@@ -105,9 +105,9 @@
         font-weight: 600;
         padding: 2px 8px;
         border-radius: 9999px;
-        background: #f0fdf4;
-        color: #15803d;
-        border: 1px solid #bbf7d0;
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
     }
 </style>
 @endpush
@@ -116,8 +116,8 @@
 <div class="row page-titles mx-0">
     <div class="col-sm-6 p-md-0">
         <div class="welcome-text">
-            <h4>Appearance & Theme</h4>
-            <p class="mb-0">Select 1 of 4 SaaS design presets for your institute console and public frontend.</p>
+            <h4 style="color: var(--adm-text);">Appearance & Theme</h4>
+            <p class="mb-0" style="color: var(--adm-text-2);">Select 1 of 4 dark SaaS design presets for your institute console.</p>
         </div>
     </div>
     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -153,7 +153,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h4 class="card-title text-white">Institute Theme Preset</h4>
+        <h4 class="card-title">Institute Theme Preset</h4>
     </div>
     <div class="card-body">
         <form method="POST" action="{{ route('admin.settings.appearance.update') }}">
@@ -161,90 +161,77 @@
 
             <div class="theme-grid">
                 @php
+                    $presetsData = file_exists(resource_path('themes/presets.json'))
+                        ? json_decode(file_get_contents(resource_path('themes/presets.json')), true)
+                        : [];
+
                     $availablePresets = [
                         'royal' => [
-                            'name' => 'Royal Violet',
-                            'tagline' => 'Rich Indigo & Royal Purple',
-                            'primary' => '#4f0bd9',
-                            'sidebar' => '#1a103c',
-                            'bg' => '#f8fafc',
-                            'surface' => '#ffffff',
-                            'accent' => '#4308b8',
-                            'is_dark' => false
+                            'name' => 'Classic Violet (original)',
+                            'tagline' => 'Original Dark Purple & Warm Orange Accent',
                         ],
                         'ocean' => [
                             'name' => 'Ocean Blue',
-                            'tagline' => 'Deep Navy & Ocean Cyan',
-                            'primary' => '#0b5fd9',
-                            'sidebar' => '#0b2447',
-                            'bg' => '#f8fafc',
-                            'surface' => '#ffffff',
-                            'accent' => '#094bb0',
-                            'is_dark' => false
+                            'tagline' => 'Deep Navy Console & Vivid Cyan Accent',
                         ],
                         'emerald' => [
                             'name' => 'Emerald Fresh',
-                            'tagline' => 'Forest Slate & Vivid Emerald',
-                            'primary' => '#047857',
-                            'sidebar' => '#052e2b',
-                            'bg' => '#f8fafc',
-                            'surface' => '#ffffff',
-                            'accent' => '#065f46',
-                            'is_dark' => false
+                            'tagline' => 'Forest Green Console & Fresh Mint Accent',
                         ],
                         'midnight' => [
                             'name' => 'Midnight Dark',
-                            'tagline' => 'Obsidian Black & Violet Glow',
-                            'primary' => '#4f46e5',
-                            'sidebar' => '#0b1020',
-                            'bg' => '#0b1020',
-                            'surface' => '#151b2e',
-                            'accent' => '#4338ca',
-                            'is_dark' => true
+                            'tagline' => 'Obsidian Black Console & Indigo Glow',
                         ]
                     ];
+
+                    foreach ($availablePresets as $k => $info) {
+                        $pMeta = $presetsData[$k] ?? [];
+                        foreach ($pMeta as $tokenKey => $tokenVal) {
+                            $availablePresets[$k][$tokenKey] = $tokenVal;
+                        }
+                    }
                 @endphp
 
                 @foreach($availablePresets as $key => $p)
                 @php $isSelected = ($currentPreset === $key); @endphp
                 <label class="theme-card {{ $isSelected ? 'active' : '' }}" for="preset_{{ $key }}">
-                    <!-- Live Mini UI Mockup -->
-                    <div class="theme-preview-mockup" style="background: {{ $p['bg'] }};">
+                    <!-- Live Mini UI Mockup of the Real Admin Console -->
+                    <div class="theme-preview-mockup" style="background: {{ $p['adm_bg'] }}; border: 1px solid {{ $p['adm_border'] }};">
                         <!-- Mini Sidebar -->
-                        <div class="theme-mockup-sidebar" style="background: {{ $p['sidebar'] }};">
-                            <div style="width: 14px; height: 14px; border-radius: 3px; background: {{ $p['primary'] }}; margin-bottom: 4px;"></div>
-                            <div style="width: 24px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.4);"></div>
-                            <div style="width: 20px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2);"></div>
-                            <div style="width: 26px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2);"></div>
+                        <div class="theme-mockup-sidebar" style="background: {{ $p['adm_sidebar'] }}; border-right: 1px solid {{ $p['adm_border'] }};">
+                            <div style="width: 14px; height: 14px; border-radius: 3px; background: {{ $p['adm_accent'] }}; margin-bottom: 4px;"></div>
+                            <div style="width: 26px; height: 5px; border-radius: 2px; background: rgba(255,255,255,0.12); border-left: 2px solid {{ $p['adm_accent'] }};"></div>
+                            <div style="width: 22px; height: 4px; border-radius: 2px; background: {{ $p['adm_text_2'] }}; opacity: 0.5;"></div>
+                            <div style="width: 24px; height: 4px; border-radius: 2px; background: {{ $p['adm_text_2'] }}; opacity: 0.5;"></div>
                         </div>
 
                         <!-- Mini Main Workspace -->
                         <div class="theme-mockup-main">
-                            <!-- Mini Topbar -->
-                            <div class="theme-mockup-header" style="background: {{ $p['surface'] }}; border: 1px solid rgba(0,0,0,0.06);">
-                                <div style="width: 40px; height: 6px; border-radius: 2px; background: {{ $p['is_dark'] ? '#94a3b8' : '#cbd5e1' }};"></div>
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ $p['primary'] }};"></div>
+                            <!-- Mini Topbar Header -->
+                            <div class="theme-mockup-header" style="background: {{ $p['adm_sidebar'] }}; border-bottom: 1px solid {{ $p['adm_border'] }};">
+                                <div style="width: 44px; height: 7px; border-radius: 10px; background: {{ $p['adm_input_bg'] }}; border: 1px solid {{ $p['adm_border'] }};"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ $p['adm_accent'] }};"></div>
                             </div>
 
-                            <!-- Mini Content -->
+                            <!-- Mini Content with 2 Stat Cards (Visible Numbers!) -->
                             <div class="theme-mockup-body">
-                                <div class="theme-mockup-stat" style="background: {{ $p['surface'] }}; border: 1px solid rgba(0,0,0,0.06);">
-                                    <div style="width: 28px; height: 5px; border-radius: 2px; background: {{ $p['is_dark'] ? '#64748b' : '#94a3b8' }};"></div>
-                                    <div style="width: 16px; height: 8px; border-radius: 2px; background: {{ $p['primary'] }};"></div>
+                                <div class="theme-mockup-stat" style="background: {{ $p['adm_surface'] }}; border: 1px solid {{ $p['adm_border'] }};">
+                                    <span style="font-size: 7px; color: {{ $p['adm_text_2'] }}; line-height: 1;">Students</span>
+                                    <span style="font-size: 11px; font-weight: 700; color: {{ $p['adm_text'] }}; line-height: 1.2;">1,240</span>
                                 </div>
-                                <div class="theme-mockup-stat" style="background: {{ $p['surface'] }}; border: 1px solid rgba(0,0,0,0.06);">
-                                    <div style="width: 32px; height: 5px; border-radius: 2px; background: {{ $p['is_dark'] ? '#64748b' : '#94a3b8' }};"></div>
-                                    <div style="width: 22px; height: 8px; border-radius: 2px; background: #15803d;"></div>
+                                <div class="theme-mockup-stat" style="background: {{ $p['adm_surface'] }}; border: 1px solid {{ $p['adm_border'] }};">
+                                    <span style="font-size: 7px; color: {{ $p['adm_text_2'] }}; line-height: 1;">Revenue</span>
+                                    <span style="font-size: 11px; font-weight: 700; color: {{ $p['adm_text'] }}; line-height: 1.2;">85.5K</span>
                                 </div>
                             </div>
 
-                            <!-- Mini Button Row -->
-                            <div style="display: flex; gap: 4px; align-items: center;">
-                                <div style="height: 14px; padding: 0 6px; border-radius: 3px; background: {{ $p['primary'] }}; display: flex; align-items: center;">
-                                    <div style="width: 20px; height: 3px; background: #ffffff; border-radius: 1px;"></div>
+                            <!-- Mini Controls (Button + Badge) -->
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <div style="height: 16px; padding: 0 6px; border-radius: 3px; background: {{ $p['adm_btn'] }}; color: {{ $p['adm_btn_text'] }}; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center;">
+                                    Save
                                 </div>
-                                <div style="height: 14px; padding: 0 4px; border-radius: 3px; border: 1px solid {{ $p['primary'] }}; display: flex; align-items: center;">
-                                    <div style="width: 16px; height: 3px; background: {{ $p['primary'] }}; border-radius: 1px;"></div>
+                                <div style="height: 16px; padding: 0 6px; border-radius: 999px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); color: #4ade80; font-size: 7.5px; font-weight: 600; display: flex; align-items: center;">
+                                    Active
                                 </div>
                             </div>
                         </div>
@@ -253,22 +240,22 @@
                     <!-- Header & Radio Selection -->
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <div class="d-flex align-items-center">
-                            <input type="radio" id="preset_{{ $key }}" name="theme_preset" value="{{ $key }}" {{ $isSelected ? 'checked' : '' }} style="margin-right: 8px; width: 18px; height: 18px; accent-color: var(--t-primary, #4f0bd9);" onchange="document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); this.closest('.theme-card').classList.add('active');">
-                            <strong>{{ $p['name'] }}</strong>
+                            <input type="radio" id="preset_{{ $key }}" name="theme_preset" value="{{ $key }}" {{ $isSelected ? 'checked' : '' }} style="margin-right: 8px; width: 18px; height: 18px; accent-color: var(--adm-accent, #EB8153);" onchange="document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active')); this.closest('.theme-card').classList.add('active');">
+                            <strong style="color: var(--adm-text);">{{ $p['name'] }}</strong>
                         </div>
                         @if($isSelected)
                             <span class="theme-badge-active"><i class="fa fa-check"></i> Active</span>
                         @endif
                     </div>
 
-                    <small class="text-muted mb-2">{{ $p['tagline'] }}</small>
+                    <small style="color: var(--adm-text-2);" class="mb-2">{{ $p['tagline'] }}</small>
 
-                    <!-- Color Swatches -->
+                    <!-- Color Swatches: bg, surface, sidebar, accent -->
                     <div class="swatch-group">
-                        <span class="swatch" style="background: {{ $p['primary'] }};" title="Primary: {{ $p['primary'] }}"></span>
-                        <span class="swatch" style="background: {{ $p['sidebar'] }};" title="Sidebar: {{ $p['sidebar'] }}"></span>
-                        <span class="swatch" style="background: {{ $p['surface'] }};" title="Surface: {{ $p['surface'] }}"></span>
-                        <span class="swatch" style="background: {{ $p['accent'] }};" title="Hover/Accent: {{ $p['accent'] }}"></span>
+                        <span class="swatch" style="background: {{ $p['adm_bg'] }};" title="Page BG: {{ $p['adm_bg'] }}"></span>
+                        <span class="swatch" style="background: {{ $p['adm_surface'] }};" title="Surface: {{ $p['adm_surface'] }}"></span>
+                        <span class="swatch" style="background: {{ $p['adm_sidebar'] }};" title="Header/Sidebar: {{ $p['adm_sidebar'] }}"></span>
+                        <span class="swatch" style="background: {{ $p['adm_accent'] }};" title="Accent: {{ $p['adm_accent'] }}"></span>
                     </div>
                 </label>
                 @endforeach
@@ -283,4 +270,3 @@
     </div>
 </div>
 @endsection
-

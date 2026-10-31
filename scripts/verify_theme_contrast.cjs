@@ -42,6 +42,15 @@ const requiredPairs = [
   ['success', 'success_bg', 'success on success-bg', 4.5],
   ['warning', 'warning_bg', 'warning on warning-bg', 4.5],
   ['danger', 'danger_bg', 'danger on danger-bg', 4.5],
+  // Admin Dark Console Tokens
+  ['adm_text', 'adm_surface', 'adm-text on adm-surface', 4.5],
+  ['adm_text', 'adm_bg', 'adm-text on adm-bg', 4.5],
+  ['adm_text_2', 'adm_surface', 'adm-text-2 on adm-surface', 4.5],
+  ['adm_text_2', 'adm_sidebar', 'adm-text-2 on adm-sidebar', 4.5],
+  ['adm_text_3', 'adm_surface', 'adm-text-3 on adm-surface', 4.5],
+  ['adm_text', 'adm_input_bg', 'adm-text on adm-input-bg', 4.5],
+  ['adm_btn_text', 'adm_btn', 'adm-btn-text on adm-btn', 4.5],
+  ['adm_accent', 'adm_sidebar', 'adm-accent on adm-sidebar', 3.0],
 ];
 
 console.log('=== WCAG AA (>= 4.5:1) Contrast Ratio Verification ===\n');
@@ -86,4 +95,3 @@ if (!allPassed) {
 
 console.log('\nSUCCESS: All presets passed all WCAG AA 4.5:1 contrast requirements.');
 process.exit(0);
-

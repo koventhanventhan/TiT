@@ -6,7 +6,7 @@
 <style>
     /* Fix Category dropdown visibility */
     select.form-control option {
-        color: #ffffff !important;
+        color: var(--adm-text) !important;
         background-color: var(--t-sidebar) !important;
     }
     
@@ -243,7 +243,7 @@
                                                                 <input type="checkbox" name="is_active" value="1" {{ $p->is_active ? 'checked' : '' }}>
                                                                 <span class="slider"></span>
                                                             </label>
-                                                            <span style="font-size: 1.1rem; color: #fff;">Package is Active</span>
+                                                            <span style="font-size: 1.1rem; color: var(--adm-text);">Package is Active</span>
                                                         </div>
 
                                                         <div class="form-group mt-3">
@@ -350,7 +350,7 @@
                             <input type="checkbox" name="is_active" value="1" checked>
                             <span class="slider"></span>
                         </label>
-                        <span style="font-size: 1.1rem; color: #fff;">Package is Active</span>
+                        <span style="font-size: 1.1rem; color: var(--adm-text);">Package is Active</span>
                     </div>
 
                     <div class="form-group mt-3">

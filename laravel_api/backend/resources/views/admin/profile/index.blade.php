@@ -32,17 +32,17 @@
     }
     
     .card {
-        background: var(--t-surface) !important;
-        border: 1.0px solid var(--t-border);
+        background: var(--adm-surface) !important;
+        border: 1.0px solid var(--adm-border);
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
     }
 
     .form-control:focus {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #fff !important;
+        background: var(--adm-input-bg) !important;
+        color: var(--adm-text) !important;
     }
 </style>
 @endpush
@@ -73,7 +73,7 @@
                 <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group mb-4">
-                        <label class="text-white font-w600">Profile Photo</label>
+                        <label class="font-w600">Profile Photo</label>
                         <div class="d-flex align-items-center mt-2">
                             @php $user = Auth::user(); @endphp
                             @if($user->avatar)
@@ -86,19 +86,19 @@
                             <div>
                                 <input type="file" name="avatar" id="avatarInput" class="d-none" accept="image/*" onchange="previewAvatar(this)">
                                 <input type="hidden" name="remove_avatar" id="removeAvatarInput" value="0">
-                                <button type="button" class="btn btn-primary btn-sm px-4 mr-2" style="background: #EB8153; border-color: #EB8153;" onclick="document.getElementById('avatarInput').click()">Change Photo</button>
+                                <button type="button" class="btn btn-primary btn-sm px-4 mr-2" onclick="document.getElementById('avatarInput').click()">Change Photo</button>
                                 <button type="button" class="btn btn-danger btn-sm px-4" id="removeAvatarBtn" style="{{ !$user->avatar ? 'display: none;' : '' }}" onclick="removeAvatar()">Remove Photo</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="form-group col-md-6"><label class="text-white font-w600">First Name</label><input type="text" name="first_name" class="form-control bg-transparent text-white border-dark" value="{{ $user->first_name }}"></div>
-                        <div class="form-group col-md-6"><label class="text-white font-w600">Last Name</label><input type="text" name="last_name" class="form-control bg-transparent text-white border-dark" value="{{ $user->last_name }}"></div>
+                        <div class="form-group col-md-6"><label class="font-w600">First Name</label><input type="text" name="first_name" class="form-control" value="{{ $user->first_name }}"></div>
+                        <div class="form-group col-md-6"><label class="font-w600">Last Name</label><input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}"></div>
                     </div>
 
                     <div class="row">
-                        <div class="form-group col-md-12"><label class="text-white font-w600">Email Address</label><input type="email" name="email" class="form-control bg-transparent text-white border-dark" value="{{ $user->email }}"></div>
+                        <div class="form-group col-md-12"><label class="font-w600">Email Address</label><input type="email" name="email" class="form-control" value="{{ $user->email }}"></div>
                     </div>
 
 

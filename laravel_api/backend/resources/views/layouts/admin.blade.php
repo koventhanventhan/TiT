@@ -68,17 +68,17 @@
                     <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo" style="max-height: 2.8125rem; max-width: 2.8125rem; object-fit: contain;">
                 @else
                     <svg class="logo-abbr" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="#EB8153"/>
+                        <rect class="svg-logo-rect" width="50" height="50" rx="20" fill="var(--adm-accent, #EB8153)"/>
                         <path class="svg-logo-path" d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: #fff;">
-                    @php
-                        $brandName = auth()->user()?->institute?->name ?: ($site_settings['site_title'] ?? $site_settings['admin_company_name'] ?? null);
-                        if (!$brandName || $brandName === 'Laravel') {
-                            $brandName = 'TiT Institute';
-                        }
-                    @endphp
+                @php
+                    $brandName = auth()->user()?->institute?->name ?: ($site_settings['admin_company_name'] ?? $site_settings['site_title'] ?? null);
+                    if (!$brandName || $brandName === 'Laravel') {
+                        $brandName = 'TiT Institute';
+                    }
+                @endphp
+                <span class="brand-title" style="font-size: 1.5rem; font-weight: 700; margin-left:0.75rem; color: var(--adm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;" title="{{ $brandName }}">
                     {{ $brandName }}
                 </span>
             </a>
@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mt-1 mb-1 font-weight-bold text-warning">Attention!</h6>
-                                    <p class="mb-2 text-dark" style="font-size: 0.85rem; line-height: 1.4;">You have <strong>{{ $pendingApprovals }}</strong> students waiting for confirmation.</p>
+                                    <p class="mb-2" style="font-size: 0.85rem; line-height: 1.4; color: var(--adm-text);">You have <strong>{{ $pendingApprovals }}</strong> students waiting for confirmation.</p>
                                     <a href="{{ route('admin.students.index') }}" class="btn btn-warning btn-sm px-3 py-1">View All</a>
                                 </div>
                                 <div>
@@ -125,7 +125,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mt-1 mb-1 font-weight-bold text-danger">Payment Notice</h6>
-                                    <p class="mb-2 text-dark" style="font-size: 0.85rem; line-height: 1.4;">There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.</p>
+                                    <p class="mb-2" style="font-size: 0.85rem; line-height: 1.4; color: var(--adm-text);">There are <strong>{{ $pendingPayments }}</strong> pending payment confirmations.</p>
                                     <a href="{{ route('admin.students.pending-payments') }}" class="btn btn-danger btn-sm px-3 py-1">Review Payments</a>
                                 </div>
                                 <div>
@@ -146,7 +146,7 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>Copyright &copy; {{ date('Y') }} {{ $brandName }}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -166,13 +166,13 @@
     <!-- Global Cropper Modal -->
     <div class="modal fade" id="globalCropperModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content text-dark">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-dark">Crop Image</h5>
-                    <button type="button" class="close text-dark" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="modal-title">Crop Image</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body text-center">
-                    <div style="max-height: 400px; width: 100%; overflow: hidden; background: #e5e5e5; position: relative;">
+                    <div style="max-height: 400px; width: 100%; overflow: hidden; background: var(--adm-input-bg); position: relative;">
                         <img id="cropperImage" src="" style="max-width: 100%; display: block;">
                     </div>
                     <div class="mt-3">

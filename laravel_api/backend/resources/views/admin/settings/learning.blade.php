@@ -23,14 +23,14 @@
     }
 
     .card-title {
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
 
     .form-control, .bootstrap-select .dropdown-toggle {
         background: rgba(0, 0, 0, 0.2) !important;
         border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-radius: 0.5rem !important;
     }
 
@@ -47,7 +47,7 @@
     .btn-info.btn-xs {
         background-color: #EB8153;
         border-color: #EB8153;
-        color: #fff;
+        color: var(--adm-text);
         border-radius: 0.375rem;
         padding: 0.3125rem 0.75rem;
     }
@@ -70,7 +70,7 @@
     }
     .table thead th {
         border-bottom: 0.125rem solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         font-weight: 600;
     }
     .table td, .table th {
@@ -83,7 +83,7 @@
     }
     .custom-file-label::after {
         background: #EB8153 !important;
-        color: #fff !important;
+        color: var(--adm-text) !important;
         border-left: 1.0px solid rgba(255, 255, 255, 0.1) !important;
     }
     .border-right {
@@ -143,7 +143,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: var(--adm-text);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -194,7 +194,7 @@
     </div>
 @endif
 @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: #fff;">
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: var(--adm-text);">
         <i class="fa fa-exclamation-triangle mr-2 text-warning"></i>{{ session('warning') }}
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>

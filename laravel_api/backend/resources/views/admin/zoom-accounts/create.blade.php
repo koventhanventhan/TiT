@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Add Zoom Account</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Add Zoom Account</h4>
         </div>
     </div>
 

@@ -60,7 +60,7 @@
         <div class="card">
             <div class="card-header border-0 pb-0 d-flex justify-content-between">
                 <h4 class="card-title">Profile Information</h4>
-                <span class="badge badge-pill badge-outline-primary">Public</span>
+                <span class="badge badge-pill badge-secondary" style="background: rgba(255, 255, 255, 0.1); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">Public</span>
             </div>
             <div class="card-body">
                 @if(session('success'))

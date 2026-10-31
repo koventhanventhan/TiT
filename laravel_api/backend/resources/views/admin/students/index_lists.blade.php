@@ -98,8 +98,8 @@
                         <small class="text-muted">{{ $selectedGrade }}</small>
                     </div>
                     <div>
-                        <span class="badge badge-light text-dark font-weight-bold px-2 py-1 mr-2">{{ $englishStudents->count() }} Students</span>
-                        <a href="{{ route('admin.students.index-lists.pdf', ['grade' => $selectedGrade, 'medium' => 'english']) }}" target="_blank" class="btn btn-xs btn-primary text-white" title="Download PDF">
+                        <span class="badge badge-secondary px-2 py-1 mr-2 font-weight-bold" style="background: rgba(255,255,255,0.1); color: var(--adm-text); border: 1px solid var(--adm-border);">{{ $englishStudents->count() }} Students</span>
+                        <a href="{{ route('admin.students.index-lists.pdf', ['grade' => $selectedGrade, 'medium' => 'english']) }}" target="_blank" class="btn btn-xs btn-primary" title="Download PDF">
                             <i class="fa fa-download"></i> PDF
                         </a>
                     </div>
@@ -159,8 +159,8 @@
                         <small class="text-muted">{{ $selectedGrade }}</small>
                     </div>
                     <div>
-                        <span class="badge badge-light text-dark font-weight-bold px-2 py-1 mr-2">{{ $tamilStudents->count() }} Students</span>
-                        <a href="{{ route('admin.students.index-lists.pdf', ['grade' => $selectedGrade, 'medium' => 'tamil']) }}" target="_blank" class="btn btn-xs btn-success text-white" title="Download PDF">
+                        <span class="badge badge-secondary px-2 py-1 mr-2 font-weight-bold" style="background: rgba(255,255,255,0.1); color: var(--adm-text); border: 1px solid var(--adm-border);">{{ $tamilStudents->count() }} Students</span>
+                        <a href="{{ route('admin.students.index-lists.pdf', ['grade' => $selectedGrade, 'medium' => 'tamil']) }}" target="_blank" class="btn btn-xs btn-success" title="Download PDF">
                             <i class="fa fa-download"></i> PDF
                         </a>
                     </div>

@@ -16,7 +16,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Edit Teacher</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Edit Teacher</h4>
             <a href="{{ route('admin.teachers.index') }}" class="btn btn-secondary btn-sm">
                 <i class="flaticon-381-back"></i> Back to Teachers
             </a>
@@ -65,7 +65,7 @@
                                 <label class="text-label" style="font-weight: 600;">Password <small class="text-muted">(leave blank to keep current)</small></label>
                                 <div style="position: relative;">
                                     <input type="password" name="password" id="editTeacherPassword" class="form-control" placeholder="Enter new password" minlength="8" style="padding-right: 3.125rem;">
-                                    <button type="button" onclick="togglePassword('editTeacherPassword', 'editTeacherEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
+                                    <button type="button" onclick="togglePassword('editTeacherPassword', 'editTeacherEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--adm-text-2); font-size: 1.125rem; padding: 0.3125rem;">
                                         <span id="editTeacherEyeIcon">👁️</span>
                                     </button>
                                 </div>
@@ -91,20 +91,20 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="text-label" style="font-weight: 600;">Teacher Photo (Avatar)</label>
-                                <div class="text-center" style="border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 1.25rem; background: #f9fafb; cursor: pointer; position: relative;" onclick="document.getElementById('teacherAvatarInput').click()">
+                                <div class="text-center" style="border: 2px dashed var(--adm-border); border-radius: 0.5rem; padding: 1.25rem; background: var(--adm-input-bg); cursor: pointer; position: relative;" onclick="document.getElementById('teacherAvatarInput').click()">
                                     @if($teacher->avatar)
                                         <img id="teacherAvatarPreview" src="{{ asset($teacher->avatar) }}" style="width: 6.25rem; height: 6.25rem; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 0.625rem;">
                                         <div id="teacherAvatarPlaceholder" style="display: none;">
-                                            <i class="la la-image" style="font-size: 2.5rem; color: #9ca3af;"></i>
-                                            <p class="mt-2 mb-0" style="color: #6b7280; font-size: 0.875rem;">Click to change photo</p>
-                                            <small class="text-muted">JPG, PNG or WebP</small>
+                                            <i class="la la-image" style="font-size: 2.5rem; color: var(--adm-text-3);"></i>
+                                            <p class="mt-2 mb-0" style="color: var(--adm-text-2); font-size: 0.875rem;">Click to change photo</p>
+                                            <small style="color: var(--adm-text-3);">JPG, PNG or WebP</small>
                                         </div>
                                     @else
                                         <img id="teacherAvatarPreview" src="" style="width: 6.25rem; height: 6.25rem; border-radius: 50%; object-fit: cover; display: none; margin: 0 auto 0.625rem;">
                                         <div id="teacherAvatarPlaceholder">
-                                            <i class="la la-image" style="font-size: 2.5rem; color: #9ca3af;"></i>
-                                            <p class="mt-2 mb-0" style="color: #6b7280; font-size: 0.875rem;">Click to upload photo</p>
-                                            <small class="text-muted">JPG, PNG or WebP</small>
+                                            <i class="la la-image" style="font-size: 2.5rem; color: var(--adm-text-3);"></i>
+                                            <p class="mt-2 mb-0" style="color: var(--adm-text-2); font-size: 0.875rem;">Click to upload photo</p>
+                                            <small style="color: var(--adm-text-3);">JPG, PNG or WebP</small>
                                         </div>
                                     @endif
                                 </div>

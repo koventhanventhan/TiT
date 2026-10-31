@@ -7,7 +7,7 @@
     <div class="col-12">
         <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
-                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Pending Student Payments</h4>
+                <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Pending Student Payments</h4>
                 <div class="d-inline-flex align-items-center mt-1 flex-wrap gap-2">
                     <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px;">
                         <i class="flaticon-381-diamond mr-1"></i> Total Pending: {{ $totalPendingCount ?? 0 }}
@@ -258,7 +258,7 @@
                             @empty
                             <tr>
                                 <td colspan="8" class="text-center py-5" style="color: #6b7280;">
-                                    <div style="font-size: 1.1rem; font-weight: 600; color: #9ca3af; margin-bottom: 6px;">No pending payments found</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600; color: var(--adm-text-2); margin-bottom: 6px;">No pending payments found</div>
                                     <div style="font-size: 0.85rem;">All student payments have been reviewed and approved.</div>
                                 </td>
                             </tr>

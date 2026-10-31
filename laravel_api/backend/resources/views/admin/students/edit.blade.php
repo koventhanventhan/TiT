@@ -91,7 +91,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Edit Student Entry</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Edit Student Entry</h4>
             <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-sm">
                 <i class="flaticon-381-back"></i> Back to List
             </a>
@@ -277,7 +277,7 @@
                                 <label>Password  <small class="text-muted">(Leave blank to keep current)</small></label>
                                 <div style="position: relative;">
                                     <input type="password" name="password" id="editPassword" class="form-control" placeholder="Enter new password" minlength="8" style="padding-right: 3.125rem;">
-                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
+                                     <button type="button" onclick="togglePassword('editPassword', 'editEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--adm-text-2); font-size: 1.125rem; padding: 0.3125rem;">
                                          <i id="editEyeIcon" class="la la-eye"></i>
                                      </button>
                                 </div>
@@ -976,7 +976,7 @@
                     </div>
                     @else
                     <div class="mt-4 text-center p-4" style="background: rgba(255,255,255,0.05); border-radius: 0.5rem;">
-                        <p class="mb-0" style="color: #938787;">No payment records yet</p>
+                        <p class="mb-0" style="color: var(--adm-text-2);">No payment records yet</p>
                     </div>
                     @endif
 

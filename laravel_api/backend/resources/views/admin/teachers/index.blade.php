@@ -10,7 +10,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Teachers</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Teachers</h4>
             <div>
                 <button type="button" class="btn btn-danger btn-sm mr-2" id="bulkDeleteBtn" style="display: none;" onclick="submitBulkDelete()">
                     <i class="flaticon-381-trash-1"></i> Delete Selected (<span id="selectedCount">0</span>)

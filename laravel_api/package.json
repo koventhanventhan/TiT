@@ -28,6 +28,7 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:admin-contrast": "node ../scripts/admin_contrast_crawler.cjs"
   }
 }

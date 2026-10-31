@@ -148,7 +148,7 @@
                                             Mapped: '{{ $val }}
                                         </span>
                                     @else
-                                        <span class="badge badge-secondary ml-2" style="font-size: 0.7rem; background: rgba(148, 163, 184, 0.15); color: #94a3b8;">
+                                        <span class="badge badge-secondary ml-2" style="font-size: 0.7rem; background: rgba(255, 255, 255, 0.1); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">
                                             Unmapped
                                         </span>
                                     @endif
@@ -168,7 +168,7 @@
                     </div>
 
                     <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary px-4 py-2" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border: none; font-weight: 600;">
+                        <button type="submit" class="btn btn-primary px-4 py-2 font-weight-bold">
                             <i class="flaticon-381-save mr-1"></i> Save Batch Mappings
                         </button>
                     </div>

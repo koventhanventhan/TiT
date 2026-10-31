@@ -30,8 +30,8 @@
         color: var(--adm-text) !important;
     }
     .form-control:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
+        border-color: var(--adm-accent);
+        box-shadow: 0 0 0 0.1875rem rgba(235, 129, 83, 0.2);
     }
     .radio-group {
         display: flex;
@@ -44,24 +44,24 @@
         gap: 0.625rem;
         cursor: pointer;
         padding: 0.75rem 1.25rem;
-        border: 0.125rem solid rgba(139, 92, 246, 0.3);
+        border: 1px solid var(--adm-border);
         border-radius: 0.75rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(99, 102, 241, 0.1);
+        background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(0.625rem);
         flex: 1;
         min-width: 7.5rem;
         justify-content: center;
     }
     .radio-label:hover {
-        border-color: rgba(139, 92, 246, 0.6);
-        background: rgba(99, 102, 241, 0.2);
+        border-color: var(--adm-accent);
+        background: rgba(255, 255, 255, 0.08);
         transform: translateY(-0.125rem);
-        box-shadow: 0 0.25rem 0.75rem rgba(139, 92, 246, 0.3);
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
     }
     .radio-label span {
-        color: #6366f1;
-        font-weight: 500;
+        color: var(--adm-text);
+        font-weight: 600;
         font-size: 0.875rem;
         transition: color 0.3s ease;
     }
@@ -91,7 +91,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Add New Student Entry</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Add New Student Entry</h4>
             <div>
                 <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-sm">
                     <i class="flaticon-381-back"></i> Back to List
@@ -188,7 +188,7 @@
                                 <label>Password <span class="text-danger">*</span></label>
                                 <div style="position: relative;">
                                     <input type="password" name="password" id="createPassword" class="form-control" placeholder="Enter password (min 8 chars)" required minlength="8" style="padding-right: 3.125rem;">
-                                     <button type="button" onclick="togglePassword('createPassword', 'createEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6366f1; font-size: 1.125rem; padding: 0.3125rem;">
+                                     <button type="button" onclick="togglePassword('createPassword', 'createEyeIcon')" style="position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--adm-text-2); font-size: 1.125rem; padding: 0.3125rem;">
                                          <i id="createEyeIcon" class="la la-eye"></i>
                                      </button>
                                 </div>

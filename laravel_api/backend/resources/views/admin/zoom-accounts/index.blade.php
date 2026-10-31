@@ -9,7 +9,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="page-title d-flex justify-content-between align-items-center">
-                <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Zoom Accounts</h4>
+                <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Zoom Accounts</h4>
                 <a href="{{ route('admin.zoom-accounts.create') }}" class="btn btn-primary btn-sm">
                     <i class="fa fa-plus"></i> Add New Account
                 </a>

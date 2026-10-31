@@ -7,18 +7,18 @@
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 <style>
     :root {
-        --settings-bg: var(--t-bg);
+        --settings-bg: var(--adm-bg);
         --card-bg: var(--adm-surface);
-        --sidebar-active: var(--t-primary-soft);
-        --accent-orange: var(--t-primary);
-        --accent-blue: var(--t-primary);
-        --text-muted: var(--t-text-3);
+        --sidebar-active: rgba(255, 255, 255, 0.08);
+        --accent-orange: var(--adm-accent);
+        --accent-blue: var(--adm-accent);
+        --text-muted: var(--adm-text-2);
     }
 
     .content-body {
         margin-top: 0 !important;
         padding-top: 1.25rem;
-        background: var(--t-bg) !important;
+        background: var(--adm-bg) !important;
     }
     
     .settings-container {
@@ -54,7 +54,7 @@
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        color: var(--text-muted);
+        color: var(--adm-text-2) !important;
         border-radius: 0.5rem;
         margin-bottom: 0.5rem;
         transition: all 0.2s;
@@ -72,13 +72,15 @@
     }
 
     .settings-nav-item:hover {
-        color: var(--adm-text);
+        color: var(--adm-text) !important;
         background: rgba(255, 255, 255, 0.05);
     }
 
     .settings-nav-item.active {
-        background: rgba(235, 129, 83, 0.1);
-        color: var(--accent-orange);
+        background: rgba(0, 0, 0, 0.25) !important;
+        color: var(--adm-text) !important;
+        font-weight: 700;
+        border-left: 3px solid var(--adm-accent) !important;
     }
 
     .settings-content {

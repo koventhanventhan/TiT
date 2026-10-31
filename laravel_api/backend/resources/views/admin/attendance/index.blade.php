@@ -19,7 +19,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Attendance Monitoring</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Attendance Monitoring</h4>
             <div>
                 <a href="{{ route('admin.zoom.index') }}" class="btn btn-secondary btn-sm">
                     <i class="flaticon-381-video-camera"></i> View Classes

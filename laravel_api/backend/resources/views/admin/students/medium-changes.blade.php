@@ -6,7 +6,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Pending Medium Change Requests</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Pending Medium Change Requests</h4>
         </div>
     </div>
 </div>

@@ -26,7 +26,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Exam Results</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Exam Results</h4>
             <div>
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                     <i class="flaticon-381-upload"></i> Import Excel

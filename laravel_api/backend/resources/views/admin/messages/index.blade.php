@@ -271,12 +271,12 @@
     #msgApp .chat-empty-state h3 {
         font-size: 1.2rem;
         font-weight: 700;
-        color: #475569;
+        color: var(--adm-text) !important;
         margin-bottom: 0.5rem;
     }
     #msgApp .chat-empty-state p {
         font-size: 0.9rem;
-        color: #94a3b8;
+        color: var(--adm-text-2) !important;
         margin: 0;
     }
 

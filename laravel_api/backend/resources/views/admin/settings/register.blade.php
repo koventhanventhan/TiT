@@ -102,7 +102,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Register Form Settings</h4>
+            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Register Form Settings</h4>
             <div>
                 <a href="{{ config('services.frontend_url') }}/" target="_blank" class="btn btn-primary btn-sm">
                     View Home Page

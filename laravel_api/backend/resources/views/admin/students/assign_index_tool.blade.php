@@ -26,11 +26,11 @@
         display: none;
     }
     .grade-chip.active {
-        background: #eb8153;
-        border-color: #eb8153;
-        color: var(--adm-text);
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(235, 129, 83, 0.4);
+        background: var(--adm-accent);
+        border-color: var(--adm-accent);
+        color: #0f172a !important;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     .section-box {
         background: rgba(255, 255, 255, 0.02);
@@ -109,7 +109,7 @@
                     <div class="alert alert-info py-2 px-3 d-flex justify-content-between align-items-center" style="background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
                         <div>
                             <strong>{{ $unassignedCount }}</strong> unassigned active student(s)
-                            <small class="d-block text-muted">Out of {{ $totalActiveCount }} confirmed students</small>
+                            <small class="d-block" style="color: #bae6fd;">Out of {{ $totalActiveCount }} confirmed students</small>
                         </div>
                         <span class="badge badge-primary">Institute: {{ $institute->name ?? 'Default' }}</span>
                     </div>
@@ -119,7 +119,7 @@
                         <label class="font-weight-bold d-flex justify-content-between">
                             <span>Select Grades</span>
                             <span>
-                                <a href="javascript:void(0)" id="selectAllGrades" class="small text-primary mr-2">Select All</a>
+                                <a href="javascript:void(0)" id="selectAllGrades" class="small mr-2" style="color: var(--adm-text); font-weight: 600; text-decoration: underline;">Select All</a>
                                 <a href="javascript:void(0)" id="clearAllGrades" class="small text-muted">Clear</a>
                             </span>
                         </label>
@@ -200,7 +200,7 @@
                         <div class="custom-control custom-radio mb-2">
                             <input type="radio" id="orderRegistered" name="order" value="registered" class="custom-control-input" checked>
                             <label class="custom-control-label" for="orderRegistered">
-                                <strong>Registration Order</strong> (users.created_at, then ID) &mdash; <span class="text-primary">Default</span>
+                                <strong>Registration Order</strong> (users.created_at, then ID) &mdash; <span style="color: var(--adm-text); font-weight: 600;">Default</span>
                             </label>
                         </div>
                         <div class="custom-control custom-radio">

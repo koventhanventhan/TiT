@@ -167,7 +167,7 @@
 
                     $availablePresets = [
                         'royal' => [
-                            'name' => 'Classic Violet (original)',
+                            'name' => 'Royal Violet (Classic Violet - original)',
                             'tagline' => 'Original Dark Purple & Warm Orange Accent',
                         ],
                         'ocean' => [

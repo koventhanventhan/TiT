@@ -1,4 +1,12 @@
 <?php
+// Ensure we always connect to the actual local database, even if invoked from phpunit testing environment
+putenv('APP_ENV=local');
+unset($_ENV['APP_ENV'], $_SERVER['APP_ENV']);
+putenv('DB_CONNECTION=mysql');
+unset($_ENV['DB_CONNECTION'], $_SERVER['DB_CONNECTION']);
+putenv('DB_DATABASE');
+unset($_ENV['DB_DATABASE'], $_SERVER['DB_DATABASE']);
+
 require __DIR__ . '/../laravel_api/backend/vendor/autoload.php';
 $app = require_once __DIR__ . '/../laravel_api/backend/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Support\Tenant;
 use App\Traits\ValidatesEmail;
 use Illuminate\Console\Command;
 
@@ -38,71 +39,76 @@ class CheckPayments extends Command
 
         $this->info("Running payment checks for $yearMonth (Day $day)...");
 
-        $unpaidStudents = \App\Models\User::where('role', 'user')
-            ->whereNotNull('full_name')
-            ->whereIn('registration_status', ['approved', 'confirmed'])
-            ->whereNull('deactivated_at')
-            ->get()
-            ->filter(function ($user) use ($yearMonth) {
-                return !$user->hasPaidForMonth($yearMonth);
-            });
+        Tenant::each(function ($institute) use ($notifier, $day, $yearMonth) {
+            $this->line("Processing institute: {$institute->name} (#{$institute->id})");
 
-        if ($unpaidStudents->isEmpty()) {
-            $this->info("No unpaid students found.");
-            return;
-        }
+            $unpaidStudents = \App\Models\User::where('role', 'user')
+                ->whereNotNull('full_name')
+                ->whereIn('registration_status', ['approved', 'confirmed'])
+                ->whereNull('deactivated_at')
+                ->get()
+                ->filter(function ($user) use ($yearMonth) {
+                    return !$user->hasPaidForMonth($yearMonth);
+                });
 
-        $deactivatedList = [];
-        $emailsSent = 0;
+            if ($unpaidStudents->isEmpty()) {
+                $this->info("  No unpaid students found.");
+                return;
+            }
 
-        foreach ($unpaidStudents as $student) {
-            if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
-                // Reminder via NotificationService (WhatsApp + Email fallback)
-                $notifier->notifyUser(
-                    $student, 'payment_reminder', 'tit_payment_reminder',
-                    [$student->full_name ?? $student->name, now()->format('F Y')],
-                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y'), 'amount' => $student->calculateMonthlyFee()]
-                );
-                $this->line("Sent reminder to: " . $student->email);
-                $emailsSent++;
+            $deactivatedList = [];
+            $emailsSent = 0;
 
-                // Rate limiting: sleep 2 seconds between sends to stay within hourly limit
-                if ($emailsSent % 5 === 0) {
-                    sleep(2);
-                }
-            } 
-            
-            if ($day === 5 || ($day > 5 && $this->option('force'))) {
-                // Deactivation Logic
-                $student->update(['deactivated_at' => now()]);
-                $deactivatedList[] = ($student->full_name ?? $student->name) . " (" . $student->email . ")";
+            foreach ($unpaidStudents as $student) {
+                if ($day === 2 || ($day > 2 && $day < 5) || $this->option('force')) {
+                    // Reminder via NotificationService (WhatsApp + Email fallback)
+                    $notifier->notifyUser(
+                        $student, 'payment_reminder', 'tit_payment_reminder',
+                        [$student->full_name ?? $student->name, now()->format('F Y')],
+                        ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y'), 'amount' => $student->calculateMonthlyFee()]
+                    );
+                    $this->line("  Sent reminder to: " . $student->email);
+                    $emailsSent++;
 
-                $notifier->notifyUser(
-                    $student, 'account_suspended', 'tit_account_suspended',
-                    [$student->full_name ?? $student->name, now()->format('F Y')],
-                    ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
-                );
-                $this->line("Deactivated and notified: " . $student->email);
-                $emailsSent++;
+                    // Rate limiting: sleep 2 seconds between sends to stay within hourly limit
+                    if ($emailsSent % 5 === 0) {
+                        sleep(2);
+                    }
+                } 
+                
+                if ($day === 5 || ($day > 5 && $this->option('force'))) {
+                    // Deactivation Logic
+                    $student->update(['deactivated_at' => now()]);
+                    $deactivatedList[] = ($student->full_name ?? $student->name) . " (" . $student->email . ")";
 
-                // Rate limiting
-                if ($emailsSent % 5 === 0) {
-                    sleep(2);
+                    $notifier->notifyUser(
+                        $student, 'account_suspended', 'tit_account_suspended',
+                        [$student->full_name ?? $student->name, now()->format('F Y')],
+                        ['student_name' => $student->full_name ?? $student->name, 'month' => now()->format('F Y')]
+                    );
+                    $this->line("  Deactivated and notified: " . $student->email);
+                    $emailsSent++;
+
+                    // Rate limiting
+                    if ($emailsSent % 5 === 0) {
+                        sleep(2);
+                    }
                 }
             }
-        }
 
-        // Notify Admin on Day 5
-        if ($day === 5 && !empty($deactivatedList)) {
-            $notifier->notifyAdmin(
-                'admin_alert', 'titeducation',
-                [],
-                ['alert_title' => 'Students Deactivated', 'alert_message' => count($deactivatedList) . ' students were deactivated for non-payment.', 'alert_details' => implode("\n", $deactivatedList)]
-            );
-            $this->info("Admin notified about deactivations.");
-        }
+            // Notify Admin on Day 5
+            if ($day === 5 && !empty($deactivatedList)) {
+                $notifier->notifyAdmin(
+                    'admin_alert', 'titeducation',
+                    [],
+                    ['alert_title' => 'Students Deactivated', 'alert_message' => count($deactivatedList) . ' students were deactivated for non-payment.', 'alert_details' => implode("\n", $deactivatedList)]
+                );
+                $this->info("  Admin notified about deactivations for {$institute->name}.");
+            }
 
-        $this->info("Finished payment automation tasks. ($emailsSent notifications sent)");
+            $this->info("  Completed for {$institute->name}: $emailsSent notifications sent.");
+        });
+
+        $this->info("Finished payment automation tasks across all institutes.");
     }
 }
-

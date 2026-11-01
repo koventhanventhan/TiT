@@ -25,6 +25,19 @@ trait BelongsToInstitute
                     }
                 } elseif (function_exists('current_institute_id') && current_institute_id()) {
                     $model->institute_id = current_institute_id();
+                } elseif (!empty($model->user_id)) {
+                    $parentUser = \App\Models\User::withoutGlobalScopes()->find($model->user_id);
+                    if ($parentUser && $parentUser->institute_id) {
+                        $model->institute_id = $parentUser->institute_id;
+                    }
+                }
+
+                // If still empty, fall back to default institute ID
+                if (!$model->institute_id) {
+                    $defaultId = (int) config('tenant.default_institute_id', 1);
+                    if ($defaultId > 0) {
+                        $model->institute_id = $defaultId;
+                    }
                 }
             }
         });

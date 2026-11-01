@@ -43,13 +43,14 @@ return [
     | Unscoped Models
     |--------------------------------------------------------------------------
     |
-    | List of Eloquent models with an institute_id column that are intentionally
-    | not using the BelongsToInstitute trait, with documented justification.
+    | List of Eloquent models that are intentionally platform-wide or queried
+    | before tenant resolution, with documented justification.
     |
     */
     'unscoped_models' => [
-        // Models intentionally unscoped:
-        // Currently all tenant-specific models with institute_id use BelongsToInstitute.
+        \App\Models\Institute::class => 'Root tenant entity; represents institutes themselves.',
+        \App\Models\InstituteDomain::class => 'Platform domain-to-tenant routing table; queried before tenant context is resolved.',
+        \App\Models\SubscriptionPlan::class => 'Platform-wide subscription tier definitions available to all institutes.',
     ],
 
 ];

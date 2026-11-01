@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToInstitute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SubjectTopup extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToInstitute;
 
     protected $table = 'subject_topups';
 

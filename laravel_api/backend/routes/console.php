@@ -17,23 +17,27 @@ Artisan::command('reminders:month-end-payment', function () {
         return;
     }
     $whatsApp = app(WhatsAppService::class);
-    $students = User::where('role', 'user')
-        ->whereNull('deactivated_at')
-        ->whereNotNull('admin_confirmed_at')
-        ->whereNotNull('phone_number')
-        ->get();
-    $sent = 0;
-    foreach ($students as $student) {
-        if ($whatsApp->sendTemplate(
-            $student->phone_number,
-            'tit_payment_reminder',
-            'en',
-            [$student->full_name ?? $student->name, now()->addMonth()->format('F Y')]
-        )) {
-            $sent++;
+    $totalSent = 0;
+    \App\Support\Tenant::each(function ($institute) use ($whatsApp, &$totalSent) {
+        $students = User::where('role', 'user')
+            ->whereNull('deactivated_at')
+            ->whereNotNull('admin_confirmed_at')
+            ->whereNotNull('phone_number')
+            ->get();
+        $sent = 0;
+        foreach ($students as $student) {
+            if ($whatsApp->sendTemplate(
+                $student->phone_number,
+                'tit_payment_reminder',
+                'en',
+                [$student->full_name ?? $student->name, now()->addMonth()->format('F Y')]
+            )) {
+                $sent++;
+            }
         }
-    }
-    $this->info("Month-end payment reminder sent to {$sent} students.");
+        $totalSent += $sent;
+    });
+    $this->info("Month-end payment reminder sent to {$totalSent} students across institutes.");
 })->purpose('Send month-end payment reminder to confirmed students via WhatsApp');
 
 // Runs a scheduled task; if it throws or exits non-zero, the admin gets an email alert.
@@ -57,17 +61,21 @@ Schedule::call($guard('zoom:send-reminders', fn() => Artisan::call('zoom:send-re
 Schedule::call($guard('zoom:fetch-recordings', fn() => Artisan::call('zoom:fetch-recordings')))->everyFifteenMinutes();
 
 Schedule::call(function () {
-    \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(10))->delete();
+    \App\Support\Tenant::each(function () {
+        \App\Models\ZoomSchedule::where('scheduled_at', '<', now()->subDays(10))->delete();
+    });
 })->dailyAt('01:00');
 
 Schedule::call($guard('promotions:auto-run', fn() => Artisan::call('promotions:auto-run')))->dailyAt('01:30');
 
 // Clean up zoom recordings older than 1 week from the database
 Schedule::call(function () {
-    \App\Models\LearningMaterial::where('type', 'recording')
-        ->whereNotNull('zoom_schedule_id') // Only auto-fetched recordings
-        ->where('created_at', '<', now()->subDays(7))
-        ->delete();
+    \App\Support\Tenant::each(function () {
+        \App\Models\LearningMaterial::where('type', 'recording')
+            ->whereNotNull('zoom_schedule_id') // Only auto-fetched recordings
+            ->where('created_at', '<', now()->subDays(7))
+            ->delete();
+    });
 })->dailyAt('02:00');
 
 // ── Email alerts ──

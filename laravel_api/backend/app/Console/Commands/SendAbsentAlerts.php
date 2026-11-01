@@ -3,10 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\Attendance;
-use App\Models\User;
 use App\Models\ZoomSchedule;
 use App\Services\ClassNotifier;
 use App\Services\EventNotifier;
+use App\Support\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
@@ -23,91 +23,93 @@ class SendAbsentAlerts extends Command
 
     public function handle(ClassNotifier $classNotifier)
     {
-        // Classes that started in the last 12h and have finished
-        $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subHours(12))
-            ->where('scheduled_at', '<=', now()->subMinutes(30))
-            ->get()
-            ->filter(fn($s) => $s->scheduled_at->copy()->addMinutes($s->duration ?: 60)->addMinutes(10)->lte(now()));
+        Tenant::each(function ($institute) use ($classNotifier) {
+            // Classes that started in the last 12h and have finished
+            $schedules = ZoomSchedule::where('scheduled_at', '>=', now()->subHours(12))
+                ->where('scheduled_at', '<=', now()->subMinutes(30))
+                ->get()
+                ->filter(fn($s) => $s->scheduled_at->copy()->addMinutes($s->duration ?: 60)->addMinutes(10)->lte(now()));
 
-        $absentStudents = collect();
-        $alerts = 0;
+            $absentStudents = collect();
+            $alerts = 0;
 
-        foreach ($schedules as $schedule) {
-            // Process each finished class only once
-            if (!Cache::add('absent_alerts_done:' . $schedule->id, 1, now()->addDays(3))) {
-                continue;
-            }
-            if (!$schedule->grade) {
-                continue;
-            }
-
-            $attended = EventNotifier::attendedIds($schedule->id);
-            $students = $classNotifier->getMatchingStudents($schedule->grade, $schedule->medium, $schedule->subject);
-
-            foreach ($students as $student) {
-                if (in_array($student->id, $attended)) {
+            foreach ($schedules as $schedule) {
+                // Process each finished class only once
+                if (!Cache::add('absent_alerts_done:' . $schedule->id, 1, now()->addDays(3))) {
                     continue;
                 }
-                if (EventNotifier::absent($student, $schedule)) {
-                    $alerts++;
-                    if ($alerts % 5 === 0) {
-                        sleep(1);
+                if (!$schedule->grade) {
+                    continue;
+                }
+
+                $attended = EventNotifier::attendedIds($schedule->id);
+                $students = $classNotifier->getMatchingStudents($schedule->grade, $schedule->medium, $schedule->subject);
+
+                foreach ($students as $student) {
+                    if (in_array($student->id, $attended)) {
+                        continue;
+                    }
+                    if (EventNotifier::absent($student, $schedule)) {
+                        $alerts++;
+                        if ($alerts % 5 === 0) {
+                            sleep(1);
+                        }
+                    }
+                    $absentStudents->put($student->id, $student);
+                }
+            }
+
+            $this->info("Institute {$institute->name}: Absent alerts sent: {$alerts}");
+
+            // ---- Low attendance warnings (only for students who were absent now) ----
+            if ($absentStudents->isEmpty()) {
+                return;
+            }
+
+            $recent = ZoomSchedule::where('scheduled_at', '>=', now()->subDays(30))
+                ->where('scheduled_at', '<=', now()->subHour())
+                ->whereNotNull('grade')
+                ->get();
+
+            // Which students belong to which class (cached per grade/medium/subject combo)
+            $audience = [];
+            $matchIds = [];
+            foreach ($recent as $s) {
+                $key = $s->grade . '|' . $s->medium . '|' . $s->subject;
+                if (!isset($audience[$key])) {
+                    $audience[$key] = $classNotifier->getMatchingStudents($s->grade, $s->medium, $s->subject)->pluck('id')->all();
+                }
+                $matchIds[$s->id] = $audience[$key];
+            }
+
+            $warned = 0;
+            foreach ($absentStudents as $student) {
+                $classIds = [];
+                foreach ($matchIds as $sid => $ids) {
+                    if (in_array($student->id, $ids)) {
+                        $classIds[] = $sid;
                     }
                 }
-                $absentStudents->put($student->id, $student);
-            }
-        }
+                $total = count($classIds);
+                if ($total < self::MIN_CLASSES) {
+                    continue;
+                }
 
-        $this->info("Absent alerts sent: {$alerts}");
+                $attended = Attendance::where('user_id', $student->id)
+                    ->where('status', 'present')
+                    ->whereIn('zoom_schedule_id', $classIds)
+                    ->count();
 
-        // ---- Low attendance warnings (only for students who were absent now) ----
-        if ($absentStudents->isEmpty()) {
-            return;
-        }
+                $percent = (int) round(($attended / $total) * 100);
 
-        $recent = ZoomSchedule::where('scheduled_at', '>=', now()->subDays(30))
-            ->where('scheduled_at', '<=', now()->subHour())
-            ->whereNotNull('grade')
-            ->get();
-
-        // Which students belong to which class (cached per grade/medium/subject combo)
-        $audience = [];
-        $matchIds = [];
-        foreach ($recent as $s) {
-            $key = $s->grade . '|' . $s->medium . '|' . $s->subject;
-            if (!isset($audience[$key])) {
-                $audience[$key] = $classNotifier->getMatchingStudents($s->grade, $s->medium, $s->subject)->pluck('id')->all();
-            }
-            $matchIds[$s->id] = $audience[$key];
-        }
-
-        $warned = 0;
-        foreach ($absentStudents as $student) {
-            $classIds = [];
-            foreach ($matchIds as $sid => $ids) {
-                if (in_array($student->id, $ids)) {
-                    $classIds[] = $sid;
+                if ($percent < self::LOW_ATTENDANCE_PERCENT && Cache::add('low_attendance:' . $student->id, 1, now()->addDays(7))) {
+                    if (EventNotifier::lowAttendance($student, $percent, $attended, $total)) {
+                        $warned++;
+                    }
                 }
             }
-            $total = count($classIds);
-            if ($total < self::MIN_CLASSES) {
-                continue;
-            }
 
-            $attended = Attendance::where('user_id', $student->id)
-                ->where('status', 'present')
-                ->whereIn('zoom_schedule_id', $classIds)
-                ->count();
-
-            $percent = (int) round(($attended / $total) * 100);
-
-            if ($percent < self::LOW_ATTENDANCE_PERCENT && Cache::add('low_attendance:' . $student->id, 1, now()->addDays(7))) {
-                if (EventNotifier::lowAttendance($student, $percent, $attended, $total)) {
-                    $warned++;
-                }
-            }
-        }
-
-        $this->info("Low attendance warnings sent: {$warned}");
+            $this->info("Institute {$institute->name}: Low attendance warnings sent: {$warned}");
+        });
     }
 }

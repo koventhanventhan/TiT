@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToInstitute;
 use Illuminate\Database\Eloquent\Model;
 
 class ExamResult extends Model
 {
+    use BelongsToInstitute;
     protected $fillable = [
         'student_name',
         'index_no',

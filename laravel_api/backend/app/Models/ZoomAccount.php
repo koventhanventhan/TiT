@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToInstitute;
 use Illuminate\Database\Eloquent\Model;
 
 class ZoomAccount extends Model
 {
+    use BelongsToInstitute;
     protected $fillable = [
         'email',
         'account_id',

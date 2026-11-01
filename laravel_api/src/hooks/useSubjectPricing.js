@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import { useState, useEffect, useMemo } from 'react';
 
 /**
@@ -19,7 +20,7 @@ export default function useSubjectPricing(selectedSubjects, availableSubjects, c
     const fetchPackages = async () => {
       setPackagesLoading(true);
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+        
         const res = await fetch(`${API_BASE_URL}/packages`);
         if (res.ok) {
           const data = await res.json();

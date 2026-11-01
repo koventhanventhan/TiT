@@ -54,7 +54,9 @@ class TutorApplicationController extends Controller
             }
 
             // Get receiving email from settings
-            $recipient = SiteSetting::get('footer_tutor_receive_email', 'admin@titjaffna.lk');
+            $institute = current_institute();
+            $primaryHost = $institute?->primaryDomain()?->domain ?? parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
+            $recipient = SiteSetting::get('footer_tutor_receive_email', 'admin@' . $primaryHost);
 
             Mail::to($recipient)->send(new TutorApplicationMail($data));
 

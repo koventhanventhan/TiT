@@ -1,7 +1,8 @@
+import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { FiBell, FiX, FiCheckCircle, FiMessageSquare, FiRefreshCw } from 'react-icons/fi'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 import { getAuthHeaders } from '../../services/apiClient'
 

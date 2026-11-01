@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL, resolveAssetUrl } from '../../services/apiBase';
 import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -68,7 +69,7 @@ export default function TeacherDashboardLayout({ children, user }) {
         if (localAvatar) return localAvatar
         if (user?.avatar) {
             if (user.avatar.startsWith('http')) return user.avatar
-            const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '')
+            const baseUrl = BACKEND_BASE_URL;
             return baseUrl ? `${baseUrl}${user.avatar}` : user.avatar
         }
         return null
@@ -84,7 +85,7 @@ export default function TeacherDashboardLayout({ children, user }) {
         formData.append('avatar', file)
 
         try {
-            const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+            
             const res = await fetch(`${API_BASE_URL}/auth/update-avatar`, {
                 method: 'POST',
                 headers: getAuthHeaders(true),
@@ -93,7 +94,7 @@ export default function TeacherDashboardLayout({ children, user }) {
             if (!res.ok) throw new Error('Upload failed')
             const data = await res.json()
 
-            const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '')
+            const baseUrl = BACKEND_BASE_URL;
             const newAvatar = data.avatar.startsWith('http') ? data.avatar : `${baseUrl}${data.avatar}`
             setLocalAvatar(newAvatar)
         } catch (err) {

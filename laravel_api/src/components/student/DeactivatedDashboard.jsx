@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect, useRef } from 'react';
 import { FiLock, FiCreditCard, FiX, FiLoader } from 'react-icons/fi';
 import { logout, registerStep2 } from '../../services/authService';
@@ -20,7 +21,7 @@ const DeactivatedDashboard = () => {
   useEffect(() => {
     const fetchPaymentDetails = async () => {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+        
         const response = await fetch(`${API_BASE_URL}/student/payment-details`, {
           headers: getAuthHeaders()
         });

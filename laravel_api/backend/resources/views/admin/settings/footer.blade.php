@@ -239,7 +239,7 @@
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label">Target Email for Applications</label>
                         <div class="col-sm-9">
-                            <input type="email" name="footer_tutor_receive_email" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tutor_receive_email', 'admin@titjaffna.lk') }}">
+                            <input type="email" name="footer_tutor_receive_email" class="form-control" value="{{ \App\Models\SiteSetting::get('footer_tutor_receive_email', 'admin@' . (current_institute()?->primaryDomain()?->domain ?? parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost')) }}">
                             <div class="help-text">Tutor applications will be sent to this email address.</div>
                         </div>
                     </div>

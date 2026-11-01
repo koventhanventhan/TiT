@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect, useRef } from 'react'
 import {
     FiSend,
@@ -22,7 +23,7 @@ import {
 import { useLanguage } from '../context/LanguageContext'
 import './StudentStudyAssistant.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 /**
  * 100% Safe Markdown Formatter without dangerouslySetInnerHTML.

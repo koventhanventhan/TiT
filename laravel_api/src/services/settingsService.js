@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { getAuthHeaders } from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL } from './apiBase';
+const API_URL = API_BASE_URL;
 
 const settingsService = {
   /**

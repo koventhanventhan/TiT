@@ -1,8 +1,9 @@
+import { API_BASE_URL } from './apiBase';
 /**
  * Translation service: uses static translations first;
  * optional Gemini API for on-demand translation of dynamic content.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 import { getAuthHeaders } from './apiClient';
 

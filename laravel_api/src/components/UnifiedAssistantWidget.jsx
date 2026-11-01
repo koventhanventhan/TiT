@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL } from '../services/apiBase';
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 export default function UnifiedAssistantWidget() {
@@ -74,7 +74,6 @@ export default function UnifiedAssistantWidget() {
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-Institute-Id': String(instituteId),
         };
 
         if (token) {

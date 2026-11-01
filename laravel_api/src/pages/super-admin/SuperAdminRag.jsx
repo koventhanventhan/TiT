@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import {
     FiCpu,
@@ -25,7 +26,7 @@ import {
 } from 'react-icons/fi'
 import './SuperAdminRag.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 export default function SuperAdminRag() {
     const [activeTab, setActiveTab] = useState('telemetry')

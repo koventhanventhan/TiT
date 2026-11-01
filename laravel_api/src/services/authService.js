@@ -1,8 +1,9 @@
+import { API_BASE_URL } from './apiBase';
 // Authentication Service
 // This service handles email/password and Google authentication
 
 // Laravel API endpoints
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 // Extract base URL (without /api) for non-API endpoints like CSRF cookie and admin redirects
 export const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin

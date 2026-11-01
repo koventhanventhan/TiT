@@ -429,11 +429,30 @@ class PaymentReceiptService
      */
     public function signedUrl(Payment $payment): string
     {
-        return URL::temporarySignedRoute(
-            'receipts.download',
-            now()->addDays(30),
-            ['payment' => $payment->id]
-        );
+        $institute = $payment->institute ?: ($payment->institute_id ? \App\Models\Institute::find($payment->institute_id) : current_institute());
+        if ($institute) {
+            $rootUrl = $institute->primaryUrl();
+            if ($rootUrl) {
+                URL::forceRootUrl(rtrim($rootUrl, '/'));
+                if (str_starts_with($rootUrl, 'https://')) {
+                    URL::forceScheme('https');
+                }
+            }
+        }
+
+        try {
+            return URL::temporarySignedRoute(
+                'receipts.download',
+                now()->addDays(30),
+                ['payment' => $payment->id]
+            );
+        } finally {
+            if (app()->runningInConsole()) {
+                URL::forceRootUrl(null);
+            } elseif (request() && request()->hasHeader('Host')) {
+                URL::forceRootUrl(request()->getSchemeAndHttpHost());
+            }
+        }
     }
 
     /**

@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect, useRef } from 'react'
 import {
     FiFolder, FiFileText, FiVideo, FiLink, FiDownload,
@@ -66,7 +67,7 @@ export default function StudentMaterials() {
             if (item.file_path.startsWith('http://') || item.file_path.startsWith('https://')) {
                 window.open(item.file_path, '_blank', 'noopener')
             } else {
-                const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || ''
+                const baseUrl = BACKEND_BASE_URL;
                 window.open(`${baseUrl}/api/materials/download?path=${encodeURIComponent(item.file_path)}`, '_blank')
             }
         } else {

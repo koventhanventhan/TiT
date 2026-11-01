@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
 import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp, sendVerificationOtp, verifyEmailOtp } from '../services/authService'
@@ -136,7 +137,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
           setIsLoading(false)
           onClose()
           // Redirect immediately - NO ALERT, NO DELAY
-          const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+          
           const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin
           const redirectUrl = `${BASE_URL}/admin/login?token=${encodeURIComponent(result.token)}`
           console.log('🚀 ADMIN REDIRECT TO:', redirectUrl)

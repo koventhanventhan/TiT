@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { FiUser, FiMail, FiPhone, FiBook, FiAward, FiClock, FiCheckCircle, FiInfo, FiUpload, FiSend } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
@@ -91,7 +92,7 @@ const TutorApplyPage = () => {
         setError('')
 
         try {
-            const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+            
             
             // Use FormData for file upload
             const dataToSubmit = new FormData()

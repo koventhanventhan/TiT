@@ -44,11 +44,10 @@ class ContactController extends Controller
     private function trySendEmail(array $data): void
     {
         try {
-            $toEmail = 'admin@titjaffna.lk';
+            $institute = current_institute();
+            $primaryHost = $institute?->primaryDomain()?->domain ?? parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
             $setting = SiteSetting::where('key', 'footer_email')->first();
-            if ($setting && $setting->value) {
-                $toEmail = $setting->value;
-            }
+            $toEmail = ($setting && $setting->value) ? $setting->value : ('admin@' . $primaryHost);
 
             // Only attempt if MAIL_PASSWORD is set
             if (!config('mail.mailers.smtp.password')) {

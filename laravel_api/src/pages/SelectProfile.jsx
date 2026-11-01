@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL } from '../services/apiBase';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -40,7 +41,7 @@ const SelectProfile = () => {
   const getAvatarUrl = (avatar) => {
     if (!avatar) return null;
     if (avatar.startsWith('http')) return avatar;
-    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
+    const baseUrl = BACKEND_BASE_URL;
     return baseUrl ? `${baseUrl}${avatar}` : avatar;
   };
 

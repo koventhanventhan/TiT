@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
     FiSend, FiChevronLeft, FiUser, FiUsers,
@@ -7,7 +8,7 @@ import echo from '../services/echo'
 import './MessagingPage.css'
 import { useToast } from '../components/shared/ToastContext';
 
-const API = import.meta.env.VITE_API_URL || '/api'
+const API = API_BASE_URL;
 
 import { getAuthHeaders } from '../services/apiClient'
 

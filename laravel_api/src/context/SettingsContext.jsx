@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import settingsService from '../services/settingsService';
 
 const SettingsContext = createContext();
@@ -11,39 +11,83 @@ export const useSettings = () => {
     return context;
 };
 
+const getInitialCachedSettings = () => {
+    try {
+        const raw = localStorage.getItem('cached_site_settings');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.host === window.location.host && parsed.settings) {
+                return parsed.settings;
+            } else {
+                localStorage.removeItem('cached_site_settings');
+            }
+        }
+    } catch (_) {}
+    return {};
+};
+
 export const SettingsProvider = ({ children }) => {
-    const [settings, setSettings] = useState({});
-    const [loading, setLoading] = useState(true);
+    const [settings, setSettings] = useState(getInitialCachedSettings);
+    const [loading, setLoading] = useState(() => Object.keys(getInitialCachedSettings()).length === 0);
     const [error, setError] = useState(null);
+
+    const applySiteBranding = (data) => {
+        if (!data || typeof data !== 'object') return;
+        if (data.site_name) {
+            document.title = data.site_name;
+        }
+        const faviconUrl = data.site_favicon || data.site_logo;
+        if (faviconUrl) {
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = faviconUrl;
+        }
+        if (data.theme_preset) {
+            document.documentElement.dataset.themePreset = data.theme_preset;
+            try { localStorage.setItem('tit_theme_preset', data.theme_preset); } catch (_) {}
+        }
+    };
 
     const fetchSettings = async () => {
         try {
             setError(null);
             const data = await settingsService.getSettings();
-            if (!data || Object.keys(data).length === 0) {
-              // If we got an empty object but the request succeeded, it might still be a config issue
-              if (import.meta.env.PROD && import.meta.env.VITE_API_URL?.includes('localhost')) {
-                throw new Error('API URL is set to localhost in production. Please check Vercel environment variables.');
-              }
+            if (data && typeof data === 'object') {
+                applySiteBranding(data);
+                setSettings(data);
+                try {
+                    localStorage.setItem('cached_site_settings', JSON.stringify({
+                        host: window.location.host,
+                        settings: data
+                    }));
+                } catch (_) {}
             }
-            if (data?.theme_preset) {
-                document.documentElement.dataset.themePreset = data.theme_preset;
-                try { localStorage.setItem('tit_theme_preset', data.theme_preset); } catch (_) {}
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+            // Only show blocking error if we don't even have cached settings
+            if (Object.keys(settings).length === 0) {
+                setError(err.message || 'Failed to connect to the backend server.');
             }
-            setSettings(data);
-        } catch (error) {
-            console.error('Failed to fetch settings:', error);
-            setError(error.message || 'Failed to connect to the backend server.');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        try {
-            const cached = localStorage.getItem('tit_theme_preset');
-            if (cached) document.documentElement.dataset.themePreset = cached;
-        } catch (_) {}
+        // Apply cached settings immediately on mount
+        const initial = getInitialCachedSettings();
+        if (initial && Object.keys(initial).length > 0) {
+            applySiteBranding(initial);
+        } else {
+            try {
+                const cachedPreset = localStorage.getItem('tit_theme_preset');
+                if (cachedPreset) document.documentElement.dataset.themePreset = cachedPreset;
+            } catch (_) {}
+        }
         fetchSettings();
     }, []);
 
@@ -79,7 +123,7 @@ export const SettingsProvider = ({ children }) => {
               {error}
             </p>
             <div style={{ textAlign: 'left', background: '#f1f5f9', padding: '0.9375rem', borderRadius: '0.5rem', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
-              <strong>Tip for Admin:</strong> Ensure <code>VITE_API_URL</code> is correctly set in your Vercel/Production environment variables.
+              <strong>Tip:</strong> Ensure the backend server is running and accessible at <code>/api</code>.
             </div>
             <button 
               onClick={fetchSettings}

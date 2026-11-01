@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
 import { getAuthHeaders } from '../services/apiClient'
@@ -84,7 +85,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
     const fetchData = async () => {
       setPackagesLoading(true)
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+        
         const [subRes, pkgRes] = await Promise.all([
           fetch(`${API_BASE_URL}/subjects/prices`),
           fetch(`${API_BASE_URL}/packages`)
@@ -622,7 +623,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
         // Strip out username and phone_number as they are not needed for siblings
         delete userData.username;
         delete userData.phone_number;
-        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+        
         const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {
             method: 'POST',
             headers: getAuthHeaders(),

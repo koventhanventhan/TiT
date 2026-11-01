@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import {
   FiMail, FiPhone, FiMapPin, FiSend, FiMessageCircle,
@@ -34,7 +35,7 @@ const ContactPage = () => {
     setSubmitError('')
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+      
       const response = await fetch(`${API_BASE_URL}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

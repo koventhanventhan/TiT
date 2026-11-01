@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FiX, FiCheck, FiLoader, FiClock, FiAlertCircle, FiCheckCircle, FiLock } from 'react-icons/fi';
 import {
@@ -287,7 +288,7 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
   const fetchSubjects = async () => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      
       const res = await fetch(`${API_BASE_URL}/subjects/prices`);
       if (res.ok) {
         const data = await res.json();

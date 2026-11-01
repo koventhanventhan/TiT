@@ -32,9 +32,9 @@ The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) i
     RewriteEngine On
     RewriteBase /
 
-    # 1. Canonical Redirect: www to non-www
-    RewriteCond %{HTTP_HOST} ^www\.titjaffna\.lk$ [NC]
-    RewriteRule ^(.*)$ https://titjaffna.lk%{REQUEST_URI} [L,R=301]
+    # 1. Canonical Redirect: www to non-www (generic for any domain)
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
     # 2. Force HTTPS
     RewriteCond %{HTTPS} off
@@ -46,9 +46,9 @@ The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) i
     RewriteRule ^ - [L]
 
     # 4. Route Laravel Backend routes to public/index.php
-    # Matches: /admin, /api, /super-panel, /livewire, /receipts, /sitemap.xml
+    # Matches: /admin, /api, /super-panel, /livewire, /receipts, /sitemap.xml, /robots.txt
     # Public routes like /receipts serve signed PDF receipt downloads and must route directly to Laravel rather than the React SPA.
-    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|receipts|sitemap\.xml) [NC]
+    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
     # 5. SPA Fallback: Route all other web routes to React index.html

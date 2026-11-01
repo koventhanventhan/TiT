@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL, resolveAssetUrl } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, Navigate } from 'react-router-dom'
 import {
@@ -62,7 +63,7 @@ const ClassesPage = () => {
 
   const getImageUrl = (img) => {
     if (!img) return ''
-    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : ''
+    const baseUrl = BACKEND_BASE_URL;
     return img.startsWith('http') ? img : `${baseUrl}/${img.replace(/^\/+/, '')}`
   }
 

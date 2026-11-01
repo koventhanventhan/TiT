@@ -60,6 +60,10 @@ class PayHereService
         $orderId = $payment->gateway_ref;
         $amount  = (float) $payment->amount;
 
+        $institute = $payment->institute ?: ($payment->institute_id ? \App\Models\Institute::find($payment->institute_id) : current_institute());
+        $baseUrl = rtrim($institute?->primaryUrl() ?? config('app.url'), '/');
+        $siteName = $institute?->name ?? 'Online Education';
+
         // Split user name into first and last
         $nameParts = explode(' ', $user->full_name ?? $user->name ?? 'Student', 2);
         $firstName = $nameParts[0] ?? 'Student';
@@ -69,11 +73,11 @@ class PayHereService
 
         return [
             'merchant_id'  => $this->merchantId,
-            'return_url'   => config('app.url') . '/api/payhere/return',
-            'cancel_url'   => config('app.url') . '/api/payhere/cancel',
-            'notify_url'   => route('payhere.notify'),
+            'return_url'   => $baseUrl . '/api/payhere/return',
+            'cancel_url'   => $baseUrl . '/api/payhere/cancel',
+            'notify_url'   => $baseUrl . '/api/payhere/notify',
             'order_id'     => $orderId,
-            'items'        => 'TiT Education - Tuition Fee',
+            'items'        => $siteName . ' - Tuition Fee',
             'currency'     => $this->currency,
             'amount'       => number_format($amount, 2, '.', ''),
             'first_name'   => $firstName,

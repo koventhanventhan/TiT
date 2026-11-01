@@ -293,7 +293,10 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Email Address</label>
-                                <input type="text" name="learning_cta_email" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_email', \App\Models\SiteSetting::get('footer_email', 'info@titjaffna.lk')) }}" placeholder="info@titjaffna.lk">
+                                @php
+                                    $defaultHost = current_institute()?->primaryDomain()?->domain ?? parse_url(config('app.url'), PHP_URL_HOST) ?? 'example.com';
+                                @endphp
+                                <input type="text" name="learning_cta_email" class="form-control" value="{{ \App\Models\SiteSetting::get('learning_cta_email', \App\Models\SiteSetting::get('footer_email', 'info@' . $defaultHost)) }}" placeholder="info@{{ $defaultHost }}">
                                 <small class="text-muted">Shown in the CTA contact card</small>
                             </div>
                         </div>

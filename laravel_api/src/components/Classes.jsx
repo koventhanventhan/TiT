@@ -1,3 +1,4 @@
+import { API_BASE_URL, resolveAssetUrl } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiArrowRight, FiBook, FiGlobe, FiMapPin, FiMonitor, FiUsers, FiStar, FiClock } from 'react-icons/fi'
@@ -108,7 +109,7 @@ const Classes = () => {
             >
               <div className="pc-card-media">
                 <img width="800" height="600"
-                  src={course.image?.startsWith('http') ? course.image : (import.meta.env.VITE_API_URL?.replace('/api', '') || '') + '/' + course.image}
+                  src={resolveAssetUrl(course.image)}
                   alt={course.title}
                   className="pc-card-img"
                 />

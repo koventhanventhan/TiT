@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Response;
 
 class SitemapController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $baseUrl = 'https://titjaffna.lk';
+        $institute = current_institute();
+        $baseUrl = rtrim($institute?->primaryUrl() ?? $request->getSchemeAndHttpHost(), '/');
 
         $routes = [
             '/',
@@ -46,6 +47,18 @@ class SitemapController extends Controller
 
         return Response::make($xml, 200, [
             'Content-Type' => 'application/xml'
+        ]);
+    }
+
+    public function robots(Request $request)
+    {
+        $institute = current_institute();
+        $baseUrl = rtrim($institute?->primaryUrl() ?? $request->getSchemeAndHttpHost(), '/');
+
+        $content = "User-agent: *\nDisallow: /admin/\nDisallow: /api/\nDisallow: /super-panel/\n\nSitemap: {$baseUrl}/sitemap.xml\n";
+
+        return Response::make($content, 200, [
+            'Content-Type' => 'text/plain'
         ]);
     }
 }

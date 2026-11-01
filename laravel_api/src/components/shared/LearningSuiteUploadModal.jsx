@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState } from 'react'
 import {
   FiX,
@@ -14,7 +15,7 @@ import { getAuthHeaders } from '../../services/apiClient'
 import FirebaseUploader from './FirebaseUploader'
 import './LearningSuiteUploadModal.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 
 const LearningSuiteUploadModal = ({
   isOpen,

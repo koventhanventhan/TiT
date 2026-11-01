@@ -105,7 +105,8 @@ const Footer = () => {
   const { t, translate, language } = useLanguage()
   const { openRegister } = useAuthModal()
 
-  const footer_email = getSetting('footer_email', 'admin@titjaffna.lk')
+  const defaultEmail = 'admin@' + (typeof window !== 'undefined' ? window.location.host.replace(/^www\./, '') : 'example.com')
+  const footer_email = getSetting('footer_email', defaultEmail)
   const footer_phone = getSetting('footer_phone', '+94 0770158446')
   const social_facebook = getSetting('social_facebook', '')
   const social_twitter = getSetting('social_twitter', '')

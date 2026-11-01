@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { FiCheckCircle, FiUsers, FiAward, FiBookOpen, FiTarget, FiTrendingUp, FiHeart, FiStar, FiUser, FiImage, FiX, FiChevronLeft, FiChevronRight, FiVideo, FiClock } from 'react-icons/fi'
 import { FaGraduationCap } from 'react-icons/fa'
@@ -15,7 +16,7 @@ const AboutPage = () => {
   const resolveImageUrl = (url) => {
     if (!url) return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80'
     if (url.startsWith('http://') || url.startsWith('https://')) return url
-    const backendBase = (import.meta.env.VITE_API_URL || '/api').replace('/api', '')
+    const backendBase = BACKEND_BASE_URL;
     return `${backendBase}/${url.startsWith('/') ? url.slice(1) : url}`
   }
 

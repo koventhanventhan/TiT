@@ -1,6 +1,6 @@
 /**
  * Centralized API Client helper
- * Consistently attaches Authorization, X-Institute-Id, and X-Profile-Id headers
+ * Consistently attaches Authorization and X-Profile-Id headers
  * across all frontend API requests.
  */
 
@@ -25,11 +25,7 @@ export const getAuthHeaders = (isFormData = false) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  if (user?.institute_id) {
-    headers['X-Institute-Id'] = user.institute_id;
-  } else if (import.meta.env.VITE_INSTITUTE_ID) {
-    headers['X-Institute-Id'] = import.meta.env.VITE_INSTITUTE_ID;
-  }
+  // Tenant is resolved from the Host header / domain. X-Institute-Id is no longer sent.
 
   if (user?.id) {
     headers['X-Profile-Id'] = user.id;

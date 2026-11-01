@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './apiBase';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { getAuthHeaders } from './apiClient';
@@ -12,7 +13,7 @@ if (pusherKey) {
         key: pusherKey,
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
         forceTLS: true,
-        authEndpoint: `${import.meta.env.VITE_API_URL || '/api'}/broadcasting/auth`,
+        authEndpoint: `${API_BASE_URL}/broadcasting/auth`,
         auth: {
             headers: getAuthHeaders(),
         },

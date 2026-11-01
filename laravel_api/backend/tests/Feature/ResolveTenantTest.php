@@ -247,4 +247,68 @@ class ResolveTenantTest extends TestCase
         $resp->assertStatus(200);
         $resp->assertJsonPath('site_name', 'TiT Official Portal');
     }
+
+    /**
+     * Test 10: /laravel_api/backend/public/api/settings alias route works.
+     */
+    public function test_laravel_api_backend_public_api_settings_alias_works(): void
+    {
+        $resp = $this->withServerVariables(['HTTP_HOST' => 'titjaffna.lk'])
+            ->getJson('http://titjaffna.lk/laravel_api/backend/public/api/settings');
+
+        $resp->assertStatus(200);
+        $resp->assertJsonPath('site_name', 'TiT Official Portal');
+    }
+
+    /**
+     * Test 11: Signed receipt URL in console context uses institute primary domain.
+     */
+    public function test_signed_receipt_url_in_console_uses_institute_primary_domain(): void
+    {
+        $user = User::create([
+            'name' => 'Console Test Student',
+            'email' => 'consoletest@abc.lk',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'institute_id' => $this->institute2->id,
+        ]);
+
+        $payment = \App\Models\Payment::create([
+            'institute_id' => $this->institute2->id,
+            'user_id' => $user->id,
+            'student_id' => $user->id,
+            'amount' => 1500,
+            'payment_method' => 'online',
+            'status' => 'approved',
+            'gateway_ref' => 'PH_TEST_CONSOLE_123',
+            'year_month' => '2026-11',
+        ]);
+
+        $service = app(\App\Services\PaymentReceiptService::class);
+        $signedUrl = $service->signedUrl($payment);
+
+        $this->assertStringStartsWith('https://abc-tuition.lk/receipts/' . $payment->id . '/download', $signedUrl);
+    }
+
+    /**
+     * Test 12: Dynamic sitemap.xml and robots.txt reflect institute primary domain.
+     */
+    public function test_dynamic_sitemap_and_robots_reflect_institute_domain(): void
+    {
+        // Sitemap for institute 2
+        $sitemapResp = $this->withServerVariables(['HTTP_HOST' => 'abc-tuition.lk'])
+            ->get('http://abc-tuition.lk/sitemap.xml');
+
+        $sitemapResp->assertStatus(200);
+        $sitemapResp->assertHeader('Content-Type', 'application/xml');
+        $this->assertStringContainsString('https://abc-tuition.lk/', $sitemapResp->getContent());
+        $this->assertStringNotContainsString('titjaffna.lk', $sitemapResp->getContent());
+
+        // Robots for institute 2
+        $robotsResp = $this->withServerVariables(['HTTP_HOST' => 'abc-tuition.lk'])
+            ->get('http://abc-tuition.lk/robots.txt');
+
+        $robotsResp->assertStatus(200);
+        $this->assertStringContainsString('Sitemap: https://abc-tuition.lk/sitemap.xml', $robotsResp->getContent());
+    }
 }

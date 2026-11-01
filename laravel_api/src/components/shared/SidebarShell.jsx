@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL, resolveAssetUrl } from '../../services/apiBase';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { FiX, FiChevronRight, FiLogOut, FiMenu } from 'react-icons/fi';
@@ -323,7 +324,7 @@ export default function SidebarShell({
         if (propAvatarUrl) return propAvatarUrl;
         if (user?.avatar) {
             if (user.avatar.startsWith('http')) return user.avatar;
-            const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
+            const baseUrl = BACKEND_BASE_URL;
             return baseUrl ? `${baseUrl}${user.avatar}` : user.avatar;
         }
         return null;

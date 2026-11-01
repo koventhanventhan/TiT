@@ -1,3 +1,4 @@
+import { API_BASE_URL, BACKEND_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { FiPlay, FiBook, FiArrowRight, FiCalendar, FiLoader, FiMail, FiMapPin, FiVideo, FiExternalLink } from 'react-icons/fi'
@@ -57,7 +58,7 @@ const RecordingsPage = () => {
     }
   }, [language, translate, getSetting, t])
 
-  const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '/') || (window.location.origin + '/')
+  const backendUrl = BACKEND_BASE_URL ? (BACKEND_BASE_URL + '/') : (window.location.origin + '/');
 
   // Dynamic settings
   const heroImage = '/assets/images/Voicemail.svg'

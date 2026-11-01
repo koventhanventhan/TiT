@@ -3,7 +3,9 @@ import { FiX, FiSave } from 'react-icons/fi';
 import { useToast } from '../shared/ToastContext';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL } from '../../services/apiBase';
+
+const API_URL = API_BASE_URL;
 
 const GRADES = [
   'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
@@ -25,10 +27,7 @@ export default function ZoomRecordingSettingsModal({ isOpen, onClose }) {
   const loadSettings = async () => {
     try {
       const response = await axios.get(`${API_URL}/settings`, {
-        headers: {
-          'X-Institute-Id': import.meta.env.VITE_INSTITUTE_ID || '1'
-        }
-      });
+        });
       const res = response.data;
       if (res.zoom_recordings_disabled_grades) {
         setDisabledGrades(JSON.parse(res.zoom_recordings_disabled_grades));
@@ -56,8 +55,7 @@ export default function ZoomRecordingSettingsModal({ isOpen, onClose }) {
         }
       }, {
         headers: {
-          'X-Institute-Id': import.meta.env.VITE_INSTITUTE_ID || '1',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       });
       toast.success('Recording settings updated successfully');

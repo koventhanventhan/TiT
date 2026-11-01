@@ -106,6 +106,16 @@ class AdminAuthController extends Controller
 
             if (Auth::attempt($credentials, $remember)) {
                 $user = Auth::user();
+
+                // Domain / Tenant verification: If admin belongs to another institute, reject with standard invalid credentials
+                $currentInstId = function_exists('current_institute_id') ? current_institute_id() : null;
+                if ($user->role !== 'super_admin' && $currentInstId && (int)$user->institute_id !== (int)$currentInstId) {
+                    Auth::logout();
+                    throw ValidationException::withMessages([
+                        'email' => ['The provided credentials do not match our records.'],
+                    ]);
+                }
+
                 // Ensure only admins/super_admins can login to the admin panel
                 if ($user->role !== 'admin' && $user->role !== 'super_admin') {
                     Auth::logout();

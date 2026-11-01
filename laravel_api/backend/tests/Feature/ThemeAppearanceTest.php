@@ -145,6 +145,8 @@ class ThemeAppearanceTest extends TestCase
         $apiRes2->assertStatus(200);
         $this->assertEquals('emerald', $apiRes2->json('theme_preset'));
 
+        $this->flushHeaders();
+
         // Admin page rendering reflects the respective tenant's preset
         $admin1Page = $this->actingAs($this->admin1, 'web')->get(route('admin.dashboard'));
         $admin1Page->assertSee('data-theme-preset="ocean"', false);

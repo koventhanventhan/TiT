@@ -653,7 +653,9 @@ class SiteSettingController extends Controller
      */
     public function getSettings(\Illuminate\Http\Request $request)
     {
-        $instituteId = $request->header('X-Institute-Id', 1);
+        $instituteId = function_exists('current_institute_id') && current_institute_id()
+            ? current_institute_id()
+            : (int)$request->header('X-Institute-Id', 1);
         $settings = SiteSetting::where('institute_id', $instituteId)->pluck('value', 'key')->toArray();
         if (empty($settings)) {
             $settings = SiteSetting::all()->pluck('value', 'key')->toArray();

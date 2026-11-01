@@ -10,8 +10,8 @@ class InstituteScope implements Scope
 {
     public function apply(Builder $builder, Model $model)
     {
-        // Prevent application in console (migrations, seeds, etc.)
-        if (app()->runningInConsole()) {
+        // Prevent application in console unless an explicit tenant context is set via Tenant::run() or Tenant::set()
+        if (app()->runningInConsole() && !app()->bound('current_institute')) {
             return;
         }
 
@@ -40,8 +40,12 @@ class InstituteScope implements Scope
 
                 $instituteId = $user->institute_id;
             } 
-            // 2. Fallback to header for certain API contexts if needed (legacy/public-with-header)
-            else if (request()->header('X-Institute-Id')) {
+            // 2. Check current resolved institute from container (ResolveTenant / Tenant::run)
+            else if (function_exists('current_institute_id') && current_institute_id()) {
+                $instituteId = current_institute_id();
+            }
+            // 3. Fallback to header for local/testing contexts if needed
+            else if (request() && request()->header('X-Institute-Id') && (app()->environment(['local', 'testing']) || in_array(request()->getHost(), ['localhost', '127.0.0.1']))) {
                 $instituteId = request()->header('X-Institute-Id');
             }
 

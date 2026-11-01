@@ -15,12 +15,16 @@ trait BelongsToInstitute
     {
         static::addGlobalScope(new InstituteScope);
 
-        // Automatically assign institute_id when creating if not set and user is logged in
+        // Automatically assign institute_id when creating if not set
         static::creating(function ($model) {
-            if (!$model->institute_id && auth()->check()) {
-                $user = auth()->user();
-                if ($user->role !== 'super_admin') {
-                    $model->institute_id = $user->institute_id;
+            if (!$model->institute_id) {
+                if (auth()->check()) {
+                    $user = auth()->user();
+                    if ($user->role !== 'super_admin') {
+                        $model->institute_id = $user->institute_id;
+                    }
+                } elseif (function_exists('current_institute_id') && current_institute_id()) {
+                    $model->institute_id = current_institute_id();
                 }
             }
         });

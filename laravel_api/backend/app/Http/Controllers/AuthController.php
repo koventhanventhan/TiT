@@ -417,6 +417,15 @@ class AuthController extends Controller
         
         $user = User::where($field, $request->usernameOrEmail)->first(); // Kept original logic for username/email
 
+        // Domain / Tenant verification: If user belongs to a different institute and is not super_admin,
+        // reject with generic invalid credentials (no information leak).
+        $currentInstId = function_exists('current_institute_id') ? current_institute_id() : null;
+        if ($user && $user->role !== 'super_admin' && $currentInstId && (int)$user->institute_id !== (int)$currentInstId) {
+            return response()->json([
+                'message' => 'Invalid login credentials',
+            ], 401);
+        }
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid login credentials',

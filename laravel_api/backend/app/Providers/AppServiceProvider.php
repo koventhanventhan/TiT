@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Load global helpers
+        if (!function_exists('current_institute')) {
+            require_once __DIR__ . '/../helpers.php';
+        }
+
         // Bind VectorStoreInterface to current driver (DatabaseVectorStore)
         $this->app->bind(
             \App\Contracts\Rag\VectorStoreInterface::class,

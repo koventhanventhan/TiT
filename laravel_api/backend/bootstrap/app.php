@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
+            // Support legacy prefixed API URL https://<domain>/laravel_api/backend/public/api/...
+            Route::middleware('api')
+                ->prefix('laravel_api/backend/public/api')
+                ->group(base_path('routes/api.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
         },
@@ -34,21 +39,21 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \App\Http\Middleware\TenantMiddleware::class,
+            \App\Http\Middleware\ResolveTenant::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\ResolveTenant::class,
+            \App\Http\Middleware\UserSessionTimeout::class,
         ]);
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'tenant' => \App\Http\Middleware\ResolveTenant::class,
             'reg_status' => \App\Http\Middleware\CheckRegistrationStatus::class,
             'profile.context' => \App\Http\Middleware\ProfileContext::class,
             'recaptcha' => \App\Http\Middleware\VerifyRecaptcha::class,
             'auth.optional' => \App\Http\Middleware\OptionalSanctumAuth::class,
-        ]);
-        
-        // Custom session timeout middleware
-        $middleware->web(append: [
-            \App\Http\Middleware\UserSessionTimeout::class,
         ]);
         
         // Use custom CSRF middleware that excludes API routes

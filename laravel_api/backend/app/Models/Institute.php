@@ -64,6 +64,34 @@ class Institute extends Model
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
+    public function domains()
+    {
+        return $this->hasMany(InstituteDomain::class);
+    }
+
+    public function primaryDomain()
+    {
+        return $this->hasOne(InstituteDomain::class)->where('is_primary', true);
+    }
+
+    public function primaryUrl(): string
+    {
+        $primary = $this->domains()->where('is_primary', true)->first();
+        if (app()->environment(['local', 'testing'])) {
+            if (!$primary || in_array($primary->domain, ['localhost', '127.0.0.1']) || str_ends_with($primary->domain, '.test')) {
+                return rtrim(config('app.url', 'http://127.0.0.1:8000'), '/');
+            }
+        }
+        if ($primary) {
+            return 'https://' . $primary->domain;
+        }
+        $first = $this->domains()->first();
+        if ($first) {
+            return 'https://' . $first->domain;
+        }
+        return rtrim(config('app.url', 'http://127.0.0.1:8000'), '/');
+    }
+
     public function users()
     {
         return $this->hasMany(User::class);

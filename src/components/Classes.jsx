@@ -112,7 +112,7 @@ const Classes = () => {
                   alt={course.title} 
                   className="pc-card-img" 
                 />
-                <div className="pc-card-category" style={{ background: course.accent, boxShadow: `0 4px 12px ${course.accent}4d` }}>
+                <div className="pc-card-category" style={{ background: course.accent, color: course.accent === '#EB8153' ? '#0f172a' : '#ffffff', boxShadow: `0 4px 12px ${course.accent}4d` }}>
                   {course.category}
                 </div>
                 <div className="pc-card-overlay">
@@ -138,7 +138,7 @@ const Classes = () => {
                     <FiStar className="star-fill" />
                     <span>{course.rating}</span>
                   </div>
-                   <Link to={`/classes`} className="pc-enroll-btn" style={{ color: course.accent }}>
+                   <Link to={`/classes`} className="pc-enroll-btn">
                     {t('details') || 'Details'} <FiArrowRight />
                   </Link>
                 </div>

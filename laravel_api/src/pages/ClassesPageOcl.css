@@ -95,7 +95,7 @@
 }
 
 .ocl-highlight-sep {
-  color: #cbd5e1;
+  color: var(--t-text-3, #64748b);
   font-weight: 300;
 }
 
@@ -207,7 +207,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--t-text-2, #475569);
   font-weight: 600;
   gap: 1rem;
 }

@@ -13,7 +13,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
   gap: 1.875rem;
-  background: #cac7c3;
+  background: var(--t-surface, #ffffff);
   padding: 3.125rem 2.5rem;
   border-radius: 1.875rem;
   box-shadow: 0 0.9375rem 2.8125rem rgba(12, 22, 49, 0.05);

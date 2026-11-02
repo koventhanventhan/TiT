@@ -74,8 +74,26 @@ class ThemeAppearanceTest extends TestCase
         $response->assertSee('Royal Violet');
         $response->assertSee('Ocean Blue');
         $response->assertSee('Emerald Fresh');
-        $response->assertSee('Midnight Dark');
+        $response->assertDontSee('Midnight Dark');
         $response->assertSee('Save Appearance');
+    }
+
+    /**
+     * Test admin cannot save disabled theme presets (e.g. midnight).
+     */
+    public function test_saving_disabled_preset_is_rejected(): void
+    {
+        $response = $this->actingAs($this->admin1, 'web')
+            ->from(route('admin.settings.appearance'))
+            ->post(route('admin.settings.appearance.update'), [
+                'theme_preset' => 'midnight',
+            ]);
+
+        $response->assertRedirect(route('admin.settings.appearance'));
+        $response->assertSessionHasErrors(['theme_preset']);
+
+        $saved = SiteSetting::getForInstitute('theme_preset', $this->institute1->id, 'royal');
+        $this->assertEquals('royal', $saved);
     }
 
     /**

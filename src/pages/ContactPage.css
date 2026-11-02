@@ -1,15 +1,16 @@
-/* ═══════════════════════════════════════════════════════════
-   Contact Page — Premium Purple-Only Design
-   All boxes use project purple palette (#1a103c, #4f0bd9, #7c3aed)
-   ═══════════════════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Contact Page â€” Premium Purple-Only Design
+   All boxes use unified design tokens (--t-*)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .cp {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f0f4ff;
   padding-top: 5rem;
 }
 
-/* ════════════════════ HERO ════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cp-hero {
   position: relative;
   background: var(--bg-dark);
@@ -81,7 +82,7 @@
   z-index: 2;
 }
 
-/* ── HERO LEFT ── */
+/* â”€â”€ HERO LEFT â”€â”€ */
 .cp-hero-left {
   color: #f8fafc;
 }
@@ -172,7 +173,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: #cbd5e1;
   font-weight: 700;
 }
 
@@ -184,7 +185,7 @@
   margin-top: 0.125rem;
 }
 
-/* ── HERO RIGHT: Floating cards visual ── */
+/* â”€â”€ HERO RIGHT: Floating cards visual â”€â”€ */
 .cp-hero-right {
   display: flex;
   justify-content: center;
@@ -229,7 +230,7 @@
 
 .cp-visual-card span {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #cbd5e1;
 }
 
 .cp-vc-1 {
@@ -296,7 +297,7 @@
   border-color: rgba(59, 130, 246, 0.04);
 }
 
-/* ════════════════════ BODY ════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cp-body {
   padding: 4.375rem 0 5rem;
 }
@@ -308,7 +309,7 @@
   align-items: start;
 }
 
-/* ── Form Card ── */
+/* â”€â”€ Form Card â”€â”€ */
 .cp-form-card {
   background: #ffffff;
   border-radius: 1.5rem;
@@ -539,7 +540,7 @@
   margin: 0;
 }
 
-/* ── Sidebar ── */
+/* â”€â”€ Sidebar â”€â”€ */
 .cp-sidebar {
   display: flex;
   flex-direction: column;
@@ -626,8 +627,8 @@
 }
 
 .cp-hour.closed .cp-hour-val {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.06);
+  color: var(--t-danger, #b91c1c);
+  background: rgba(185, 28, 28, 0.08);
 }
 
 /* Social links */
@@ -699,7 +700,7 @@
 
 /* CTA card */
 .cp-side-cta {
-  background: linear-gradient(135deg, #1a103c 0%, #2e1065 100%) !important;
+  background: var(--gradient-1) !important;
   border: 1.0px solid rgba(124, 58, 237, 0.1) !important;
   position: relative;
   overflow: hidden;
@@ -757,7 +758,7 @@
   box-shadow: 0 0.5rem 1.5rem rgba(79, 11, 217, 0.45);
 }
 
-/* ════════════════════ MAP ════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cp-map {
   padding-bottom: 0;
 }
@@ -784,7 +785,7 @@
 }
 
 .cp-map-title p {
-  color: #64748b;
+  color: var(--t-text-2, #475569);
   font-size: 0.9375rem;
   margin: 0;
 }
@@ -837,7 +838,7 @@
   border: none;
 }
 
-/* ════════════════════ RESPONSIVE ════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• RESPONSIVE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @media (max-width: 64rem) {
   .cp-hero-inner {
     grid-template-columns: 1fr;
@@ -865,11 +866,11 @@
 
 @media (max-width: 48rem) {
   .cp {
-    padding-top: 3.75rem;
+    padding-top: 5rem;
   }
 
   .cp-hero {
-    padding: 3.75rem 0 4.375rem;
+    padding: 4.5rem 0 4.375rem;
   }
 
   .cp-title {

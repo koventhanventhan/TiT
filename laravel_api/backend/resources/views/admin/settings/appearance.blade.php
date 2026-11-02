@@ -190,6 +190,9 @@
                             $availablePresets[$k][$tokenKey] = $tokenVal;
                         }
                     }
+
+                    $enabledList = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
+                    $availablePresets = array_filter($availablePresets, fn($k) => in_array($k, $enabledList, true), ARRAY_FILTER_USE_KEY);
                 @endphp
 
                 @foreach($availablePresets as $key => $p)

@@ -161,7 +161,7 @@
 
 .form-group label .optional {
     font-weight: 400;
-    color: #a78bfa;
+    color: var(--primary-light, #6d28d9);
     font-size: 0.78rem;
 }
 

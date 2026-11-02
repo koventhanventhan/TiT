@@ -194,17 +194,17 @@ button.btn-register {
 }
 
 .btn-youtube {
-  background: #FF0000;
+  background: #CC0000;
   color: white;
-  border: 0.125rem solid #FF0000;
+  border: 0.125rem solid #CC0000;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .btn-youtube:hover {
-  background: #CC0000;
-  border-color: #CC0000;
+  background: #B30000;
+  border-color: #B30000;
   transform: translateY(-0.125rem);
   box-shadow: 0 0.625rem 1.5625rem rgba(255, 0, 0, 0.3);
 }
@@ -235,7 +235,7 @@ button.btn-register {
 
 .section-subtitle {
   font-size: 1.125rem;
-  color: var(--text-light);
+  color: var(--t-text-2, #475569);
   text-align: center;
   max-width: 37.5rem;
   margin: 0 auto 3rem;
@@ -247,7 +247,7 @@ button.btn-register {
   border-radius: var(--radius-lg);
   padding: 2.5rem;
   text-align: center;
-  color: var(--text-light);
+  color: var(--t-text-2, #475569);
   font-weight: 500;
   animation: shimmerPulse 2s ease-in-out infinite;
 }

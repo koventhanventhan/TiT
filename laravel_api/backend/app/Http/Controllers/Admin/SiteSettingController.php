@@ -37,9 +37,12 @@ class SiteSettingController extends Controller
         $currentPreset = SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
         
         $presetsJsonPath = resource_path('themes/presets.json');
-        $presets = file_exists($presetsJsonPath) 
+        $allPresets = file_exists($presetsJsonPath) 
             ? json_decode(file_get_contents($presetsJsonPath), true) 
             : [];
+
+        $enabledPresets = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
+        $presets = array_filter($allPresets, fn($k) => in_array($k, $enabledPresets, true), ARRAY_FILTER_USE_KEY);
 
         return view('admin.settings.appearance', compact('currentPreset', 'presets'));
     }
@@ -49,8 +52,9 @@ class SiteSettingController extends Controller
      */
     public function updateAppearance(\Illuminate\Http\Request $request)
     {
+        $enabledPresets = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
         $request->validate([
-            'theme_preset' => 'required|string|in:royal,ocean,emerald,midnight',
+            'theme_preset' => ['required', 'string', \Illuminate\Validation\Rule::in($enabledPresets)],
         ]);
 
         $instituteId = auth()->user()?->institute_id ?: 1;
@@ -663,6 +667,10 @@ class SiteSettingController extends Controller
 
         if (!isset($settings['theme_preset'])) {
             $settings['theme_preset'] = SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
+        }
+        $enabledPresets = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
+        if (!in_array($settings['theme_preset'], $enabledPresets, true)) {
+            $settings['theme_preset'] = 'royal';
         }
         $institute = \App\Models\Institute::find($instituteId);
 

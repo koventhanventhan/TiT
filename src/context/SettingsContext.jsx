@@ -127,7 +127,10 @@ export const SettingsProvider = ({ children }) => {
         }
 
         // 6. Theme preset
-        const preset = data.theme_preset || 'royal';
+        const enabledPresets = ['royal', 'ocean', 'emerald'];
+        const preset = (data.theme_preset && enabledPresets.includes(data.theme_preset))
+            ? data.theme_preset
+            : 'royal';
         document.documentElement.dataset.themePreset = preset;
         try { localStorage.setItem('tit_theme_preset', preset); } catch (_) {}
     };

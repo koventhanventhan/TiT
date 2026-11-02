@@ -43,7 +43,7 @@ function renderTokens(p) {
   --t-text: ${p.text};
   --t-text-2: ${p.text_2};
   --t-text-3: ${p.text_3};
-  --t-muted: ${isDark ? '#94a3b8' : '#94a3b8'};
+  --t-muted: ${isDark ? '#94a3b8' : (p.text_2 || '#475569')};
   --t-bg-muted: ${isDark ? '#1e2447' : '#f8fafc'};
   --t-radius-card: ${p.radius_card};
   --t-radius-control: ${p.radius_control};
@@ -97,6 +97,12 @@ function renderTokens(p) {
   --text-medium: var(--t-text-2);
   --text-light: var(--t-text-3);
   --text-muted: var(--t-text-3);
+  --color-text: var(--t-text);
+  --color-muted: var(--t-text-2);
+  --card-bg: var(--t-surface);
+  --success: var(--t-success);
+  --warning: var(--t-warning);
+  --danger: var(--t-danger);
   --border-color: var(--t-border);
   --border-light: ${isDark ? '#2a3350' : '#f1f5f9'};
   --radius-sm: 0.5rem;

@@ -173,7 +173,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: #cbd5e1;
   font-weight: 700;
 }
 
@@ -230,7 +230,7 @@
 
 .cp-visual-card span {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #cbd5e1;
 }
 
 .cp-vc-1 {
@@ -627,8 +627,8 @@
 }
 
 .cp-hour.closed .cp-hour-val {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.06);
+  color: var(--t-danger, #b91c1c);
+  background: rgba(185, 28, 28, 0.08);
 }
 
 /* Social links */
@@ -785,7 +785,7 @@
 }
 
 .cp-map-title p {
-  color: #64748b;
+  color: var(--t-text-2, #475569);
   font-size: 0.9375rem;
   margin: 0;
 }

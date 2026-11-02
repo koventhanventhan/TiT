@@ -17,6 +17,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: '**/frontend-visual.spec.js',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'frontend-visual',
+      testMatch: '**/frontend-visual.spec.js',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

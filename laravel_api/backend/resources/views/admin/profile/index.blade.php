@@ -22,8 +22,8 @@
         width: 6.25rem;
         height: 6.25rem;
         border-radius: 50%;
-        background: var(--t-primary);
-        color: white;
+        background: var(--adm-accent, var(--t-primary));
+        color: var(--adm-on-accent, #0f172a);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -58,9 +58,12 @@
 <div class="row">
     <div class="col-xl-9 col-lg-10">
         <div class="card">
-            <div class="card-header border-0 pb-0 d-flex justify-content-between">
-                <h4 class="card-title">Profile Information</h4>
-                <span class="badge badge-pill badge-secondary" style="background: rgba(255, 255, 255, 0.1); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">Public</span>
+            <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">Profile Information</h4>
+                    <p class="text-muted mb-0 font-w500 fs-12 mt-1">Manage your account credentials and personal details</p>
+                </div>
+                <span class="badge badge-pill badge-secondary" style="background: rgba(255, 255, 255, 0.1); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">Public Profile</span>
             </div>
             <div class="card-body">
                 @if(session('success'))

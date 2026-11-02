@@ -18,7 +18,7 @@ const PAGES = [
   { key: 'appearance', path: '/admin/settings/appearance' }
 ];
 
-const CONVERSATION_ID = 'af31a0fc-39bf-4161-af3f-cc8ffe5987f6';
+const CONVERSATION_ID = 'b9f4d111-6647-41e9-bb11-91d18d644037';
 const ARTIFACT_DIR = path.resolve('C:/Users/HP/.gemini/antigravity/brain', CONVERSATION_ID, 'scratch/screenshots');
 const LOCAL_DIR = path.resolve(__dirname, '../scratch/screenshots');
 
@@ -52,9 +52,15 @@ async function captureScreenshots() {
       });
       const page = await context.newPage();
 
-      // Block external requests
+      // Block external requests and mock polling
       await page.route('**/*', route => {
         const url = route.request().url();
+        if (url.includes('/admin/messages/unread-count') || url.includes('/admin/notifications')) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ count: 0, notifications: [] }) });
+        }
+        if (url.includes('/api/messages')) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ messages: [], recipients: {} }) });
+        }
         if (url.startsWith(BASE_URL)) return route.continue();
         return route.abort();
       });

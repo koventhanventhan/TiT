@@ -51,6 +51,7 @@ const requiredPairs = [
   ['adm_text', 'adm_input_bg', 'adm-text on adm-input-bg', 4.5],
   ['adm_btn_text', 'adm_btn', 'adm-btn-text on adm-btn', 4.5],
   ['adm_accent', 'adm_sidebar', 'adm-accent on adm-sidebar', 3.0],
+  ['adm_on_accent', 'adm_accent', 'adm-on-accent on adm-accent', 4.5],
 ];
 
 console.log('=== WCAG AA (>= 4.5:1) Contrast Ratio Verification ===\n');

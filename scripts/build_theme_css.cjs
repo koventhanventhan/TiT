@@ -53,6 +53,7 @@ function renderTokens(p) {
   --adm-accent: ${p.adm_accent || '#EB8153'};
   --adm-btn: ${p.adm_btn || '#EB8153'};
   --adm-btn-text: ${p.adm_btn_text || '#0f172a'};
+  --adm-on-accent: ${p.adm_on_accent || '#0f172a'};
   --adm-input-bg: ${p.adm_input_bg || '#241e3d'};
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */

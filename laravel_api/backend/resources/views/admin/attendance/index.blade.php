@@ -40,7 +40,7 @@
 <div class="card mb-4">
     <div class="card-header bg-light">
         <h4 class="card-title text-primary"><strong>{{ $s->title }}</strong></h4>
-        <span class="badge badge-outline-dark fs-12">{{ $s->scheduled_at ? $s->scheduled_at->format('M d, Y @ H:i') : 'N/A' }}</span>
+        <span class="badge badge-outline-light fs-12" style="color: var(--adm-text); border-color: var(--adm-border);">{{ $s->scheduled_at ? $s->scheduled_at->format('M d, Y @ H:i') : 'N/A' }}</span>
     </div>
     <div class="card-body px-0">
         <div class="table-responsive">
@@ -60,7 +60,7 @@
                         <td class="pl-4"><strong>{{ $index + 1 }}</strong></td>
                         <td>{{ $att->user?->full_name ?? $att->user?->name ?? $att->user?->email ?? ('User not found (#' . $att->user_id . ')') }}</td>
                         <td>
-                            <span class="badge badge-xs light badge-{{ $att->role === 'teacher' ? 'info' : 'secondary' }}">
+                            <span class="badge badge-xs badge-pill" style="background: rgba(255, 255, 255, 0.12); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">
                                 {{ strtoupper($att->role) }}
                             </span>
                         </td>

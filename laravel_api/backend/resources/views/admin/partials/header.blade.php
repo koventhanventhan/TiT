@@ -129,50 +129,109 @@
                 transform: translateY(-6px) rotate(-45deg) !important;
             }
 
-            /* Search */
+            /* Search - MOBILE */
             .header-left {
-                flex: 0 1 100px !important;
-                min-width: 0 !important;
-                max-width: 100px !important;
-                margin-right: 6px !important;
+                margin-right: 4px !important;
                 padding: 0 !important;
-                transition: max-width 0.25s ease-in-out !important;
             }
-            .header-left:focus-within {
+            .header-left:not(.search-expanded) {
+                flex: 0 0 44px !important;
+                max-width: 44px !important;
+            }
+            .header-left:not(.search-expanded) .search_bar {
+                display: none !important;
+            }
+            .mobile-search-btn {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                background: transparent !important;
+                border: none !important;
+                color: var(--adm-text) !important;
+                padding: 0 !important;
+                cursor: pointer !important;
+                touch-action: manipulation !important;
+            }
+            .mobile-search-btn svg {
+                width: 22px !important;
+                height: 22px !important;
+                stroke: var(--adm-text) !important;
+            }
+            .search-close-btn {
+                display: none !important;
+            }
+
+            /* Search expanded overlay - MOBILE */
+            .header-left.search-expanded {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                background: var(--adm-surface) !important;
+                z-index: 1050 !important;
+                display: flex !important;
+                align-items: center !important;
+                padding: 0 10px !important;
+                margin: 0 !important;
+            }
+            .header-left.search-expanded .mobile-search-btn {
+                display: none !important;
+            }
+            .header-left.search-expanded .search_bar {
+                display: flex !important;
                 flex: 1 1 auto !important;
-                max-width: 150px !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
-            .header-left .search_bar { width: 100% !important; }
-            .header-left .search_bar form {
-                position: relative !important;
+            .header-left.search-expanded .search_bar form {
                 display: flex !important;
                 align-items: center !important;
                 width: 100% !important;
+                position: relative !important;
+                gap: 8px !important;
             }
-            .header-left .search_bar .form-control {
-                height: 32px !important;
-                font-size: 10px !important;
-                padding: 0 8px 0 26px !important;
+            .header-left.search-expanded .search_bar .form-control {
+                flex: 1 1 auto !important;
+                height: 38px !important;
+                font-size: 13px !important;
+                padding: 0 10px 0 32px !important;
                 background: var(--adm-input-bg) !important;
                 border: 1px solid var(--adm-border) !important;
-                border-radius: 50px !important;
+                border-radius: 8px !important;
                 color: var(--adm-text) !important;
-                box-shadow: none !important;
-                width: 100% !important;
                 outline: none !important;
             }
-            .header-left .search_bar .form-control::placeholder {
-                color: var(--adm-text-3) !important;
-                font-size: 10px !important;
-            }
-            .header-left .search_bar .search_icon {
+            .header-left.search-expanded .search_bar .search_icon {
                 position: absolute !important;
-                left: 8px !important; top: 50% !important;
+                left: 10px !important;
+                top: 50% !important;
                 transform: translateY(-50%) !important;
                 color: var(--adm-text-3) !important;
-                font-size: 13px !important;
-                z-index: 10 !important;
+                font-size: 15px !important;
                 pointer-events: none !important;
+            }
+            .header-left.search-expanded .search-close-btn {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                background: transparent !important;
+                border: none !important;
+                color: var(--adm-text) !important;
+                padding: 0 !important;
+                cursor: pointer !important;
+                touch-action: manipulation !important;
+                flex-shrink: 0 !important;
             }
 
             /* Right icons */
@@ -365,6 +424,8 @@
             }
 
             /* Search — fixed width, never grows into icons */
+            .mobile-search-btn { display: none !important; }
+            .search-close-btn { display: none !important; }
             .header-left {
                 flex: 0 0 120px !important;
                 width: 120px !important;
@@ -473,6 +534,8 @@
         @media (min-width: 1200px) {
 
             .custom-hamburger { display: none !important; }
+            .mobile-search-btn { display: none !important; }
+            .search-close-btn { display: none !important; }
 
             .header-left {
                 flex: 1 !important;
@@ -564,11 +627,23 @@
                 </button>
 
                 {{-- SEARCH --}}
-                <div class="header-left">
+                <div class="header-left" id="headerSearchContainer">
+                    <button type="button" class="mobile-search-btn" id="mobileSearchBtn" aria-label="Open search">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
                     <div class="search_bar">
-                        <form>
-                            <input class="form-control" type="search" placeholder="Search..." aria-label="Search">
+                        <form action="{{ route('admin.search') }}" method="GET">
+                            <input class="form-control" type="search" name="q" placeholder="Search..." aria-label="Search">
                             <span class="search_icon"><i class="mdi mdi-magnify"></i></span>
+                            <button type="button" class="search-close-btn" id="mobileSearchClose" aria-label="Close search">
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -641,7 +716,7 @@
                                      style="border-radius:50%;object-fit:cover;">
                             @else
                                 <div class="header-profile-initials"
-                                     style="background:var(--adm-accent);color:var(--adm-btn-text, #ffffff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+                                     style="background:var(--adm-accent);color:var(--adm-on-accent, #0f172a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
                                     {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                 </div>
                             @endif
@@ -653,7 +728,7 @@
                                     <img src="{{ asset(Auth::user()->avatar) }}" alt=""
                                          style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
                                 @else
-                                    <div style="width:36px;height:36px;border-radius:50%;background:var(--adm-accent);color:var(--adm-btn-text, #ffffff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
+                                    <div style="width:36px;height:36px;border-radius:50%;background:var(--adm-accent);color:var(--adm-on-accent, #0f172a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
                                         {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
                                     </div>
                                 @endif
@@ -719,6 +794,37 @@
                         document.body.classList.remove('menu-toggle');
                         btn.classList.remove('active');
                     }
+                }
+            });
+
+            // Mobile header search collapse & expand
+            var searchBtn = document.getElementById('mobileSearchBtn');
+            var searchClose = document.getElementById('mobileSearchClose');
+            var searchContainer = document.getElementById('headerSearchContainer');
+            var searchInput = searchContainer ? searchContainer.querySelector('input[type="search"]') : null;
+
+            if (searchBtn && searchContainer) {
+                searchBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    searchContainer.classList.add('search-expanded');
+                    if (searchInput) {
+                        setTimeout(function () { searchInput.focus(); }, 80);
+                    }
+                });
+            }
+
+            if (searchClose && searchContainer) {
+                searchClose.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    searchContainer.classList.remove('search-expanded');
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && searchContainer && searchContainer.classList.contains('search-expanded')) {
+                    searchContainer.classList.remove('search-expanded');
                 }
             });
         })();

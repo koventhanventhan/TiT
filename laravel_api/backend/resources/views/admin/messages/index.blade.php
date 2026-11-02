@@ -560,7 +560,10 @@
     {{-- Sidebar (Threads) --}}
     <div class="chat-sidebar">
         <div class="chat-header">
-            <h3 class="chat-title">&#x1F4AC; Messages</h3>
+            <div class="d-flex align-items-center">
+                <h3 class="chat-title mb-0">&#x1F4AC; Messages</h3>
+                <span class="badge badge-outline-light fs-12 ml-2" style="color: var(--adm-text); border-color: var(--adm-border);">Inbox</span>
+            </div>
             <button class="compose-btn" onclick="showCompose()">
                 <i class="flaticon-381-add-1"></i> New
             </button>
@@ -589,6 +592,24 @@
             </div>
             <h3>Select a conversation</h3>
             <p>Choose a contact from the list or compose a new message.</p>
+            <div class="mt-4 d-flex flex-wrap justify-content-center" style="gap: 1rem;">
+                <div class="p-3 rounded text-left" style="background: var(--adm-surface); border: 1px solid var(--adm-border); max-width: 220px;">
+                    <strong style="color: var(--adm-text);">Broadcast Notices</strong>
+                    <p class="fs-12 mb-0" style="color: var(--adm-text-muted);">Send general announcements and circulars to student cohorts.</p>
+                </div>
+                <div class="p-3 rounded text-left" style="background: var(--adm-surface); border: 1px solid var(--adm-border); max-width: 220px;">
+                    <strong style="color: var(--adm-text);">Direct Inquiries</strong>
+                    <p class="fs-12 mb-0" style="color: var(--adm-text-muted);">Communicate one-on-one with enrolled students or teachers.</p>
+                </div>
+                <div class="p-3 rounded text-left" style="background: var(--adm-surface); border: 1px solid var(--adm-border); max-width: 220px;">
+                    <strong style="color: var(--adm-text);">Class Discussions</strong>
+                    <p class="fs-12 mb-0" style="color: var(--adm-text-muted);">Share course updates and materials with enrolled students.</p>
+                </div>
+                <div class="p-3 rounded text-left" style="background: var(--adm-surface); border: 1px solid var(--adm-border); max-width: 220px;">
+                    <strong style="color: var(--adm-text);">Support Inquiries</strong>
+                    <p class="fs-12 mb-0" style="color: var(--adm-text-muted);">Provide assistance for billing and registration queries.</p>
+                </div>
+            </div>
         </div>
 
         {{-- Active Thread --}}

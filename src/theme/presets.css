@@ -37,6 +37,7 @@
   --adm-accent: #EB8153;
   --adm-btn: #EB8153;
   --adm-btn-text: #0f172a;
+  --adm-on-accent: #0f172a;
   --adm-input-bg: #241e3d;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
@@ -103,6 +104,7 @@ html[data-theme-preset="royal"], [data-theme-preset="royal"] {
   --adm-accent: #EB8153;
   --adm-btn: #EB8153;
   --adm-btn-text: #0f172a;
+  --adm-on-accent: #0f172a;
   --adm-input-bg: #241e3d;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
@@ -169,6 +171,7 @@ html[data-theme-preset="ocean"], [data-theme-preset="ocean"] {
   --adm-accent: #7cc4ff;
   --adm-btn: #0b5fd9;
   --adm-btn-text: #ffffff;
+  --adm-on-accent: #0f172a;
   --adm-input-bg: #0c1e3a;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
@@ -235,6 +238,7 @@ html[data-theme-preset="emerald"], [data-theme-preset="emerald"] {
   --adm-accent: #6ee7b7;
   --adm-btn: #047857;
   --adm-btn-text: #ffffff;
+  --adm-on-accent: #0f172a;
   --adm-input-bg: #082825;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */
@@ -301,6 +305,7 @@ html[data-theme-preset="midnight"], [data-theme-preset="midnight"] {
   --adm-accent: #a5b4fc;
   --adm-btn: #4f46e5;
   --adm-btn-text: #ffffff;
+  --adm-on-accent: #0f172a;
   --adm-input-bg: #101524;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth) */

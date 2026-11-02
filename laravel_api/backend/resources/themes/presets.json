@@ -35,6 +35,7 @@
     "adm_accent": "#EB8153",
     "adm_btn": "#EB8153",
     "adm_btn_text": "#0f172a",
+    "adm_on_accent": "#0f172a",
     "adm_input_bg": "#241e3d"
   },
   "ocean": {
@@ -73,6 +74,7 @@
     "adm_accent": "#7cc4ff",
     "adm_btn": "#0b5fd9",
     "adm_btn_text": "#ffffff",
+    "adm_on_accent": "#0f172a",
     "adm_input_bg": "#0c1e3a"
   },
   "emerald": {
@@ -111,6 +113,7 @@
     "adm_accent": "#6ee7b7",
     "adm_btn": "#047857",
     "adm_btn_text": "#ffffff",
+    "adm_on_accent": "#0f172a",
     "adm_input_bg": "#082825"
   },
   "midnight": {
@@ -149,6 +152,7 @@
     "adm_accent": "#a5b4fc",
     "adm_btn": "#4f46e5",
     "adm_btn_text": "#ffffff",
+    "adm_on_accent": "#0f172a",
     "adm_input_bg": "#101524"
   }
 }

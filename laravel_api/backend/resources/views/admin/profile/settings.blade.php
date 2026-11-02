@@ -153,8 +153,8 @@
         width: 6.25rem;
         height: 6.25rem;
         border-radius: 50%;
-        background: #EB8153;
-        color: white;
+        background: var(--adm-accent, #EB8153);
+        color: var(--adm-on-accent, #0f172a);
         display: flex;
         align-items: center;
         justify-content: center;

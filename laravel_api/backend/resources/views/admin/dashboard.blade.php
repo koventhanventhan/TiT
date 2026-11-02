@@ -2,10 +2,55 @@
 
 @section('title', 'Admin Dashboard')
 
+@push('styles')
+<style>
+@media (max-width: 576px) {
+    .widget-stat.card {
+        margin-bottom: 0.75rem !important;
+    }
+    .widget-stat .card-body {
+        padding: 0.75rem 0.5rem !important;
+    }
+    .widget-stat .media {
+        display: flex !important;
+        align-items: center !important;
+        flex-direction: row !important;
+    }
+    .widget-stat .media > span {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        min-width: 2.5rem !important;
+        margin-right: 0.5rem !important;
+        border-radius: 8px !important;
+    }
+    .widget-stat .media > span i {
+        font-size: 1.2rem !important;
+    }
+    .widget-stat .media-body {
+        min-width: 0 !important;
+    }
+    .widget-stat .media-body p {
+        font-size: 0.6875rem !important;
+        margin-bottom: 2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .widget-stat .media-body h4 {
+        font-size: 1.05rem !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 <!-- Summary Cards Row -->
 <div class="row">
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
@@ -20,7 +65,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
@@ -35,7 +80,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
@@ -50,7 +95,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
@@ -65,7 +110,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <div class="widget-stat card">
             <div class="card-body p-4">
                 <div class="media ai-icon">
@@ -80,7 +125,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-xxl-4 col-lg-6 col-sm-6">
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
         <a href="{{ route('admin.students.pending-payments') }}" style="text-decoration: none;">
             <div class="widget-stat card" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                 <div class="card-body p-4">

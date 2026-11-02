@@ -26,7 +26,10 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Exam Results</h4>
+            <div>
+                <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Exam Results</h4>
+                <p class="text-muted mb-0 font-w500 fs-12">View and manage examination records and student performance</p>
+            </div>
             <div>
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                     <i class="flaticon-381-upload"></i> Import Excel
@@ -46,7 +49,10 @@
                 <div class="spinner-border text-primary" role="status"></div>
             </div>
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title">All Results</h4>
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="card-title mb-0 mr-2">All Results</h4>
+                    <span class="badge badge-outline-light fs-12" style="color: var(--adm-text); border-color: var(--adm-border);">Academic Records</span>
+                </div>
                 <div class="d-flex gap-2">
                     <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search index no or name..." style="width: 250px;">
                 </div>
@@ -65,7 +71,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Filled by JS -->
+                            <tr id="initialTableRow"><td colspan="6" class="text-center py-4 text-muted">Loading examination records...</td></tr>
                         </tbody>
                     </table>
                 </div>

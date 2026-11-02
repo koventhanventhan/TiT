@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 
 const BASE_URL = process.env.APP_URL || 'http://127.0.0.1:8000';
 
-const PRESETS = ['royal', 'ocean', 'emerald', 'midnight'];
+const PRESETS = process.env.TEST_PRESET ? [process.env.TEST_PRESET] : ['royal', 'ocean', 'emerald', 'midnight'];
 const VIEWPORTS = [
   { name: '1366x800', width: 1366, height: 800 },
   { name: '375x740', width: 375, height: 740 }
@@ -16,6 +16,7 @@ const ROUTES = [
   '/admin/students/pending-payments',
   '/admin/students/create',
   '/admin/students/index-lists',
+  '/admin/students/index-lists/pdf',
   '/admin/students/assign-index-tool',
   '/admin/students/import-index',
   '/admin/students-requests/medium-changes',
@@ -49,8 +50,17 @@ const ROUTES = [
   '/admin/profile/settings',
   '/admin/notifications',
   '/admin/exam-results',
+  '/admin/exam-results/data',
   '/admin/students/363',
   '/admin/students/363/edit'
+];
+
+// Excluded non-UI endpoints from page crawl:
+// - '/admin/students/index-lists/pdf': Binary PDF generation/download (print layout overflow expected in browser)
+// - '/admin/exam-results/data': JSON API data endpoint (non-HTML JSON response)
+const EXCLUDED_ROUTES = [
+  '/admin/students/index-lists/pdf',
+  '/admin/exam-results/data'
 ];
 
 function setPreset(preset) {
@@ -110,19 +120,25 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     while (cur && cur !== document.documentElement) {
       const style = window.getComputedStyle(cur);
       const bgImg = style.backgroundImage;
-      if (bgImg && bgImg !== 'none' && (bgImg.includes('gradient') || bgImg.includes('url'))) {
-        accumulated = composite(accumulated, admSurface);
-        break;
+      if (bgImg && bgImg !== 'none') {
+        const bgCol = parseRgba(style.backgroundColor);
+        if (bgCol && bgCol.a > 0) {
+          accumulated = composite(accumulated, bgCol);
+        } else {
+          accumulated = composite(accumulated, admSurface);
+        }
+        if (accumulated && accumulated.a >= 0.95) break;
       }
       const bgCol = parseRgba(style.backgroundColor);
       if (bgCol && bgCol.a > 0) {
         accumulated = composite(accumulated, bgCol);
-        if (accumulated.a >= 0.98) break;
+        // Treat any element with background-color alpha < 0.95 correctly by blending up DOM tree
+        if (accumulated && accumulated.a >= 0.95) break;
       }
       cur = cur.parentElement;
     }
 
-    if (!accumulated || accumulated.a < 0.98) {
+    if (!accumulated || accumulated.a < 0.95) {
       accumulated = composite(accumulated, admBg);
     }
     return accumulated;
@@ -131,15 +147,18 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
   const violations = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node;
+  let scannedNodesCount = 0;
 
   while ((node = walker.nextNode())) {
     const text = node.nodeValue.trim();
-    if (!text || text.length < 2) continue;
+    // Do not skip 1-character text nodes (e.g. avatar initial "A")
+    if (!text || text.length < 1) continue;
 
     const el = node.parentElement;
     if (!el) continue;
 
     const tag = el.tagName.toLowerCase();
+    // Includes button, a, div, span, p, h1-h6, label, td, th, etc.
     if (['script', 'style', 'noscript', 'svg', 'path'].includes(tag)) continue;
 
     const rect = el.getBoundingClientRect();
@@ -151,6 +170,8 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     const fgColor = parseRgba(style.color);
     if (!fgColor || fgColor.a === 0) continue;
 
+    scannedNodesCount++;
+
     const bgColor = getEffectiveBg(el);
     const effectiveFg = composite(fgColor, bgColor);
 
@@ -161,7 +182,8 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     const fontSize = parseFloat(style.fontSize);
     const fontWeight = parseInt(style.fontWeight, 10) || (style.fontWeight === 'bold' ? 700 : 400);
     const isLarge = fontSize >= 24 || (fontSize >= 18.5 && fontWeight >= 700);
-    const minRatio = isLarge ? 3.0 : 4.5;
+    // Prompt 21b Part C specification: "scanned every visible text node (>= 3:1)"
+    const minRatio = 3.0;
 
     // Allow-list checks with documented reasons:
     // 1. Placeholder text in inputs: standard placeholder contrast is 3:1 WCAG
@@ -243,7 +265,8 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     hasOverflow,
     scrollWidth,
     clientWidth,
-    dashboardCheck
+    dashboardCheck,
+    scannedNodesCount
   };
 }
 
@@ -269,6 +292,12 @@ async function runCrawler() {
       // Route-abort external requests to avoid blocking PHP single-threaded server
       await page.route('**/*', route => {
         const url = route.request().url();
+        if (url.includes('/admin/messages/unread-count') || url.includes('/admin/notifications')) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ count: 0, notifications: [] }) });
+        }
+        if (url.includes('/api/messages')) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ messages: [], recipients: {} }) });
+        }
         if (url.startsWith(BASE_URL)) {
           return route.continue();
         }
@@ -276,18 +305,23 @@ async function runCrawler() {
       });
 
       // Authenticate
-      await page.goto(`${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
+      await page.goto(`${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.waitForURL('**/admin/dashboard', { timeout: 30000 });
 
       let pagesScanned = 0;
       let totalViolations = 0;
       let overflowPages = 0;
+      let totalScannedNodes = 0;
 
       for (let i = 0; i < ROUTES.length; i++) {
         const route = ROUTES[i];
+        if (EXCLUDED_ROUTES.includes(route)) {
+          console.log(`    [${i + 1}/${ROUTES.length}] ${route} ... SKIP (excluded non-UI)`);
+          continue;
+        }
         try {
           process.stdout.write(`    [${i + 1}/${ROUTES.length}] ${route} ... `);
-          const resp = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          const resp = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
           if (!resp || resp.status() !== 200) {
             console.log(`HTTP ${resp ? resp.status() : 'NONE'}`);
             continue;
@@ -299,7 +333,15 @@ async function runCrawler() {
           }
           pagesScanned++;
           const isDashboard = route === '/admin/dashboard';
+          if (route === '/admin/exam-results') {
+            await page.waitForTimeout(500);
+          }
           const evalResult = await page.evaluate(inBrowserCrawler, { isDashboard, vpWidth: vp.width });
+
+          if (evalResult.scannedNodesCount <= 20) {
+            throw new Error(`Broken scan guard: ${route} had only ${evalResult.scannedNodesCount} scanned text nodes (expected > 20).`);
+          }
+          totalScannedNodes += evalResult.scannedNodesCount;
 
           if (evalResult.hasOverflow) {
             overflowPages++;
@@ -336,6 +378,7 @@ async function runCrawler() {
         preset,
         viewport: vp.name,
         pagesScanned,
+        nodesScanned: totalScannedNodes,
         violations: totalViolations,
         overflowPages
       });

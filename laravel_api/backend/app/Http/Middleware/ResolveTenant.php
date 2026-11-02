@@ -48,14 +48,22 @@ class ResolveTenant
             }
         }
 
-        // 3. Safety net: Host of config('app.url') (if not shared localhost) and titjaffna.lk always resolves to Institute 1
-        // even if the table row is missing or not yet populated.
+        // 3. Safety net: Host of config('app.url') (if not shared localhost) or configured fallback hosts
+        // (env TENANT_FALLBACK_HOSTS) always resolves to Institute 1 even if the table row is missing.
         if (!$institute && !$isSharedLocalHost) {
             $appUrlHost = strtolower((string)parse_url(config('app.url', ''), PHP_URL_HOST));
             $appUrlHost = preg_replace('/:\d+$/', '', $appUrlHost);
             $bareAppUrlHost = preg_replace('/^www\./', '', $appUrlHost);
 
-            if (($bareAppUrlHost && !in_array($bareAppUrlHost, ['localhost', '127.0.0.1'], true) && $bareHost === $bareAppUrlHost) || $bareHost === 'titjaffna.lk') {
+            $fallbackHosts = (array) config('tenant.fallback_hosts', []);
+            $normalizedFallbackHosts = array_map(function ($h) {
+                return preg_replace('/^www\./', '', strtolower(trim((string)$h)));
+            }, $fallbackHosts);
+
+            $matchesAppUrl = ($bareAppUrlHost && !in_array($bareAppUrlHost, ['localhost', '127.0.0.1'], true) && $bareHost === $bareAppUrlHost);
+            $matchesFallback = in_array($bareHost, $normalizedFallbackHosts, true);
+
+            if ($matchesAppUrl || $matchesFallback) {
                 if (Schema::hasTable('institutes')) {
                     $institute = Institute::find(1);
                     $matchedViaDomain = true;

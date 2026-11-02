@@ -230,22 +230,38 @@ class ResolveTenantTest extends TestCase
     }
 
     /**
-     * Test 9: titjaffna.lk row missing -> safety net still resolves to institute 1.
+     * Test 9: With domain table empty, config('app.url') host and config('tenant.fallback_hosts')
+     * still resolve to Institute 1, while unknown hosts return 404 in production.
      */
     public function test_titjaffna_row_missing_safety_net_resolves_institute_1(): void
     {
-        config(['app.env' => 'production']);
+        config([
+            'app.env' => 'production',
+            'app.url' => 'https://app-url-safety.local',
+            'tenant.fallback_hosts' => ['tenant-fallback.local'],
+        ]);
         $this->app['env'] = 'production';
 
-        // Delete domain rows for Institute 1
-        InstituteDomain::where('institute_id', $this->institute1->id)->delete();
+        // Delete all domain rows
+        InstituteDomain::query()->delete();
         Cache::flush();
 
-        $resp = $this->withServerVariables(['HTTP_HOST' => 'titjaffna.lk'])
-            ->getJson('http://titjaffna.lk/api/settings');
+        // 1. config('app.url') host resolves to institute 1
+        $respAppUrl = $this->withServerVariables(['HTTP_HOST' => 'app-url-safety.local'])
+            ->getJson('http://app-url-safety.local/api/settings');
+        $respAppUrl->assertStatus(200);
+        $respAppUrl->assertJsonPath('site_name', 'TiT Official Portal');
 
-        $resp->assertStatus(200);
-        $resp->assertJsonPath('site_name', 'TiT Official Portal');
+        // 2. config('tenant.fallback_hosts') host resolves to institute 1
+        $respFallback = $this->withServerVariables(['HTTP_HOST' => 'tenant-fallback.local'])
+            ->getJson('http://tenant-fallback.local/api/settings');
+        $respFallback->assertStatus(200);
+        $respFallback->assertJsonPath('site_name', 'TiT Official Portal');
+
+        // 3. Unknown host returns 404 in production
+        $respUnknown = $this->withServerVariables(['HTTP_HOST' => 'unknown-host.local'])
+            ->getJson('http://unknown-host.local/api/settings');
+        $respUnknown->assertStatus(404);
     }
 
     /**
@@ -253,8 +269,12 @@ class ResolveTenantTest extends TestCase
      */
     public function test_laravel_api_backend_public_api_settings_alias_works(): void
     {
-        $resp = $this->withServerVariables(['HTTP_HOST' => 'titjaffna.lk'])
-            ->getJson('http://titjaffna.lk/laravel_api/backend/public/api/settings');
+        config(['app.url' => 'https://app-alias.local']);
+        InstituteDomain::query()->delete();
+        Cache::flush();
+
+        $resp = $this->withServerVariables(['HTTP_HOST' => 'app-alias.local'])
+            ->getJson('http://app-alias.local/laravel_api/backend/public/api/settings');
 
         $resp->assertStatus(200);
         $resp->assertJsonPath('site_name', 'TiT Official Portal');

@@ -33,9 +33,88 @@ export const SettingsProvider = ({ children }) => {
 
     const applySiteBranding = (data) => {
         if (!data || typeof data !== 'object') return;
-        if (data.site_name) {
-            document.title = data.site_name;
+        const siteName = data.site_name || 'Online Education';
+        document.title = siteName;
+
+        const currentOrigin = window.location.origin;
+        const currentPathname = window.location.pathname;
+        const canonicalUrl = `${currentOrigin}${currentPathname}`;
+
+        // 1. <link rel="canonical"> = location.origin + location.pathname
+        let canonicalLink = document.querySelector("link[rel='canonical']");
+        if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.rel = 'canonical';
+            document.head.appendChild(canonicalLink);
         }
+        canonicalLink.href = canonicalUrl;
+
+        // Helper for meta tags
+        const setMetaTag = (attrName, attrValue, content) => {
+            if (!content) return;
+            let el = document.querySelector(`meta[${attrName}='${attrValue}']`);
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attrName, attrValue);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        };
+
+        // 2. OpenGraph & Twitter tags
+        setMetaTag('property', 'og:url', canonicalUrl);
+        setMetaTag('property', 'og:title', siteName);
+        if (data.site_description) {
+            setMetaTag('property', 'og:description', data.site_description);
+            setMetaTag('name', 'description', data.site_description);
+        }
+
+        // 3. og:image (institute logo from settings, absolute URL on the same host)
+        const rawLogo = data.site_logo || data.site_favicon;
+        let absoluteLogoUrl = '';
+        if (rawLogo) {
+            if (rawLogo.startsWith('http://') || rawLogo.startsWith('https://')) {
+                try {
+                    const parsed = new URL(rawLogo);
+                    absoluteLogoUrl = parsed.href;
+                } catch (_) {
+                    absoluteLogoUrl = `${currentOrigin}/${rawLogo.replace(/^\/+/, '')}`;
+                }
+            } else {
+                absoluteLogoUrl = `${currentOrigin}/${rawLogo.replace(/^\/+/, '')}`;
+            }
+            setMetaTag('property', 'og:image', absoluteLogoUrl);
+        }
+
+        // 4. JSON-LD structured data (EducationalOrganization with institute name/url/logo/contact)
+        let jsonLdScript = document.querySelector("script[type='application/ld+json']#institute-json-ld")
+            || document.querySelector("script[type='application/ld+json']");
+        if (!jsonLdScript) {
+            jsonLdScript = document.createElement('script');
+            jsonLdScript.type = 'application/ld+json';
+            jsonLdScript.id = 'institute-json-ld';
+            document.head.appendChild(jsonLdScript);
+        }
+        const jsonLdData = {
+            '@context': 'https://schema.org',
+            '@type': 'EducationalOrganization',
+            name: siteName,
+            url: currentOrigin,
+        };
+        if (absoluteLogoUrl) {
+            jsonLdData.logo = absoluteLogoUrl;
+        }
+        if (data.contact_email || data.contact_phone || data.contact_whatsapp) {
+            jsonLdData.contactPoint = {
+                '@type': 'ContactPoint',
+                contactType: 'customer support',
+                ...(data.contact_email ? { email: data.contact_email } : {}),
+                ...(data.contact_phone ? { telephone: data.contact_phone } : {}),
+            };
+        }
+        jsonLdScript.textContent = JSON.stringify(jsonLdData, null, 2);
+
+        // 5. Favicon
         const faviconUrl = data.site_favicon || data.site_logo;
         if (faviconUrl) {
             let link = document.querySelector("link[rel~='icon']");
@@ -46,6 +125,8 @@ export const SettingsProvider = ({ children }) => {
             }
             link.href = faviconUrl;
         }
+
+        // 6. Theme preset
         if (data.theme_preset) {
             document.documentElement.dataset.themePreset = data.theme_preset;
             try { localStorage.setItem('tit_theme_preset', data.theme_preset); } catch (_) {}

@@ -15,15 +15,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Fallback Hosts
+    |--------------------------------------------------------------------------
+    |
+    | Additional hosts that always resolve to Institute 1 as a safety net
+    | even if the institute_domains table row is missing.
+    |
+    */
+    'fallback_hosts' => array_values(array_filter(array_map('trim', explode(',', env('TENANT_FALLBACK_HOSTS', ''))))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Platform Hosts
     |--------------------------------------------------------------------------
     |
     | Hosts where super-admin users have unrestricted access across all
-    | institutes. Defaults to the host in config('app.url') and titjaffna.lk.
+    | institutes. Defaults to the host in config('app.url'), localhost, and 127.0.0.1.
     |
     */
     'platform_hosts' => array_values(array_filter(array_unique(array_map('trim', explode(',', env('TENANT_PLATFORM_HOSTS', sprintf(
-        '%s,titjaffna.lk,localhost,127.0.0.1',
+        '%s,localhost,127.0.0.1',
         parse_url(env('APP_URL', 'http://127.0.0.1:8000'), PHP_URL_HOST) ?: 'localhost'
     ))))))),
 

@@ -356,9 +356,9 @@
 }
 
 .clp-badge:hover {
-  background: var(--hover-bg, var(--primary-color));
+  background: var(--accent-color, var(--primary-color));
   color: #fff;
-  border-color: var(--hover-bg, var(--primary-color));
+  border-color: var(--accent-color, var(--primary-color));
   transform: translateY(-1.0px);
 }
 

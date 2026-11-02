@@ -137,7 +137,7 @@
 .tit-reg-input:focus,
 .tit-reg-select:focus {
   outline: none;
-  border-color: var(--t-primary-border);
+  border-color: var(--t-primary);
   background: rgba(37, 99, 235, 0.15);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
@@ -190,7 +190,7 @@
 }
 
 .tit-reg-checkbox-label.tit-reg-checked {
-  border-color: var(--t-primary-border);
+  border-color: var(--t-primary);
   background: rgba(139, 92, 246, 0.2);
 }
 

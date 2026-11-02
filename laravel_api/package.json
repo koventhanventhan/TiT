@@ -29,6 +29,7 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lint:css-vars": "node ../scripts/lint_css_vars.cjs",
     "test:admin-contrast": "node ../scripts/admin_contrast_crawler.cjs"
   }
 }

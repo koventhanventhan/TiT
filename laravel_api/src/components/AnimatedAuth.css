@@ -143,11 +143,11 @@
 }
 
 .animated-box.register-mode::before {
-  background: linear-gradient(0deg, transparent, var(--t-primary), transparent, var(--t-primary-border));
+  background: linear-gradient(0deg, transparent, var(--t-primary), transparent, var(--secondary-color));
 }
 
 .animated-box.register-mode::after {
-  background: linear-gradient(0deg, transparent, var(--t-primary-border), transparent, var(--t-primary-border));
+  background: linear-gradient(0deg, transparent, var(--secondary-color), transparent, var(--secondary-color));
 }
 
 .animated-box.register-mode {

@@ -13,8 +13,19 @@ const presets = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
 function renderTokens(p) {
   const isDark = !!p.is_dark;
+  const isRoyal = p.id === 'royal';
   const glassBg = isDark ? 'rgba(21, 27, 46, 0.85)' : 'rgba(255, 255, 255, 0.85)';
   const glow = isDark ? `0 0 25px rgba(79, 70, 229, 0.35)` : `0 0 25px rgba(79, 11, 217, 0.25)`;
+
+  let primaryRgb = '79, 11, 217';
+  if (p.primary && p.primary.startsWith('#') && p.primary.length === 7) {
+    const r = parseInt(p.primary.slice(1, 3), 16);
+    const g = parseInt(p.primary.slice(3, 5), 16);
+    const b = parseInt(p.primary.slice(5, 7), 16);
+    primaryRgb = `${r}, ${g}, ${b}`;
+  }
+
+  const primaryLightVal = isRoyal ? '#6d28d9' : (isDark ? '#6366f1' : (p.primary_hover || p.primary));
 
   return `  /* Core Design Tokens */
   --t-primary: ${p.primary};
@@ -33,6 +44,7 @@ function renderTokens(p) {
   --t-text-2: ${p.text_2};
   --t-text-3: ${p.text_3};
   --t-muted: ${isDark ? '#94a3b8' : '#94a3b8'};
+  --t-bg-muted: ${isDark ? '#1e2447' : '#f8fafc'};
   --t-radius-card: ${p.radius_card};
   --t-radius-control: ${p.radius_control};
   --t-success: ${p.success};
@@ -56,29 +68,46 @@ function renderTokens(p) {
   --adm-on-accent: ${p.adm_on_accent || '#0f172a'};
   --adm-input-bg: ${p.adm_input_bg || '#241e3d'};
 
-  /* Legacy & Semantic Aliases (Unified Source of Truth) */
+  /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
   --primary-dark: var(--t-sidebar);
-  --primary-light: var(--t-primary-soft);
+  --primary-light: ${primaryLightVal};
   --secondary-color: var(--t-primary-hover);
   --accent-color: var(--t-primary);
+  --accent-color-rgb: ${primaryRgb};
   --accent-glow: ${glow};
   --gradient-1: linear-gradient(135deg, var(--t-sidebar) 0%, var(--t-primary) 100%);
   --gradient-2: linear-gradient(135deg, var(--t-primary) 0%, var(--t-primary-hover) 100%);
   --gradient-3: linear-gradient(135deg, var(--t-primary) 0%, var(--t-primary-hover) 100%);
   --gradient-hero: linear-gradient(135deg, var(--t-sidebar) 0%, var(--t-primary) 100%);
   --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --shadow-sm: 0 0.0625rem 0.1875rem rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 0.25rem 1rem rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 0.75rem 2.5rem rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 1.25rem 3.75rem rgba(15, 23, 42, 0.15);
   --shadow-glow: ${glow};
   --glass-bg: ${glassBg};
   --glass-border: var(--t-border);
+  --glass-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.12);
   --bg-light: var(--t-primary-soft);
   --bg-white: var(--t-surface);
+  --bg-dark: #0c0a09;
   --bg-navy: var(--t-sidebar);
   --text-dark: var(--t-text);
   --text-medium: var(--t-text-2);
   --text-light: var(--t-text-3);
   --text-muted: var(--t-text-3);
   --border-color: var(--t-border);
+  --border-light: ${isDark ? '#2a3350' : '#f1f5f9'};
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --tool-color: var(--t-primary);
+  --tool-color-rgb: ${primaryRgb};
   ${isDark ? 'color-scheme: dark;' : 'color-scheme: light;'}
 `;
 }

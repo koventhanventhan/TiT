@@ -1,8 +1,18 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'laravel_api', 'dist');
+
+// 0. Lint CSS variables
+console.log('Running lint:css-vars check...');
+try {
+  execSync(`node "${path.join(__dirname, 'lint_css_vars.cjs')}"`, { stdio: 'inherit' });
+} catch (err) {
+  console.error('publish_bundle failed: lint_css_vars check failed.');
+  process.exit(1);
+}
 const distAssetsDir = path.join(distDir, 'assets');
 const rootAssetsDir = path.join(rootDir, 'assets');
 const distIndex = path.join(distDir, 'index.html');

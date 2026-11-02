@@ -127,17 +127,47 @@ export const SettingsProvider = ({ children }) => {
         }
 
         // 6. Theme preset
-        if (data.theme_preset) {
-            document.documentElement.dataset.themePreset = data.theme_preset;
-            try { localStorage.setItem('tit_theme_preset', data.theme_preset); } catch (_) {}
+        const preset = data.theme_preset || 'royal';
+        document.documentElement.dataset.themePreset = preset;
+        try { localStorage.setItem('tit_theme_preset', preset); } catch (_) {}
+    };
+
+    const isConsoleRoute = () => {
+        try {
+            const p = window.location.pathname;
+            return p.startsWith('/admin') ||
+                   p.startsWith('/teacher') ||
+                   p.startsWith('/student') ||
+                   p.startsWith('/super-admin') ||
+                   p.startsWith('/parent');
+        } catch (_) {
+            return false;
         }
     };
 
-    const fetchSettings = async () => {
+    const handleSettingsFailure = (err, attempt) => {
+        // Ensure royal default is active on failure
+        if (!document.documentElement.dataset.themePreset) {
+            document.documentElement.dataset.themePreset = 'royal';
+        }
+        // Schedule background retry with exponential backoff
+        if (attempt < 8) {
+            const delay = Math.min(2000 * Math.pow(1.5, attempt), 30000);
+            setTimeout(() => {
+                fetchSettings(attempt + 1);
+            }, delay);
+        }
+        // Only block authenticated consoles if no settings exist
+        if (isConsoleRoute() && Object.keys(settings).length === 0) {
+            setError(err.message || 'Failed to connect to the backend server.');
+        }
+    };
+
+    const fetchSettings = async (attempt = 0) => {
         try {
             setError(null);
             const data = await settingsService.getSettings();
-            if (data && typeof data === 'object') {
+            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
                 applySiteBranding(data);
                 setSettings(data);
                 try {
@@ -146,19 +176,22 @@ export const SettingsProvider = ({ children }) => {
                         settings: data
                     }));
                 } catch (_) {}
+            } else {
+                handleSettingsFailure(new Error('Settings response was empty or non-JSON'), attempt);
             }
         } catch (err) {
             console.error('Failed to fetch settings:', err);
-            // Only show blocking error if we don't even have cached settings
-            if (Object.keys(settings).length === 0) {
-                setError(err.message || 'Failed to connect to the backend server.');
-            }
+            handleSettingsFailure(err, attempt);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        // Ensure royal default if attribute is absent
+        if (!document.documentElement.dataset.themePreset) {
+            document.documentElement.dataset.themePreset = 'royal';
+        }
         // Apply cached settings immediately on mount
         const initial = getInitialCachedSettings();
         if (initial && Object.keys(initial).length > 0) {
@@ -169,17 +202,17 @@ export const SettingsProvider = ({ children }) => {
                 if (cachedPreset) document.documentElement.dataset.themePreset = cachedPreset;
             } catch (_) {}
         }
-        fetchSettings();
+        fetchSettings(0);
     }, []);
 
-    const refreshSettings = () => fetchSettings();
+    const refreshSettings = () => fetchSettings(0);
 
     // Helper to get a setting with a default value
     const getSetting = (key, defaultValue) => {
         return (settings[key] !== undefined && settings[key] !== null) ? settings[key] : defaultValue;
     };
 
-    if (error && !Object.keys(settings).length) {
+    if (error && isConsoleRoute() && !Object.keys(settings).length) {
       return (
         <div style={{ 
           padding: '2.5rem', 

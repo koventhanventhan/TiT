@@ -19,7 +19,7 @@ class ZoomService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.zoom.base_url', 'https://api.zoom.us/v2');
+        $this->baseUrl = (string) (config('services.zoom.base_url') ?: 'https://api.zoom.us/v2');
         // Initial defaults from config
         $this->accountId = config('services.zoom.account_id');
         $this->clientId = config('services.zoom.client_id');

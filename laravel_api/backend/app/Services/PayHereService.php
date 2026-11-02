@@ -8,17 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class PayHereService
 {
-    protected string $merchantId;
-    protected string $merchantSecret;
+    protected ?string $merchantId = null;
+    protected ?string $merchantSecret = null;
     protected bool $isSandbox;
     protected string $currency;
 
     public function __construct()
     {
-        $this->merchantId     = config('payhere.merchant_id');
-        $this->merchantSecret = config('payhere.merchant_secret');
-        $this->isSandbox      = config('payhere.is_sandbox', true);
-        $this->currency       = config('payhere.currency', 'LKR');
+        $mId = config('payhere.merchant_id') ?: env('PAYHERE_MERCHANT_ID');
+        $this->merchantId     = ($mId !== null && trim((string) $mId) !== '') ? (string) $mId : null;
+        $mSec = config('payhere.merchant_secret') ?: env('PAYHERE_MERCHANT_SECRET');
+        $this->merchantSecret = ($mSec !== null && trim((string) $mSec) !== '') ? (string) $mSec : null;
+        $this->isSandbox      = (bool) config('payhere.is_sandbox', true);
+        $this->currency       = (string) (config('payhere.currency') ?: 'LKR');
     }
 
     /**
@@ -41,10 +43,10 @@ class PayHereService
     public function generateHash(string $orderId, float $amount): string
     {
         $formattedAmount = number_format($amount, 2, '.', '');
-        $secretHash = strtoupper(md5($this->merchantSecret));
+        $secretHash = strtoupper(md5((string) $this->merchantSecret));
 
         return strtoupper(md5(
-            $this->merchantId .
+            ((string) $this->merchantId) .
             $orderId .
             $formattedAmount .
             $this->currency .
@@ -107,7 +109,7 @@ class PayHereService
         $statusCode     = $data['status_code'] ?? '';
         $md5sig         = $data['md5sig'] ?? '';
 
-        $secretHash = strtoupper(md5($this->merchantSecret));
+        $secretHash = strtoupper(md5((string) $this->merchantSecret));
 
         $localHash = strtoupper(md5(
             $merchantId .

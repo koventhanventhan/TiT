@@ -21,7 +21,7 @@ class NotificationService
         // 'auto' = try WhatsApp first, fallback to email
         // 'email' = email only
         // 'whatsapp' = whatsapp only
-        $this->channel = config('services.notification_channel', 'auto');
+        $this->channel = (string) (config('services.notification_channel') ?: 'auto');
     }
 
     /**

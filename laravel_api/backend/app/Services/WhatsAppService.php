@@ -11,7 +11,7 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->driver = config('services.whatsapp.driver', 'meta');
+        $this->driver = (string) (config('services.whatsapp.driver') ?: 'meta');
     }
 
     /**

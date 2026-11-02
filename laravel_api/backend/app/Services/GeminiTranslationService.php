@@ -7,28 +7,48 @@ use Illuminate\Support\Facades\Log;
 
 class GeminiTranslationService
 {
-    protected string $apiKey;
+    protected ?string $apiKey = null;
     protected string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    protected static bool $hasLoggedUnconfigured = false;
 
-    public function __construct()
+    public function __construct(?string $apiKey = null)
     {
-        $this->apiKey = config('services.gemini.api_key');
-        if (!$this->apiKey) {
-            $this->apiKey = env('GEMINI_API_KEY');
+        if (func_num_args() > 0) {
+            $resolved = $apiKey;
+        } else {
+            $resolved = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
         }
+        $this->apiKey = ($resolved !== null && trim((string) $resolved) !== '') ? (string) $resolved : null;
+    }
+
+    public function isConfigured(): bool
+    {
+        return !empty($this->apiKey);
+    }
+
+    public static function resetLoggedUnconfigured(): void
+    {
+        self::$hasLoggedUnconfigured = false;
     }
 
     /**
      * Translate text to target language.
      *
-     * @param string $text
+     * @param string|null $text
      * @param string $targetLocale 'ta' or 'si'
-     * @return string
+     * @return string|null
      */
-    public function translate(string $text, string $targetLocale): string
+    public function translate(?string $text, string $targetLocale): ?string
     {
-        if (empty($this->apiKey)) {
-            Log::error('Gemini API Key is missing.');
+        if ($text === null || trim($text) === '') {
+            return $text;
+        }
+
+        if (!$this->isConfigured()) {
+            if (!self::$hasLoggedUnconfigured) {
+                Log::info('Gemini API Key is not configured. Translation skipped.');
+                self::$hasLoggedUnconfigured = true;
+            }
             return $text;
         }
 
@@ -37,7 +57,7 @@ class GeminiTranslationService
         $prompt = "Translate the following word/phrase to {$languageName}. Return ONLY the translated text, no explanation or extra characters. Text: \"{$text}\"";
 
         try {
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            $url = $this->baseUrl;
             $response = Http::withHeaders([
                 'x-goog-api-key' => $this->apiKey,
                 'Content-Type' => 'application/json',

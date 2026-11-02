@@ -28,7 +28,7 @@ class AnswerService
         $this->normalizer = $normalizer ?? new TextNormalizer();
         $this->minCandidateSimilarity = (float) config('rag.retrieval.min_candidate_similarity', 0.50);
         $this->similarityThreshold = (float) config('rag.retrieval.similarity_threshold', config('rag.retrieval.min_similarity', 0.70));
-        $this->groundingAction = (string) config('rag.grounding.action', 'replace');
+        $this->groundingAction = (string) (config('rag.grounding.action') ?: 'replace');
     }
 
     /**

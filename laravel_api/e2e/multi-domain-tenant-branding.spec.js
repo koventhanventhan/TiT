@@ -110,4 +110,101 @@ test.describe('Multi-Domain Tenant Branding & Isolation', () => {
     const html = await page.evaluate(() => document.documentElement.outerHTML);
     expect(html.toLowerCase()).not.toContain('titjaffna');
   });
+
+  test('Two-State Smoke: theme attribute present renders valid gradients and visible text', async ({ page }) => {
+    await page.route('**/api/settings', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ site_name: 'Online Education Platform', theme_preset: 'royal' })
+      });
+    });
+    await page.route('**/api/**', async (route) => {
+      if (route.request().url().includes('/api/settings')) return;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: [] }) });
+    });
+
+    await page.goto('/');
+    await page.waitForTimeout(200);
+
+    // State 1: Attribute present
+    const stateAttr = await page.evaluate(() => document.documentElement.dataset.themePreset);
+    expect(stateAttr).toBe('royal');
+
+    const varsPresent = await page.evaluate(() => {
+      const style = window.getComputedStyle(document.documentElement);
+      return {
+        grad1: style.getPropertyValue('--gradient-1').trim(),
+        gradHero: style.getPropertyValue('--gradient-hero').trim(),
+        shadowGlow: style.getPropertyValue('--shadow-glow').trim(),
+      };
+    });
+
+    expect(varsPresent.grad1.length).toBeGreaterThan(0);
+    expect(varsPresent.grad1).not.toBe('var(--gradient-1)');
+    expect(varsPresent.gradHero.length).toBeGreaterThan(0);
+    expect(varsPresent.gradHero).not.toBe('var(--gradient-hero)');
+    expect(varsPresent.shadowGlow.length).toBeGreaterThan(0);
+    expect(varsPresent.shadowGlow).not.toBe('var(--shadow-glow)');
+  });
+
+  test('Two-State Smoke: theme attribute absent falls back cleanly to royal without invisible text', async ({ page }) => {
+    await page.route('**/api/settings', async (route) => {
+      // Simulate failed or pending settings
+      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Server error' }) });
+    });
+    await page.route('**/api/**', async (route) => {
+      if (route.request().url().includes('/api/settings')) return;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: [] }) });
+    });
+
+    await page.goto('/');
+    await page.waitForTimeout(200);
+
+    // Explicitly remove the attribute to test resilient :root fallback
+    await page.evaluate(() => {
+      document.documentElement.removeAttribute('data-theme-preset');
+    });
+
+    const varsAbsent = await page.evaluate(() => {
+      const style = window.getComputedStyle(document.documentElement);
+      return {
+        grad1: style.getPropertyValue('--gradient-1').trim(),
+        gradHero: style.getPropertyValue('--gradient-hero').trim(),
+        shadowGlow: style.getPropertyValue('--shadow-glow').trim(),
+      };
+    });
+
+    // None of these variables should be empty or circular
+    expect(varsAbsent.grad1.length).toBeGreaterThan(0);
+    expect(varsAbsent.grad1).not.toBe('var(--gradient-1)');
+    expect(varsAbsent.gradHero.length).toBeGreaterThan(0);
+    expect(varsAbsent.gradHero).not.toBe('var(--gradient-hero)');
+    expect(varsAbsent.shadowGlow.length).toBeGreaterThan(0);
+    expect(varsAbsent.shadowGlow).not.toBe('var(--shadow-glow)');
+
+    // Verify key brand elements are visible
+    const logoVisible = await page.locator('.logo, .logo-text, .brand-logo').first().isVisible();
+    expect(logoVisible).toBe(true);
+
+    // Check no text has transparent fill without valid gradient
+    const hasInvisibleText = await page.evaluate(() => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const el = node.parentElement;
+        if (!el) continue;
+        const s = window.getComputedStyle(el);
+        const fill = s.webkitTextFillColor;
+        const clip = s.webkitBackgroundClip || s.backgroundClip || '';
+        const bgImg = s.backgroundImage;
+        if (fill === 'transparent' && (!clip.includes('text') || !bgImg || bgImg === 'none')) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    expect(hasInvisibleText).toBe(false);
+  });
 });

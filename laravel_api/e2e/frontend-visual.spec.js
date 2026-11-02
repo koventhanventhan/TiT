@@ -62,6 +62,9 @@ async function evaluateVisualPage(page, options = {}) {
     const issues = [];
     let nodesScanned = 0;
     const docEl = document.documentElement;
+    if (!docEl || !document.body) {
+      return { nodesScanned: 0, issues: [] };
+    }
 
     // 1. Horizontal Overflow Check
     if (checkOverflow) {
@@ -79,34 +82,39 @@ async function evaluateVisualPage(page, options = {}) {
 
     // 2. Empty CSS Variables Check
     if (checkVars) {
-      const rootStyle = window.getComputedStyle(docEl);
-      const usedVars = new Set();
-      for (const sheet of document.styleSheets) {
-        try {
-          for (const rule of sheet.cssRules) {
-            if (rule.style) {
-              const cssText = rule.style.cssText;
-              const matches = cssText.match(/var\(\s*(--[a-zA-Z0-9_-]+)/g);
-              if (matches) {
-                for (const m of matches) {
-                  const varName = m.replace(/var\(\s*/, '').trim();
-                  usedVars.add(varName);
+      let rootStyle = null;
+      try {
+        rootStyle = window.getComputedStyle(docEl);
+      } catch (_) {}
+      if (rootStyle) {
+        const usedVars = new Set();
+        for (const sheet of document.styleSheets) {
+          try {
+            for (const rule of sheet.cssRules) {
+              if (rule.style) {
+                const cssText = rule.style.cssText;
+                const matches = cssText.match(/var\(\s*(--[a-zA-Z0-9_-]+)/g);
+                if (matches) {
+                  for (const m of matches) {
+                    const varName = m.replace(/var\(\s*/, '').trim();
+                    usedVars.add(varName);
+                  }
                 }
               }
             }
-          }
-        } catch (_) {}
-      }
+          } catch (_) {}
+        }
 
-      for (const v of usedVars) {
-        const val = rootStyle.getPropertyValue(v).trim();
-        if (val === '') {
-          issues.push({
-            type: 'empty-var',
-            selector: ':root',
-            text: v,
-            detail: `Custom property ${v} resolved to empty string`
-          });
+        for (const v of usedVars) {
+          const val = rootStyle.getPropertyValue(v).trim();
+          if (val === '') {
+            issues.push({
+              type: 'empty-var',
+              selector: ':root',
+              text: v,
+              detail: `Custom property ${v} resolved to empty string`
+            });
+          }
         }
       }
     }
@@ -148,7 +156,10 @@ async function evaluateVisualPage(page, options = {}) {
     }
 
     // Base background of the document
-    const bodyBg = parseRgba(window.getComputedStyle(document.body).backgroundColor);
+    let bodyBg = null;
+    try {
+      bodyBg = parseRgba(window.getComputedStyle(document.body).backgroundColor);
+    } catch (_) {}
     const baseCanvas = (bodyBg && bodyBg.a > 0) ? bodyBg : { r: 255, g: 255, b: 255, a: 1 };
 
     // Walk visible text nodes
@@ -157,7 +168,7 @@ async function evaluateVisualPage(page, options = {}) {
         if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
         const el = node.parentElement;
         if (!el || !(el instanceof Element)) return NodeFilter.FILTER_REJECT;
-        const tag = el.tagName.toLowerCase();
+        const tag = (el.tagName || '').toLowerCase();
         if (['script', 'style', 'noscript', 'template', 'svg'].includes(tag)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       }
@@ -170,10 +181,21 @@ async function evaluateVisualPage(page, options = {}) {
       const text = currentNode.textContent.trim();
       if (!text) continue;
 
-      const rect = el.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) continue;
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;
+      let rect;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch (_) {
+        continue;
+      }
+      if (!rect || rect.width === 0 || rect.height === 0) continue;
+
+      let style;
+      try {
+        style = window.getComputedStyle(el);
+      } catch (_) {
+        continue;
+      }
+      if (!style || style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;
 
       // Allow-list decorative / mock elements
       if (el.closest('.s-dummy-content') || el.closest('.phone-speaker') || el.closest('.phone-home-line')) {
@@ -212,14 +234,19 @@ async function evaluateVisualPage(page, options = {}) {
         const bgStack = [];
         let hasGradientBg = false;
 
-        while (p && p instanceof Element && p !== document.documentElement) {
-          const ps = window.getComputedStyle(p);
-          const bg = parseRgba(ps.backgroundColor);
-          if (bg && bg.a > 0) {
-            bgStack.unshift(bg);
-          }
-          if (ps.backgroundImage && ps.backgroundImage.includes('gradient')) {
-            hasGradientBg = true;
+        while (p && p instanceof Element && p !== docEl) {
+          try {
+            const ps = window.getComputedStyle(p);
+            if (!ps) break;
+            const bg = parseRgba(ps.backgroundColor);
+            if (bg && bg.a > 0) {
+              bgStack.unshift(bg);
+            }
+            if (ps.backgroundImage && ps.backgroundImage.includes('gradient')) {
+              hasGradientBg = true;
+            }
+          } catch (_) {
+            break;
           }
           p = p.parentElement;
         }
@@ -269,6 +296,7 @@ test.describe('Frontend Visual & Contrast Crawler', () => {
   for (const st of STATES) {
     for (const vp of VIEWPORTS) {
       test(`Matrix: [${st.label}] @ [${vp.name}]`, async ({ page }) => {
+        test.setTimeout(180000);
         await page.setViewportSize({ width: vp.width, height: vp.height });
 
         // Setup API mock

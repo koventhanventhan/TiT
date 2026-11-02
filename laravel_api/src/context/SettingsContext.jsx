@@ -170,7 +170,7 @@ export const SettingsProvider = ({ children }) => {
         try {
             setError(null);
             const data = await settingsService.getSettings();
-            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            if (data && typeof data === 'object') {
                 applySiteBranding(data);
                 setSettings(data);
                 try {
@@ -180,7 +180,7 @@ export const SettingsProvider = ({ children }) => {
                     }));
                 } catch (_) {}
             } else {
-                handleSettingsFailure(new Error('Settings response was empty or non-JSON'), attempt);
+                handleSettingsFailure(new Error('Settings response was non-JSON'), attempt);
             }
         } catch (err) {
             console.error('Failed to fetch settings:', err);

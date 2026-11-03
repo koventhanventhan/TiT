@@ -118,12 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             const saveBtn = document.getElementById('saveBrandingBtn');
-            if (window.TitButton) {
-                TitButton.setLoading(saveBtn, 'Saving...');
-            } else if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
-            }
+            TitButton.setLoading(saveBtn, 'Saving...');
 
             const formData = new FormData(this);
             const tokenMeta = document.querySelector('meta[name="csrf-token"]');
@@ -178,12 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
                 .finally(() => {
-                    if (window.TitButton) {
-                        TitButton.clearLoading(saveBtn);
-                    } else if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.innerText = 'Save Changes';
-                    }
+                    TitButton.clearLoading(saveBtn);
                 });
         });
     }

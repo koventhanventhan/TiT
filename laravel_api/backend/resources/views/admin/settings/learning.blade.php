@@ -749,11 +749,15 @@
                 const removeBtn = container.parentElement.querySelector('.btn-danger');
                 if (removeBtn) removeBtn.style.display = '';
             } else {
-                Swal.fire({title: 'Error', text: data.message || 'Upload failed', type: 'error', customClass: 'swal-dark-popup'});
+                if (window.TitNotify) {
+                    TitNotify.error(data.message || 'Upload failed', { title: 'Error' });
+                }
             }
         } catch (error) {
             console.error('Error uploading image:', error);
-            Swal.fire({title: 'Error', text: 'An error occurred during upload', type: 'error', customClass: 'swal-dark-popup'});
+            if (window.TitNotify) {
+                TitNotify.error('An error occurred during upload', { title: 'Error' });
+            }
         } finally {
             loader.style.display = 'none';
         }
@@ -880,12 +884,9 @@
             const contentType = getContentType(file);
             if (type === 'note' || type === 'past_paper') {
                 if (file.size > 50 * 1024 * 1024) {
-                    Swal.fire({
-                        title: 'File Too Large',
-                        text: 'Notes and Past Papers must be 50MB or less.',
-                        type: 'error',
-                        customClass: 'swal-dark-popup'
-                    });
+                    if (window.TitNotify) {
+                        TitNotify.error('Notes and Past Papers must be 50MB or less.', { title: 'File Too Large' });
+                    }
                     return;
                 }
                 const allowed = [
@@ -894,38 +895,33 @@
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 ];
                 if (!allowed.includes(contentType)) {
-                    Swal.fire({
-                        title: 'Invalid File Type',
-                        text: 'Only PDF, DOC, or DOCX files are allowed for notes and past papers.',
-                        type: 'error',
-                        customClass: 'swal-dark-popup'
-                    });
+                    if (window.TitNotify) {
+                        TitNotify.error('Only PDF, DOC, or DOCX files are allowed for notes and past papers.', { title: 'Invalid File Type' });
+                    }
                     return;
                 }
             } else if (type === 'recording') {
                 if (file.size > 500 * 1024 * 1024) {
-                    Swal.fire({
-                        title: 'File Too Large',
-                        text: 'Recordings must be 500MB or less.',
-                        type: 'error',
-                        customClass: 'swal-dark-popup'
-                    });
+                    if (window.TitNotify) {
+                        TitNotify.error('Recordings must be 500MB or less.', { title: 'File Too Large' });
+                    }
                     return;
                 }
                 if (!contentType.startsWith('video/')) {
-                    Swal.fire({
-                        title: 'Invalid File Type',
-                        text: 'Only video files (MP4, WebM, etc.) are allowed for recordings.',
-                        type: 'error',
-                        customClass: 'swal-dark-popup'
-                    });
+                    if (window.TitNotify) {
+                        TitNotify.error('Only video files (MP4, WebM, etc.) are allowed for recordings.', { title: 'Invalid File Type' });
+                    }
                     return;
                 }
             }
 
             if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Uploading...';
+                if (window.TitButton) {
+                    TitButton.setLoading(submitBtn, 'Uploading...');
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Uploading...';
+                }
             }
             if (progressContainer) {
                 progressContainer.style.display = 'block';
@@ -944,18 +940,17 @@
                 // Fallback to normal server upload
                 if (progressContainer) progressContainer.style.display = 'none';
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
+                    if (window.TitButton) {
+                        TitButton.clearLoading(submitBtn);
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
                 }
                 form._skipFirebase = true;
-                Swal.fire({
-                    title: 'Notice',
-                    text: 'Firebase Storage not configured. Uploading via server disk fallback...',
-                    type: 'info',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    customClass: 'swal-dark-popup'
-                });
+                if (window.TitNotify) {
+                    TitNotify.info('Firebase Storage not configured. Uploading via server disk fallback...', { title: 'Notice' });
+                }
                 setTimeout(() => {
                     HTMLFormElement.prototype.submit.call(form);
                 }, 600);
@@ -998,15 +993,16 @@
                 console.error('Firebase upload error:', uploadError);
                 if (progressContainer) progressContainer.style.display = 'none';
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
+                    if (window.TitButton) {
+                        TitButton.clearLoading(submitBtn);
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
                 }
-                Swal.fire({
-                    title: 'Upload Failed',
-                    text: uploadError.message || 'Failed to upload file to Firebase Storage.',
-                    type: 'error',
-                    customClass: 'swal-dark-popup'
-                });
+                if (window.TitNotify) {
+                    TitNotify.error(uploadError.message || 'Failed to upload file to Firebase Storage.', { title: 'Upload Failed' });
+                }
                 return;
             }
 
@@ -1060,16 +1056,17 @@
                     if (originalInputName) fileInput.setAttribute('name', originalInputName);
                     if (progressContainer) progressContainer.style.display = 'none';
                     if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalBtnText;
+                        if (window.TitButton) {
+                            TitButton.clearLoading(submitBtn);
+                        } else {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
                     }
 
-                    Swal.fire({
-                        title: 'Save Failed',
-                        text: errMsg,
-                        type: 'error',
-                        customClass: 'swal-dark-popup'
-                    });
+                    if (window.TitNotify) {
+                        TitNotify.error(errMsg, { title: 'Save Failed' });
+                    }
                     return;
                 }
 
@@ -1086,16 +1083,17 @@
                 if (originalInputName) fileInput.setAttribute('name', originalInputName);
                 if (progressContainer) progressContainer.style.display = 'none';
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
+                    if (window.TitButton) {
+                        TitButton.clearLoading(submitBtn);
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
                 }
 
-                Swal.fire({
-                    title: 'Error',
-                    text: 'An error occurred while saving the material.',
-                    type: 'error',
-                    customClass: 'swal-dark-popup'
-                });
+                if (window.TitNotify) {
+                    TitNotify.error('An error occurred while saving the material.', { title: 'Error' });
+                }
             }
         });
     });

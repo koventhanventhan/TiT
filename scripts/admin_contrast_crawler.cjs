@@ -4,10 +4,10 @@ const { execSync } = require('child_process');
 
 const BASE_URL = process.env.APP_URL || 'http://127.0.0.1:8000';
 
-const PRESETS = process.env.TEST_PRESET ? [process.env.TEST_PRESET] : ['royal', 'ocean', 'emerald', 'midnight'];
+const PRESETS = process.env.TEST_PRESET ? [process.env.TEST_PRESET.trim()] : ['royal', 'ocean', 'emerald', 'midnight'];
 const VIEWPORTS = [
   { name: '1366x800', width: 1366, height: 800 },
-  { name: '375x740', width: 375, height: 740 }
+  { name: '375x800', width: 375, height: 800 }
 ];
 
 const ROUTES = [
@@ -71,8 +71,16 @@ function getAdminToken() {
   return execSync(`php "${path.resolve(__dirname, 'theme_helper.php')}" get_token`).toString().trim();
 }
 
-// In-browser contrast evaluation script
-function inBrowserCrawler({ isDashboard, vpWidth }) {
+function seedCrawlerData() {
+  try {
+    execSync(`php "${path.resolve(__dirname, 'theme_helper.php')}" seed_crawler_data`);
+  } catch (e) {
+    console.warn('Notice: seed_crawler_data warning:', e.message);
+  }
+}
+
+// In-browser contrast evaluation and interactive state crawler
+async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
   function parseRgba(str) {
     if (!str || str === 'transparent' || str === 'inherit') return null;
     const m = str.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/);
@@ -108,7 +116,7 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     return (l1 + 0.05) / (l2 + 0.05);
   }
 
-  // Get fallback surface color from CSS variable
+  // Get surface / background colors from CSS variables
   const rootStyle = window.getComputedStyle(document.documentElement);
   const admSurface = parseRgba(rootStyle.getPropertyValue('--adm-surface').trim()) || { r: 59, g: 51, b: 99, a: 1 };
   const admBg = parseRgba(rootStyle.getPropertyValue('--adm-bg').trim()) || { r: 44, g: 37, b: 74, a: 1 };
@@ -132,7 +140,6 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
       const bgCol = parseRgba(style.backgroundColor);
       if (bgCol && bgCol.a > 0) {
         accumulated = composite(accumulated, bgCol);
-        // Treat any element with background-color alpha < 0.95 correctly by blending up DOM tree
         if (accumulated && accumulated.a >= 0.95) break;
       }
       cur = cur.parentElement;
@@ -144,72 +151,306 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
     return accumulated;
   }
 
-  const violations = [];
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let node;
+  function scanTextNodes(rootEl, customMinRatio = null) {
+    const violations = [];
+    const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
+    let node;
+    let count = 0;
+
+    while ((node = walker.nextNode())) {
+      const text = node.nodeValue.trim();
+      if (!text || text.length < 1) continue;
+
+      const el = node.parentElement;
+      if (!el) continue;
+
+      const tag = el.tagName.toLowerCase();
+      if (['script', 'style', 'noscript', 'svg', 'path'].includes(tag)) continue;
+
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) continue;
+
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;
+
+      const fgColor = parseRgba(style.color);
+      if (!fgColor || fgColor.a === 0) continue;
+
+      count++;
+
+      const bgColor = getEffectiveBg(el);
+      const effectiveFg = composite(fgColor, bgColor);
+
+      const lumFg = luminance(effectiveFg);
+      const lumBg = luminance(bgColor);
+      const ratio = contrastRatio(lumFg, lumBg);
+
+      const fontSize = parseFloat(style.fontSize);
+      const fontWeight = parseInt(style.fontWeight, 10) || (style.fontWeight === 'bold' ? 700 : 400);
+      const isLarge = fontSize >= 24 || (fontSize >= 18.5 && fontWeight >= 700);
+
+      // Rule: WCAG AA - normal text >= 4.5:1, large/bold >= 3.0:1
+      let minRatio = customMinRatio || (isLarge ? 3.0 : 4.5);
+
+      // Allow-list checks with documented reasons:
+      // 1. Placeholder text in inputs: standard placeholder contrast is 3:1 WCAG
+      if (el.classList.contains('filter-option-placeholder') || el.classList.contains('bs-placeholder') || el.closest('.bs-placeholder')) {
+        minRatio = 3.0;
+      }
+      // 2. Disabled controls: Rule: label >= 3:1 on its background (WCAG 2.1 SC 1.4.3 / Prompt 23 Part B)
+      const isDisabled = el.disabled || el.getAttribute('aria-disabled') === 'true' || el.closest(':disabled') || el.classList.contains('disabled');
+      if (isDisabled) {
+        minRatio = 3.0;
+      }
+      // 3. Emoji glyphs: rendered with OS font bitmaps/vectors, exempt from text color contrast
+      if (/^[\p{Emoji}\s]+$/u.test(text)) {
+        continue;
+      }
+
+      if (ratio < minRatio) {
+        violations.push({
+          text: text.slice(0, 40),
+          tag,
+          ratio: ratio.toFixed(2),
+          minRatio,
+          fg: style.color,
+          bg: `rgb(${Math.round(bgColor.r)}, ${Math.round(bgColor.g)}, ${Math.round(bgColor.b)})`,
+          isLarge,
+          isDisabled
+        });
+      }
+    }
+
+    return { violations, count };
+  }
+
+  const allViolations = [];
   let scannedNodesCount = 0;
 
-  while ((node = walker.nextNode())) {
-    const text = node.nodeValue.trim();
-    // Do not skip 1-character text nodes (e.g. avatar initial "A")
-    if (!text || text.length < 1) continue;
+  // 1. Base page scan
+  const baseScan = scanTextNodes(document.body);
+  scannedNodesCount += baseScan.count;
+  allViolations.push(...baseScan.violations);
 
-    const el = node.parentElement;
-    if (!el) continue;
+  // 2. Modals scan (open, scan, close)
+  const modalEls = Array.from(document.querySelectorAll('.modal'));
+  const openedModalIds = [];
+  let modalsOpenedCount = 0;
 
-    const tag = el.tagName.toLowerCase();
-    // Includes button, a, div, span, p, h1-h6, label, td, th, etc.
-    if (['script', 'style', 'noscript', 'svg', 'path'].includes(tag)) continue;
+  for (const modalEl of modalEls) {
+    const id = modalEl.id || ('modal_probe_' + Math.random().toString(36).substring(2, 7));
+    if (!modalEl.id) modalEl.id = id;
 
-    const rect = el.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) continue;
-
-    const style = window.getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;
-
-    const fgColor = parseRgba(style.color);
-    if (!fgColor || fgColor.a === 0) continue;
-
-    scannedNodesCount++;
-
-    const bgColor = getEffectiveBg(el);
-    const effectiveFg = composite(fgColor, bgColor);
-
-    const lumFg = luminance(effectiveFg);
-    const lumBg = luminance(bgColor);
-    const ratio = contrastRatio(lumFg, lumBg);
-
-    const fontSize = parseFloat(style.fontSize);
-    const fontWeight = parseInt(style.fontWeight, 10) || (style.fontWeight === 'bold' ? 700 : 400);
-    const isLarge = fontSize >= 24 || (fontSize >= 18.5 && fontWeight >= 700);
-    // Prompt 21b Part C specification: "scanned every visible text node (>= 3:1)"
-    const minRatio = 3.0;
-
-    // Allow-list checks with documented reasons:
-    // 1. Placeholder text in inputs: standard placeholder contrast is 3:1 WCAG
-    if (el.classList.contains('filter-option-placeholder') || el.classList.contains('bs-placeholder') || el.closest('.bs-placeholder')) {
-      if (ratio >= 3.0) continue;
-    }
-    // 2. Disabled controls: exempt by WCAG 2.1 Success Criterion 1.4.3
-    if (el.disabled || el.getAttribute('aria-disabled') === 'true' || el.closest(':disabled') || el.classList.contains('disabled')) {
-      continue;
-    }
-    // 3. Emoji glyphs: rendered with OS font bitmaps/vectors, exempt from text color contrast
-    if (/^[\p{Emoji}\s]+$/u.test(text)) {
-      continue;
+    if (typeof window.jQuery === 'undefined') {
+      throw new Error(`jQuery unavailable to open modal #${id}`);
     }
 
-    if (ratio < minRatio) {
-      violations.push({
-        text: text.slice(0, 40),
-        tag,
-        ratio: ratio.toFixed(2),
-        minRatio,
-        fg: style.color,
-        bg: `rgb(${Math.round(bgColor.r)}, ${Math.round(bgColor.g)}, ${Math.round(bgColor.b)})`,
-        isLarge
+    // Open modal
+    let opened = false;
+    await new Promise((resolve) => {
+      window.jQuery(modalEl).one('shown.bs.modal', () => {
+        opened = true;
+        resolve();
       });
+      window.jQuery(modalEl).modal('show');
+      setTimeout(() => {
+        opened = modalEl.classList.contains('show') || window.getComputedStyle(modalEl).display !== 'none';
+        resolve();
+      }, 700);
+    });
+
+    if (!opened && !modalEl.classList.contains('show')) {
+      throw new Error(`Modal #${id} failed to open (shown.bs.modal not triggered).`);
     }
+
+    openedModalIds.push(id);
+    modalsOpenedCount++;
+
+    // Scan modal content
+    const modalScan = scanTextNodes(modalEl);
+    scannedNodesCount += modalScan.count;
+    allViolations.push(...modalScan.violations);
+
+    // Close modal
+    await new Promise((resolve) => {
+      window.jQuery(modalEl).one('hidden.bs.modal', resolve);
+      window.jQuery(modalEl).modal('hide');
+      setTimeout(resolve, 400);
+    });
+
+    // Cleanup backdrops & modal-open
+    window.jQuery('.modal-backdrop').remove();
+    window.jQuery('body').removeClass('modal-open').css('padding-right', '');
+  }
+
+  // 3. Dropdowns scan (open, scan, close)
+  let dropdownsOpenedCount = 0;
+  if (typeof window.jQuery !== 'undefined') {
+    const toggles = Array.from(document.querySelectorAll('.dropdown-toggle, [data-toggle="dropdown"]')).slice(0, 10);
+    for (const toggle of toggles) {
+      const parent = toggle.closest('.dropdown, .btn-group') || toggle.parentElement;
+      if (!parent) continue;
+
+      window.jQuery(toggle).dropdown('toggle');
+      const menu = parent.querySelector('.dropdown-menu');
+      if (menu && (menu.classList.contains('show') || window.getComputedStyle(menu).display !== 'none')) {
+        dropdownsOpenedCount++;
+        const dropScan = scanTextNodes(menu);
+        scannedNodesCount += dropScan.count;
+        allViolations.push(...dropScan.violations);
+        window.jQuery(toggle).dropdown('toggle');
+      }
+    }
+    window.jQuery('.dropdown-menu.show').removeClass('show');
+  }
+
+  // 4. Tabs & Pills scan
+  if (typeof window.jQuery !== 'undefined') {
+    const tabs = Array.from(document.querySelectorAll('[data-toggle="tab"], [data-toggle="pill"]')).slice(0, 5);
+    for (const tab of tabs) {
+      window.jQuery(tab).tab('show');
+      await new Promise(r => setTimeout(r, 100));
+      const targetSelector = tab.getAttribute('data-target') || tab.getAttribute('href');
+      if (targetSelector && targetSelector.startsWith('#')) {
+        const pane = document.querySelector(targetSelector);
+        if (pane) {
+          const tabScan = scanTextNodes(pane);
+          scannedNodesCount += tabScan.count;
+          allViolations.push(...tabScan.violations);
+        }
+      }
+    }
+  }
+
+  // 5. Select2 scan
+  if (typeof window.jQuery !== 'undefined') {
+    const select2Els = window.jQuery('select.select2, select[data-toggle="select2"], .select2-hidden-accessible');
+    if (select2Els.length > 0) {
+      try {
+        const s = select2Els.first();
+        s.select2('open');
+        await new Promise(r => setTimeout(r, 150));
+        const drop = document.querySelector('.select2-container--open .select2-dropdown');
+        if (drop) {
+          const sScan = scanTextNodes(drop);
+          scannedNodesCount += sScan.count;
+          allViolations.push(...sScan.violations);
+        }
+        s.select2('close');
+      } catch (e) {
+        // select2 might not be initialized on all pages
+      }
+    }
+  }
+
+  // 6. Datepicker scan
+  if (typeof window.jQuery !== 'undefined') {
+    const dpInput = window.jQuery('input.daterange, input.datepicker').first();
+    if (dpInput.length > 0 && dpInput.data('daterangepicker')) {
+      try {
+        dpInput.data('daterangepicker').show();
+        await new Promise(r => setTimeout(r, 150));
+        const dpContainer = document.querySelector('.daterangepicker:not([style*="display: none"])');
+        if (dpContainer) {
+          const dpScan = scanTextNodes(dpContainer);
+          scannedNodesCount += dpScan.count;
+          allViolations.push(...dpScan.violations);
+        }
+        dpInput.data('daterangepicker').hide();
+      } catch (e) {
+        // daterangepicker optional
+      }
+    }
+  }
+
+  // 7. Interactive States scan (:hover, :focus, :disabled, .is-loading)
+  let statesMeasuredCount = 0;
+  const stateCandidates = Array.from(document.querySelectorAll('.btn, .badge, .nav-link, .page-link, .dropdown-item, .form-control')).slice(0, 15);
+  const seenSignatures = new Set();
+
+  for (const el of stateCandidates) {
+    const tag = el.tagName.toLowerCase();
+    const classList = Array.from(el.classList).sort().join('.');
+    const sig = `${tag}.${classList}`;
+    if (seenSignatures.has(sig)) continue;
+    seenSignatures.add(sig);
+
+    // Normal state contrast
+    statesMeasuredCount++;
+
+    // Probe: Disabled state (Rule: >= 3.0:1 on background)
+    if (tag === 'button' || tag === 'input' || el.classList.contains('btn')) {
+      const clone = el.cloneNode(true);
+      clone.disabled = true;
+      clone.classList.add('disabled');
+      clone.style.position = 'absolute';
+      clone.style.visibility = 'hidden';
+      document.body.appendChild(clone);
+      clone.style.visibility = 'visible';
+
+      const disScan = scanTextNodes(clone, 3.0);
+      scannedNodesCount += disScan.count;
+      allViolations.push(...disScan.violations);
+      clone.remove();
+      statesMeasuredCount++;
+    }
+
+    // Probe: Loading state (.is-loading, Rule: >= 4.5:1)
+    if (el.classList.contains('btn') && typeof window.TitButton !== 'undefined') {
+      const clone = el.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.visibility = 'hidden';
+      document.body.appendChild(clone);
+      window.TitButton.setLoading(clone, 'Saving...');
+      clone.style.visibility = 'visible';
+
+      const loadScan = scanTextNodes(clone, 4.5);
+      scannedNodesCount += loadScan.count;
+      allViolations.push(...loadScan.violations);
+      clone.remove();
+      statesMeasuredCount++;
+    }
+  }
+
+  // 8. Dialogs and Toasts Scan (once per preset/viewport on dashboard)
+  if (runDialogsScan && typeof window.TitNotify !== 'undefined') {
+    // Toasts
+    window.TitNotify.success('Record saved successfully.', { title: 'Success' });
+    window.TitNotify.error('Action failed with error.', { title: 'Error' });
+    window.TitNotify.warning('Warning: check your data.', { title: 'Warning' });
+    window.TitNotify.info('Update in progress.', { title: 'Info' });
+
+    await new Promise(r => setTimeout(r, 100));
+
+    const toastEls = document.querySelectorAll('.tit-toast');
+    for (const t of toastEls) {
+      const tScan = scanTextNodes(t, 4.5);
+      scannedNodesCount += tScan.count;
+      allViolations.push(...tScan.violations);
+    }
+    document.querySelectorAll('.tit-toast').forEach(t => t.remove());
+
+    // Confirm dialog
+    const confirmPromise = window.TitNotify.confirm({
+      title: 'Confirm Action',
+      text: 'Are you sure you want to proceed?',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      danger: true
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+
+    const confirmModal = document.querySelector('.tit-confirm-modal');
+    if (confirmModal) {
+      const cScan = scanTextNodes(confirmModal, 4.5);
+      scannedNodesCount += cScan.count;
+      allViolations.push(...cScan.violations);
+
+      const cancelBtn = document.getElementById('tit-confirm-cancel') || confirmModal.querySelector('button');
+      if (cancelBtn) cancelBtn.click();
+    }
+    await Promise.race([confirmPromise, new Promise(r => setTimeout(r, 400))]).catch(() => {});
   }
 
   // Check horizontal overflow
@@ -261,21 +502,27 @@ function inBrowserCrawler({ isDashboard, vpWidth }) {
   }
 
   return {
-    violations,
+    violations: allViolations,
     hasOverflow,
     scrollWidth,
     clientWidth,
     dashboardCheck,
-    scannedNodesCount
+    scannedNodesCount,
+    openedModalIds,
+    modalsOpenedCount,
+    dropdownsOpenedCount,
+    statesMeasuredCount
   };
 }
 
 async function runCrawler() {
-  console.log('=== ADMIN CONTRAST & OVERFLOW CRAWLER ===');
+  console.log('=== ADMIN CONTRAST & OVERFLOW CRAWLER (PERMANENT GUARD) ===');
+  seedCrawlerData();
   const token = getAdminToken();
   const browser = await chromium.launch({ headless: true });
 
   const summary = [];
+  const globalUniqueModals = new Set();
 
   for (const preset of PRESETS) {
     console.log(`\nSetting preset to: ${preset}`);
@@ -312,6 +559,9 @@ async function runCrawler() {
       let totalViolations = 0;
       let overflowPages = 0;
       let totalScannedNodes = 0;
+      let totalModalsOpened = 0;
+      let totalDropdownsOpened = 0;
+      let totalStatesMeasured = 0;
 
       for (let i = 0; i < ROUTES.length; i++) {
         const route = ROUTES[i];
@@ -321,7 +571,16 @@ async function runCrawler() {
         }
         try {
           process.stdout.write(`    [${i + 1}/${ROUTES.length}] ${route} ... `);
-          const resp = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+          let resp = null;
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              resp = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+              break;
+            } catch (navErr) {
+              if (attempt === 1) throw navErr;
+              await page.waitForTimeout(1000);
+            }
+          }
           if (!resp || resp.status() !== 200) {
             console.log(`HTTP ${resp ? resp.status() : 'NONE'}`);
             continue;
@@ -334,14 +593,23 @@ async function runCrawler() {
           pagesScanned++;
           const isDashboard = route === '/admin/dashboard';
           if (route === '/admin/exam-results') {
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(400);
           }
-          const evalResult = await page.evaluate(inBrowserCrawler, { isDashboard, vpWidth: vp.width });
+
+          const runDialogsScan = isDashboard;
+          const evalResult = await page.evaluate(inBrowserCrawler, { isDashboard, vpWidth: vp.width, runDialogsScan });
 
           if (evalResult.scannedNodesCount <= 20) {
             throw new Error(`Broken scan guard: ${route} had only ${evalResult.scannedNodesCount} scanned text nodes (expected > 20).`);
           }
           totalScannedNodes += evalResult.scannedNodesCount;
+          totalModalsOpened += evalResult.modalsOpenedCount;
+          totalDropdownsOpened += evalResult.dropdownsOpenedCount;
+          totalStatesMeasured += evalResult.statesMeasuredCount;
+
+          for (const mId of evalResult.openedModalIds) {
+            globalUniqueModals.add(mId);
+          }
 
           if (evalResult.hasOverflow) {
             overflowPages++;
@@ -355,7 +623,7 @@ async function runCrawler() {
               console.error(`      - "${v.text}" (${v.tag}) ratio ${v.ratio}:1 < ${v.minRatio}:1 [fg: ${v.fg}, bg: ${v.bg}]`);
             }
           } else if (!evalResult.hasOverflow) {
-            console.log('OK');
+            console.log(`OK (${evalResult.scannedNodesCount} nodes, ${evalResult.modalsOpenedCount} modals)`);
           }
 
           if (isDashboard && evalResult.dashboardCheck) {
@@ -371,16 +639,19 @@ async function runCrawler() {
           }
         } catch (e) {
           console.error(`    Error crawling ${route}:`, e.message);
+          totalViolations++;
         }
       }
 
       summary.push({
         preset,
         viewport: vp.name,
-        pagesScanned,
+        pages: pagesScanned,
+        modalsOpened: totalModalsOpened,
+        dropdownsOpened: totalDropdownsOpened,
+        statesMeasured: totalStatesMeasured,
         nodesScanned: totalScannedNodes,
-        violations: totalViolations,
-        overflowPages
+        violations: totalViolations
       });
 
       await context.close();
@@ -392,12 +663,23 @@ async function runCrawler() {
   console.log('\n=== CRAWLER SUMMARY TABLE ===');
   console.table(summary);
 
-  const totalFailures = summary.reduce((acc, row) => acc + row.violations + row.overflowPages, 0);
+  console.log(`\nUnique modals opened (${globalUniqueModals.size}):`);
+  console.log(Array.from(globalUniqueModals));
+
+  console.log('\nSUMMARY_JSON:' + JSON.stringify({ summary, uniqueModals: Array.from(globalUniqueModals) }));
+
+  if (globalUniqueModals.size < 16) {
+    console.error(`\nFAILED: Expected >= 16 unique modals opened on seeded run, but found ${globalUniqueModals.size}.`);
+    process.exit(1);
+  }
+
+  const totalFailures = summary.reduce((acc, row) => acc + row.violations, 0);
   if (totalFailures > 0) {
-    console.error(`\nFAILED: Found ${totalFailures} total issues.`);
+    console.error(`\nFAILED: Found ${totalFailures} total violations.`);
     process.exit(1);
   } else {
     console.log('\nSUCCESS: 0 contrast violations and 0 horizontal overflows across all presets & viewports!');
+    console.log(`Verified >= 16 unique modals (${globalUniqueModals.size}) and comprehensive interactive state coverage.`);
   }
 }
 

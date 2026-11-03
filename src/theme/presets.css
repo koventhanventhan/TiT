@@ -36,6 +36,7 @@
   --adm-text-2: #cbd5e1;
   --adm-text-3: #a8b3c7;
   --adm-accent: #EB8153;
+  --adm-accent-strong: #fb923c;
   --adm-btn: #EB8153;
   --adm-btn-text: #0f172a;
   --adm-on-accent: #0f172a;
@@ -132,6 +133,7 @@ html[data-theme-preset="royal"], [data-theme-preset="royal"] {
   --adm-text-2: #cbd5e1;
   --adm-text-3: #a8b3c7;
   --adm-accent: #EB8153;
+  --adm-accent-strong: #fb923c;
   --adm-btn: #EB8153;
   --adm-btn-text: #0f172a;
   --adm-on-accent: #0f172a;
@@ -228,6 +230,7 @@ html[data-theme-preset="ocean"], [data-theme-preset="ocean"] {
   --adm-text-2: #cbd5e1;
   --adm-text-3: #a3b6d1;
   --adm-accent: #7cc4ff;
+  --adm-accent-strong: #7cc4ff;
   --adm-btn: #0b5fd9;
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;
@@ -324,6 +327,7 @@ html[data-theme-preset="emerald"], [data-theme-preset="emerald"] {
   --adm-text-2: #cbd5e1;
   --adm-text-3: #a7c4bd;
   --adm-accent: #6ee7b7;
+  --adm-accent-strong: #6ee7b7;
   --adm-btn: #047857;
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;
@@ -420,6 +424,7 @@ html[data-theme-preset="midnight"], [data-theme-preset="midnight"] {
   --adm-text-2: #cbd5e1;
   --adm-text-3: #94a3b8;
   --adm-accent: #a5b4fc;
+  --adm-accent-strong: #a5b4fc;
   --adm-btn: #4f46e5;
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;

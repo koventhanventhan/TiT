@@ -113,7 +113,7 @@
                             @endphp
                             <tr>
                                 <td>
-                                    <span style="font-weight: 700; font-size: 0.78rem; color: #9ca3af;">#{{ $payment->id }}</span>
+                                    <span style="font-weight: 700; font-size: 0.78rem; color: var(--adm-text-2);">#{{ $payment->id }}</span>
                                 </td>
                                 <td>
                                     @if($student)
@@ -125,8 +125,8 @@
                                                 <span class="badge badge-info ml-1" style="font-size: 0.65rem; padding: 1px 5px; font-family: monospace;">{{ $student->index_number }}</span>
                                             @endif
                                         </div>
-                                        <div style="font-size: 0.72rem; color: #9ca3af; margin-top: 2px;">
-                                            <span style="color: #a78bfa; font-weight: 700;">G{{ $student->current_grade ?: '?' }}</span>
+                                        <div style="font-size: 0.72rem; color: var(--adm-text-2); margin-top: 2px;">
+                                            <span style="color: var(--adm-text); font-weight: 700;">G{{ $student->current_grade ?: '?' }}</span>
                                             <span style="opacity: 0.4; margin: 0 4px;">|</span>
                                             <span style="font-weight: 600;">{{ strtoupper($student->medium ?: 'ENG') }}</span>
                                             <span style="opacity: 0.4; margin: 0 4px;">|</span>
@@ -135,7 +135,7 @@
                                                     {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}
                                                 @elseif($student->parent_id && $student->parent && $student->parent->phone_number)
                                                     {{ str_starts_with($student->parent->phone_number, '94') ? '+' . $student->parent->phone_number : $student->parent->phone_number }}
-                                                    <span style="font-size: 0.6rem; color: #6b7280;">(parent)</span>
+                                                    <span style="font-size: 0.6rem; color: var(--adm-text-2);">(parent)</span>
                                                 @else
                                                     {{ $student->email }}
                                                 @endif
@@ -189,7 +189,7 @@
                                     <div style="font-size: 0.78rem; color: #d1d5db;">
                                         {{ $payment->created_at ? $payment->created_at->format('M d, Y') : '—' }}
                                     </div>
-                                    <div style="font-size: 0.68rem; color: #9ca3af;">
+                                    <div style="font-size: 0.68rem; color: var(--adm-text-2);">
                                         {{ $payment->created_at ? $payment->created_at->diffForHumans() : '' }}
                                     </div>
                                 </td>

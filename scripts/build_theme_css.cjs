@@ -63,6 +63,7 @@ function renderTokens(p) {
   --adm-text-2: ${p.adm_text_2 || '#cbd5e1'};
   --adm-text-3: ${p.adm_text_3 || '#a8b3c7'};
   --adm-accent: ${p.adm_accent || '#EB8153'};
+  --adm-accent-strong: ${p.adm_accent_strong || (isRoyal ? '#fb923c' : p.adm_accent || '#EB8153')};
   --adm-btn: ${p.adm_btn || '#EB8153'};
   --adm-btn-text: ${p.adm_btn_text || '#0f172a'};
   --adm-on-accent: ${p.adm_on_accent || '#0f172a'};
@@ -308,7 +309,7 @@ body {
   color: var(--adm-text) !important;
 }
 .btn-outline-info {
-  color: #38bdf8 !important;
+  color: #7dd3fc !important;
   border-color: #38bdf8 !important;
   background-color: transparent !important;
 }
@@ -347,7 +348,7 @@ body {
   color: #0f172a !important;
 }
 .btn-outline-danger {
-  color: #f87171 !important;
+  color: #fca5a5 !important;
   border-color: #f87171 !important;
   background-color: transparent !important;
 }
@@ -469,6 +470,32 @@ body {
   border-color: var(--adm-border) !important;
   color: var(--adm-text) !important;
 }
+.btn-orange {
+  background-color: var(--adm-accent) !important;
+  border-color: var(--adm-accent) !important;
+  color: var(--adm-on-accent) !important;
+}
+.btn-orange:hover,
+.btn-orange:focus,
+.btn-orange:active,
+.btn-orange.active {
+  background-color: var(--adm-accent-hover, var(--adm-accent)) !important;
+  border-color: var(--adm-accent-hover, var(--adm-accent)) !important;
+  color: var(--adm-on-accent) !important;
+}
+.btn-blue {
+  background-color: var(--adm-btn) !important;
+  border-color: var(--adm-btn) !important;
+  color: var(--adm-btn-text) !important;
+}
+.btn-blue:hover,
+.btn-blue:focus,
+.btn-blue:active,
+.btn-blue.active {
+  background-color: var(--adm-btn-hover, var(--adm-btn)) !important;
+  border-color: var(--adm-btn-hover, var(--adm-btn)) !important;
+  color: var(--adm-btn-text) !important;
+}
 
 /* Loading state class */
 .is-loading,
@@ -477,25 +504,40 @@ body {
   cursor: wait !important;
   pointer-events: none !important;
   opacity: 1 !important;
-  color: var(--adm-on-accent, #ffffff) !important;
+  color: var(--adm-btn-text, #ffffff) !important;
   background-color: var(--adm-btn) !important;
   border-color: var(--adm-btn) !important;
+}
+.btn.is-loading * {
+  color: inherit !important;
 }
 .btn-secondary.is-loading {
   color: var(--adm-text) !important;
   background-color: var(--adm-surface-2) !important;
 }
+.btn-secondary.is-loading * {
+  color: inherit !important;
+}
 .btn-success.is-loading {
   color: #ffffff !important;
   background-color: #15803d !important;
+}
+.btn-success.is-loading * {
+  color: inherit !important;
 }
 .btn-danger.is-loading {
   color: #ffffff !important;
   background-color: #dc2626 !important;
 }
+.btn-danger.is-loading * {
+  color: inherit !important;
+}
 .btn-warning.is-loading {
   color: #0f172a !important;
   background-color: #f59e0b !important;
+}
+.btn-warning.is-loading * {
+  color: inherit !important;
 }
 
 /* Disabled buttons - rule: opacity 0.75, explicit high-contrast labels >= 3:1 on button background */
@@ -542,7 +584,7 @@ fieldset:disabled .btn {
 .btn-outline-danger.disabled {
   background-color: transparent !important;
   border-color: var(--adm-border) !important;
-  color: #f87171 !important;
+  color: #fca5a5 !important;
 }
 .btn-outline-warning:disabled,
 .btn-outline-warning.disabled {
@@ -554,7 +596,7 @@ fieldset:disabled .btn {
 .btn-outline-info.disabled {
   background-color: transparent !important;
   border-color: var(--adm-border) !important;
-  color: #38bdf8 !important;
+  color: #7dd3fc !important;
 }
 .btn-success:disabled,
 .btn-success.disabled {
@@ -718,14 +760,31 @@ textarea::placeholder {
 }
 
 /* Bootstrap Select */
+html [data-theme-version="dark"] .bootstrap-select .dropdown-toggle,
+html [data-theme-version="dark"] .bootstrap-select .filter-option,
+html [data-theme-version="dark"] .bootstrap-select .filter-option-inner,
+html [data-theme-version="dark"] .bootstrap-select .filter-option-inner-inner,
+.bootstrap-select,
 .bootstrap-select .dropdown-toggle,
 .bootstrap-select .filter-option,
 .bootstrap-select .filter-option-inner,
 .bootstrap-select .filter-option-inner-inner,
+.filter-option-inner-inner,
 .bootstrap-select .dropdown-toggle:focus {
+  color: var(--adm-text) !important;
+}
+.bootstrap-select .dropdown-toggle {
   background-color: var(--adm-input-bg) !important;
   border-color: var(--adm-border) !important;
+}
+.all-notification,
+a.all-notification {
   color: var(--adm-text) !important;
+  font-weight: 600 !important;
+}
+.all-notification:hover,
+a.all-notification:hover {
+  color: var(--adm-accent) !important;
 }
 .bootstrap-select.btn-group .dropdown-toggle.bs-placeholder,
 .bootstrap-select.btn-group .dropdown-toggle.bs-placeholder .filter-option,
@@ -748,6 +807,18 @@ textarea::placeholder {
 .bootstrap-select .dropdown-menu li.selected a {
   background-color: rgba(255, 255, 255, 0.08) !important;
   color: var(--adm-accent) !important;
+}
+.bootstrap-select .bs-actionsbox .btn,
+.bootstrap-select .bs-actionsbox button {
+  background-color: var(--adm-surface-2) !important;
+  color: var(--adm-text) !important;
+  border: 1px solid var(--adm-border) !important;
+  font-weight: 600 !important;
+}
+.bootstrap-select .bs-actionsbox .btn:hover,
+.bootstrap-select .bs-actionsbox button:hover {
+  background-color: var(--adm-btn) !important;
+  color: var(--adm-on-accent) !important;
 }
 
 /* Modals */
@@ -980,13 +1051,23 @@ textarea::placeholder {
   color: #0f172a !important;
   font-weight: 700 !important;
 }
+.badge-secondary {
+  background-color: var(--adm-surface-2) !important;
+  color: var(--adm-text) !important;
+  border: 1px solid var(--adm-border) !important;
+}
+.badge-secondary.light {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--adm-text) !important;
+  border: 1px solid var(--adm-border) !important;
+}
 .badge-danger {
   background-color: #dc2626 !important;
   color: #ffffff !important;
 }
 .badge-danger.light {
   background-color: rgba(239, 68, 68, 0.15) !important;
-  color: #f87171 !important;
+  color: #fca5a5 !important;
   border: 1px solid rgba(239, 68, 68, 0.3) !important;
 }
 .badge-info {
@@ -995,7 +1076,7 @@ textarea::placeholder {
 }
 .badge-info.light {
   background-color: rgba(14, 165, 233, 0.15) !important;
-  color: #38bdf8 !important;
+  color: #7dd3fc !important;
   border: 1px solid rgba(14, 165, 233, 0.3) !important;
 }
 
@@ -1008,7 +1089,7 @@ textarea::placeholder {
 
 /* Typography & Helpers */
 .text-primary {
-  color: var(--adm-accent) !important;
+  color: var(--adm-accent-strong, var(--adm-accent)) !important;
 }
 .text-dark {
   color: var(--adm-text) !important;

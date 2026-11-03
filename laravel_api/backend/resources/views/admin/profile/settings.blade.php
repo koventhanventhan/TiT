@@ -267,6 +267,15 @@
         font-weight: 600;
     }
 
+    .btn-orange {
+        background: var(--adm-accent);
+        color: var(--adm-on-accent);
+        border: none;
+        padding: 0.625rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }
+
     .password-toggle-wrapper {
         position: relative;
     }

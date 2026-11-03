@@ -630,7 +630,7 @@
                                         <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                                         <td>
                                             @if($payment->status === 'paid')
-                                                <span class="badge" style="background: #4caf50; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID</span>
+                                                <span class="badge" style="background: #15803d; color: #ffffff; font-weight: 700; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PAID</span>
                                                 <div class="small mt-1 payment-method-hint" style="color: #cbd5e1;">
                                                     @if($payment->displayMethod() === 'online')
                                                         Online (PayHere){{ $payment->transaction_id ? ' · ' . $payment->transaction_id : '' }}
@@ -654,11 +654,11 @@
                                                     @endif
                                                 </div>
                                             @elseif($payment->status === 'pending')
-                                                <span class="badge" style="background: #ffab2d; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PENDING</span>
+                                                <span class="badge" style="background: #f59e0b; color: #0f172a; font-weight: 700; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">PENDING</span>
                                             @elseif($payment->status === 'cancelled')
                                                 <span class="badge" style="background: #757575; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">CANCELLED</span>
                                             @else
-                                                <span class="badge" style="background: #f44336; color: #fff; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">{{ strtoupper($payment->status) }}</span>
+                                                <span class="badge" style="background: #dc2626; color: #fff; font-weight: 700; padding: 0.3125rem 0.75rem; border-radius: 1.25rem;">{{ strtoupper($payment->status) }}</span>
                                             @endif
                                         </td>
                                         <td class="nowrap-column">
@@ -680,11 +680,11 @@
                                                 @if($payment->status === 'paid')
                                                     {{-- Receipt View/Download Button --}}
                                                     <a href="{{ route('admin.students.payments.receipt', ['id' => $student->id, 'payment' => $payment->id]) }}" 
-                                                       target="_blank" 
-                                                       class="btn btn-sm btn-action-receipt" 
-                                                       title="View / Download PDF Receipt" 
-                                                       aria-label="View / Download PDF Receipt"
-                                                       style="min-height: 36px; background: #0284c7; border-color: #0284c7; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                        target="_blank" 
+                                                        class="btn btn-sm btn-action-receipt" 
+                                                        title="View / Download PDF Receipt" 
+                                                        aria-label="View / Download PDF Receipt"
+                                                        style="min-height: 36px; background: #0369a1; border-color: #0369a1; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
                                                         <i class="fa fa-file-pdf-o"></i> <span>Receipt</span>
                                                     </a>
 
@@ -695,7 +695,7 @@
                                                                 class="btn btn-sm btn-action-resend" 
                                                                 title="Resend receipt email & WhatsApp" 
                                                                 aria-label="Resend receipt email & WhatsApp"
-                                                                style="min-height: 36px; background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                                style="min-height: 36px; background: #4f46e5; border-color: #4f46e5; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
                                                             <i class="fa fa-paper-plane"></i> <span>Resend</span>
                                                         </button>
                                                     </form>
@@ -708,7 +708,7 @@
                                                             data-bs-target="#revertPaymentModal_{{ $payment->id }}"
                                                             title="Revert payment {{ $payment->year_month }} to pending" 
                                                             aria-label="Revert payment {{ $payment->year_month }} to pending"
-                                                            style="min-height: 36px; background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                            style="min-height: 36px; background: #b45309; border-color: #b45309; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
                                                         <i class="fa fa-undo"></i> <span>Revert</span>
                                                     </button>
                                                 @else
@@ -720,7 +720,7 @@
                                                             data-bs-target="#markPaidModal_{{ $payment->id }}"
                                                             title="Mark payment {{ $payment->year_month }} as paid" 
                                                             aria-label="Mark payment {{ $payment->year_month }} as paid"
-                                                            style="min-height: 36px; background: #4caf50; border-color: #4caf50; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                            style="min-height: 36px; background: #15803d; border-color: #15803d; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
                                                         <i class="fa fa-check"></i> <span>Mark Paid</span>
                                                     </button>
                                                 @endif
@@ -734,7 +734,7 @@
                                                         data-bs-target="#deletePaymentModal_{{ $payment->id }}"
                                                         title="Delete payment {{ $payment->year_month }}" 
                                                         aria-label="Delete payment {{ $payment->year_month }}"
-                                                        style="min-height: 36px; background: #f44336; border-color: #f44336; color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
+                                                        style="min-height: 36px; background: #dc2626; border-color: #dc2626; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px;">
                                                     <i class="fa fa-trash"></i> <span>Delete</span>
                                                 </button>
                                             </div>
@@ -859,7 +859,7 @@
                                                     </div>
                                                     <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
                                                         <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
-                                                        <button type="submit" class="btn btn-danger" style="min-height: 36px; font-weight: 700; background: #f44336; border-color: #f44336;">Delete Payment</button>
+                                                        <button type="submit" class="btn btn-danger" style="min-height: 36px; font-weight: 700; background: #dc2626; border-color: #dc2626; color: #ffffff;">Delete Payment</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -924,7 +924,7 @@
                                                         </div>
                                                         <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal" style="min-height: 36px;">Cancel</button>
-                                                            <button type="submit" class="btn btn-success" style="min-height: 36px; font-weight: 700; background: #4caf50; border-color: #4caf50;">Mark Paid</button>
+                                                            <button type="submit" class="btn btn-success" style="min-height: 36px; font-weight: 700; background: #15803d; border-color: #15803d; color: #ffffff;">Mark Paid</button>
                                                         </div>
                                                     </form>
                                                 </div>

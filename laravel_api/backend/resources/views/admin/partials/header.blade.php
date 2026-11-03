@@ -702,7 +702,7 @@
                                     <li class="text-center py-3" style="color:var(--adm-text-3);">No new notifications</li>
                                 </ul>
                             </div>
-                            <a class="all-notification" href="{{ route('admin.notifications.index') }}" style="color:var(--adm-accent);">
+                            <a class="all-notification" href="{{ route('admin.notifications.index') }}" style="color:var(--adm-text); font-weight:600;">
                                 See all notifications <i class="ti-arrow-right"></i>
                             </a>
                         </div>

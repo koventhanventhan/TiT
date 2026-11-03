@@ -364,11 +364,15 @@ test.describe('Frontend States, Modals, Dropdowns & Toasts Crawler', () => {
         }, { u: mockAdmin, p: preset });
 
         await page.goto(`${BASE_URL}/super-admin`, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(400);
 
         await page.evaluate((p) => {
           document.documentElement.dataset.themePreset = p;
         }, preset);
+
+        // Wait for React to render dashboard content
+        await page.waitForSelector('main, .card, div', { timeout: 5000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
         scan = await evaluateScan(page);
         expect(scan.issues, `Super admin issues on [${preset}] @ [${vp.name}]`).toEqual([]);

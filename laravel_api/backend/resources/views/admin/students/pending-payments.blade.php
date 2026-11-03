@@ -118,9 +118,11 @@
                                 <td>
                                     @if($student)
                                         <div>
-                                            <a href="{{ route('admin.students.edit', $student->id) }}" style="font-weight: 700; color: #ffab2d; text-decoration: none;" title="Edit student details">
-                                                {{ $student->full_name ?? $student->name }}
-                                            </a>
+                                            <p class="mb-0 d-inline">
+                                                <a href="{{ route('admin.students.edit', $student->id) }}" style="font-weight: 700; color: #ffab2d; text-decoration: none;" title="Edit student details">
+                                                    {{ $student->full_name ?? $student->name }}
+                                                </a>
+                                            </p>
                                             @if($student->index_number)
                                                 <span class="badge badge-info ml-1" style="font-size: 0.65rem; padding: 1px 5px; font-family: monospace;">{{ $student->index_number }}</span>
                                             @endif

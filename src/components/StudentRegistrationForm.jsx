@@ -1,10 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import { API_BASE_URL } from '../services/apiBase';
+import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { registerStep1, registerStep2, registerPaymentSuccess, sendMergeOtp, verifyMergeOtp } from '../services/authService'
+import { getAuthHeaders } from '../services/apiClient'
 import { useLocation } from 'react-router-dom'
-import { registerStep1, registerStep2, registerPaymentSuccess, verifyMergeOtp } from '../services/authService'
-import { FiX } from 'react-icons/fi'
+import { FiX, FiLoader } from 'react-icons/fi'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './StudentRegistrationForm.css'
+import { useToast } from '../components/shared/ToastContext';
+import FeeRow from './shared/FeeRow';
+import { formatRs } from '../utils/format';
+
 
 // Subject data structures
 // (Removed hardcoded arrays — subjects are now fetched from backend API grouped by category)
@@ -12,48 +18,132 @@ import './StudentRegistrationForm.css'
 const MONTHLY_AMOUNT = 500
 const gradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
-const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) => {
-  const { getSetting } = useSettings()
+const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, isAddSiblingMode = false }) => {
+  const toast = useToast();
+
+  const { getSetting, loading: settingsLoading } = useSettings()
   const { t, translate, language } = useLanguage()
   const location = useLocation()
-  const [step, setStep] = useState(1)
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  // reCAPTCHA v3
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search)
-    if (searchParams.get('step') === '2') {
-      setStep(2)
+    if (!RECAPTCHA_SITE_KEY) return
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) return
+
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }, [RECAPTCHA_SITE_KEY])
+
+  const executeRecaptcha = async (action = 'submit') => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null
+    try {
+      await new Promise((resolve) => window.grecaptcha.ready(resolve))
+      return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+    } catch (err) {
+      console.warn('reCAPTCHA execution failed:', err)
+      return null
     }
+  }
+  
+  // Read step from URL
+  const initialStep = React.useMemo(() => {
+    const searchParams = new window.URLSearchParams(location.search)
+    const stepParam = searchParams.get('step')
+    return stepParam ? parseInt(stepParam, 10) : 1
   }, [location.search])
+
+  const [step, setStep] = useState(initialStep)
   const [subjectsByCategory, setSubjectsByCategory] = useState({})
+  
+  // OTP state
+  const [otp, setOtp] = useState('')
+  const [parentData, setParentData] = useState(null)
+  const [newSiblingId, setNewSiblingId] = useState(null)
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false)
+  const [confirmingTimeout, setConfirmingTimeout] = useState(false)
 
   // Fetch subjects grouped by category from backend
+  const [packages, setPackages] = useState([])
+  const [packagesLoading, setPackagesLoading] = useState(true)
   React.useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
+      setPackagesLoading(true)
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_BASE_URL}/subjects/prices`)
-        if (response.ok) {
-          const data = await response.json()
+        
+        const [subRes, pkgRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/subjects/prices`),
+          fetch(`${API_BASE_URL}/packages`)
+        ])
+        
+        if (subRes.ok) {
+          const data = await subRes.json()
           setSubjectsByCategory(data)
         }
+        if (pkgRes.ok) {
+          const pkgData = await pkgRes.json()
+          setPackages(pkgData)
+        }
       } catch (err) {
-        console.error('Failed to fetch subjects:', err)
+        console.error('Failed to fetch data:', err)
+      } finally {
+        setPackagesLoading(false)
       }
     }
-    fetchSubjects()
+    fetchData()
   }, [])
 
   // Auto-initialize email from currently authenticated user
   React.useEffect(() => {
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
-    if (userStr) {
+    if (userStr && !isAddSiblingMode) {
       try {
         const u = JSON.parse(userStr)
         if (u && u.email) {
           setFormData(prev => ({ ...prev, email: u.email }))
         }
+        
+        // Also initialize selected subjects to accurately calculate the amount in step 2
+        if (u && u.selected_subjects) {
+          let subs = u.selected_subjects
+          if (typeof subs === 'string') {
+            try { subs = JSON.parse(subs) } catch(e) { subs = subs.split(',').map(s => s.trim()) }
+          }
+          if (Array.isArray(subs)) {
+             // In setFormData, also need to know the stream/grade to figure out availableSubjects
+             if (u.current_grade) {
+               setFormData(prev => ({ ...prev, currentGrade: u.current_grade }))
+             }
+             if (u.medium) {
+               setFormData(prev => ({ ...prev, medium: u.medium }))
+             }
+             if (u.stream) {
+               setSelectedStream(u.stream)
+             }
+             
+             // Wait for state updates, we can just set selected subjects directly 
+             // but they need to match the API data format.
+             // Usually it's just an array of names.
+             setSelectedSubjects(subs)
+          }
+        }
       } catch (e) {
-        console.error('Failed to parse user for email initialization:', e)
+        console.error('Failed to parse user for initialization:', e)
       }
     }
   }, [])
@@ -71,41 +161,6 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
     phoneNumber: '',
     email: ''
   })
-  const [selectedStream, setSelectedStream] = useState('')
-  const [selectedSubjects, setSelectedSubjects] = useState([])
-
-  // Re-hydrate state from localStorage
-  useEffect(() => {
-    try {
-      const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        if (u) {
-          setFormData(prev => ({
-            ...prev,
-            fullName: u.full_name || prev.fullName,
-            dateOfBirth: u.date_of_birth || prev.dateOfBirth,
-            gender: u.gender || prev.gender,
-            schoolName: u.school_name || prev.schoolName,
-            medium: u.medium || prev.medium,
-            onlineExperience: u.online_experience !== undefined ? (u.online_experience ? 'yes' : 'no') : prev.onlineExperience,
-            deviceUsed: u.device_used || prev.deviceUsed,
-            currentGrade: u.current_grade || prev.currentGrade,
-            username: u.username || prev.username,
-            phoneNumber: u.phone_number || prev.phoneNumber,
-            email: u.email || prev.email
-          }));
-          if (u.stream) setSelectedStream(u.stream);
-          if (u.selected_subjects) {
-            const parsed = typeof u.selected_subjects === 'string' ? JSON.parse(u.selected_subjects) : u.selected_subjects;
-            if (Array.isArray(parsed)) setSelectedSubjects(parsed);
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse user data from storage:', e);
-    }
-  }, [step]); // Run this when step changes or component mounts
   const [regTitle, setRegTitle] = useState('')
   const [regSubtitle, setRegSubtitle] = useState('')
   const [labelFullname, setLabelFullname] = useState('')
@@ -217,8 +272,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
       setBtnNext(getSetting('register_next_btn', t('reg_next_payment')))
     }
   }, [language, getSetting, t, translate])
-  // (selectedStream and selectedSubjects are now initialized in the useEffect above)
+  const [selectedStream, setSelectedStream] = useState('')
+  const [selectedSubjects, setSelectedSubjects] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isOfflineSubmitting, setIsOfflineSubmitting] = useState(false)
+  const offlineSubmittingRef = useRef(false)
   const [error, setError] = useState('')
   const [paymentChoice, setPaymentChoice] = useState(null)
   const [cardData, setCardData] = useState({ number: '', holder: '', expiry: '', cvv: '' })
@@ -243,27 +301,196 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
     const gradeNum = getGradeNumber(formData.currentGrade)
     if (!gradeNum) return []
 
-    if (gradeNum >= 1 && gradeNum <= 5) {
-      return subjectsByCategory['grade_1_to_5'] || []
-    } else if (gradeNum >= 6 && gradeNum <= 11) {
-      return subjectsByCategory['grade_6_to_11'] || []
+    let subs = []
+    if (gradeNum >= 1 && gradeNum <= 2) {
+      subs = subjectsByCategory['grade_1_to_2'] || []
+    } else if (gradeNum === 3) {
+      subs = subjectsByCategory['grade_3'] || []
+    } else if (gradeNum === 4) {
+      subs = subjectsByCategory['grade_4'] || []
+    } else if (gradeNum === 5) {
+      subs = subjectsByCategory['grade_5'] || []
+    } else if (gradeNum >= 6 && gradeNum <= 9) {
+      subs = subjectsByCategory['grade_6_to_9'] || []
+    } else if (gradeNum >= 10 && gradeNum <= 11) {
+      subs = subjectsByCategory['grade_10_to_11'] || []
     } else if (gradeNum >= 12 && gradeNum <= 13) {
-      return subjectsByCategory[selectedStream] || []
+      subs = subjectsByCategory[selectedStream] || []
     }
-    return []
+    
+    // Filter by selected medium if any
+    if (formData.medium) {
+      subs = subs.filter(s => s.medium === formData.medium || s.medium === 'both')
+    }
+
+    // Ensure unique subjects by name
+    const uniqueSubs = []
+    const seen = new Set()
+    for (const s of subs) {
+      if (!seen.has(s.name)) {
+        seen.add(s.name)
+        uniqueSubs.push(s)
+      }
+    }
+    
+    return uniqueSubs
   }
 
-  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, selectedStream, subjectsByCategory])
+  const availableSubjects = useMemo(() => getAvailableSubjects(), [formData.currentGrade, formData.medium, selectedStream, subjectsByCategory])
+
+  // Retrieve admission fees config
+  const admissionFeesConfigStr = getSetting('admission_fees_config', '{}')
+  const admissionFeesConfig = useMemo(() => {
+    try {
+      return JSON.parse(admissionFeesConfigStr)
+    } catch (e) {
+      return {}
+    }
+  }, [admissionFeesConfigStr])
 
   // Calculate total amount based on selected subjects
-  const totalAmount = useMemo(() => {
-    if (selectedSubjects.length === 0) return 0
-    return selectedSubjects.reduce((sum, subjectName) => {
-      // Find the subject's price from the available subjects array
+  const { monthlyAmount, admissionFee, totalAmount, appliedPackage, originalAmount } = useMemo(() => {
+    if (selectedSubjects.length === 0) return { monthlyAmount: 0, admissionFee: 0, totalAmount: 0, appliedPackage: null, originalAmount: 0 }
+    
+    const gradeNum = getGradeNumber(formData.currentGrade)
+    
+    // Original Monthly Fee Calculation (without package)
+    const originalMonthly = selectedSubjects.reduce((sum, subjectName) => {
       const subjectObj = availableSubjects.find(s => s.name === subjectName)
       return sum + (subjectObj ? parseFloat(subjectObj.price) : 0)
     }, 0)
-  }, [selectedSubjects, availableSubjects])
+    
+    let mAmount = originalMonthly
+    let appliedPkg = null
+
+    // Find applicable packages for this grade and medium
+    if (gradeNum && packages && packages.length > 0) {
+      const applicablePkgs = packages.filter(p => {
+        let grades = p.applicable_grades
+        if (typeof grades === 'string') {
+          try { grades = JSON.parse(grades) } catch(e) { grades = [] }
+        }
+        const hasGrade = Array.isArray(grades) && grades.some(g => parseInt(g, 10) === gradeNum)
+        const hasMedium = p.medium === 'both' || p.medium === formData.medium
+        return hasGrade && hasMedium
+      })
+      
+      const allSubjPkg = applicablePkgs.find(p => p.type === 'all_subjects')
+      if (allSubjPkg && availableSubjects.length > 0 && selectedSubjects.length === availableSubjects.length) {
+         mAmount = parseFloat(allSubjPkg.package_price)
+         appliedPkg = allSubjPkg
+      } else {
+         const mainSubjPkg = applicablePkgs.find(p => p.type === 'main_subjects')
+         
+         // Check if they selected all 5 mandatory main subjects
+         const mainSubjectNames = ['tamil', 'maths', 'science', 'english', 'history']
+         const selectedNamesLower = selectedSubjects.map(s => s.toLowerCase())
+         const hasAllMainSubjects = mainSubjectNames.every(ms => selectedNamesLower.includes(ms))
+
+         // Apply main_subjects package only if all main subjects are selected
+         if (mainSubjPkg && hasAllMainSubjects) {
+            const pkgBasePrice = parseFloat(mainSubjPkg.package_price)
+            let price = pkgBasePrice
+            if (mainSubjPkg.addon_price && parseFloat(mainSubjPkg.addon_price) > 0) {
+               const addonPrice = parseFloat(mainSubjPkg.addon_price)
+               // Use base_subject_count from package (how many subjects the package covers)
+               const baseCount = mainSubjPkg.base_subject_count || 5
+               if (selectedSubjects.length > baseCount) {
+                  const extraCount = selectedSubjects.length - baseCount
+                  price += extraCount * addonPrice
+               }
+            }
+            // Only apply if it actually saves money
+            if (price < originalMonthly) {
+               mAmount = price
+               appliedPkg = mainSubjPkg
+            }
+         }
+      }
+    }
+
+    let admFee = 0
+    if (gradeNum && admissionFeesConfig[gradeNum] && admissionFeesConfig[gradeNum].enabled) {
+      admFee = parseFloat(admissionFeesConfig[gradeNum].amount) || 0
+    }
+
+    return { 
+      monthlyAmount: mAmount, 
+      admissionFee: admFee, 
+      totalAmount: mAmount + admFee,
+      appliedPackage: appliedPkg,
+      originalAmount: originalMonthly
+    }
+  }, [selectedSubjects, availableSubjects, formData.currentGrade, formData.medium, admissionFeesConfig, packages])
+
+  // Dynamic Fee Info Message based on available subjects and packages
+  const dynamicFeeMessage = useMemo(() => {
+    if (availableSubjects.length === 0) return null;
+
+    const gradeNum = getGradeNumber(formData.currentGrade);
+    
+    // Calculate total price
+    let totalIndividualPrice = 0;
+    
+    const subjectPartsEn = availableSubjects.map(s => {
+      const price = parseFloat(s.price || 0);
+      totalIndividualPrice += price;
+      return `${s.name} = Rs. ${price.toFixed(0)}`;
+    });
+    
+    const subjectPartsTa = availableSubjects.map(s => {
+      const price = parseFloat(s.price || 0);
+      return `${s.name_ta || s.name} = Rs. ${price.toFixed(0)}`;
+    });
+
+    let msgEn = subjectPartsEn.join(', ') + ` (Total: Rs. ${totalIndividualPrice.toFixed(0)}). `;
+    let msgTa = subjectPartsTa.join(', ') + ` (மொத்தம்: Rs. ${totalIndividualPrice.toFixed(0)}). `;
+
+    // Find if there's a package for this grade and medium
+    let applicablePkgs = [];
+    if (gradeNum && packages && packages.length > 0) {
+      applicablePkgs = packages.filter(p => {
+        let grades = p.applicable_grades;
+        if (typeof grades === 'string') {
+          try { grades = JSON.parse(grades); } catch(e) { grades = []; }
+        }
+        const hasGrade = Array.isArray(grades) && grades.some(g => parseInt(g, 10) === gradeNum);
+        const hasMedium = p.medium === 'both' || p.medium === formData.medium;
+        return hasGrade && hasMedium;
+      });
+    }
+
+    const allSubjPkg = applicablePkgs.find(p => p.type === 'all_subjects');
+    const mainSubjPkg = applicablePkgs.find(p => p.type === 'main_subjects');
+
+    if (allSubjPkg) {
+      const pkgPrice = parseFloat(allSubjPkg.package_price).toFixed(0);
+      msgEn += `But if you select all subjects, your package price is only Rs. ${pkgPrice}!`;
+      msgTa += `ஆனால், நீங்கள் அனைத்துப் பாடங்களையும் தேர்ந்தெடுத்தால் உங்களுக்கான Package கட்டணம் Rs. ${pkgPrice} மட்டுமே!`;
+    } else if (mainSubjPkg) {
+       const pkgPrice = parseFloat(mainSubjPkg.package_price).toFixed(0);
+       const baseCount = mainSubjPkg.base_subject_count || 5;
+       const addonPrice = mainSubjPkg.addon_price ? parseFloat(mainSubjPkg.addon_price).toFixed(0) : 0;
+       
+       if (addonPrice > 0) {
+           msgEn += `But if you select ${baseCount} subjects, your package price will be Rs. ${pkgPrice}! Each additional subject costs Rs. ${addonPrice}.`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} மட்டுமே! அதன்பின் தேர்ந்தெடுக்கப்படும் ஒவ்வொரு கூடுதல் பாடத்திற்கும் கட்டணம் Rs. ${addonPrice} மட்டுமே!`;
+       } else {
+           msgEn += `But if you select ${baseCount} or more subjects, your package price will be reduced to Rs. ${pkgPrice}!`;
+           msgTa += `ஆனால், நீங்கள் ${baseCount} அல்லது அதற்கு மேற்பட்ட பாடங்களை தேர்ந்தெடுத்தால் Package கட்டணம் Rs. ${pkgPrice} ஆக குறைக்கப்படும்!`;
+       }
+    } else {
+       msgEn = `Note: Your monthly fee is calculated based on the subjects you select. ` + msgEn;
+       msgTa = `குறிப்பு: உங்கள் மாதக் கட்டணம் நீங்கள் தேர்ந்தெடுக்கும் பாடங்களின் அடிப்படையில் கணக்கிடப்படும். ` + msgTa;
+    }
+
+    return (
+      <>
+        <div style={{ marginBottom: '6px' }}>{msgEn}</div>
+        <div>{msgTa}</div>
+      </>
+    );
+  }, [availableSubjects, formData.currentGrade, formData.medium, packages]);
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -343,10 +570,12 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
       return
     }
 
-    const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
-    if (!formData.phoneNumber || phoneDigits.length < 10 || phoneDigits.length > 15) {
-      setError('Phone number must be 10-15 digits / தொலைபேசி எண் 10-15 இலக்கங்களாக இருக்க வேண்டும்')
-      return
+    if (!isAddSiblingMode) {
+      const phoneDigits = formData.phoneNumber.trim().replace(/\D/g, '')
+      if (!formData.phoneNumber || phoneDigits.length < 9 || phoneDigits.length > 15) {
+        setError('Phone number must be valid (9-15 digits) / தொலைபேசி எண் சரியாக இருக்க வேண்டும் (9 இலக்கங்கள்)')
+        return
+      }
     }
 
     const gradeNum = getGradeNumber(formData.currentGrade)
@@ -390,98 +619,135 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
         )
       }
 
-      if (localMergeToken) {
-        userData.merge_token = localMergeToken
+      if (isAddSiblingMode) {
+        // Strip out username and phone_number as they are not needed for siblings
+        delete userData.username;
+        delete userData.phone_number;
+        
+        const res = await fetch(`${API_BASE_URL}/auth/add-sibling`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(userData)
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || 'Failed to add sibling');
+        }
+        
+        const responseData = await res.json();
+        toast.success('Sibling added successfully!');
+        
+        // Update available profiles
+        let profiles = JSON.parse(localStorage.getItem('availableProfiles') || '[]');
+        if (profiles.length === 0) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            profiles.push(user);
+        }
+        profiles.push(responseData.profile);
+        localStorage.setItem('availableProfiles', JSON.stringify(profiles));
+        
+        setNewSiblingId(responseData.profile.id);
+        setIsLoading(false);
+        setStep(2);
+        setError('');
+        return;
       }
 
-      await registerStep1(userData)
+      if (mergeToken) {
+        userData.merge_token = mergeToken
+      }
+
+      // Get reCAPTCHA token before submitting step 1
+      const recaptchaToken = await executeRecaptcha('registration_step1')
+      if (recaptchaToken) userData.recaptcha_token = recaptchaToken
+
+      const res = await registerStep1(userData)
+      
+      if (res && res.status === 'existing_account_found') {
+        setParentData({
+          mergeToken: res.merge_token,
+          maskedContact: res.masked_contact,
+          userData: userData
+        })
+        try {
+          const { sendMergeOtp } = await import('../services/authService');
+          await sendMergeOtp(res.merge_token);
+          setStep(1.5)
+        } catch (e) {
+          console.error("OTP send err", e);
+          setError(e.message || 'Failed to send OTP. Please try again.');
+        }
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(false)
       setStep(2)
       setError('')
     } catch (err) {
       setIsLoading(false)
-      if (err.isMergeFlow) {
-        setIsMergeFlow(true)
-        setLocalMergeToken(err.mergeToken)
-        setMaskedContact(err.maskedContact)
-        return
-      }
       setError(err.message || 'Registration failed. Please try again.')
       console.error('Registration error:', err)
     }
   }
 
-  const handleMergeOtpSubmit = async (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    if (!mergeOtp) {
-      setError('Please enter the OTP.')
+    if (!otp || otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP.')
       return
     }
-
-    setIsLoading(true)
     setError('')
-
+    setIsLoading(true)
     try {
-      // In step 1, verifyMergeOtp will actually create the sibling right away
-      // because we already submitted the full form data in step 1, but wait!
-      // Wait, verifyMergeOtp only takes token and otp.
-      // But we ALREADY sent the form data in step1, and it failed with 409.
-      // So the backend DOES NOT have the form data saved! It returned 409 and discarded it.
-      // Ah! Phase 2: verifyMergeOtp just validates the OTP and creates the token.
-      // Then we must RESUBMIT step1 with the verified localMergeToken!
-      
-      const data = await verifyMergeOtp(localMergeToken, mergeOtp)
-      
-      // If verification succeeds, we resubmit handleStep1Submit with the localMergeToken!
-      // Wait, we can just call registerStep1 again.
-      
-      const gradeNum = getGradeNumber(formData.currentGrade)
-      const username = formData.username || formData.fullName.toLowerCase().replace(/\s+/g, '') || 'student'
-      const userData = {
-        username: formData.email || username,
-        full_name: formData.fullName,
-        phone_number: formData.phoneNumber.trim().replace(/\D/g, ''),
-        date_of_birth: formData.dateOfBirth,
-        gender: formData.gender,
-        school_name: formData.schoolName,
-        medium: formData.medium,
-        online_experience: formData.onlineExperience === 'yes',
-        device_used: formData.deviceUsed,
-        current_grade: formData.currentGrade,
-        stream: gradeNum && gradeNum >= 12 && gradeNum <= 13 ? selectedStream : null,
-        selected_subjects: JSON.stringify(selectedSubjects),
-        merge_token: localMergeToken,
-        ...Object.fromEntries(
-          customFieldLabels.map(label => [label.toLowerCase().replace(/\s+/g, '_'), formData[label.toLowerCase().replace(/\s+/g, '_')] || ''])
-        )
-      }
-
-      await registerStep1(userData)
-      setIsLoading(false)
-      setIsMergeFlow(false)
-      setStep(2)
-      setError('')
+      const { verifyMergeOtp } = await import('../services/authService')
+      await verifyMergeOtp(parentData.mergeToken, otp, parentData.userData)
+      toast.success('Account verified and merged successfully!')
+      if (onClose) onClose()
+      window.location.href = '/select-profile'
     } catch (err) {
       setIsLoading(false)
-      setError(err.message || 'OTP Verification failed.')
+      setError(err.message || 'Invalid OTP.')
     }
   }
 
-  const handlePaymentOffline = async (amount) => {
+  const handleResendOtp = async () => {
     setError('')
     setIsLoading(true)
     try {
-      await registerStep2('offline', amount)
-      setIsLoading(false)
-      alert(t('pay_offline_success'))
-      setStep(1)
-      setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-      setSelectedStream('')
-      setSelectedSubjects([])
-      if (onClose) onClose()
+      const { sendMergeOtp } = await import('../services/authService')
+      await sendMergeOtp(parentData.mergeToken)
+      toast.success('OTP resent successfully!')
     } catch (err) {
+      setError(err.message || 'Failed to resend OTP.')
+    }
+    setIsLoading(false)
+  }
+
+  const handlePaymentOffline = async (amount) => {
+    if (offlineSubmittingRef.current || isLoading || isOfflineSubmitting) return
+    offlineSubmittingRef.current = true
+    setIsOfflineSubmitting(true)
+    setError('')
+    setIsLoading(true)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
+    try {
+      await registerStep2('offline', amount, newSiblingId, { signal: controller.signal })
+      clearTimeout(timeoutId)
+      toast.success(t('pay_offline_success'))
+      if (onClose) onClose()
+      if (isAddSiblingMode) window.location.reload()
+      else window.location.href = '/student/dashboard'
+    } catch (err) {
+      clearTimeout(timeoutId)
       setIsLoading(false)
-      setError(err.message || 'Failed.')
+      setIsOfflineSubmitting(false)
+      offlineSubmittingRef.current = false
+      setError(err.name === 'AbortError' ? 'Request timed out. Please check your connection.' : (err.message || 'Failed.'))
     }
   }
 
@@ -506,7 +772,19 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
     setError('')
     setIsLoading(true)
     try {
-      const resp = await registerStep2('online', amount)
+      const resp = await registerStep2('online', amount, newSiblingId)
+      
+      if (!window.payhere) {
+          await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://www.payhere.lk/lib/payhere.js';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load PayHere'));
+              document.body.appendChild(script);
+          });
+      }
+
       setIsLoading(false)
 
       if (!window.payhere) {
@@ -520,21 +798,42 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
 
       window.payhere.onCompleted = async function onCompleted(orderId) {
         console.log("Payment completed. OrderID:" + orderId)
-        try {
-          await registerPaymentSuccess(resp.params.order_id, orderId)
-          alert(t('pay_online_success'))
-          setStep(1)
-          setFormData({ fullName: '', dateOfBirth: '', gender: '', schoolName: '', medium: '', onlineExperience: '', deviceUsed: '', currentGrade: '', username: '', phoneNumber: '' })
-          setCardData({ number: '', holder: '', expiry: '', cvv: '' })
-          setSelectedStream('')
-          setSelectedSubjects([])
-          if (onClose) onClose()
-          window.location.href = '/student/dashboard'
-        } catch (err) {
-          console.error('Failed to notify backend of payment success:', err)
-          alert('Payment succeeded but we couldn\'t update your status. Please contact support or login to check.')
-          if (onClose) onClose()
-          window.location.href = '/student/dashboard'
+        setIsConfirmingPayment(true)
+        setConfirmingTimeout(false)
+
+        const targetOrderId = resp.params?.order_id || orderId
+        const pollInterval = 3000
+        const maxAttempts = 20
+        let attempts = 0
+        let isConfirmed = false
+
+        while (attempts < maxAttempts && !isConfirmed) {
+          attempts++
+          try {
+            const data = await registerPaymentSuccess(targetOrderId, orderId, newSiblingId)
+            if (data && (data.status === 'paid' || data.registration_status === 'approved')) {
+              isConfirmed = true
+              setIsConfirmingPayment(false)
+              toast.success(t('pay_online_success') || 'Payment confirmed successfully!')
+              setTimeout(() => {
+                if (onClose) onClose()
+                if (isAddSiblingMode) window.location.reload()
+                else window.location.href = '/student/dashboard'
+              }, 1500)
+              return
+            }
+          } catch (err) {
+            console.warn('Polling payment success error:', err)
+          }
+
+          if (attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, pollInterval))
+          }
+        }
+
+        if (!isConfirmed) {
+          setIsConfirmingPayment(false)
+          setConfirmingTimeout(true)
         }
       }
 
@@ -560,63 +859,27 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
   return (
     <div className="tit-reg-overlay">
       <div className={`tit-reg-wrapper ${step === 3 ? 'tit-reg-step-payment-active' : ''}`}>
-        {onClose && (
-          <button className="tit-reg-close" onClick={onClose}>
-            <FiX />
-          </button>
-        )}
+        <button className="tit-reg-close" onClick={() => {
+          if (step === 2) {
+            setStep(1);
+          } else if (onClose) {
+            onClose();
+          } else {
+            window.location.href = '/';
+          }
+        }}>
+          <FiX />
+        </button>
 
         {step === 1 && (
           <div className="tit-reg-container">
-            <h2 className="tit-reg-title">{isMergeFlow ? 'Verify Account' : regTitle}</h2>
-            <p className="tit-reg-subtitle">
-              {isMergeFlow 
-                ? `An account with this contact already exists. We've sent a 6-digit code to ${maskedContact} to verify you're the parent.`
-                : regSubtitle}
-            </p>
+            <h2 className="tit-reg-title">{regTitle}</h2>
+            <p className="tit-reg-subtitle">{regSubtitle}</p>
 
             {error && <div className="tit-reg-error">{error}</div>}
 
-            {isMergeFlow ? (
-              <form onSubmit={handleMergeOtpSubmit} className="tit-reg-form">
-                <div className="tit-reg-group">
-                  <label htmlFor="mergeOtp" className="tit-reg-label">6-Digit Code <span className="tit-reg-required">*</span></label>
-                  <input
-                    type="text"
-                    id="mergeOtp"
-                    name="mergeOtp"
-                    value={mergeOtp}
-                    onChange={(e) => setMergeOtp(e.target.value)}
-                    className="tit-reg-input"
-                    required
-                    maxLength="6"
-                    pattern="\d{6}"
-                    placeholder="Enter 6-digit code"
-                  />
-                </div>
-                <div className="tit-reg-actions">
-                  <button
-                    type="button"
-                    className="tit-reg-btn tit-reg-btn-secondary"
-                    onClick={() => {
-                      setIsMergeFlow(false)
-                      setError('')
-                    }}
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    className="tit-reg-btn tit-reg-btn-primary"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? t('loading') : 'Verify & Continue'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="tit-reg-form">
-                {/* Full Name */}
+            <form onSubmit={handleSubmit} className="tit-reg-form">
+              {/* Full Name */}
               {labelFullname && (
                 <div className="tit-reg-group">
                   <label htmlFor="fullName" className="tit-reg-label">{labelFullname} <span className="tit-reg-required">*</span></label>
@@ -634,7 +897,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
               )}
 
               {/* Phone (for WhatsApp) */}
-              {labelPhone && (
+              {labelPhone && !isAddSiblingMode && (
                 <div className="tit-reg-group">
                   <label htmlFor="phoneNumber" className="tit-reg-label">{labelPhone} <span className="tit-reg-required">*</span></label>
                   <input
@@ -644,7 +907,7 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
                     className="tit-reg-input"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    required
+                    required={!isAddSiblingMode}
                     placeholder="e.g. 07XXXXXXXX"
                   />
                 </div>
@@ -837,6 +1100,11 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
               {availableSubjects.length > 0 && (
                 <div className="tit-reg-group">
                   <label className="tit-reg-label">{t('reg_subjects')} <span className="tit-reg-required">*</span></label>
+                  
+                  {/* Dynamic Fee Info Message */}
+                  <div style={{ backgroundColor: '#e0e7ff', color: '#3730a3', padding: '10px 15px', borderRadius: '6px', fontSize: '13px', marginBottom: '12px', borderLeft: '4px solid #4f46e5' }}>
+                    <strong>{dynamicFeeMessage}</strong>
+                  </div>
                   <div className="tit-reg-checkbox-group">
                     {availableSubjects.map((subjectObj) => (
                       <label
@@ -862,11 +1130,67 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
               <button
                 type="submit"
                 className="tit-reg-submit-btn"
-                disabled={isLoading}
+                disabled={isLoading || settingsLoading || packagesLoading}
               >
-                {isLoading ? t('reg_submitting') : btnNext}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('reg_submitting')}</span>
+                  </>
+                ) : (settingsLoading || packagesLoading ? 'Calculating fees...' : btnNext)}
               </button>
             </form>
+          </div>
+        )}
+
+        {step === 1.5 && (
+          <div className="tit-reg-container">
+            <h2 className="tit-reg-title">Verify Account</h2>
+            <p className="tit-reg-subtitle">An account exists with this contact.</p>
+            {error && <div className="tit-reg-error">{error}</div>}
+            <div className="registration-step step-otp animate-fade-in">
+              <div className="auth-alert info" style={{ marginBottom: '20px' }}>
+                <p>We found an existing account using this contact number/email.</p>
+                <p>To add this student to that family account, please enter the 6-digit code we just sent to <strong>{parentData?.maskedContact}</strong>.</p>
+              </div>
+
+              <form onSubmit={handleVerifyOtp} className="auth-form" style={{ marginTop: '20px' }}>
+                <div className="form-group">
+                  <label>Verification Code (OTP)</label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Enter 6-digit code"
+                    required
+                    style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem' }}
+                  />
+                </div>
+
+                <div className="form-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    className={`btn-primary submit-btn ${isLoading ? 'loading' : ''}`}
+                    disabled={isLoading || otp.length !== 6}
+                    style={{ width: '100%' }}
+                  >
+                    {isLoading ? <span className="spinner"></span> : 'Verify & Link Account'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-text"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    style={{ width: '100%', textAlign: 'center', color: 'var(--primary-color)' }}
+                  >
+                    Resend Code
+                  </button>
+                </div>
+              </form>
+            </div>
+            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }} style={{ marginTop: '1rem', background: 'none', border: 'none', cursor: 'pointer' }}>
+              {t('pay_back') || 'Back'}
+            </button>
           </div>
         )}
 
@@ -875,21 +1199,133 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null }) 
             <h2 className="tit-reg-title">{t('pay_title')}</h2>
             <p className="tit-reg-subtitle">{t('pay_subtitle')}</p>
             {error && <div className="tit-reg-error">{error}</div>}
-            <div className="tit-reg-payment-options">
-              <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4f46e5', marginBottom: '1.25rem' }}>
-                {t('pay_total')}: Rs. {totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT} {totalAmount > 0 ? '(Initial Payment)' : '(Monthly)'}
-              </p>
-              <button type="button" className="tit-reg-submit-btn" onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)} disabled={isLoading}>
-                {t('pay_offline')}
+            
+            {isConfirmingPayment ? (
+              <div className="tit-reg-confirming-payment" data-testid="reg-confirming-payment" style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                <FiLoader className="spin-icon" style={{ fontSize: '2.5rem', color: '#4f46e5', marginBottom: '1rem', animation: 'spin 1s linear infinite' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>
+                  Payment received – confirming…
+                </h3>
+                <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+                  Please wait while we confirm your payment...
+                </p>
+              </div>
+            ) : confirmingTimeout ? (
+              <div className="tit-reg-timeout-payment" data-testid="reg-timeout-payment" style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: '#b45309', marginBottom: '0.75rem' }}>
+                  Confirmation Pending
+                </h3>
+                <p style={{ color: '#374151', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+                  We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.
+                </p>
+                <button
+                  type="button"
+                  className="tit-reg-submit-btn"
+                  onClick={() => {
+                    if (onClose) onClose();
+                    if (isAddSiblingMode) window.location.reload();
+                    else window.location.href = '/student/dashboard';
+                  }}
+                >
+                  Continue to Dashboard
+                </button>
+              </div>
+            ) : (settingsLoading || packagesLoading) ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#4f46e5' }}>
+                Calculating payment details...
+              </div>
+            ) : (
+              <div className="tit-reg-payment-options">
+              {totalAmount > 0 && (
+                <div style={{
+                  marginBottom: '1rem',
+                  background: 'rgba(79, 11, 217, 0.12)',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(139, 92, 246, 0.3)'
+                }}>
+                  {appliedPackage ? (
+                    <>
+                      <FeeRow
+                        label="Subjects Total:"
+                        value={formatRs(originalAmount)}
+                        isStrikethrough={true}
+                      />
+                      <FeeRow
+                        label="Monthly Fee:"
+                        value={formatRs(monthlyAmount)}
+                        isDiscount={true}
+                      />
+                    </>
+                  ) : (
+                    <FeeRow
+                      label="Monthly Fee:"
+                      value={formatRs(monthlyAmount)}
+                    />
+                  )}
+
+                  {admissionFee > 0 && (
+                    <FeeRow
+                      label="Admission Fee (First Time):"
+                      value={formatRs(admissionFee)}
+                    />
+                  )}
+
+                  <FeeRow
+                    label="Total Amount:"
+                    value={formatRs(totalAmount)}
+                    isTotal={true}
+                  />
+                </div>
+              )}
+              {totalAmount === 0 && (
+                <FeeRow
+                  label={`${t('pay_total')} (Monthly):`}
+                  value={formatRs(MONTHLY_AMOUNT)}
+                  isTotal={true}
+                  style={{ marginBottom: '1.25rem' }}
+                />
+              )}
+              <button
+                type="button"
+                className="tit-reg-submit-btn"
+                onClick={() => handlePaymentOffline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
+                disabled={isLoading || isOfflineSubmitting}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, touchAction: 'manipulation' }}
+              >
+                {isOfflineSubmitting ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('submitting') || 'Submitting...'}</span>
+                  </>
+                ) : (
+                  t('pay_offline')
+                )}
               </button>
               <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
                 onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
                 disabled={isLoading}>
-                {isLoading ? t('pay_processing') : t('pay_online')}
+                {isLoading ? (
+                  <>
+                    <FiLoader className="spin-icon" />
+                    <span>{t('pay_processing') || 'Processing...'}</span>
+                  </>
+                ) : (
+                  t('pay_online')
+                )}
               </button>
             </div>
-            <button type="button" className="tit-reg-back-link" onClick={() => { setStep(1); setError(''); }}>
-              {t('pay_back')}
+            )}
+            <button type="button" className="tit-reg-back-link" onClick={() => { 
+              if (isAddSiblingMode) {
+                if (onClose) onClose();
+                window.location.reload();
+              } else {
+                setStep(1); setError(''); 
+              }
+            }}>
+              {isAddSiblingMode ? 'Pay Later' : t('pay_back')}
             </button>
           </div>
         )}

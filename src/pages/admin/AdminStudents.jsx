@@ -55,7 +55,6 @@ export default function AdminStudents() {
     }
 
     const handleDeleteSelected = async () => {
-        if (!window.confirm(`Are you sure you want to delete ${selectedStudents.length} students?`)) return
         setIsDeleting(true)
         try {
             await bulkDeleteAdminStudents(selectedStudents)
@@ -63,7 +62,6 @@ export default function AdminStudents() {
             setSelectedStudents([])
         } catch (error) {
             console.error('Failed to delete students:', error)
-            alert('Error deleting students')
         } finally {
             setIsDeleting(false)
         }

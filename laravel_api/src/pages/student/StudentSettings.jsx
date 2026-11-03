@@ -5,8 +5,12 @@ import SubjectUpdateModal, { formatPendingMediumMessage } from '../../components
 import MonthlyPaymentRulesCard from '../../components/student/MonthlyPaymentRulesCard'
 import { getStudentStats, cancelSubjectTopup } from '../../services/dashboardService'
 import { useLanguage } from '../../context/LanguageContext'
+import { useToast } from '../../components/shared/ToastContext'
+import { useConfirm } from '../../components/shared/ConfirmDialog'
 
 export default function StudentSettings() {
+    const toast = useToast()
+    const confirm = useConfirm()
     const [isAddSiblingModalOpen, setIsAddSiblingModalOpen] = useState(false)
     const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false)
     const [stats, setStats] = useState(null)
@@ -101,13 +105,20 @@ export default function StudentSettings() {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (window.confirm('Remove added subjects and cancel top-up?')) {
+                                        const ok = await confirm({
+                                            title: 'Cancel Subject Top-up',
+                                            message: 'Remove added subjects and cancel top-up?',
+                                            confirmText: 'Remove & Cancel',
+                                            danger: true
+                                        });
+                                        if (ok) {
                                             try {
                                                 await cancelSubjectTopup(stats.user.pending_topup.id);
                                                 const refreshed = await getStudentStats();
                                                 setStats(refreshed);
+                                                toast.success('Subject top-up cancelled.');
                                             } catch (e) {
-                                                alert(e.message || 'Failed to cancel');
+                                                toast.error(e.message || 'Failed to cancel');
                                             }
                                         }
                                     }}

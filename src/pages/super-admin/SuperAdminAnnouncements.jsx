@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { getSuperAdminAnnouncements, createSuperAdminAnnouncement } from '../../services/dashboardService'
 import { FiPlus, FiAlertCircle } from 'react-icons/fi'
+import { useToast } from '../../components/shared/ToastContext'
 import './SuperAdminInstitutes.css' // Reuse styles
 
 export default function SuperAdminAnnouncements() {
+    const toast = useToast()
     const [announcements, setAnnouncements] = useState([])
     const [loading, setLoading] = useState(true)
     const [formData, setFormData] = useState({ title: '', message: '', is_active: true })
@@ -31,9 +33,9 @@ export default function SuperAdminAnnouncements() {
             await createSuperAdminAnnouncement(formData)
             setFormData({ title: '', message: '', is_active: true })
             loadData()
-            alert('Announcement created successfully')
+            toast.success('Announcement created successfully')
         } catch (error) {
-            alert('Failed to create announcement')
+            toast.error('Failed to create announcement')
         } finally {
             setSubmitting(false)
         }

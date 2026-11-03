@@ -2,8 +2,12 @@ import React, { useState } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useLanguage } from '../context/LanguageContext'
 import './Contact.css'
+import { useToast } from '../components/shared/ToastContext';
+
 
 const Contact = () => {
+  const toast = useToast();
+
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage() // Assuming 'translate' function and 'language' are available from useLanguage
 
@@ -59,7 +63,7 @@ const Contact = () => {
     e.preventDefault()
     // Handle form submission here
     console.log('Form submitted:', formData)
-    alert(t('contact_success'))
+    toast.success(t('contact_success'))
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
   }
 

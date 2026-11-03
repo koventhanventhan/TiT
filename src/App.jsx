@@ -54,6 +54,8 @@ import TeacherMaterials from './pages/teacher/TeacherMaterials'
 import TeacherSchedule from './pages/teacher/TeacherSchedule'
 import TeacherReports from './pages/teacher/TeacherReports'
 import TeacherSettings from './pages/teacher/TeacherSettings'
+import { ToastProvider } from './components/shared/ToastContext'
+import { ConfirmProvider } from './components/shared/ConfirmDialog'
 import { SettingsProvider } from './context/SettingsContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthModalProvider } from './context/AuthModalContext'
@@ -165,21 +167,25 @@ function AppContent() {
 
 function App() {
   return (
-    <SettingsProvider>
-      <LanguageProvider>
-        <AuthModalProvider>
-          <Router
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true
-            }}
-          >
-            <ScrollToTop />
-            <AppContent />
-          </Router>
-        </AuthModalProvider>
-      </LanguageProvider>
-    </SettingsProvider>
+    <ToastProvider>
+      <ConfirmProvider>
+        <SettingsProvider>
+          <LanguageProvider>
+            <AuthModalProvider>
+              <Router
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true
+                }}
+              >
+                <ScrollToTop />
+                <AppContent />
+              </Router>
+            </AuthModalProvider>
+          </LanguageProvider>
+        </SettingsProvider>
+      </ConfirmProvider>
+    </ToastProvider>
   )
 }
 

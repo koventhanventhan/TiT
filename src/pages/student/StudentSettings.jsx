@@ -1,132 +1,260 @@
-import React from 'react'
-import { FiUser, FiMail, FiLock, FiBell, FiSave } from 'react-icons/fi'
-import './StudentSections.css'
+import React, { useState, useEffect } from 'react'
+import { FiAlertCircle } from 'react-icons/fi'
+import StudentRegistrationForm from '../../components/StudentRegistrationForm'
+import SubjectUpdateModal, { formatPendingMediumMessage } from '../../components/student/SubjectUpdateModal'
+import MonthlyPaymentRulesCard from '../../components/student/MonthlyPaymentRulesCard'
+import { getStudentStats, cancelSubjectTopup } from '../../services/dashboardService'
+import { useLanguage } from '../../context/LanguageContext'
+import { useToast } from '../../components/shared/ToastContext'
+import { useConfirm } from '../../components/shared/ConfirmDialog'
 
 export default function StudentSettings() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const toast = useToast()
+    const confirm = useConfirm()
+    const [isAddSiblingModalOpen, setIsAddSiblingModalOpen] = useState(false)
+    const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false)
+    const [stats, setStats] = useState(null)
+    const [loading, setLoading] = useState(true)
+
+    let t = (k, def) => def
+    let language = 'en'
+    try {
+        const lang = useLanguage()
+        if (lang) {
+            t = lang.t
+            language = lang.language
+        }
+    } catch (_) {}
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const data = await getStudentStats()
+                setStats(data)
+            } catch (err) {
+                console.error("Failed to load student stats", err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadData()
+    }, [])
 
     return (
-        <div className="student-section">
-            <div className="section-top">
-                <h2>Settings</h2>
+        <div style={{ paddingBottom: 40 }}>
+            {/* Header Section */}
+            <div style={{
+                display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24
+            }}>
+                <div>
+                    <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t-text)', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Settings</h1>
+                    <p style={{ color: 'var(--t-text-muted)', margin: 0, fontSize: 14 }}>Manage your profile and linked accounts</p>
+                </div>
             </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(25rem, 1fr))',
-                gap: 24
-            }}>
-                {/* Profile Section */}
-                <div style={{
-                    background: '#fff', borderRadius: 14, padding: 28,
-                    border: '1.0px solid #e2e8f0'
-                }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
-                        <FiUser style={{ color: '#2563eb' }} /> Profile Information
-                    </h3>
-                    <div style={{ display: 'grid', gap: 16 }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Full Name</label>
-                            <input
-                                type="text"
-                                defaultValue={user.name || ''}
-                                style={{
-                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
-                                    borderRadius: 10, fontSize: '0.9rem', color: '#334155', outline: 'none',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
+            {/* Content Area */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                
+                {/* Subjects & Medium */}
+                <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Subjects & Medium</h3>
+
+                    {stats?.user?.pending_topup && (
+                        <div
+                            className="status-card-topup-pending"
+                            data-testid="settings-topup-pending-card"
+                            style={{
+                                background: '#fffbeb',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                borderRadius: 12,
+                                padding: '16px 18px',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 14,
+                                marginBottom: 20,
+                                lineHeight: 1.5,
+                                boxSizing: 'border-box',
+                                flexWrap: 'wrap'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <FiAlertCircle style={{ flexShrink: 0, fontSize: 20, color: '#d97706' }} />
+                                <div>
+                                    <div style={{ fontWeight: 700, color: '#92400e' }}>
+                                        Subject Top-up Pending (Rs {parseFloat(stats.user.pending_topup.amount || 0).toFixed(0)} for {(stats.user.pending_topup.added_subjects || []).join(', ')})
+                                    </div>
+                                    <div style={{ fontSize: 13, color: '#b45309', marginTop: 2 }}>
+                                        Added subjects remain locked until paid.
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <button
+                                    onClick={() => setIsSubjectModalOpen(true)}
+                                    data-testid="settings-pay-topup-btn"
+                                    style={{
+                                        padding: '8px 16px', borderRadius: 8, border: 'none', background: '#d97706',
+                                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Pay Top-up
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        const ok = await confirm({
+                                            title: 'Cancel Subject Top-up',
+                                            message: 'Remove added subjects and cancel top-up?',
+                                            confirmText: 'Remove & Cancel',
+                                            danger: true
+                                        });
+                                        if (ok) {
+                                            try {
+                                                await cancelSubjectTopup(stats.user.pending_topup.id);
+                                                const refreshed = await getStudentStats();
+                                                setStats(refreshed);
+                                                toast.success('Subject top-up cancelled.');
+                                            } catch (e) {
+                                                toast.error(e.message || 'Failed to cancel');
+                                            }
+                                        }
+                                    }}
+                                    data-testid="settings-cancel-topup-btn"
+                                    style={{
+                                        padding: '7px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff',
+                                        color: '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Remove Added Subjects
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Email</label>
-                            <input
-                                type="email"
-                                defaultValue={user.email || ''}
-                                disabled
-                                style={{
-                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
-                                    borderRadius: 10, fontSize: '0.9rem', color: '#94a3b8', background: '#f8fafc',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
+                    )}
+                    
+                    {stats?.user?.pending_medium && (
+                        <div
+                            className="status-card-pending-medium"
+                            data-testid="settings-pending-medium-card"
+                            style={{
+                                background: '#fffbeb',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                borderRadius: 12,
+                                padding: '14px 16px',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                marginBottom: 20,
+                                lineHeight: 1.5,
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            <FiAlertCircle style={{ flexShrink: 0, fontSize: 18, color: '#d97706' }} />
+                            <span>
+                                {formatPendingMediumMessage(stats.user.medium, language, t)}
+                            </span>
                         </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Phone</label>
-                            <input
-                                type="tel"
-                                defaultValue={user.phone_number || ''}
-                                style={{
-                                    width: '100%', padding: '0.625rem 0.875rem', border: '1.0px solid #e2e8f0',
-                                    borderRadius: 10, fontSize: '0.9rem', color: '#334155', outline: 'none',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
-                        </div>
+                    )}
+
+                    <div style={{ marginBottom: 24 }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)' }}>
+                            Update your medium of learning and manage the subjects you are enrolled in. Any changes to your subjects may affect your monthly fee.
+                        </p>
                     </div>
-                    <button style={{
-                        marginTop: 20, display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                        color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600,
-                        fontSize: '0.9rem', cursor: 'pointer'
-                    }}>
-                        <FiSave /> Save Changes
-                    </button>
+                    
+                    <div style={{ background: 'var(--t-bg)', padding: 24, borderRadius: 16, border: '1px solid var(--t-border)' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Update Learning Preferences</h4>
+                        <button 
+                            disabled={loading}
+                            onClick={() => setIsSubjectModalOpen(true)} 
+                            style={{
+                                minHeight: 44, padding: '10px 24px', background: 'var(--t-primary)', color: '#fff', border: 'none', borderRadius: 10,
+                                fontWeight: 600, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer',
+                                opacity: loading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(79, 11, 217, 0.2)'
+                            }}>
+                            {loading ? 'Loading...' : 'Edit Subjects & Medium'}
+                        </button>
+                    </div>
                 </div>
 
-                {/* Notifications */}
-                <div style={{ display: 'grid', gap: 24 }}>
-                    <div style={{
-                        background: '#fff', borderRadius: 14, padding: 28,
-                        border: '1.0px solid #e2e8f0'
-                    }}>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
-                            <FiBell style={{ color: '#f59e0b' }} /> Notifications
-                        </h3>
-                        {[
-                            { label: 'Email notifications for new assignments', checked: true },
-                            { label: 'SMS alerts for upcoming classes', checked: false },
-                            { label: 'Weekly progress summary', checked: true }
-                        ].map((item, i) => (
-                            <div key={i} style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '0.75rem 0', borderBottom: i < 2 ? '1.0px solid #f1f5f9' : 'none'
-                            }}>
-                                <span style={{ color: '#334155', fontSize: '0.9rem' }}>{item.label}</span>
-                                <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24 }}>
-                                    <input type="checkbox" defaultChecked={item.checked} style={{ opacity: 0, width: 0, height: 0 }} />
-                                    <span style={{
-                                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                                        background: item.checked ? '#2563eb' : '#cbd5e1', borderRadius: 24,
-                                        transition: '0.3s'
-                                    }}>
-                                        <span style={{
-                                            position: 'absolute', height: 18, width: 18, left: item.checked ? 22 : 3, bottom: 3,
-                                            background: '#fff', borderRadius: '50%', transition: '0.3s'
-                                        }} />
-                                    </span>
-                                </label>
-                            </div>
-                        ))}
+                {/* Payments */}
+                <div
+                    className="t-card"
+                    id="payments"
+                    data-testid="settings-payments-card"
+                    style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}
+                >
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>
+                        {t('settings_payments_title', 'Monthly Payments & Policy')}
+                    </h3>
+                    <div style={{ marginBottom: 20 }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)', margin: 0 }}>
+                            {t('settings_payments_desc', 'Rules and schedule for monthly fees, automated reminders, suspensions, and receipts.')}
+                        </p>
                     </div>
+                    
+                    <MonthlyPaymentRulesCard isDark={false} compact={false} />
+                </div>
 
-                    <div style={{
-                        background: '#fff', borderRadius: 14, padding: 28,
-                        border: '1.0px solid #e2e8f0'
-                    }}>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, color: '#1e293b' }}>
-                            <FiLock style={{ color: '#ef4444' }} /> Security
-                        </h3>
-                        <button style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '0.625rem 1.25rem', background: '#fff',
-                            color: '#334155', border: '1.0px solid #e2e8f0', borderRadius: 10, fontWeight: 500,
-                            fontSize: '0.9rem', cursor: 'pointer'
+                {/* Siblings */}
+                <div className="t-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--t-border)', padding: '32px', boxShadow: 'var(--t-shadow-sm)' }}>
+                    <h3 style={{ margin: '0 0 24px 0', fontSize: 18, fontWeight: 700, color: 'var(--t-text)' }}>Siblings</h3>
+                    <div style={{ marginBottom: 24 }}>
+                        <p style={{ fontSize: 14, color: 'var(--t-text-muted)' }}>
+                            If you have siblings studying with us, you can add them to this same account. This avoids needing separate emails and passwords. Each sibling will have their own dashboard and payment portal.
+                        </p>
+                    </div>
+                    
+                    <div style={{ background: 'var(--t-bg)', padding: 24, borderRadius: 16, border: '1px solid var(--t-border)' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 700, color: 'var(--t-text)' }}>Add New Sibling</h4>
+                        <button onClick={() => setIsAddSiblingModalOpen(true)} style={{
+                            minHeight: 44, padding: '10px 24px', background: 'var(--t-primary)', color: '#fff', border: 'none', borderRadius: 10,
+                            fontWeight: 600, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 11, 217, 0.2)'
                         }}>
-                            <FiLock /> Change Password
+                            Open Add Sibling Form
                         </button>
                     </div>
                 </div>
             </div>
+
+            {/* Modals are rendered OUTSIDE .t-card: its hover transform would otherwise
+                turn position:fixed overlays into card-relative (broken layout). */}
+            {isSubjectModalOpen && stats?.user && (
+                <SubjectUpdateModal
+                    isOpen={isSubjectModalOpen}
+                    onClose={() => setIsSubjectModalOpen(false)}
+                    currentGrade={stats.user.current_grade}
+                    medium={stats.user.medium}
+                    pendingMedium={stats.user.pending_medium}
+                    stream={stats.user.stream}
+                    initialSubjects={stats.user.selected_subjects}
+                    onUpdateSuccess={(newSubjects, newPendingMedium) => {
+                        setStats(prev => ({
+                            ...prev,
+                            user: {
+                                ...prev.user,
+                                needs_subject_review: false,
+                                selected_subjects: newSubjects,
+                                ...(newPendingMedium ? { pending_medium: newPendingMedium } : {})
+                            }
+                        }))
+                        setIsSubjectModalOpen(false)
+                    }}
+                />
+            )}
+
+            {isAddSiblingModalOpen && (
+                <StudentRegistrationForm
+                    isOpen={isAddSiblingModalOpen}
+                    onClose={() => setIsAddSiblingModalOpen(false)}
+                    isAddSiblingMode={true}
+                />
+            )}
         </div>
     )
 }

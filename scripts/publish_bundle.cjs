@@ -13,6 +13,15 @@ try {
   console.error('publish_bundle failed: lint_css_vars check failed.');
   process.exit(1);
 }
+
+// 0b. Lint no native dialogs
+console.log('Running lint:dialogs check...');
+try {
+  execSync(`node "${path.join(__dirname, 'lint_no_native_dialogs.cjs')}"`, { stdio: 'inherit' });
+} catch (err) {
+  console.error('publish_bundle failed: lint_no_native_dialogs check failed.');
+  process.exit(1);
+}
 const distAssetsDir = path.join(distDir, 'assets');
 const rootAssetsDir = path.join(rootDir, 'assets');
 const distIndex = path.join(distDir, 'index.html');
@@ -139,4 +148,23 @@ if (multiHashes.length > 0) {
   console.warn('Warning: found multi-hash names:', multiHashes);
 } else {
   console.log('no multi-hash names');
+}
+
+// 7. Check for forbidden leak strings in bundle assets
+let titjaffnaCount = 0;
+let xInstituteIdCount = 0;
+for (const f of allReferenced) {
+  if (f.endsWith('.js')) {
+    const content = fs.readFileSync(path.join(rootAssetsDir, f), 'utf8');
+    const matchesTit = content.match(/titjaffna/gi);
+    if (matchesTit) titjaffnaCount += matchesTit.length;
+    const matchesInst = content.match(/X-Institute-Id/g);
+    if (matchesInst) xInstituteIdCount += matchesInst.length;
+  }
+}
+console.log(`0x titjaffna: ${titjaffnaCount === 0 ? 'PASS (0 occurrences)' : 'FAIL (' + titjaffnaCount + ')'}`);
+console.log(`0x X-Institute-Id: ${xInstituteIdCount === 0 ? 'PASS (0 occurrences)' : 'FAIL (' + xInstituteIdCount + ')'}`);
+if (titjaffnaCount > 0 || xInstituteIdCount > 0) {
+  console.error('publish_bundle failed: forbidden strings found in bundle!');
+  process.exit(1);
 }

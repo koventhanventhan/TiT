@@ -105,6 +105,14 @@ function renderTokens(p) {
   --text-muted: var(--t-text-3);
   --color-text: var(--t-text);
   --color-muted: var(--t-text-2);
+  --surface: var(--t-surface);
+  --surface-2: var(--t-bg-muted);
+  --text: var(--t-text);
+  --text-2: var(--t-text-2);
+  --text-3: var(--t-text-3);
+  --border: var(--t-border);
+  --primary: var(--t-primary);
+  --on-primary: var(--t-on-primary);
   --card-bg: var(--t-surface);
   --success: var(--t-success);
   --warning: var(--t-warning);

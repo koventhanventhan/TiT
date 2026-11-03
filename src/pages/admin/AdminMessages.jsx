@@ -19,7 +19,7 @@ export default function AdminMessages() {
         // Simulate API call
         setTimeout(() => {
             setSending(false)
-            alert('Message sent successfully!')
+            console.log('Message sent successfully!')
             setMessage({ title: '', body: '' })
         }, 1500)
     }

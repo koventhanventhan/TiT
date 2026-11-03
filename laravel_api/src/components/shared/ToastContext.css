@@ -17,31 +17,33 @@
   }
 }
 
-/* Mobile: Bottom Center */
+/* Mobile: Bottom Center (above safe area) */
 @media (max-width: 767px) {
   .tit-toast-container {
-    bottom: 24px;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
     left: 50%;
     transform: translateX(-50%);
     align-items: center;
-    width: calc(100% - 40px);
+    width: calc(100% - 32px);
   }
 }
 
-/* tit-toast styling */
+/* tit-toast styling using design tokens */
 .tit-toast {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: var(--surface, #ffffff);
+  color: var(--text, #0f172a);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
-  padding: 16px 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
+  padding: 12px 16px;
   pointer-events: auto;
-  min-width: 300px;
-  max-width: 400px;
+  min-width: 280px;
+  max-width: 420px;
   position: relative;
   overflow: hidden;
-  border-left: 4px solid transparent;
+  border-left: 5px solid transparent;
 }
 
 @media (max-width: 767px) {
@@ -51,65 +53,92 @@
   }
 }
 
-/* Brand/Semantic Colors */
-.tit-toast-success { border-left-color: #10b981; }
-.tit-toast-error { border-left-color: #ef4444; }
-.tit-toast-info { border-left-color: #4f46e5; }
-.tit-toast-warning { border-left-color: #f59e0b; }
+/* Brand/Semantic Colors with >= 4.5:1 text contrast */
+.tit-toast-success { border-left-color: var(--success, #10b981); }
+.tit-toast-error { border-left-color: var(--danger, #ef4444); }
+.tit-toast-info { border-left-color: var(--primary, #4f46e5); }
+.tit-toast-warning { border-left-color: var(--warning, #f59e0b); }
 
 .tit-toast-icon {
   font-size: 1.25rem;
   margin-right: 12px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
-.tit-toast-success .tit-toast-icon { color: #10b981; }
-.tit-toast-error .tit-toast-icon { color: #ef4444; }
-.tit-toast-info .tit-toast-icon { color: #4f46e5; }
-.tit-toast-warning .tit-toast-icon { color: #f59e0b; }
+.tit-toast-success .tit-toast-icon { color: var(--success, #10b981); }
+.tit-toast-error .tit-toast-icon { color: var(--danger, #ef4444); }
+.tit-toast-info .tit-toast-icon { color: var(--primary, #4f46e5); }
+.tit-toast-warning .tit-toast-icon { color: var(--warning, #f59e0b); }
 
 .tit-toast-message {
   flex: 1;
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text, #0f172a);
   font-weight: 500;
   line-height: 1.4;
-  margin-right: 12px;
+  margin-right: 8px;
 }
 
 .tit-toast-close {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-2, #64748b);
   cursor: pointer;
-  padding: 4px;
-  display: flex;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
-  font-size: 1.1rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  border-radius: 6px;
 }
 
-.tit-toast-close:hover {
-  color: #475569;
+.tit-toast-close:hover,
+.tit-toast-close:focus {
+  color: var(--text, #0f172a);
+  background-color: var(--surface-2, rgba(0, 0, 0, 0.05));
+  outline: none;
 }
 
 /* Animations */
 .animate-toast {
-  animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  animation: titToastSlideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
-@media (min-width: 768px) {
-  @keyframes slideIn {
-    0% { transform: translateX(100%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
+@keyframes titToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 @media (max-width: 767px) {
-  @keyframes slideIn {
-    0% { transform: translateY(100%); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+  @keyframes titToastSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast {
+    animation: none;
   }
 }

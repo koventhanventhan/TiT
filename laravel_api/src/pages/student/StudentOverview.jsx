@@ -10,6 +10,8 @@ import StudentPaymentModule from '../../components/student/StudentPaymentModule'
 import SubjectUpdateModal from '../../components/student/SubjectUpdateModal'
 import useJoinClass from '../../hooks/useJoinClass'
 import useMediaQuery from '../../hooks/useMediaQuery'
+import { useToast } from '../../components/shared/ToastContext'
+import { useConfirm } from '../../components/shared/ConfirmDialog'
 
 // Reusable Stat Card
 function StatCard({ icon: Icon, label, value }) {
@@ -38,6 +40,8 @@ function StatCard({ icon: Icon, label, value }) {
 }
 
 export default function StudentOverview() {
+    const toast = useToast()
+    const confirm = useConfirm()
     const [stats, setStats] = useState(null)
     const [todaySchedules, setTodaySchedules] = useState([])
     const [loading, setLoading] = useState(true)
@@ -218,12 +222,19 @@ export default function StudentOverview() {
                         </button>
                         <button
                             onClick={async () => {
-                                if (window.confirm('Are you sure you want to remove the added subjects and cancel this top-up?')) {
+                                const ok = await confirm({
+                                    title: 'Cancel Subject Top-up',
+                                    message: 'Are you sure you want to remove the added subjects and cancel this top-up?',
+                                    confirmText: 'Remove & Cancel',
+                                    danger: true
+                                });
+                                if (ok) {
                                     try {
                                         await cancelSubjectTopup(stats.user.pending_topup.id);
                                         loadStats();
+                                        toast.success('Subject top-up cancelled.');
                                     } catch (e) {
-                                        alert(e.message || 'Failed to cancel');
+                                        toast.error(e.message || 'Failed to cancel');
                                     }
                                 }
                             }}

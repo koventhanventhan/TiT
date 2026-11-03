@@ -1,11 +1,16 @@
+import { API_BASE_URL } from '../services/apiBase';
 import React, { useState, useEffect } from 'react'
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi'
-import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp } from '../services/authService'
+import { loginWithEmail, registerWithEmail, loginWithGoogle, forgotPassword, verifyMergeOtp, sendVerificationOtp, verifyEmailOtp } from '../services/authService'
 import StudentRegistrationForm from './StudentRegistrationForm'
 import { useLanguage } from '../context/LanguageContext'
 import './AnimatedAuth.css'
+import { useToast } from '../components/shared/ToastContext';
+
 
 const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
+  const toast = useToast();
+
   const { t } = useLanguage()
   const [isLogin, setIsLogin] = useState(defaultTab === 'login')
   const [showPassword, setShowPassword] = useState(false)
@@ -30,6 +35,37 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [mergeToken, setMergeToken] = useState(null)
   const [maskedContact, setMaskedContact] = useState('')
   const [mergeOtp, setMergeOtp] = useState('')
+
+  // Email Verification Flow State
+  const [isVerificationFlow, setIsVerificationFlow] = useState(false)
+  const [verificationOtp, setVerificationOtp] = useState('')
+
+  // reCAPTCHA v3 Site Key
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+  // Load reCAPTCHA v3 script once
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) return
+
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }, [RECAPTCHA_SITE_KEY])
+
+  // Execute reCAPTCHA v3 and return token (returns null if not configured)
+  const executeRecaptcha = async (action = 'submit') => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null
+    try {
+      await new Promise((resolve) => window.grecaptcha.ready(resolve))
+      return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+    } catch (err) {
+      console.warn('reCAPTCHA execution failed:', err)
+      return null
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -77,10 +113,21 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       console.log('User role:', result?.user?.role)
       console.log('Is admin redirect?', result?._isAdminRedirect)
 
-      // Check if user is admin FIRST - before any alerts or other logic
+      // Check if user is admin or super_admin FIRST - before any alerts or other logic
       if (result && result.user && result.token) {
         const userRole = result.user.role
         const isAdmin = userRole && String(userRole).toLowerCase() === 'admin'
+        const isSuperAdmin = userRole && String(userRole).toLowerCase() === 'super_admin'
+
+        if (isSuperAdmin) {
+          console.log('✅ Super Admin detected - redirecting to super admin dashboard...')
+          console.log('   User:', result.user.email)
+          console.log('   Role:', result.user.role)
+          setIsLoading(false)
+          onClose()
+          window.location.href = '/super-admin/dashboard'
+          return
+        }
 
         if (isAdmin) {
           console.log('✅ Admin detected - redirecting to dashboard immediately...')
@@ -90,7 +137,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
           setIsLoading(false)
           onClose()
           // Redirect immediately - NO ALERT, NO DELAY
-          const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+          
           const BASE_URL = API_BASE_URL.replace('/api', '') || window.location.origin
           const redirectUrl = `${BASE_URL}/admin/login?token=${encodeURIComponent(result.token)}`
           console.log('🚀 ADMIN REDIRECT TO:', redirectUrl)
@@ -127,7 +174,7 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       } else {
         // Unknown role - just reload
         console.log('❓ Unknown role - reloading page')
-        alert(`Welcome back, ${result?.user?.username || result?.user?.email || 'User'}!`)
+        toast.info(`Welcome back, ${result?.user?.username || result?.user?.email || 'User'}!`)
         window.location.reload()
       }
     } catch (err) {
@@ -142,8 +189,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       })
 
       // Show more helpful error messages
-      if (errorMessage.includes('Cannot connect') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        setError('Cannot connect to server. Please ensure Laravel server is running: cd backend && php artisan serve')
+      if (errorMessage.includes('Unable to connect') || errorMessage.includes('Cannot connect') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        setError('Unable to connect to server. Please check your internet connection or try again later')
       } else if (errorMessage.includes('credentials') || errorMessage.includes('incorrect')) {
         // Keep the original error message for credential errors
         setError(errorMessage)
@@ -199,36 +246,72 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       return
     }
 
-
     setIsLoading(true)
 
     try {
+      const recaptchaToken = await executeRecaptcha('send_otp')
+      await sendVerificationOtp(signupData.email, recaptchaToken)
+      setIsLoading(false)
+      setIsVerificationFlow(true)
+      setVerificationOtp('')
+    } catch (err) {
+      setIsLoading(false)
+      setError(err.message || 'Failed to send verification code. Please check your email and try again.')
+    }
+  }
+
+  const handleVerificationSubmit = async (e) => {
+    e.preventDefault()
+    if (!verificationOtp) {
+      setError('Please enter the OTP.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      await verifyEmailOtp(signupData.email, verificationOtp)
+      
+      // OTP verified successfully, now proceed with actual registration
       let userData = {
         email: signupData.email,
         password: signupData.password,
         role: 'user', // Registering as a student
       }
 
+      // Get a fresh reCAPTCHA token for the register call
+      const recaptchaToken = await executeRecaptcha('register')
+      if (recaptchaToken) userData.recaptcha_token = recaptchaToken
+
       const result = await registerWithEmail(userData)
       setIsLoading(false)
 
       // Show success message
-      alert(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
+      toast.success(`Registration successful! Welcome, ${result.user?.username || result.user?.email || 'Student'}!`)
 
-      // After successful admin registration, show student entry form
+      // After successful registration, show student entry form
       setShowStudentForm(true)
-      onClose() // Close the admin registration form
+      setIsVerificationFlow(false)
+      onClose() 
     } catch (err) {
       setIsLoading(false)
-      
       if (err.isMergeFlow) {
-        setIsMergeFlow(true)
-        setMergeToken(err.mergeToken)
-        setMaskedContact(err.maskedContact)
-        return // Stop here to show the OTP UI
+        // This shouldn't typically happen here since we check for duplicates at the OTP send stage,
+        // but just in case, handle it.
+        try {
+          const { sendMergeOtp } = await import('../services/authService');
+          await sendMergeOtp(err.mergeToken);
+          setIsVerificationFlow(false);
+          setIsMergeFlow(true);
+          setMergeToken(err.mergeToken);
+          setMaskedContact(err.maskedContact);
+        } catch (otpErr) {
+          setError(otpErr.message || 'Failed to send OTP. Please try again.');
+        }
+        return;
       }
-
-      setError(err.message || 'Registration failed. Please try again.')
+      setError(err.message || 'Verification failed. Please try again.')
     }
   }
 
@@ -246,15 +329,11 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
       const data = await verifyMergeOtp(mergeToken, mergeOtp)
       setIsLoading(false)
       
-      // If phase 1 is successful, transition to student registration form
       if (data.is_deferred) {
-        // Show student form, passing the token
         setShowStudentForm(true)
-        // Reset local auth modal states, wait for onClose in parent or let user fill form
         setIsMergeFlow(false)
-        onClose() // Close the animated auth UI itself since we will show StudentRegistrationForm
+        onClose() 
       } else {
-        // Just in case it wasn't deferred
         window.location.reload()
       }
     } catch (err) {
@@ -277,12 +356,10 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         return
       }
 
-      alert(`Welcome, ${result.user?.name || result.user?.username || 'User'}!`)
       onClose()
-      window.location.reload()
+      // Redirection is handled inside loginWithGoogle in authService.js
     } catch (err) {
       setError(err.message || 'Login failed')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -294,7 +371,8 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
     setIsLoading(true)
 
     try {
-      const response = await forgotPassword(forgotEmail)
+      const recaptchaToken = await executeRecaptcha('forgot_password')
+      const response = await forgotPassword(forgotEmail, recaptchaToken)
       setSuccessMessage(response.message || 'Reset link sent!')
     } catch (err) {
       setError(err.message || 'Failed to send reset link')
@@ -384,6 +462,40 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
                 </div>
 
                 <input type="submit" value={isLoading ? t('loading') : 'Verify'} disabled={isLoading} />
+              </form>
+            ) : isVerificationFlow ? (
+              <form onSubmit={handleVerificationSubmit}>
+                <h2>Verify Email</h2>
+                
+                <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '15px', textAlign: 'center', lineHeight: '1.5' }}>
+                  We've sent a 6-digit code to <strong>{signupData.email}</strong>.<br/>
+                  Please enter it below to verify your email.
+                </p>
+
+                <div className="inputbox">
+                  <input
+                    type="text"
+                    value={verificationOtp}
+                    onChange={(e) => setVerificationOtp(e.target.value)}
+                    placeholder=" "
+                    required
+                    maxLength="6"
+                    pattern="[0-9]{6}"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                  />
+                  <span>6-Digit Code</span>
+                  <i></i>
+                </div>
+
+                <div className="links">
+                  <span></span>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setIsVerificationFlow(false); setError(''); }}>
+                    Cancel
+                  </a>
+                </div>
+
+                <input type="submit" value={isLoading ? t('loading') : 'Verify & Register'} disabled={isLoading} />
               </form>
             ) : isForgotPassword ? (
               <form onSubmit={handleForgotSubmit}>

@@ -22,7 +22,8 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint:css-vars": "node scripts/lint_css_vars.cjs",
+    "lint:css-vars": "node scripts/lint_css_vars.cjs && node scripts/lint_no_native_dialogs.cjs",
+    "lint:dialogs": "node scripts/lint_no_native_dialogs.cjs",
     "test:admin-contrast": "node scripts/admin_contrast_crawler.cjs"
   }
 }

@@ -37,7 +37,7 @@ export default function AdminSettings() {
 
         try {
             await updateAdminBranding(formData)
-            alert('Branding updated successfully! Refresh to apply changes.')
+            console.log('Branding updated successfully! Refresh to apply changes.')
             setRemoveLogo(false); // Reset removeLogo after successful save
             setLogoFile(null); // Clear file input
             setLogoPreview(null); // Clear preview
@@ -49,7 +49,7 @@ export default function AdminSettings() {
             // If a new logo was uploaded, the logo_url might be updated by the backend,
             // but for now, we just clear the preview if a new file was selected.
         } catch (error) {
-            alert('Failed to update branding')
+            console.error('Failed to update branding', error)
         }
     }
 
@@ -58,9 +58,9 @@ export default function AdminSettings() {
             await updateAdminSettings(updatedSettings)
             setSettings({ ...settings, ...updatedSettings })
             refreshSettings()
-            alert('Settings updated successfully!')
+            console.log('Settings updated successfully!')
         } catch (error) {
-            alert('Failed to update settings')
+            console.error('Failed to update settings', error)
         }
     }
 

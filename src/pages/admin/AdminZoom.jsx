@@ -30,7 +30,6 @@ export default function AdminZoom() {
     };
 
     const handleDeleteSelected = async () => {
-        if (!window.confirm(`Are you sure you want to delete ${selectedClasses.length} zoom classes?`)) return
         setIsDeleting(true)
         try {
             await bulkDeleteAdminZoomClasses(selectedClasses)
@@ -38,7 +37,6 @@ export default function AdminZoom() {
             setSelectedClasses([])
         } catch (error) {
             console.error('Failed to delete zoom classes:', error)
-            alert('Error deleting zoom classes')
         } finally {
             setIsDeleting(false)
         }

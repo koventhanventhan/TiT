@@ -26,10 +26,12 @@ import {
     retryTeacherMaterial
 } from '../../services/dashboardService'
 import { useToast } from '../../components/shared/ToastContext'
+import { useConfirm } from '../../components/shared/ConfirmDialog'
 import { useLanguage } from '../../context/LanguageContext'
 
 export default function TeacherMaterials() {
     const toast = useToast()
+    const confirm = useConfirm()
     const { t } = useLanguage()
 
     const [materials, setMaterials] = useState([])
@@ -220,7 +222,13 @@ export default function TeacherMaterials() {
 
     const handleDelete = async (item) => {
         if (deletingId) return
-        if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) return
+        const ok = await confirm({
+            title: 'Delete Material',
+            message: `Are you sure you want to delete "${item.title}"?`,
+            confirmText: 'Delete',
+            danger: true
+        })
+        if (!ok) return
 
         setDeletingId(item.id)
         try {

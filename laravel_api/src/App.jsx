@@ -2,6 +2,7 @@ import React, { useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { ToastProvider } from './components/shared/ToastContext'
+import { ConfirmProvider } from './components/shared/ConfirmDialog'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import UnifiedAssistantWidget from './components/UnifiedAssistantWidget'
@@ -157,7 +158,8 @@ function App() {
   return (
     <HelmetProvider>
       <ToastProvider>
-        <SettingsProvider>
+        <ConfirmProvider>
+          <SettingsProvider>
           <LanguageProvider>
             <AuthModalProvider>
               <Router
@@ -172,7 +174,8 @@ function App() {
             </AuthModalProvider>
           </LanguageProvider>
         </SettingsProvider>
-      </ToastProvider>
+      </ConfirmProvider>
+    </ToastProvider>
     </HelmetProvider>
   )
 }

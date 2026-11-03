@@ -1,9 +1,9 @@
-﻿import React from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-console.log('ðŸš€ React is starting...')
+console.log('🚀 React is starting...')
 console.log('Root element:', document.getElementById('root'))
 
 // Error Boundary Component
@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('âŒ React Error:', error, errorInfo)
+    console.error('❌ React Error:', error, errorInfo)
   }
 
   render() {
@@ -75,7 +75,7 @@ try {
   }
 
   const root = ReactDOM.createRoot(rootElement)
-  console.log('âœ… Root created')
+  console.log('✅ Root created')
   
   root.render(
     <React.StrictMode>
@@ -84,9 +84,9 @@ try {
       </ErrorBoundary>
     </React.StrictMode>
   )
-  console.log('âœ… App rendered')
+  console.log('✅ App rendered')
 } catch (error) {
-  console.error('âŒ Error rendering app:', error)
+  console.error('❌ Error rendering app:', error)
   const rootElement = document.getElementById('root')
   if (rootElement) {
     rootElement.innerHTML = `

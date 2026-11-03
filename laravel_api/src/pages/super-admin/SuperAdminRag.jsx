@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../../services/apiBase';
 import React, { useState, useEffect } from 'react'
+import { useConfirm } from '../../components/shared/ConfirmDialog'
 import {
     FiCpu,
     FiCheckCircle,
@@ -29,6 +30,7 @@ import './SuperAdminRag.css'
 
 
 export default function SuperAdminRag() {
+    const confirm = useConfirm()
     const [activeTab, setActiveTab] = useState('telemetry')
     const [statusData, setStatusData] = useState(null)
     const [feedbackData, setFeedbackData] = useState(null)
@@ -234,7 +236,13 @@ export default function SuperAdminRag() {
     }
 
     const handleDeleteFaq = async (faqId) => {
-        if (!window.confirm('Are you sure you want to delete this FAQ item?')) return
+        const ok = await confirm({
+            title: 'Delete FAQ Item',
+            message: 'Are you sure you want to delete this FAQ item?',
+            confirmText: 'Delete',
+            danger: true
+        })
+        if (!ok) return
         try {
             const res = await fetch(`${API_BASE_URL}/admin/faqs/${faqId}`, {
                 method: 'DELETE',

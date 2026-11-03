@@ -185,22 +185,7 @@
     </div>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show">
-        {{ session('success') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: var(--adm-text);">
-        <i class="fa fa-exclamation-triangle mr-2 text-warning"></i>{{ session('warning') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
+
 
 <div class="row">
     <div class="col-xl-12">

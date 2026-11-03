@@ -11,6 +11,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/tit-theme.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <!-- Pusher and Notifications -->
     <link rel="stylesheet" href="{{ asset('admin-theme/vendor/toastr/css/toastr.min.css') }}">
@@ -117,7 +118,9 @@
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/tit-notify.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    @include('admin.partials.flash')
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
     
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>

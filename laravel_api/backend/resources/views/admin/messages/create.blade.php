@@ -8,6 +8,7 @@
     <title>New Message - {{ config('app.name') }}</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link href="{{ asset('admin-theme/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-theme/css/tit-theme.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-theme/css/admin-responsive.css') }}" rel="stylesheet">
     <style>.content-body { margin-top: 0 !important; padding-top: 1.25rem; } .card { border-radius: 0.5rem; margin-bottom: 1.25rem; }</style>
     <!-- Pusher and Notifications -->
@@ -41,8 +42,7 @@
         <div class="header"><div class="header-content"><nav class="navbar"><ul class="navbar-nav"><li><a href="{{ route('admin.messages.index') }}">Back to Messages</a></li></ul></nav></div></div>
         <div class="content-body">
             <div class="container-fluid">
-                <div class="row mb-4"><div class="col-12"><h4 style="font-size:1.5rem;font-weight:600;">New Message</h4></div></div>
-                @if ($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
+                <div class="row mb-4"><div class="col-12"><h4 style="font-size:1.5rem;font-weight:600; color: var(--adm-text);">New Message</h4></div></div>
                 <form action="{{ route('admin.messages.store') }}" method="POST">
                     @csrf
                     <div class="card">
@@ -85,7 +85,9 @@
         });
       });
     </script>
+    <script src="{{ asset('admin-theme/js/tit-notify.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
+    @include('admin.partials.flash')
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
     
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>

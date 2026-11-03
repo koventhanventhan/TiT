@@ -66,12 +66,7 @@
                 <span class="badge badge-pill badge-secondary" style="background: rgba(255, 255, 255, 0.1); color: var(--adm-text); border: 1px solid var(--adm-border); font-weight: 600;">Public Profile</span>
             </div>
             <div class="card-body">
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show">
-                        <button type="button" class="close h-100" data-dismiss="alert"><span><i class="mdi mdi-close"></i></span></button>
-                        {{ session('success') }}
-                    </div>
-                @endif
+
 
                 <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf

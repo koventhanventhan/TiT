@@ -27,6 +27,7 @@
     "is_dark": false,
     "adm_bg": "#2c254a",
     "adm_surface": "#3b3363",
+    "adm_surface_2": "#332b56",
     "adm_sidebar": "#3b3363",
     "adm_border": "#473f72",
     "adm_text": "#f1f5f9",
@@ -36,7 +37,11 @@
     "adm_btn": "#EB8153",
     "adm_btn_text": "#0f172a",
     "adm_on_accent": "#0f172a",
-    "adm_input_bg": "#241e3d"
+    "adm_input_bg": "#241e3d",
+    "adm_success": "#34d399",
+    "adm_danger": "#f87171",
+    "adm_warning": "#fbbf24",
+    "adm_info": "#38bdf8"
   },
   "ocean": {
     "id": "ocean",
@@ -66,6 +71,7 @@
     "is_dark": false,
     "adm_bg": "#0a1a33",
     "adm_surface": "#10264a",
+    "adm_surface_2": "#0e203f",
     "adm_sidebar": "#0b2447",
     "adm_border": "#1f3a66",
     "adm_text": "#f1f5f9",
@@ -75,7 +81,11 @@
     "adm_btn": "#0b5fd9",
     "adm_btn_text": "#ffffff",
     "adm_on_accent": "#0f172a",
-    "adm_input_bg": "#0c1e3a"
+    "adm_input_bg": "#0c1e3a",
+    "adm_success": "#34d399",
+    "adm_danger": "#f87171",
+    "adm_warning": "#fbbf24",
+    "adm_info": "#38bdf8"
   },
   "emerald": {
     "id": "emerald",
@@ -105,6 +115,7 @@
     "is_dark": false,
     "adm_bg": "#062320",
     "adm_surface": "#0b3430",
+    "adm_surface_2": "#082c28",
     "adm_sidebar": "#052e2b",
     "adm_border": "#14504a",
     "adm_text": "#f1f5f9",
@@ -114,7 +125,11 @@
     "adm_btn": "#047857",
     "adm_btn_text": "#ffffff",
     "adm_on_accent": "#0f172a",
-    "adm_input_bg": "#082825"
+    "adm_input_bg": "#082825",
+    "adm_success": "#34d399",
+    "adm_danger": "#f87171",
+    "adm_warning": "#fbbf24",
+    "adm_info": "#38bdf8"
   },
   "midnight": {
     "id": "midnight",
@@ -144,6 +159,7 @@
     "is_dark": true,
     "adm_bg": "#0b1020",
     "adm_surface": "#151b2e",
+    "adm_surface_2": "#101526",
     "adm_sidebar": "#0b1020",
     "adm_border": "#2a3350",
     "adm_text": "#f1f5f9",
@@ -153,6 +169,10 @@
     "adm_btn": "#4f46e5",
     "adm_btn_text": "#ffffff",
     "adm_on_accent": "#0f172a",
-    "adm_input_bg": "#101524"
+    "adm_input_bg": "#101524",
+    "adm_success": "#34d399",
+    "adm_danger": "#f87171",
+    "adm_warning": "#fbbf24",
+    "adm_info": "#38bdf8"
   }
 }

@@ -158,10 +158,12 @@
     <script src="{{ asset('admin-theme/js/custom.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/deznav-init.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-search.js') }}"></script>
+    <script src="{{ asset('admin-theme/js/tit-notify.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    @include('admin.partials.flash')
 
     <!-- Global Cropper Modal -->
     <div class="modal fade" id="globalCropperModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
@@ -200,11 +202,15 @@
             cropperOptions = options || {};
             const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
-                alert('Invalid file format. Please upload JPG, PNG, or WebP.');
+                if (window.TitNotify) {
+                    TitNotify.error('Invalid file format. Please upload JPG, PNG, or WebP.');
+                }
                 return;
             }
             if (file.size > 5 * 1024 * 1024) {
-                alert('File is too large. Maximum size is 5MB.');
+                if (window.TitNotify) {
+                    TitNotify.error('File is too large. Maximum size is 5MB.');
+                }
                 return;
             }
 
@@ -258,42 +264,7 @@
             document.getElementById('cropperImage').src = '';
         });
     </script>
-    <script src="{{ asset('admin-theme/vendor/sweetalert2/dist/sweetalert2.min.js') }}"></script>
-    <script>
-    // Global SweetAlert override for all confirm() popups
-    // Global SweetAlert handler for all swal-confirm-btn elements using Event Delegation
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('.swal-confirm-btn');
-        if (!btn) return;
 
-        e.preventDefault();
-        e.stopPropagation();
-        
-        var formId = btn.getAttribute('data-form-id');
-        var title = btn.getAttribute('data-title') || 'Are you sure?';
-        var text = btn.getAttribute('data-text') || 'This action cannot be undone.';
-        var confirmText = btn.getAttribute('data-confirm-text') || 'Yes, proceed!';
-        var confirmColor = btn.getAttribute('data-confirm-color') || '#d33';
-        var icon = /delete/i.test(title) ? 'warning' : (/deactivate/i.test(title) ? 'warning' : 'question');
-
-        Swal.fire({
-            title: title,
-            text: text,
-            type: icon,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: confirmText,
-            cancelButtonText: 'Cancel',
-            customClass: 'swal-dark-popup'
-        }).then(function(result) {
-            if (result.value) {
-                var form = document.getElementById(formId);
-                if (form) form.submit();
-            }
-        });
-    });
-    </script>
     @stack('scripts')
 </body>
 

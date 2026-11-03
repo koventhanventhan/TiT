@@ -40,6 +40,11 @@
   --adm-btn-text: #0f172a;
   --adm-on-accent: #0f172a;
   --adm-input-bg: #241e3d;
+  --adm-surface-2: #332b56;
+  --adm-success: #34d399;
+  --adm-danger: #f87171;
+  --adm-warning: #fbbf24;
+  --adm-info: #38bdf8;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
@@ -131,6 +136,11 @@ html[data-theme-preset="royal"], [data-theme-preset="royal"] {
   --adm-btn-text: #0f172a;
   --adm-on-accent: #0f172a;
   --adm-input-bg: #241e3d;
+  --adm-surface-2: #332b56;
+  --adm-success: #34d399;
+  --adm-danger: #f87171;
+  --adm-warning: #fbbf24;
+  --adm-info: #38bdf8;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
@@ -222,6 +232,11 @@ html[data-theme-preset="ocean"], [data-theme-preset="ocean"] {
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;
   --adm-input-bg: #0c1e3a;
+  --adm-surface-2: #0e203f;
+  --adm-success: #34d399;
+  --adm-danger: #f87171;
+  --adm-warning: #fbbf24;
+  --adm-info: #38bdf8;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
@@ -313,6 +328,11 @@ html[data-theme-preset="emerald"], [data-theme-preset="emerald"] {
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;
   --adm-input-bg: #082825;
+  --adm-surface-2: #082c28;
+  --adm-success: #34d399;
+  --adm-danger: #f87171;
+  --adm-warning: #fbbf24;
+  --adm-info: #38bdf8;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
@@ -404,6 +424,11 @@ html[data-theme-preset="midnight"], [data-theme-preset="midnight"] {
   --adm-btn-text: #ffffff;
   --adm-on-accent: #0f172a;
   --adm-input-bg: #101524;
+  --adm-surface-2: #101526;
+  --adm-success: #34d399;
+  --adm-danger: #f87171;
+  --adm-warning: #fbbf24;
+  --adm-info: #38bdf8;
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);

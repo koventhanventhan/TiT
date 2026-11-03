@@ -99,45 +99,7 @@
     </div>
 </div>
 
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
 
-@if (session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{ session('warning') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-
-@if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
 
 <div class="row">
     <div class="col-xl-12">
@@ -561,7 +523,7 @@
                     <div class="p-4 rounded mb-4" id="confirm-and-mark-paid-card" style="background: rgba(56, 189, 248, 0.08); border-left: 0.3125rem solid #38bdf8;">
                         <h5 class="mb-2" style="color: var(--adm-text);">Confirm registration + mark paid</h5>
                         <p class="mb-3 small text-muted">Use this when the money for {{ now()->format('F Y') }} has already been received: the registration is confirmed, an index number is assigned (if missing) and the payment is marked as paid with a receipt.</p>
-                        <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" onsubmit="if(!confirm('Money received? This confirms the registration and marks {{ now()->format('F Y') }} as paid.')) { return false; } this.querySelector('button[type=submit]').disabled=true;">
+                        <form action="{{ route('admin.students.confirm-and-mark-paid', $student->id) }}" method="POST" class="js-confirm-submit" data-title="Confirm & Mark Paid" data-text="Money received? This confirms the registration and marks {{ now()->format('F Y') }} as paid." data-confirm-text="Confirm & Mark Paid">
                             @csrf
                             @include('admin.partials.received-by-select', ['dark' => true])
                             <button type="submit" class="btn btn-info font-weight-bold" style="border-radius: 0.5rem;">CONFIRM + MARK PAID (MONEY RECEIVED)</button>

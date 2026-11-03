@@ -121,18 +121,7 @@
     </div>
 </div>
 
-@if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
+
 
 <div class="card">
     <div class="card-body p-0">
@@ -275,17 +264,12 @@
     const allTeachers = @json($teachersJson);
 
     function runSync() {
-        Swal.fire({
+        TitNotify.confirm({
             title: 'Generate Zoom Links?',
             text: 'This will generate Zoom links for the next 90 days based on this timetable. Continue?',
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ffab2d',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, generate them!',
-            customClass: 'swal-dark-popup'
-        }).then((result) => {
-            if (result.value) {
+            confirmText: 'Yes, generate them!'
+        }).then((confirmed) => {
+            if (confirmed) {
                 window.location.href = "{{ route('admin.timetables.sync') }}";
             }
         });

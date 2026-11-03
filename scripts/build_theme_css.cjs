@@ -67,6 +67,11 @@ function renderTokens(p) {
   --adm-btn-text: ${p.adm_btn_text || '#0f172a'};
   --adm-on-accent: ${p.adm_on_accent || '#0f172a'};
   --adm-input-bg: ${p.adm_input_bg || '#241e3d'};
+  --adm-surface-2: ${p.adm_surface_2 || '#332b56'};
+  --adm-success: ${p.adm_success || '#34d399'};
+  --adm-danger: ${p.adm_danger || '#f87171'};
+  --adm-warning: ${p.adm_warning || '#fbbf24'};
+  --adm-info: ${p.adm_info || '#38bdf8'};
 
   /* Legacy & Semantic Aliases (Unified Source of Truth - fully self-sufficient) */
   --primary-color: var(--t-primary);
@@ -839,6 +844,201 @@ hr {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--adm-text-3);
+}
+
+/* TitNotify Toasts */
+.tit-toast-container {
+  position: fixed;
+  z-index: 1090;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .tit-toast-container {
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .tit-toast-container {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: none;
+  }
+}
+
+.tit-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--adm-surface);
+  color: var(--adm-text);
+  border: 1px solid var(--adm-border);
+  border-left-width: 4px;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tit-toast--hiding {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tit-toast,
+  .tit-toast--hiding {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.tit-toast--success {
+  border-left-color: var(--adm-success);
+}
+.tit-toast--success .tit-toast-icon {
+  color: var(--adm-success);
+}
+
+.tit-toast--error {
+  border-left-color: var(--adm-danger);
+}
+.tit-toast--error .tit-toast-icon {
+  color: var(--adm-danger);
+}
+
+.tit-toast--warning {
+  border-left-color: var(--adm-warning);
+}
+.tit-toast--warning .tit-toast-icon {
+  color: var(--adm-warning);
+}
+
+.tit-toast--info {
+  border-left-color: var(--adm-info);
+}
+.tit-toast--info .tit-toast-icon {
+  color: var(--adm-info);
+}
+
+.tit-toast-icon-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.125rem;
+  font-size: 1.2rem;
+}
+
+.tit-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.tit-toast-title {
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--adm-text);
+  margin-bottom: 0.25rem;
+}
+
+.tit-toast-message {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--adm-text-2);
+  word-break: break-word;
+}
+
+.tit-toast-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -0.5rem -0.5rem -0.5rem auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--adm-text-3);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease;
+}
+
+.tit-toast-close:hover,
+.tit-toast-close:focus {
+  color: var(--adm-text);
+  outline: none;
+}
+
+/* TitNotify Confirm Dialog */
+.tit-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1099;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.tit-confirm-dialog {
+  background-color: var(--adm-surface);
+  color: var(--adm-text);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+.tit-confirm-title {
+  color: var(--adm-text) !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.tit-confirm-body {
+  color: var(--adm-text-2) !important;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.tit-confirm-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.tit-confirm-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 `;
 

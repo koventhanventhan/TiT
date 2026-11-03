@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Inject the Branding Modal
+    // 1. Inject the Branding Modal (tokens only, no bg-light/bg-white)
     const modalHTML = `
     <div class="modal fade" id="adminBrandingModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="fa fa-paint-brush mr-2"></i>Edit Brand Logo</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-paint-brush mr-2 text-primary"></i>Edit Brand Logo</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <form id="adminBrandingForm" enctype="multipart/form-data">
                     <div class="modal-body p-4">
@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <input type="file" name="admin_logo" id="modalAdminLogoInput" class="custom-file-input" onchange="previewBrandingLogo(this)">
                                 <label class="custom-file-label" for="modalAdminLogoInput">Choose new logo...</label>
                             </div>
-                            <div id="modalLogoPreview" class="text-center p-3 bg-light rounded border mt-2" style="min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                            <div id="modalLogoPreview" class="text-center p-3 rounded mt-2" style="background: var(--adm-surface-2); border: 1px solid var(--adm-border); min-height: 80px; display: flex; align-items: center; justify-content: center;">
                                 <img src="" id="modalLogoImg" style="max-height: 60px; max-width: 100%; display: none;">
-                                <div id="modalLogoPlaceholder" class="text-muted"><i class="fa fa-image fa-2x mb-2"></i><br>New Logo Preview</div>
+                                <div id="modalLogoPlaceholder" style="color: var(--adm-text-muted);"><i class="fa fa-image fa-2x mb-2"></i><br>New Logo Preview</div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary btn-sm" id="saveBrandingBtn">Save Changes</button>
                     </div>
@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     </div>
-    <style>
-        /* CSS for branding modal remains if needed, but logo specific hover styles removed */
-    </style>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
@@ -68,10 +65,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 4. Modal Functions
     window.openBrandingModal = function () {
-        const currentName = document.querySelector('.brand-title').innerText.trim();
+        const titleEl = document.querySelector('.brand-title');
+        const currentName = titleEl ? titleEl.innerText.trim() : '';
         const currentLogo = document.querySelector('.brand-logo img') ? document.querySelector('.brand-logo img').src : '';
 
-        document.getElementById('modal_admin_company_name').value = document.querySelector('.brand-title') ? document.querySelector('.brand-title').innerText.trim() : '';
+        const nameInput = document.getElementById('modal_admin_company_name');
+        if (nameInput) {
+            nameInput.value = currentName;
+        }
 
         if (currentLogo) {
             document.getElementById('modalLogoImg').src = currentLogo;
@@ -84,70 +85,106 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.previewBrandingLogo = function (input) {
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                if (window.TitNotify) {
+                    TitNotify.error('Invalid file format. Please upload JPG, PNG, or WebP.');
+                }
+                input.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                if (window.TitNotify) {
+                    TitNotify.error('File is too large. Maximum size is 5MB.');
+                }
+                input.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function (e) {
                 document.getElementById('modalLogoImg').src = e.target.result;
                 document.getElementById('modalLogoImg').style.display = 'block';
                 document.getElementById('modalLogoPlaceholder').style.display = 'none';
-            }
-            reader.readAsDataURL(input.files[0]);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
     // 5. AJAX Submission
     const form = document.getElementById('adminBrandingForm');
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const saveBtn = document.getElementById('saveBrandingBtn');
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
-
-        const formData = new FormData(this);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '');
-
-        fetch('/admin/settings/branding', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const saveBtn = document.getElementById('saveBrandingBtn');
+            if (window.TitButton) {
+                TitButton.setLoading(saveBtn, 'Saving...');
+            } else if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
             }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update Sidebar Logo/Name
-                    const brandTitles = document.querySelectorAll('.brand-title');
-                    brandTitles.forEach(el => el.innerText = data.name);
 
-                    const brandLogos = document.querySelectorAll('.brand-logo');
-                    brandLogos.forEach(el => {
-                        if (data.logo_url) {
-                            let img = el.querySelector('img');
-                            if (!img) {
-                                el.querySelector('svg')?.remove();
-                                img = document.createElement('img');
-                                img.style.maxHeight = '45px';
-                                img.style.maxWidth = '45px';
-                                img.style.objectFit = 'contain';
-                                el.prepend(img);
-                            }
-                            img.src = data.logo_url;
-                        }
-                    });
+            const formData = new FormData(this);
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            if (tokenMeta) {
+                formData.append('_token', tokenMeta.content);
+            }
 
-                    $('#adminBrandingModal').modal('hide');
-                    alert('Branding updated successfully!');
-                } else {
-                    alert(data.message || 'Error updating branding');
+            fetch('/admin/settings/branding', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while saving.');
-            })
-            .finally(() => {
-                saveBtn.disabled = false;
-                saveBtn.innerText = 'Save Changes';
-            });
-    });
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.success) {
+                        // Update Sidebar Logo/Name
+                        const brandTitles = document.querySelectorAll('.brand-title');
+                        brandTitles.forEach(el => el.innerText = data.name);
+
+                        const brandLogos = document.querySelectorAll('.brand-logo');
+                        brandLogos.forEach(el => {
+                            if (data.logo_url) {
+                                let img = el.querySelector('img');
+                                if (!img) {
+                                    el.querySelector('svg')?.remove();
+                                    img = document.createElement('img');
+                                    img.style.maxHeight = '45px';
+                                    img.style.maxWidth = '45px';
+                                    img.style.objectFit = 'contain';
+                                    el.prepend(img);
+                                }
+                                img.src = data.logo_url;
+                            }
+                        });
+
+                        $('#adminBrandingModal').modal('hide');
+                        if (window.TitNotify) {
+                            TitNotify.success('Branding updated successfully!');
+                        }
+                    } else {
+                        if (window.TitNotify) {
+                            TitNotify.error((data && data.message) ? data.message : 'Error updating branding');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (window.TitNotify) {
+                        TitNotify.error('An error occurred while saving.');
+                    }
+                })
+                .finally(() => {
+                    if (window.TitButton) {
+                        TitButton.clearLoading(saveBtn);
+                    } else if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerText = 'Save Changes';
+                    }
+                });
+        });
+    }
 });

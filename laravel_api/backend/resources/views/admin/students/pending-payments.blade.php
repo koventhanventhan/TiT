@@ -32,38 +32,7 @@
     </div>
 </div>
 
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if (session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{ session('warning') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if (session('info'))
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        {{ session('info') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
+
 
 @if(($advanceRequestsCount ?? 0) > 0)
     <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-4" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px;">
@@ -228,7 +197,7 @@
                                     <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
                                         @if($student)
                                             @if($isTopup && $topupId)
-                                                <form action="{{ route('admin.students.subject-topups.mark-paid', $topupId) }}" method="POST" class="d-inline-flex align-items-center mb-0" style="gap: 6px;" onsubmit="return confirm('Confirm received payment of Rs {{ number_format((float)$payment->amount, 2) }} for {{ $payment->year_month }}?');">
+                                                <form action="{{ route('admin.students.subject-topups.mark-paid', $topupId) }}" method="POST" class="d-inline-flex align-items-center mb-0 js-confirm-submit" style="gap: 6px;" data-title="Confirm Payment" data-text="Confirm received payment of Rs {{ number_format((float)$payment->amount, 2) }} for {{ $payment->year_month }}?" data-confirm-text="Mark Paid">
                                                     @csrf
                                                     @include('admin.partials.received-by-select')
                                                     <button type="submit" class="btn btn-sm btn-success py-1 px-2" style="font-size: 0.75rem; white-space: nowrap;" title="Confirm payment and unlock subjects">
@@ -236,7 +205,7 @@
                                                     </button>
                                                 </form>
                                             @else
-                                                <form action="{{ route('admin.students.payments.mark-paid', [$student->id, $payment->id]) }}" method="POST" class="d-inline-flex align-items-center mb-0" style="gap: 6px;" onsubmit="return confirm('Confirm received payment of Rs {{ number_format((float)$payment->amount, 2) }} for {{ $payment->year_month }}?');">
+                                                <form action="{{ route('admin.students.payments.mark-paid', [$student->id, $payment->id]) }}" method="POST" class="d-inline-flex align-items-center mb-0 js-confirm-submit" style="gap: 6px;" data-title="Confirm Payment" data-text="Confirm received payment of Rs {{ number_format((float)$payment->amount, 2) }} for {{ $payment->year_month }}?" data-confirm-text="Mark Paid">
                                                     @csrf
                                                     @include('admin.partials.received-by-select')
                                                     <button type="submit" class="btn btn-sm btn-success py-1 px-2" style="font-size: 0.75rem; white-space: nowrap;" title="Mark Paid and issue receipt">
@@ -246,7 +215,7 @@
                                             @endif
                                         @endif
 
-                                        <form action="{{ route('admin.students.pending-payments.cancel', $payment->id) }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('Are you sure you want to cancel this pending payment request?');">
+                                        <form action="{{ route('admin.students.pending-payments.cancel', $payment->id) }}" method="POST" class="d-inline mb-0 js-confirm-submit" data-title="Cancel Payment Request" data-text="Are you sure you want to cancel this pending payment request?" data-confirm-text="Cancel Request" data-danger="true">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.75rem; white-space: nowrap;" title="Cancel pending payment request">
                                                 Cancel

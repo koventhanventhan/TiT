@@ -11,30 +11,7 @@
     </div>
 </div>
 
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if (session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{ session('warning') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-@endif
+
 @if (isset($hiddenCount) && $hiddenCount > 0)
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         {{ $hiddenCount }} request(s) hidden (student not found / other institute)
@@ -85,7 +62,7 @@
                                 <td>
                                     <div class="d-flex gap-2">
                                         @if($req->user)
-                                            <form action="{{ route('admin.students.advance-payments.approve', $req->id) }}" method="POST" class="d-flex align-items-end" style="gap: 6px;" onsubmit="return confirm('Money received for {{ $req->months_count ?? 1 }} month(s)?');">
+                                            <form action="{{ route('admin.students.advance-payments.approve', $req->id) }}" method="POST" class="d-flex align-items-end js-confirm-submit" style="gap: 6px;" data-title="Approve Advance Payment" data-text="Money received for {{ $req->months_count ?? 1 }} month(s)?" data-confirm-text="Approve">
                                                 @csrf
                                                 @include('admin.partials.received-by-select')
                                                 <button type="submit" class="btn btn-sm btn-success mb-2">Approve ({{ $req->months_count ?? 1 }} Months)</button>

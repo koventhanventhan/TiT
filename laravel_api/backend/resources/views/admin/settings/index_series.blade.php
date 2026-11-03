@@ -73,19 +73,7 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac;">
-                <strong>Success:</strong> {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="color: #86efac;"><span aria-hidden="true">&times;</span></button>
-            </div>
-        @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5;">
-                <strong>Error:</strong> {{ session('error') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="color: #fca5a5;"><span aria-hidden="true">&times;</span></button>
-            </div>
-        @endif
 
         <!-- 1. Institute Format & Prefix Settings -->
         <div class="card mb-4">

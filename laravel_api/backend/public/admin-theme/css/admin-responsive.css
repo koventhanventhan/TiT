@@ -615,3 +615,37 @@ body.menu-toggle {
         justify-content: center !important;
     }
 }
+
+/* Admission Fees Responsive Stacking */
+@media (max-width: 820px) {
+    .admission-fees-page .fee-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+    .admission-fees-page .fee-row__meta {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .admission-fees-page .fee-row__input-group {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .admission-fees-page .fee-control {
+        width: 100% !important;
+        max-width: 160px !important;
+    }
+    .admission-fees-page .policy-item {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .admission-fees-page .fee-control {
+        max-width: 140px !important;
+    }
+    .admission-fees-page .fee-submit-btn {
+        width: 100% !important;
+    }
+}

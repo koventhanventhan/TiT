@@ -1674,6 +1674,187 @@ table.dataTable thead .sorting_desc:after {
     justify-content: center !important;
   }
 }
+
+/* Admission Fees Page Scoped Styles */
+.admission-fees-page .card {
+  height: auto !important;
+  margin-bottom: 1.5rem !important;
+}
+.admission-fees-page .fee-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.admission-fees-page .fee-row {
+  background: var(--adm-surface-2, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--adm-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--t-radius-card, 12px);
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.admission-fees-page .fee-row:hover {
+  border-color: var(--adm-accent, #EB8153);
+}
+.admission-fees-page .fee-row--disabled {
+  opacity: 0.75;
+}
+.admission-fees-page .fee-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.admission-fees-page .fee-grade-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--adm-text);
+  min-width: 90px;
+}
+.admission-fees-page .fee-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.admission-fees-page .fee-toggle-text {
+  font-size: 0.85rem;
+  color: var(--adm-text-2);
+  user-select: none;
+}
+.admission-fees-page .fee-row__input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.admission-fees-page .fee-amount-label {
+  font-size: 0.85rem;
+  color: var(--adm-text-2);
+}
+.admission-fees-page .fee-control {
+  background: var(--adm-input-bg, rgba(0, 0, 0, 0.2)) !important;
+  border: 1px solid var(--adm-border, rgba(255, 255, 255, 0.15)) !important;
+  color: var(--adm-text) !important;
+  border-radius: 0.5rem !important;
+  width: 140px;
+  min-height: 44px;
+  padding: 0.375rem 0.75rem;
+  font-weight: 600;
+}
+.admission-fees-page .fee-control:focus {
+  border-color: var(--adm-accent, #EB8153) !important;
+  box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
+}
+.admission-fees-page .fee-control.is-disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background: var(--adm-surface) !important;
+  border-color: var(--adm-border) !important;
+}
+.admission-fees-page .fee-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 26px;
+  margin-bottom: 0;
+  min-width: 44px;
+  min-height: 44px;
+}
+.admission-fees-page .fee-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.admission-fees-page .fee-switch .slider {
+  position: relative;
+  cursor: pointer;
+  width: 48px;
+  height: 26px;
+  background-color: var(--adm-border, rgba(255, 255, 255, 0.2));
+  transition: 0.3s ease;
+  border-radius: 26px;
+  display: block;
+}
+.admission-fees-page .fee-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #ffffff;
+  transition: 0.3s ease;
+  border-radius: 50%;
+}
+.admission-fees-page .fee-switch input:checked + .slider {
+  background-color: var(--adm-accent, #EB8153);
+}
+.admission-fees-page .fee-switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+.admission-fees-page .fee-submit-btn {
+  min-height: 44px;
+  font-weight: 600;
+}
+.admission-fees-page .payment-policy-details {
+  overflow: hidden;
+}
+.admission-fees-page .payment-policy-summary {
+  cursor: pointer;
+  user-select: none;
+  min-height: 48px;
+  padding: 1rem 1.25rem;
+}
+.admission-fees-page .payment-policy-summary::-webkit-details-marker {
+  display: none;
+}
+.admission-fees-page .payment-policy-summary::marker {
+  display: none;
+}
+.admission-fees-page .policy-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.admission-fees-page .policy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: var(--adm-surface-2, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--adm-border, rgba(255, 255, 255, 0.08));
+  border-radius: 0.5rem;
+}
+.admission-fees-page .policy-badge-col {
+  min-width: 70px;
+  display: flex;
+  align-items: center;
+}
+.admission-fees-page .policy-day-badge {
+  min-width: 60px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.5rem;
+}
+.admission-fees-page .policy-content-col {
+  flex: 1;
+}
+.admission-fees-page .policy-item-title {
+  font-weight: 700;
+  color: var(--adm-text);
+  font-size: 0.95rem;
+}
+.admission-fees-page .policy-item-desc {
+  color: var(--adm-text-2);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.admission-fees-page .text-muted-theme {
+  color: var(--adm-text-2) !important;
+}
 `;
 
   return out;

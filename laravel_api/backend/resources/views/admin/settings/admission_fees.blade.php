@@ -2,269 +2,212 @@
 
 @section('title', 'Admission Fees')
 
-@push('styles')
-<style>
-    .content-body {
-        margin-top: 0 !important;
-        padding-top: 1.25rem;
-    }
-
-    .card {
-        border-radius: 0.75rem;
-        box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.2);
-        margin-bottom: 1.5625rem;
-        background: rgba(43, 37, 72, 0.4) !important;
-        border: 1.0px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .card-header {
-        border-bottom: 1.0px solid rgba(255, 255, 255, 0.1);
-        background: transparent !important;
-    }
-
-    .card-title {
-        color: var(--adm-text) !important;
-        font-weight: 600;
-    }
-
-    .fee-row {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1.0px solid rgba(255,255,255,0.1);
-        border-radius: 0.75rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        color: var(--adm-text);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        transition: all 0.3s ease;
-    }
-
-    .fee-row:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(235, 129, 83, 0.3);
-    }
-
-    .form-control {
-        background: rgba(0, 0, 0, 0.2) !important;
-        border: 1.0px solid rgba(255, 255, 255, 0.1) !important;
-        color: var(--adm-text) !important;
-        border-radius: 0.5rem !important;
-        width: 150px;
-    }
-
-    .form-control:focus {
-        border-color: #EB8153 !important;
-        box-shadow: 0 0 0 0.2rem rgba(235, 129, 83, 0.25) !important;
-    }
-
-    .text-primary {
-        color: #EB8153 !important;
-    }
-
-    /* Custom Switch */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
-        margin-bottom: 0;
-    }
-
-    .switch input { 
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(255, 255, 255, 0.2);
-        transition: .4s;
-        border-radius: 24px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
-
-    input:checked + .slider {
-        background-color: #EB8153;
-    }
-
-    input:checked + .slider:before {
-        transform: translateX(26px);
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="row page-titles mx-0 mb-4">
-    <div class="col-sm-6 p-md-0">
-        <div class="welcome-text">
-            <h4 style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Admission Fees</h4>
-        </div>
-    </div>
-    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('admin.packages.index') }}">Payment Settings</a></li>
-            <li class="breadcrumb-item active"><a href="javascript:void(0)">Admission Fees</a></li>
-        </ol>
-    </div>
-</div>
-
-
-
-<div class="row">
-    <div class="col-xl-8 offset-xl-2">
-        <div class="card mb-4" data-testid="admin-payment-rules-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 text-primary">
-                    <i class="fa fa-info-circle mr-2"></i> How Monthly Payment Works (System Policy & Automation Rules)
-                </h5>
-                <span class="badge badge-warning text-dark font-weight-bold">Policy & Automation</span>
-            </div>
-            <div class="card-body">
-                <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem; line-height: 1.6;">
-                    The platform enforces automated monthly billing, access gating, reminders, and deactivations based on real-time payment states:
-                </p>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-primary mr-1">Day 1</span> 1st of the Month – Due Date
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                From the 1st of each month, students without a <code>PAID</code> payment row for the current month enter <code>payment_due</code> access state. Access to learning materials, Zoom classes, and recordings is gated until paid.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-warning mr-1">Day 2</span> Automated Payment Reminder
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                The <code>app:check-payments</code> command executes on Day 2 and sends automated payment reminders via WhatsApp and Email to all unpaid active students.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-danger mr-1">Day 5</span> Automated Account Deactivation
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                On Day 5, <code>app:check-payments</code> deactivates students who remain unpaid (<code>deactivated_at = now()</code>), issues suspension notices via WhatsApp/Email, and sends a deactivation summary alert to Admin.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-info mr-1">Methods</span> Payment Channels
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                <strong>Online:</strong> Paid instantly via PayHere; unlocks access immediately. <br/>
-                                <strong>Offline:</strong> Student submits bank/cash slip; unlocks once Admin clicks "Mark Paid". <br/>
-                                <strong>Advance:</strong> Student requests 1–12 advance months offline; approved by Admin.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-success mr-1">Receipts</span> Instant Digital Receipts
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                Official digital receipts are automatically generated and dispatched via Email and WhatsApp immediately after a payment is confirmed (online gateway or admin "Mark Paid").
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.5rem; padding: 1rem;">
-                            <h6 class="font-weight-bold mb-2">
-                                <span class="badge badge-secondary mr-1">Top-Up</span> Subject Top-Up (Added Subjects)
-                            </h6>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; line-height: 1.5;">
-                                When an enrolled student who already paid for the month adds extra subjects, a single pending top-up is created for the fee difference. Added subjects remain locked until the top-up is paid.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert alert-dark mt-2 mb-0" style="background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); font-size: 0.85rem;">
-                    <strong>Implementation Note:</strong> In <code>app:check-payments</code>, the reminder block condition checks <code>$day === 2 || ($day &gt; 2 &amp;&amp; $day &lt; 5)</code>. However, the command exits early at line 34 if <code>$day !== 2 &amp;&amp; $day !== 5</code> (unless <code>--force</code> is passed). Therefore, Day 3 and Day 4 reminders are unreachable during standard automated cron execution.
-                </div>
+<div class="admission-fees-page">
+    <div class="row page-titles mx-0 mb-4">
+        <div class="col-sm-6 p-md-0">
+            <div class="welcome-text">
+                <h4 class="page-title-text mb-0">Admission Fees</h4>
             </div>
         </div>
+        <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.packages.index') }}">Payment Settings</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Admission Fees</a></li>
+            </ol>
+        </div>
+    </div>
 
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ route('admin.settings.admission-fees.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-4">
-                        <h5 class="text-primary">First-Time Admission Fees</h5>
-                        <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">
-                            Set the admission fee that will be automatically added to a student's <strong>first</strong> payment. Use the switch to turn the admission fee ON or OFF for specific grades.
-                        </p>
-                    </div>
+    <!-- 1. First-Time Admission Fees Form (Primary Content First) -->
+    <div class="card mb-4" data-testid="admission-fees-form-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="flaticon-381-settings-2 mr-2 text-primary"></i> First-Time Admission Fees
+            </h5>
+            <span class="badge badge-primary font-weight-bold">Per-Grade Setup</span>
+        </div>
+        <div class="card-body">
+            <p class="mb-4 text-muted-theme">
+                Set the admission fee that will be automatically added to a student's first payment. Use the switch to turn the admission fee ON or OFF for specific grades.
+            </p>
 
-                    @php
-                        $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
-                        $config = json_decode($configStr, true) ?? [];
-                        // Ensure grades 1 to 13 exist
-                        $grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-                    @endphp
+            <form action="{{ route('admin.settings.admission-fees.store') }}" method="POST" id="admissionFeesForm">
+                @csrf
+                @php
+                    $configStr = \App\Models\SiteSetting::get('admission_fees_config', '{}');
+                    $config = json_decode($configStr, true) ?? [];
+                    $grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+                @endphp
 
+                <div class="fee-rows-list">
                     @foreach($grades as $grade)
                         @php
                             $gradeConfig = $config[$grade] ?? ['enabled' => false, 'amount' => 500];
+                            $isEnabled = !empty($gradeConfig['enabled']);
+                            $amount = $gradeConfig['amount'] ?? 500;
                         @endphp
-                        <div class="fee-row">
-                            <div class="d-flex align-items-center">
-                                <h6 class="mb-0" style="font-size: 1.1rem; width: 120px;">Grade {{ $grade }}</h6>
-                                
-                                <label class="switch ml-3">
-                                    <input type="checkbox" name="fees[{{ $grade }}][enabled]" value="1" {{ $gradeConfig['enabled'] ? 'checked' : '' }}>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="ml-2" style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Enable Fee</span>
+                        <div class="fee-row {{ !$isEnabled ? 'fee-row--disabled' : '' }}" data-grade="{{ $grade }}">
+                            <div class="fee-row__meta">
+                                <span class="fee-grade-title">Grade {{ $grade }}</span>
+                                <div class="fee-toggle-wrapper">
+                                    <label class="switch fee-switch">
+                                        <input type="checkbox" 
+                                               id="fee_toggle_{{ $grade }}" 
+                                               name="fees[{{ $grade }}][enabled]" 
+                                               value="1" 
+                                               {{ $isEnabled ? 'checked' : '' }} 
+                                               onchange="toggleGradeFee(this, {{ $grade }})">
+                                        <span class="slider"></span>
+                                        <span class="sr-only">Toggle admission fee for Grade {{ $grade }}</span>
+                                    </label>
+                                    <label for="fee_toggle_{{ $grade }}" class="fee-toggle-text mb-0 cursor-pointer">
+                                        {{ $isEnabled ? 'Fee Enabled' : 'Fee Disabled' }}
+                                    </label>
+                                </div>
                             </div>
                             
-                            <div class="d-flex align-items-center">
-                                <span class="mr-2" style="color: rgba(255,255,255,0.6);">Amount (LKR)</span>
-                                <input type="number" step="0.01" min="0" name="fees[{{ $grade }}][amount]" class="form-control text-right" value="{{ $gradeConfig['amount'] }}">
+                            <div class="fee-row__input-group">
+                                <label for="fee_amount_{{ $grade }}" class="fee-amount-label mb-0">Amount (LKR)</label>
+                                <div class="fee-input-container">
+                                    <input type="number" 
+                                           id="fee_amount_{{ $grade }}"
+                                           step="0.01" 
+                                           min="0" 
+                                           inputmode="decimal" 
+                                           name="fees[{{ $grade }}][amount]" 
+                                           class="form-control fee-control text-right {{ !$isEnabled ? 'is-disabled' : '' }}" 
+                                           value="{{ $amount }}"
+                                           {{ !$isEnabled ? 'readonly' : '' }}>
+                                    @error('fees.' . $grade . '.amount')
+                                        <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     @endforeach
+                </div>
 
-                    <div class="mt-4 text-center">
-                        <button type="submit" class="btn btn-primary btn-lg px-5">Save Admission Fees</button>
-                    </div>
-                </form>
-            </div>
+                <div class="mt-4 pt-2 text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 fee-submit-btn">
+                        Save Admission Fees
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- 2. How Monthly Payments Work (Help Panel Below Form, Collapsible) -->
+    <details class="card mb-4 payment-policy-details" id="paymentPolicyDetails" data-testid="admin-payment-rules-card">
+        <summary class="card-header d-flex justify-content-between align-items-center payment-policy-summary">
+            <span class="d-flex align-items-center">
+                <i class="fa fa-info-circle mr-2 text-primary"></i>
+                <span class="h5 card-title mb-0 d-inline">How monthly payments work</span>
+            </span>
+            <span class="badge badge-info font-weight-bold ml-2">Policy Overview</span>
+        </summary>
+        <div class="card-body">
+            <p class="mb-4 text-muted-theme">
+                The platform enforces automated monthly billing, access gating, reminders, and deactivations based on real-time student payment states:
+            </p>
+
+            <div class="policy-items-list">
+                <div class="policy-item">
+                    <div class="policy-badge-col">
+                        <span class="badge badge-primary policy-day-badge">Day 1</span>
+                    </div>
+                    <div class="policy-content-col">
+                        <h6 class="policy-item-title mb-1">1st of the Month – Due Date</h6>
+                        <p class="policy-item-desc mb-0">
+                            Monthly fees become due on the 1st of each month; students without a confirmed payment enter payment due status, temporarily restricting access to class materials and live sessions until settled.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="policy-item">
+                    <div class="policy-badge-col">
+                        <span class="badge badge-warning text-dark policy-day-badge">Day 2</span>
+                    </div>
+                    <div class="policy-content-col">
+                        <h6 class="policy-item-title mb-1">Automated Payment Reminder</h6>
+                        <p class="policy-item-desc mb-0">
+                            Automated reminders are dispatched via WhatsApp and Email to all active enrolled students with unpaid balances for the current month.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="policy-item">
+                    <div class="policy-badge-col">
+                        <span class="badge badge-danger policy-day-badge">Day 5</span>
+                    </div>
+                    <div class="policy-content-col">
+                        <h6 class="policy-item-title mb-1">Automated Account Deactivation</h6>
+                        <p class="policy-item-desc mb-0">
+                            Students who remain unpaid by Day 5 are automatically deactivated, issued suspension notices via WhatsApp and Email, and a summary is sent to the administrator.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="policy-item">
+                    <div class="policy-badge-col">
+                        <span class="badge badge-info policy-day-badge">Channels</span>
+                    </div>
+                    <div class="policy-content-col">
+                        <h6 class="policy-item-title mb-1">Payment Channels (Online, Offline, Advance)</h6>
+                        <p class="policy-item-desc mb-0">
+                            Online payments through PayHere activate access instantly, offline bank slips unlock access once verified and marked paid by an admin, and students can request 1 to 12 months in advance offline.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="policy-item">
+                    <div class="policy-badge-col">
+                        <span class="badge badge-success policy-day-badge">Receipts</span>
+                    </div>
+                    <div class="policy-content-col">
+                        <h6 class="policy-item-title mb-1">Instant Digital Receipts &amp; Subject Top-Ups</h6>
+                        <p class="policy-item-desc mb-0">
+                            Official digital receipts are dispatched via Email and WhatsApp immediately after a payment is confirmed, and enrolled students adding subjects mid-month receive a pending top-up for the fee difference while keeping new subjects locked until paid.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </details>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var details = document.getElementById('paymentPolicyDetails');
+    if (details) {
+        if (window.innerWidth >= 768) {
+            details.open = true;
+        } else {
+            details.open = false;
+        }
+    }
+});
+
+function toggleGradeFee(checkbox, grade) {
+    var row = checkbox.closest('.fee-row');
+    if (!row) return;
+    var input = row.querySelector('.fee-control');
+    var label = row.querySelector('.fee-toggle-text');
+    if (checkbox.checked) {
+        row.classList.remove('fee-row--disabled');
+        if (input) {
+            input.removeAttribute('readonly');
+            input.classList.remove('is-disabled');
+        }
+        if (label) label.textContent = 'Fee Enabled';
+    } else {
+        row.classList.add('fee-row--disabled');
+        if (input) {
+            input.setAttribute('readonly', 'readonly');
+            input.classList.add('is-disabled');
+        }
+        if (label) label.textContent = 'Fee Disabled';
+    }
+}
+</script>
 @endsection

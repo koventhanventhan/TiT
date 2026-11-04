@@ -131,6 +131,45 @@
 
 
 
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="card-title">Institute Identity & Branding</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.settings.appearance.update') }}">
+            @csrf
+            <div class="form-group row align-items-center mb-3">
+                <label for="institute_name" class="col-sm-3 col-form-label font-weight-bold" style="color: var(--adm-text);">
+                    Institute Name <span class="text-danger">*</span>
+                </label>
+                <div class="col-sm-9">
+                    <input type="text"
+                           class="form-control @error('institute_name') is-invalid @enderror"
+                           id="institute_name"
+                           name="institute_name"
+                           value="{{ old('institute_name', $institute->name ?? '') }}"
+                           placeholder="e.g. TiT"
+                           minlength="2"
+                           maxlength="80"
+                           required
+                           style="background: var(--adm-input-bg); border-color: var(--adm-border); color: var(--adm-text);">
+                    <small class="form-text" style="color: var(--adm-text-2);">
+                        Name displayed across the admin console, subtitles, and official communications (2–80 characters).
+                    </small>
+                    @error('institute_name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary px-4 py-2" style="font-weight: 600;">
+                    <i class="fa fa-save mr-2"></i> Save Institute Name
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <h4 class="card-title">Institute Theme Preset</h4>

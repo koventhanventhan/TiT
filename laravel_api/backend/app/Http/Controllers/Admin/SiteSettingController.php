@@ -34,6 +34,7 @@ class SiteSettingController extends Controller
     public function appearance()
     {
         $instituteId = auth()->user()?->institute_id ?: 1;
+        $institute = \App\Models\Institute::find($instituteId);
         $currentPreset = SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
         
         $presetsJsonPath = resource_path('themes/presets.json');
@@ -44,26 +45,54 @@ class SiteSettingController extends Controller
         $enabledPresets = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
         $presets = array_filter($allPresets, fn($k) => in_array($k, $enabledPresets, true), ARRAY_FILTER_USE_KEY);
 
-        return view('admin.settings.appearance', compact('currentPreset', 'presets'));
+        return view('admin.settings.appearance', compact('currentPreset', 'presets', 'institute'));
     }
 
     /**
-     * Update the Appearance settings (theme preset).
+     * Update the Appearance settings (theme preset and/or institute name).
      */
     public function updateAppearance(\Illuminate\Http\Request $request)
     {
         $enabledPresets = config('appearance.enabled_presets', ['royal', 'ocean', 'emerald']);
-        $request->validate([
-            'theme_preset' => ['required', 'string', \Illuminate\Validation\Rule::in($enabledPresets)],
-        ]);
+
+        $rules = [];
+        if ($request->has('theme_preset')) {
+            $rules['theme_preset'] = ['required', 'string', \Illuminate\Validation\Rule::in($enabledPresets)];
+        }
+        if ($request->has('institute_name')) {
+            $rules['institute_name'] = ['required', 'string', 'min:2', 'max:80'];
+        }
+
+        if (empty($rules)) {
+            $rules['theme_preset'] = ['required', 'string', \Illuminate\Validation\Rule::in($enabledPresets)];
+        }
+
+        $request->validate($rules);
 
         $instituteId = auth()->user()?->institute_id ?: 1;
-        SiteSetting::setForInstitute('theme_preset', $request->theme_preset, $instituteId, 'appearance');
+        $updatedItems = [];
 
-        \Illuminate\Support\Facades\Cache::forget("site_settings_{$instituteId}");
-        \Illuminate\Support\Facades\Cache::forget("site_settings_all");
+        if ($request->filled('theme_preset')) {
+            SiteSetting::setForInstitute('theme_preset', $request->theme_preset, $instituteId, 'appearance');
+            \Illuminate\Support\Facades\Cache::forget("site_settings_{$instituteId}");
+            \Illuminate\Support\Facades\Cache::forget("site_settings_all");
+            $updatedItems[] = 'Theme preset';
+        }
 
-        return redirect()->route('admin.settings.appearance')->with('success', 'Appearance theme updated successfully to ' . ucfirst($request->theme_preset) . '!');
+        if ($request->filled('institute_name')) {
+            $institute = \App\Models\Institute::find($instituteId);
+            if ($institute) {
+                $institute->update(['name' => $request->institute_name]);
+                \Illuminate\Support\Facades\Cache::forget("current_institute_{$instituteId}");
+                $updatedItems[] = 'Institute name';
+            }
+        }
+
+        $msg = !empty($updatedItems) 
+            ? implode(' and ', $updatedItems) . ' updated successfully!' 
+            : 'Settings saved successfully!';
+
+        return redirect()->route('admin.settings.appearance')->with('success', $msg);
     }
 
     /**

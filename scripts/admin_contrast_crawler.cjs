@@ -7,6 +7,7 @@ const BASE_URL = process.env.APP_URL || 'http://127.0.0.1:8000';
 const PRESETS = process.env.TEST_PRESET ? [process.env.TEST_PRESET.trim()] : ['royal', 'ocean', 'emerald', 'midnight'];
 const VIEWPORTS = [
   { name: '1366x800', width: 1366, height: 800 },
+  { name: '820x1180', width: 820, height: 1180 },
   { name: '375x800', width: 375, height: 800 }
 ];
 
@@ -529,7 +530,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     maxVisibleBottom = docHeight;
   }
 
-  const heightThreshold = maxVisibleBottom * 1.6 + 200;
+  const heightThreshold = Math.max(window.innerHeight + 200, maxVisibleBottom * 1.6 + 200);
   const isBlankPageViolation = docHeight > heightThreshold;
 
   const blankPageCheck = {
@@ -538,6 +539,75 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     threshold: Math.round(heightThreshold),
     failed: isBlankPageViolation
   };
+
+  // 7. Layout Sanity Check per page and viewport
+  const layoutViolations = [];
+
+  // Check 1: Nested .content-body count > 1
+  const contentBodies = Array.from(document.querySelectorAll('.content-body'));
+  if (contentBodies.length > 1) {
+    layoutViolations.push({
+      type: 'nested-content-body',
+      message: `nested .content-body count (${contentBodies.length}) > 1`
+    });
+  }
+
+  // Check 2: gapLeft & gapTop on layout's .content-body
+  const layoutContentBody = contentBodies[0] || document.querySelector('#main-wrapper') || document.body;
+  const cbRect = layoutContentBody.getBoundingClientRect();
+  const candidates = Array.from(layoutContentBody.querySelectorAll('.page-titles, .card, h1, h2, h3, h4, form, table'));
+  let firstVisibleEl = null;
+  let firstElRect = null;
+  for (const el of candidates) {
+    const s = window.getComputedStyle(el);
+    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    firstVisibleEl = el;
+    firstElRect = r;
+    break;
+  }
+
+  let gapLeft = 0;
+  let gapTop = 0;
+  if (firstElRect) {
+    gapLeft = Math.round(firstElRect.left - cbRect.left);
+    gapTop = Math.round(firstElRect.top - cbRect.top);
+
+    const maxGapLeft = vpWidth >= 1000 ? 120 : (vpWidth >= 576 ? 60 : 40);
+    if (gapLeft > maxGapLeft) {
+      layoutViolations.push({
+        type: 'gapLeft',
+        message: `gapLeft ${gapLeft}px > ${maxGapLeft}px on <${firstVisibleEl.tagName.toLowerCase()}${firstVisibleEl.className ? '.' + firstVisibleEl.className.trim().split(/\s+/).join('.') : ''}>`
+      });
+    }
+
+    if (gapTop > 220) {
+      layoutViolations.push({
+        type: 'gapTop',
+        message: `gapTop ${gapTop}px > 220px on <${firstVisibleEl.tagName.toLowerCase()}${firstVisibleEl.className ? '.' + firstVisibleEl.className.trim().split(/\s+/).join('.') : ''}>`
+      });
+    }
+  }
+
+  // Check 3: Clipped overflow in .card or .table-responsive (scrollWidth > clientWidth + 4 while overflow-x: hidden|clip)
+  const cardsAndTables = Array.from(document.querySelectorAll('.card, .table-responsive'));
+  for (const el of cardsAndTables) {
+    const s = window.getComputedStyle(el);
+    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0) continue;
+    if (s.overflowX === 'hidden' || s.overflowX === 'clip') {
+      if (el.scrollWidth > el.clientWidth + 4) {
+        const diff = el.scrollWidth - el.clientWidth;
+        const sel = el.className ? `.${el.className.trim().split(/\s+/).join('.')}` : el.tagName.toLowerCase();
+        layoutViolations.push({
+          type: 'clipped-overflow',
+          selector: sel,
+          hiddenWidth: diff,
+          message: `${sel} scrollWidth (${el.scrollWidth}px) > clientWidth (${el.clientWidth}px) + 4 with overflow-x: ${s.overflowX} (hidden: +${diff}px)`
+        });
+      }
+    }
+  }
 
   return {
     violations: allViolations,
@@ -550,7 +620,10 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     modalsOpenedCount,
     dropdownsOpenedCount,
     statesMeasuredCount,
-    blankPageCheck
+    blankPageCheck,
+    layoutViolations,
+    gapLeft,
+    gapTop
   };
 }
 
@@ -562,6 +635,7 @@ async function runCrawler() {
 
   const summary = [];
   const globalUniqueModals = new Set();
+  const globalLayoutOffenders = [];
 
   for (const preset of PRESETS) {
     console.log(`\nSetting preset to: ${preset}`);
@@ -596,6 +670,7 @@ async function runCrawler() {
 
       let pagesScanned = 0;
       let totalViolations = 0;
+      let totalLayoutViolations = 0;
       let overflowPages = 0;
       let totalScannedNodes = 0;
       let totalModalsOpened = 0;
@@ -660,13 +735,27 @@ async function runCrawler() {
             console.error(`      [BLANK PAGE DETECTED] docHeight=${evalResult.blankPageCheck.docHeight}px exceeds threshold ${evalResult.blankPageCheck.threshold}px (content bottom: ${evalResult.blankPageCheck.maxBottom}px)`);
           }
 
+          if (evalResult.layoutViolations && evalResult.layoutViolations.length > 0) {
+            totalLayoutViolations += evalResult.layoutViolations.length;
+            totalViolations += evalResult.layoutViolations.length;
+            for (const lv of evalResult.layoutViolations) {
+              globalLayoutOffenders.push({
+                preset,
+                viewport: vp.name,
+                route,
+                ...lv
+              });
+              console.error(`      [LAYOUT VIOLATION] ${lv.message}`);
+            }
+          }
+
           if (evalResult.violations.length > 0) {
             totalViolations += evalResult.violations.length;
             console.log(`[FAIL: ${evalResult.violations.length} violations]`);
             for (const v of evalResult.violations.slice(0, 5)) {
               console.error(`      - "${v.text}" (${v.tag}) ratio ${v.ratio}:1 < ${v.minRatio}:1 [fg: ${v.fg}, bg: ${v.bg}]`);
             }
-          } else if (!evalResult.hasOverflow && !(evalResult.blankPageCheck && evalResult.blankPageCheck.failed)) {
+          } else if (!evalResult.hasOverflow && !(evalResult.blankPageCheck && evalResult.blankPageCheck.failed) && (!evalResult.layoutViolations || evalResult.layoutViolations.length === 0)) {
             const hInfo = evalResult.blankPageCheck ? ` [h:${evalResult.blankPageCheck.docHeight}px/b:${evalResult.blankPageCheck.maxBottom}px]` : '';
             console.log(`OK (${evalResult.scannedNodesCount} nodes, ${evalResult.modalsOpenedCount} modals${hInfo})`);
           }
@@ -696,6 +785,7 @@ async function runCrawler() {
         dropdownsOpened: totalDropdownsOpened,
         statesMeasured: totalStatesMeasured,
         nodesScanned: totalScannedNodes,
+        layoutViolations: totalLayoutViolations,
         violations: totalViolations
       });
 
@@ -707,6 +797,23 @@ async function runCrawler() {
 
   console.log('\n=== CRAWLER SUMMARY TABLE ===');
   console.table(summary);
+
+  console.log('\n=== VIEWPORT -> PAGES / LAYOUT VIOLATIONS ===');
+  const layoutTable = summary.map(s => ({
+    preset: s.preset,
+    viewport: s.viewport,
+    pages: s.pages,
+    layoutViolations: s.layoutViolations,
+    totalViolations: s.violations
+  }));
+  console.table(layoutTable);
+
+  if (globalLayoutOffenders.length > 0) {
+    console.error('\nTop 5 Layout Offenders:');
+    globalLayoutOffenders.slice(0, 5).forEach((off, idx) => {
+      console.error(`  ${idx + 1}. [${off.preset} ${off.viewport}] ${off.route} -> ${off.message}`);
+    });
+  }
 
   console.log(`\nUnique modals opened (${globalUniqueModals.size}):`);
   console.log(Array.from(globalUniqueModals));
@@ -724,6 +831,7 @@ async function runCrawler() {
     process.exit(1);
   } else {
     console.log('\nSUCCESS: 0 contrast violations and 0 horizontal overflows across all presets & viewports!');
+    console.log(`Verified 0 layout violations across ${summary.length} preset/viewport runs.`);
     console.log(`Verified >= 16 unique modals (${globalUniqueModals.size}) and comprehensive interactive state coverage.`);
   }
 }

@@ -217,6 +217,35 @@ html, body {
     .header-left .search_bar {
         max-width: 16.25rem;
     }
+
+    /* Widget Stats at <= 64rem (1024px / tablets) */
+    .widget-stat.card .card-body {
+        padding: 0.75rem !important;
+    }
+    .widget-stat .media {
+        flex-direction: column !important;
+        text-align: center !important;
+        align-items: center !important;
+        gap: 0.35rem;
+    }
+    .widget-stat .media span.mr-3,
+    .widget-stat .media > span {
+        margin-right: 0 !important;
+        margin-bottom: 0.25rem !important;
+        width: 3rem !important;
+        height: 3rem !important;
+    }
+    .widget-stat .media > span i {
+        font-size: 1.35rem !important;
+    }
+    .widget-stat .media-body {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+    .widget-stat .media-body h4 {
+        font-size: 1rem !important;
+        word-break: break-word !important;
+    }
 }
 
 /* ============================
@@ -280,6 +309,25 @@ html, body {
     /* Content */
     .content-body {
         padding-top: 0.625rem !important;
+    }
+
+    /* Widget Stats at <= 64rem (1024px) */
+    .widget-stat.card .card-body {
+        padding: 0.75rem !important;
+    }
+    .widget-stat .media {
+        flex-direction: column !important;
+        text-align: center !important;
+        align-items: center !important;
+        gap: 0.5rem;
+    }
+    .widget-stat .media span.mr-3 {
+        margin-right: 0 !important;
+        margin-bottom: 0.375rem !important;
+    }
+    .widget-stat .media-body h4 {
+        font-size: 1.1rem !important;
+        word-break: break-word !important;
     }
 
     .container-fluid {
@@ -419,6 +467,22 @@ html, body {
 
     .card-body {
         padding: 0.625rem;
+    }
+
+    .widget-stat.card .card-body {
+        padding: 0.5rem !important;
+    }
+
+    .widget-stat .media-body h4 {
+        font-size: 0.95rem !important;
+    }
+
+    .card-body > .form-group.row,
+    .card-body .row,
+    .card .row,
+    form .form-group.row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     .table thead th,

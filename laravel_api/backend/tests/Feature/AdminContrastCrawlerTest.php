@@ -41,6 +41,7 @@ class AdminContrastCrawlerTest extends TestCase
         $this->assertEquals(0, $exitCode, "Admin contrast crawler failed with exit code {$exitCode}:\n{$outputText}");
         $this->assertStringContainsString('0 contrast violations', $outputText);
         $this->assertStringContainsString('0 horizontal overflows', $outputText);
+        $this->assertStringContainsString('0 layout violations', $outputText);
         $this->assertStringContainsString('Unique modals opened', $outputText);
 
         if (preg_match('/SUMMARY_JSON:(.*)/', $outputText, $matches)) {
@@ -49,6 +50,7 @@ class AdminContrastCrawlerTest extends TestCase
             $this->assertGreaterThanOrEqual(16, count($data['uniqueModals']), 'Must open at least 16 unique modals');
             foreach ($data['summary'] as $row) {
                 $this->assertEquals(0, $row['violations'], "Violations must be 0 for {$row['preset']} {$row['viewport']}");
+                $this->assertEquals(0, $row['layoutViolations'], "Layout violations must be 0 for {$row['preset']} {$row['viewport']}");
                 $this->assertGreaterThan(20, $row['nodesScanned'] / max(1, $row['pages']), "Average nodes scanned per page must exceed 20");
             }
         }

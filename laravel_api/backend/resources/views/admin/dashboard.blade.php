@@ -4,44 +4,60 @@
 
 @push('styles')
 <style>
+@media (max-width: 1024px) {
+    .widget-stat.card .card-body {
+        padding: 0.75rem !important;
+    }
+    .widget-stat .media {
+        flex-direction: column !important;
+        text-align: center !important;
+        align-items: center !important;
+        gap: 0.35rem;
+    }
+    .widget-stat .media > span.mr-3,
+    .widget-stat .media > span {
+        margin-right: 0 !important;
+        margin-bottom: 0.25rem !important;
+        width: 3rem !important;
+        height: 3rem !important;
+    }
+    .widget-stat .media > span i {
+        font-size: 1.35rem !important;
+    }
+    .widget-stat .media-body {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+    .widget-stat .media-body p {
+        font-size: 0.75rem !important;
+        margin-bottom: 2px !important;
+    }
+    .widget-stat .media-body h4 {
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+        word-break: break-word !important;
+    }
+}
 @media (max-width: 576px) {
     .widget-stat.card {
         margin-bottom: 0.75rem !important;
     }
     .widget-stat .card-body {
-        padding: 0.75rem 0.5rem !important;
-    }
-    .widget-stat .media {
-        display: flex !important;
-        align-items: center !important;
-        flex-direction: row !important;
+        padding: 0.625rem 0.375rem !important;
     }
     .widget-stat .media > span {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        min-width: 2.5rem !important;
-        margin-right: 0.5rem !important;
-        border-radius: 8px !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-width: 2.25rem !important;
     }
     .widget-stat .media > span i {
-        font-size: 1.2rem !important;
-    }
-    .widget-stat .media-body {
-        min-width: 0 !important;
+        font-size: 1.1rem !important;
     }
     .widget-stat .media-body p {
-        font-size: 0.6875rem !important;
-        margin-bottom: 2px !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        font-size: 0.65rem !important;
     }
     .widget-stat .media-body h4 {
-        font-size: 1.05rem !important;
-        line-height: 1.2 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        font-size: 0.9rem !important;
     }
 }
 </style>

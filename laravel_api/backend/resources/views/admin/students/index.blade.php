@@ -295,7 +295,7 @@
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
-        <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div class="page-title d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
             <div>
                 <h4 class="mb-1" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Student Entries</h4>
                 <div class="d-inline-flex align-items-center mt-1 flex-wrap gap-2">

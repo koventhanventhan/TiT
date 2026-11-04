@@ -19,6 +19,25 @@
     .grade-S { background: #ffedd5; color: #9a3412; }
     .grade-F { background: #fee2e2; color: #991b1b; }
     .grade-W { background: #f3f4f6; color: #374151; }
+
+    @media (max-width: 576px) {
+        .card-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        .card-header .d-flex.gap-2 {
+            width: 100%;
+        }
+        .card-header #searchInput {
+            width: 100% !important;
+        }
+        .page-title {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+    }
 </style>
 @endpush
 

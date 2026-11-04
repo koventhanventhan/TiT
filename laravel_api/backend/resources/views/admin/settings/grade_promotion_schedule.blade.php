@@ -113,6 +113,28 @@
     input:checked + .slider:before {
         transform: translateX(26px);
     }
+
+    @media (max-width: 576px) {
+        .schedule-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        .schedule-row > div:first-child {
+            width: 100%;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .schedule-row .date-input {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .schedule-row .date-input .form-control {
+            width: 100% !important;
+            max-width: 180px;
+        }
+    }
 </style>
 @endpush
 

@@ -649,3 +649,63 @@ body.menu-toggle {
         width: 100% !important;
     }
 }
+
+/* Index Series Responsive Stacking */
+@media (max-width: 576px) {
+    .index-series-page .series-table {
+        display: block !important;
+        width: 100% !important;
+    }
+    .index-series-page .series-table thead {
+        display: none !important;
+    }
+    .index-series-page .series-table tbody {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+        width: 100% !important;
+    }
+    .index-series-page .series-table tr {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        background: var(--adm-surface-2, rgba(255, 255, 255, 0.03)) !important;
+        border: 1px solid var(--adm-border) !important;
+        border-radius: 0.75rem !important;
+        padding: 1rem !important;
+        width: 100% !important;
+    }
+    .index-series-page .series-table td {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0 !important;
+        border: none !important;
+        width: 100% !important;
+        text-align: left !important;
+    }
+    .index-series-page .series-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--adm-text-2);
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+    }
+    .index-series-page .series-table td.series-action-cell {
+        margin-top: 0.5rem !important;
+        display: block !important;
+    }
+    .index-series-page .series-table td.series-action-cell button {
+        width: 100% !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .index-series-page .series-table td form {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+}
+

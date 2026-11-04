@@ -1866,6 +1866,45 @@ table.dataTable thead .sorting_desc:after {
 .admission-fees-page .text-muted-theme {
   color: var(--adm-text-2) !important;
 }
+
+/* Index Series Page Tokens */
+.index-series-page .series-table th {
+  color: var(--adm-text-2);
+  font-weight: 600;
+  border-bottom: 1px solid var(--adm-border) !important;
+  background: transparent;
+}
+.index-series-page .series-table td {
+  color: var(--adm-text);
+  vertical-align: middle !important;
+  border-top: 1px solid var(--adm-border) !important;
+}
+.index-series-page .form-control-dark {
+  background: var(--adm-input-bg) !important;
+  border: 1px solid var(--adm-border) !important;
+  color: var(--adm-text) !important;
+}
+.index-series-page .form-control-dark:focus {
+  border-color: var(--adm-accent) !important;
+  box-shadow: 0 0 0 2px var(--adm-accent-soft, rgba(235, 129, 83, 0.25)) !important;
+}
+.index-series-page .format-notice {
+  background: var(--adm-surface-2, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+}
+.index-series-page .custom-radio .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: var(--adm-accent, #EB8153);
+  border-color: var(--adm-accent, #EB8153);
+}
+.index-series-page .custom-radio .custom-control-label::before {
+  background-color: var(--adm-input-bg, rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--adm-border);
+}
+.index-series-page .action-col {
+  min-width: 150px;
+  text-align: right;
+}
 `;
 
   return out;

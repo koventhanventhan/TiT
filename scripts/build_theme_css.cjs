@@ -71,6 +71,7 @@ function renderTokens(p) {
   --adm-surface-2: ${p.adm_surface_2 || '#332b56'};
   --adm-success: ${p.adm_success || '#34d399'};
   --adm-danger: ${p.adm_danger || '#f87171'};
+  --adm-danger-light: ${p.adm_danger_light || '#fca5a5'};
   --adm-warning: ${p.adm_warning || '#fbbf24'};
   --adm-info: ${p.adm_info || '#38bdf8'};
 
@@ -1104,6 +1105,16 @@ a.all-notification:hover {
 }
 .text-muted {
   color: var(--adm-text-3) !important;
+}
+
+/* Prompt 24: Required-field asterisk and danger text on dark console >= 4.5:1 */
+.card .text-danger,
+.modal .text-danger,
+.content-body .text-danger,
+.header .text-danger,
+label .text-danger,
+span.text-danger {
+  color: var(--adm-danger-light, #fca5a5) !important;
 }
 .text-white {
   color: var(--adm-text) !important;

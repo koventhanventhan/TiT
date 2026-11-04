@@ -305,11 +305,11 @@
                     </span>
                     <a href="{{ route('admin.students.pending-payments') }}"
                        class="badge"
-                       style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
+                       style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 600; font-size: 0.8rem; border-radius: 12px; padding: 4px 10px; text-decoration: none;"
                        title="Pending Payments: students with a PENDING payment for the current month – click to open dedicated pending payments page">
                         <i class="flaticon-381-diamond mr-1"></i> Pending Payments: {{ $pendingPaymentsCount ?? 0 }}
                         @if(isset($pendingMonthlyCount) && isset($pendingTopupsCount))
-                            <span style="opacity: 0.85; font-size: 0.72rem; margin-left: 2px;">({{ $pendingMonthlyCount }} monthly + {{ $pendingTopupsCount }} top-ups)</span>
+                            <span style="color: #fde68a; font-size: 0.72rem; margin-left: 2px;">({{ $pendingMonthlyCount }} monthly + {{ $pendingTopupsCount }} top-ups)</span>
                         @endif
                     </a>
                     <span class="badge badge-light" style="background: rgba(255, 255, 255, 0.08); color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: help;"

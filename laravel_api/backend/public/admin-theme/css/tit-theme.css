@@ -44,6 +44,7 @@
   --adm-surface-2: #332b56;
   --adm-success: #34d399;
   --adm-danger: #f87171;
+  --adm-danger-light: #fca5a5;
   --adm-warning: #fbbf24;
   --adm-info: #38bdf8;
 
@@ -149,6 +150,7 @@ html[data-theme-preset="royal"], [data-theme-preset="royal"] {
   --adm-surface-2: #332b56;
   --adm-success: #34d399;
   --adm-danger: #f87171;
+  --adm-danger-light: #fca5a5;
   --adm-warning: #fbbf24;
   --adm-info: #38bdf8;
 
@@ -254,6 +256,7 @@ html[data-theme-preset="ocean"], [data-theme-preset="ocean"] {
   --adm-surface-2: #0e203f;
   --adm-success: #34d399;
   --adm-danger: #f87171;
+  --adm-danger-light: #fca5a5;
   --adm-warning: #fbbf24;
   --adm-info: #38bdf8;
 
@@ -359,6 +362,7 @@ html[data-theme-preset="emerald"], [data-theme-preset="emerald"] {
   --adm-surface-2: #082c28;
   --adm-success: #34d399;
   --adm-danger: #f87171;
+  --adm-danger-light: #fca5a5;
   --adm-warning: #fbbf24;
   --adm-info: #38bdf8;
 
@@ -464,6 +468,7 @@ html[data-theme-preset="midnight"], [data-theme-preset="midnight"] {
   --adm-surface-2: #101526;
   --adm-success: #34d399;
   --adm-danger: #f87171;
+  --adm-danger-light: #fca5a5;
   --adm-warning: #fbbf24;
   --adm-info: #38bdf8;
 
@@ -1478,6 +1483,16 @@ a.all-notification:hover {
 }
 .text-muted {
   color: var(--adm-text-3) !important;
+}
+
+/* Prompt 24: Required-field asterisk and danger text on dark console >= 4.5:1 */
+.card .text-danger,
+.modal .text-danger,
+.content-body .text-danger,
+.header .text-danger,
+label .text-danger,
+span.text-danger {
+  color: var(--adm-danger-light, #fca5a5) !important;
 }
 .text-white {
   color: var(--adm-text) !important;

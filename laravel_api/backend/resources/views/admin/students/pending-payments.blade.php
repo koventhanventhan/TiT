@@ -129,9 +129,9 @@
                                         </div>
                                         <div style="font-size: 0.72rem; color: var(--adm-text-2); margin-top: 2px;">
                                             <span style="color: var(--adm-text); font-weight: 700;">G{{ $student->current_grade ?: '?' }}</span>
-                                            <span style="opacity: 0.4; margin: 0 4px;">|</span>
+                                            <span aria-hidden="true" style="color: var(--adm-text-3); margin: 0 4px;">|</span>
                                             <span style="font-weight: 600;">{{ strtoupper($student->medium ?: 'ENG') }}</span>
-                                            <span style="opacity: 0.4; margin: 0 4px;">|</span>
+                                            <span aria-hidden="true" style="color: var(--adm-text-3); margin: 0 4px;">|</span>
                                             <span>
                                                 @if($student->phone_number)
                                                     {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}

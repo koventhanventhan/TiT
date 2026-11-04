@@ -19,7 +19,7 @@
 
 
 
-    <div class="card">
+    <div class="card" style="min-height: 480px;">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-responsive-md">

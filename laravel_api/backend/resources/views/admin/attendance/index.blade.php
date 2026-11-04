@@ -32,7 +32,7 @@
 
 
 @forelse($schedules as $s)
-<div class="card mb-4">
+<div class="card mb-4" style="min-height: 480px;">
     <div class="card-header bg-light">
         <h4 class="card-title text-primary"><strong>{{ $s->title }}</strong></h4>
         <span class="badge badge-outline-light fs-12" style="color: var(--adm-text); border-color: var(--adm-border);">{{ $s->scheduled_at ? $s->scheduled_at->format('M d, Y @ H:i') : 'N/A' }}</span>
@@ -96,7 +96,7 @@
     </div>
 </div>
 @empty
-<div class="card">
+<div class="card" style="min-height: 480px;">
     <div class="card-body text-center py-5">
         <p class="text-muted mb-0">No Zoom class schedules found in history.</p>
     </div>

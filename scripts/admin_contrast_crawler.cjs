@@ -169,6 +169,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
 
       const rect = el.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) continue;
+      if (vpWidth && (rect.right <= 0 || rect.left >= vpWidth)) continue;
 
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;
@@ -501,6 +502,43 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     };
   }
 
+  // 6. Blank-page detector: Page height vs visible content bottom
+  // Fails when document height > 1.6 * bottom of last visible content element + 200px
+  const docHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight
+  );
+
+  let maxVisibleBottom = 0;
+  const contentBody = document.querySelector('.content-body') || document.querySelector('#main-wrapper') || document.body;
+  const contentEls = contentBody.querySelectorAll('h1, h2, h3, h4, h5, h6, p, table, form, .card, .btn, input, select, textarea, img, ul, ol');
+  for (const el of contentEls) {
+    const s = window.getComputedStyle(el);
+    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height <= 0 || r.width <= 0) continue;
+    const absBottom = r.bottom + window.scrollY;
+    if (absBottom > maxVisibleBottom) {
+      maxVisibleBottom = absBottom;
+    }
+  }
+
+  if (maxVisibleBottom === 0) {
+    maxVisibleBottom = docHeight;
+  }
+
+  const heightThreshold = maxVisibleBottom * 1.6 + 200;
+  const isBlankPageViolation = docHeight > heightThreshold;
+
+  const blankPageCheck = {
+    docHeight: Math.round(docHeight),
+    maxBottom: Math.round(maxVisibleBottom),
+    threshold: Math.round(heightThreshold),
+    failed: isBlankPageViolation
+  };
+
   return {
     violations: allViolations,
     hasOverflow,
@@ -511,7 +549,8 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     openedModalIds,
     modalsOpenedCount,
     dropdownsOpenedCount,
-    statesMeasuredCount
+    statesMeasuredCount,
+    blankPageCheck
   };
 }
 
@@ -539,8 +578,8 @@ async function runCrawler() {
       // Route-abort external requests to avoid blocking PHP single-threaded server
       await page.route('**/*', route => {
         const url = route.request().url();
-        if (url.includes('/admin/messages/unread-count') || url.includes('/admin/notifications')) {
-          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ count: 0, notifications: [] }) });
+        if (url.includes('/admin/messages/unread-count') || url.includes('/admin/notifications') || url.includes('/broadcasting/auth') || url.includes('/admin/calendar/events') || url.includes('/admin/exam-results/data')) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ count: 0, notifications: [], events: [], data: [] }) });
         }
         if (url.includes('/api/messages')) {
           return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ messages: [], recipients: {} }) });
@@ -616,14 +655,20 @@ async function runCrawler() {
             console.warn(`[OVERFLOW: ${evalResult.scrollWidth}px]`);
           }
 
+          if (evalResult.blankPageCheck && evalResult.blankPageCheck.failed) {
+            totalViolations++;
+            console.error(`      [BLANK PAGE DETECTED] docHeight=${evalResult.blankPageCheck.docHeight}px exceeds threshold ${evalResult.blankPageCheck.threshold}px (content bottom: ${evalResult.blankPageCheck.maxBottom}px)`);
+          }
+
           if (evalResult.violations.length > 0) {
             totalViolations += evalResult.violations.length;
             console.log(`[FAIL: ${evalResult.violations.length} violations]`);
             for (const v of evalResult.violations.slice(0, 5)) {
               console.error(`      - "${v.text}" (${v.tag}) ratio ${v.ratio}:1 < ${v.minRatio}:1 [fg: ${v.fg}, bg: ${v.bg}]`);
             }
-          } else if (!evalResult.hasOverflow) {
-            console.log(`OK (${evalResult.scannedNodesCount} nodes, ${evalResult.modalsOpenedCount} modals)`);
+          } else if (!evalResult.hasOverflow && !(evalResult.blankPageCheck && evalResult.blankPageCheck.failed)) {
+            const hInfo = evalResult.blankPageCheck ? ` [h:${evalResult.blankPageCheck.docHeight}px/b:${evalResult.blankPageCheck.maxBottom}px]` : '';
+            console.log(`OK (${evalResult.scannedNodesCount} nodes, ${evalResult.modalsOpenedCount} modals${hInfo})`);
           }
 
           if (isDashboard && evalResult.dashboardCheck) {

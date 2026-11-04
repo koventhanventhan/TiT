@@ -23,7 +23,7 @@
 
 <div class="row">
     <div class="col-xl-12">
-        <div class="card">
+        <div class="card" style="min-height: 480px;">
             <div class="card-header">
                 <h4 class="card-title">Advance Payment Requests (Offline)</h4>
             </div>

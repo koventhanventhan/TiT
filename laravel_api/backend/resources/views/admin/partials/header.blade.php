@@ -281,15 +281,23 @@
             /* Pulse dot - MOBILE */
             #message-pulse,
             #notification-pulse {
-                width: 0.55rem !important;
-                height: 0.55rem !important;
-                top: 3px !important;
-                right: 3px !important;
+                min-width: 16px !important;
+                min-height: 16px !important;
+                width: auto !important;
+                height: auto !important;
+                padding: 1px 3px !important;
+                border-radius: 999px !important;
+                top: 2px !important;
+                right: 2px !important;
                 box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
+                box-sizing: border-box !important;
             }
             #message-count,
             #notification-count {
-                display: none !important;
+                font-size: 10px !important;
+                font-weight: 700 !important;
+                line-height: 1 !important;
+                color: var(--adm-on-accent) !important;
             }
 
             [data-header-position="fixed"] .content-body {
@@ -512,15 +520,23 @@
             /* Pulse dot - TABLET */
             #message-pulse,
             #notification-pulse {
-                width: 0.55rem !important;
-                height: 0.55rem !important;
-                top: 3px !important;
-                right: 3px !important;
+                min-width: 16px !important;
+                min-height: 16px !important;
+                width: auto !important;
+                height: auto !important;
+                padding: 1px 3px !important;
+                border-radius: 999px !important;
+                top: 2px !important;
+                right: 2px !important;
                 box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
+                box-sizing: border-box !important;
             }
             #message-count,
             #notification-count {
-                display: none !important;
+                font-size: 10px !important;
+                font-weight: 700 !important;
+                line-height: 1 !important;
+                color: var(--adm-on-accent) !important;
             }
 
             [data-header-position="fixed"] .content-body {
@@ -569,17 +585,23 @@
             /* Pulse dot - DESKTOP */
             #message-pulse,
             #notification-pulse {
-                width: 0.80rem !important;
-                height: 0.80rem !important;
-                top: 4px !important;
-                right: 4px !important;
-                box-shadow: 0 0 0 2.5px var(--adm-sidebar) !important;
+                min-width: 16px !important;
+                min-height: 16px !important;
+                width: auto !important;
+                height: auto !important;
+                padding: 1px 4px !important;
+                border-radius: 999px !important;
+                top: 2px !important;
+                right: 2px !important;
+                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
+                box-sizing: border-box !important;
             }
             #message-count,
             #notification-count {
-                font-size: 0.45rem !important;
-                font-weight: bold !important;
+                font-size: 10px !important;
+                font-weight: 700 !important;
                 line-height: 1 !important;
+                color: var(--adm-on-accent) !important;
             }
 
             /* Dropdown */
@@ -675,8 +697,8 @@
                                       stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <div class="pulse-css d-none" id="message-pulse"
-                                 style="background:var(--adm-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="message-count" class="d-none" style="color:var(--adm-btn-text, #ffffff);font-weight:bold;">0</span>
+                                 style="background:var(--adm-accent);border-radius:999px;min-width:16px;min-height:16px;padding:1px 3px;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="message-count" class="d-none" style="color:var(--adm-on-accent);font-weight:bold;font-size:10px;line-height:1;">0</span>
                             </div>
                         </a>
                     </li>
@@ -692,8 +714,8 @@
                                       fill="var(--adm-text)"/>
                             </svg>
                             <div class="pulse-css d-none" id="notification-pulse"
-                                 style="background:var(--adm-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="notification-count" class="d-none" style="color:var(--adm-btn-text, #ffffff);font-weight:bold;">0</span>
+                                 style="background:var(--adm-accent);border-radius:999px;min-width:16px;min-height:16px;padding:1px 3px;display:flex;align-items:center;justify-content:center;position:absolute;">
+                                <span id="notification-count" class="d-none" style="color:var(--adm-on-accent);font-weight:bold;font-size:10px;line-height:1;">0</span>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">

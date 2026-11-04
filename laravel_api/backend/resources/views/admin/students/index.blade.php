@@ -558,7 +558,7 @@
                                      <div style="margin-bottom: 0.125rem;">
                                          @if($student->is_graduated)
                                              <span class="badge badge-xs badge-info" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Graduated</span>
-                                         @elseif($student->deactivated_at)
+                                         @elseif($student->deactivated_at) {{-- jargon-ok: model property --}}
                                              <span class="badge badge-xs badge-danger" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Deactivated</span>
                                          @elseif($student->admin_confirmed_at)
                                              <span class="badge badge-xs badge-success" style="padding: 0.0625rem 0.25rem; font-size: 0.55rem; border-radius: 0.125rem;">Confirmed</span>
@@ -616,7 +616,7 @@
                                                  </form>
                                              @endif
                                              <a class="dropdown-item" href="{{ route('admin.students.edit', $student->id) }}">Edit Details</a>
-                                            @if($student->deactivated_at)
+                                            @if($student->deactivated_at) {{-- jargon-ok: model property --}}
                                                 <form action="{{ route('admin.students.activate', $student->id) }}" method="POST" id="activate-form-{{ $student->id }}">
                                                     @csrf
                                                     <button type="button" class="dropdown-item text-success swal-confirm-btn"

@@ -71,7 +71,7 @@
                                 <td>{{ $t->phone_number ?? 'â€“' }}</td>
                                 <td>{{ $t->teacher_class ?? 'â€“' }}</td>
                                 <td>
-                                    @if($t->deactivated_at)
+                                    @if($t->deactivated_at) {{-- jargon-ok: model property --}}
                                         <span class="badge badge-danger">Deactivated</span>
                                     @else
                                         <span class="badge badge-success">Active</span>
@@ -84,7 +84,7 @@
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
                                             <a class="dropdown-item" href="{{ route('admin.teachers.edit', $t->id) }}">Edit Details</a>
-                                            @if($t->deactivated_at)
+                                            @if($t->deactivated_at) {{-- jargon-ok: model property --}}
                                                 <form action="{{ route('admin.teachers.activate', $t->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">Activate Teacher</button>

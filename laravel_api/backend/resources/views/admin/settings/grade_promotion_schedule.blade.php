@@ -138,10 +138,6 @@
                         <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">
                             Set a <strong>one-time</strong> promotion date for each grade. On the scheduled date, all students in that grade will be automatically promoted to the next grade at 01:30 AM. The toggle automatically switches OFF after the promotion runs.
                         </p>
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-                            <i class="flaticon-381-warning-1 mr-1"></i>
-                            You can also run it manually: <code style="color: #EB8153;">php artisan promotions:auto-run</code>
-                        </p>
                     </div>
 
                     @php

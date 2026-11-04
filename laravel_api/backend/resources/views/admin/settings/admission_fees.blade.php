@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Admission Fees Settings')
+@section('title', 'Admission Fees')
 
 @push('styles')
 <style>
@@ -112,11 +112,18 @@
 @endpush
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="page-title d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Admission Fees Setup</h4>
+<div class="row page-titles mx-0 mb-4">
+    <div class="col-sm-6 p-md-0">
+        <div class="welcome-text">
+            <h4 style="font-size: 1.5rem; font-weight: 600; color: var(--adm-text);">Admission Fees</h4>
         </div>
+    </div>
+    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('admin.packages.index') }}">Payment Settings</a></li>
+            <li class="breadcrumb-item active"><a href="javascript:void(0)">Admission Fees</a></li>
+        </ol>
     </div>
 </div>
 

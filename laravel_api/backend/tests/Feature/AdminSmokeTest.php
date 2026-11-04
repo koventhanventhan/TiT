@@ -412,7 +412,7 @@ class AdminSmokeTest extends TestCase
             ['GET', '/admin/settings/footer', 200],
             ['GET', '/admin/settings/register', 200],
             ['GET', '/admin/settings/admission-fees', 200],
-            ['GET', '/admin/settings/payments', 200],
+            ['GET', '/admin/settings/payments', 301],
             ['GET', '/admin/settings/grade-promotion-schedule', 200],
             ['GET', '/admin/settings/index-batches', 200],
             ['GET', '/admin/settings/index-series', 200],

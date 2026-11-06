@@ -308,7 +308,7 @@ class RegistrationController extends Controller
             'institute_id' => $instituteId,
         ];
 
-        \Log::info('RegistrationController@step1 - Start', ['request' => $request->except(['_token', 'password'])]);
+        \Log::info('RegistrationController@step1 - Start', ['request' => \App\Support\Redact::array($request->except(['_token', 'password']))]);
 
         if ($user) {
             // Update existing user
@@ -1380,27 +1380,6 @@ class RegistrationController extends Controller
             'selected_subjects' => $user->selected_subjects,
             'registration_status' => $user->registration_status,
         ];
-    }
-    public function testAdminWhatsApp()
-    {
-        try {
-            $response = $this->notifier->notifyAdmin(
-                'admin_alert', 'tit_welcome',
-                ["ADMIN TEST", "DEBUG123"],
-                ['alert_title' => 'Test Notification', 'alert_message' => 'This is a test notification from TiT Education system.']
-            );
-
-            return response()->json([
-                'message' => 'Test attempt completed',
-                'channel' => env('NOTIFICATION_CHANNEL', 'auto'),
-                'result' => $response
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Exception occurred',
-                'details' => $e->getMessage()
-            ], 500);
-        }
     }
 
     /**

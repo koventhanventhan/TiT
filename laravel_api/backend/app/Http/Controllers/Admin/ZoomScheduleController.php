@@ -55,7 +55,7 @@ class ZoomScheduleController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('ZoomScheduleController@store started', $request->all());
+        Log::info('ZoomScheduleController@store started', \App\Support\Redact::array($request->all()));
 
         if (auth()->user()->role !== 'admin') {
             Log::warning('Permission denied for Zoom session creation');
@@ -82,7 +82,7 @@ class ZoomScheduleController extends Controller
             'created_by' => auth()->id(),
         ];
 
-        Log::info('Prepared data for ZoomSchedule', $data);
+        Log::info('Prepared data for ZoomSchedule', \App\Support\Redact::array($data));
 
         // Auto-create Zoom meeting if no link provided
         if (!$request->filled('zoom_link')) {

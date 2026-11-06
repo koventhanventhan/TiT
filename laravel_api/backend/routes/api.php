@@ -64,8 +64,6 @@ Route::post('/register/verify-merge-otp', [RegistrationController::class, 'verif
 // PayHere notification (public - called by PayHere servers)
 Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])->name('payhere.notify');
 
-Route::get('/test-admin-whatsapp', [RegistrationController::class, 'testAdminWhatsApp']);
-
 // Unified Website Assistant Route (Optional Sanctum Auth + ProfileContext)
 Route::middleware([\App\Http\Middleware\OptionalSanctumAuth::class, \App\Http\Middleware\ProfileContext::class])
     ->post('/assistant/chat', [\App\Http\Controllers\Api\AssistantChatController::class, 'chat']);

@@ -26,7 +26,7 @@ class ProfileController extends Controller
 
     public function updateProfile(Request $request)
     {
-        \Log::info('ProfileController@updateProfile hit', $request->except(['_token']));
+        \Log::info('ProfileController@updateProfile hit', \App\Support\Redact::array($request->except(['_token'])));
         $user = auth()->user();
         
         $request->validate([
@@ -84,7 +84,7 @@ class ProfileController extends Controller
 
     public function updateSettings(Request $request)
     {
-        \Log::info('ProfileController@updateSettings hit', $request->except(['_token']));
+        \Log::info('ProfileController@updateSettings hit', \App\Support\Redact::array($request->except(['_token'])));
         $user = auth()->user();
         
         if ($request->has('admin_notification_email')) {
@@ -132,7 +132,7 @@ class ProfileController extends Controller
 
     public function updateSecurity(Request $request)
     {
-        \Log::info('--- SECURITY UPDATE REQUEST START ---', $request->all());
+        \Log::info('--- SECURITY UPDATE REQUEST START ---', \App\Support\Redact::array($request->all()));
         $user = auth()->user();
         
         // 1. Handle Password Update if requested

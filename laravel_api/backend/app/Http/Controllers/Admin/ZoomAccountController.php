@@ -30,7 +30,7 @@ class ZoomAccountController extends Controller
      */
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('ZoomAccount store request', $request->all());
+        \Illuminate\Support\Facades\Log::info('ZoomAccount store request', \App\Support\Redact::array($request->all()));
         $validated = $request->validate([
             'email' => 'required|email|unique:zoom_accounts,email',
             'account_id' => 'required|string',
@@ -42,7 +42,7 @@ class ZoomAccountController extends Controller
         $validated['institute_id'] = auth()->user()->institute_id ?? 1;
         $validated['is_active'] = $request->has('is_active');
 
-        \Illuminate\Support\Facades\Log::info('ZoomAccount validated data', $validated);
+        \Illuminate\Support\Facades\Log::info('ZoomAccount validated data', \App\Support\Redact::array($validated));
         $account = ZoomAccount::create($validated);
         \Illuminate\Support\Facades\Log::info('ZoomAccount created', ['id' => $account->id]);
 

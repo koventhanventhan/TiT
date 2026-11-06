@@ -125,7 +125,7 @@ class ExamResultWebController extends Controller
     // ─── ADMIN: Store a single result ───
     public function store(Request $request)
     {
-        \Log::info('ExamResultWebController@store called', $request->all());
+        \Log::info('ExamResultWebController@store called', \App\Support\Redact::array($request->all()));
 
         $validator = Validator::make($request->all(), [
             'student_name' => 'required|string|max:255',

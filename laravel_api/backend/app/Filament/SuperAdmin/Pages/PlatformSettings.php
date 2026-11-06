@@ -53,8 +53,8 @@ class PlatformSettings extends Page implements HasForms
                             ->image(),
                     ])->columns(2),
 
-                Section::make('Zoom API Configuration')
-                    ->description('These credentials will be used as default for the platform.')
+                Section::make('Zoom API Configuration — Platform defaults (only used where fallback is allowed)')
+                    ->description('Platform defaults (only used where fallback is allowed). Institutes should configure their own Zoom accounts.')
                     ->schema([
                         TextInput::make('zoom_client_id')
                             ->label('Zoom Client ID'),
@@ -65,8 +65,8 @@ class PlatformSettings extends Page implements HasForms
                             ->label('Zoom Account ID'),
                     ])->columns(2),
 
-                Section::make('PayHere Payment Gateway')
-                    ->description('Global payment gateway credentials.')
+                Section::make('PayHere Payment Gateway — Platform defaults (only used where fallback is allowed)')
+                    ->description('Platform defaults (only used where fallback is allowed). Only institutes explicitly listed in INTEGRATIONS_ENV_FALLBACK_INSTITUTES may use platform PayHere defaults.')
                     ->schema([
                         TextInput::make('payhere_merchant_id')
                             ->label('Merchant ID'),

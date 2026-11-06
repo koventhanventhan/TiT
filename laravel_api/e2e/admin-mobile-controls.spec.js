@@ -19,6 +19,8 @@ test.describe('Admin Mobile Controls & Tap Targets (375px)', () => {
     { name: 'students', path: '/admin/students' },
     { name: 'settings', path: '/admin/settings' },
     { name: 'payments', path: '/admin/students/pending-payments' },
+    { name: 'online-payments', path: '/admin/settings/online-payments' },
+    { name: 'messaging', path: '/admin/settings/messaging' },
   ];
 
   for (const pageInfo of targetPages) {

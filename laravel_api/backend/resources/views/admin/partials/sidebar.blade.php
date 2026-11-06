@@ -59,12 +59,12 @@
             </li>
 
             {{-- Payment Settings --}}
-            <li class="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*') || request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*')) ? 'mm-active' : '' }}">
+            <li class="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*') || request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*') || request()->routeIs('admin.settings.online-payments*')) ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
                     <i class="flaticon-381-settings-2"></i>
                     <span class="nav-text">Payment Settings</span>
                 </a>
-                <ul aria-expanded="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*') || request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*')) ? 'true' : 'false' }}">
+                <ul aria-expanded="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*') || request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*') || request()->routeIs('admin.settings.online-payments*')) ? 'true' : 'false' }}">
                     <li class="{{ request()->routeIs('admin.packages.index') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.packages.index') }}">Packages / Bundles</a>
                     </li>
@@ -74,6 +74,11 @@
                     <li class="{{ (request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*')) ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.admission-fees') }}">Admission Fees</a>
                     </li>
+                    @if(auth()->user()?->role === 'admin')
+                        <li class="{{ request()->routeIs('admin.settings.online-payments*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.settings.online-payments') }}">Online Payments (PayHere)</a>
+                        </li>
+                    @endif
                 </ul>
             </li>
 
@@ -119,12 +124,17 @@
             {{-- Settings --}}
 
             {{-- Settings --}}
-            <li class="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*')) ? 'mm-active' : '' }}">
+            <li class="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*')) ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
                     <i class="flaticon-381-settings-2"></i>
                     <span class="nav-text">Settings</span>
                 </a>
-                <ul aria-expanded="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*')) ? 'true' : 'false' }}">
+                <ul aria-expanded="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*')) ? 'true' : 'false' }}">
+                    @if(auth()->user()?->role === 'admin')
+                        <li class="{{ request()->routeIs('admin.settings.messaging*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.settings.messaging') }}">Messaging &amp; E-mail</a>
+                        </li>
+                    @endif
                     <li class="{{ request()->routeIs('admin.settings.register') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.register') }}">Register Form</a>
                     </li>

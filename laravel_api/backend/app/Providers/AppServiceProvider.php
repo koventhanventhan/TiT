@@ -134,6 +134,11 @@ class AppServiceProvider extends ServiceProvider
         // );
 
         $this->configureQueueTenantContext();
+
+        \Illuminate\Support\Facades\Gate::policy(
+            \App\Models\InstituteIntegration::class,
+            \App\Policies\InstituteIntegrationPolicy::class
+        );
     }
 
     /**

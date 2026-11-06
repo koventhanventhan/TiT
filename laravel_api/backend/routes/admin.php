@@ -139,6 +139,43 @@ Route::prefix('admin')->group(function () {
             return redirect()->route('admin.settings.admission-fees', [], 301);
         })->name('admin.settings.payments');
         Route::post('/settings/admission-fees', [SiteSettingController::class, 'storeAdmissionFees'])->name('admin.settings.admission-fees.store');
+
+        // Per-institute payment, WhatsApp & e-mail integration settings (strictly institute `admin` role only)
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/settings/online-payments', [\App\Http\Controllers\Admin\IntegrationController::class, 'onlinePayments'])
+                ->name('admin.settings.online-payments');
+            Route::post('/settings/online-payments', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateOnlinePayments'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.online-payments.update');
+            Route::post('/settings/online-payments/check', [\App\Http\Controllers\Admin\IntegrationController::class, 'checkOnlinePayments'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.online-payments.check');
+            Route::post('/settings/online-payments/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearOnlinePayments'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.online-payments.clear');
+
+            Route::get('/settings/messaging', [\App\Http\Controllers\Admin\IntegrationController::class, 'messaging'])
+                ->name('admin.settings.messaging');
+            Route::post('/settings/messaging/mail', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateMail'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.messaging.mail.update');
+            Route::post('/settings/messaging/mail/test', [\App\Http\Controllers\Admin\IntegrationController::class, 'sendTestMail'])
+                ->middleware('throttle:10,1')
+                ->name('admin.settings.messaging.mail.test');
+            Route::post('/settings/messaging/mail/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearMail'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.messaging.mail.clear');
+
+            Route::post('/settings/messaging/whatsapp', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateWhatsApp'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.messaging.whatsapp.update');
+            Route::post('/settings/messaging/whatsapp/test', [\App\Http\Controllers\Admin\IntegrationController::class, 'sendTestWhatsApp'])
+                ->middleware('throttle:10,1')
+                ->name('admin.settings.messaging.whatsapp.test');
+            Route::post('/settings/messaging/whatsapp/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearWhatsApp'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.messaging.whatsapp.clear');
+        });
         Route::get('/settings/grade-promotion-schedule', [SiteSettingController::class, 'gradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule');
         Route::post('/settings/grade-promotion-schedule', [SiteSettingController::class, 'storeGradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule.store');
         Route::post('/settings/learning/store', [SiteSettingController::class, 'storeMaterial'])->name('admin.settings.learning.material.store');

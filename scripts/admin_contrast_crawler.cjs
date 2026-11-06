@@ -39,6 +39,8 @@ const ROUTES = [
   '/admin/settings/index-batches',
   '/admin/settings/index-series',
   '/admin/settings/appearance',
+  '/admin/settings/online-payments',
+  '/admin/settings/messaging',
   '/admin/zoom',
   '/admin/zoom/create',
   '/admin/zoom-accounts',

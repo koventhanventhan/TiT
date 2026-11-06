@@ -59,52 +59,46 @@ class SuperAdminController extends Controller
         return response()->json($institutes);
     }
 
-    public function storeInstitute(Request $request)
+    public function storeInstitute(Request $request, \App\Services\InstituteProvisioner $provisioner)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'subscription_plan_id' => 'required|exists:subscription_plans,id',
+            'name' => 'required|string|min:2|max:80',
+            'slug' => 'nullable|string|max:240',
+            'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
             'expires_at' => 'nullable|date',
-            'admin_name' => 'nullable|string|max:255',
-            'admin_email' => 'nullable|email|unique:users,email',
+            'domain' => 'nullable|string|max:253',
+            'admin_name' => 'nullable|string|max:120',
+            'admin_email' => 'nullable|email|max:255',
             'admin_phone' => 'nullable|string|max:20',
+            'theme_preset' => 'nullable|string|max:32',
+            'index_prefix' => 'nullable|string|min:2|max:6',
+            'index_format' => 'nullable|in:grade,batch',
         ]);
 
-        $institute = Institute::create([
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']),
-            'subscription_plan_id' => $validated['subscription_plan_id'],
-            'status' => 'active',
-            'expires_at' => $validated['expires_at'] ?? now()->addYear(),
-        ]);
+        $hasAdmin = !empty($validated['admin_email']);
 
-        if (!empty($validated['admin_email'])) {
-            $password = Str::random(10);
-            $admin = \App\Models\User::create([
-                'name' => $validated['admin_name'] ?? 'Admin',
-                'full_name' => $validated['admin_name'] ?? 'Admin',
-                'email' => $validated['admin_email'],
-                'phone_number' => $validated['admin_phone'] ?? null,
-                'password' => \Illuminate\Support\Facades\Hash::make($password),
-                'role' => 'admin',
-                'institute_id' => $institute->id,
-            ]);
+        $result = $provisioner->provision(new \App\Services\ProvisionInstituteData(
+            name: $validated['name'],
+            shortBrandName: $validated['name'],
+            slug: $validated['slug'] ?? null,
+            subscriptionPlanId: (int) $validated['subscription_plan_id'],
+            expiresAt: !empty($validated['expires_at']) ? \Carbon\Carbon::parse($validated['expires_at']) : null,
+            indexPrefix: $validated['index_prefix'] ?? null,
+            indexFormat: $validated['index_format'] ?? 'grade',
+            domain: $validated['domain'] ?? null,
+            createAdmin: $hasAdmin,
+            adminName: $hasAdmin ? ($validated['admin_name'] ?? ($validated['name'] . ' Admin')) : null,
+            adminEmail: $validated['admin_email'] ?? null,
+            adminPhone: $validated['admin_phone'] ?? null,
+            themePreset: $validated['theme_preset'] ?? 'royal',
+        ));
 
-            try {
-                $notifier = app(\App\Services\NotificationService::class);
-                $notifier->notifyUser(
-                    $admin, 'welcome', 'tit_welcome',
-                    [$admin->name, $admin->email],
-                    ['student_name' => $admin->name, 'username' => $admin->email . ' (Password: ' . $password . ')']
-                );
-            } catch (\Exception $e) {
-                \Log::error('Failed to send admin welcome email: ' . $e->getMessage());
-            }
+        $payload = $result->institute->toArray();
+        if ($result->plainAdminPassword !== null) {
+            $payload['one_time_admin_password'] = $result->plainAdminPassword;
         }
 
-        \App\Services\ActivityLogService::log('institute_created', "Created institute: {$institute->name}", ['id' => $institute->id]);
-
-        return response()->json($institute);
+        return response()->json($payload, 201);
     }
 
     public function updateInstitute(Request $request, Institute $institute)

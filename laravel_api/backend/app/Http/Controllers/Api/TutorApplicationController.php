@@ -58,7 +58,7 @@ class TutorApplicationController extends Controller
             $primaryHost = $institute?->primaryDomain()?->domain ?? parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
             $recipient = SiteSetting::get('footer_tutor_receive_email', 'admin@' . $primaryHost);
 
-            Mail::to($recipient)->send(new TutorApplicationMail($data));
+            \App\Support\InstituteMail::to($recipient, $institute?->id)->send(new TutorApplicationMail($data));
 
             return response()->json([
                 'success' => true,

@@ -166,7 +166,16 @@ class DiagnosePaymentReceiptsCommand extends Command
                         now()->addDays(30),
                         ['payment' => $payment->id]
                     );
-                    Mail::to($toEmail)->send(new PaymentReceiptMail($payment, $pdfContent, $signedUrl));
+                    $studentForMail = $payment->user ?: \App\Models\User::withoutGlobalScopes()->find($payment->user_id);
+                    \App\Support\InstituteMail::to($toEmail, (int) ($payment->institute_id ?: 1))
+                        ->sendOrThrow(new PaymentReceiptMail(
+                            $studentForMail,
+                            $payment,
+                            $pdfContent,
+                            (string) ($payment->receipt_no ?: 'DIAG-' . $payment->id),
+                            (string) ($payment->year_month ?: now()->format('Y-m')),
+                            $signedUrl
+                        ));
                     $this->info(" [OK] Email sent successfully to {$toEmail}.");
                 } catch (\Throwable $e) {
                     $hasError = true;

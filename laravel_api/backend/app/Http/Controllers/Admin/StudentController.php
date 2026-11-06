@@ -744,7 +744,15 @@ class StudentController extends Controller
                 return response()->json(['success' => true, 'message' => 'New password generated, but email could not be sent (invalid email address). Please share the password manually.', 'password' => $newPassword]);
             }
 
-            \Illuminate\Support\Facades\Mail::to($targetEmail)->send($mail);
+            $sent = \App\Support\InstituteMail::to($targetEmail, (int) ($student->institute_id ?: auth()->user()->institute_id))
+                ->send($mail);
+            if (!$sent) {
+                $errException = \App\Support\InstituteMail::getLastException();
+                if ($errException && $this->isPermanentMailFailure($errException)) {
+                    $this->markEmailAsBounced($targetEmail);
+                }
+                return response()->json(['success' => false, 'message' => 'Failed to send email. Check logs.']);
+            }
             \Illuminate\Support\Facades\Log::info('Successfully sent password reset email to: ' . $targetEmail);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send password reset email to: ' . $targetEmail . '. Error: ' . $e->getMessage());

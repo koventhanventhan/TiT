@@ -680,9 +680,10 @@ class PaymentReceiptService
 
         // 2. Send Email (with or without PDF)
         $targetEmail = $targetUser->email;
+        $paymentInstituteId = (int) ($payment->institute_id ?: (\App\Support\Tenant::id() ?: 1));
         if ($targetEmail && !str_contains($targetEmail, '@child.local') && $this->isValidEmailForSending($targetEmail)) {
             try {
-                Mail::to($targetEmail)->send(new PaymentReceiptMail(
+                $sentMail = \App\Support\InstituteMail::to($targetEmail, $paymentInstituteId)->send(new PaymentReceiptMail(
                     $student,
                     $payment,
                     $pdfContent,
@@ -690,12 +691,17 @@ class PaymentReceiptService
                     $monthName,
                     $signedUrl
                 ));
-                $deliveredAny = true;
-                $emailSent = true;
-                Log::info("PaymentReceiptService: Sent receipt email to {$targetEmail} for Payment #{$payment->id}" . ($pdfContent ? ' with PDF' : ' without PDF attachment'));
+                if ($sentMail) {
+                    $deliveredAny = true;
+                    $emailSent = true;
+                    Log::info("PaymentReceiptService: Sent receipt email to {$targetEmail} for Payment #{$payment->id}" . ($pdfContent ? ' with PDF' : ' without PDF attachment'));
+                } else {
+                    $emailError = \App\Support\InstituteMail::getLastError() ?: 'SMTP delivery failed';
+                    Log::error("PaymentReceiptService: Failed to send receipt email to {$targetEmail}: {$emailError}");
+                }
             } catch (\Throwable $e) {
-                $emailError = $e->getMessage();
-                Log::error("PaymentReceiptService: Failed to send receipt email to {$targetEmail}: " . $e->getMessage());
+                $emailError = \App\Support\Redact::sanitizeText($e->getMessage());
+                Log::error("PaymentReceiptService: Failed to send receipt email to {$targetEmail}: " . $emailError);
             }
         } else {
             $emailError = $targetEmail ? 'Email format invalid or placeholder' : 'No email address registered';
@@ -705,7 +711,7 @@ class PaymentReceiptService
         $targetPhone = $targetUser->phone_number;
         if ($targetPhone) {
             try {
-                $whatsApp = app(WhatsAppService::class);
+                $whatsApp = WhatsAppService::forInstitute($paymentInstituteId);
                 $sent = $whatsApp->sendTemplate(
                     $targetPhone,
                     'tit_payment_receipt',
@@ -717,11 +723,11 @@ class PaymentReceiptService
                     $whatsappSent = true;
                     Log::info("PaymentReceiptService: Sent receipt WhatsApp notification to {$targetPhone} for Payment #{$payment->id}");
                 } else {
-                    $whatsappError = 'WhatsApp template not approved or delivery failed';
+                    $whatsappError = 'WhatsApp not configured, template not approved, or delivery skipped';
                 }
             } catch (\Throwable $e) {
-                $whatsappError = $e->getMessage();
-                Log::error("PaymentReceiptService: Failed to send receipt WhatsApp to {$targetPhone}: " . $e->getMessage());
+                $whatsappError = \App\Support\Redact::sanitizeText($e->getMessage());
+                Log::error("PaymentReceiptService: Failed to send receipt WhatsApp to {$targetPhone}: " . $whatsappError);
             }
         } else {
             $whatsappError = 'No phone number registered';

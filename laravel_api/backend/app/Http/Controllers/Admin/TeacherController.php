@@ -165,7 +165,15 @@ class TeacherController extends Controller
         ]);
         
         if ($this->isValidEmailForSending($teacher->email)) {
-            \Illuminate\Support\Facades\Mail::to($teacher->email)->send(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
+            $sent = \App\Support\InstituteMail::to($teacher->email, (int) ($teacher->institute_id ?: auth()->user()->institute_id))
+                ->send(new \App\Mail\GoogleAutoPasswordMail($teacher, $newPassword, true));
+            if (!$sent) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'New password generated, but email delivery failed. Please share the password manually.',
+                    'password' => $newPassword,
+                ]);
+            }
             return response()->json(['success' => true, 'message' => 'New password generated and emailed to the teacher.']);
         } else {
             \Illuminate\Support\Facades\Log::warning('TeacherController: Skipped password reset email — invalid address: ' . $teacher->email);

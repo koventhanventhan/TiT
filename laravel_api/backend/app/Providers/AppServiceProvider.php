@@ -132,5 +132,128 @@ class AppServiceProvider extends ServiceProvider
         //     \Illuminate\Auth\Events\Login::class,
         //     [\App\Listeners\SendLoginAlert::class, 'handle']
         // );
+
+        $this->configureQueueTenantContext();
+    }
+
+    /**
+     * Embed current tenant `institute_id` into queued job payloads at dispatch time
+     * and restore/clear tenant + per-institute mailer configuration in queue workers.
+     */
+    protected function configureQueueTenantContext(): void
+    {
+        \Illuminate\Support\Facades\Queue::createPayloadUsing(function ($connection, $queue, $payload) {
+            $instituteId = \App\Support\InstituteMail::$dispatchingInstituteId
+                ?? \App\Support\Tenant::id()
+                ?? (auth()->check() ? auth()->user()?->institute_id : null);
+
+            if (empty($instituteId)) {
+                $command = $payload['data']['command'] ?? null;
+                if (is_object($command)) {
+                    if (isset($command->instituteId) && is_numeric($command->instituteId)) {
+                        $instituteId = (int) $command->instituteId;
+                    } elseif (isset($command->institute_id) && is_numeric($command->institute_id)) {
+                        $instituteId = (int) $command->institute_id;
+                    } elseif (isset($command->mailable) && is_object($command->mailable)) {
+                        $mailable = $command->mailable;
+                        $instituteId = $mailable->user->institute_id
+                            ?? $mailable->student->institute_id
+                            ?? $mailable->payment->institute_id
+                            ?? null;
+                    }
+                }
+            }
+
+            return !empty($instituteId) && (int) $instituteId > 0
+                ? ['institute_id' => (int) $instituteId]
+                : [];
+        });
+
+        $snapshots = [];
+
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Queue\Events\JobProcessing::class,
+            function (\Illuminate\Queue\Events\JobProcessing $event) use (&$snapshots): void {
+                $payload = $event->job->payload();
+                $instituteId = isset($payload['institute_id']) ? (int) $payload['institute_id'] : 0;
+
+                if ($instituteId <= 0) {
+                    return;
+                }
+
+                $key = spl_object_id($event->job);
+                $snapshots[$key] = [
+                    'tenant' => \App\Support\Tenant::current(),
+                    'default_mailer' => config('mail.default'),
+                    'mail_from' => config('mail.from'),
+                    'institute_id' => $instituteId,
+                ];
+
+                $institute = \Illuminate\Support\Facades\Schema::hasTable('institutes')
+                    ? \App\Models\Institute::withoutGlobalScopes()->find($instituteId)
+                    : null;
+
+                \App\Support\Tenant::set($institute);
+
+                $configured = \App\Support\InstituteMail::configureMailer($instituteId);
+                if (!empty($configured['mailer']) && !empty($configured['creds'])) {
+                    config([
+                        'mail.default' => $configured['mailer'],
+                        'mail.from' => [
+                            'address' => $configured['creds']->fromAddress,
+                            'name' => $configured['creds']->fromName,
+                        ],
+                    ]);
+                }
+            }
+        );
+
+        $restoreContext = function (object $job) use (&$snapshots): void {
+            $key = spl_object_id($job);
+            if (!array_key_exists($key, $snapshots)) {
+                \App\Support\Tenant::set(null);
+                return;
+            }
+
+            $snap = $snapshots[$key];
+            unset($snapshots[$key]);
+
+            config([
+                'mail.default' => $snap['default_mailer'],
+                'mail.from' => $snap['mail_from'],
+            ]);
+            \App\Support\Tenant::set($snap['tenant']);
+        };
+
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Queue\Events\JobProcessed::class,
+            function (\Illuminate\Queue\Events\JobProcessed $event) use ($restoreContext): void {
+                $restoreContext($event->job);
+            }
+        );
+
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Queue\Events\JobFailed::class,
+            function (\Illuminate\Queue\Events\JobFailed $event) use ($restoreContext): void {
+                try {
+                    $payload = $event->job->payload();
+                    $instituteId = isset($payload['institute_id']) ? (int) $payload['institute_id'] : 0;
+                    $displayName = (string) ($payload['displayName'] ?? '');
+                    $commandName = (string) ($payload['data']['commandName'] ?? '');
+
+                    if (
+                        $instituteId > 0
+                        && (
+                            $commandName === \Illuminate\Mail\SendQueuedMailable::class
+                            || is_subclass_of($displayName, \Illuminate\Contracts\Mail\Mailable::class)
+                        )
+                    ) {
+                        \App\Support\InstituteMail::handleFailure($instituteId, $event->exception);
+                    }
+                } finally {
+                    $restoreContext($event->job);
+                }
+            }
+        );
     }
 }

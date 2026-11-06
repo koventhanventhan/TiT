@@ -49,21 +49,27 @@ class ContactController extends Controller
             $setting = SiteSetting::where('key', 'footer_email')->first();
             $toEmail = ($setting && $setting->value) ? $setting->value : ('admin@' . $primaryHost);
 
-            // Only attempt if MAIL_PASSWORD is set
-            if (!config('mail.mailers.smtp.password')) {
-                Log::info('Contact message saved to DB (email skipped — no MAIL_PASSWORD configured)', [
+            $instituteId = $institute?->id ?? \App\Support\Tenant::id() ?? 1;
+            $mailCreds = \App\Support\Integrations::for($instituteId)->mail();
+
+            // Skip only when neither institute DB SMTP nor platform SMTP password is configured
+            if ($mailCreds === null || ($mailCreds->source === 'env' && $mailCreds->mailer === 'smtp' && empty($mailCreds->password))) {
+                Log::info('Contact message saved to DB (email skipped — no SMTP credentials configured)', [
+                    'institute_id' => $instituteId,
                     'from' => $data['email']
                 ]);
                 return;
             }
 
-            Mail::raw($this->buildEmailBody($data), function ($mail) use ($data, $toEmail) {
+            $sent = \App\Support\InstituteMail::raw($this->buildEmailBody($data), function ($mail) use ($data, $toEmail) {
                 $mail->to($toEmail)
                      ->replyTo($data['email'], $data['name'])
                      ->subject('Contact Form: ' . $data['subject']);
-            });
+            }, instituteId: $instituteId);
 
-            Log::info('Contact form email sent', ['to' => $toEmail, 'from' => $data['email']]);
+            if ($sent) {
+                Log::info('Contact form email sent', ['institute_id' => $instituteId, 'to' => $toEmail, 'from' => $data['email']]);
+            }
         } catch (\Exception $e) {
             Log::warning('Contact email failed (message saved to DB): ' . $e->getMessage());
         }

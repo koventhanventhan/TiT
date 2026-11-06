@@ -1447,20 +1447,26 @@ class RegistrationController extends Controller
         // Reset the attempt counter for verify
         \Illuminate\Support\Facades\Cache::forget('merge_otp_attempts_' . $parentId);
 
+        $parentInstituteId = (int) ($parent->institute_id ?: (\App\Support\Tenant::id() ?: 1));
         $sentWhatsApp = false;
-        if ($parent->phone_number && config('services.whatsapp.enabled', false)) {
-            $whatsappService = app(\App\Services\WhatsAppService::class);
+        $whatsappService = \App\Services\WhatsAppService::forInstitute($parentInstituteId);
+        if ($parent->phone_number && (config('services.whatsapp.enabled', false) || $whatsappService->isConfigured())) {
             $sentWhatsApp = $whatsappService->sendTemplate($parent->phone_number, 'tit_otp_verification', 'en', [$otp]);
         }
 
         if (!$sentWhatsApp && $parent->email) {
             try {
-                \Illuminate\Support\Facades\Mail::to($parent->email)->send(new \App\Mail\MergeAccountOtpMail($parent, $otp));
+                $sentEmail = \App\Support\InstituteMail::to($parent->email, $parentInstituteId)
+                    ->send(new \App\Mail\MergeAccountOtpMail($parent, $otp));
+                if (!$sentEmail) {
+                    return response()->json([
+                        'message' => 'Could not send verification code, please try again.',
+                    ], 500);
+                }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('MergeAccountOtpMail failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('MergeAccountOtpMail failed: ' . \App\Support\Redact::sanitizeText($e->getMessage()));
                 return response()->json([
                     'message' => 'Could not send verification code, please try again.',
-                    'error' => $e->getMessage()
                 ], 500);
             }
         }

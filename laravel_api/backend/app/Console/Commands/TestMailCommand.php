@@ -13,7 +13,7 @@ class TestMailCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'mail:test {email}';
+    protected $signature = 'mail:test {email} {--institute=1 : Institute ID whose mail configuration to test}';
 
     /**
      * The console command description.
@@ -28,20 +28,24 @@ class TestMailCommand extends Command
     public function handle()
     {
         $email = $this->argument('email');
-        $this->info("Sending test email to: {$email}");
-        $this->info("Mailer: " . config('mail.default'));
-        $this->info("Host: " . config('mail.mailers.smtp.host'));
-        $this->info("Port: " . config('mail.mailers.smtp.port'));
+        $instituteId = (int) ($this->option('institute') ?: 1);
+        $configured = \App\Support\InstituteMail::configureMailer($instituteId);
+        $creds = $configured['creds'];
 
-        try {
-            Mail::raw('This is a test email from TiT Education.', function (Message $message) use ($email) {
-                $message->to($email)
-                        ->subject('TiT Education - Test Email');
-            });
-            $this->info("✅ Test email sent successfully.");
-        } catch (\Exception $e) {
-            $this->error("❌ Failed to send email.");
-            $this->error($e->getMessage());
+        $this->info("Sending test email to: {$email} (institute #{$instituteId})");
+        $this->info("Source: " . ($creds?->source ?? 'none'));
+        $this->info("Mailer: " . ($configured['mailer'] ?? 'none'));
+        $this->info("Host: " . ($creds?->host ?? 'N/A'));
+        $this->info("Port: " . ($creds?->port ?? 'N/A'));
+
+        $result = \App\Support\InstituteMail::sendTestEmail($instituteId, $email);
+        if ($result['success']) {
+            $this->info("✅ " . $result['message']);
+            return self::SUCCESS;
         }
+
+        $this->error("❌ Failed to send email.");
+        $this->error($result['message']);
+        return self::FAILURE;
     }
 }

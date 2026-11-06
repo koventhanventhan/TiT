@@ -745,7 +745,8 @@ class AuthController extends Controller
 
                 // Send the generated plain text password to the student (with email validation)
                 if ($this->isValidEmailForSending($user->email)) {
-                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
+                    \App\Support\InstituteMail::to($user->email, (int) $instituteId)
+                        ->send(new \App\Mail\GoogleAutoPasswordMail($user, $plainPassword, false));
                 } else {
                     \Illuminate\Support\Facades\Log::warning('AuthController: Skipped password email — invalid address: ' . $user->email);
                 }
@@ -877,12 +878,16 @@ class AuthController extends Controller
         \Illuminate\Support\Facades\Cache::forget('email_verify_attempts_' . $email);
 
         try {
-            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\EmailVerificationOtpMail($email, $otp));
+            $sent = \App\Support\InstituteMail::to($email)->send(new \App\Mail\EmailVerificationOtpMail($email, $otp));
+            if (!$sent) {
+                return response()->json([
+                    'message' => 'Could not send verification code, please try again.',
+                ], 500);
+            }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('EmailVerificationOtpMail failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('EmailVerificationOtpMail failed: ' . \App\Support\Redact::sanitizeText($e->getMessage()));
             return response()->json([
                 'message' => 'Could not send verification code, please try again.',
-                'error' => $e->getMessage()
             ], 500);
         }
 

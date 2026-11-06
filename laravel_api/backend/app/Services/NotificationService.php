@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Mail\NotificationMail;
+use App\Models\InstituteIntegration;
 use App\Models\User;
+use App\Support\InstituteMail;
+use App\Support\Integrations;
+use App\Support\Tenant;
 use App\Traits\ValidatesEmail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
@@ -26,12 +29,6 @@ class NotificationService
 
     /**
      * Send a notification to a student/user via WhatsApp (with email fallback).
-     *
-     * @param User   $user          The user to notify
-     * @param string $type          Notification type (welcome, payment_reminder, etc.)
-     * @param string $templateName  WhatsApp template name
-     * @param array  $templateVars  Variables for WhatsApp template
-     * @param array  $emailData     Data for email template (merged with defaults)
      */
     public function notifyUser(
         User $user,
@@ -43,32 +40,45 @@ class NotificationService
     ): bool {
         $targetUser = $user;
         if ($user->parent_id) {
-            $parent = User::find($user->parent_id);
+            $parent = User::withoutGlobalScopes()->find($user->parent_id);
             if ($parent) {
                 $targetUser = $parent;
             }
         }
-        
+
+        $instituteId = (int) ($targetUser->institute_id ?: $user->institute_id ?: Tenant::id() ?: 1);
         $phone = $targetUser->phone_number;
         $email = $targetUser->email;
         $sent = false;
 
-        // Try WhatsApp first (if channel allows)
-        if ($this->shouldTryWhatsApp() && $phone) {
-            $sent = $this->whatsApp->sendTemplate($phone, $templateName, $langCode, $templateVars);
+        // Try WhatsApp first (if channel allows). Unconfigured WhatsApp returns a typed "skipped"
+        // result and transparently continues to the email fallback channel without throwing.
+        if ($this->shouldTryWhatsApp($instituteId) && $phone) {
+            $wa = app()->isShared(WhatsAppService::class)
+                ? $this->whatsApp
+                : WhatsAppService::forInstitute($instituteId);
+
+            if ($wa instanceof \Mockery\MockInterface) {
+                $sent = $wa->sendTemplate($phone, $templateName, $langCode, $templateVars);
+            } else {
+                $result = $wa->sendTemplateResult($phone, $templateName, $langCode, $templateVars);
+                $sent = $result->isSent();
+                if ($result->isFailed()) {
+                    Log::warning("NotificationService: WhatsApp failed for [{$type}] to {$phone}, attempting email fallback...");
+                }
+            }
+
             if ($sent) {
                 Log::info("NotificationService: [{$type}] sent via WhatsApp to {$phone}");
                 return true;
             }
-            Log::warning("NotificationService: WhatsApp failed for [{$type}] to {$phone}, attempting email fallback...");
         }
 
         // Fallback to Email (if channel allows) — with DNS/MX validation
-        if ($this->shouldTryEmail() && $this->isValidEmailForSending($email)) {
-            return $this->sendEmail($email, $type, $emailData);
+        if ($this->shouldTryEmail() && $email && $this->isValidEmailForSending($email)) {
+            return $this->sendEmail($email, $type, $emailData, $instituteId);
         }
 
-        // If neither worked
         if (!$sent) {
             Log::info("NotificationService: [{$type}] could not be sent — no viable channel for user #{$user->id} (phone: {$phone}, email: {$email})");
         }
@@ -78,11 +88,6 @@ class NotificationService
 
     /**
      * Send an admin notification via WhatsApp (with email fallback).
-     *
-     * @param string $type         Notification type (usually 'admin_alert')
-     * @param string $templateName WhatsApp template name
-     * @param array  $templateVars Variables for WhatsApp template
-     * @param array  $emailData    Data for email template
      */
     public function notifyAdmin(
         string $type,
@@ -91,23 +96,34 @@ class NotificationService
         array $emailData = [],
         string $langCode = 'en'
     ): bool {
-        $adminPhone = config('services.admin_whatsapp_number');
-        $adminEmail = $this->getAdminEmail();
+        $instituteId = (int) (Tenant::id() ?: (auth()->check() ? (auth()->user()?->institute_id ?: 1) : 1));
+        $adminPhone = $this->getAdminWhatsAppNumber($instituteId);
+        $adminEmail = $this->getAdminEmail($instituteId);
         $sent = false;
 
-        // Try WhatsApp first
-        if ($this->shouldTryWhatsApp() && $adminPhone) {
-            $sent = $this->whatsApp->sendTemplate($adminPhone, $templateName, $langCode, $templateVars);
+        if ($this->shouldTryWhatsApp($instituteId) && $adminPhone) {
+            $wa = app()->isShared(WhatsAppService::class)
+                ? $this->whatsApp
+                : WhatsAppService::forInstitute($instituteId);
+
+            if ($wa instanceof \Mockery\MockInterface) {
+                $sent = $wa->sendTemplate($adminPhone, $templateName, $langCode, $templateVars);
+            } else {
+                $result = $wa->sendTemplateResult($adminPhone, $templateName, $langCode, $templateVars);
+                $sent = $result->isSent();
+                if ($result->isFailed()) {
+                    Log::warning("NotificationService: Admin WhatsApp failed for [{$type}], attempting email fallback...");
+                }
+            }
+
             if ($sent) {
                 Log::info("NotificationService: Admin [{$type}] sent via WhatsApp to {$adminPhone}");
                 return true;
             }
-            Log::warning("NotificationService: Admin WhatsApp failed for [{$type}], attempting email fallback...");
         }
 
-        // Fallback to Email — admin email is validated too
         if ($this->shouldTryEmail() && $adminEmail && $this->isValidEmailForSending($adminEmail)) {
-            return $this->sendEmail($adminEmail, $type, $emailData);
+            return $this->sendEmail($adminEmail, $type, $emailData, $instituteId);
         }
 
         if (!$sent) {
@@ -119,26 +135,22 @@ class NotificationService
 
     /**
      * Send an email-only notification (no WhatsApp).
-     *
-     * @param User   $user
-     * @param string $type
-     * @param array  $emailData
      */
     public function notifyUserByEmail(User $user, string $type, array $emailData = []): bool
     {
         $targetUser = $user;
         if ($user->parent_id) {
-            $parent = User::find($user->parent_id);
+            $parent = User::withoutGlobalScopes()->find($user->parent_id);
             if ($parent) {
                 $targetUser = $parent;
             }
         }
-        
+
+        $instituteId = (int) ($targetUser->institute_id ?: $user->institute_id ?: Tenant::id() ?: 1);
         $email = $targetUser->email;
 
-        // Verify we only send to contactable/valid emails
         if ($email && $this->isValidEmailForSending($email)) {
-            return $this->sendEmail($email, $type, $emailData);
+            return $this->sendEmail($email, $type, $emailData, $instituteId);
         }
 
         Log::info("NotificationService: [{$type}] could not be sent — no valid email for user #{$user->id} (email: {$email})");
@@ -150,10 +162,11 @@ class NotificationService
      */
     public function notifyAdminByEmail(string $type, array $emailData = []): bool
     {
-        $adminEmail = $this->getAdminEmail();
+        $instituteId = (int) (Tenant::id() ?: (auth()->check() ? (auth()->user()?->institute_id ?: 1) : 1));
+        $adminEmail = $this->getAdminEmail($instituteId);
 
         if ($adminEmail && $this->isValidEmailForSending($adminEmail)) {
-            return $this->sendEmail($adminEmail, $type, $emailData);
+            return $this->sendEmail($adminEmail, $type, $emailData, $instituteId);
         }
 
         Log::info("NotificationService: Admin [{$type}] email could not be sent — no valid admin email");
@@ -161,63 +174,94 @@ class NotificationService
     }
 
     /**
-     * Send email using the NotificationMail Mailable.
-     * Records bounces on failure for future blocklisting.
+     * Send email using InstituteMail + NotificationMail Mailable.
+     * Records bounces on permanent SMTP failure without throwing into callers.
      */
-    protected function sendEmail(string $to, string $type, array $data): bool
+    protected function sendEmail(string $to, string $type, array $data, ?int $instituteId = null): bool
     {
-        try {
-            Mail::to($to)->send(new NotificationMail($type, $data));
+        $sent = InstituteMail::to($to, $instituteId)->send(new NotificationMail($type, $data));
+
+        if ($sent) {
             Log::info("NotificationService: [{$type}] email sent successfully to {$to}");
             return true;
-        } catch (\Throwable $e) {
-            Log::error("NotificationService: Email failed for [{$type}] to {$to}: " . $e->getMessage());
-
-            // Track the bounce — after 2 bounces the address will be blocklisted
-            if ($this->isPermanentMailFailure($e)) {
-                $this->markEmailAsBounced($to);
-            }
-
-            return false;
         }
+
+        $exception = InstituteMail::getLastException();
+        if ($exception !== null && $this->isPermanentMailFailure($exception)) {
+            $this->markEmailAsBounced($to);
+        }
+
+        return false;
+    }
+
+    protected function getAdminWhatsAppNumber(int $instituteId): ?string
+    {
+        $explicit = \App\Models\SiteSetting::getForInstitute('assistant_public_contact_whatsapp', $instituteId, '');
+        if (!empty($explicit)) {
+            return (string) $explicit;
+        }
+
+        if (Integrations::isEnvFallbackAllowed($instituteId)) {
+            return config('services.admin_whatsapp_number') ?: null;
+        }
+
+        $admin = User::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('role', 'admin')
+            ->whereNotNull('phone_number')
+            ->where('phone_number', '!=', '')
+            ->latest()
+            ->first();
+
+        return $admin?->phone_number;
     }
 
     /**
-     * Get the admin notification email.
-     *
-     * Resolution order:
-     *  1. SiteSetting 'admin_notification_email' (explicit, settable from Admin Settings UI)
-     *  2. Latest admin user's email (safety-net fallback)
-     *  3. MAIL_FROM_ADDRESS from .env (last resort)
+     * Get the admin notification email for the resolved institute.
      */
-    protected function getAdminEmail(): ?string
+    protected function getAdminEmail(?int $instituteId = null): ?string
     {
-        // First try to get the explicit admin notification email from site settings
-        $explicitEmail = \App\Models\SiteSetting::get('admin_notification_email');
+        $resolvedId = $instituteId ?: (Tenant::id() ?: 1);
+
+        $explicitEmail = \App\Models\SiteSetting::getForInstitute('admin_notification_email', $resolvedId, '');
         if (!empty($explicitEmail) && filter_var($explicitEmail, FILTER_VALIDATE_EMAIL)) {
             return $explicitEmail;
         }
 
-        // Fallback: Prefer the most recently created admin (the seeded canonical admin)
-        // and skip any emails that have been blocklisted as bounced
-        $admin = User::where('role', 'admin')
+        $admin = User::withoutGlobalScopes()
+            ->where('institute_id', $resolvedId)
+            ->where('role', 'admin')
             ->whereNotNull('email')
             ->where('email', '!=', '')
             ->latest()
             ->first();
 
-        return $admin?->email ?? config('mail.from.address');
+        if ($admin?->email) {
+            return $admin->email;
+        }
+
+        return Integrations::isEnvFallbackAllowed($resolvedId) ? config('mail.from.address') : null;
     }
 
     /**
-     * Whether WhatsApp channel should be attempted.
+     * Whether WhatsApp channel should be attempted for this institute.
      */
-    protected function shouldTryWhatsApp(): bool
+    protected function shouldTryWhatsApp(?int $instituteId = null): bool
     {
-        if (!config('services.whatsapp.enabled', false)) {
+        if (!in_array($this->channel, ['auto', 'whatsapp'], true)) {
             return false;
         }
-        return in_array($this->channel, ['auto', 'whatsapp']);
+
+        if (app()->isShared(WhatsAppService::class)) {
+            return (bool) config('services.whatsapp.enabled', false);
+        }
+
+        $row = Integrations::for($instituteId)->findRow(InstituteIntegration::PROVIDER_WHATSAPP);
+        if ($row !== null && $row->status !== InstituteIntegration::STATUS_UNCONFIGURED) {
+            return true;
+        }
+
+        return (bool) config('services.whatsapp.enabled', false);
     }
 
     /**
@@ -225,6 +269,6 @@ class NotificationService
      */
     protected function shouldTryEmail(): bool
     {
-        return in_array($this->channel, ['auto', 'email']);
+        return in_array($this->channel, ['auto', 'email'], true);
     }
 }

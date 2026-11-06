@@ -42,7 +42,8 @@ trait HandlesDuplicateAccounts
                 return null;
             }
 
-            $useWhatsApp = config('services.whatsapp.enabled', false);
+            $useWhatsApp = config('services.whatsapp.enabled', false)
+                || \App\Services\WhatsAppService::forInstitute((int) ($matchedParent->institute_id ?: 1))->isConfigured();
             
             $maskedContact = ($matchedParent->phone_number && $useWhatsApp)
                 ? '+' . substr($matchedParent->phone_number, 0, 4) . ' *** *** ' . substr($matchedParent->phone_number, -4)

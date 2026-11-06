@@ -142,6 +142,23 @@ class Institute extends Model
         return $this->hasMany(ActivityLog::class);
     }
 
+    public function integrations()
+    {
+        return $this->hasMany(InstituteIntegration::class);
+    }
+
+    public function primaryDomainHost(): string
+    {
+        $primary = $this->domains()->where('is_primary', true)->first()
+            ?: $this->domains()->first();
+        if ($primary && !empty($primary->domain)) {
+            return strtolower(trim($primary->domain));
+        }
+
+        $parsed = parse_url($this->primaryUrl(), PHP_URL_HOST);
+        return $parsed ? strtolower($parsed) : '127.0.0.1';
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

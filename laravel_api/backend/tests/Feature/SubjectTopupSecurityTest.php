@@ -24,6 +24,12 @@ class SubjectTopupSecurityTest extends TestCase
     {
         parent::setUp();
 
+        config([
+            'payhere.merchant_id' => 'TEST_SEC_MID',
+            'payhere.merchant_secret' => 'TEST_SEC_SECRET',
+            'payhere.currency' => 'LKR',
+        ]);
+
         $this->institute = Institute::create([
             'name' => 'TiT Security Test Institute',
             'slug' => 'tit-sec-test',

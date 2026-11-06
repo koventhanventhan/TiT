@@ -5,11 +5,20 @@ import { logout, registerStep2 } from '../../services/authService';
 import { getAuthHeaders } from '../../services/apiClient';
 import '../StudentRegistrationForm.css';
 import { useToast } from '../../components/shared/ToastContext';
+import { useSettings } from '../../context/SettingsContext';
 import FeeRow from '../shared/FeeRow';
 import { formatRs } from '../../utils/format';
 
 const DeactivatedDashboard = () => {
   const toast = useToast();
+  let onlinePaymentsEnabled = true;
+  try {
+    const settingsCtx = useSettings();
+    if (settingsCtx && typeof settingsCtx.getSetting === 'function') {
+      const rawOnlineEnabled = settingsCtx.getSetting('online_payments_enabled', true);
+      onlinePaymentsEnabled = rawOnlineEnabled !== false && rawOnlineEnabled !== 'false' && rawOnlineEnabled !== 0 && rawOnlineEnabled !== '0';
+    }
+  } catch (_) {}
 
   const [paymentData, setPaymentData] = useState({ total: 500, subjects: [] });
   const [loading, setLoading] = useState(true);
@@ -200,9 +209,27 @@ const DeactivatedDashboard = () => {
                 )}
               </button>
               
-              <button className="tit-reg-submit-btn tit-reg-secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>
-                {processing ? 'PROCESSING...' : 'PAY ONLINE / ஆன்லைனில் செலுத்துங்கள்'}
-              </button>
+              {onlinePaymentsEnabled ? (
+                <button className="tit-reg-submit-btn tit-reg-secondary" style={{ width: '100%' }} onClick={handlePayOnline} disabled={processing}>
+                  {processing ? 'PROCESSING...' : 'PAY ONLINE / ஆன்லைனில் செலுத்துங்கள்'}
+                </button>
+              ) : (
+                <div
+                  data-testid="deactivated-online-unavailable-notice"
+                  style={{
+                    padding: '0.75rem 1rem',
+                    borderRadius: 'var(--t-radius-control)',
+                    background: 'var(--t-sidebar-active-bg)',
+                    color: 'var(--t-sidebar-text)',
+                    border: '1px solid var(--t-primary-border)',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  Online card payments are unavailable for this institute. Please use the offline bank/cash option above.
+                </div>
+              )}
 
               <div style={{ textAlign: 'center' }}>
                 <button className="tit-reg-back-link" onClick={() => setPaymentStep('info')}>

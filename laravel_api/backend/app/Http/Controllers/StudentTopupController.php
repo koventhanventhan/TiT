@@ -43,6 +43,17 @@ class StudentTopupController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
+        $instituteId = (int) ($user->institute_id ?: (\App\Support\Tenant::id() ?: 1));
+        $payHere = PayHereService::forInstitute($instituteId);
+
+        if (!$payHere->isConfigured()) {
+            return response()->json([
+                'code'    => 'online_payments_unavailable',
+                'error'   => 'online_payments_unavailable',
+                'message' => 'Online payments are not available for this institute. Please choose bank transfer or cash payment.',
+            ], 422);
+        }
+
         $orderId = 'TOPUP_' . $topup->id . '_' . time();
 
         $payment = Payment::updateOrCreate(
@@ -53,13 +64,14 @@ class StudentTopupController extends Controller
                 'status' => 'pending',
             ],
             [
-                'institute_id' => $user->institute_id ?? 1,
+                'institute_id' => $instituteId,
                 'amount' => $topup->amount,
                 'payment_method' => 'online',
                 'gateway_ref' => $orderId,
                 'meta' => [
                     'topup_id' => $topup->id,
                     'added_subjects' => $topup->added_subjects,
+                    'currency' => $payHere->getCurrency(),
                 ],
             ]
         );
@@ -70,15 +82,10 @@ class StudentTopupController extends Controller
         ]);
 
         // Online payments become paid ONLY through signed PayHere server notification or admin action.
-
-        // Build PayHere checkout params
-        $payhereData = null;
-        if ($this->payHere && $this->payHere->isConfigured()) {
-            $payhereData = [
-                'payhere_url' => $this->payHere->getCheckoutUrl(),
-                'params' => $this->payHere->buildCheckoutParams($payment, $user),
-            ];
-        }
+        $payhereData = [
+            'payhere_url' => $payHere->getCheckoutUrl(),
+            'params' => $payHere->buildCheckoutParams($payment, $user),
+        ];
 
         return response()->json([
             'success' => true,

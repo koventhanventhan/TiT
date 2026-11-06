@@ -553,7 +553,7 @@ class PaymentReceiptService
         }
 
         $this->ensureReceipt($payment);
-        $student = $payment->user;
+        $student = $payment->user ?: User::withoutGlobalScopes()->find($payment->user_id);
         if (!$student) {
             return false;
         }
@@ -569,14 +569,25 @@ class PaymentReceiptService
             ]);
         }
 
-        // Asynchronously dispatch delivery so response to admin / student is instantaneous
-        dispatch(function () use ($payment, $student, $targetUser, $force) {
-            try {
-                $service = app(PaymentReceiptService::class);
-                $service->deliverNotifications($payment, $student, $targetUser, $force);
-            } catch (\Throwable $e) {
-                Log::error("PaymentReceiptService: Error delivering receipt for Payment #{$payment->id}: " . $e->getMessage());
-            }
+        $instituteId = (int) ($payment->institute_id ?: (\App\Support\Tenant::id() ?: 1));
+        $paymentId = (int) $payment->id;
+
+        // Asynchronously dispatch delivery so response to admin / student is instantaneous.
+        // Pass scalar IDs and restore Tenant context inside afterResponse() so cross-host webhooks
+        // (e.g. PayHere notify arriving on any host) run under the payment's owning institute.
+        dispatch(function () use ($paymentId, $instituteId, $force) {
+            \App\Support\Tenant::run($instituteId, function () use ($paymentId, $force) {
+                try {
+                    $freshPayment = Payment::withoutGlobalScopes()->find($paymentId);
+                    if (!$freshPayment) {
+                        return;
+                    }
+                    $service = app(PaymentReceiptService::class);
+                    $service->deliverDirect($freshPayment, $force);
+                } catch (\Throwable $e) {
+                    Log::error("PaymentReceiptService: Error delivering receipt for Payment #{$paymentId}: " . $e->getMessage());
+                }
+            });
         })->afterResponse();
 
         return true;
@@ -592,7 +603,7 @@ class PaymentReceiptService
      */
     public function deliverDirect(Payment $payment, bool $force = false): array
     {
-        $freshSentAt = Payment::where('id', $payment->id)->value('receipt_sent_at');
+        $freshSentAt = Payment::withoutGlobalScopes()->where('id', $payment->id)->value('receipt_sent_at');
         if (!$force && !empty($freshSentAt)) {
             return [
                 'success' => true,
@@ -602,7 +613,7 @@ class PaymentReceiptService
         }
 
         $this->ensureReceipt($payment);
-        $student = $payment->user;
+        $student = $payment->user ?: User::withoutGlobalScopes()->find($payment->user_id);
         if (!$student) {
             $err = 'Payment has no associated student';
             $payment->update([

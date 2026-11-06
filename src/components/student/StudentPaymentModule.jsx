@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader, FiClock } from 'react-icons/fi';
 import { getStudentPaymentStatus, initializeMonthlyPayment, initializeOfflineMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSettings } from '../../context/SettingsContext';
 import './StudentPaymentModule.css';
 import { formatRs } from '../../utils/format';
 
@@ -20,11 +21,21 @@ const formatAmount = (amt) => {
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
+    let onlinePaymentsEnabled = true;
+    try {
+        const settingsCtx = useSettings();
+        if (settingsCtx && typeof settingsCtx.getSetting === 'function') {
+            const rawOnline = settingsCtx.getSetting('online_payments_enabled', true);
+            onlinePaymentsEnabled = rawOnline !== false && rawOnline !== 'false' && rawOnline !== 0 && rawOnline !== '0';
+        }
+    } catch (_) {}
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
     const [payingOffline, setPayingOffline] = useState(false);
     const [offlineSuccess, setOfflineSuccess] = useState(false);
+    const [confirmingPayment, setConfirmingPayment] = useState(false);
+    const [confirmingTimeout, setConfirmingTimeout] = useState(false);
     const [error, setError] = useState(null);
     const submittingOfflineRef = useRef(false);
 
@@ -74,10 +85,41 @@ const StudentPaymentModule = () => {
                 ...resp.params
             };
 
-            window.payhere.onCompleted = function onCompleted(orderId) {
+            window.payhere.onCompleted = async function onCompleted(orderId) {
                 console.log("Payment completed. OrderID:" + orderId);
-                fetchStatus();
                 setPaying(false);
+                setConfirmingPayment(true);
+                setConfirmingTimeout(false);
+
+                const pollInterval = 3000;
+                const maxAttempts = 20;
+                let attempts = 0;
+                let confirmed = false;
+
+                while (attempts < maxAttempts && !confirmed) {
+                    attempts++;
+                    try {
+                        const newStatus = await getStudentPaymentStatus();
+                        if (newStatus && (newStatus.has_paid || newStatus.is_paid)) {
+                            confirmed = true;
+                            setStatus(newStatus);
+                            setConfirmingPayment(false);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Polling monthly payment status error:', e);
+                    }
+
+                    if (attempts < maxAttempts) {
+                        await new Promise((r) => setTimeout(r, pollInterval));
+                    }
+                }
+
+                if (!confirmed) {
+                    setConfirmingPayment(false);
+                    setConfirmingTimeout(true);
+                    fetchStatus();
+                }
             };
 
             window.payhere.onDismissed = function onDismissed() {
@@ -169,6 +211,58 @@ const StudentPaymentModule = () => {
                     )}
                 </div>
 
+                {confirmingPayment && (
+                    <div
+                        className="status-card-confirming"
+                        data-testid="status-card-confirming"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#eff6ff',
+                            color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiLoader className="spin-icon" style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>Payment received – confirming…</span>
+                    </div>
+                )}
+
+                {confirmingTimeout && (
+                    <div
+                        className="status-card-timeout"
+                        data-testid="status-card-timeout"
+                        style={{
+                            width: '100%',
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            background: '#fffbeb',
+                            color: '#b45309',
+                            border: '1px solid #fde68a',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textAlign: 'left',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <FiClock style={{ flexShrink: 0, fontSize: 18 }} />
+                        <span>We have not received the confirmation yet – you will get an e-mail/WhatsApp as soon as it arrives. Do not pay again.</span>
+                    </div>
+                )}
+
                 {isPendingOffline && (
                     <div
                         className="status-card-pending"
@@ -223,14 +317,36 @@ const StudentPaymentModule = () => {
                 
                 {!is_paid && !isPendingOffline && (
                     <div className="payment-actions-stack">
-                        <button 
-                            className="pay-now-btn" 
-                            onClick={handlePayment}
-                            disabled={paying || payingOffline}
-                            style={{ touchAction: 'manipulation' }}
-                        >
-                            {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
-                        </button>
+                        {onlinePaymentsEnabled ? (
+                            <button 
+                                className="pay-now-btn" 
+                                data-testid="pay-now-btn"
+                                onClick={handlePayment}
+                                disabled={paying || payingOffline}
+                                style={{ touchAction: 'manipulation' }}
+                            >
+                                {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
+                            </button>
+                        ) : (
+                            <div
+                                data-testid="online-payments-unavailable-notice"
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 14px',
+                                    borderRadius: 'var(--t-radius-control)',
+                                    background: 'var(--t-warning-bg)',
+                                    color: 'var(--t-warning)',
+                                    border: '1px solid var(--t-border)',
+                                    fontSize: 13,
+                                    fontWeight: 500,
+                                    lineHeight: 1.45,
+                                    textAlign: 'left',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                {t('online_payments_unavailable_notice') || 'Online payments are unavailable for this institute. Please pay via bank transfer or cash.'}
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={handleOfflinePayment}

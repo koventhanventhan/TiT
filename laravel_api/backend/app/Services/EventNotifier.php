@@ -31,12 +31,18 @@ class EventNotifier
     // Infrastructure helpers
     // ------------------------------------------------------------------
 
-    /** Run now in console, otherwise after the HTTP response is sent. */
+    /** Run now in console, otherwise after the HTTP response is sent (preserving current tenant context). */
     public static function defer(callable $fn): void
     {
-        $safe = function () use ($fn) {
+        $tenantId = \App\Support\Tenant::id();
+
+        $safe = function () use ($fn, $tenantId) {
             try {
-                $fn();
+                if ($tenantId) {
+                    \App\Support\Tenant::run($tenantId, $fn);
+                } else {
+                    $fn();
+                }
             } catch (\Throwable $e) {
                 Log::error('EventNotifier: deferred task failed: ' . $e->getMessage());
             }
@@ -442,8 +448,14 @@ class EventNotifier
     public static function paymentFailed(User $user, $payment, string $statusLabel, ?string $orderId): void
     {
         $amount = number_format((float) ($payment->amount ?? 0), 2);
+        $instituteId = (int) ($payment->institute_id ?? $user->institute_id ?? \App\Support\Tenant::id() ?? 1);
+        $currency = strtoupper(trim((string) ($payment->meta['currency'] ?? PayHereService::forInstitute($instituteId)->getCurrency())));
 
-        self::defer(function () use ($user, $amount, $statusLabel, $orderId, $payment) {
+        self::defer(function () use ($user, $amount, $currency, $statusLabel, $orderId, $payment, $instituteId) {
+            $instituteName = \App\Support\Tenant::current()?->name
+                ?? \App\Models\Institute::withoutGlobalScopes()->find($instituteId)?->name
+                ?? 'TiT Education';
+
             self::toAdmin('payment_failed', [
                 'subject_line' => 'Payment ' . $statusLabel . ' - ' . self::name($user),
                 'heading'      => 'Payment ' . $statusLabel,
@@ -452,7 +464,7 @@ class EventNotifier
                 'message'      => 'An online (PayHere) payment did not complete.',
                 'details'      => [
                     'Student' => self::name($user),
-                    'Amount'  => 'LKR ' . $amount,
+                    'Amount'  => $currency . ' ' . $amount,
                     'Month'   => $payment->year_month ?? null,
                     'Order'   => $orderId,
                     'Status'  => $statusLabel,
@@ -460,12 +472,12 @@ class EventNotifier
             ]);
 
             self::toUser($user, 'payment_failed', [
-                'subject_line' => 'Payment ' . $statusLabel . ' - TiT Education',
+                'subject_line' => 'Payment ' . $statusLabel . ' - ' . $instituteName,
                 'heading'      => 'Payment ' . $statusLabel,
                 'icon'         => '💳',
                 'color'        => '#ef4444',
                 'greeting'     => 'Dear ' . self::name($user) . ',',
-                'message'      => 'Your online payment of LKR ' . $amount . ' was not completed. Please log in and try again, or choose offline payment. No money was taken if the payment failed.',
+                'message'      => "Your online payment of {$currency} {$amount} was not completed. Please log in and try again, or choose offline payment. No money was taken if the payment failed.",
                 'button_url'   => self::appUrl('/'),
                 'button_text'  => 'Retry Payment',
             ]);

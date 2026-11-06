@@ -715,6 +715,19 @@ class SiteSettingController extends Controller
             $settings['public_assistant_enabled'] = (bool) ($globalPublicEnabled && ($institute?->public_assistant_enabled ?? false));
         }
 
+        // Never leak legacy platform secret keys in public /api/settings
+        unset(
+            $settings['payhere_merchant_id'],
+            $settings['payhere_merchant_secret'],
+            $settings['payhere_app_id'],
+            $settings['payhere_app_secret'],
+            $settings['zoom_client_id'],
+            $settings['zoom_client_secret'],
+            $settings['zoom_account_id']
+        );
+
+        $settings['online_payments_enabled'] = \App\Services\PayHereService::forInstitute((int) $instituteId)->isConfigured();
+
         return response()->json($settings);
     }
 

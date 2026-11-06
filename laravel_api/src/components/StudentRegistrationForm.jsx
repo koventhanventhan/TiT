@@ -22,6 +22,8 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
   const toast = useToast();
 
   const { getSetting, loading: settingsLoading } = useSettings()
+  const rawOnlineEnabled = getSetting('online_payments_enabled', true)
+  const onlinePaymentsEnabled = rawOnlineEnabled !== false && rawOnlineEnabled !== 'false' && rawOnlineEnabled !== 0 && rawOnlineEnabled !== '0'
   const { t, translate, language } = useLanguage()
   const location = useLocation()
 
@@ -1303,18 +1305,37 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
                   t('pay_offline')
                 )}
               </button>
-              <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
-                onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
-                disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <FiLoader className="spin-icon" />
-                    <span>{t('pay_processing') || 'Processing...'}</span>
-                  </>
-                ) : (
-                  t('pay_online')
-                )}
-              </button>
+              {onlinePaymentsEnabled ? (
+                <button type="button" className="tit-reg-submit-btn tit-reg-secondary"
+                  onClick={() => handlePaymentOnline(totalAmount > 0 ? totalAmount : MONTHLY_AMOUNT)}
+                  disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <FiLoader className="spin-icon" />
+                      <span>{t('pay_processing') || 'Processing...'}</span>
+                    </>
+                  ) : (
+                    t('pay_online')
+                  )}
+                </button>
+              ) : (
+                <div
+                  data-testid="online-payments-unavailable-notice"
+                  style={{
+                    marginTop: '0.5rem',
+                    padding: '0.75rem 1rem',
+                    borderRadius: 'var(--t-radius-control)',
+                    background: 'var(--t-bg-muted)',
+                    color: 'var(--t-text-2)',
+                    border: '1px solid var(--t-border)',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {t('online_payments_unavailable_notice') || 'Online card payments are currently unavailable for this institute. Please complete registration via bank transfer or cash.'}
+                </div>
+              )}
             </div>
             )}
             <button type="button" className="tit-reg-back-link" onClick={() => { 

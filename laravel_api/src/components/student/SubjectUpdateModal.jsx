@@ -16,6 +16,7 @@ import FeeRow from '../shared/FeeRow';
 import AdvanceMonthsBlock from './AdvanceMonthsBlock';
 import { formatRs } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const formatDate = (isoString) => {
   if (!isoString) return new Date().toISOString().split('T')[0];
@@ -90,6 +91,15 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
     if (lang) {
       t = lang.t;
       language = lang.language;
+    }
+  } catch (_) {}
+
+  let onlinePaymentsEnabled = true;
+  try {
+    const settingsCtx = useSettings();
+    if (settingsCtx && typeof settingsCtx.getSetting === 'function') {
+      const rawOnline = settingsCtx.getSetting('online_payments_enabled', true);
+      onlinePaymentsEnabled = rawOnline !== false && rawOnline !== 'false' && rawOnline !== 0 && rawOnline !== '0';
     }
   } catch (_) {}
 
@@ -936,34 +946,51 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
                         {/* Top-up Action Buttons */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-                          <button
-                            type="button"
-                            onClick={handlePayTopupOnline}
-                            disabled={loading || paymentDone}
-                            data-testid="btn-topup-pay-online"
-                            style={{
-                              width: '100%',
-                              padding: '12px 18px',
-                              borderRadius: 10,
-                              border: 'none',
-                              background: '#d97706',
-                              color: '#fff',
-                              fontSize: 14,
-                              fontWeight: 600,
-                              cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 8,
-                              opacity: (loading || paymentDone) ? 0.6 : 1,
-                              minHeight: 44
-                            }}
-                          >
-                            <FiCheck size={16} />
-                            <span>
-                              {t('subj_topup_pay_online', 'Pay Online (Rs {diff})').replace('{diff}', formatAmount(topupDiff))}
-                            </span>
-                          </button>
+                          {onlinePaymentsEnabled ? (
+                            <button
+                              type="button"
+                              onClick={handlePayTopupOnline}
+                              disabled={loading || paymentDone}
+                              data-testid="btn-topup-pay-online"
+                              style={{
+                                width: '100%',
+                                padding: '12px 18px',
+                                borderRadius: 10,
+                                border: 'none',
+                                background: '#d97706',
+                                color: '#fff',
+                                fontSize: 14,
+                                fontWeight: 600,
+                                cursor: (loading || paymentDone) ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                opacity: (loading || paymentDone) ? 0.6 : 1,
+                                minHeight: 44
+                              }}
+                            >
+                              <FiCheck size={16} />
+                              <span>
+                                {t('subj_topup_pay_online', 'Pay Online (Rs {diff})').replace('{diff}', formatAmount(topupDiff))}
+                              </span>
+                            </button>
+                          ) : (
+                            <div
+                              data-testid="topup-online-unavailable-notice"
+                              style={{
+                                padding: '10px 14px',
+                                borderRadius: 'var(--t-radius-control)',
+                                background: 'var(--t-surface)',
+                                color: 'var(--t-text-2)',
+                                border: '1px solid var(--t-border)',
+                                fontSize: 13,
+                                lineHeight: 1.45,
+                              }}
+                            >
+                              {t('online_payments_unavailable_notice', 'Online payments are unavailable for this institute. Please use bank transfer or cash below.')}
+                            </div>
+                          )}
 
                           <button
                             type="button"
@@ -1141,35 +1168,54 @@ export default function SubjectUpdateModal({ isOpen, onClose, currentGrade, medi
 
                     {(!existingPayment || existingPayment.status !== 'pending' || existingPayment.payment_method !== 'offline') ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        {/* Option 1: Pay online */}
-                        <div style={{
-                          border: '1px solid var(--t-border, #e2e8f0)',
-                          borderRadius: 14,
-                          padding: 14,
-                          background: '#fff',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 6
-                        }}>
-                          <button 
-                            onClick={handlePayOnline} 
-                            disabled={loading || paymentDone}
-                            data-testid="pay-online-btn"
+                        {/* Option 1: Pay online (hidden when institute has no PayHere configured) */}
+                        {onlinePaymentsEnabled ? (
+                          <div style={{
+                            border: '1px solid var(--t-border, #e2e8f0)',
+                            borderRadius: 14,
+                            padding: 14,
+                            background: '#fff',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 6
+                          }}>
+                            <button 
+                              onClick={handlePayOnline} 
+                              disabled={loading || paymentDone}
+                              data-testid="pay-online-btn"
+                              style={{
+                                width: '100%',
+                                padding: '12px 20px', borderRadius: '12px', border: 'none',
+                                background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s', textAlign: 'center', minHeight: 46,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              }}
+                            >
+                              {loading ? 'Processing...' : 'PAY ONLINE'}
+                            </button>
+                            <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
+                              {t('subj_update_pay_online_desc', 'Pay online – receipt is sent immediately')}
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            data-testid="modal-online-unavailable-notice"
                             style={{
-                              width: '100%',
-                              padding: '12px 20px', borderRadius: '12px', border: 'none',
-                              background: 'var(--t-primary)', color: '#fff', fontSize: '15px', fontWeight: 600,
-                              cursor: loading ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.2s', textAlign: 'center', minHeight: 46,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              padding: '12px 14px',
+                              borderRadius: 'var(--t-radius-control)',
+                              background: 'var(--t-warning-bg)',
+                              color: 'var(--t-warning)',
+                              border: '1px solid var(--t-border)',
+                              fontSize: 13,
+                              fontWeight: 500,
+                              lineHeight: 1.45,
+                              boxSizing: 'border-box',
                             }}
                           >
-                            {loading ? 'Processing...' : 'PAY ONLINE'}
-                          </button>
-                          <div style={{ fontSize: 13, color: 'var(--t-text-3, #64748b)', paddingLeft: 4, lineHeight: 1.4 }}>
-                            {t('subj_update_pay_online_desc', 'Pay online – receipt is sent immediately')}
+                            {t('online_payments_unavailable_notice', 'Online payments are unavailable for this institute. Please use bank transfer, cash, or advance payment options below.')}
                           </div>
-                        </div>
+                        )}
 
                         {/* Option 2: Pay offline */}
                         <div style={{

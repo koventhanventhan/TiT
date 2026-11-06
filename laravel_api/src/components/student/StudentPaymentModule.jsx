@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiLoader, FiClock } from 'react-icons/fi';
 import { getStudentPaymentStatus, initializeMonthlyPayment, initializeOfflineMonthlyPayment } from '../../services/dashboardService';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSettings } from '../../context/SettingsContext';
 import './StudentPaymentModule.css';
 import { formatRs } from '../../utils/format';
 
@@ -20,6 +21,14 @@ const formatAmount = (amt) => {
 
 const StudentPaymentModule = () => {
     const { t } = useLanguage();
+    let onlinePaymentsEnabled = true;
+    try {
+        const settingsCtx = useSettings();
+        if (settingsCtx && typeof settingsCtx.getSetting === 'function') {
+            const rawOnline = settingsCtx.getSetting('online_payments_enabled', true);
+            onlinePaymentsEnabled = rawOnline !== false && rawOnline !== 'false' && rawOnline !== 0 && rawOnline !== '0';
+        }
+    } catch (_) {}
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
@@ -308,15 +317,36 @@ const StudentPaymentModule = () => {
                 
                 {!is_paid && !isPendingOffline && (
                     <div className="payment-actions-stack">
-                        <button 
-                            className="pay-now-btn" 
-                            data-testid="pay-now-btn"
-                            onClick={handlePayment}
-                            disabled={paying || payingOffline}
-                            style={{ touchAction: 'manipulation' }}
-                        >
-                            {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
-                        </button>
+                        {onlinePaymentsEnabled ? (
+                            <button 
+                                className="pay-now-btn" 
+                                data-testid="pay-now-btn"
+                                onClick={handlePayment}
+                                disabled={paying || payingOffline}
+                                style={{ touchAction: 'manipulation' }}
+                            >
+                                {paying ? <><FiLoader className="spin-icon" /> {t('processing') || 'Processing...'}</> : t('pay_now') || 'Pay Now'}
+                            </button>
+                        ) : (
+                            <div
+                                data-testid="online-payments-unavailable-notice"
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 14px',
+                                    borderRadius: 'var(--t-radius-control)',
+                                    background: 'var(--t-warning-bg)',
+                                    color: 'var(--t-warning)',
+                                    border: '1px solid var(--t-border)',
+                                    fontSize: 13,
+                                    fontWeight: 500,
+                                    lineHeight: 1.45,
+                                    textAlign: 'left',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                {t('online_payments_unavailable_notice') || 'Online payments are unavailable for this institute. Please pay via bank transfer or cash.'}
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={handleOfflinePayment}

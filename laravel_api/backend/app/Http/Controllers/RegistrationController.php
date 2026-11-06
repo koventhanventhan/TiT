@@ -456,7 +456,22 @@ class RegistrationController extends Controller
             ]);
         }
 
-        // Online: Create PayHere payment
+        // Online: Verify PayHere is configured for this institute BEFORE creating checkout
+        $instituteId = (int) ($user->institute_id ?: (\App\Support\Tenant::id() ?: 1));
+        $payHere = PayHereService::forInstitute($instituteId);
+
+        if (!$payHere->isConfigured()) {
+            Log::warning('PayHere credentials not configured for institute. Online payment unavailable.', [
+                'institute_id' => $instituteId,
+                'user_id' => $user->id,
+            ]);
+            return response()->json([
+                'code' => 'online_payments_unavailable',
+                'error' => 'online_payments_unavailable',
+                'message' => 'Online payments are not available for this institute. Please choose bank transfer or cash payment.',
+            ], 422);
+        }
+
         $amount = $this->calculateUserAmount($user, $request->amount);
         $yearMonth = now()->format('Y-m');
 
@@ -467,7 +482,7 @@ class RegistrationController extends Controller
             ->update(['status' => 'cancelled']);
 
         $admFee = $user->getAdmissionFeeAmount();
-        $meta = [];
+        $meta = ['currency' => $payHere->getCurrency()];
         if ($admFee > 0) {
             $meta['admission_fee'] = $admFee;
         }
@@ -479,65 +494,50 @@ class RegistrationController extends Controller
             'payment_method' => 'online',
             'year_month'     => $yearMonth,
             'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
-            'institute_id'   => $user->institute_id ?? 1,
-            'meta'           => !empty($meta) ? $meta : null,
+            'institute_id'   => $instituteId,
+            'meta'           => $meta,
         ]);
 
         // Mark registration status
         $user->update(['registration_status' => 'payment_completed']);
 
-        // Build PayHere checkout params for frontend JS SDK
-        if ($this->payHere->isConfigured()) {
-            $params = $this->payHere->buildCheckoutParams($payment, $user);
-            $checkoutUrl = $this->payHere->getCheckoutUrl();
+        $params = $payHere->buildCheckoutParams($payment, $user);
+        $checkoutUrl = $payHere->getCheckoutUrl();
 
-            Log::info('PayHere checkout params generated', [
-                'order_id' => $payment->gateway_ref,
-                'amount'   => $amount,
-                'user_id'  => $user->id,
-            ]);
+        Log::info('PayHere checkout params generated', [
+            'institute_id' => $instituteId,
+            'order_id'     => $payment->gateway_ref,
+            'amount'       => $amount,
+            'user_id'      => $user->id,
+        ]);
 
-            return response()->json([
-                'message'     => 'Payment order created.',
-                'payhere_url' => $checkoutUrl,
-                'params'      => $params,
-                'user'        => $this->formatUserResponse($user),
-            ]);
-        }
-
-        // PayHere not configured — return error
-        Log::warning('PayHere credentials not configured. Cannot process online payment.');
         return response()->json([
-            'message' => 'Online payment is not configured yet. Please contact admin or choose offline payment.',
-        ], 503);
+            'message'     => 'Payment order created.',
+            'payhere_url' => $checkoutUrl,
+            'params'      => $params,
+            'user'        => $this->formatUserResponse($user),
+        ]);
     }
 
     /**
      * PayHere server notification callback (public route, called by PayHere servers).
-     * This is the most reliable way to confirm payment — it's server-to-server.
+     * Resolves payment across all tenants FIRST, then verifies signature, merchant_id,
+     * amount, and currency strictly inside the owning institute's tenant context.
      */
     public function payhereNotify(Request $request)
     {
-        Log::info('PayHere Notification Received', $request->all());
-
         $data = $request->all();
+        $redactedPayload = \App\Support\Redact::array($data);
 
-        // Verify the notification hash
-        if (!$this->payHere->verifyNotification($data)) {
-            Log::error('PayHere notification hash verification FAILED', $data);
-            \App\Services\EventNotifier::webhookError(
-                'PayHere Hash Verification Failed',
-                'PayHere webhook received invalid signature hash. Possible tampering or misconfigured secret.',
-                ['order_id' => $data['order_id'] ?? 'unknown', 'status_code' => $data['status_code'] ?? 'unknown']
-            );
-            return response('Hash verification failed', 403);
-        }
+        Log::info('PayHere Notification Received', $redactedPayload);
 
-        $orderId    = $data['order_id'] ?? '';
+        $orderId    = trim((string) ($data['order_id'] ?? ''));
         $statusCode = $data['status_code'] ?? '';
 
-        // Find the payment record
-        $payment = Payment::where('gateway_ref', $orderId)->first();
+        // (a) Find the Payment by gateway_ref with withoutGlobalScopes() FIRST (webhook may arrive on any host)
+        $payment = $orderId !== ''
+            ? Payment::withoutGlobalScopes()->where('gateway_ref', $orderId)->first()
+            : null;
 
         if (!$payment) {
             Log::error('PayHere notification: Payment not found', ['order_id' => $orderId]);
@@ -549,28 +549,60 @@ class RegistrationController extends Controller
             return response('Payment not found', 404);
         }
 
-        // PayHere status codes:
-        // 2 = success
-        // 0 = pending
-        // -1 = canceled
-        // -2 = failed
-        // -3 = chargeback
-        if ($statusCode == 2) {
-            // Payment successful
-            if ($payment->kind === 'topup') {
-                $wasAlreadyPaid = ($payment->status === 'paid');
+        $paymentInstituteId = (int) ($payment->institute_id ?: 1);
 
-                \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $data) {
-                    $payment->update([
-                        'status'         => 'paid',
-                        'paid_at'        => $payment->paid_at ?: now(),
-                        'transaction_id' => $data['payment_id'] ?? $payment->transaction_id,
+        // (b) Run verification and all side-effects inside Tenant::run($payment->institute_id, ...)
+        return \App\Support\Tenant::run($paymentInstituteId, function () use ($payment, $paymentInstituteId, $data, $redactedPayload, $orderId, $statusCode) {
+            $payHere = PayHereService::forInstitute($paymentInstituteId);
+
+            // (c, d, e, g) Verify md5sig, merchant_id, payhere_amount, and payhere_currency for THAT institute
+            if (!$payHere->verifyNotification($data, $payment)) {
+                $reason = $payHere->getLastVerificationError() ?? 'PayHere notification verification failed';
+                Log::error('PayHere notification verification FAILED', [
+                    'institute_id' => $paymentInstituteId,
+                    'order_id'     => $orderId,
+                    'reason'       => $reason,
+                    'payload'      => $redactedPayload,
+                ]);
+                \App\Services\EventNotifier::webhookError(
+                    'PayHere Verification Failed',
+                    "PayHere webhook rejected ({$reason}).",
+                    \App\Support\Redact::array([
+                        'institute_id'     => $paymentInstituteId,
+                        'order_id'         => $orderId ?: 'unknown',
+                        'merchant_id'      => $data['merchant_id'] ?? 'unknown',
+                        'payhere_amount'   => $data['payhere_amount'] ?? 'unknown',
+                        'payhere_currency' => $data['payhere_currency'] ?? 'unknown',
+                        'status_code'      => $statusCode ?: 'unknown',
+                        'md5sig'           => $data['md5sig'] ?? null,
+                    ])
+                );
+                return response('Hash verification failed', 403);
+            }
+
+            // PayHere status codes:
+            // 2 = success, 0 = pending, -1 = canceled, -2 = failed, -3 = chargeback
+            if ($statusCode == 2) {
+                // (f) Idempotent: already paid -> 200 OK with zero duplicate side effects
+                if ($payment->status === 'paid') {
+                    Log::info('PayHere notification idempotent replay ignored (already paid)', [
+                        'institute_id' => $paymentInstituteId,
+                        'order_id'     => $orderId,
                     ]);
-                    \App\Models\SubjectTopup::markPaid($payment->id, 'online');
-                });
+                    return response('OK', 200);
+                }
 
-                if (!$wasAlreadyPaid) {
-                    $user = $payment->user?->fresh();
+                if ($payment->kind === 'topup') {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $data) {
+                        $payment->update([
+                            'status'         => 'paid',
+                            'paid_at'        => $payment->paid_at ?: now(),
+                            'transaction_id' => $data['payment_id'] ?? $payment->transaction_id,
+                        ]);
+                        \App\Models\SubjectTopup::markPaid($payment->id, 'online');
+                    });
+
+                    $user = User::withoutGlobalScopes()->find($payment->user_id);
 
                     // Generate receipt and dispatch notifications (topup receipt format)
                     try {
@@ -581,7 +613,6 @@ class RegistrationController extends Controller
                         Log::error('PayHere notify: Top-up receipt generation failed: ' . $e->getMessage());
                     }
 
-                    // notify student ("Your new subjects are now open")
                     if ($user) {
                         $this->notifier->notifyUser(
                             $user, 'general_update', 'tit_general_update',
@@ -590,9 +621,8 @@ class RegistrationController extends Controller
                         );
                     }
 
-                    // notify admin ("Subject top-up received: <student> – <subjects> – Rs X")
                     $addedList = !empty($payment->meta['added_subjects'])
-                        ? (is_array($payment->meta['added_subjects']) ? implode(', ', $payment->meta['added_subjects']) : (string)$payment->meta['added_subjects'])
+                        ? (is_array($payment->meta['added_subjects']) ? implode(', ', $payment->meta['added_subjects']) : (string) $payment->meta['added_subjects'])
                         : 'Added subjects';
                     $studentName = $user ? ($user->full_name ?? $user->name) : 'Student';
                     $amountStr = number_format((float) $payment->amount, 2);
@@ -604,8 +634,9 @@ class RegistrationController extends Controller
                         ['alert_title' => 'Subject Top-up Received', 'alert_message' => $adminMsg]
                     );
 
-                    $admin = User::where('role', 'admin')
-                        ->where('institute_id', $user?->institute_id ?? 1)
+                    $admin = User::withoutGlobalScopes()
+                        ->where('role', 'admin')
+                        ->where('institute_id', $paymentInstituteId)
                         ->first();
                     if ($admin) {
                         try {
@@ -621,123 +652,125 @@ class RegistrationController extends Controller
                     }
 
                     Log::info('PayHere topup payment SUCCESS', [
-                        'order_id'   => $orderId,
-                        'user_id'    => $user?->id,
-                        'amount'     => $payment->amount,
-                        'payment_id' => $data['payment_id'] ?? 'N/A',
+                        'institute_id' => $paymentInstituteId,
+                        'order_id'     => $orderId,
+                        'user_id'      => $user?->id,
+                        'amount'       => $payment->amount,
+                        'payment_id'   => $data['payment_id'] ?? 'N/A',
                     ]);
+
+                    return response('OK', 200);
                 }
 
-                return response('OK', 200);
-            }
+                $payment->update([
+                    'status'         => 'paid',
+                    'paid_at'        => now(),
+                    'transaction_id' => $data['payment_id'] ?? null,
+                ]);
 
-            $payment->update([
-                'status'      => 'paid',
-                'paid_at'     => now(),
-                'transaction_id' => $data['payment_id'] ?? null,
-            ]);
+                $user = User::withoutGlobalScopes()->find($payment->user_id);
+                if ($user) {
+                    if (in_array($user->registration_status, ['pending_payment', 'payment_completed'])) {
+                        $user->update([
+                            'registration_status' => 'approved',
+                            'admin_confirmed_at'  => now(),
+                        ]);
 
-            $user = $payment->user;
-            if ($user) {
-                // Update registration status if it was a registration payment
-                if (in_array($user->registration_status, ['pending_payment', 'payment_completed'])) {
-                    $user->update([
-                        'registration_status' => 'approved',
-                        'admin_confirmed_at'  => now(),
-                    ]);
+                        if (empty($user->index_number)) {
+                            try {
+                                $indexSvc = app(\App\Services\StudentIndexService::class);
+                                $institute = \App\Models\Institute::withoutGlobalScopes()->find($paymentInstituteId);
+                                $format = $institute?->getIndexFormat() ?? 'grade';
 
-                    if (empty($user->index_number)) {
-                        try {
-                            $indexSvc = app(\App\Services\StudentIndexService::class);
-                            $institute = $user->institute ?: \App\Models\Institute::find($user->institute_id ?: 1);
-                            $format = $institute?->getIndexFormat() ?? 'grade';
-
-                            if ($format === 'grade') {
-                                $indexSvc->assign($user, null);
-                            } else {
-                                $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
-                                $indexSvc->assign($user, $batch);
+                                if ($format === 'grade') {
+                                    $indexSvc->assign($user, null);
+                                } else {
+                                    $batch = $indexSvc->calculateDefaultBatchYear($user) ?? (int) date('y');
+                                    $indexSvc->assign($user, $batch);
+                                }
+                            } catch (\Throwable $e) {
+                                Log::warning("Could not auto-assign index number in online payment callback: " . $e->getMessage());
                             }
-                        } catch (\Throwable $e) {
-                            Log::warning("Could not auto-assign index number in online payment callback: " . $e->getMessage());
                         }
                     }
-                }
 
-                // Notify Admin of successful payment
-                $admin = User::where('role', 'admin')
-                    ->where('institute_id', $user->institute_id)
-                    ->first();
-                if ($admin) {
-                    try {
-                        $admin->notify(new AdminNotification(
-                            "Payment Received: " . ($user->full_name ?? $user->name) . " - LKR " . number_format($payment->amount, 2),
-                            'success',
-                            route('admin.students.edit', $user->id),
-                            'admission_payments'
-                        ));
-                    } catch (\Throwable $e) {
-                        Log::error('PayHere notify: Admin notification failed: ' . $e->getMessage());
+                    $admin = User::withoutGlobalScopes()
+                        ->where('role', 'admin')
+                        ->where('institute_id', $paymentInstituteId)
+                        ->first();
+                    if ($admin) {
+                        try {
+                            $currencyLabel = $payment->meta['currency'] ?? $payHere->getCurrency();
+                            $admin->notify(new AdminNotification(
+                                "Payment Received: " . ($user->full_name ?? $user->name) . " - {$currencyLabel} " . number_format((float) $payment->amount, 2),
+                                'success',
+                                route('admin.students.edit', $user->id),
+                                'admission_payments'
+                            ));
+                        } catch (\Throwable $e) {
+                            Log::error('PayHere notify: Admin notification failed: ' . $e->getMessage());
+                        }
                     }
+
+                    $this->notifier->notifyUser(
+                        $user, 'payment_success', 'tit_payment_success',
+                        [$user->full_name ?? $user->name],
+                        ['student_name' => $user->full_name ?? $user->name]
+                    );
+
+                    try {
+                        $receiptSvc = app(\App\Services\PaymentReceiptService::class);
+                        $receiptSvc->ensureReceipt($payment);
+                        $receiptSvc->sendReceiptNotifications($payment);
+                    } catch (\Throwable $e) {
+                        Log::error('PayHere notify: Receipt generation failed: ' . $e->getMessage());
+                    }
+
+                    $currencyLabel = $payment->meta['currency'] ?? $payHere->getCurrency();
+                    $this->notifier->notifyAdmin(
+                        'admin_alert', 'tit_payment_success',
+                        ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid {$currencyLabel} " . number_format((float) $payment->amount, 2)],
+                        ['alert_title' => 'Payment Received', 'alert_message' => ($user->full_name ?? $user->name) . " paid {$currencyLabel} " . number_format((float) $payment->amount, 2)]
+                    );
+
+                    Log::info('PayHere payment SUCCESS', [
+                        'institute_id' => $paymentInstituteId,
+                        'order_id'     => $orderId,
+                        'user_id'      => $user->id,
+                        'amount'       => $payment->amount,
+                        'payment_id'   => $data['payment_id'] ?? 'N/A',
+                    ]);
                 }
-
-                // Send Payment Success notification to Student
-                $this->notifier->notifyUser(
-                    $user, 'payment_success', 'tit_payment_success',
-                    [$user->full_name ?? $user->name],
-                    ['student_name' => $user->full_name ?? $user->name]
-                );
-
-                // Generate receipt and dispatch notifications
-                try {
-                    $receiptSvc = app(\App\Services\PaymentReceiptService::class);
-                    $receiptSvc->ensureReceipt($payment);
-                    $receiptSvc->sendReceiptNotifications($payment);
-                } catch (\Throwable $e) {
-                    Log::error('PayHere notify: Receipt generation failed: ' . $e->getMessage());
+            } elseif (in_array((string) $statusCode, ['-1', '-2', '-3'])) {
+                if ($payment->status !== 'paid') {
+                    $payment->update(['status' => 'failed']);
                 }
-
-                // Notify Admin
-                $this->notifier->notifyAdmin(
-                    'admin_alert', 'tit_payment_success',
-                    ["PAYMENT ALERT: " . ($user->full_name ?? $user->name) . " paid LKR " . number_format($payment->amount, 2)],
-                    ['alert_title' => 'Payment Received', 'alert_message' => ($user->full_name ?? $user->name) . ' paid LKR ' . number_format($payment->amount, 2)]
-                );
-
-                Log::info('PayHere payment SUCCESS', [
-                    'order_id'   => $orderId,
-                    'user_id'    => $user->id,
-                    'amount'     => $payment->amount,
-                    'payment_id' => $data['payment_id'] ?? 'N/A',
+                $statusLabel = match ((string) $statusCode) {
+                    '-1' => 'Canceled',
+                    '-2' => 'Failed',
+                    '-3' => 'Chargeback',
+                    default => 'Failed',
+                };
+                $user = User::withoutGlobalScopes()->find($payment->user_id);
+                if ($user && $payment->kind !== 'topup') {
+                    \App\Services\EventNotifier::paymentFailed($user, $payment, $statusLabel, $orderId);
+                }
+                Log::warning('PayHere payment FAILED/CANCELED', [
+                    'institute_id' => $paymentInstituteId,
+                    'order_id'     => $orderId,
+                    'status_code'  => $statusCode,
+                    'kind'         => $payment->kind,
+                ]);
+            } else {
+                Log::info('PayHere payment PENDING', [
+                    'institute_id' => $paymentInstituteId,
+                    'order_id'     => $orderId,
+                    'status_code'  => $statusCode,
                 ]);
             }
-        } elseif (in_array((string) $statusCode, ['-1', '-2', '-3'])) {
-            // Payment failed/canceled/chargeback
-            $payment->update(['status' => 'failed']);
-            $statusLabel = match ((string) $statusCode) {
-                '-1' => 'Canceled',
-                '-2' => 'Failed',
-                '-3' => 'Chargeback',
-                default => 'Failed',
-            };
-            if ($payment->user && $payment->kind !== 'topup') {
-                \App\Services\EventNotifier::paymentFailed($payment->user, $payment, $statusLabel, $orderId);
-            }
-            // For topup: topup stays pending so student can retry, subjects remain locked.
-            Log::warning('PayHere payment FAILED/CANCELED', [
-                'order_id'    => $orderId,
-                'status_code' => $statusCode,
-                'kind'        => $payment->kind,
-            ]);
-        } else {
-            // Pending (status_code = 0)
-            Log::info('PayHere payment PENDING', [
-                'order_id'    => $orderId,
-                'status_code' => $statusCode,
-            ]);
-        }
 
-        return response('OK', 200);
+            return response('OK', 200);
+        });
     }
 
     /**
@@ -789,7 +822,7 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $trustClientCallback = (bool) (config('payhere.trust_client_callback') ?? env('PAYHERE_TRUST_CLIENT_CALLBACK', false));
+        $trustClientCallback = \App\Support\Integrations::trustPayHereClientCallback();
 
         // If still pending and client callback is not trusted, return 202
         if (!$trustClientCallback) {
@@ -1018,6 +1051,17 @@ class RegistrationController extends Controller
             ], 400);
         }
 
+        $instituteId = (int) ($user->institute_id ?: (\App\Support\Tenant::id() ?: 1));
+        $payHere = PayHereService::forInstitute($instituteId);
+
+        if (!$payHere->isConfigured()) {
+            return response()->json([
+                'code'    => 'online_payments_unavailable',
+                'error'   => 'online_payments_unavailable',
+                'message' => 'Online payments are not available for this institute. Please choose bank transfer or cash payment.',
+            ], 422);
+        }
+
         // Cancel any pending monthly payments for this month
         Payment::monthly()
             ->where('user_id', $user->id)
@@ -1034,7 +1078,7 @@ class RegistrationController extends Controller
         $amount = $this->calculateUserAmount($user);
 
         $admFee = $user->getAdmissionFeeAmount();
-        $meta = [];
+        $meta = ['currency' => $payHere->getCurrency()];
         if ($admFee > 0) {
             $meta['admission_fee'] = $admFee;
         }
@@ -1047,24 +1091,19 @@ class RegistrationController extends Controller
             'payment_method' => 'online',
             'year_month'     => $yearMonth,
             'gateway_ref'    => 'PH_' . strtoupper(uniqid()),
-            'institute_id'   => $user->institute_id ?? 1,
-            'meta'           => !empty($meta) ? $meta : null,
+            'institute_id'   => $instituteId,
+            'meta'           => $meta,
         ]);
 
-        if (!$this->payHere->isConfigured()) {
-            return response()->json([
-                'message' => 'Online payment is not configured. Please contact admin.',
-            ], 503);
-        }
-
-        $params = $this->payHere->buildCheckoutParams($payment, $user);
-        $checkoutUrl = $this->payHere->getCheckoutUrl();
+        $params = $payHere->buildCheckoutParams($payment, $user);
+        $checkoutUrl = $payHere->getCheckoutUrl();
 
         Log::info('Monthly PayHere checkout initialized', [
-            'user_id'    => $user->id,
-            'order_id'   => $payment->gateway_ref,
-            'amount'     => $amount,
-            'year_month' => $yearMonth,
+            'institute_id' => $instituteId,
+            'user_id'      => $user->id,
+            'order_id'     => $payment->gateway_ref,
+            'amount'       => $amount,
+            'year_month'   => $yearMonth,
         ]);
 
         return response()->json([

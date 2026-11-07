@@ -85,6 +85,13 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Pagination\Paginator::useBootstrap();
         \Illuminate\Support\Facades\Gate::policy(\App\Models\Institute::class, \App\Policies\InstitutePolicy::class);
 
+        if (\PHP_VERSION_ID < 80400 && interface_exists(\Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface::class)) {
+            $this->app->scoped(
+                \Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface::class,
+                static fn (): \Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface => new \App\Support\Php82SafeHtmlSanitizer(),
+            );
+        }
+
         // Share site settings with all views
         if (!app()->runningInConsole()) {
             try {

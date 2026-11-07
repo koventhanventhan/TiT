@@ -100,6 +100,12 @@ class Institute extends Model
             // Ignore when site_settings table is unavailable.
         }
 
+        // For Institute #1: always ignore `institutes.name` so DB name mismatches
+        // never alter outgoing TiT mail or branding.
+        if ($id === 1) {
+            return ($fallback !== 'Education') ? $fallback : 'TiT Education';
+        }
+
         try {
             $name = self::withoutGlobalScopes()->whereKey($id)->value('name');
             $trimmedName = trim((string) ($name ?? ''));

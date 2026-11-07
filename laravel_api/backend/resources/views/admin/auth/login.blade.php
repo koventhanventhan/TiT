@@ -1,7 +1,12 @@
 @php
-    $loginBrandName = $site_settings['admin_company_name']
-        ?? $site_settings['site_name']
-        ?? \App\Models\Institute::displayBrandName(null, 'Institute Portal');
+    $loginContextInstId = \App\Models\Institute::resolveContextInstituteId();
+    if ((int) $loginContextInstId === 1 || $loginContextInstId === null) {
+        $loginBrandName = \App\Models\Institute::mailBrandName(1);
+    } else {
+        $loginBrandName = $site_settings['admin_company_name']
+            ?? $site_settings['site_name']
+            ?? \App\Models\Institute::displayBrandName($loginContextInstId, 'Institute Portal');
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en" class="h-100">

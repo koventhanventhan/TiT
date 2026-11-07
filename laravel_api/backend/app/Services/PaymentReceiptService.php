@@ -154,8 +154,19 @@ class PaymentReceiptService
         $contactLine = $this->resolveInstituteContactLine($payment);
 
         if ($instituteId === 1) {
-            $wordmarkLogo = 'TiT';
-            $wordmarkSub = 'INSTITUTE • JAFFNA';
+            $setting = trim((string) \App\Models\SiteSetting::getForInstitute('admin_company_name', 1, ''));
+            $legacyAliases = ['tit', 'tit institute', 'tit education', 'tit education institute', 'tit online education'];
+            if ($setting !== '' && !in_array(strtolower($setting), $legacyAliases, true)) {
+                $wordmarkLogo = $setting;
+            } else {
+                $wordmarkLogo = 'TiT';
+            }
+            $loc = trim((string) \App\Models\SiteSetting::getForInstitute('footer_location', 1, ''));
+            if ($setting !== '' && !in_array(strtolower($setting), $legacyAliases, true)) {
+                $wordmarkSub = $loc !== '' ? mb_strtoupper($loc) : '';
+            } else {
+                $wordmarkSub = 'INSTITUTE • JAFFNA';
+            }
         } else {
             $wordmarkLogo = \App\Models\Institute::displayBrandName($instituteId, 'Education');
             $loc = trim((string) \App\Models\SiteSetting::getForInstitute('footer_location', $instituteId, ''));

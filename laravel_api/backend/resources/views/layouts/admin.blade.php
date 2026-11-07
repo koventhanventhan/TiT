@@ -1,8 +1,20 @@
 @php
-    $resolvedAdminInstId = auth()->user()?->institute_id ?: (\App\Models\Institute::resolveContextInstituteId() ?: 1);
-    $brandName = auth()->user()?->institute?->name ?: ($site_settings['admin_company_name'] ?? $site_settings['site_title'] ?? null);
-    if (!$brandName || $brandName === 'Laravel') {
-        $brandName = (int) $resolvedAdminInstId === 1 ? 'TiT Institute' : \App\Models\Institute::displayBrandName((int) $resolvedAdminInstId, 'Institute Portal');
+    $resolvedAdminInstId = (int) (auth()->user()?->institute_id ?: (\App\Models\Institute::resolveContextInstituteId() ?: 1));
+    if ($resolvedAdminInstId === 1) {
+        $brandSetting = $site_settings['admin_company_name'] ?? null;
+        $legacyAliases = ['tit', 'tit institute', 'tit education', 'tit education institute', 'tit online education'];
+        if ($brandSetting && !in_array(strtolower(trim($brandSetting)), $legacyAliases, true)) {
+            $brandName = trim($brandSetting);
+        } else {
+            $brandName = 'TiT Institute';
+        }
+    } else {
+        $brandName = $site_settings['admin_company_name']
+            ?? auth()->user()?->institute?->name
+            ?? ($site_settings['site_title'] ?? null);
+        if (!$brandName || $brandName === 'Laravel') {
+            $brandName = \App\Models\Institute::displayBrandName($resolvedAdminInstId, 'Institute Portal');
+        }
     }
 @endphp
 <!DOCTYPE html>

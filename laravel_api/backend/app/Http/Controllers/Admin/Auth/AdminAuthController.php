@@ -49,45 +49,40 @@ class AdminAuthController extends Controller
                     $user = $accessToken->tokenable;
                     \Log::info('Token found, user: ' . $user->email . ', role: ' . $user->role);
                     
-                    // Only allow admin or super_admin users
-                    if ($user->role === 'admin' || $user->role === 'super_admin') {
-                        /*
-                        dd('User is admin, attempting login', [
+                    // Only allow admin or super_admin users belonging to this institute
+                    $currentInstId = function_exists('current_institute_id') ? current_institute_id() : null;
+                    if ($user->role !== 'super_admin' && $currentInstId && (int) $user->institute_id !== (int) $currentInstId) {
+                        \Log::warning('Cross-tenant admin token rejected', [
                             'user_id' => $user->id,
-                            'role' => $user->role,
-                            'session_id' => $request->session()->getId()
+                            'user_institute_id' => $user->institute_id,
+                            'current_institute_id' => $currentInstId,
                         ]);
-                        */
+                        return redirect($this->resolveFrontendUrl($request) . '?error=admin_required');
+                    }
+
+                    if ($user->role === 'admin' || $user->role === 'super_admin') {
                         Auth::login($user);
                         $request->session()->regenerate();
                         \Log::info('Admin authenticated, redirecting to dashboard');
                         return redirect()->route('admin.dashboard');
                     } else {
                         \Log::warning('User is not admin', ['user_id' => $user->id, 'role' => $user->role]);
-                        // Redirect to React frontend with error message
-                        $frontendUrl = config('services.frontend_url');
-                        return redirect($frontendUrl . '?error=admin_required');
+                        return redirect($this->resolveFrontendUrl($request) . '?error=admin_required');
                     }
                 } else {
                     \Log::warning('Token not found or invalid', ['token' => substr($token, 0, 20) . '...']);
-                    // Redirect to React frontend
-                    $frontendUrl = config('services.frontend_url');
-                    return redirect($frontendUrl . '?error=invalid_token');
+                    return redirect($this->resolveFrontendUrl($request) . '?error=invalid_token');
                 }
             } catch (\Exception $e) {
-                // Token invalid, redirect to React frontend
                 \Log::error('Token authentication failed', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                $frontendUrl = config('services.frontend_url');
-                return redirect($frontendUrl . '?error=login_required');
+                return redirect($this->resolveFrontendUrl($request) . '?error=login_required');
             }
         }
         
-        // No token provided - redirect to React frontend for login
-        $frontendUrl = config('services.frontend_url');
-        return redirect($frontendUrl . '?redirect=admin');
+        return view('admin.auth.login');
     }
 
     /**
@@ -163,9 +158,23 @@ class AdminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        // Redirect to React frontend with logout parameter
+        // Redirect to tenant-aware frontend with logout parameter
         // React will detect this and clear localStorage
-        $reactUrl = config('services.frontend_url');
+        $reactUrl = $this->resolveFrontendUrl($request);
         return redirect($reactUrl . '?logout=1&from=dashboard');
+    }
+
+    private function resolveFrontendUrl(Request $request): string
+    {
+        $configured = rtrim((string) config('services.frontend_url', ''), '/');
+        $configuredHost = strtolower((string) parse_url($configured, PHP_URL_HOST));
+        $requestHost = strtolower((string) $request->getHost());
+        $currentInstId = function_exists('current_institute_id') ? (int) current_institute_id() : 0;
+
+        if ($currentInstId > 1 || ($requestHost !== '' && $configuredHost !== '' && $requestHost !== $configuredHost)) {
+            return rtrim($request->getSchemeAndHttpHost(), '/');
+        }
+
+        return $configured !== '' ? $configured : rtrim($request->getSchemeAndHttpHost(), '/');
     }
 }

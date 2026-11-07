@@ -446,6 +446,7 @@
                 href="{{ $integrationsUrl }}"
                 class="inst-btn"
                 x-bind:class="!savedCredentials ? 'inst-btn-disabled' : ''"
+                x-bind:aria-disabled="(!savedCredentials).toString()"
             >
                 Set up online payments
             </a>
@@ -454,6 +455,7 @@
                 href="{{ $integrationsUrl }}"
                 class="inst-btn"
                 x-bind:class="!savedCredentials ? 'inst-btn-disabled' : ''"
+                x-bind:aria-disabled="(!savedCredentials).toString()"
             >
                 Set up WhatsApp &amp; e-mail
             </a>
@@ -464,6 +466,7 @@
                 rel="noopener noreferrer"
                 class="inst-btn inst-btn-primary"
                 x-bind:class="!savedCredentials ? 'inst-btn-disabled' : ''"
+                x-bind:aria-disabled="(!savedCredentials).toString()"
                 data-testid="open-institute-admin-btn"
             >
                 Open this institute's admin &rarr;

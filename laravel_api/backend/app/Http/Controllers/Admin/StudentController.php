@@ -162,6 +162,9 @@ class StudentController extends Controller
             ->first();
 
         if (!$student) {
+            if (User::withoutGlobalScopes()->where('role', 'user')->where('id', $id)->exists()) {
+                abort(404);
+            }
             return redirect()->route('admin.students.index')
                 ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
         }
@@ -190,6 +193,9 @@ class StudentController extends Controller
             ->first();
 
         if (!$student) {
+            if (User::withoutGlobalScopes()->where('role', 'user')->where('id', $id)->exists()) {
+                abort(404);
+            }
             return redirect()->route('admin.students.index')
                 ->with('error', 'Student not found. The registration may be incomplete or the record was deleted.');
         }

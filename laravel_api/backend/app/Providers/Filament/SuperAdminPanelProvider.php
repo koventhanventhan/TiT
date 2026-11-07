@@ -56,6 +56,12 @@ class SuperAdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                fn () => new \Illuminate\Support\HtmlString(
+                    '<style>html:not(.dark) .filepond--label-action{color:#b45309!important;}.fi-sc-wizard-header-step.fi-completed .fi-sc-wizard-header-step-number{color:#09090b!important;}</style>'
+                )
+            )
             ->discoverResources(in: app_path('Filament/SuperAdmin/Resources'), for: 'App\Filament\SuperAdmin\Resources')
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\Filament\SuperAdmin\Pages')
             ->pages([

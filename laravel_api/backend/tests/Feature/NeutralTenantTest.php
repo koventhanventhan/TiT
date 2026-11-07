@@ -362,5 +362,55 @@ class NeutralTenantTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('0767206279', $respCSuper->getContent());
         $this->assertStringNotContainsStringIgnoringCase('DISTINCTIVE_A_HERO_TITLE', $respCSuper->getContent());
     }
+
+    public function test_new_institute_admin_login_renders_neutral_page_and_blocks_cross_tenant_student_access(): void
+    {
+        config(['services.frontend_url' => 'https://titjaffna.lk']);
+
+        $instA = Institute::withoutGlobalScopes()->find(1) ?: Institute::create([
+            'name' => 'TiT Institute',
+            'slug' => 'tit',
+            'status' => 'active',
+            'subscription_plan_id' => $this->plan->id,
+            'index_prefix' => 'TIT',
+            'index_format' => 'grade',
+        ]);
+
+        $studentA = User::withoutGlobalScopes()->create([
+            'name' => 'Student A',
+            'full_name' => 'Student A Full',
+            'email' => 'student-a@titjaffna.lk',
+            'phone_number' => '0771112223',
+            'password' => Hash::make('StudentPass!123'),
+            'role' => 'user',
+            'institute_id' => $instA->id,
+        ]);
+
+        $resB = app(InstituteProvisioner::class)->provision(new ProvisionInstituteData(
+            name: 'Western Crest Institute',
+            shortBrandName: 'Western Crest',
+            subscriptionPlanId: $this->plan->id,
+            domain: 'westerncrest.lk',
+            createAdmin: true,
+            adminName: 'Western Admin',
+            adminEmail: 'admin@westerncrest.lk',
+            adminPhone: '0775556667',
+        ));
+
+        // Direct GET /admin/login on tenant B renders neutral Blade login (never redirects to TiT FRONTEND_URL)
+        $loginPage = $this->get('http://westerncrest.lk/admin/login');
+        $loginPage->assertOk();
+        $loginPage->assertSee('Admin Login - Western Crest', false);
+        $this->assertStringNotContainsString('TiT', $loginPage->getContent());
+
+        // Cross-tenant student show/edit returns 404 to B's admin
+        $this->actingAs($resB->admin, 'web')
+            ->get("http://westerncrest.lk/admin/students/{$studentA->id}")
+            ->assertNotFound();
+
+        $this->actingAs($resB->admin, 'web')
+            ->get("http://westerncrest.lk/admin/students/{$studentA->id}/edit")
+            ->assertNotFound();
+    }
 }
 

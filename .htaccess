@@ -7,7 +7,7 @@
 #   1. Force HTTPS and canonical host redirects.
 #   2. Static files & existing directories bypass: -f / -d -> [L].
 #   3. API routing rule: /api
-#   4. Backend routing rule: /admin|super-panel|livewire (added by owner)
+#   4. Backend routing rule: /admin|super-admin|super-panel|livewire (added by owner)
 #   5. Sitemap routing rule: /sitemap.xml
 #   6. SPA fallback: Everything else routes to index.html
 #
@@ -31,8 +31,8 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # 2. Route Laravel Backend ONLY (Admin Blade, API, Super-Panel, Livewire, Receipts, Sitemap, Robots)
-    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
+    # 2. Route Laravel Backend ONLY (Admin Blade, API, Super-Admin, legacy Super-Panel, Livewire, Receipts, Sitemap, Robots)
+    RewriteCond %{REQUEST_URI} ^/(admin|api|super-admin|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
     # 3. Everything else (Frontend, Student Dashboard, Teacher Dashboard) goes to React

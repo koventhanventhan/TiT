@@ -13,7 +13,8 @@ The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) i
 2. **Real Files & Folders Bypass**: Existing physical files and directories (including `laravel_api/backend/public/...`, static assets, images) pass through directly without hitting rewrite rules.
 3. **Backend & Admin Routes**:
    - `/admin` (Admin Blade dashboard)
-   - `/super-panel` (Super Admin Filament panel)
+   - `/super-admin` (Super Admin Filament panel — canonical path from `config('filament.path')`)
+   - `/super-panel` (Legacy alias — kept in `.htaccess` and redirected via HTTP 301 to `/super-admin`)
    - `/livewire` (Livewire backend components)
    - `/api` (Direct API calls)
    - `/sitemap.xml` (Dynamically generated sitemap)
@@ -46,9 +47,9 @@ The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) i
     RewriteRule ^ - [L]
 
     # 4. Route Laravel Backend routes to public/index.php
-    # Matches: /admin, /api, /super-panel, /livewire, /receipts, /sitemap.xml, /robots.txt
+    # Matches: /admin, /api, /super-admin, /super-panel, /livewire, /receipts, /sitemap.xml, /robots.txt
     # Public routes like /receipts serve signed PDF receipt downloads and must route directly to Laravel rather than the React SPA.
-    RewriteCond %{REQUEST_URI} ^/(admin|api|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
+    RewriteCond %{REQUEST_URI} ^/(admin|api|super-admin|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
     RewriteRule ^(.*)$ laravel_api/backend/public/index.php [QSA,L]
 
     # 5. SPA Fallback: Route all other web routes to React index.html

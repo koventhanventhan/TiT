@@ -23,19 +23,28 @@ class SuperAdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $panelPath = trim((string) config('filament.path', 'super-admin'), '/');
+        $defaultBrand = (string) config('filament.brand', 'TiT');
+
         return $panel
             ->id('super-admin')
-            ->path('super-admin')
+            ->path($panelPath !== '' ? $panelPath : 'super-admin')
             ->login()
-            ->brandName(fn () => 
-                (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings')) 
-                ? \App\Models\SiteSetting::where('key', 'site_name')->value('value') ?? 'TiT' 
-                : 'TiT'
+            ->brandName(fn () =>
+                (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings'))
+                ? (\App\Models\SiteSetting::withoutGlobalScopes()
+                    ->where('institute_id', 1)
+                    ->where('key', 'site_name')
+                    ->value('value') ?: $defaultBrand)
+                : $defaultBrand
             )
             ->brandLogo(function () {
                 try {
                     if (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
-                        $logo = \App\Models\SiteSetting::where('key', 'site_logo')->value('value');
+                        $logo = \App\Models\SiteSetting::withoutGlobalScopes()
+                            ->where('institute_id', 1)
+                            ->where('key', 'site_logo')
+                            ->value('value');
                         return $logo ? asset('storage/' . $logo) : null;
                     }
                 } catch (\Exception $e) {

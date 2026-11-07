@@ -151,5 +151,9 @@ Run these commands from `laravel_api/backend`:
    *(Replaces the removed unauthenticated `/api/test-admin-whatsapp` route.)*
 
 ### 3. Super-Admin Panel (`/super-admin`)
+- **Canonical Panel Path & Live `.htaccess` Routing:** The Filament Super-Admin panel path is single-sourced from `config('filament.path')` (default `super-admin`). Ensure the live root `.htaccess` backend routing rule includes both `super-admin` and `super-panel` (any legacy `/super-panel/*` request is redirected via HTTP 301 to `/super-admin/*` by Laravel):
+  ```apache
+  RewriteCond %{REQUEST_URI} ^/(admin|api|super-admin|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
+  ```
 - **Administration → Institute Integrations** (`/super-admin/institute-integrations-overview`): Read-only status matrix across all institutes (`verified`, `configured`, `failing`, `using platform fallback`, `unconfigured`) with sanitised error summaries and a **Clear credentials** emergency action. Plaintext secrets are never shown.
 - **Platform Settings** (`/super-admin/platform-settings`): Clearly labelled *"Platform defaults (only used where fallback is allowed)"*.

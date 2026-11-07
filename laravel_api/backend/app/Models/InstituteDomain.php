@@ -40,16 +40,42 @@ class InstituteDomain extends Model
     }
 
     /**
-     * Invalidate cached domain mappings when domain changes.
+     * Invalidate cached domain mappings when domain changes and enforce removal guards.
      */
     protected static function booted(): void
     {
+        static::deleting(function (self $model) {
+            if ((int) $model->institute_id === 1) {
+                $remainingCount = static::where('institute_id', 1)->count();
+                if ($remainingCount <= 1) {
+                    throw new \DomainException('Cannot remove the last website address of Institute #1.');
+                }
+            }
+
+            if (app()->bound('request')) {
+                $rawHost = (string) request()->getHost();
+                if (!in_array(strtolower($rawHost), ['', 'localhost', '127.0.0.1'], true)) {
+                    $currentHost = app(\App\Services\DomainChecker::class)->normalize($rawHost);
+                    if ($currentHost !== '' && $currentHost === strtolower((string) $model->domain)) {
+                        throw new \DomainException('Cannot remove the website address you are currently using to access this page.');
+                    }
+                }
+            }
+        });
+
         static::saved(function (self $model) {
             static::clearDomainCache($model);
         });
 
         static::deleted(function (self $model) {
             static::clearDomainCache($model);
+
+            if ($model->is_primary) {
+                $nextDomain = static::where('institute_id', $model->institute_id)->orderBy('id')->first();
+                if ($nextDomain && !$nextDomain->is_primary) {
+                    $nextDomain->update(['is_primary' => true]);
+                }
+            }
         });
     }
 

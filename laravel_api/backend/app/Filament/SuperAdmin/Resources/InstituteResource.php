@@ -167,7 +167,9 @@ class InstituteResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            InstituteResource\RelationManagers\DomainsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

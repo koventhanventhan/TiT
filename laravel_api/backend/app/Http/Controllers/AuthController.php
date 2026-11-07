@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Traits\ValidatesEmail;
 use App\Services\NotificationService;
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
@@ -417,6 +420,46 @@ class AuthController extends Controller
             'remember' => 'nullable|boolean',
         ]);
 
+        $identifier = strtolower(trim((string) $request->usernameOrEmail));
+        $ip = (string) $request->ip();
+        $emailThrottleKey = 'api_login:' . Str::transliterate($identifier) . '|' . $ip;
+        $ipThrottleKey = 'api_login_ip:' . $ip;
+
+        $isEmailLocked = RateLimiter::tooManyAttempts($emailThrottleKey, 5);
+        $isIpLocked = RateLimiter::tooManyAttempts($ipThrottleKey, 20);
+
+        if ($isEmailLocked || $isIpLocked) {
+            event(new Lockout($request));
+
+            $seconds = max(
+                $isEmailLocked ? RateLimiter::availableIn($emailThrottleKey) : 0,
+                $isIpLocked ? RateLimiter::availableIn($ipThrottleKey) : 0
+            );
+            if ($seconds <= 0) {
+                $seconds = 60;
+            }
+
+            ActivityLogService::log(
+                'api_login_lockout',
+                "API login lockout for {$identifier} from {$ip}",
+                [
+                    'identifier' => $identifier,
+                    'ip' => $ip,
+                    'seconds_remaining' => $seconds,
+                    'reason' => $isEmailLocked ? 'email_limit' : 'ip_limit',
+                ]
+            );
+
+            $message = "Too many sign-in attempts. Please wait {$seconds} seconds and try again.";
+
+            return response()->json([
+                'message' => $message,
+                'errors' => [
+                    'email' => [$message],
+                ],
+            ], 429);
+        }
+
         // Check if input is email or username
         $field = filter_var($request->usernameOrEmail, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
         
@@ -426,16 +469,22 @@ class AuthController extends Controller
         // reject with generic invalid credentials (no information leak).
         $currentInstId = function_exists('current_institute_id') ? current_institute_id() : null;
         if ($user && $user->role !== 'super_admin' && $currentInstId && (int)$user->institute_id !== (int)$currentInstId) {
+            RateLimiter::hit($emailThrottleKey, 60);
+            RateLimiter::hit($ipThrottleKey, 60);
             return response()->json([
                 'message' => 'Invalid login credentials',
             ], 401);
         }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($emailThrottleKey, 60);
+            RateLimiter::hit($ipThrottleKey, 60);
             return response()->json([
                 'message' => 'Invalid login credentials',
             ], 401);
         }
+
+        RateLimiter::clear($emailThrottleKey);
 
         // Check Admin Approval for Students
         if ($user->role === 'user') {

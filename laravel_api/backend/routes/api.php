@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\StudentMessageController;
 use App\Http\Controllers\Api\TranslateController;
 
 // Public routes
+Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
 

@@ -113,7 +113,7 @@ const AboutPage = () => {
           fRaw = parsed.map((item) => ({
             icon: item.icon || 'FiVideo',
             title: item.title || '',
-            subtitle: item.subtitle || 'TiT Excellence',
+            subtitle: item.subtitle || 'Academic Excellence',
             description: item.description || '',
             image: resolveImageUrl(item.image),
             tags: Array.isArray(item.tags)
@@ -657,7 +657,7 @@ const AboutPage = () => {
                     </div>
                     <div className="diff-content">
                       <h2 className="diff-title">{feature.title}</h2>
-                      <h3 className="diff-subtitle">{feature.subtitle || 'TiT Excellence'}</h3>
+                      <h3 className="diff-subtitle">{feature.subtitle || 'Academic Excellence'}</h3>
                       <p className="diff-desc">{feature.description}</p>
                       <div className="diff-footer">
                         <div className="diff-details">

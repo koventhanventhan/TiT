@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { FiX, FiChevronRight, FiLogOut, FiMenu } from 'react-icons/fi';
 import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery';
+import { useSettings } from '../../context/SettingsContext';
 import './sidebar-shell.css';
 
 /**
@@ -48,6 +49,13 @@ export default function SidebarShell({
     hamburgerRef,
 }) {
     const location = useLocation();
+    const { getSetting } = useSettings();
+    const resolvedBrand = (getSetting('site_name', '') || getSetting('admin_company_name', '') || 'Institute Portal').trim();
+    const brandTile = (() => {
+        const words = resolvedBrand.split(/[^A-Za-z0-9]+/).filter(Boolean);
+        if (words.length >= 2) return words.map(w => w[0]).join('').slice(0, 3).toUpperCase();
+        return (words[0] || 'INS').slice(0, 3);
+    })();
     const isPhone = useMediaQuery(MOBILE_BREAKPOINT);
     const prevIsPhoneRef = useRef(isPhone);
 
@@ -445,16 +453,16 @@ export default function SidebarShell({
                     onPointerDown={handleHeaderBrandPointerDown}
                     onClick={handleHeaderBrandClick}
                     title="Collapse sidebar"
-                    aria-label="TiT Education"
+                    aria-label={resolvedBrand}
                 >
                     <div className="sidebar-header-logo-col">
                         <div className="sidebar-logo-tile">
-                            TiT
+                            {brandTile}
                         </div>
                     </div>
                     <div className="sidebar-brand-text">
                         <div className="sidebar-brand-name">
-                            TiT<span className="sidebar-brand-accent">Education</span>
+                            {resolvedBrand}
                         </div>
                         <div className="sidebar-brand-subtitle">{brandSubtitle}</div>
                     </div>
@@ -575,7 +583,7 @@ export default function SidebarShell({
                                 ref={logoBtnRef}
                                 type="button"
                                 className="sidebar-rail-logo-btn"
-                                title="TiT Education"
+                                title={resolvedBrand}
                                 aria-label="Open menu"
                                 aria-expanded={isExpanded}
                                 aria-controls="expanded-sidebar-drawer"
@@ -586,7 +594,7 @@ export default function SidebarShell({
                                 onClick={(e) => handleRailClick(e, 'logo')}
                                 onKeyDown={(e) => handleRailKeyDown(e, 'logo')}
                             >
-                                <div className="sidebar-logo-tile">TiT</div>
+                                <div className="sidebar-logo-tile">{brandTile}</div>
                             </button>
 
                             {/* Spacer matching --sb-nav-gap for vertical alignment */}

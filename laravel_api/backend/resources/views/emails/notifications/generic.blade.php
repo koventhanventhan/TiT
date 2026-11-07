@@ -9,6 +9,7 @@
     $icon = $data['icon'] ?? '🔔';
     $lines = $data['lines'] ?? [];
     $details = $data['details'] ?? [];
+    $resolvedBrand = $brandName ?? \App\Models\Institute::mailBrandName($data['institute_id'] ?? null);
 @endphp
 <body style="margin:0;padding:0;background:#f4f1fa;font-family:'Segoe UI',Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1fa;padding:32px 0;">
@@ -18,7 +19,7 @@
     <tr>
         <td style="background:{{ $color }};padding:32px 40px;text-align:center;">
             <h1 style="color:#ffffff;font-size:22px;margin:0 0 4px;">{{ $icon }} {{ $data['heading'] ?? 'Notification' }}</h1>
-            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">TiT Education</p>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">{{ $resolvedBrand }}</p>
         </td>
     </tr>
     <!-- Body -->
@@ -67,7 +68,7 @@
     <!-- Footer -->
     <tr>
         <td style="background:#1e1b4b;padding:20px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} TiT Education. All rights reserved.</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} {{ $resolvedBrand }}. All rights reserved.</p>
         </td>
     </tr>
 </table>

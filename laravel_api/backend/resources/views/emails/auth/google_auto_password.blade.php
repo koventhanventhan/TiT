@@ -1,17 +1,20 @@
+@php
+    $authBrand = \App\Models\Institute::mailBrandName($user->institute_id ?? null);
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{{ $isReset ? 'Password Reset' : 'Welcome to TiT Education' }}</title>
+    <title>{{ $isReset ? 'Password Reset' : 'Welcome to ' . $authBrand }}</title>
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #6366f1; margin: 0;">TiT Education</h1>
+            <h1 style="color: #6366f1; margin: 0;">{{ $authBrand }}</h1>
         </div>
 
         <h2 style="color: #1e293b; font-size: 20px; font-weight: 700;">
-            {{ $isReset ? 'Your Password Has Been Reset' : 'Welcome to TiT Education!' }}
+            {{ $isReset ? 'Your Password Has Been Reset' : 'Welcome to ' . $authBrand . '!' }}
         </h2>
 
         <p style="font-size: 16px; line-height: 1.5; color: #475569;">
@@ -50,7 +53,7 @@
 
         <p style="font-size: 12px; color: #94a3b8; text-align: center;">
             If you did not request this account or password reset, please contact support immediately.<br>
-            © {{ date('Y') }} TiT Education. All rights reserved.
+            © {{ date('Y') }} {{ $authBrand }}. All rights reserved.
         </p>
     </div>
 </body>

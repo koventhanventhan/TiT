@@ -35,9 +35,11 @@ const ClassesPage = () => {
   const [activeGrade, setActiveGrade] = useState(0)
   const [showAllSubjects, setShowAllSubjects] = useState(false)
 
+  const defaultTagline = getSetting('site_name') || 'ONLINE LEARNING'
+
   // ── Online Classes State (ocl_) ──
   const [oclText, setOclText] = useState({
-    tagline: getSetting('ocl_tagline') || 'TiT KALVI NILAYAM – JAFFNA',
+    tagline: getSetting('ocl_tagline') || defaultTagline,
     titleLine1: getSetting('ocl_title_line1') || 'ONLINE',
     titleLine2: getSetting('ocl_title_line2') || 'CLASSES',
     subtitleTamil: getSetting('ocl_subtitle_tamil') || 'இணையவழி வகுப்புகள்',
@@ -50,7 +52,7 @@ const ClassesPage = () => {
 
   // ── Direct Classes State (dcl_) ──
   const [dclText, setDclText] = useState({
-    tagline: getSetting('dcl_tagline') || 'TiT KALVI NILAYAM – JAFFNA',
+    tagline: getSetting('dcl_tagline') || defaultTagline,
     titleLine1: getSetting('dcl_title_line1') || 'DIRECT',
     titleLine2: getSetting('dcl_title_line2') || 'CLASSES',
     subtitleTamil: getSetting('dcl_subtitle_tamil') || 'நேரடி வகுப்புகள்',
@@ -69,10 +71,11 @@ const ClassesPage = () => {
 
   // ── Translation Effect ──
   useEffect(() => {
+    const fallbackTagline = getSetting('site_name') || 'ONLINE LEARNING'
     const translateLayouts = async () => {
       if (language !== 'en') {
         setOclText({
-          tagline: await translate(getSetting('ocl_tagline') || 'TiT KALVI NILAYAM – JAFFNA'),
+          tagline: await translate(getSetting('ocl_tagline') || fallbackTagline),
           titleLine1: await translate(getSetting('ocl_title_line1') || 'ONLINE'),
           titleLine2: await translate(getSetting('ocl_title_line2') || 'CLASSES'),
           subtitleTamil: await translate(getSetting('ocl_subtitle_tamil') || 'இணையவழி வகுப்புகள்'),
@@ -83,7 +86,7 @@ const ClassesPage = () => {
           subjectsLink: await translate(getSetting('ocl_subjects_link_text') || 'All Subjects')
         })
         setDclText({
-          tagline: await translate(getSetting('dcl_tagline') || 'TiT KALVI NILAYAM – JAFFNA'),
+          tagline: await translate(getSetting('dcl_tagline') || fallbackTagline),
           titleLine1: await translate(getSetting('dcl_title_line1') || 'DIRECT'),
           titleLine2: await translate(getSetting('dcl_title_line2') || 'CLASSES'),
           subtitleTamil: await translate(getSetting('dcl_subtitle_tamil') || 'நேரடி வகுப்புகள்'),
@@ -95,7 +98,7 @@ const ClassesPage = () => {
         })
       } else {
         setOclText({
-          tagline: getSetting('ocl_tagline') || 'TiT KALVI NILAYAM – JAFFNA',
+          tagline: getSetting('ocl_tagline') || fallbackTagline,
           titleLine1: getSetting('ocl_title_line1') || 'ONLINE',
           titleLine2: getSetting('ocl_title_line2') || 'CLASSES',
           subtitleTamil: getSetting('ocl_subtitle_tamil') || 'இணையவழி வகுப்புகள்',
@@ -106,7 +109,7 @@ const ClassesPage = () => {
           subjectsLink: getSetting('ocl_subjects_link_text') || 'All Subjects'
         })
         setDclText({
-          tagline: getSetting('dcl_tagline') || 'TiT KALVI NILAYAM – JAFFNA',
+          tagline: getSetting('dcl_tagline') || fallbackTagline,
           titleLine1: getSetting('dcl_title_line1') || 'DIRECT',
           titleLine2: getSetting('dcl_title_line2') || 'CLASSES',
           subtitleTamil: getSetting('dcl_subtitle_tamil') || 'நேரடி வகுப்புகள்',

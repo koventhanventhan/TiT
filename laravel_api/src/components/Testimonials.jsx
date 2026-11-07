@@ -8,31 +8,31 @@ const Testimonials = () => {
       name: 'K. Ellakiya',
       location: 'Kandy',
       rating: 5,
-      text: "EduLearn's platform is incredibly user-friendly. I can access my courses and materials for the Sri Lankan National Syllabus anytime, which has made learning much more flexible for me"
+      text: "This platform is incredibly user-friendly. I can access my courses and materials for the National Syllabus anytime, which has made learning much more flexible for me"
     },
     {
       name: 'P. Vijithan',
       location: 'Colombo',
       rating: 5,
-      text: "EduLearn! Their Cambridge courses are great, but the best part is the online forums. Met so many cool classmates from around the world – studying just got way more fun."
+      text: "Great courses and interactive classes! The best part is how easy it is to collaborate with classmates and stay engaged with every subject."
     },
     {
       name: 'T. Kalaivani',
       location: 'Kalmunai',
       rating: 5,
-      text: "EduLearn is perfect for working moms like me! Their online platform lets my daughter learn anytime, anywhere. No more scrambling to find time for tuition classes!"
+      text: "Perfect for working parents like me! The online platform lets my daughter learn anytime, anywhere without scrambling to find travel time for classes!"
     },
     {
       name: 'A. Chellakumar',
       location: 'Galle',
       rating: 5,
-      text: "EduLearn provides affordable and high-quality online courses that cater to a diverse range of needs. We receive regular updates on our daughter's progress, allowing us to stay actively involved in her learning journey."
+      text: "Affordable and high-quality online courses that cater to a diverse range of needs. We receive regular updates on our daughter's progress, allowing us to stay actively involved in her learning journey."
     },
     {
       name: 'C. Kajansika',
       location: 'Batticaloa',
       rating: 5,
-      text: "What I love about EduLearn is the community. Even online, I feel connected to my peers and teachers. It's not just about passing exams; it's about growing and learning together. The support here is incredible."
+      text: "What I love most is the community. Even online, I feel connected to my peers and teachers. It's not just about passing exams; it's about growing and learning together."
     }
   ]
 

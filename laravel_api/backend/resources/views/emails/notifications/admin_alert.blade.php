@@ -1,3 +1,6 @@
+@php
+    $resolvedBrand = $brandName ?? \App\Models\Institute::mailBrandName($data['institute_id'] ?? null);
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +15,7 @@
     <tr>
         <td style="background:linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%);padding:32px 40px;text-align:center;">
             <h1 style="color:#ffffff;font-size:22px;margin:0 0 4px;">🔔 Admin Alert</h1>
-            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">TiT Education System</p>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">{{ $resolvedBrand }} System</p>
         </td>
     </tr>
     <!-- Body -->
@@ -36,14 +39,14 @@
             </table>
             @endif
             <p style="color:#9ca3af;font-size:13px;margin:24px 0 0;border-top:1px solid #e5e7eb;padding-top:16px;">
-                This is an automated alert from TiT Education system. Sent at {{ now()->format('Y-m-d H:i:s') }}.
+                This is an automated alert from {{ $resolvedBrand }} system. Sent at {{ now()->format('Y-m-d H:i:s') }}.
             </p>
         </td>
     </tr>
     <!-- Footer -->
     <tr>
         <td style="background:#1e1b4b;padding:20px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} TiT Education. All rights reserved.</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} {{ $resolvedBrand }}. All rights reserved.</p>
         </td>
     </tr>
 </table>

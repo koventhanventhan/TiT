@@ -88,9 +88,10 @@ const Hero = () => {
     }
   }, [language, getSetting, translate, t])
 
-  const raw_years = getSetting('stats_years', '10')
-  const raw_students = getSetting('stats_students', '10000')
-  const raw_tutors = getSetting('stats_tutors', '200')
+  const raw_years = getSetting('stats_years', '0')
+  const raw_students = getSetting('stats_students', '0')
+  const raw_tutors = getSetting('stats_tutors', '0')
+  const youtubeUrl = getSetting('social_youtube', '')
 
   const stats_years = parseInt(raw_years.toString().replace(/[^0-9]/g, '')) || 0
   const stats_students = parseInt(raw_students.toString().replace(/[^0-9]/g, '')) || 0
@@ -251,15 +252,17 @@ const Hero = () => {
                 {t('hero_cta')}
                 <FaArrowRight style={{ fontSize: '1rem', marginLeft: '0.5rem', color: '#ffffff' }} />
               </button>
-              <a
-                href="https://www.youtube.com/@titeducation2087"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-youtube hero-btn"
-              >
-                <FaYoutube style={{ fontSize: '1.125rem', marginRight: '0.5rem', color: '#ffffff' }} />
-                {t('hero_youtube')}
-              </a>
+              {youtubeUrl && youtubeUrl !== '#' && (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-youtube hero-btn"
+                >
+                  <FaYoutube style={{ fontSize: '1.125rem', marginRight: '0.5rem', color: '#ffffff' }} />
+                  {getSetting('hero_youtube_label', t('hero_youtube'))}
+                </a>
+              )}
             </div>
             <div className="hero-stats" ref={statsRef}>
               <div className="stat-item">

@@ -239,51 +239,65 @@ const Header = () => {
         <div className="container">
           <div className="top-bar-content">
             <div className="top-bar-left">
-              {(getSetting('topbar_show_fb', 'yes') === 'yes' ||
-                getSetting('topbar_show_insta', 'yes') === 'yes' ||
-                getSetting('topbar_show_youtube', 'yes') === 'yes') && (
+              {(() => {
+                const showSocial = getSetting('topbar_show_social', 'yes') !== 'no'
+                const fbUrl = getSetting('social_facebook', '')
+                const instaUrl = getSetting('social_instagram', '')
+                const ytUrl = getSetting('social_youtube', '')
+                const showFb = showSocial && getSetting('topbar_show_fb', 'yes') === 'yes' && fbUrl && fbUrl !== '#'
+                const showInsta = showSocial && getSetting('topbar_show_insta', 'yes') === 'yes' && instaUrl && instaUrl !== '#'
+                const showYt = showSocial && getSetting('topbar_show_youtube', 'yes') === 'yes' && ytUrl && ytUrl !== '#'
+                const topbarEmail = getSetting('footer_email', '')
+                const showEmail = getSetting('topbar_show_email', 'yes') === 'yes' && topbarEmail
+
+                return (
                   <>
-                    {getSetting('topbar_show_fb', 'yes') === 'yes' && (
-                      <a
-                        href={getSetting('social_facebook', 'https://facebook.com')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="top-social-icon"
-                        aria-label="Facebook"
-                      >
-                        <FaFacebook />
+                    {(showFb || showInsta || showYt) && (
+                      <>
+                        {showFb && (
+                          <a
+                            href={fbUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="top-social-icon"
+                            aria-label="Facebook"
+                          >
+                            <FaFacebook />
+                          </a>
+                        )}
+                        {showInsta && (
+                          <a
+                            href={instaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="top-social-icon"
+                            aria-label="Instagram"
+                          >
+                            <FaInstagram />
+                          </a>
+                        )}
+                        {showYt && (
+                          <a
+                            href={ytUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="top-social-icon"
+                            aria-label="YouTube"
+                          >
+                            <FaYoutube />
+                          </a>
+                        )}
+                        {showEmail && <span className="top-bar-separator"></span>}
+                      </>
+                    )}
+                    {showEmail && (
+                      <a href={`mailto:${topbarEmail}`} className="top-bar-email">
+                        {topbarEmail}
                       </a>
                     )}
-                    {getSetting('topbar_show_insta', 'yes') === 'yes' && (
-                      <a
-                        href={getSetting('social_instagram', 'https://instagram.com')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="top-social-icon"
-                        aria-label="Instagram"
-                      >
-                        <FaInstagram />
-                      </a>
-                    )}
-                    {getSetting('topbar_show_youtube', 'yes') === 'yes' && (
-                      <a
-                        href={getSetting('social_youtube', 'https://youtube.com')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="top-social-icon"
-                        aria-label="YouTube"
-                      >
-                        <FaYoutube />
-                      </a>
-                    )}
-                    <span className="top-bar-separator"></span>
                   </>
-                )}
-              {getSetting('topbar_show_email', 'yes') === 'yes' && (
-                <a href={`mailto:${getSetting('footer_email', 'info@titonline.lk')}`} className="top-bar-email">
-                  {getSetting('footer_email', 'info@titonline.lk')}
-                </a>
-              )}
+                )
+              })()}
             </div>
             <div className="top-bar-right">
               {getSetting('topbar_show_lang', 'yes') === 'yes' && (
@@ -395,7 +409,7 @@ const Header = () => {
               {getSetting('logo_url') ? (
                 <img width="800" height="600" src={getSetting('logo_url')} alt="Logo" className="site-logo" />
               ) : (
-                <span className="logo-text">{getSetting('site_name', 'TiT')}</span>
+                <span className="logo-text">{getSetting('site_name', 'Institute Portal')}</span>
               )}
               {/* <span className="logo-tagline">{getSetting('site_tagline', t('logo_tagline'))}</span> */}
             </Link>

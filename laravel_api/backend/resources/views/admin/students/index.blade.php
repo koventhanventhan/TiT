@@ -864,7 +864,7 @@
             title: 'Assign Index Numbers',
             html: `
                 <p style="color:#d1d5db; font-size: 0.9rem;">
-                    Assign sequential Index Numbers (e.g. <code>TiT/YY/100</code>) to the selected students who do not have an index number yet.
+                    Assign sequential Index Numbers (e.g. <code>{{ auth()->user()?->institute?->getIndexPrefix() ?? 'INS' }}/YY/100</code>) to the selected students who do not have an index number yet.
                 </p>
                 <div style="text-align: left; margin-top: 1rem;">
                     <label style="color: var(--adm-text); font-size: 0.85rem; font-weight:600;">Batch Year (2 digits, e.g. 28 for 2028):</label>

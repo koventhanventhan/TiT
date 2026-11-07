@@ -220,7 +220,7 @@ export default function UnifiedAssistantWidget() {
                                 {t('unified_assistant_title') || 'Website Assistant'}
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                {settings?.site_name || 'TiT Education'}
+                                {settings?.site_name || 'Institute Portal'}
                             </div>
                         </div>
                         <button

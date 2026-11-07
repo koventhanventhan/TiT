@@ -138,7 +138,7 @@
     <table class="header-table">
         <tr>
             <td style="width: 50%; vertical-align: middle;">
-                <div class="wordmark">{{ $institute->index_prefix ?? 'TiT' }}</div>
+                <div class="wordmark">{{ $institute ? $institute->getIndexPrefix() : 'INS' }}</div>
                 <div class="institute-sub">{{ $institute->name ?? 'INSTITUTE OF EDUCATION' }}</div>
             </td>
             <td style="width: 50%; vertical-align: middle; text-align: right;">

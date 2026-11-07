@@ -12,7 +12,7 @@
     <tr>
         <td style="background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);padding:32px 40px;text-align:center;">
             <h1 style="color:#ffffff;font-size:22px;margin:0 0 4px;">🚫 Account Suspended</h1>
-            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">TiT Education</p>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">{{ $brandName ?? \App\Models\Institute::mailBrandName($data['institute_id'] ?? null) }}</p>
         </td>
     </tr>
     <!-- Body -->
@@ -40,7 +40,7 @@
     <!-- Footer -->
     <tr>
         <td style="background:#1e1b4b;padding:20px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} TiT Education. All rights reserved.</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">© {{ date('Y') }} {{ $brandName ?? \App\Models\Institute::mailBrandName($data['institute_id'] ?? null) }}. All rights reserved.</p>
         </td>
     </tr>
 </table>

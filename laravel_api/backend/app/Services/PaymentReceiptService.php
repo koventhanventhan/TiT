@@ -145,11 +145,22 @@ class PaymentReceiptService
         // otherwise "Received by admin on <date>" (never a PH_ checkout reference).
         $transactionId = $this->referenceFor($payment, $paymentDate);
 
-        // Base64 Logo (overridable via public/images/receipt-logo.png or institute setting receipt_logo)
+        $instituteId = (int) ($payment->institute_id ?: ($student?->institute_id ?: 1));
+
+        // Base64 Logo (overridable via institute setting receipt_logo / logo_path, or public/images/receipt-logo.png on Institute #1)
         $logoBase64 = $this->getLogoBase64($payment);
 
         // Institute Contact Line
         $contactLine = $this->resolveInstituteContactLine($payment);
+
+        if ($instituteId === 1) {
+            $wordmarkLogo = 'TiT';
+            $wordmarkSub = 'INSTITUTE • JAFFNA';
+        } else {
+            $wordmarkLogo = \App\Models\Institute::displayBrandName($instituteId, 'Education');
+            $loc = trim((string) \App\Models\SiteSetting::getForInstitute('footer_location', $instituteId, ''));
+            $wordmarkSub = $loc !== '' ? mb_strtoupper($loc) : '';
+        }
 
         return [
             'receiptNo' => $payment->receipt_no,
@@ -165,6 +176,8 @@ class PaymentReceiptService
             'transactionId' => $transactionId,
             'logoBase64' => $logoBase64,
             'contactLine' => $contactLine,
+            'wordmarkLogo' => $wordmarkLogo,
+            'wordmarkSub' => $wordmarkSub,
         ];
     }
 
@@ -318,16 +331,22 @@ class PaymentReceiptService
      */
     public function getLogoBase64(?Payment $payment = null): ?string
     {
-        $customPaths = [
-            public_path('images/receipt-logo.png'),
-        ];
+        $institute = $payment?->institute
+            ?? ($payment?->institute_id ? \App\Models\Institute::withoutGlobalScopes()->find($payment->institute_id) : null);
+        $instituteId = (int) ($institute?->id ?? $payment?->institute_id ?? (\App\Models\Institute::resolveContextInstituteId() ?? 1));
 
-        if ($payment && $payment->institute) {
-            $settingLogo = $payment->institute->theme_settings['receipt_logo'] ?? null;
+        $customPaths = [];
+
+        if ($institute) {
+            $settingLogo = $institute->theme_settings['receipt_logo'] ?? $institute->logo_path ?? null;
             if (!empty($settingLogo)) {
                 $customPaths[] = public_path($settingLogo);
-                $customPaths[] = storage_path('app/public/' . $settingLogo);
+                $customPaths[] = storage_path('app/public/' . ltrim((string) $settingLogo, '/'));
             }
+        }
+
+        if ($instituteId === 1) {
+            $customPaths[] = public_path('images/receipt-logo.png');
         }
 
         foreach ($customPaths as $path) {
@@ -349,24 +368,37 @@ class PaymentReceiptService
      */
     protected function resolveInstituteContactLine(Payment $payment): string
     {
-        $institute = $payment->institute;
+        $institute = $payment->institute
+            ?? ($payment->institute_id ? \App\Models\Institute::withoutGlobalScopes()->find($payment->institute_id) : null);
+        $instituteId = (int) ($institute?->id ?? $payment->institute_id ?? 1);
         $parts = [];
 
-        if ($institute && !empty($institute->theme_settings['phone'])) {
-            $parts[] = $institute->theme_settings['phone'];
-        }
-        if ($institute && !empty($institute->theme_settings['email'])) {
-            $parts[] = $institute->theme_settings['email'];
+        $phone = $institute->theme_settings['phone']
+            ?? trim((string) \App\Models\SiteSetting::getForInstitute('footer_phone', $instituteId, ''));
+        if (!empty($phone)) {
+            $parts[] = $phone;
         }
 
-        if (empty($parts)) {
+        $email = $institute->theme_settings['email']
+            ?? trim((string) \App\Models\SiteSetting::getForInstitute('footer_email', $instituteId, ''));
+        if (!empty($email)) {
+            $parts[] = $email;
+        }
+
+        if (empty($parts) && $instituteId === 1) {
             $mail = config('mail.from.address');
             if ($mail) {
                 $parts[] = $mail;
             }
         }
 
-        return !empty($parts) ? implode(' • ', $parts) : 'TiT Institute • Jaffna';
+        if (!empty($parts)) {
+            return implode(' • ', $parts);
+        }
+
+        return $instituteId === 1
+            ? 'TiT Institute • Jaffna'
+            : \App\Models\Institute::displayBrandName($instituteId, 'Official Receipt');
     }
 
     /**

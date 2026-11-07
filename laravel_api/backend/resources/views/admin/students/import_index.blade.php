@@ -98,7 +98,7 @@
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small" style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25); color: #7dd3fc;">
-                        <strong>Institute:</strong> {{ $institute->name ?? 'Default Institute' }} (Prefix: <code>{{ $institute->index_prefix ?? 'TiT' }}</code>)
+                        <strong>Institute:</strong> {{ $institute->name ?? 'Default Institute' }} (Prefix: <code>{{ isset($institute) && $institute ? $institute->getIndexPrefix() : 'INS' }}</code>)
                     </div>
 
                     <button type="button" class="btn btn-primary btn-block" id="btnUploadPreview" onclick="uploadAndPreview()" disabled>

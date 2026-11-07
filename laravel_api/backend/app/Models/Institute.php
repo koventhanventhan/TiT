@@ -40,7 +40,110 @@ class Institute extends Model
 
     public function getIndexPrefix(): string
     {
-        return $this->index_prefix ?: 'TIT';
+        if (!empty($this->index_prefix)) {
+            return (string) $this->index_prefix;
+        }
+
+        if ((int) $this->id === 1) {
+            return 'TIT';
+        }
+
+        return \App\Services\InstituteProvisioner::deriveIndexPrefix((string) $this->name);
+    }
+
+    /**
+     * Resolve the active institute ID from an explicit ID, current tenant binding, or authenticated non-super-admin user.
+     */
+    public static function resolveContextInstituteId(?int $explicitId = null): ?int
+    {
+        if ($explicitId !== null && $explicitId > 0) {
+            return $explicitId;
+        }
+
+        if (function_exists('current_institute_id') && current_institute_id()) {
+            return (int) current_institute_id();
+        }
+
+        $tenantId = \App\Support\Tenant::id();
+        if ($tenantId) {
+            return (int) $tenantId;
+        }
+
+        if (auth()->check() && auth()->user()?->role !== 'super_admin' && auth()->user()?->institute_id) {
+            return (int) auth()->user()->institute_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve an institute's display name (`SiteSetting admin_company_name` -> `institutes.name` -> neutral fallback).
+     * Never falls back to another institute's name.
+     */
+    public static function displayBrandName(?int $instituteId = null, string $fallback = 'Education'): string
+    {
+        $id = self::resolveContextInstituteId($instituteId);
+        if ($id === null || $id <= 0) {
+            return $fallback;
+        }
+
+        try {
+            $setting = SiteSetting::withoutGlobalScopes()
+                ->where('institute_id', $id)
+                ->where('key', 'admin_company_name')
+                ->value('value');
+            $trimmedSetting = trim((string) ($setting ?? ''));
+            if ($trimmedSetting !== '') {
+                return $trimmedSetting;
+            }
+        } catch (\Throwable) {
+            // Ignore when site_settings table is unavailable.
+        }
+
+        try {
+            $name = self::withoutGlobalScopes()->whereKey($id)->value('name');
+            $trimmedName = trim((string) ($name ?? ''));
+            if ($trimmedName !== '') {
+                return $trimmedName;
+            }
+        } catch (\Throwable) {
+            // Ignore DB lookup errors.
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * Resolve the brand name used in outgoing e-mail subject lines and headers.
+     * Preserves Institute #1's historical "TiT Education" subject lines unchanged while
+     * using each other institute's own display name (or neutral "Education").
+     */
+    public static function mailBrandName(?int $instituteId = null): string
+    {
+        $id = self::resolveContextInstituteId($instituteId);
+
+        if ($id === 1) {
+            $brand = self::displayBrandName(1, 'TiT Education');
+            $legacyTitAliases = [
+                'tit',
+                'tit institute',
+                'tit education',
+                'tit education institute',
+                'tit online education',
+            ];
+
+            if ($brand === '' || in_array(strtolower($brand), $legacyTitAliases, true)) {
+                return 'TiT Education';
+            }
+
+            return $brand;
+        }
+
+        if ($id === null || $id <= 0) {
+            return 'Education';
+        }
+
+        return self::displayBrandName($id, 'Education');
     }
 
     public function getIndexSeqStart(): int

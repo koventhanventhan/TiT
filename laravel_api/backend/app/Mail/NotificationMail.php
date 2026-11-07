@@ -27,6 +27,13 @@ class NotificationMail extends Mailable
         $this->data = $data;
     }
 
+    protected function resolveBrandName(): string
+    {
+        $instituteId = isset($this->data['institute_id']) ? (int) $this->data['institute_id'] : null;
+
+        return \App\Models\Institute::mailBrandName($instituteId ?: null);
+    }
+
     public function envelope(): Envelope
     {
         // Allow callers to pass an explicit subject line
@@ -34,23 +41,25 @@ class NotificationMail extends Mailable
             return new Envelope(subject: $this->data['subject_line']);
         }
 
+        $brand = $this->resolveBrandName();
+
         $subjects = [
-            'general_update'       => 'Update - TiT Education',
-            'welcome'                  => 'Welcome to TiT Education! 🎓',
-            'payment_reminder'         => 'Payment Reminder - TiT Education',
-            'payment_request_received' => 'Offline Payment Request Received 📋 - TiT Education',
-            'payment_success'          => 'Payment Confirmed ✅ - TiT Education',
-            'admin_approved'       => 'Account Approved! 🎉 - TiT Education',
-            'account_deactivated'  => 'Account Deactivated - TiT Education',
-            'account_suspended'    => 'Account Suspended - TiT Education',
-            'account_reactivated'  => 'Account Reactivated ✅ - TiT Education',
-            'zoom_reminder'        => 'Zoom Class Reminder 📹 - TiT Education',
-            'admin_alert'          => 'Admin Alert - TiT Education',
-            'class_created'        => 'New Class Scheduled - TiT Education',
+            'general_update'           => "Update - {$brand}",
+            'welcome'                  => "Welcome to {$brand}! 🎓",
+            'payment_reminder'         => "Payment Reminder - {$brand}",
+            'payment_request_received' => "Offline Payment Request Received 📋 - {$brand}",
+            'payment_success'          => "Payment Confirmed ✅ - {$brand}",
+            'admin_approved'           => "Account Approved! 🎉 - {$brand}",
+            'account_deactivated'      => "Account Deactivated - {$brand}",
+            'account_suspended'        => "Account Suspended - {$brand}",
+            'account_reactivated'      => "Account Reactivated ✅ - {$brand}",
+            'zoom_reminder'            => "Zoom Class Reminder 📹 - {$brand}",
+            'admin_alert'              => "Admin Alert - {$brand}",
+            'class_created'            => "New Class Scheduled - {$brand}",
         ];
 
         return new Envelope(
-            subject: $subjects[$this->type] ?? 'Notification - TiT Education',
+            subject: $subjects[$this->type] ?? "Notification - {$brand}",
         );
     }
 
@@ -61,7 +70,12 @@ class NotificationMail extends Mailable
             ? 'emails.notifications.' . $this->type
             : 'emails.notifications.generic';
 
-        return new Content(view: $view);
+        return new Content(
+            view: $view,
+            with: [
+                'brandName' => $this->resolveBrandName(),
+            ],
+        );
     }
 
     public function attachments(): array

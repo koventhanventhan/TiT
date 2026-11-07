@@ -31,7 +31,7 @@
                     <table>
                         <tr>
                             <td class="title">
-                                <span style="color: #6366f1; font-weight: bold;">TiT Education </span>
+                                <span style="color: #6366f1; font-weight: bold;">{{ \App\Models\Institute::mailBrandName($payment->institute_id ?? $payment->user?->institute_id ?? null) }} </span>
                             </td>
                             <td>
                                 Invoice #: {{ $payment->id }}<br>

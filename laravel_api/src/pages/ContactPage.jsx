@@ -67,7 +67,7 @@ const ContactPage = () => {
   const [mapDesc, setMapDesc] = useState(t('footer_map_desc'))
 
   const [location, setLocation] = useState(getSetting('contact_location', t('footer_location')))
-  const [pinName, setPinName] = useState(getSetting('contact_map_pin_name', 'TiT Online Education'))
+  const [pinName, setPinName] = useState(getSetting('contact_map_pin_name', getSetting('site_name', 'Main Campus')))
 
   const phone = getSetting('contact_phone') || getSetting('footer_phone') || ''
   const email = getSetting('contact_email') || getSetting('footer_email') || ''
@@ -101,8 +101,8 @@ const ContactPage = () => {
       social_title: 'Connect With Us',
       map_title: 'Our Location',
       map_desc: 'Find us on the map or visit our office directly.',
-      location: 'Colombo, Sri Lanka',
-      pin_name: 'TiT Online Education'
+      location: '',
+      pin_name: getSetting('site_name', 'Main Campus')
     }
 
     if (language !== 'en') {
@@ -128,8 +128,7 @@ const ContactPage = () => {
         else setLocation(await translate(valLoc))
 
         const valPin = getSetting('contact_map_pin_name', defaultEn.pin_name)
-        if (valPin === defaultEn.pin_name) setPinName('TiT') // Keep TiT short or translate
-        else setPinName(await translate(valPin))
+        setPinName(await translate(valPin))
 
         setSocialTitle(t('footer_social_title'))
         setMapTitle(t('footer_map_title'))
@@ -142,7 +141,7 @@ const ContactPage = () => {
       setMissionTitle(getSetting('contact_urgent_title', t('urgent_help')))
       setMissionDesc(getSetting('contact_urgent_desc', t('contact_urgent_desc')))
       setLocation(getSetting('contact_location', t('footer_location')))
-      setPinName(getSetting('contact_map_pin_name', 'TiT Online Education'))
+      setPinName(getSetting('contact_map_pin_name', getSetting('site_name', 'Main Campus')))
       setSocialTitle(t('footer_social_title'))
       setMapTitle(t('footer_map_title'))
       setMapDesc(t('footer_map_desc'))

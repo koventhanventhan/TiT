@@ -1,8 +1,12 @@
+@php
+    $resolvedBrand = $brandName ?? \App\Models\Institute::mailBrandName($payment->institute_id ?? $student->institute_id ?? null);
+    $resolvedFooter = $footerLine ?? $resolvedBrand;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Payment Receipt - TiT Education</title>
+    <title>Payment Receipt - {{ $resolvedBrand }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -79,7 +83,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>TiT Education</h1>
+            <h1>{{ $resolvedBrand }}</h1>
             <div class="receipt-pill">Receipt: {{ $receiptNo }}</div>
         </div>
 
@@ -109,7 +113,7 @@
         </div>
 
         <div class="footer">
-            <p>&copy; {{ date('Y') }} TiT Education &bull; Jaffna, Sri Lanka. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} {{ $resolvedFooter }}. All rights reserved.</p>
         </div>
     </div>
 </body>

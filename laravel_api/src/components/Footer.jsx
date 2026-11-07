@@ -105,9 +105,8 @@ const Footer = () => {
   const { t, translate, language } = useLanguage()
   const { openRegister } = useAuthModal()
 
-  const defaultEmail = 'admin@' + (typeof window !== 'undefined' ? window.location.host.replace(/^www\./, '') : 'example.com')
-  const footer_email = getSetting('footer_email', defaultEmail)
-  const footer_phone = getSetting('footer_phone', '+94 0770158446')
+  const footer_email = getSetting('footer_email', '')
+  const footer_phone = getSetting('footer_phone', '')
   const social_facebook = getSetting('social_facebook', '')
   const social_twitter = getSetting('social_twitter', '')
   const social_instagram = getSetting('social_instagram', '')
@@ -115,7 +114,7 @@ const Footer = () => {
   const social_youtube = getSetting('social_youtube', '')
 
   const footer_tagline = getSetting('footer_tagline', t('footer_your_education'))
-  const footerLogoText = getSetting('footer_logo_text', 'TiT Education')
+  const footerLogoText = getSetting('footer_logo_text', '') || getSetting('site_name', 'Institute Portal')
 
   const [footerInfo, setFooterInfo] = useState('')
   const [copyright, setCopyright] = useState('')
@@ -145,8 +144,8 @@ const Footer = () => {
         footer_apply_tutor: getSetting('footer_tutor_label', 'Apply as a Tutor'),
         footer_register_student: getSetting('footer_student_label', 'Join as Student'),
         footer_contact: getSetting('footer_contact_title', 'Contact Us'),
-        footer_location: getSetting('footer_location', 'Colombo, Sri Lanka'),
-        footer_developed_by: getSetting('footer_developed_by', 'Designed & Developed by TiT Team')
+        footer_location: getSetting('footer_location', ''),
+        footer_developed_by: getSetting('footer_developed_by', `Powered by ${footerLogoText}`)
       }
 
       if (language !== 'en') {
@@ -261,18 +260,30 @@ const Footer = () => {
           <div className="footer-contact-column">
             <h4 className="footer-column-title">{contactTitle}</h4>
             <div className="contact-details">
-              <a href={`mailto:${footer_email}`} className="contact-link">
-                <div className="contact-icon-box"><FiMail /></div>
-                <span>{footer_email}</span>
-              </a>
-              <a href={`tel:${footer_phone.replace(/\s/g, '')}`} className="contact-link">
-                <div className="contact-icon-box"><FiPhone /></div>
-                <span>{footer_phone}</span>
-              </a>
-              <Link to="/contact#map-section" className="contact-link">
-                <div className="contact-icon-box"><FiMapPin /></div>
-                <span>{locationLabel}</span>
-              </Link>
+              {footer_email && (
+                <a href={`mailto:${footer_email}`} className="contact-link">
+                  <div className="contact-icon-box"><FiMail /></div>
+                  <span>{footer_email}</span>
+                </a>
+              )}
+              {footer_phone && (
+                <a href={`tel:${footer_phone.replace(/\s/g, '')}`} className="contact-link">
+                  <div className="contact-icon-box"><FiPhone /></div>
+                  <span>{footer_phone}</span>
+                </a>
+              )}
+              {locationLabel && (
+                <Link to="/contact#map-section" className="contact-link">
+                  <div className="contact-icon-box"><FiMapPin /></div>
+                  <span>{locationLabel}</span>
+                </Link>
+              )}
+              {!footer_email && !footer_phone && !locationLabel && (
+                <Link to="/contact" className="contact-link">
+                  <div className="contact-icon-box"><FiMail /></div>
+                  <span>{t('btn_contact_us') || 'Contact Us'}</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

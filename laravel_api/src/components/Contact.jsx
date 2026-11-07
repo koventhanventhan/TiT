@@ -11,9 +11,9 @@ const Contact = () => {
   const { getSetting } = useSettings()
   const { t, language, translate } = useLanguage() // Assuming 'translate' function and 'language' are available from useLanguage
 
-  const footer_email = getSetting('footer_email', 'info@edulearn.lk')
-  const footer_phone = getSetting('footer_phone', '+94 114 477 488')
-  const contact_location = getSetting('contact_location', 'Colombo, Sri Lanka')
+  const footer_email = getSetting('footer_email', '')
+  const footer_phone = getSetting('footer_phone', '')
+  const contact_location = getSetting('contact_location', '')
 
   // Contact Hero settings
   const [contactTitle, setContactTitle] = useState('')

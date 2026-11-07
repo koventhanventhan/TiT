@@ -1,7 +1,10 @@
+@php
+    $tutorBrand = \App\Models\Institute::mailBrandName($data['institute_id'] ?? null);
+@endphp
 <x-mail::message>
 # New Tutor Application Received
 
-A new tutor application has been submitted through the TiT Online Education platform.
+A new tutor application has been submitted through the {{ $tutorBrand }} platform.
 
 **Applicant Details:**
 - **Full Name:** {{ $data['fullName'] }}
@@ -25,5 +28,5 @@ A new tutor application has been submitted through the TiT Online Education plat
 @endif
 
 Thanks,<br>
-{{ config('app.name') }}
+{{ $tutorBrand }}
 </x-mail::message>

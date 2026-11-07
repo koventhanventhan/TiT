@@ -179,6 +179,10 @@ class NotificationService
      */
     protected function sendEmail(string $to, string $type, array $data, ?int $instituteId = null): bool
     {
+        if ($instituteId !== null && !isset($data['institute_id'])) {
+            $data['institute_id'] = $instituteId;
+        }
+
         $sent = InstituteMail::to($to, $instituteId)->send(new NotificationMail($type, $data));
 
         if ($sent) {

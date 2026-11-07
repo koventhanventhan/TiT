@@ -65,6 +65,11 @@ class EventNotifier
         return $u->full_name ?? $u->name ?? 'Student';
     }
 
+    protected static function brandFor(?int $instituteId = null): string
+    {
+        return \App\Models\Institute::mailBrandName($instituteId);
+    }
+
     protected static function appUrl(string $path = ''): string
     {
         $base = rtrim(config('app.frontend_url', config('app.url')), '/');
@@ -132,8 +137,10 @@ class EventNotifier
 
     public static function absent(User $student, ZoomSchedule $schedule): bool
     {
+        $brand = self::brandFor($student->institute_id ? (int) $student->institute_id : null);
+
         return self::toUser($student, 'attendance_absent', [
-            'subject_line' => 'Absence Alert - ' . self::name($student) . ' - TiT Education',
+            'subject_line' => 'Absence Alert - ' . self::name($student) . ' - ' . $brand,
             'heading'      => 'Absent from Class',
             'icon'         => '⚠️',
             'color'        => '#f59e0b',
@@ -153,8 +160,10 @@ class EventNotifier
 
     public static function lowAttendance(User $student, int $percent, int $attended, int $total): bool
     {
+        $brand = self::brandFor($student->institute_id ? (int) $student->institute_id : null);
+
         return self::toUser($student, 'attendance_low', [
-            'subject_line' => 'Low Attendance Warning - ' . self::name($student) . ' - TiT Education',
+            'subject_line' => 'Low Attendance Warning - ' . self::name($student) . ' - ' . $brand,
             'heading'      => 'Low Attendance Warning',
             'icon'         => '📉',
             'color'        => '#ef4444',
@@ -192,9 +201,10 @@ class EventNotifier
             return;
         }
         $teachers = $teachers ?? $schedule->teachers;
+        $brand = self::brandFor($schedule->institute_id ? (int) $schedule->institute_id : null);
 
         self::notifyClassPeople($schedule, $teachers, 'class_cancelled', [
-            'subject_line' => 'Class Cancelled - ' . $schedule->title . ' - TiT Education',
+            'subject_line' => 'Class Cancelled - ' . $schedule->title . ' - ' . $brand,
             'heading'      => 'Class Cancelled',
             'icon'         => '❌',
             'color'        => '#ef4444',
@@ -210,8 +220,10 @@ class EventNotifier
 
     public static function classRescheduled(ZoomSchedule $schedule, $oldTime): void
     {
+        $brand = self::brandFor($schedule->institute_id ? (int) $schedule->institute_id : null);
+
         self::notifyClassPeople($schedule, $schedule->teachers, 'class_rescheduled', [
-            'subject_line' => 'Class Rescheduled - ' . $schedule->title . ' - TiT Education',
+            'subject_line' => 'Class Rescheduled - ' . $schedule->title . ' - ' . $brand,
             'heading'      => 'Class Rescheduled',
             'icon'         => '🔄',
             'color'        => '#0ea5e9',
@@ -230,8 +242,10 @@ class EventNotifier
 
     public static function teacherChanged(ZoomSchedule $schedule, array $oldNames, array $newNames): void
     {
+        $brand = self::brandFor($schedule->institute_id ? (int) $schedule->institute_id : null);
+
         self::notifyClassPeople($schedule, $schedule->teachers, 'class_teacher_changed', [
-            'subject_line' => 'Teacher Changed - ' . $schedule->title . ' - TiT Education',
+            'subject_line' => 'Teacher Changed - ' . $schedule->title . ' - ' . $brand,
             'heading'      => 'Teacher Changed',
             'icon'         => '👩‍🏫',
             'color'        => '#8b5cf6',
@@ -307,8 +321,10 @@ class EventNotifier
 
     public static function passwordResetLink(User $user, string $url): bool
     {
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         return self::toUser($user, 'password_reset_link', [
-            'subject_line' => 'Reset Your Password - TiT Education',
+            'subject_line' => 'Reset Your Password - ' . $brand,
             'heading'      => 'Reset Your Password',
             'icon'         => '🔑',
             'color'        => '#4f46e5',
@@ -322,8 +338,10 @@ class EventNotifier
 
     public static function passwordChanged(User $user): void
     {
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         self::defer(fn() => self::toUser($user, 'password_changed', [
-            'subject_line' => 'Your Password Was Changed - TiT Education',
+            'subject_line' => 'Your Password Was Changed - ' . $brand,
             'heading'      => 'Password Changed',
             'icon'         => '🔒',
             'color'        => '#059669',
@@ -336,8 +354,10 @@ class EventNotifier
 
     public static function newDeviceLogin(User $user, string $ip, string $agent): void
     {
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         self::defer(fn() => self::toUser($user, 'new_device_login', [
-            'subject_line' => 'New Login to Your Account - TiT Education',
+            'subject_line' => 'New Login to Your Account - ' . $brand,
             'heading'      => 'New Device Login',
             'icon'         => '🛡️',
             'color'        => '#0ea5e9',
@@ -359,8 +379,10 @@ class EventNotifier
             return;
         }
 
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         self::defer(fn() => self::toUser($user, 'account_reactivated', [
-            'subject_line' => 'Account Reactivated ✅ - TiT Education',
+            'subject_line' => 'Account Reactivated ✅ - ' . $brand,
             'heading'      => 'Account Reactivated',
             'icon'         => '✅',
             'color'        => '#059669',
@@ -385,8 +407,10 @@ class EventNotifier
 
     public static function registrationRejected(User $user, ?string $reason): void
     {
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         self::defer(fn() => self::toUser($user, 'registration_rejected', [
-            'subject_line' => 'Registration Update - TiT Education',
+            'subject_line' => 'Registration Update - ' . $brand,
             'heading'      => 'Registration Not Approved',
             'icon'         => '📝',
             'color'        => '#ef4444',
@@ -397,8 +421,10 @@ class EventNotifier
 
     public static function approvalPendingStudent(User $user): bool
     {
+        $brand = self::brandFor($user->institute_id ? (int) $user->institute_id : null);
+
         return self::toUser($user, 'approval_pending', [
-            'subject_line' => 'Your Registration Is Under Review - TiT Education',
+            'subject_line' => 'Your Registration Is Under Review - ' . $brand,
             'heading'      => 'Registration Under Review',
             'icon'         => '⏳',
             'color'        => '#f59e0b',
@@ -452,9 +478,7 @@ class EventNotifier
         $currency = strtoupper(trim((string) ($payment->meta['currency'] ?? PayHereService::forInstitute($instituteId)->getCurrency())));
 
         self::defer(function () use ($user, $amount, $currency, $statusLabel, $orderId, $payment, $instituteId) {
-            $instituteName = \App\Support\Tenant::current()?->name
-                ?? \App\Models\Institute::withoutGlobalScopes()->find($instituteId)?->name
-                ?? 'TiT Education';
+            $instituteName = self::brandFor($instituteId);
 
             self::toAdmin('payment_failed', [
                 'subject_line' => 'Payment ' . $statusLabel . ' - ' . self::name($user),
@@ -585,20 +609,24 @@ class EventNotifier
 
     public static function birthday(User $student): bool
     {
+        $brand = self::brandFor($student->institute_id ? (int) $student->institute_id : null);
+
         return self::toUser($student, 'birthday', [
             'subject_line' => 'Happy Birthday ' . self::name($student) . '! 🎂',
             'heading'      => 'Happy Birthday!',
             'icon'         => '🎂',
             'color'        => '#ec4899',
             'greeting'     => 'Dear ' . self::name($student) . ',',
-            'message'      => "Wishing you a wonderful birthday full of joy and success!\n\nFrom all of us at TiT Education - keep learning, keep shining. 🌟",
+            'message'      => "Wishing you a wonderful birthday full of joy and success!\n\nFrom all of us at {$brand} - keep learning, keep shining. 🌟",
         ]);
     }
 
     public static function wishes(User $student, string $title, string $message): bool
     {
+        $brand = self::brandFor($student->institute_id ? (int) $student->institute_id : null);
+
         return self::toUser($student, 'festival_wishes', [
-            'subject_line' => $title . ' - TiT Education',
+            'subject_line' => $title . ' - ' . $brand,
             'heading'      => $title,
             'icon'         => '🎉',
             'color'        => '#f59e0b',

@@ -15,9 +15,9 @@ const About = () => {
 
   useEffect(() => {
     const defaultEn = {
-      about_title: 'About TiT Online Education',
-      about_subtitle: "Sri Lanka's Premier Choice for Online Tuition 🎓",
-      about_hero_desc: "Sri Lanka's trusted leader in online tuition. We ensure student success through personalized learning and comprehensive parental support."
+      about_title: 'About Our Institute',
+      about_subtitle: "Premier Choice for Structured Tuition 🎓",
+      about_hero_desc: "Dedicated online and classroom tuition focused on student success through personalized learning and consistent support."
     }
 
     if (language !== 'en') {

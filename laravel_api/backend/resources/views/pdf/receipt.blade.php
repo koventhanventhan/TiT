@@ -149,12 +149,20 @@
 </head>
 <body>
     <div class="header">
+        @php
+            $resolvedWordmark = $wordmarkLogo ?? 'Education';
+            $resolvedSub = $wordmarkSub ?? '';
+        @endphp
         @if(!empty($logoBase64))
             <img src="{{ $logoBase64 }}" class="logo-img" alt="Logo">
-            <div class="wordmark-sub">INSTITUTE • JAFFNA</div>
+            @if($resolvedSub !== '')
+                <div class="wordmark-sub">{{ $resolvedSub }}</div>
+            @endif
         @else
-            <div class="wordmark-logo">TiT</div>
-            <div class="wordmark-sub">INSTITUTE • JAFFNA</div>
+            <div class="wordmark-logo">{{ $resolvedWordmark }}</div>
+            @if($resolvedSub !== '')
+                <div class="wordmark-sub">{{ $resolvedSub }}</div>
+            @endif
         @endif
 
         <div class="title-container">
@@ -225,7 +233,7 @@
 
     <div class="footer">
         <div class="thank-you">Thank you for your payment.</div>
-        <div class="contact-line">{{ $contactLine ?? 'TiT Institute • Jaffna' }}</div>
+        <div class="contact-line">{{ $contactLine ?? 'Official Receipt' }}</div>
     </div>
 </body>
 </html>

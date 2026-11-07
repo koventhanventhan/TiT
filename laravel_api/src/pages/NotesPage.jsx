@@ -63,9 +63,9 @@ const NotesPage = () => {
   // Dynamic settings
   const heroImage = '/assets/images/Notes%20animation.svg'
   const ctaImage = '/assets/images/zxdhD87HrW.svg'
-  const ctaWhatsapp = getSetting('learning_cta_whatsapp', getSetting('footer_phone', '+94 77 123 4567'))
-  const ctaEmail = getSetting('learning_cta_email', getSetting('footer_email', 'info@titjafna.lk'))
-  const ctaLocation = getSetting('learning_cta_location', getSetting('contact_location', 'Kokuvil, Jaffna, Sri Lanka'))
+  const ctaWhatsapp = getSetting('learning_cta_whatsapp', getSetting('footer_phone', ''))
+  const ctaEmail = getSetting('learning_cta_email', getSetting('footer_email', ''))
+  const ctaLocation = getSetting('learning_cta_location', getSetting('contact_location', ''))
   const ctaBtnText = getSetting('learning_cta_btn', t('btn_contact') || 'Get in Touch')
   const ctaBtnLink = getSetting('learning_cta_link', '/contact')
 

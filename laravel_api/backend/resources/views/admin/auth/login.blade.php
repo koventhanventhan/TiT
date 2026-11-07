@@ -1,3 +1,8 @@
+@php
+    $loginBrandName = $site_settings['admin_company_name']
+        ?? $site_settings['site_name']
+        ?? \App\Models\Institute::displayBrandName(null, 'Institute Portal');
+@endphp
 <!DOCTYPE html>
 <html lang="en" class="h-100">
 
@@ -6,7 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Admin Login - {{ config('app.name') }}</title>
+    <title>Admin Login - {{ $loginBrandName }}</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('admin-theme/images/favicon.png') }}">
     <link href="{{ asset('admin-theme/vendor/bootstrap-select/dist/css/bootstrap-select.min.css') }}" rel="stylesheet">
@@ -45,7 +50,7 @@
                                                 <path d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                                             </svg>
                                         @endif
-                                        <h4 class="mt-3" style="font-weight: 700; color: #fff;">{{ $site_settings['admin_company_name'] ?? config('app.name') }}</h4>
+                                        <h4 class="mt-3" style="font-weight: 700; color: #fff;">{{ $loginBrandName }}</h4>
                                     </div>
                                     <h4 class="text-center mb-4">Sign in your account</h4>
                                     

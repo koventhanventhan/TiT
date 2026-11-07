@@ -148,7 +148,7 @@ const TutorApplyPage = () => {
                         <p>
                             {language === 'ta' 
                                 ? 'உங்கள் விண்ணப்பத்திற்கு நன்றி. எமது குழு உங்கள் தகவல்களை பரிசீலித்து விரைவில் உங்களை தொடர்பு கொள்ளும்.' 
-                                : 'Thank you for your interest in joining TiT. Our team will review your qualifications and contact you soon.'}
+                                : 'Thank you for your interest in joining our institute. Our team will review your qualifications and contact you soon.'}
                         </p>
                         <button className="btn btn-primary" onClick={() => window.location.href = '/'}>
                             {language === 'ta' ? 'முகப்புப் பக்கத்திற்குச் செல்க' : 'Back to Home'}

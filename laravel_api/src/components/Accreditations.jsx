@@ -21,8 +21,8 @@ const Accreditations = () => {
             Award-Winning Online Tuition awaits for Your Success 🎖️
           </p>
           <p className="accreditations-description">
-            Hailed by educational leaders and market giants, EduLearn offers exceptional 
-            online tuition service. Achieve your academic goals with our award-winning approach!
+            Hailed by educational leaders and market giants, our platform offers exceptional 
+            online tuition service. Achieve your academic goals with our structured approach!
           </p>
         </div>
 

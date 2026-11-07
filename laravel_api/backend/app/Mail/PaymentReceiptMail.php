@@ -38,15 +38,30 @@ class PaymentReceiptMail extends Mailable
         $this->downloadUrl = $downloadUrl;
     }
 
+    protected function resolveInstituteId(): ?int
+    {
+        $id = (int) ($this->payment->institute_id ?: ($this->student->institute_id ?: 0));
+
+        return $id > 0 ? $id : null;
+    }
+
     public function envelope(): Envelope
     {
+        $brand = \App\Models\Institute::mailBrandName($this->resolveInstituteId());
+
         return new Envelope(
-            subject: "Payment Receipt [{$this->receiptNo}] - TiT Education",
+            subject: "Payment Receipt [{$this->receiptNo}] - {$brand}",
         );
     }
 
     public function content(): Content
     {
+        $instituteId = $this->resolveInstituteId();
+        $brand = \App\Models\Institute::mailBrandName($instituteId);
+        $footerLine = $instituteId === 1
+            ? 'TiT Education • Jaffna, Sri Lanka'
+            : $brand;
+
         return new Content(
             view: 'emails.payment_receipt',
             with: [
@@ -56,6 +71,8 @@ class PaymentReceiptMail extends Mailable
                 'monthName' => $this->monthName,
                 'downloadUrl' => $this->downloadUrl,
                 'hasAttachment' => !empty($this->pdfContent),
+                'brandName' => $brand,
+                'footerLine' => $footerLine,
             ]
         );
     }

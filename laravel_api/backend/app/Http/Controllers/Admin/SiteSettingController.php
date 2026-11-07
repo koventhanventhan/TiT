@@ -686,12 +686,35 @@ class SiteSettingController extends Controller
      */
     public function getSettings(\Illuminate\Http\Request $request)
     {
-        $instituteId = function_exists('current_institute_id') && current_institute_id()
-            ? current_institute_id()
-            : (int)$request->header('X-Institute-Id', 1);
-        $settings = SiteSetting::where('institute_id', $instituteId)->pluck('value', 'key')->toArray();
-        if (empty($settings)) {
-            $settings = SiteSetting::all()->pluck('value', 'key')->toArray();
+        $env = config('app.env') ?: app()->environment();
+        $isLocalOrTesting = in_array($env, ['local', 'testing'], true);
+
+        if (function_exists('current_institute_id') && current_institute_id()) {
+            $instituteId = (int) current_institute_id();
+        } elseif ($isLocalOrTesting && $request->hasHeader('X-Institute-Id')) {
+            $instituteId = (int) $request->header('X-Institute-Id');
+        } else {
+            $instituteId = 1;
+        }
+
+        $settings = SiteSetting::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->pluck('value', 'key')
+            ->toArray();
+
+        $institute = \App\Models\Institute::withoutGlobalScopes()->find($instituteId);
+
+        // Never fall back to SiteSetting::all() (which leaks other institutes' settings).
+        // If a non-primary institute has no stored SiteSetting rows yet, synthesize neutral defaults from its own name.
+        if (empty($settings) && $instituteId !== 1) {
+            $displayName = $institute?->name ?: 'Education Portal';
+            foreach (\App\Services\InstituteProvisioner::buildNeutralSettings($displayName, 'royal', $institute?->logo_path) as $key => [$val, $_group]) {
+                $settings[$key] = $val;
+            }
+        } elseif ($instituteId !== 1 && $institute) {
+            $settings['site_name'] ??= $institute->name;
+            $settings['admin_company_name'] ??= $institute->name;
+            $settings['footer_logo_text'] ??= $institute->name;
         }
 
         if (!isset($settings['theme_preset'])) {
@@ -701,7 +724,6 @@ class SiteSettingController extends Controller
         if (!in_array($settings['theme_preset'], $enabledPresets, true)) {
             $settings['theme_preset'] = 'royal';
         }
-        $institute = \App\Models\Institute::find($instituteId);
 
         $globalPublicEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);
         $recaptchaSecret = config('services.recaptcha.secret_key');

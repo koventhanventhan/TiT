@@ -11,6 +11,7 @@ import SidebarShell, { SidebarHamburger } from '../shared/SidebarShell'
 import { useToast } from '../../components/shared/ToastContext';
 import { getActiveStorage, getAuthHeaders } from '../../services/apiClient';
 import { useMediaQuery, MOBILE_BREAKPOINT } from '../../hooks/useMediaQuery';
+import { useSettings } from '../../context/SettingsContext';
 import '../shared/dashboard-theme.css';
 
 const menuItems = [
@@ -26,6 +27,8 @@ const menuItems = [
 
 export default function StudentDashboardLayout({ children, user }) {
     const toast = useToast();
+    const { getSetting } = useSettings();
+    const mobileBrand = (getSetting('site_name', '') || getSetting('admin_company_name', '') || 'Portal').trim();
 
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -212,7 +215,7 @@ export default function StudentDashboardLayout({ children, user }) {
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                             }}>
-                                TiT <span style={{ color: 'var(--t-primary)' }}>Student</span>
+                                {mobileBrand} <span style={{ color: 'var(--t-primary)' }}>Student</span>
                             </div>
                         )}
 

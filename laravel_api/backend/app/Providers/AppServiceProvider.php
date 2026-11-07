@@ -92,11 +92,14 @@ class AppServiceProvider extends ServiceProvider
             );
         }
 
-        // Share site settings with all views
+        // Share default site settings strictly scoped to primary institute (never cross-tenant SiteSetting::all())
         if (!app()->runningInConsole()) {
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
-                    \Illuminate\Support\Facades\View::share('site_settings', \App\Models\SiteSetting::all()->pluck('value', 'key'));
+                    \Illuminate\Support\Facades\View::share(
+                        'site_settings',
+                        \App\Models\SiteSetting::withoutGlobalScopes()->where('institute_id', 1)->pluck('value', 'key')
+                    );
                 } else {
                     \Illuminate\Support\Facades\View::share('site_settings', collect());
                 }
@@ -106,27 +109,20 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Dedicated view composer for admin layout to inject tenant-isolated theme preset
+        // Dedicated view composer for admin layout & views to inject strictly tenant-isolated site_settings & theme preset
         \Illuminate\Support\Facades\View::composer(['layouts.admin', 'admin.*'], function ($view) {
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
-                    $instituteId = auth()->check() ? auth()->user()->institute_id : null;
-                    $preset = \App\Models\SiteSetting::getForInstitute('theme_preset', $instituteId, 'royal');
-                    $data = $view->getData();
-                    $settings = $data['site_settings'] ?? null;
-                    if ($settings instanceof \Illuminate\Support\Collection) {
-                        $settings->put('theme_preset', $preset);
-                    } elseif (is_array($settings)) {
-                        $settings['theme_preset'] = $preset;
-                        $view->with('site_settings', $settings);
-                    } else {
-                        $allSettings = \App\Models\SiteSetting::where('institute_id', $instituteId ?: 1)->pluck('value', 'key');
-                        if ($allSettings->isEmpty()) {
-                            $allSettings = \App\Models\SiteSetting::all()->pluck('value', 'key');
-                        }
-                        $allSettings->put('theme_preset', $preset);
-                        $view->with('site_settings', $allSettings);
-                    }
+                    $instituteId = \App\Models\Institute::resolveContextInstituteId()
+                        ?? (auth()->check() ? auth()->user()?->institute_id : null)
+                        ?? 1;
+                    $scopedSettings = \App\Models\SiteSetting::withoutGlobalScopes()
+                        ->where('institute_id', (int) $instituteId)
+                        ->pluck('value', 'key');
+                    $preset = $scopedSettings->get('theme_preset')
+                        ?: \App\Models\SiteSetting::getForInstitute('theme_preset', (int) $instituteId, 'royal');
+                    $scopedSettings->put('theme_preset', $preset);
+                    $view->with('site_settings', $scopedSettings);
                     $view->with('current_theme_preset', $preset);
                 }
             } catch (\Exception $e) {

@@ -274,18 +274,19 @@ class RegistrationController extends Controller
             return $value !== null;
         });
 
-        $instituteId = $request->header('X-Institute-Id') ?: 1;
+        $instituteId = (app()->environment(['local', 'testing']) && $request->header('X-Institute-Id'))
+            ? (int) $request->header('X-Institute-Id')
+            : ((function_exists('current_institute_id') && current_institute_id()) ? current_institute_id() : ((int) $request->header('X-Institute-Id') ?: 1));
 
         if (!$user) {
             $institute = \App\Models\Institute::with('plan')->find($instituteId);
-            if ($institute && $institute->plan) {
-                $currentStudents = $institute->students()->count();
-                if ($currentStudents >= $institute->plan->max_students) {
-                    return response()->json([
-                        'message' => 'Student limit reached for your current plan. Please contact support to upgrade.',
-                        'errors' => ['username' => ['Student limit reached for your current plan. Please contact support to upgrade.']]
-                    ], 403);
-                }
+            if ($institute && !\App\Services\SubscriptionService::canAddStudent($institute)) {
+                $limit = $institute->plan?->limitFor('max_students');
+                $limitMessage = "Student limit ({$limit}) reached for your current plan. Please contact support to upgrade.";
+                return response()->json([
+                    'message' => $limitMessage,
+                    'errors' => ['username' => [$limitMessage]]
+                ], 403);
             }
         }
 

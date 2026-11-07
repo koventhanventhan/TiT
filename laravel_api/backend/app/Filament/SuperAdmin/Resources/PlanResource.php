@@ -78,7 +78,10 @@ class PlanResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('max_students')
                     ->label('Students Limit')
-                    ->formatStateUsing(fn ($state) => $state == 0 ? 'Unlimited' : $state),
+                    ->formatStateUsing(fn ($state, SubscriptionPlan $record): string => $record->formattedLimit('max_students')),
+                Tables\Columns\TextColumn::make('max_teachers')
+                    ->label('Teachers Limit')
+                    ->formatStateUsing(fn ($state, SubscriptionPlan $record): string => $record->formattedLimit('max_teachers')),
                 Tables\Columns\TextColumn::make('institutes_count')
                     ->counts('institutes')
                     ->label('Active Institutes'),

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Institute;
 use App\Models\User;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 
 class SubscriptionService
 {
@@ -12,15 +14,17 @@ class SubscriptionService
      */
     public static function canAddStudent(Institute $institute): bool
     {
-        $plan = $institute->subscriptionPlan;
-        if (!$plan || $plan->max_students === -1) return true;
+        $plan = $institute->plan;
+        if (!$plan || $plan->isUnlimited('max_students')) {
+            return true;
+        }
 
-        $studentCount = User::withoutGlobalScopes()
-            ->where('institute_id', $institute->id)
-            ->where('role', 'user')
-            ->count();
+        $limit = $plan->limitFor('max_students');
+        if ($limit === null) {
+            return true;
+        }
 
-        return $studentCount < $plan->max_students;
+        return self::countRoleForInstitute((int) $institute->id, 'user') < $limit;
     }
 
     /**
@@ -28,15 +32,17 @@ class SubscriptionService
      */
     public static function canAddTeacher(Institute $institute): bool
     {
-        $plan = $institute->subscriptionPlan;
-        if (!$plan || $plan->max_teachers === -1) return true;
+        $plan = $institute->plan;
+        if (!$plan || $plan->isUnlimited('max_teachers')) {
+            return true;
+        }
 
-        $teacherCount = User::withoutGlobalScopes()
-            ->where('institute_id', $institute->id)
-            ->where('role', 'teacher')
-            ->count();
+        $limit = $plan->limitFor('max_teachers');
+        if ($limit === null) {
+            return true;
+        }
 
-        return $teacherCount < $plan->max_teachers;
+        return self::countRoleForInstitute((int) $institute->id, 'teacher') < $limit;
     }
 
     /**
@@ -44,9 +50,30 @@ class SubscriptionService
      */
     public static function hasFeature(Institute $institute, string $feature): bool
     {
-        $plan = $institute->subscriptionPlan;
-        if (!$plan) return false;
+        $plan = $institute->plan;
+        if (!$plan) {
+            return false;
+        }
 
-        return in_array($feature, $plan->features ?? []);
+        return in_array($feature, $plan->features ?? [], true);
+    }
+
+    /**
+     * Count active (non-soft-deleted) users of a given role belonging strictly to $instituteId.
+     */
+    public static function countRoleForInstitute(int $instituteId, string $role): int
+    {
+        $query = User::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('role', $role);
+
+        if (
+            in_array(SoftDeletes::class, class_uses_recursive(User::class), true)
+            || Schema::hasColumn('users', 'deleted_at')
+        ) {
+            $query->whereNull('deleted_at');
+        }
+
+        return $query->count();
     }
 }

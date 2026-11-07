@@ -182,12 +182,17 @@ class AuthController extends Controller
         }
         
         // Identify Institute
-        $instituteId = $request->header('X-Institute-Id') ?: 1;
-        $institute = \App\Models\Institute::findOrFail($instituteId);
+        $instituteId = (app()->environment(['local', 'testing']) && $request->header('X-Institute-Id'))
+            ? (int) $request->header('X-Institute-Id')
+            : ((function_exists('current_institute_id') && current_institute_id()) ? current_institute_id() : ((int) $request->header('X-Institute-Id') ?: 1));
+        $institute = \App\Models\Institute::with('plan')->findOrFail($instituteId);
 
         // Enforce Subscription Limits
         if (!\App\Services\SubscriptionService::canAddStudent($institute)) {
-            return response()->json(['message' => 'Student limit reached for this institute.'], 403);
+            $limit = $institute->plan?->limitFor('max_students');
+            return response()->json([
+                'message' => "Student limit ({$limit}) reached for this institute's current plan. Please contact support to upgrade.",
+            ], 403);
         }
         
         $userData['institute_id'] = $institute->id;

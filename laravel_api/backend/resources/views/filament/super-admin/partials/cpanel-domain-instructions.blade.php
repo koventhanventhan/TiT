@@ -8,23 +8,95 @@
 
 <div
     x-data="{ copiedKey: null, copyText(key, text) { if (navigator.clipboard) { navigator.clipboard.writeText(text); } this.copiedKey = key; setTimeout(() => { if (this.copiedKey === key) this.copiedKey = null; }, 2000); } }"
-    class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200 space-y-3"
+    class="cpanel-guide-panel"
 >
-    <div class="font-semibold text-gray-900 dark:text-white">
+    <style>
+        .cpanel-guide-panel {
+            border-radius: 0.75rem;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
+            padding: 1rem 1.125rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+        html.dark .cpanel-guide-panel {
+            border-color: #334155;
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+        .cpanel-guide-code {
+            display: inline-block;
+            border-radius: 0.375rem;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 0.2rem 0.5rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8125rem;
+            word-break: break-all;
+        }
+        html.dark .cpanel-guide-code {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #475569;
+        }
+        .cpanel-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            min-width: 44px;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .cpanel-copy-btn:hover {
+            background: #f1f5f9;
+        }
+        html.dark .cpanel-copy-btn {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #475569;
+        }
+        .cpanel-manual-note {
+            margin-top: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #fcd34d;
+            background: #fffbeb;
+            color: #78350f;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        html.dark .cpanel-manual-note {
+            border-color: #b45309;
+            background: #451a03;
+            color: #fef3c7;
+        }
+    </style>
+
+    <div style="font-weight: 700; margin-bottom: 0.5rem;">
         How to connect this website address (DNS &amp; cPanel)
     </div>
 
-    <ol class="list-decimal pl-5 space-y-2 leading-relaxed">
+    <ol style="padding-left: 1.25rem; margin: 0; display: flex; flex-direction: column; gap: 0.625rem;">
         <li>
-            At the domain registrar, point the <strong>A record</strong> for both <code>@</code> and <code>www</code> to
+            At the domain registrar, point the <strong>A record</strong> for both <code class="cpanel-guide-code">@</code> and <code class="cpanel-guide-code">www</code> to
             @if (!empty($serverIps))
                 @foreach ($serverIps as $ip)
-                    <span class="inline-flex items-center gap-2 align-middle">
-                        <code class="rounded bg-white px-2 py-0.5 font-mono text-xs border border-gray-300 dark:bg-gray-800 dark:border-gray-600">{{ $ip }}</code>
+                    <span style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; vertical-align: middle;">
+                        <code class="cpanel-guide-code">{{ $ip }}</code>
                         <button
                             type="button"
                             x-on:click="copyText('ip-{{ $loop->index }}', @js($ip))"
-                            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            class="cpanel-copy-btn"
                         >
                             <span x-show="copiedKey !== 'ip-{{ $loop->index }}'">Copy IP</span>
                             <span x-cloak x-show="copiedKey === 'ip-{{ $loop->index }}'">Copied</span>
@@ -32,22 +104,20 @@
                     </span>
                 @endforeach
             @else
-                <span class="font-medium text-amber-700 dark:text-amber-400">
-                    your server IP (not configured yet — set <code>TENANT_SERVER_IPS</code> in the platform settings)
-                </span>
+                <strong>your server IP (server IP not configured — set TENANT_SERVER_IPS in platform settings)</strong>.
             @endif
         </li>
 
         <li>
             In <strong>cPanel</strong>, add the domain as an <strong>Alias / Parked domain</strong> whose document root is the <strong>same folder as titjaffna.lk</strong>:
-            <span class="inline-flex flex-wrap items-center gap-2 align-middle mt-1">
-                <code class="rounded bg-white px-2 py-1 font-mono text-xs border border-gray-300 dark:bg-gray-800 dark:border-gray-600">{{ $docRoot }}</code>
+            <span style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; vertical-align: middle; margin-top: 0.25rem;">
+                <code class="cpanel-guide-code">{{ $docRoot }}</code>
                 <button
                     type="button"
                     x-on:click="copyText('docroot', @js($docRoot))"
-                    class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                    class="cpanel-copy-btn"
                 >
-                    <span x-show="copiedKey !== 'docroot'">Copy path</span>
+                    <span x-show="copiedKey !== 'docroot'">Copy folder path</span>
                     <span x-cloak x-show="copiedKey === 'docroot'">Copied</span>
                 </button>
             </span>
@@ -63,8 +133,7 @@
         </li>
     </ol>
 
-    <div class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/70 dark:bg-amber-950/50 dark:text-amber-200">
-        <strong>Important:</strong> Step 2 is done manually by the platform owner in cPanel — it is not performed automatically by this screen.
+    <div class="cpanel-manual-note">
+        <strong>Note:</strong> Step 2 is completed manually by the platform owner in cPanel — it is not performed automatically by this screen.
     </div>
 </div>
-

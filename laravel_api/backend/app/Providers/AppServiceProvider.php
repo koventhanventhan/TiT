@@ -83,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Support\Facades\Schema::defaultStringLength(191);
         \Illuminate\Pagination\Paginator::useBootstrap();
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Institute::class, \App\Policies\InstitutePolicy::class);
 
         // Share site settings with all views
         if (!app()->runningInConsole()) {

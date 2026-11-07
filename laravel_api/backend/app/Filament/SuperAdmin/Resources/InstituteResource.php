@@ -4,14 +4,14 @@ namespace App\Filament\SuperAdmin\Resources;
 
 use App\Filament\SuperAdmin\Resources\InstituteResource\Pages;
 use App\Models\Institute;
-use App\Models\SubscriptionPlan;
+use Closure;
+use DomainException;
 use Filament\Actions;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -31,22 +31,45 @@ class InstituteResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Institute Details')
+                Section::make('Institute details')
                     ->schema([
                         TextInput::make('name')
+                            ->label('Institute name')
                             ->required()
-                            ->maxLength(255)
+                            ->minLength(2)
+                            ->maxLength(80)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn ($set, ?string $state) => $set('slug', Str::slug($state))),
+                            ->afterStateUpdated(fn ($set, ?string $state, ?Institute $record) => $record === null ? $set('slug', Str::slug((string) $state)) : null),
 
                         TextInput::make('slug')
+                            ->label('Short URL identifier')
                             ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
+                            ->maxLength(240)
+                            ->rule(static function (?Institute $record): Closure {
+                                return static function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                    $normalized = Str::slug(trim((string) $value));
+                                    if ($normalized === '' || $normalized !== trim((string) $value)) {
+                                        $fail('Use lowercase letters, numbers, and hyphens only.');
+
+                                        return;
+                                    }
+
+                                    $exists = Institute::withTrashed()
+                                        ->where('slug', $normalized)
+                                        ->when($record !== null, static fn ($q) => $q->whereKeyNot($record->getKey()))
+                                        ->exists();
+
+                                    if ($exists) {
+                                        $fail('This URL identifier is already used by another institute (including deleted ones).');
+                                    }
+                                };
+                            }),
 
                         FileUpload::make('logo_path')
                             ->label('Logo')
                             ->image()
+                            ->maxSize(2048)
+                            ->disk('public')
                             ->directory('institute-logos'),
 
                         Select::make('status')
@@ -56,10 +79,12 @@ class InstituteResource extends Resource
                                 'expired' => 'Expired',
                             ])
                             ->default('active')
+                            ->disabled(static fn (?Institute $record): bool => $record !== null && (int) $record->id === 1)
+                            ->dehydrated()
                             ->required(),
                     ])->columns(2),
 
-                Section::make('Subscription')
+                Section::make('Plan & student numbering')
                     ->schema([
                         Select::make('subscription_plan_id')
                             ->label('Plan')
@@ -68,22 +93,32 @@ class InstituteResource extends Resource
                             ->searchable(),
 
                         DateTimePicker::make('expires_at')
-                            ->label('Expiry Date'),
-                    ])->columns(2),
+                            ->label('Expiry date'),
 
-                Section::make('Theme Settings')
-                    ->schema([
-                        KeyValue::make('theme_settings')
-                            ->label('Theme Configuration'),
-                    ])->collapsed(),
+                        TextInput::make('index_prefix')
+                            ->label('Student ID prefix')
+                            ->minLength(2)
+                            ->maxLength(6)
+                            ->regex('/^[A-Za-z0-9]{2,6}$/'),
+
+                        Select::make('index_format')
+                            ->label('Student ID format')
+                            ->options([
+                                'grade' => 'By grade (for example, ABC/08/001)',
+                                'batch' => 'By batch year (for example, ABC/26/1001)',
+                            ])
+                            ->default('grade'),
+                    ])->columns(2),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with(['domains', 'plan']))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Institute')
                     ->searchable()
                     ->sortable(),
 
@@ -96,9 +131,25 @@ class InstituteResource extends Resource
                         default => 'gray',
                     }),
 
+                Tables\Columns\TextColumn::make('setup_badges')
+                    ->label('Setup')
+                    ->badge()
+                    ->getStateUsing(static fn (Institute $record): array => $record->setupBadges())
+                    ->color(static fn (string $state): string => match (true) {
+                        $state === 'Domain: verified',
+                        $state === 'Admin: yes',
+                        $state === 'Integrations: 3/3' => 'success',
+                        $state === 'Domain: unverified',
+                        $state === 'Integrations: 1/3',
+                        $state === 'Integrations: 2/3' => 'warning',
+                        $state === 'Domain: none',
+                        $state === 'Admin: no' => 'danger',
+                        default => 'gray',
+                    }),
+
                 Tables\Columns\TextColumn::make('plan.name')
                     ->label('Plan')
-                    ->default('No Plan'),
+                    ->default('No plan'),
 
                 Tables\Columns\TextColumn::make('students_count')
                     ->counts('students')
@@ -108,11 +159,6 @@ class InstituteResource extends Resource
                 Tables\Columns\TextColumn::make('teachers_count')
                     ->counts('teachers')
                     ->label('Teachers')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('classes_count')
-                    ->counts('classes')
-                    ->label('Classes')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('expires_at')
@@ -140,29 +186,92 @@ class InstituteResource extends Resource
                     ->relationship('plan', 'name'),
             ])
             ->actions([
+                Actions\ViewAction::make()
+                    ->label('Checklist'),
+
                 Actions\EditAction::make(),
 
                 Actions\Action::make('suspend')
-                    ->label('Suspend')
+                    ->label(static fn (Institute $record): string => (!$record->canBeDeletedSafely() && (int) $record->id !== 1) ? 'Suspend instead' : 'Suspend')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (Institute $record) => $record->status === 'active')
-                    ->action(fn (Institute $record) => $record->update(['status' => 'suspended'])),
+                    ->modalHeading(static fn (Institute $record): string => "Suspend {$record->name}?")
+                    ->modalDescription(static fn (Institute $record): string => "Suspending {$record->name} immediately blocks sign-ins for its administrators, teachers, and students until reactivated.")
+                    ->hidden(static fn (Institute $record): bool => (int) $record->id === 1 || $record->status !== 'active')
+                    ->action(static function (Institute $record): void {
+                        try {
+                            $record->update(['status' => 'suspended']);
+
+                            Notification::make()
+                                ->title("{$record->name} suspended")
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('Cannot suspend institute')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
                 Actions\Action::make('activate')
                     ->label('Activate')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Institute $record) => $record->status !== 'active')
-                    ->action(fn (Institute $record) => $record->update(['status' => 'active'])),
+                    ->modalHeading(static fn (Institute $record): string => "Reactivate {$record->name}?")
+                    ->modalDescription(static fn (Institute $record): string => "Restore access for {$record->name}?")
+                    ->visible(static fn (Institute $record): bool => (int) $record->id !== 1 && $record->status !== 'active')
+                    ->action(static function (Institute $record): void {
+                        $record->update(['status' => 'active']);
+
+                        Notification::make()
+                            ->title("{$record->name} activated")
+                            ->success()
+                            ->send();
+                    }),
+
+                Actions\Action::make('delete_institute')
+                    ->label('Delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->hidden(static fn (Institute $record): bool => !$record->canBeDeletedSafely())
+                    ->requiresConfirmation()
+                    ->modalHeading(static fn (Institute $record): string => "Delete {$record->name}?")
+                    ->modalDescription(static fn (Institute $record): string => "This institute has 0 students and 0 payments. Type \"{$record->name}\" below to confirm removal.")
+                    ->form(static fn (Institute $record): array => [
+                        TextInput::make('confirm_name')
+                            ->label("Type \"{$record->name}\" to confirm")
+                            ->required()
+                            ->rule(static function () use ($record): Closure {
+                                return static function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                    if (trim((string) $value) !== $record->name) {
+                                        $fail("Please type \"{$record->name}\" exactly to confirm deletion.");
+                                    }
+                                };
+                            }),
+                    ])
+                    ->action(static function (Institute $record): void {
+                        try {
+                            $name = $record->name;
+                            $record->delete();
+
+                            Notification::make()
+                                ->title("{$name} deleted")
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('Cannot delete institute')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
-            ->bulkActions([
-                Actions\BulkActionGroup::make([
-                    Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array
@@ -177,6 +286,7 @@ class InstituteResource extends Resource
         return [
             'index' => Pages\ListInstitutes::route('/'),
             'create' => Pages\CreateInstitute::route('/create'),
+            'view' => Pages\ViewInstitute::route('/{record}'),
             'edit' => Pages\EditInstitute::route('/{record}/edit'),
         ];
     }

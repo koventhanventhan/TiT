@@ -186,6 +186,13 @@ class InstituteProvisionerTest extends TestCase
 
     public function test_duplicate_slug_handling_includes_soft_deleted_institutes(): void
     {
+        // Seed protected primary institute (#1) so provisioned customer institutes start at #2
+        Institute::create([
+            'name' => 'Platform Primary',
+            'slug' => 'platform-primary',
+            'status' => 'active',
+        ]);
+
         $provisioner = app(InstituteProvisioner::class);
 
         $first = $provisioner->provision(new ProvisionInstituteData(

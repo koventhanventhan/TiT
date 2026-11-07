@@ -59,6 +59,137 @@ class Institute extends Model
         'index_seq_start' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $model): void {
+            if ($model->exists && (int) $model->id === 1 && $model->isDirty('status') && $model->status !== 'active') {
+                throw new \DomainException('Institute #1 is the primary platform institute and cannot be suspended or deactivated.');
+            }
+        });
+
+        static::deleting(function (self $model): void {
+            if ((int) $model->id === 1) {
+                throw new \DomainException('Institute #1 is the primary platform institute and cannot be deleted.');
+            }
+
+            $studentCount = $model->nonScopedStudentsCount();
+            $paymentCount = $model->nonScopedPaymentsCount();
+
+            if ($studentCount > 0 || $paymentCount > 0) {
+                throw new \DomainException(
+                    "Cannot delete {$model->name} because it has {$studentCount} student(s) and {$paymentCount} payment(s). Suspend it instead."
+                );
+            }
+        });
+    }
+
+    public function nonScopedStudentsCount(): int
+    {
+        return User::withoutGlobalScopes()
+            ->where('institute_id', $this->id)
+            ->where('role', 'user')
+            ->count();
+    }
+
+    public function nonScopedPaymentsCount(): int
+    {
+        return Payment::withoutGlobalScopes()
+            ->where('institute_id', $this->id)
+            ->count();
+    }
+
+    public function canBeDeletedSafely(): bool
+    {
+        return (int) $this->id !== 1
+            && $this->nonScopedStudentsCount() === 0
+            && $this->nonScopedPaymentsCount() === 0;
+    }
+
+    /**
+     * Compute non-secret setup checklist state for the super-admin list & checklist page.
+     *
+     * @return array{
+     *   domain_status: 'none'|'unverified'|'verified',
+     *   primary_domain: ?string,
+     *   domains_count: int,
+     *   has_admin: bool,
+     *   admin_email: ?string,
+     *   integrations_configured: int,
+     *   integrations_total: int,
+     *   providers: array<string, bool>,
+     *   has_plan: bool,
+     *   plan_name: string
+     * }
+     */
+    public function setupChecklist(): array
+    {
+        $domains = $this->relationLoaded('domains')
+            ? $this->domains
+            : $this->domains()->get();
+
+        if ($domains->isEmpty()) {
+            $domainStatus = 'none';
+            $primaryDomain = null;
+        } else {
+            $hasVerified = $domains->contains(static fn (InstituteDomain $d): bool => $d->verified_at !== null);
+            $domainStatus = $hasVerified ? 'verified' : 'unverified';
+            $primary = $domains->firstWhere('is_primary', true) ?? $domains->first();
+            $primaryDomain = $primary?->domain;
+        }
+
+        $admin = User::withoutGlobalScopes()
+            ->where('institute_id', $this->id)
+            ->where('role', 'admin')
+            ->orderBy('id')
+            ->first(['id', 'email', 'name']);
+
+        $integrationSummary = \App\Support\Integrations::for((int) $this->id)->statusSummary();
+        $providers = [];
+        $configuredCount = 0;
+
+        foreach (InstituteIntegration::PROVIDERS as $provider) {
+            $item = $integrationSummary[$provider] ?? [];
+            $isDbConfigured = ($item['source'] ?? 'none') === 'db'
+                && ($item['status'] ?? InstituteIntegration::STATUS_UNCONFIGURED) !== InstituteIntegration::STATUS_UNCONFIGURED;
+
+            $providers[$provider] = $isDbConfigured;
+            if ($isDbConfigured) {
+                $configuredCount++;
+            }
+        }
+
+        $plan = $this->relationLoaded('plan') ? $this->plan : $this->plan()->first();
+
+        return [
+            'domain_status' => $domainStatus,
+            'primary_domain' => $primaryDomain,
+            'domains_count' => $domains->count(),
+            'has_admin' => $admin !== null,
+            'admin_email' => $admin?->email,
+            'integrations_configured' => $configuredCount,
+            'integrations_total' => count(InstituteIntegration::PROVIDERS),
+            'providers' => $providers,
+            'has_plan' => $plan !== null,
+            'plan_name' => $plan?->name ?? 'No plan',
+        ];
+    }
+
+    /**
+     * Badges rendered in the InstituteResource Setup column.
+     *
+     * @return list<string>
+     */
+    public function setupBadges(): array
+    {
+        $summary = $this->setupChecklist();
+
+        return [
+            'Domain: ' . $summary['domain_status'],
+            'Admin: ' . ($summary['has_admin'] ? 'yes' : 'no'),
+            "Integrations: {$summary['integrations_configured']}/{$summary['integrations_total']}",
+        ];
+    }
+
     public function plan()
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');

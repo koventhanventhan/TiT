@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Support\InstituteMail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class SendInstituteExpiryReminders extends Command
 {
@@ -121,10 +120,7 @@ class SendInstituteExpiryReminders extends Command
                 );
 
                 // Send via InstituteMail with platform SMTP fallback
-                $sent = InstituteMail::to($admin->email, $institute->id)->send($mailable);
-                if (!$sent) {
-                    Mail::to($admin->email)->send($mailable);
-                }
+                InstituteMail::to($admin->email, $institute->id)->send($mailable);
 
                 // Record notice for idempotency
                 InstituteSubscriptionNotice::create([
@@ -165,7 +161,7 @@ class SendInstituteExpiryReminders extends Command
                     messageText: "The daily subscription expiry reminder scan processed the following notices:\n\n" . implode("\n", $digestLines),
                 );
 
-                Mail::to($platformOwnerEmail)->send($digestMailable);
+                InstituteMail::to($platformOwnerEmail, 1)->send($digestMailable);
                 $this->info("Sent digest to platform owner ({$platformOwnerEmail}).");
             }
         }

@@ -127,16 +127,16 @@ class PlanLimitEnforcementTest extends TestCase
             ]);
 
         $response2->assertRedirect(route('admin.students.create'));
-        $response2->assertSessionHas('error', 'Your plan allows 2 students. Contact the platform owner to upgrade.');
+        $response2->assertSessionHas('error', 'Student limit (2) reached. Your plan allows 2 students. Contact the platform owner to upgrade.');
         $this->assertDatabaseMissing('users', [
             'email' => 'student3@example.com',
         ]);
     }
 
     /**
-     * 2. API registration at limit returns 422 with code plan_limit_reached.
+     * 2. API registration at limit returns 403 with code plan_limit_reached.
      */
-    public function test_api_registration_at_limit_returns_422_with_code_plan_limit_reached(): void
+    public function test_api_registration_at_limit_returns_403_with_code_plan_limit_reached(): void
     {
         $inst = $this->createInstituteWithPlan(['max_students' => 1]);
 
@@ -164,12 +164,12 @@ class PlanLimitEnforcementTest extends TestCase
                 'role' => 'user',
             ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(403);
         $response->assertJson([
             'code' => 'plan_limit_reached',
         ]);
         $response->assertJsonFragment([
-            'message' => 'Your plan allows 1 students. Contact the platform owner to upgrade.',
+            'message' => 'Student limit (1) reached. Your plan allows 1 students. Contact the platform owner to upgrade.',
         ]);
     }
 
@@ -217,7 +217,7 @@ class PlanLimitEnforcementTest extends TestCase
             ]);
 
         $res2->assertRedirect(route('admin.teachers.index'));
-        $res2->assertSessionHas('error', 'Your plan allows 1 teachers. Contact the platform owner to upgrade.');
+        $res2->assertSessionHas('error', 'Teacher limit (1) reached. Your plan allows 1 teachers. Contact the platform owner to upgrade.');
         $this->assertDatabaseMissing('users', [
             'email' => 'teacher2@example.com',
         ]);

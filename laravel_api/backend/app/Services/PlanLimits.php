@@ -26,11 +26,12 @@ class PlanLimits
 
         if (($current + $adding) > $limit) {
             throw new PlanLimitReachedException(
-                "Your plan allows {$limit} students. Contact the platform owner to upgrade.",
+                "Student limit ({$limit}) reached. Your plan allows {$limit} students. Contact the platform owner to upgrade.",
                 $limit,
                 $current,
                 $adding,
-                'student'
+                'student',
+                403
             );
         }
     }
@@ -53,11 +54,12 @@ class PlanLimits
 
         if (($current + $adding) > $limit) {
             throw new PlanLimitReachedException(
-                "Your plan allows {$limit} teachers. Contact the platform owner to upgrade.",
+                "Teacher limit ({$limit}) reached. Your plan allows {$limit} teachers. Contact the platform owner to upgrade.",
                 $limit,
                 $current,
                 $adding,
-                'teacher'
+                'teacher',
+                403
             );
         }
     }

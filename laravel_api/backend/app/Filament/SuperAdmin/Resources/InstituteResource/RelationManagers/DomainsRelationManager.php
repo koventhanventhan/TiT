@@ -94,7 +94,7 @@ class DomainsRelationManager extends RelationManager
                     ->before(function (Actions\CreateAction $action) {
                         /** @var Institute $owner */
                         $owner = $this->getOwnerRecord();
-                        if (!$owner->hasFeature('custom_domain')) {
+                        if ($owner->domains()->exists() && !$owner->hasFeature('custom_domain')) {
                             Notification::make()
                                 ->title('Feature not in plan')
                                 ->body('This institute plan does not include the Custom Domain feature. Please upgrade the plan first.')

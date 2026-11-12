@@ -17,7 +17,7 @@ class PlanLimitReachedException extends RuntimeException
         ?int $currentCount = null,
         int $adding = 1,
         string $type = 'student',
-        int $code = 422,
+        int $code = 403,
         ?\Throwable $previous = null
     ) {
         parent::__construct($message, $code, $previous);
@@ -59,7 +59,7 @@ class PlanLimitReachedException extends RuntimeException
                 'limit' => $this->limit,
                 'current' => $this->currentCount,
                 'type' => $this->type,
-            ], 422);
+            ], 403);
         }
 
         return redirect()->back()

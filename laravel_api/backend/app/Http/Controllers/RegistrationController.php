@@ -288,7 +288,7 @@ class RegistrationController extends Controller
                         'message' => $e->getMessage(),
                         'code' => 'plan_limit_reached',
                         'errors' => ['username' => [$e->getMessage()]],
-                    ], 422);
+                    ], 403);
                 }
             }
         }
@@ -348,7 +348,7 @@ class RegistrationController extends Controller
                     'message' => $e->getMessage(),
                     'code' => 'plan_limit_reached',
                     'errors' => ['username' => [$e->getMessage()]],
-                ], 422);
+                ], 403);
             }
 
             if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
@@ -1599,7 +1599,7 @@ class RegistrationController extends Controller
             return response()->json([
                 'message' => $e->getMessage(),
                 'code' => 'plan_limit_reached',
-            ], 422);
+            ], 403);
         }
 
         Log::info('New sibling account created via OTP merge', ['parent_id' => $parent->id, 'sibling_id' => $sibling->id]);

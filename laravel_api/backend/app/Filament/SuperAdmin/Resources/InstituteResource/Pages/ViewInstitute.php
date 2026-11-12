@@ -134,7 +134,7 @@ class ViewInstitute extends ViewRecord
             ->action(function (array $data): void {
                 /** @var Institute $institute */
                 $institute = $this->getRecord();
-                if (!$institute->hasFeature('custom_domain')) {
+                if ($institute->domains()->exists() && !$institute->hasFeature('custom_domain')) {
                     Notification::make()
                         ->title('Feature not in plan')
                         ->body('This institute plan does not include the Custom Domain feature. Please upgrade the plan first.')

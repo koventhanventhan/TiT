@@ -201,7 +201,7 @@ class AuthController extends Controller
                 'message' => $e->getMessage(),
                 'code' => 'plan_limit_reached',
                 'limit' => $e->getLimit(),
-            ], 422);
+            ], 403);
         }
 
         \Illuminate\Support\Facades\Cache::forget('email_verified_' . $request->email);
@@ -314,7 +314,7 @@ class AuthController extends Controller
                 'message' => $e->getMessage(),
                 'code' => 'plan_limit_reached',
                 'limit' => $e->getLimit(),
-            ], 422);
+            ], 403);
         }
 
         try {

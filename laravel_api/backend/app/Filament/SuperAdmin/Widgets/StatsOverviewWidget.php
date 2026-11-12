@@ -5,10 +5,8 @@ namespace App\Filament\SuperAdmin\Widgets;
 use App\Models\Institute;
 use App\Models\Payment;
 use App\Models\User;
-use App\Models\ZoomSchedule;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Database\Eloquent\Builder;
 
 class StatsOverviewWidget extends BaseWidget
 {
@@ -37,6 +35,21 @@ class StatsOverviewWidget extends BaseWidget
             })
             ->count();
 
+        $expiringSoon = Institute::where('id', '!=', 1)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '>=', now())
+            ->where('expires_at', '<=', now()->addDays(30))
+            ->count();
+
+        $expiredInstitutes = Institute::where('id', '!=', 1)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', now())
+            ->count();
+
+        $overLimitInstitutes = Institute::whereHas('plan', fn ($q) => $q->where('max_students', '>', 0))
+            ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\' AND users.deleted_at IS NULL) > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
+            ->count();
+
         return [
             Stat::make('Total Users', number_format($totalStudents + $totalTeachers + $totalAdmins))
                 ->description("{$totalStudents} Students, {$totalTeachers} Teachers, {$totalAdmins} Admins")
@@ -57,6 +70,21 @@ class StatsOverviewWidget extends BaseWidget
                 ->description('Institutes with active plans')
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
+
+            Stat::make('Expiring in 30 days', $expiringSoon)
+                ->description('Institutes nearing expiry')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color($expiringSoon > 0 ? 'warning' : 'gray'),
+
+            Stat::make('Expired', $expiredInstitutes)
+                ->description('Institutes past subscription date')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($expiredInstitutes > 0 ? 'danger' : 'gray'),
+
+            Stat::make('Over Limit', $overLimitInstitutes)
+                ->description('Institutes exceeding plan student capacity')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color($overLimitInstitutes > 0 ? 'danger' : 'gray'),
         ];
     }
 }

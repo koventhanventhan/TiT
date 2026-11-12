@@ -97,6 +97,8 @@ class ViewInstitute extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            InstituteResource::getRenewAction()
+                ->record($this->getRecord()),
             Actions\EditAction::make()
                 ->label('Edit institute'),
         ];

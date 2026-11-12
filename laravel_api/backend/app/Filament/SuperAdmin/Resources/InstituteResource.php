@@ -165,7 +165,13 @@ class InstituteResource extends Resource
                     ->label('Expires')
                     ->dateTime('M d, Y')
                     ->sortable()
-                    ->color(fn (Institute $record) => $record->isExpired() ? 'danger' : null),
+                    ->badge()
+                    ->color(fn (Institute $record): string => match (true) {
+                        (int) $record->id === 1 => 'gray',
+                        $record->isExpired() => 'danger',
+                        $record->expires_at !== null && now()->diffInDays($record->expires_at, false) <= 14 && now()->lte($record->expires_at) => 'warning',
+                        default => 'success',
+                    }),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
@@ -184,10 +190,36 @@ class InstituteResource extends Resource
                 Tables\Filters\SelectFilter::make('subscription_plan_id')
                     ->label('Plan')
                     ->relationship('plan', 'name'),
+
+                Tables\Filters\Filter::make('expired')
+                    ->label('Expired')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where('id', '!=', 1)
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<', now())
+                    ),
+
+                Tables\Filters\Filter::make('expiring_soon')
+                    ->label('Expiring in 30 days')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where('id', '!=', 1)
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '>=', now())
+                        ->where('expires_at', '<=', now()->addDays(30))
+                    ),
+
+                Tables\Filters\Filter::make('over_limit')
+                    ->label('Over limit')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->whereHas('plan', fn ($p) => $p->where('max_students', '>', 0))
+                        ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\' AND users.deleted_at IS NULL) > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
+                    ),
             ])
             ->actions([
                 Actions\ViewAction::make()
                     ->label('Checklist'),
+
+                static::getRenewAction(),
 
                 Actions\EditAction::make(),
 
@@ -272,6 +304,53 @@ class InstituteResource extends Resource
                     }),
             ])
             ->bulkActions([]);
+    }
+
+    public static function getRenewAction(): Actions\Action
+    {
+        return Actions\Action::make('renew')
+            ->label('Renew')
+            ->icon('heroicon-o-arrow-path')
+            ->color('success')
+            ->modalHeading(static fn (Institute $record): string => "Renew subscription — {$record->name}")
+            ->modalDescription(static fn (Institute $record): string => "Extend {$record->name}'s subscription from its current expiry or today.")
+            ->form([
+                Select::make('duration')
+                    ->label('Extension')
+                    ->options([
+                        '30_days' => '+30 days',
+                        '1_year'  => '+1 year',
+                        'custom'  => 'Custom date',
+                    ])
+                    ->default('30_days')
+                    ->required()
+                    ->live(),
+
+                DateTimePicker::make('custom_expires_at')
+                    ->label('Custom expiry date')
+                    ->visible(fn ($get) => $get('duration') === 'custom')
+                    ->required(fn ($get) => $get('duration') === 'custom'),
+
+                Select::make('subscription_plan_id')
+                    ->label('Change plan (optional)')
+                    ->relationship('plan', 'name')
+                    ->placeholder('Keep current plan')
+                    ->preload(),
+
+                TextInput::make('note')
+                    ->label('Note (optional)')
+                    ->placeholder('Payment reference, invoice number, or reason')
+                    ->maxLength(255),
+            ])
+            ->action(static function (Institute $record, array $data): void {
+                $record->renewSubscription($data);
+
+                Notification::make()
+                    ->title('Subscription renewed')
+                    ->body("{$record->name} subscription renewed until " . $record->expires_at->format('M d, Y'))
+                    ->success()
+                    ->send();
+            });
     }
 
     public static function getRelations(): array

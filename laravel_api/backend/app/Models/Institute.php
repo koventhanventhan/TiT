@@ -395,6 +395,11 @@ class Institute extends Model
         return $this->hasMany(InstituteIntegration::class);
     }
 
+    public function subscriptionNotices()
+    {
+        return $this->hasMany(InstituteSubscriptionNotice::class);
+    }
+
     public function primaryDomainHost(): string
     {
         $primary = $this->domains()->where('is_primary', true)->first()
@@ -464,5 +469,59 @@ class Institute extends Model
         }
 
         return $plan->hasFeature($key);
+    }
+
+    /**
+     * Renew subscription from max(now, expires_at), clearing grace/expired status and logging the change.
+     */
+    public function renewSubscription(array $data): self
+    {
+        $now = now();
+        $previousExpiresAt = $this->expires_at;
+
+        $base = ($previousExpiresAt !== null && $previousExpiresAt->isFuture())
+            ? $previousExpiresAt->copy()
+            : $now->copy();
+
+        $duration = $data['duration'] ?? '30_days';
+        if ($duration === '30_days') {
+            $newExpiresAt = $base->addDays(30);
+        } elseif ($duration === '1_year') {
+            $newExpiresAt = $base->addYear();
+        } elseif ($duration === 'custom') {
+            $newExpiresAt = \Carbon\Carbon::parse($data['custom_expires_at']);
+        } else {
+            $newExpiresAt = $base->addDays(30);
+        }
+
+        $updateData = [
+            'expires_at' => $newExpiresAt,
+        ];
+
+        if ($this->status === 'expired') {
+            $updateData['status'] = 'active';
+        }
+
+        if (!empty($data['subscription_plan_id'])) {
+            $updateData['subscription_plan_id'] = $data['subscription_plan_id'];
+        }
+
+        $this->update($updateData);
+
+        \App\Services\ActivityLogService::log(
+            action: 'institute_subscription_renewed',
+            description: "Renewed subscription for {$this->name} until {$newExpiresAt->format('Y-m-d H:i')}",
+            metadata: [
+                'institute_id' => $this->id,
+                'previous_expires_at' => $previousExpiresAt?->toISOString(),
+                'new_expires_at' => $newExpiresAt->toISOString(),
+                'duration' => $duration,
+                'subscription_plan_id' => $this->subscription_plan_id,
+                'note' => $data['note'] ?? null,
+            ],
+            instituteId: $this->id,
+        );
+
+        return $this;
     }
 }

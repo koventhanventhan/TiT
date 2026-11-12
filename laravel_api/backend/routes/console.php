@@ -56,6 +56,7 @@ $guard = function (string $label, callable $task) {
 };
 
 Schedule::call($guard('app:check-payments', fn() => Artisan::call('app:check-payments')))->dailyAt('09:00');
+Schedule::call($guard('institutes:expiry-reminders', fn() => Artisan::call('institutes:expiry-reminders')))->dailyAt('09:30');
 Schedule::call($guard('zoom:sync-timetable', fn() => Artisan::call('zoom:sync-timetable')))->dailyAt('00:00');
 Schedule::call($guard('zoom:send-reminders', fn() => Artisan::call('zoom:send-reminders')))->everyMinute();
 Schedule::call($guard('zoom:fetch-recordings', fn() => Artisan::call('zoom:fetch-recordings')))->everyFifteenMinutes();

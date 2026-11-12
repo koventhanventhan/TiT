@@ -51,6 +51,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/students/pending-payments/{payment}/cancel', [StudentController::class, 'cancelPendingPayment'])->name('admin.students.pending-payments.cancel')->whereNumber('payment');
         Route::get('/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
+        Route::post('/students/import', [StudentController::class, 'import'])->name('admin.students.import');
         Route::post('/students/bulk-assign-index', [StudentController::class, 'bulkAssignIndex'])->name('admin.students.bulk-assign-index');
         Route::get('/students/index-lists', [StudentIndexBulkController::class, 'indexLists'])->name('admin.students.index-lists');
         Route::get('/students/index-lists/pdf', [StudentIndexBulkController::class, 'indexListsPdf'])->name('admin.students.index-lists.pdf');

@@ -52,6 +52,14 @@ class Institute extends Model
     }
 
     /**
+     * Get the current active tenant Institute.
+     */
+    public static function current(): ?self
+    {
+        return \App\Support\Tenant::current();
+    }
+
+    /**
      * Resolve the active institute ID from an explicit ID, current tenant binding, or authenticated non-super-admin user.
      */
     public static function resolveContextInstituteId(?int $explicitId = null): ?int

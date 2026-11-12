@@ -393,10 +393,31 @@
                         </div>
                     </div>
 
+                    @php
+                        $currentInst = \App\Models\Institute::current() ?? (auth()->check() ? auth()->user()->institute : null) ?? \App\Models\Institute::find(1);
+                        $remainingStudentSlots = $currentInst ? \App\Services\PlanLimits::remainingStudentSlots($currentInst) : null;
+                        $isStudentLimitReached = ($remainingStudentSlots !== null && $remainingStudentSlots <= 0);
+                    @endphp
+
+                    @if($isStudentLimitReached)
+                        <div class="alert alert-danger font-weight-bold my-3" role="alert">
+                            <i class="flaticon-381-warning mr-2"></i>
+                            Your plan allows {{ $currentInst?->plan?->limitFor('max_students') }} students. Limit reached. Contact the platform owner to upgrade.
+                        </div>
+                    @endif
+
                     <div class="form-group mt-4">
-                        <button type="submit" class="btn btn-primary" style="background: #ffab2d; border-color: #ffab2d; color: #000; font-weight: 700;">
-                            <i class="flaticon-381-save"></i> ADD NEW STUDENT
-                        </button>
+                        @if($isStudentLimitReached)
+                            <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="Student limit reached for your plan. Contact the platform owner to upgrade.">
+                                <button type="button" class="btn btn-primary" disabled style="background: #ffab2d; border-color: #ffab2d; color: #000; font-weight: 700; opacity: 0.6; cursor: not-allowed;">
+                                    <i class="flaticon-381-save"></i> ADD NEW STUDENT
+                                </button>
+                            </span>
+                        @else
+                            <button type="submit" class="btn btn-primary" style="background: #ffab2d; border-color: #ffab2d; color: #000; font-weight: 700;">
+                                <i class="flaticon-381-save"></i> ADD NEW STUDENT
+                            </button>
+                        @endif
                         <a href="{{ route('admin.students.index') }}" class="btn btn-dark ml-2">
                             CANCEL
                         </a>

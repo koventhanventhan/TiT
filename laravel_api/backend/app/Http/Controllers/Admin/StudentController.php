@@ -322,6 +322,15 @@ class StudentController extends Controller
             ->firstOrFail();
 
         $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+
+        if ($student->registration_status === 'rejected') {
+            try {
+                \App\Services\PlanLimits::assertCanAddStudent($institute, 1);
+            } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
         $format = $institute?->getIndexFormat() ?? 'grade';
 
         $indexAssigned = false;
@@ -414,6 +423,15 @@ class StudentController extends Controller
             ->firstOrFail();
 
         $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+
+        if ($student->registration_status === 'rejected') {
+            try {
+                \App\Services\PlanLimits::assertCanAddStudent($institute, 1);
+            } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
         $format = $institute?->getIndexFormat() ?? 'grade';
 
         $indexAssigned = false;
@@ -577,35 +595,47 @@ class StudentController extends Controller
             $subjects = json_encode(array_values(array_unique($validated['selected_subjects'])), JSON_UNESCAPED_UNICODE);
         }
 
-        // Auto-generate username from email prefix
-        $emailPrefix = explode('@', $validated['email'])[0];
-        $username = $emailPrefix;
-        $counter = 1;
-        while (User::where('name', $username)->exists()) {
-            $username = $emailPrefix . $counter;
-            $counter++;
-        }
+        // Plan limits enforcement with DB row lock
+        $targetInstitute = \App\Models\Institute::current()
+            ?? (auth()->check() ? auth()->user()->institute : null)
+            ?? \App\Models\Institute::find(auth()->user()->institute_id ?: 1);
 
-        // Use admin-entered password
-        $user = User::create([
-            'name' => $username,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'user',
-            'full_name' => $validated['full_name'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'date_of_birth' => $validated['date_of_birth'],
-            'gender' => $validated['gender'],
-            'school_name' => $validated['school_name'],
-            'medium' => $validated['medium'],
-            'online_experience' => $request->boolean('online_experience'),
-            'device_used' => $validated['device_used'],
-            'current_grade' => $validated['current_grade'],
-            'stream' => $validated['stream'] ?? null,
-            'selected_subjects' => $subjects,
-            'registration_status' => 'approved',
-            'admin_confirmed_at' => now(),
-        ]);
+        try {
+            $user = \App\Services\PlanLimits::runWithStudentLock($targetInstitute, 1, function () use ($validated, $request, $subjects) {
+                // Auto-generate username from email prefix
+                $emailPrefix = explode('@', $validated['email'])[0];
+                $username = $emailPrefix;
+                $counter = 1;
+                while (User::where('name', $username)->exists()) {
+                    $username = $emailPrefix . $counter;
+                    $counter++;
+                }
+
+                // Use admin-entered password
+                return User::create([
+                    'name' => $username,
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'role' => 'user',
+                    'full_name' => $validated['full_name'],
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'date_of_birth' => $validated['date_of_birth'],
+                    'gender' => $validated['gender'],
+                    'school_name' => $validated['school_name'],
+                    'medium' => $validated['medium'],
+                    'online_experience' => $request->boolean('online_experience'),
+                    'device_used' => $validated['device_used'],
+                    'current_grade' => $validated['current_grade'],
+                    'stream' => $validated['stream'] ?? null,
+                    'selected_subjects' => $subjects,
+                    'registration_status' => 'approved',
+                    'admin_confirmed_at' => now(),
+                    'institute_id' => auth()->user()->institute_id ?: 1,
+                ]);
+            });
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
 
         // Assign automatic student index number
         try {
@@ -664,7 +694,7 @@ class StudentController extends Controller
             }
         }
 
-        $response = redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $username . ' | Password: ' . $validated['password']);
+        $response = redirect()->route('admin.students.index')->with('success', 'Student added successfully! Username: ' . $user->name . ' | Password: ' . $validated['password']);
         if ($preflightWarning) {
             $response->with('warning', "Payment saved, but the receipt could not be sent: {$preflightWarning}. Use Resend on the student's page.");
         }
@@ -698,9 +728,45 @@ class StudentController extends Controller
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
         $student = User::where('role', 'user')->where('id', $id)->firstOrFail();
+
+        if ($student->registration_status === 'rejected') {
+            $institute = $student->institute ?: \App\Models\Institute::find($student->institute_id ?: 1);
+            try {
+                \App\Services\PlanLimits::assertCanAddStudent($institute, 1);
+            } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
         $student->update(['deactivated_at' => null]);
         
         return redirect()->route('admin.students.index')->with('success', 'Student account reactivated successfully and notification sent.');
+    }
+
+    /**
+     * Import students from CSV file.
+     */
+    public function import(Request $request, \App\Services\StudentImportService $importService)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $institute = \App\Models\Institute::current()
+            ?? (auth()->check() ? auth()->user()->institute : null)
+            ?? \App\Models\Institute::find(auth()->user()->institute_id ?: 1);
+
+        try {
+            $result = $importService->importCsv($institute, $request->file('csv_file')->getRealPath());
+            return redirect()->route('admin.students.index')
+                ->with('success', "Imported {$result['inserted']} students successfully.");
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**

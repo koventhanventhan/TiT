@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\PlanLimitReachedException;
 use App\Models\Institute;
 use App\Models\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,37 +13,27 @@ class SubscriptionService
     /**
      * Check if an institute can add more students.
      */
-    public static function canAddStudent(Institute $institute): bool
+    public static function canAddStudent(Institute $institute, int $adding = 1): bool
     {
-        $plan = $institute->plan;
-        if (!$plan || $plan->isUnlimited('max_students')) {
+        try {
+            PlanLimits::assertCanAddStudent($institute, $adding);
             return true;
+        } catch (PlanLimitReachedException $e) {
+            return false;
         }
-
-        $limit = $plan->limitFor('max_students');
-        if ($limit === null) {
-            return true;
-        }
-
-        return self::countRoleForInstitute((int) $institute->id, 'user') < $limit;
     }
 
     /**
      * Check if an institute can add more teachers.
      */
-    public static function canAddTeacher(Institute $institute): bool
+    public static function canAddTeacher(Institute $institute, int $adding = 1): bool
     {
-        $plan = $institute->plan;
-        if (!$plan || $plan->isUnlimited('max_teachers')) {
+        try {
+            PlanLimits::assertCanAddTeacher($institute, $adding);
             return true;
+        } catch (PlanLimitReachedException $e) {
+            return false;
         }
-
-        $limit = $plan->limitFor('max_teachers');
-        if ($limit === null) {
-            return true;
-        }
-
-        return self::countRoleForInstitute((int) $institute->id, 'teacher') < $limit;
     }
 
     /**
@@ -50,12 +41,7 @@ class SubscriptionService
      */
     public static function hasFeature(Institute $institute, string $feature): bool
     {
-        $plan = $institute->plan;
-        if (!$plan) {
-            return false;
-        }
-
-        return in_array($feature, $plan->features ?? [], true);
+        return $institute->hasFeature($feature);
     }
 
     /**
@@ -63,6 +49,19 @@ class SubscriptionService
      */
     public static function countRoleForInstitute(int $instituteId, string $role): int
     {
+        $institute = Institute::find($instituteId);
+        if (!$institute) {
+            return 0;
+        }
+
+        if ($role === 'user') {
+            return PlanUsage::students($institute);
+        }
+
+        if ($role === 'teacher') {
+            return PlanUsage::teachers($institute);
+        }
+
         $query = User::withoutGlobalScopes()
             ->where('institute_id', $instituteId)
             ->where('role', $role);

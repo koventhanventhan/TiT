@@ -42,10 +42,14 @@ class TeacherController extends Controller
             'teacher_class' => 'nullable|string|max:255',
         ]);
 
-        $institute = \App\Models\Institute::with('plan')->find(auth()->user()->institute_id);
-        if ($institute && !\App\Services\SubscriptionService::canAddTeacher($institute)) {
-            $limit = $institute->plan?->limitFor('max_teachers');
-            return redirect()->back()->with('error', "Teacher limit ({$limit}) reached for your current plan. Please contact support to upgrade.");
+        $institute = \App\Models\Institute::current()
+            ?? (auth()->check() ? auth()->user()->institute : null)
+            ?? \App\Models\Institute::find(auth()->user()->institute_id ?: 1);
+
+        try {
+            \App\Services\PlanLimits::assertCanAddTeacher($institute, 1);
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
 
         // Auto-generate simple Teacher ID (1, 2, 3...) across global unique index
@@ -67,6 +71,7 @@ class TeacherController extends Controller
             'phone_number' => $request->phone_number,
             'teacher_unique_id' => $newId,
             'teacher_class' => $request->teacher_class,
+            'institute_id' => $institute->id,
         ];
 
         if ($request->filled('avatar_base64')) {
@@ -84,7 +89,13 @@ class TeacherController extends Controller
             $data['avatar'] = 'uploads/avatars/' . $fileName;
         }
 
-        User::create($data);
+        try {
+            \App\Services\PlanLimits::runWithTeacherLock($institute, 1, function () use ($data) {
+                return User::create($data);
+            });
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.teachers.index')
             ->with('success', 'Teacher added successfully! ID: ' . $newId . ' | Password: ' . $request->password);

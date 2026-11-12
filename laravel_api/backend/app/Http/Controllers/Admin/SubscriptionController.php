@@ -24,3 +24,4 @@ class SubscriptionController extends Controller
         return view('admin.subscription.index', compact('institute', 'summary'));
     }
 }
+

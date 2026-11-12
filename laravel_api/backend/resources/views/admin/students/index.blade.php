@@ -385,9 +385,22 @@
                     <a href="{{ route('admin.students.import-index') }}" class="btn btn-outline-secondary btn-sm mr-2">
                         <i class="flaticon-381-file"></i> Import CSV
                     </a>
-                    <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
-                        <i class="flaticon-381-add-1"></i> Add Student
-                    </a>
+                    @php
+                        $currentInst = \App\Models\Institute::current() ?? (auth()->check() ? auth()->user()->institute : null) ?? \App\Models\Institute::find(1);
+                        $remainingStudentSlots = $currentInst ? \App\Services\PlanLimits::remainingStudentSlots($currentInst) : null;
+                        $isStudentLimitReached = ($remainingStudentSlots !== null && $remainingStudentSlots <= 0);
+                    @endphp
+                    @if($isStudentLimitReached)
+                        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="Student limit reached for your plan. Contact the platform owner to upgrade.">
+                            <button class="btn btn-primary btn-sm" disabled style="pointer-events: none; opacity: 0.65;">
+                                <i class="flaticon-381-add-1"></i> Add Student
+                            </button>
+                        </span>
+                    @else
+                        <a href="{{ route('admin.students.create') }}" class="btn btn-primary btn-sm">
+                            <i class="flaticon-381-add-1"></i> Add Student
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

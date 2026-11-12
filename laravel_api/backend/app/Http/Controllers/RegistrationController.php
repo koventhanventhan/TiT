@@ -280,13 +280,16 @@ class RegistrationController extends Controller
 
         if (!$user) {
             $institute = \App\Models\Institute::with('plan')->find($instituteId);
-            if ($institute && !\App\Services\SubscriptionService::canAddStudent($institute)) {
-                $limit = $institute->plan?->limitFor('max_students');
-                $limitMessage = "Student limit ({$limit}) reached for your current plan. Please contact support to upgrade.";
-                return response()->json([
-                    'message' => $limitMessage,
-                    'errors' => ['username' => [$limitMessage]]
-                ], 403);
+            if ($institute) {
+                try {
+                    \App\Services\PlanLimits::assertCanAddStudent($institute, 1);
+                } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                    return response()->json([
+                        'message' => $e->getMessage(),
+                        'code' => 'plan_limit_reached',
+                        'errors' => ['username' => [$e->getMessage()]],
+                    ], 422);
+                }
             }
         }
 
@@ -335,7 +338,18 @@ class RegistrationController extends Controller
             
             \Log::info('RegistrationController@step1 - Creating new student', ['data' => array_diff_key($userData, ['password' => 1])]);
             
-            $user = User::create($userData);
+            $targetInstitute = \App\Models\Institute::find($instituteId ?: 1);
+            try {
+                $user = \App\Services\PlanLimits::runWithStudentLock($targetInstitute, 1, function () use ($userData) {
+                    return User::create($userData);
+                });
+            } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'code' => 'plan_limit_reached',
+                    'errors' => ['username' => [$e->getMessage()]],
+                ], 422);
+            }
 
             if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
                 \Illuminate\Support\Facades\Cache::forget('email_verified_' . $request->username);
@@ -1576,7 +1590,17 @@ class RegistrationController extends Controller
         $userData['admin_confirmed_at'] = null; // Sibling needs admin confirmation if applicable, or inherit
         $userData['institute_id'] = $parent->institute_id;
         
-        $sibling = User::create($userData);
+        $targetInstitute = $parent->institute ?: \App\Models\Institute::find($parent->institute_id ?: 1);
+        try {
+            $sibling = \App\Services\PlanLimits::runWithStudentLock($targetInstitute, 1, function () use ($userData) {
+                return User::create($userData);
+            });
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'plan_limit_reached',
+            ], 422);
+        }
 
         Log::info('New sibling account created via OTP merge', ['parent_id' => $parent->id, 'sibling_id' => $sibling->id]);
 

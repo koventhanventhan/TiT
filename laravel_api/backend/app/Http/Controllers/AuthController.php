@@ -190,17 +190,19 @@ class AuthController extends Controller
             : ((function_exists('current_institute_id') && current_institute_id()) ? current_institute_id() : ((int) $request->header('X-Institute-Id') ?: 1));
         $institute = \App\Models\Institute::with('plan')->findOrFail($instituteId);
 
-        // Enforce Subscription Limits
-        if (!\App\Services\SubscriptionService::canAddStudent($institute)) {
-            $limit = $institute->plan?->limitFor('max_students');
+        // Enforce Subscription Limits with lock
+        try {
+            $user = \App\Services\PlanLimits::runWithStudentLock($institute, 1, function () use ($userData, $institute) {
+                $userData['institute_id'] = $institute->id;
+                return User::create($userData);
+            });
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
             return response()->json([
-                'message' => "Student limit ({$limit}) reached for this institute's current plan. Please contact support to upgrade.",
-            ], 403);
+                'message' => $e->getMessage(),
+                'code' => 'plan_limit_reached',
+                'limit' => $e->getLimit(),
+            ], 422);
         }
-        
-        $userData['institute_id'] = $institute->id;
-
-        $user = User::create($userData);
 
         \Illuminate\Support\Facades\Cache::forget('email_verified_' . $request->email);
 
@@ -302,7 +304,18 @@ class AuthController extends Controller
         $userData['admin_confirmed_at'] = $parent->admin_confirmed_at; // Inherit parent's confirmation
         $userData['institute_id'] = $parent->institute_id;
         
-        $sibling = User::create($userData);
+        $targetInstitute = $parent->institute ?: \App\Models\Institute::find($parent->institute_id ?: 1);
+        try {
+            $sibling = \App\Services\PlanLimits::runWithStudentLock($targetInstitute, 1, function () use ($userData) {
+                return User::create($userData);
+            });
+        } catch (\App\Exceptions\PlanLimitReachedException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'plan_limit_reached',
+                'limit' => $e->getLimit(),
+            ], 422);
+        }
 
         try {
             $this->notifier->notifyUser(
@@ -782,20 +795,27 @@ class AuthController extends Controller
                 
                 $plainPassword = Str::random(10);
                 
-                $user = User::create([
-                    'name' => $fullName,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'full_name' => $fullName,
-                    'email' => $googleUser->getEmail(),
-                    'password' => Hash::make($plainPassword),
-                    'role' => 'user',
-                    'institute_id' => $instituteId,
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                    'email_verified_at' => now(),
-                    'registration_status' => 'pending', // Requires admin approval normally
-                ]);
+                $targetInstitute = \App\Models\Institute::find($instituteId ?: 1);
+                try {
+                    $user = \App\Services\PlanLimits::runWithStudentLock($targetInstitute, 1, function () use ($fullName, $firstName, $lastName, $googleUser, $plainPassword, $instituteId) {
+                        return User::create([
+                            'name' => $fullName,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
+                            'full_name' => $fullName,
+                            'email' => $googleUser->getEmail(),
+                            'password' => Hash::make($plainPassword),
+                            'role' => 'user',
+                            'institute_id' => $instituteId,
+                            'google_id' => $googleUser->getId(),
+                            'avatar' => $googleUser->getAvatar(),
+                            'email_verified_at' => now(),
+                            'registration_status' => 'pending', // Requires admin approval normally
+                        ]);
+                    });
+                } catch (\App\Exceptions\PlanLimitReachedException $e) {
+                    return redirect()->to('/login?error=' . urlencode($e->getMessage()));
+                }
 
                 // Send the generated plain text password to the student (with email validation)
                 if ($this->isValidEmailForSending($user->email)) {

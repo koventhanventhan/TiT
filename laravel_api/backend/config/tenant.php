@@ -51,6 +51,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Expiry Grace Days
+    |--------------------------------------------------------------------------
+    |
+    | Number of days an institute subscription remains functional after expires_at.
+    | During this grace period, admin sees a warning banner.
+    |
+    */
+    'expiry_grace_days' => (int) env('TENANT_EXPIRY_GRACE_DAYS', 7),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Platform Contact Information
+    |--------------------------------------------------------------------------
+    |
+    | Contact details shown on blocked, expired, and subscription upgrade pages.
+    | Empty values will cause corresponding contact lines to be hidden.
+    |
+    */
+    'platform_contact_email' => env('TENANT_PLATFORM_CONTACT_EMAIL'),
+    'platform_contact_phone' => env('TENANT_PLATFORM_CONTACT_PHONE'),
+    'platform_contact_whatsapp' => env('TENANT_PLATFORM_CONTACT_WHATSAPP'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Unscoped Models
     |--------------------------------------------------------------------------
     |

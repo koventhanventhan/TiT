@@ -125,15 +125,13 @@ class ResolveTenant
             abort(404, 'Unknown institute for domain: ' . $host);
         }
 
-        // 6. Platform / Super-admin unrestricted access
+        // 6. Platform / Super-admin unrestricted access (super_admin is never blocked on any host)
         $user = $request->user() ?: auth()->user() ?: auth('web')->user() ?: auth('sanctum')->user();
         if (!$user && $request->bearerToken()) {
             $user = auth('sanctum')->user();
         }
 
-        $platformHosts = config('tenant.platform_hosts', []);
-        $isPlatformHost = in_array($bareHost, $platformHosts, true) || in_array($host, $platformHosts, true);
-        if ($isPlatformHost && $user && $user->role === 'super_admin') {
+        if ($user && $user->role === 'super_admin') {
             Tenant::set($institute);
             $request->merge(['current_institute' => $institute]);
             return $next($request);
@@ -146,23 +144,61 @@ class ResolveTenant
             }
         }
 
-        // 8. Verify Institute status
-        if ($institute->status !== 'active') {
-            return response()->json([
-                'message' => 'Institute access is ' . $institute->status,
-                'status' => $institute->status,
-            ], 403);
+        // 8. Institute 1 never expires and is never auto-suspended or blocked
+        if ((int)$institute->id !== 1) {
+            $isSuspended = ($institute->status !== 'active');
+            $isExpired = $institute->isPastGrace();
+
+            if ($isSuspended || $isExpired) {
+                // a) Admin login and logout routes must remain accessible
+                if ($request->is('admin/login') || $request->is('admin/logout')) {
+                    Tenant::set($institute);
+                    $request->merge(['current_institute' => $institute]);
+                    return $next($request);
+                }
+
+                // b) Authenticated institute admin (role admin, this institute) can open /admin/subscription
+                $isAdmin = ($user && $user->role === 'admin' && (int)$user->institute_id === (int)$institute->id);
+                if ($isAdmin) {
+                    if ($request->is('admin/subscription')) {
+                        Tenant::set($institute);
+                        $request->merge(['current_institute' => $institute]);
+                        return $next($request);
+                    }
+
+                    if ($request->is('admin') || $request->is('admin/*')) {
+                        return redirect()->route('admin.subscription');
+                    }
+                }
+
+                // c) Unauthenticated access to admin routes redirects to admin login
+                if ($request->is('admin') || $request->is('admin/*')) {
+                    return redirect()->route('admin.login');
+                }
+
+                // d) API / JSON requests return typed JSON response
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message' => $isExpired ? 'Subscription has ended' : 'This institute is temporarily unavailable',
+                        'status' => $isExpired ? 'expired' : 'suspended',
+                        'code' => $isExpired ? 'institute_expired' : 'institute_suspended',
+                    ], $isExpired ? 402 : 403);
+                }
+
+                // e) Browser requests return branded static Blade page
+                return response()->view('errors.tenant-blocked', [
+                    'institute' => $institute,
+                    'title' => $isExpired ? 'Subscription has ended' : 'This institute is temporarily unavailable',
+                    'isExpired' => $isExpired,
+                    'isSuspended' => $isSuspended,
+                    'contactEmail' => config('tenant.platform_contact_email'),
+                    'contactPhone' => config('tenant.platform_contact_phone'),
+                    'contactWhatsapp' => config('tenant.platform_contact_whatsapp'),
+                ], $isExpired ? 402 : 403)->header('X-Robots-Tag', 'noindex');
+            }
         }
 
-        // 9. Check subscription expiry
-        if ($institute->expires_at && $institute->expires_at->isPast()) {
-            return response()->json([
-                'message' => 'Institute subscription has expired',
-                'status' => 'expired',
-            ], 403);
-        }
-
-        // 10. Store in container and request
+        // 9. Store in container and request
         Tenant::set($institute);
         $request->merge(['current_institute' => $institute]);
 

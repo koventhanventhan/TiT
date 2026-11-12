@@ -107,6 +107,29 @@
 
         <div class="content-body">
             <div class="container-fluid">
+                @php
+                    $tenantForGrace = \App\Support\Tenant::current()
+                        ?: \App\Models\Institute::find(auth()->user()?->institute_id ?: (\App\Models\Institute::resolveContextInstituteId() ?: 1));
+                    $isInGrace = $tenantForGrace && $tenantForGrace->isInGracePeriod();
+                @endphp
+                @if($isInGrace)
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger mb-3 p-3 text-white d-flex align-items-center flex-wrap" role="alert" style="background-color: #dc2626; border-color: #b91c1c; border-radius: 0.5rem;">
+                            <div class="mr-3">
+                                <i class="flaticon-381-warning-1" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 font-weight-bold" style="font-size: 0.95rem;">
+                                Your subscription expired on {{ $tenantForGrace->expires_at->format('Y-m-d') }}. Access will stop on {{ $tenantForGrace->graceEndsAt()->format('Y-m-d') }}. Contact the platform owner to renew.
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <a href="{{ route('admin.subscription') }}" class="btn btn-sm btn-light font-weight-bold px-3 py-1 text-danger">View Plan</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <!-- Notifications / Alerts Section -->
                 @if(($pendingApprovals ?? 0) > 0 || ($pendingPayments ?? 0) > 0)
                 <div class="row">

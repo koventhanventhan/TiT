@@ -135,6 +135,9 @@
                             <a href="{{ route('admin.settings.messaging') }}">Messaging &amp; E-mail</a>
                         </li>
                     @endif
+                    <li class="{{ request()->routeIs('admin.subscription*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.subscription') }}">Subscription &amp; Limits</a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.settings.register') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.settings.register') }}">Register Form</a>
                     </li>

@@ -406,6 +406,55 @@ class Institute extends Model
 
     public function isExpired(): bool
     {
-        return $this->expires_at && $this->expires_at->isPast();
+        if ((int) $this->id === 1) {
+            return false;
+        }
+
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    public function isInGracePeriod(): bool
+    {
+        if ((int) $this->id === 1 || !$this->isExpired()) {
+            return false;
+        }
+
+        $graceDays = (int) config('tenant.expiry_grace_days', 7);
+        $graceEnd = $this->expires_at->copy()->addDays($graceDays);
+
+        return now()->lte($graceEnd);
+    }
+
+    public function isPastGrace(): bool
+    {
+        if ((int) $this->id === 1 || !$this->isExpired()) {
+            return false;
+        }
+
+        return !$this->isInGracePeriod();
+    }
+
+    public function graceEndsAt(): ?\Carbon\CarbonInterface
+    {
+        if ((int) $this->id === 1 || !$this->expires_at) {
+            return null;
+        }
+
+        $graceDays = (int) config('tenant.expiry_grace_days', 7);
+        return $this->expires_at->copy()->addDays($graceDays);
+    }
+
+    public function hasFeature(string $key): bool
+    {
+        if ((int) $this->id === 1) {
+            return true;
+        }
+
+        $plan = $this->plan;
+        if (!$plan) {
+            return true;
+        }
+
+        return in_array($key, $plan->features ?? [], true);
     }
 }

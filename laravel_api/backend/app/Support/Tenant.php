@@ -16,6 +16,14 @@ class Tenant
     }
 
     /**
+     * Alias for current().
+     */
+    public static function get(): ?Institute
+    {
+        return static::current();
+    }
+
+    /**
      * Get the current resolved institute ID.
      */
     public static function id(): ?int

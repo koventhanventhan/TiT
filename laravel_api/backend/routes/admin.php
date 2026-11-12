@@ -176,6 +176,9 @@ Route::prefix('admin')->group(function () {
                 ->middleware('throttle:20,1')
                 ->name('admin.settings.messaging.whatsapp.clear');
         });
+        // Subscription & Limits
+        Route::get('/subscription', [\App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('admin.subscription');
+
         Route::get('/settings/grade-promotion-schedule', [SiteSettingController::class, 'gradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule');
         Route::post('/settings/grade-promotion-schedule', [SiteSettingController::class, 'storeGradePromotionSchedule'])->name('admin.settings.grade-promotion-schedule.store');
         Route::post('/settings/learning/store', [SiteSettingController::class, 'storeMaterial'])->name('admin.settings.learning.material.store');

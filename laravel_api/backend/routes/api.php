@@ -66,7 +66,7 @@ Route::post('/register/verify-merge-otp', [RegistrationController::class, 'verif
 Route::post('/payhere/notify', [RegistrationController::class, 'payhereNotify'])->name('payhere.notify');
 
 // Unified Website Assistant Route (Optional Sanctum Auth + ProfileContext)
-Route::middleware([\App\Http\Middleware\OptionalSanctumAuth::class, \App\Http\Middleware\ProfileContext::class])
+Route::middleware([\App\Http\Middleware\OptionalSanctumAuth::class, \App\Http\Middleware\ProfileContext::class, 'feature:ai_assistant'])
     ->post('/assistant/chat', [\App\Http\Controllers\Api\AssistantChatController::class, 'chat']);
 
 // Protected routes
@@ -101,9 +101,12 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
 
         // Restricted Dashboard Routes
         Route::middleware(['reg_status'])->group(function () {
-            Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
-            Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
-            Route::post('/attend', [StudentZoomController::class, 'attend']);
+            Route::middleware(['feature:zoom'])->group(function () {
+                Route::get('/zoom-classes', [StudentZoomController::class, 'index']);
+                Route::get('/upcoming-schedules', [StudentZoomController::class, 'upcomingSchedules']);
+                Route::post('/attend', [StudentZoomController::class, 'attend']);
+            });
+
             Route::get('/messages', [StudentMessageController::class, 'index']);
             Route::post('/messages/{id}/read', [StudentMessageController::class, 'markRead']);
             
@@ -113,17 +116,21 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
             Route::get('/materials', [\App\Http\Controllers\Api\StudentMaterialController::class, 'index']);
 
             // Student AI Study Assistant (RAG Chatbot)
-            Route::post('/ai-chat', [\App\Http\Controllers\Api\StudentAiChatController::class, 'chat']);
-            Route::get('/ai-chat/history', [\App\Http\Controllers\Api\StudentAiChatController::class, 'history']);
-            Route::get('/ai-chat/usage', [\App\Http\Controllers\Api\StudentAiChatController::class, 'usage']);
-            Route::post('/ai-chat/{id}/feedback', [\App\Http\Controllers\Api\StudentAiChatController::class, 'feedback']);
+            Route::middleware(['feature:ai_assistant'])->group(function () {
+                Route::post('/ai-chat', [\App\Http\Controllers\Api\StudentAiChatController::class, 'chat']);
+                Route::get('/ai-chat/history', [\App\Http\Controllers\Api\StudentAiChatController::class, 'history']);
+                Route::get('/ai-chat/usage', [\App\Http\Controllers\Api\StudentAiChatController::class, 'usage']);
+                Route::post('/ai-chat/{id}/feedback', [\App\Http\Controllers\Api\StudentAiChatController::class, 'feedback']);
+            });
         });
     });
 
     // Teacher Dashboard Routes (Tenant Aware + Role: teacher)
     Route::middleware(['role:teacher', 'tenant'])->prefix('teacher')->group(function () {
-        Route::get('/zoom-classes', [TeacherZoomController::class, 'index']);
-        Route::post('/attend', [TeacherZoomController::class, 'attend']);
+        Route::middleware(['feature:zoom'])->group(function () {
+            Route::get('/zoom-classes', [TeacherZoomController::class, 'index']);
+            Route::post('/attend', [TeacherZoomController::class, 'attend']);
+        });
         
         Route::get('/stats', [\App\Http\Controllers\Api\TeacherDashboardController::class, 'stats']);
         Route::get('/upcoming-schedules', [\App\Http\Controllers\Api\TeacherDashboardController::class, 'upcomingSchedules']);
@@ -146,12 +153,16 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
     // Admin Master Control Routes (Tenant Aware + Role: admin)
     Route::middleware(['role:admin', 'tenant'])->prefix('admin')->group(function () {
         Route::apiResource('faqs', \App\Http\Controllers\Api\AdminFaqController::class);
-        Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
-        Route::post('/rag/materials/{id}/reindex', [\App\Http\Controllers\Api\AdminRagController::class, 'reindex']);
-        Route::post('/rag/toggle-assistant', [\App\Http\Controllers\Api\AdminRagController::class, 'toggleAssistant']);
-        Route::get('/rag/feedback-loop', [\App\Http\Controllers\Api\AdminRagController::class, 'feedbackLoop']);
-        Route::get('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'getContactSettings']);
-        Route::post('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'updateContactSettings']);
+
+        Route::middleware(['feature:ai_assistant'])->group(function () {
+            Route::get('/rag/status', [\App\Http\Controllers\Api\AdminRagController::class, 'status']);
+            Route::post('/rag/materials/{id}/reindex', [\App\Http\Controllers\Api\AdminRagController::class, 'reindex']);
+            Route::post('/rag/toggle-assistant', [\App\Http\Controllers\Api\AdminRagController::class, 'toggleAssistant']);
+            Route::get('/rag/feedback-loop', [\App\Http\Controllers\Api\AdminRagController::class, 'feedbackLoop']);
+            Route::get('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'getContactSettings']);
+            Route::post('/rag/contact-settings', [\App\Http\Controllers\Api\AdminRagController::class, 'updateContactSettings']);
+        });
+
         Route::post('/students/promote', [\App\Http\Controllers\AdminPromotionController::class, 'promoteStudents']);
         Route::get('/stats', [\App\Http\Controllers\Api\MasterAdminController::class, 'stats']);
         Route::get('/students', [\App\Http\Controllers\Api\MasterAdminController::class, 'students']);
@@ -160,8 +171,11 @@ Route::middleware(['auth:sanctum', 'profile.context'])->group(function () {
         Route::patch('/students/{id}/subject-review', [\App\Http\Controllers\Api\MasterAdminController::class, 'updateSubjectReview']);
         Route::post('/teachers/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteTeachers']);
         Route::get('/finance', [\App\Http\Controllers\Api\MasterAdminController::class, 'finance']);
-        Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);
-        Route::post('/zoom/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteZoomClasses']);
+
+        Route::middleware(['feature:zoom'])->group(function () {
+            Route::get('/zoom', [\App\Http\Controllers\Api\MasterAdminController::class, 'zoomClasses']);
+            Route::post('/zoom/bulk-delete', [\App\Http\Controllers\Api\MasterAdminController::class, 'bulkDeleteZoomClasses']);
+        });
         Route::get('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'materials']);
         Route::post('/materials', [\App\Http\Controllers\Api\MasterAdminController::class, 'storeMaterial']);
         Route::delete('/materials/{id}', [\App\Http\Controllers\Api\MasterAdminController::class, 'deleteMaterial']);

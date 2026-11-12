@@ -20,6 +20,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        config(['broadcasting.default' => 'null']);
         \Illuminate\Support\Facades\Http::preventStrayRequests();
     }
 }

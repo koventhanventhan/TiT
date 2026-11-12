@@ -70,6 +70,15 @@ class WhatsAppService
      */
     public function send(string $phone, string $message): bool
     {
+        $instituteId = $this->resolveInstituteId();
+        if ($instituteId) {
+            $inst = \App\Models\Institute::find($instituteId);
+            if ($inst && !$inst->hasFeature('whatsapp')) {
+                Log::info("WhatsApp skipped for institute {$instituteId}: feature not in plan");
+                return false;
+            }
+        }
+
         if ($this->driver === 'meta') {
             $phone = $this->normalizePhone($phone, false);
             return $this->sendMetaTemplateResult($phone, 'titeducation', 'en')->isSent();
@@ -181,6 +190,14 @@ class WhatsAppService
         array $components = []
     ): WhatsAppSendResult {
         $instituteId = $this->resolveInstituteId();
+        if ($instituteId) {
+            $inst = \App\Models\Institute::find($instituteId);
+            if ($inst && !$inst->hasFeature('whatsapp')) {
+                Log::info("WhatsApp template skipped for institute {$instituteId}: feature not in plan");
+                return WhatsAppSendResult::skipped('feature not in plan');
+            }
+        }
+
         $creds = Integrations::for($instituteId)->whatsapp(logWhenUnconfigured: true);
 
         if ($creds === null) {

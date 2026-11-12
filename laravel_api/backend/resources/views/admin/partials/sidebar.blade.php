@@ -1,4 +1,7 @@
 <div class="deznav">
+    @php
+        $sidebarInst = \App\Models\Institute::current() ?? (auth()->check() ? auth()->user()->institute : null) ?? \App\Models\Institute::find(1);
+    @endphp
     <div class="deznav-scroll">
         <ul class="metismenu" id="menu">
             {{-- Dashboard --}}
@@ -83,6 +86,7 @@
             </li>
 
             {{-- Zoom Classes --}}
+            @if(!$sidebarInst || $sidebarInst->hasFeature('zoom'))
             <li class="{{ (request()->routeIs('admin.zoom.*') || request()->routeIs('admin.attendance.*')) ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
                     <i class="flaticon-381-video-camera"></i>
@@ -106,6 +110,7 @@
                     </li>
                 </ul>
             </li>
+            @endif
 
             {{-- Exam Results (Hidden temporarily as it is not fully finished)
             <li class="{{ request()->routeIs('admin.exam-results.*') ? 'mm-active' : '' }}">

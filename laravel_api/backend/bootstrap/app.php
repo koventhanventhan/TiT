@@ -54,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'profile.context' => \App\Http\Middleware\ProfileContext::class,
             'recaptcha' => \App\Http\Middleware\VerifyRecaptcha::class,
             'auth.optional' => \App\Http\Middleware\OptionalSanctumAuth::class,
+            'feature' => \App\Http\Middleware\EnsureInstituteHasFeature::class,
         ]);
         
         // Use custom CSRF middleware that excludes API routes

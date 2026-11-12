@@ -463,6 +463,6 @@ class Institute extends Model
             return true;
         }
 
-        return in_array($key, $plan->features ?? [], true);
+        return $plan->hasFeature($key);
     }
 }

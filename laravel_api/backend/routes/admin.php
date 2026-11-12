@@ -195,14 +195,27 @@ Route::prefix('admin')->group(function () {
         Route::get('/firebase-token', [SiteSettingController::class, 'firebaseToken'])->name('admin.firebase-token');
 
         // Zoom classes
-        Route::get('/zoom', [ZoomScheduleController::class, 'index'])->name('admin.zoom.index');
-        Route::post('/zoom/bulk-delete', [ZoomScheduleController::class, 'bulkDelete'])->name('admin.zoom.bulk-delete');
-        Route::get('/zoom/create', [ZoomScheduleController::class, 'create'])->name('admin.zoom.create');
-        Route::post('/zoom', [ZoomScheduleController::class, 'store'])->name('admin.zoom.store');
-        Route::get('/zoom/{id}/edit', [ZoomScheduleController::class, 'edit'])->name('admin.zoom.edit');
-        Route::put('/zoom/{id}', [ZoomScheduleController::class, 'update'])->name('admin.zoom.update');
-        Route::post('/zoom/{id}/notify', [ZoomScheduleController::class, 'notify'])->name('admin.zoom.notify');
-        Route::delete('/zoom/{id}', [ZoomScheduleController::class, 'destroy'])->name('admin.zoom.destroy');
+        Route::middleware(['feature:zoom'])->group(function () {
+            Route::get('/zoom', [ZoomScheduleController::class, 'index'])->name('admin.zoom.index');
+            Route::post('/zoom/bulk-delete', [ZoomScheduleController::class, 'bulkDelete'])->name('admin.zoom.bulk-delete');
+            Route::get('/zoom/create', [ZoomScheduleController::class, 'create'])->name('admin.zoom.create');
+            Route::post('/zoom', [ZoomScheduleController::class, 'store'])->name('admin.zoom.store');
+            Route::get('/zoom/{id}/edit', [ZoomScheduleController::class, 'edit'])->name('admin.zoom.edit');
+            Route::put('/zoom/{id}', [ZoomScheduleController::class, 'update'])->name('admin.zoom.update');
+            Route::post('/zoom/{id}/notify', [ZoomScheduleController::class, 'notify'])->name('admin.zoom.notify');
+            Route::delete('/zoom/{id}', [ZoomScheduleController::class, 'destroy'])->name('admin.zoom.destroy');
+
+            // Zoom accounts management
+            Route::resource('zoom-accounts', ZoomAccountController::class)->names([
+                'index' => 'admin.zoom-accounts.index',
+                'create' => 'admin.zoom-accounts.create',
+                'store' => 'admin.zoom-accounts.store',
+                'edit' => 'admin.zoom-accounts.edit',
+                'update' => 'admin.zoom-accounts.update',
+                'destroy' => 'admin.zoom-accounts.destroy',
+            ])->except(['show']);
+            Route::post('/zoom-accounts/{zoomAccount}/test', [ZoomAccountController::class, 'testConnection'])->name('admin.zoom-accounts.test');
+        });
 
         // Timetable management
         Route::get('/timetables', [TimetableController::class, 'index'])->name('admin.timetables.index');
@@ -252,16 +265,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/exam-results/data/{id}', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'destroy'])->name('admin.exam-results.destroy');
         Route::post('/exam-results/data/import', [\App\Http\Controllers\Admin\ExamResultWebController::class, 'import'])->name('admin.exam-results.import');
 
-        // Zoom accounts management
-        Route::resource('zoom-accounts', ZoomAccountController::class)->names([
-            'index' => 'admin.zoom-accounts.index',
-            'create' => 'admin.zoom-accounts.create',
-            'store' => 'admin.zoom-accounts.store',
-            'edit' => 'admin.zoom-accounts.edit',
-            'update' => 'admin.zoom-accounts.update',
-            'destroy' => 'admin.zoom-accounts.destroy',
-        ])->except(['show']);
-        Route::post('/zoom-accounts/{zoomAccount}/test', [ZoomAccountController::class, 'testConnection'])->name('admin.zoom-accounts.test');
+
 
         // Global Search API
         Route::get('/search', [AdminController::class, 'search'])->name('admin.search');

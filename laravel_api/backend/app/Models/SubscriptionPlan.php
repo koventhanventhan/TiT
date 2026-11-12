@@ -72,4 +72,28 @@ class SubscriptionPlan extends Model
 
         return $limit === null ? 'Unlimited' : number_format($limit);
     }
+
+    /**
+     * Check if a feature is enabled on this plan (supports canonical keys and legacy labels).
+     */
+    public function hasFeature(string $key): bool
+    {
+        $rawFeatures = $this->features;
+        if (!is_array($rawFeatures)) {
+            return false;
+        }
+
+        if (in_array($key, $rawFeatures, true)) {
+            return true;
+        }
+
+        $legacyMap = config('plans.legacy_map', []);
+        foreach ($rawFeatures as $raw) {
+            if (isset($legacyMap[$raw]) && $legacyMap[$raw] === $key) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

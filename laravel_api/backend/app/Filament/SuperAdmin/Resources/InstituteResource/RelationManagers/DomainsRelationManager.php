@@ -91,6 +91,18 @@ class DomainsRelationManager extends RelationManager
                 Actions\CreateAction::make('add_domain')
                     ->label('Add website address')
                     ->modalHeading('Add website address')
+                    ->before(function (Actions\CreateAction $action) {
+                        /** @var Institute $owner */
+                        $owner = $this->getOwnerRecord();
+                        if (!$owner->hasFeature('custom_domain')) {
+                            Notification::make()
+                                ->title('Feature not in plan')
+                                ->body('This institute plan does not include the Custom Domain feature. Please upgrade the plan first.')
+                                ->danger()
+                                ->send();
+                            $action->halt();
+                        }
+                    })
                     ->using(function (array $data): InstituteDomain {
                         /** @var Institute $owner */
                         $owner = $this->getOwnerRecord();

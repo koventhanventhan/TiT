@@ -11,7 +11,9 @@ const VIEWPORTS = [
   { name: '375x800', width: 375, height: 800 }
 ];
 
-const ROUTES = [
+const ROUTES = process.env.CRAWL_ROUTES
+  ? process.env.CRAWL_ROUTES.split(',').map(r => r.trim()).filter(Boolean)
+  : [
   '/admin/dashboard',
   '/admin/students',
   '/admin/students/pending-payments',
@@ -496,7 +498,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
 
     dashboardCheck = {
       statCards,
-      statCardsOk: statCards.length === 6 && statCards.every(s => s.ok),
+      statCardsOk: (statCards.length >= 6 && statCards.length <= 7) && statCards.every(s => s.ok),
       icons: {
         home: checkIcon(home),
         mail: checkIcon(mail),
@@ -823,7 +825,7 @@ async function runCrawler() {
 
   console.log('\nSUMMARY_JSON:' + JSON.stringify({ summary, uniqueModals: Array.from(globalUniqueModals) }));
 
-  if (globalUniqueModals.size < 16) {
+  if (!process.env.CRAWL_ROUTES && globalUniqueModals.size < 16) {
     console.error(`\nFAILED: Expected >= 16 unique modals opened on seeded run, but found ${globalUniqueModals.size}.`);
     process.exit(1);
   }

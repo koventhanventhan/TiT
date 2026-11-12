@@ -86,6 +86,7 @@ return [
         \App\Models\Institute::class => 'Root tenant entity; represents institutes themselves.',
         \App\Models\InstituteDomain::class => 'Platform domain-to-tenant routing table; queried before tenant context is resolved.',
         \App\Models\SubscriptionPlan::class => 'Platform-wide subscription tier definitions available to all institutes.',
+        \App\Models\InstituteSubscriptionNotice::class => 'Platform-wide subscription reminder notice history; managed by console daemon across tenants.',
     ],
 
 ];

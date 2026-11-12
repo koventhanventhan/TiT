@@ -150,6 +150,11 @@ class PlanUsage
             'teacher_percent' => self::percent($teacherUsed, $teacherLimit),
             'teacher_state' => self::state($teacherUsed, $teacherLimit),
             'features' => $featuresList,
+            'contact' => [
+                'email' => config('tenant.platform_contact_email'),
+                'phone' => config('tenant.platform_contact_phone'),
+                'whatsapp' => config('tenant.platform_contact_whatsapp'),
+            ],
         ];
     }
 }

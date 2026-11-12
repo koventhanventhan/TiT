@@ -333,9 +333,8 @@ class InstituteResource extends Resource
 
                 Select::make('subscription_plan_id')
                     ->label('Change plan (optional)')
-                    ->relationship('plan', 'name')
-                    ->placeholder('Keep current plan')
-                    ->preload(),
+                    ->options(static fn (): array => \App\Models\SubscriptionPlan::orderBy('id')->pluck('name', 'id')->all())
+                    ->placeholder('Keep current plan'),
 
                 TextInput::make('note')
                     ->label('Note (optional)')

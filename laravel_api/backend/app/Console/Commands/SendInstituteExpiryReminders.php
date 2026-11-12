@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\NotificationMail;
+use App\Mail\SubscriptionExpiryDigestMail;
+use App\Mail\SubscriptionExpiryReminderMail;
 use App\Models\Institute;
 use App\Models\InstituteSubscriptionNotice;
 use App\Models\User;
@@ -107,17 +108,17 @@ class SendInstituteExpiryReminders extends Command
             if ($isDryRun) {
                 $this->info("[DRY RUN] Would send {$kind} reminder to {$admin->email} for {$institute->name} (expires {$expiresOn}).");
             } else {
-                $mailable = new NotificationMail('subscription_reminder', [
-                    'subject_line' => $subject,
-                    'heading'      => $heading,
-                    'message'      => $messageText,
-                    'institute_id' => $institute->id,
-                    'details'      => [
+                $mailable = new SubscriptionExpiryReminderMail(
+                    subjectLine: $subject,
+                    heading: $heading,
+                    messageText: $messageText,
+                    instituteId: $institute->id,
+                    details: [
                         'Institute'  => $institute->name,
                         'Expires On' => $expiresOn,
                         'Days Left'  => (string) $daysUntil,
                     ],
-                ]);
+                );
 
                 // Send via InstituteMail with platform SMTP fallback
                 $sent = InstituteMail::to($admin->email, $institute->id)->send($mailable);
@@ -158,12 +159,11 @@ class SendInstituteExpiryReminders extends Command
             if ($isDryRun) {
                 $this->info("[DRY RUN] Would send digest of " . count($sentReminders) . " notice(s) to platform owner: {$platformOwnerEmail}");
             } else {
-                $digestMailable = new NotificationMail('admin_alert', [
-                    'subject_line' => "Subscription Expiry Digest - " . count($sentReminders) . " Notice(s) Sent",
-                    'heading'      => 'Subscription Expiry Digest',
-                    'message'      => "The daily subscription expiry reminder scan processed the following notices:\n\n" . implode("\n", $digestLines),
-                    'institute_id' => 1,
-                ]);
+                $digestMailable = new SubscriptionExpiryDigestMail(
+                    subjectLine: "Subscription Expiry Digest - " . count($sentReminders) . " Notice(s) Sent",
+                    heading: 'Subscription Expiry Digest',
+                    messageText: "The daily subscription expiry reminder scan processed the following notices:\n\n" . implode("\n", $digestLines),
+                );
 
                 Mail::to($platformOwnerEmail)->send($digestMailable);
                 $this->info("Sent digest to platform owner ({$platformOwnerEmail}).");

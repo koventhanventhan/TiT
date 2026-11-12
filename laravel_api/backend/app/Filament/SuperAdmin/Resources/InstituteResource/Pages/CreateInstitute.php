@@ -375,15 +375,6 @@ class CreateInstitute extends CreateRecord
         $deferDomain = (bool) ($data['defer_domain'] ?? false);
         $domain = (!$deferDomain && !empty($data['domain'])) ? trim((string) $data['domain']) : null;
 
-        // Custom domain plan feature check
-        if ($domain && !empty($data['subscription_plan_id'])) {
-            $plan = \App\Models\SubscriptionPlan::find((int) $data['subscription_plan_id']);
-            if ($plan && !$plan->hasFeature('custom_domain')) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'domain' => 'The selected plan does not include the Custom Domain feature.',
-                ]);
-            }
-        }
         $createAdmin = (bool) ($data['create_admin'] ?? true);
         $expiresAt = !empty($data['expires_at'])
             ? Carbon::parse((string) $data['expires_at'])

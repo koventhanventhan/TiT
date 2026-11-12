@@ -4,7 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\SuperAdmin\Resources\InstituteResource;
 use App\Filament\SuperAdmin\Widgets\StatsOverviewWidget;
-use App\Mail\NotificationMail;
+use App\Mail\SubscriptionExpiryDigestMail;
+use App\Mail\SubscriptionExpiryReminderMail;
 use App\Models\ActivityLog;
 use App\Models\Institute;
 use App\Models\InstituteSubscriptionNotice;
@@ -106,7 +107,7 @@ class InstituteRenewalAndReminderTest extends TestCase
             );
 
             // Assert email was sent to admin
-            Mail::assertSent(NotificationMail::class, function (NotificationMail $mail) use ($admin) {
+            Mail::assertSent(SubscriptionExpiryReminderMail::class, function (SubscriptionExpiryReminderMail $mail) use ($admin) {
                 return $mail->hasTo($admin->email);
             });
         }
@@ -166,7 +167,7 @@ class InstituteRenewalAndReminderTest extends TestCase
             'institute_id' => 1,
         ]);
 
-        Mail::assertNotSent(NotificationMail::class, function (NotificationMail $mail) {
+        Mail::assertNotSent(SubscriptionExpiryReminderMail::class, function (SubscriptionExpiryReminderMail $mail) {
             return $mail->hasTo('admin_inst1@example.com');
         });
 
@@ -229,7 +230,7 @@ class InstituteRenewalAndReminderTest extends TestCase
 
         Artisan::call('institutes:expiry-reminders');
 
-        Mail::assertSent(NotificationMail::class, function (NotificationMail $mail) {
+        Mail::assertSent(SubscriptionExpiryDigestMail::class, function (SubscriptionExpiryDigestMail $mail) {
             return $mail->hasTo('owner@platform.com');
         });
 

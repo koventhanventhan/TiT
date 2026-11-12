@@ -179,7 +179,7 @@ class ResolveTenant
                 // d) API / JSON requests return typed JSON response
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json([
-                        'message' => $isExpired ? 'Subscription has ended' : 'This institute is temporarily unavailable',
+                        'message' => $isExpired ? 'Subscription has ended' : 'Institute access is suspended',
                         'status' => $isExpired ? 'expired' : 'suspended',
                         'code' => $isExpired ? 'institute_expired' : 'institute_suspended',
                     ], $isExpired ? 402 : 403);

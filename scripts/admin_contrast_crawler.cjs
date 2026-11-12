@@ -41,6 +41,7 @@ const ROUTES = [
   '/admin/settings/appearance',
   '/admin/settings/online-payments',
   '/admin/settings/messaging',
+  '/admin/subscription',
   '/admin/zoom',
   '/admin/zoom/create',
   '/admin/zoom-accounts',

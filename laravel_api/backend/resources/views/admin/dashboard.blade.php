@@ -162,6 +162,34 @@
             </div>
         </a>
     </div>
+    {{-- Plan & Capacity Card --}}
+    @php
+        $dashInst = \App\Support\Tenant::current()
+            ?: \App\Models\Institute::find(auth()->user()?->institute_id ?: (\App\Models\Institute::resolveContextInstituteId() ?: 1));
+        $dashPlan = $dashInst?->plan;
+        $dashStuUsed = $dashInst ? \App\Services\PlanUsage::students($dashInst) : 0;
+        $dashStuLimit = $dashPlan?->limitFor('max_students');
+    @endphp
+    <div class="col-6 col-md-4 col-xl-3 col-xxl-4">
+        <a href="{{ route('admin.subscription') }}" style="text-decoration: none;">
+            <div class="widget-stat card" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="card-body p-4">
+                    <div class="media ai-icon">
+                        <span class="mr-3" style="width: 3.75rem; height: 3.75rem; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--adm-accent, #3b82f6); border: 1px solid var(--adm-border);">
+                            <i class="flaticon-381-layer-1" style="font-size: 1.75rem;"></i>
+                        </span>
+                        <div class="media-body">
+                            <p class="mb-1" style="font-size: 0.8125rem; color: var(--adm-text-2);">Plan &amp; Capacity</p>
+                            <h4 class="mb-0" style="font-size: 1.15rem; font-weight: 700; color: var(--adm-text);">{{ $dashPlan?->name ?? 'Standard' }}</h4>
+                            <div style="font-size: 0.72rem; color: var(--adm-text-3); margin-top: 2px;">
+                                Students: {{ $dashStuUsed }} / {{ $dashStuLimit !== null ? $dashStuLimit : 'Unlimited' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 <!-- Charts Section -->

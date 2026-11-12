@@ -108,26 +108,79 @@
         <div class="content-body">
             <div class="container-fluid">
                 @php
-                    $tenantForGrace = \App\Support\Tenant::current()
+                    $tenantForNotice = \App\Support\Tenant::current()
                         ?: \App\Models\Institute::find(auth()->user()?->institute_id ?: (\App\Models\Institute::resolveContextInstituteId() ?: 1));
-                    $isInGrace = $tenantForGrace && $tenantForGrace->isInGracePeriod();
+                    $isInGrace = $tenantForNotice && $tenantForNotice->isInGracePeriod();
+                    $planUsageDetails = $tenantForNotice ? \App\Services\PlanUsage::details($tenantForNotice) : null;
+
+                    $showNoticeBar = false;
+                    $noticeType = null;
+                    $noticeMsg = null;
+                    $noticeColor = 'warning';
+
+                    if ($planUsageDetails && !$planUsageDetails['is_primary']) {
+                        if ($isInGrace) {
+                            $showNoticeBar = true;
+                            $noticeType = 'grace';
+                            $noticeColor = 'danger';
+                            $noticeMsg = 'Your subscription expired on ' . ($tenantForNotice->expires_at ? $tenantForNotice->expires_at->format('Y-m-d') : 'recently') . '. Access will stop on ' . ($tenantForNotice->graceEndsAt() ? $tenantForNotice->graceEndsAt()->format('Y-m-d') : 'soon') . '. Contact the platform owner to renew.';
+                        } elseif ($planUsageDetails['days_left'] !== null && $planUsageDetails['days_left'] <= 14 && $planUsageDetails['days_left'] >= 0) {
+                            $showNoticeBar = true;
+                            $noticeType = 'expiring';
+                            $noticeColor = 'warning';
+                            $noticeMsg = 'Your subscription expires in ' . $planUsageDetails['days_left'] . ' day' . ($planUsageDetails['days_left'] === 1 ? '' : 's') . '. Contact the platform owner to renew.';
+                        } elseif ($planUsageDetails['student_percent'] >= 90) {
+                            $showNoticeBar = true;
+                            $noticeType = 'student_capacity';
+                            $noticeColor = 'warning';
+                            $noticeMsg = 'Student capacity is at ' . $planUsageDetails['student_percent'] . '% (' . $planUsageDetails['student_used'] . '/' . $planUsageDetails['student_limit'] . '). Contact the platform owner to upgrade your plan.';
+                        } elseif ($planUsageDetails['teacher_percent'] >= 90) {
+                            $showNoticeBar = true;
+                            $noticeType = 'teacher_capacity';
+                            $noticeColor = 'warning';
+                            $noticeMsg = 'Teacher capacity is at ' . $planUsageDetails['teacher_percent'] . '% (' . $planUsageDetails['teacher_used'] . '/' . $planUsageDetails['teacher_limit'] . '). Contact the platform owner to upgrade your plan.';
+                        }
+                    }
                 @endphp
-                @if($isInGrace)
-                <div class="row">
+
+                @if($showNoticeBar)
+                <div class="row" id="tit-plan-notice-bar" style="display: {{ $isInGrace ? 'block' : 'none' }};">
                     <div class="col-12">
-                        <div class="alert alert-danger mb-3 p-3 text-white d-flex align-items-center flex-wrap" role="alert" style="background-color: #dc2626; border-color: #b91c1c; border-radius: 0.5rem;">
-                            <div class="mr-3">
-                                <i class="flaticon-381-warning-1" style="font-size: 1.5rem;"></i>
+                        <div class="alert alert-{{ $noticeColor }} mb-3 p-2 px-3 d-flex align-items-center justify-content-between flex-wrap" role="alert" style="border-radius: 0.5rem; font-size: 0.875rem; {{ $noticeColor === 'danger' ? 'background-color: #dc2626; border-color: #b91c1c; color: #ffffff;' : '' }}">
+                            <div class="d-flex align-items-center flex-grow-1 mr-2 flex-wrap">
+                                <i class="flaticon-381-warning-1 mr-2" style="font-size: 1.25rem;"></i>
+                                <span class="font-weight-bold mr-2">{{ $noticeMsg }}</span>
+                                <a href="{{ route('admin.subscription') }}" class="btn btn-xs {{ $noticeColor === 'danger' ? 'btn-light text-danger' : 'btn-outline-dark' }} font-weight-bold ml-1">View Plan</a>
                             </div>
-                            <div class="flex-grow-1 font-weight-bold" style="font-size: 0.95rem;">
-                                Your subscription expired on {{ $tenantForGrace->expires_at->format('Y-m-d') }}. Access will stop on {{ $tenantForGrace->graceEndsAt()->format('Y-m-d') }}. Contact the platform owner to renew.
-                            </div>
-                            <div class="mt-2 mt-sm-0">
-                                <a href="{{ route('admin.subscription') }}" class="btn btn-sm btn-light font-weight-bold px-3 py-1 text-danger">View Plan</a>
-                            </div>
+                            @if(!$isInGrace)
+                            <button type="button" class="close" id="tit-dismiss-plan-notice" aria-label="Close" style="font-size: 1.25rem; line-height: 1; opacity: 0.7; padding: 0; background: none; border: none; cursor: pointer;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            @endif
                         </div>
                     </div>
                 </div>
+                @if(!$isInGrace)
+                <script>
+                    (function() {
+                        try {
+                            var noticeKey = 'tit_plan_notice_dismissed_{{ $noticeType }}';
+                            if (!sessionStorage.getItem(noticeKey)) {
+                                var el = document.getElementById('tit-plan-notice-bar');
+                                if (el) el.style.display = 'block';
+                            }
+                            var btn = document.getElementById('tit-dismiss-plan-notice');
+                            if (btn) {
+                                btn.addEventListener('click', function() {
+                                    sessionStorage.setItem(noticeKey, '1');
+                                    var el = document.getElementById('tit-plan-notice-bar');
+                                    if (el) el.style.display = 'none';
+                                });
+                            }
+                        } catch (_) {}
+                    })();
+                </script>
+                @endif
                 @endif
 
                 <!-- Notifications / Alerts Section -->

@@ -25,6 +25,8 @@ class RecaptchaAndGooglePerInstituteTest extends TestCase
     {
         parent::setUp();
 
+        config(['services.recaptcha.verify_in_tests' => true]);
+
         RateLimiter::clear('recaptcha_unconfigured:*');
 
         $this->instOne = Institute::create([

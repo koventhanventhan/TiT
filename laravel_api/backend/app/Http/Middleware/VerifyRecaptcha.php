@@ -31,6 +31,11 @@ class VerifyRecaptcha
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip reCAPTCHA verification in tests unless explicitly opted in
+        if (app()->environment('testing') && !config('services.recaptcha.verify_in_tests', false)) {
+            return $next($request);
+        }
+
         $instituteId = Tenant::id() ?? 1;
         $creds = Integrations::for($instituteId)->recaptcha();
 

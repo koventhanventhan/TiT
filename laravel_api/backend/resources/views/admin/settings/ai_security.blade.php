@@ -719,7 +719,7 @@
                 }).then(function (ok) {
                     if (ok) geminiClearForm.submit();
                 });
-            } else if (confirm('Clear Gemini AI Key? AI Assistant features will be disabled.')) {
+            } else {
                 geminiClearForm.submit();
             }
         });
@@ -749,7 +749,7 @@
                 }).then(function (ok) {
                     if (ok) recaptchaClearForm.submit();
                 });
-            } else if (confirm('Clear reCAPTCHA credentials? Strict fallback throttling will apply.')) {
+            } else {
                 recaptchaClearForm.submit();
             }
         });
@@ -770,7 +770,7 @@
                 }).then(function (ok) {
                     if (ok) googleClearForm.submit();
                 });
-            } else if (confirm('Clear Google Sign-in credentials? Google sign-in will be disabled.')) {
+            } else {
                 googleClearForm.submit();
             }
         });

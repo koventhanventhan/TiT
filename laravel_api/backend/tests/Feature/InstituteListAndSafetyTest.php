@@ -144,10 +144,10 @@ class InstituteListAndSafetyTest extends TestCase
         ]);
 
         // Verify computed setupBadges() across all 4 situations
-        $this->assertSame(['Domain: verified', 'Admin: yes', 'Integrations: 3/3'], $inst1->setupBadges());
-        $this->assertSame(['Domain: none', 'Admin: no', 'Integrations: 0/3'], $instBare->setupBadges());
-        $this->assertSame(['Domain: unverified', 'Admin: yes', 'Integrations: 0/3'], $instUnverified->setupBadges());
-        $this->assertSame(['Domain: verified', 'Admin: no', 'Integrations: 1/3'], $instPartial->setupBadges());
+        $this->assertSame(['Domain: verified', 'Admin: yes', 'Integrations: 3/7'], $inst1->setupBadges());
+        $this->assertSame(['Domain: none', 'Admin: no', 'Integrations: 0/7'], $instBare->setupBadges());
+        $this->assertSame(['Domain: unverified', 'Admin: yes', 'Integrations: 0/7'], $instUnverified->setupBadges());
+        $this->assertSame(['Domain: verified', 'Admin: no', 'Integrations: 1/7'], $instPartial->setupBadges());
 
         // Render ListInstitutes table and assert badges appear while secrets NEVER appear
         $this->actingAs($this->superAdmin);
@@ -159,9 +159,9 @@ class InstituteListAndSafetyTest extends TestCase
             ->assertSee('Domain: none')
             ->assertSee('Admin: yes')
             ->assertSee('Admin: no')
-            ->assertSee('Integrations: 3/3')
-            ->assertSee('Integrations: 1/3')
-            ->assertSee('Integrations: 0/3')
+            ->assertSee('Integrations: 3/7')
+            ->assertSee('Integrations: 1/7')
+            ->assertSee('Integrations: 0/7')
             ->assertDontSee('TOP_SECRET_PAYHERE_KEY')
             ->assertDontSee('TOP_SECRET_WA_TOKEN')
             ->assertDontSee('TOP_SECRET_SMTP_PASS')

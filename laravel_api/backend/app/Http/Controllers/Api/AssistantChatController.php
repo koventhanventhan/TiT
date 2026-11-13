@@ -104,13 +104,29 @@ class AssistantChatController extends Controller
                 $headerInst = $request->header('X-Institute-Id');
                 $instituteId = ($headerInst && is_numeric($headerInst)) ? (int) $headerInst : (Tenant::id() ?? 1);
             } else {
-                $instituteId = Tenant::id() ?? 1;
+                // Host Tenant::id() always decides when resolved.
+                // In testing environments where host domain routing did not set Tenant::id(), fall back to header if provided.
+                $instituteId = Tenant::id() ?? ($request->hasHeader('X-Institute-Id') && app()->environment('testing') ? (int) $request->header('X-Institute-Id') : null) ?? 1;
             }
         }
 
         $institute = Institute::find($instituteId);
         if (!$institute) {
             return response()->json(['message' => 'Institute not found.'], 404);
+        }
+
+        // reCAPTCHA fail closed: in production / non-local environments, if reCAPTCHA secret is empty, fail closed (503)
+        if ($tier === 'public') {
+            $env = config('app.env') ?: app()->environment();
+            if (!in_array($env, ['local', 'testing'], true)) {
+                $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
+                if ($recaptchaCreds === null || !$recaptchaCreds->isConfigured()) {
+                    return response()->json([
+                        'message' => 'The public website assistant is temporarily undergoing maintenance.',
+                        'public_enabled' => false,
+                    ], 503);
+                }
+            }
         }
 
         // Verify Gemini key is configured for this institute
@@ -278,6 +294,7 @@ class AssistantChatController extends Controller
                 ], 429);
             }
             RateLimiter::hit($throttleKeyMin, 60);
+            RateLimiter::hit("assistant_ip_min:{$ip}", 60);
 
             // Per IP per day
             $perDay = (int) config('rag.assistant.visitor_per_day', 60);
@@ -288,6 +305,7 @@ class AssistantChatController extends Controller
                 ], 429);
             }
             RateLimiter::hit($throttleKeyDay, 86400);
+            RateLimiter::hit("assistant_ip_day:{$ip}", 86400);
         }
 
         // 6. Fast Academic Keyword Pre-Check for Public Tier

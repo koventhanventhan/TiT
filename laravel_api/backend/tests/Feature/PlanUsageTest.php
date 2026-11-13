@@ -62,7 +62,7 @@ class PlanUsageTest extends TestCase
         ]);
     }
 
-    public function test_plan_usage_counting_rules_exclude_soft_deleted_and_rejected_students(): void
+    public function test_plan_usage_counting_rules_exclude_deleted_and_rejected_students(): void
     {
         // 2 active students
         User::withoutGlobalScopes()->create([
@@ -93,16 +93,16 @@ class PlanUsageTest extends TestCase
             'registration_status' => 'rejected',
         ]);
 
-        // 1 soft-deleted student -> MUST NOT count
-        $softDeleted = User::withoutGlobalScopes()->create([
-            'name' => 'Soft Deleted Student',
+        // 1 deleted student -> MUST NOT count
+        $deleted = User::withoutGlobalScopes()->create([
+            'name' => 'Deleted Student',
             'email' => 's_deleted@horizon.lk',
             'password' => Hash::make('Pass123!'),
             'role' => 'user',
             'institute_id' => $this->institute->id,
             'registration_status' => 'confirmed',
         ]);
-        $softDeleted->delete();
+        $deleted->delete();
 
         // 1 student from another institute -> MUST NOT count
         User::withoutGlobalScopes()->create([

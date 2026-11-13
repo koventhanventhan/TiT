@@ -47,7 +47,7 @@ class StatsOverviewWidget extends BaseWidget
             ->count();
 
         $overLimitInstitutes = Institute::whereHas('plan', fn ($q) => $q->where('max_students', '>', 0))
-            ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\' AND users.deleted_at IS NULL) > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
+            ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\') > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
             ->count();
 
         return [

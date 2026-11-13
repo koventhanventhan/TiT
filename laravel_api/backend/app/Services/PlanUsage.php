@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Models\Institute;
 use App\Models\User;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 
 class PlanUsage
 {
     /**
      * Count active students belonging to the institute that count toward the plan limit.
-     * Definition: role = 'user', institute_id = this institute, not soft-deleted,
+     * Definition: role = 'user', institute_id = this institute,
      * and registration_status != 'rejected'.
      */
     public static function students(Institute $institute): int
@@ -19,13 +18,6 @@ class PlanUsage
         $query = User::withoutGlobalScopes()
             ->where('institute_id', $institute->id)
             ->where('role', 'user');
-
-        if (
-            in_array(SoftDeletes::class, class_uses_recursive(User::class), true)
-            || Schema::hasColumn('users', 'deleted_at')
-        ) {
-            $query->whereNull('deleted_at');
-        }
 
         if (Schema::hasColumn('users', 'registration_status')) {
             $query->where(function ($q) {
@@ -39,22 +31,14 @@ class PlanUsage
 
     /**
      * Count active teachers belonging to the institute that count toward the plan limit.
-     * Definition: role = 'teacher', institute_id = this institute, not soft-deleted.
+     * Definition: role = 'teacher', institute_id = this institute.
      */
     public static function teachers(Institute $institute): int
     {
-        $query = User::withoutGlobalScopes()
+        return User::withoutGlobalScopes()
             ->where('institute_id', $institute->id)
-            ->where('role', 'teacher');
-
-        if (
-            in_array(SoftDeletes::class, class_uses_recursive(User::class), true)
-            || Schema::hasColumn('users', 'deleted_at')
-        ) {
-            $query->whereNull('deleted_at');
-        }
-
-        return $query->count();
+            ->where('role', 'teacher')
+            ->count();
     }
 
     /**

@@ -344,32 +344,156 @@ class PlanLimitEnforcementTest extends TestCase
     }
 
     /**
-     * 7. Soft-deleted users do not count toward the limit.
+     * 7. Deleting a student/teacher frees a slot (admin delete route + bulk delete + teacher delete).
      */
-    public function test_soft_deleted_students_do_not_count_toward_limit(): void
+    public function test_deleting_a_student_or_teacher_frees_a_slot_across_admin_and_bulk_delete_routes(): void
     {
-        $inst = $this->createInstituteWithPlan(['max_students' => 1]);
+        $inst = $this->createInstituteWithPlan(['max_students' => 2, 'max_teachers' => 1]);
 
-        $student = User::withoutGlobalScopes()->create([
+        $admin = User::withoutGlobalScopes()->create([
+            'name' => 'Inst Admin',
+            'email' => 'admin@inst-' . uniqid() . '.lk',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'institute_id' => $inst->id,
+        ]);
+
+        $student1 = User::withoutGlobalScopes()->create([
             'name' => 's1',
             'email' => 's1@test.com',
             'password' => Hash::make('secret'),
             'role' => 'user',
-            'full_name' => 'S1',
+            'full_name' => 'Student One',
             'institute_id' => $inst->id,
         ]);
 
-        // Institute is at limit
+        $student2 = User::withoutGlobalScopes()->create([
+            'name' => 's2',
+            'email' => 's2@test.com',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
+            'full_name' => 'Student Two',
+            'institute_id' => $inst->id,
+        ]);
+
+        // Students limit reached (2/2)
         $this->assertEquals(0, PlanLimits::remainingStudentSlots($inst));
 
-        // Soft-delete the student
-        $student->deleted_at = now();
-        $student->save();
+        // a) Admin single student delete route frees 1 slot
+        $this->actingAs($admin)
+            ->delete(route('admin.students.destroy', $student1->id))
+            ->assertRedirect(route('admin.students.index'))
+            ->assertSessionHas('success', 'Student account deleted permanently.');
 
-        // Remaining slots should now be 1
+        $this->assertDatabaseMissing('users', ['id' => $student1->id]);
         $this->assertEquals(1, PlanLimits::remainingStudentSlots($inst));
-        PlanLimits::assertCanAddStudent($inst, 1);
-        $this->assertTrue(true);
+
+        // Add back a student so we are full again
+        $student3 = User::withoutGlobalScopes()->create([
+            'name' => 's3',
+            'email' => 's3@test.com',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
+            'full_name' => 'Student Three',
+            'institute_id' => $inst->id,
+        ]);
+        $this->assertEquals(0, PlanLimits::remainingStudentSlots($inst));
+
+        // b) Admin bulk delete frees all selected slots
+        $this->actingAs($admin)
+            ->post(route('admin.students.bulk-delete'), ['ids' => [$student2->id, $student3->id]])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $student2->id]);
+        $this->assertDatabaseMissing('users', ['id' => $student3->id]);
+        $this->assertEquals(2, PlanLimits::remainingStudentSlots($inst));
+
+        // c) Teacher delete frees a teacher slot
+        $teacher = User::withoutGlobalScopes()->create([
+            'name' => 't1',
+            'email' => 't1@test.com',
+            'password' => Hash::make('secret'),
+            'role' => 'teacher',
+            'full_name' => 'Teacher One',
+            'institute_id' => $inst->id,
+        ]);
+        $this->assertEquals(0, PlanLimits::remainingTeacherSlots($inst));
+
+        $this->actingAs($admin)
+            ->delete(route('admin.teachers.destroy', $teacher->id))
+            ->assertRedirect(route('admin.teachers.index'))
+            ->assertSessionHas('success', 'Teacher deleted permanently.');
+
+        $this->assertDatabaseMissing('users', ['id' => $teacher->id]);
+        $this->assertEquals(1, PlanLimits::remainingTeacherSlots($inst));
+    }
+
+    /**
+     * 7b. After deleting a student the same e-mail and phone can be registered again.
+     */
+    public function test_after_deleting_a_student_the_same_email_and_phone_can_be_registered_again(): void
+    {
+        $inst = $this->createInstituteWithPlan(['max_students' => 5]);
+
+        $admin = User::withoutGlobalScopes()->create([
+            'name' => 'Inst Admin 2',
+            'email' => 'admin2@inst-' . uniqid() . '.lk',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'institute_id' => $inst->id,
+        ]);
+
+        $studentData = [
+            'full_name' => 'Original Student',
+            'email' => 'duplicate.check@example.com',
+            'phone_number' => '0771234567',
+            'password' => 'Password123!',
+            'date_of_birth' => '2005-01-01',
+            'gender' => 'male',
+            'school_name' => 'Central College',
+            'medium' => 'english',
+            'online_experience' => 1,
+            'device_used' => 'Laptop',
+            'current_grade' => 'Grade 12',
+            'stream' => 'bio_maths',
+        ];
+
+        // 1. Admin creates initial student
+        $res = $this->actingAs($admin)
+            ->post(route('admin.students.store'), $studentData);
+        $res->assertRedirect();
+        $created = User::withoutGlobalScopes()->where('email', 'duplicate.check@example.com')->firstOrFail();
+
+        // 2. Admin deletes student
+        $this->actingAs($admin)
+            ->delete(route('admin.students.destroy', $created->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $created->id]);
+
+        // 3. Admin creates another student with the EXACT SAME email and phone
+        $res2 = $this->actingAs($admin)
+            ->post(route('admin.students.store'), [
+                'full_name' => 'Re-registered Student',
+                'email' => 'duplicate.check@example.com',
+                'phone_number' => '0771234567',
+                'password' => 'NewPassword123!',
+                'date_of_birth' => '2005-02-02',
+                'gender' => 'female',
+                'school_name' => 'Central College',
+                'medium' => 'english',
+                'online_experience' => 1,
+                'device_used' => 'Phone',
+                'current_grade' => 'Grade 12',
+                'stream' => 'bio_maths',
+            ]);
+
+        $res2->assertSessionHasNoErrors();
+        $res2->assertRedirect();
+
+        $reRegistered = User::withoutGlobalScopes()->where('email', 'duplicate.check@example.com')->first();
+        $this->assertNotNull($reRegistered);
+        $this->assertEquals('Re-registered Student', $reRegistered->full_name);
     }
 
     /**

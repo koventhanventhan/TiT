@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Exceptions\PlanLimitReachedException;
 use App\Models\Institute;
 use App\Models\User;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 
 class SubscriptionService
@@ -62,17 +61,9 @@ class SubscriptionService
             return PlanUsage::teachers($institute);
         }
 
-        $query = User::withoutGlobalScopes()
+        return User::withoutGlobalScopes()
             ->where('institute_id', $instituteId)
-            ->where('role', $role);
-
-        if (
-            in_array(SoftDeletes::class, class_uses_recursive(User::class), true)
-            || Schema::hasColumn('users', 'deleted_at')
-        ) {
-            $query->whereNull('deleted_at');
-        }
-
-        return $query->count();
+            ->where('role', $role)
+            ->count();
     }
 }

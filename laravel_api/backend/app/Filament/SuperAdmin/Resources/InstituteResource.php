@@ -212,7 +212,7 @@ class InstituteResource extends Resource
                     ->label('Over limit')
                     ->query(fn (Builder $query): Builder => $query
                         ->whereHas('plan', fn ($p) => $p->where('max_students', '>', 0))
-                        ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\' AND users.deleted_at IS NULL) > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
+                        ->whereRaw('(SELECT count(*) FROM users WHERE users.institute_id = institutes.id AND users.role = \'user\') > (SELECT max_students FROM subscription_plans WHERE subscription_plans.id = institutes.subscription_plan_id)')
                     ),
             ])
             ->actions([

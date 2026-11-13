@@ -1,6 +1,180 @@
-# Per-Institute Integrations Guide (PayHere, WhatsApp & Outgoing E-mail)
+# Per-Institute Integrations Guide (All 7 Providers)
 
-Each institute on the TiT platform manages its own encrypted **PayHere**, **Meta WhatsApp Cloud API**, and **Outgoing E-mail (SMTP)** credentials so student fee collections and automated messages are isolated per tenant.
+Each institute on the TiT platform manages its own isolated, encrypted credentials across all 7 supported integration providers:
+1. **PayHere Online Payments** (`payhere`)
+2. **Meta WhatsApp Cloud API** (`whatsapp`)
+3. **Outgoing E-mail / SMTP** (`mail`)
+4. **Google Gemini AI Assistant** (`gemini`)
+5. **Zoom Meetings** (`zoom`)
+6. **Google reCAPTCHA v3** (`recaptcha`)
+7. **Google Sign-in / OAuth 2.0** (`google`)
+
+This architecture guarantees that tenant institutes **never spend TiT's Gemini quota, consume TiT's Zoom account, or depend on TiT's reCAPTCHA/Google credentials**.
+
+---
+
+## Part 1: Guide for Institute Administrators
+
+Sign in as an institute `admin` and open the management pages from the left sidebar:
+- **Payment Settings → Online Payments (PayHere)** (`/admin/settings/online-payments`)
+- **Settings → Messaging & E-mail** (`/admin/settings/messaging`)
+- **Settings → AI & Security** (`/admin/settings/ai-security`)
+- **Zoom → Zoom Accounts** (`/admin/zoom-accounts`)
+
+All secrets and keys are **encrypted at rest** (`APP_KEY`) using authenticated AES-256 encryption. Secrets are **masked** in Blade templates and API outputs (`••••xxxx`). Submitting a form with an empty secret field keeps the existing saved secret unchanged; click **Replace** only when rotating a secret.
+
+---
+
+### 1. Online Payments (PayHere)
+- **Settings:** Merchant ID, App ID, Sandbox toggle, Currency (`LKR` or `USD`).
+- **Secret:** Merchant Secret, App Secret (masked `••••xxxx`).
+- **Features:** Format verification via "Check Configuration", status upgrade to `Verified` on first webhook notification.
+- **Notify URL:** `https://<institute-primary-domain>/api/payhere/notify`.
+- **Behavior without keys:** Online card payment options are automatically hidden on student forms; cash, bank transfer, and advance payments remain active.
+
+---
+
+### 2. WhatsApp Notifications (Meta Cloud API)
+- **Settings:** Phone Number ID, API version (default `v21.0`), Template Name Overrides.
+- **Secret:** Permanent System User Access Token (masked `••••xxxx`).
+- **Features:** Rate-limited test messaging (maximum 3 test messages per hour per institute).
+- **Behavior without keys:** WhatsApp notifications are skipped safely; student alerts continue via e-mail and in-app notifications.
+
+---
+
+### 3. Outgoing E-mail (SMTP)
+- **Settings:** Host, Port, Encryption (`TLS` / `SSL` / `None`), Username, From Address, From Name, Reply-To.
+- **Secret:** SMTP Password or Google Workspace App Password (masked `••••xxxx`).
+- **Features:** Send Test E-mail to logged-in administrator.
+- **Behavior without keys:** When `INTEGRATIONS_MAIL_PLATFORM_FALLBACK=true`, falls back to platform SMTP mailer with institute name and contact reply-to branding.
+
+---
+
+### 4. AI Assistant (Google Gemini)
+- **Settings:** Visitor Daily Question Cap (minimum 50, institute 1 defaults to 500, others default to 100).
+- **Secret:** Google AI Studio Gemini API Key (starts with `AIza`, masked `••••xxxx`).
+- **Features:**
+  - **Daily Questions Counter:** Real-time counter of `AI questions today: N / cap`.
+  - **Test Key Button:** Validates the API key directly with Google Gemini (`https://generativelanguage.googleapis.com/v1beta/models`). Marks status as `Verified` upon success.
+- **Behavior without keys:**
+  - Public assistant chatbot is disabled (HTTP 403 `{code: "ai_not_configured"}`).
+  - Study assistant, OCR ingestion, and translation endpoints return HTTP 422 `{code: "ai_not_configured"}` with an administrator-readable message.
+  - Public site hides assistant widgets via `/api/settings` flag `assistant_available`.
+
+---
+
+### 5. Zoom Meetings (Zoom Server-to-Server OAuth)
+- **Accounts Table:** Managed under `/admin/zoom-accounts`.
+- **Fields:** Host Email, Account ID, Client ID, Max Concurrent Meetings.
+- **Secret:** Client Secret (encrypted at rest via `SafeEncryptedString` cast, masked `••••xxxx`).
+- **Features:**
+  - **Test Connection Button:** Requests an access token and queries `GET /users/me` from Zoom. Shows a `TitNotify` toast with sanitized error reasons and updates integration status (`Verified` / `Failing`).
+  - **Multi-Tenant Token Cache:** Cache keys are strictly isolated per account: `zoom:token:{institute_id}:{account_id}`.
+- **Behavior without keys:**
+  - Schedule creation fails with typed error `zoom_not_configured` ("Add a Zoom account under Settings → Zoom Accounts").
+  - Zero outbound HTTP calls are made.
+
+---
+
+### 6. Google reCAPTCHA v3
+- **Settings:** Public Site Key, Score Threshold (range 0.1 to 1.0, default 0.5).
+- **Secret:** Secret Key (starts with `6L`, masked `••••xxxx`).
+- **Features:**
+  - **Test Keys Button:** Tests the secret key against Google reCAPTCHA siteverify.
+  - Delivered to React frontends dynamically at runtime via `/api/settings` (`recaptcha_site_key`).
+- **Behavior without keys (Fallback institutes vs non-fallback):**
+  - Registration, login, and contact forms **function without captcha**, but operate under a **strict throttle** (5 submissions / 10 minutes / IP / institute, returning HTTP 429 `too_many_requests`).
+  - Public AI assistant is **disabled** to protect against automated cost abuse.
+
+---
+
+### 7. Google Sign-in (OAuth 2.0)
+- **Settings:** Client ID (ending with `.apps.googleusercontent.com`).
+- **Secret:** Client Secret (starts with `GOCSPX-`, masked `••••xxxx`).
+- **Features:**
+  - **Authorized Redirect URI:** Read-only display of the exact callback URL with a one-click copy button:
+    ```text
+    https://<institute-primary-domain>/api/auth/google/callback
+    ```
+- **Behavior without keys:**
+  - Google Sign-in button is hidden on login and registration pages (`/api/settings` flag `google_login_available: false`).
+  - Direct hits to `/api/auth/google/redirect` return HTTP 422 `{code: "google_not_configured"}`.
+
+---
+
+## Part 2: Platform Owner & DevOps Guide
+
+### 1. Multi-Tenant Fallback Policy (`config/integrations.php`)
+
+Fallback to `.env` variables is strictly restricted:
+```dotenv
+# Comma-separated list of institute IDs permitted to fall back to .env platform keys.
+# Default is 1 (TiT). Other institutes NEVER fall back to .env under any circumstances.
+INTEGRATIONS_ENV_FALLBACK_INSTITUTES=1
+```
+
+| Provider | Has Database Row | No DB Row & In Fallback List (Inst 1) | No DB Row & Non-Fallback Institute (Inst 2+) |
+| :--- | :--- | :--- | :--- |
+| **PayHere** | Uses institute credentials | Uses `.env` `PAYHERE_*` | `null` (online payments disabled) |
+| **WhatsApp** | Uses institute token/phone | Uses `.env` `META_WHATSAPP_*` | Skipped safely (no HTTP) |
+| **Mail (SMTP)** | Uses custom institute SMTP | Uses platform SMTP | Uses platform SMTP with institute name |
+| **Gemini AI** | Uses institute API key | Uses `.env` `GEMINI_API_KEY` | Disabled (HTTP 403/422 `ai_not_configured`, no HTTP) |
+| **Zoom** | Uses `ZoomAccount` rows | Uses `.env` `ZOOM_*` virtual account | Error (HTTP 422 `zoom_not_configured`, no HTTP) |
+| **reCAPTCHA** | Validates with institute secret | Uses `.env` `RECAPTCHA_*` | Strict throttle (5/10 min), assistant disabled |
+| **Google OAuth**| Uses institute client ID/secret | Uses `.env` `GOOGLE_*` | Button hidden, HTTP 422 `google_not_configured` |
+
+---
+
+### 2. Security Key Rotation Steps (CRITICAL)
+
+#### A. Gemini API Key Rotation
+> **CRITICAL ACTION REQUIRED:**
+> The previous Gemini API key was exposed and must be rotated immediately:
+> 1. Open [Google AI Studio](https://aistudio.google.com/) and revoke the exposed API key.
+> 2. Create a new Gemini API key.
+> 3. Update the key **only in production server `.env`** (`GEMINI_API_KEY=AIza...`) for Institute 1, or input it directly via **Settings → AI & Security** in the admin panel.
+> 4. **Never commit any Gemini key to the Git repository.**
+
+#### B. Zoom Client Secret Encryption Command
+Live `zoom_accounts` rows containing legacy plaintext client secrets must be encrypted:
+```bash
+# Dry-run: counts rows to encrypt without writing to database:
+php artisan integrations:encrypt-zoom-secrets --dry-run
+
+# Execute: encrypts plaintext secrets at rest using APP_KEY (idempotent):
+php artisan integrations:encrypt-zoom-secrets
+```
+
+#### C. Importing `.env` Credentials to Database
+To import environment variables for Institute 1 into encrypted database storage:
+```bash
+# Dry-run preview:
+php artisan integrations:import-env 1 --dry-run
+
+# Import all 7 providers:
+php artisan integrations:import-env 1
+```
+
+#### D. Inspecting Integration Status (Masked)
+```bash
+php artisan integrations:status
+php artisan integrations:status --institute=1
+```
+
+---
+
+### 3. Super-Admin Panel (`/super-admin`)
+
+- **Overview Matrix:** `/super-admin/institute-integrations-overview` displays real-time operational status for all 7 providers across all institutes (`Verified`, `Configured`, `Failing`, `Using platform fallback`, `Unconfigured`) with sanitized error details and emergency credential revocation. Plaintext secrets are never displayed.
+- **Setup Checklist:** `/super-admin/institutes/{record}` includes checklist rows for AI & Security and Zoom accounts.
+
+---
+
+### 4. Firebase Storage Multi-Tenant Isolation Audit
+
+For details on the current Firebase service account, storage security rules, token minting, and cross-tenant risks, consult the full audit report:
+👉 [docs/FIREBASE_ISOLATION_AUDIT.md](FIREBASE_ISOLATION_AUDIT.md)
+
 
 ---
 

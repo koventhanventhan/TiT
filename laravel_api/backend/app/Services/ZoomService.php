@@ -75,16 +75,14 @@ class ZoomService
             ->get();
 
         if ($accounts->isEmpty() && Integrations::allowsEnvFallback($instId)) {
-            $envAccountId = config('services.zoom.account_id');
-            $envClientId = config('services.zoom.client_id');
-            $envClientSecret = config('services.zoom.client_secret');
+            $zoomCreds = Integrations::for($instId)->zoom();
 
-            if ($envAccountId && $envClientId && $envClientSecret) {
+            if ($zoomCreds && $zoomCreds->isConfigured()) {
                 $virtual = new ZoomAccount([
                     'email' => (string) config('services.zoom.host_email', 'default@tit.lk'),
-                    'account_id' => (string) $envAccountId,
-                    'client_id' => (string) $envClientId,
-                    'client_secret' => (string) $envClientSecret,
+                    'account_id' => (string) $zoomCreds->accountId(),
+                    'client_id' => (string) $zoomCreds->clientId(),
+                    'client_secret' => (string) $zoomCreds->clientSecret(),
                     'max_concurrent' => 10,
                     'is_active' => true,
                     'institute_id' => $instId,

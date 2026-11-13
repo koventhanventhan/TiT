@@ -233,5 +233,98 @@ if ($action === 'renew_inst_b') {
     exit(0);
 }
 
+if ($action === 'seed_prompt29_multi_host') {
+    // 1. Institute 1: Colombo
+    $inst1 = App\Models\Institute::find(1);
+    App\Models\InstituteDomain::firstOrCreate(
+        ['domain' => 'colombo.test'],
+        ['institute_id' => 1, 'is_primary' => true, 'verified_at' => now()]
+    );
+    Illuminate\Support\Facades\Cache::forget('tenant_domain_colombo.test');
+
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => 1, 'provider' => 'recaptcha'],
+        [
+            'credentials' => ['secret_key' => '6LeColomboSecretKey1111111111111111111111'],
+            'settings' => ['site_key' => '6LeColomboSiteKey111111111111111111111111', 'score_threshold' => 0.5],
+            'status' => 'verified',
+            'last_verified_at' => now(),
+        ]
+    );
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => 1, 'provider' => 'google'],
+        [
+            'credentials' => ['client_secret' => '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1'],
+            'settings' => ['client_id' => 'colombo-1111.apps.googleusercontent.com'],
+            'status' => 'configured',
+        ]
+    );
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => 1, 'provider' => 'gemini'],
+        [
+            'credentials' => ['api_key' => 'AIzaSyColomboGeminiKey111111111111111111111'],
+            'settings' => ['daily_cap' => 500],
+            'status' => 'verified',
+            'last_verified_at' => now(),
+        ]
+    );
+
+    // 2. Institute 2: Kandy
+    $inst2 = App\Models\Institute::firstOrCreate(
+        ['slug' => 'kandy-test'],
+        ['name' => 'Kandy Institute', 'status' => 'active']
+    );
+    App\Models\InstituteDomain::firstOrCreate(
+        ['domain' => 'kandy.test'],
+        ['institute_id' => $inst2->id, 'is_primary' => true, 'verified_at' => now()]
+    );
+    Illuminate\Support\Facades\Cache::forget('tenant_domain_kandy.test');
+
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => $inst2->id, 'provider' => 'recaptcha'],
+        [
+            'credentials' => ['secret_key' => '6LeKandySecretKey22222222222222222222222'],
+            'settings' => ['site_key' => '6LeKandySiteKey22222222222222222222222222', 'score_threshold' => 0.5],
+            'status' => 'verified',
+            'last_verified_at' => now(),
+        ]
+    );
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => $inst2->id, 'provider' => 'google'],
+        [
+            'credentials' => ['client_secret' => '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22'],
+            'settings' => ['client_id' => 'kandy-2222.apps.googleusercontent.com'],
+            'status' => 'configured',
+        ]
+    );
+    App\Models\InstituteIntegration::updateOrCreate(
+        ['institute_id' => $inst2->id, 'provider' => 'gemini'],
+        [
+            'credentials' => ['api_key' => 'AIzaSyKandyGeminiKey2222222222222222222222'],
+            'settings' => ['daily_cap' => 200],
+            'status' => 'verified',
+            'last_verified_at' => now(),
+        ]
+    );
+
+    $admin2 = App\Models\User::firstOrCreate(
+        ['email' => 'admin@kandy.test'],
+        [
+            'institute_id' => $inst2->id,
+            'role' => 'admin',
+            'password' => Illuminate\Support\Facades\Hash::make('Secret123!'),
+            'name' => 'Kandy Admin',
+        ]
+    );
+    $token2 = $admin2->createToken('kandy-test-token')->plainTextToken;
+
+    echo json_encode([
+        'inst1_id' => $inst1->id,
+        'inst2_id' => $inst2->id,
+        'token2' => $token2,
+    ]);
+    exit(0);
+}
+
 echo "Unknown action";
 exit(1);

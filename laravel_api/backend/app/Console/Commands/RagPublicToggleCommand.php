@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Institute;
 use App\Models\SiteSetting;
 use App\Services\PublicKnowledgeService;
+use App\Support\Integrations;
 use Illuminate\Console\Command;
 
 class RagPublicToggleCommand extends Command
@@ -36,13 +37,13 @@ class RagPublicToggleCommand extends Command
         }
 
         // Safety gate before enabling 'on':
-        // 1. Refuse to enable if not in local/testing and RECAPTCHA_SECRET_KEY is missing
-        $recaptchaSecret = config('services.recaptcha.secret_key');
+        // 1. Refuse to enable if not in local/testing and reCAPTCHA is missing
+        $recaptcha = Integrations::for($id)->recaptcha();
         $env = config('app.env') ?: app()->environment();
-        if (!in_array($env, ['local', 'testing'], true) && empty($recaptchaSecret)) {
-            $this->error("Refusing to activate Public Assistant without RECAPTCHA_SECRET_KEY in production.");
-            $this->warn("RECAPTCHA_SECRET_KEY is missing or empty. In production/non-local environments, reCAPTCHA must fail closed.");
-            $this->line("Please configure RECAPTCHA_SECRET_KEY in your .env file before enabling the public assistant.");
+        if (!in_array($env, ['local', 'testing'], true) && ($recaptcha === null || !$recaptcha->isConfigured())) {
+            $this->error("Refusing to activate Public Assistant without reCAPTCHA in production.");
+            $this->warn("reCAPTCHA is missing or empty. In production/non-local environments, reCAPTCHA must fail closed.");
+            $this->line("Please configure reCAPTCHA credentials before enabling the public assistant.");
             return 1;
         }
 

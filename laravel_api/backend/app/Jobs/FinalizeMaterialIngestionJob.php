@@ -7,6 +7,7 @@ use App\Contracts\Rag\VectorStoreInterface;
 use App\Services\Rag\QualityCheckUnavailableException;
 use App\Models\LearningMaterial;
 use App\Models\MaterialPage;
+use App\Support\Tenant;
 use App\Services\Rag\MultilingualTextChunker;
 use App\Services\Rag\TextReadabilityChecker;
 use Illuminate\Bus\Queueable;
@@ -48,6 +49,8 @@ class FinalizeMaterialIngestionJob implements ShouldQueue
             Log::warning("FinalizeMaterialIngestionJob: Material #{$this->materialId} not found, skipping.");
             return;
         }
+
+        Tenant::set(\App\Models\Institute::find((int) $material->institute_id));
 
         $pages = [];
         $tempDir = "rag_temp/material_{$this->materialId}";

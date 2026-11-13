@@ -7,6 +7,7 @@ use App\Models\Institute;
 use App\Models\SiteSetting;
 use App\Models\StudentIndexCounter;
 use App\Models\User;
+use App\Support\Integrations;
 use App\Services\ActivityLogService;
 use App\Services\StudentIndexService;
 use Illuminate\Http\Request;
@@ -726,12 +727,29 @@ class SiteSettingController extends Controller
         }
 
         $globalPublicEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);
-        $recaptchaSecret = config('services.recaptcha.secret_key');
         $env = config('app.env') ?: app()->environment();
         $isLocalOrTesting = in_array($env, ['local', 'testing'], true);
 
-        // reCAPTCHA fail closed: If not local or testing and RECAPTCHA_SECRET_KEY is empty, public widget is hidden.
-        if (!$isLocalOrTesting && empty($recaptchaSecret)) {
+        // Assistant availability: Gemini configured + plan feature enabled
+        $geminiCreds = Integrations::for($instituteId)->gemini();
+        $hasGemini = $geminiCreds !== null && $geminiCreds->isConfigured();
+        $planAllowsAi = $institute ? $institute->hasFeature('ai_assistant') : true;
+        $assistantAvailable = $hasGemini && $planAllowsAi;
+        $settings['assistant_available'] = $assistantAvailable;
+
+        // reCAPTCHA keys
+        $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
+        $settings['recaptcha_site_key'] = $recaptchaCreds?->isConfigured() ? $recaptchaCreds->siteKey : '';
+        $settings['recaptcha_available'] = !empty($settings['recaptcha_site_key']);
+
+        // Google OAuth availability
+        $googleCreds = Integrations::for($instituteId)->google();
+        $settings['google_login_available'] = $googleCreds?->isConfigured() ?? false;
+
+        // reCAPTCHA fail closed: If not local or testing and reCAPTCHA is empty, public widget is hidden.
+        if (!$isLocalOrTesting && empty($settings['recaptcha_site_key'])) {
+            $settings['public_assistant_enabled'] = false;
+        } elseif (!$assistantAvailable) {
             $settings['public_assistant_enabled'] = false;
         } else {
             $settings['public_assistant_enabled'] = (bool) ($globalPublicEnabled && ($institute?->public_assistant_enabled ?? false));
@@ -745,7 +763,10 @@ class SiteSettingController extends Controller
             $settings['payhere_app_secret'],
             $settings['zoom_client_id'],
             $settings['zoom_client_secret'],
-            $settings['zoom_account_id']
+            $settings['zoom_account_id'],
+            $settings['gemini_api_key'],
+            $settings['recaptcha_secret_key'],
+            $settings['google_client_secret']
         );
 
         $settings['online_payments_enabled'] = \App\Services\PayHereService::forInstitute((int) $instituteId)->isConfigured();

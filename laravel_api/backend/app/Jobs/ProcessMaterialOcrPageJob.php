@@ -6,6 +6,7 @@ use App\Contracts\Rag\GeminiClientInterface;
 use App\Exceptions\Rag\OcrUnavailableException;
 use App\Models\LearningMaterial;
 use App\Models\MaterialPage;
+use App\Support\Tenant;
 use App\Services\Rag\PdfTextExtractor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -57,6 +58,8 @@ class ProcessMaterialOcrPageJob implements ShouldQueue
             Log::warning("ProcessMaterialOcrPageJob: Material #{$this->materialId} not found, aborting.");
             return;
         }
+
+        Tenant::set(\App\Models\Institute::find((int) $material->institute_id));
 
         // 1. Check material_pages table for existing extracted page text
         $existingPage = MaterialPage::where('material_id', $this->materialId)

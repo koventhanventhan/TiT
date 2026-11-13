@@ -2,28 +2,58 @@
 
 namespace App\Services;
 
+use App\Support\Integrations;
+use App\Support\Tenant;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GeminiTranslationService
 {
-    protected ?string $apiKey = null;
+    protected ?string $explicitApiKey = null;
+    protected ?int $explicitInstituteId = null;
     protected string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
     protected static bool $hasLoggedUnconfigured = false;
 
-    public function __construct(?string $apiKey = null)
+    public function __construct(?string $apiKey = null, ?int $instituteId = null)
     {
-        if (func_num_args() > 0) {
-            $resolved = $apiKey;
-        } else {
-            $resolved = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+        $this->explicitApiKey = ($apiKey !== null && trim((string) $apiKey) !== '') ? (string) $apiKey : null;
+        $this->explicitInstituteId = $instituteId;
+    }
+
+    public function forInstitute(?int $instituteId): self
+    {
+        $clone = clone $this;
+        $clone->explicitInstituteId = $instituteId;
+        return $clone;
+    }
+
+    public function resolveApiKey(): ?string
+    {
+        if ($this->explicitApiKey !== null) {
+            return $this->explicitApiKey;
         }
-        $this->apiKey = ($resolved !== null && trim((string) $resolved) !== '') ? (string) $resolved : null;
+
+        $instituteId = $this->explicitInstituteId ?? Tenant::id();
+        if ($instituteId !== null && $instituteId > 0) {
+            $creds = Integrations::for($instituteId)->gemini();
+            if ($creds !== null && $creds->isConfigured()) {
+                return $creds->apiKey;
+            }
+        }
+
+        if (auth()->check() && auth()->user()?->institute_id) {
+            $creds = Integrations::for((int) auth()->user()->institute_id)->gemini();
+            if ($creds !== null && $creds->isConfigured()) {
+                return $creds->apiKey;
+            }
+        }
+
+        return null;
     }
 
     public function isConfigured(): bool
     {
-        return !empty($this->apiKey);
+        return !empty($this->resolveApiKey());
     }
 
     public static function resetLoggedUnconfigured(): void
@@ -44,7 +74,8 @@ class GeminiTranslationService
             return $text;
         }
 
-        if (!$this->isConfigured()) {
+        $apiKey = $this->resolveApiKey();
+        if (empty($apiKey)) {
             if (!self::$hasLoggedUnconfigured) {
                 Log::info('Gemini API Key is not configured. Translation skipped.');
                 self::$hasLoggedUnconfigured = true;
@@ -59,7 +90,7 @@ class GeminiTranslationService
         try {
             $url = $this->baseUrl;
             $response = Http::withHeaders([
-                'x-goog-api-key' => $this->apiKey,
+                'x-goog-api-key' => $apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(15)->post($url, [
                 'contents' => [

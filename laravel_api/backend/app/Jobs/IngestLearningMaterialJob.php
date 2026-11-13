@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Contracts\Rag\GeminiClientInterface;
 use App\Contracts\Rag\VectorStoreInterface;
 use App\Models\LearningMaterial;
+use App\Support\Tenant;
 use App\Services\Rag\FileTooLargeException;
 use App\Services\Rag\MultilingualTextChunker;
 use App\Services\Rag\OcrPageLimitExceededException;
@@ -81,6 +82,8 @@ class IngestLearningMaterialJob implements ShouldQueue
             'rag_status' => 'processing',
             'rag_error' => null,
         ]);
+
+        Tenant::set(\App\Models\Institute::find((int) $material->institute_id));
 
         $tempDir = "rag_temp/material_{$material->id}";
 

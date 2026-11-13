@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\Integrations;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -31,11 +33,21 @@ class TranslateController extends Controller
             return response()->json(['translated_text' => $cached]);
         }
 
-        $apiKey = config('services.gemini.api_key');
-        if (!$apiKey) {
-            Log::warning('Gemini API key not configured');
-            return response()->json(['translated_text' => $text], 200);
+        $instituteId = Tenant::id()
+            ?? (auth()->check() && auth()->user()?->institute_id ? (int) auth()->user()->institute_id : null)
+            ?? 1;
+
+        $gemini = Integrations::for($instituteId)->gemini();
+        if ($gemini === null || !$gemini->isConfigured()) {
+            Log::warning("Gemini API key not configured for institute {$instituteId}");
+            return response()->json([
+                'message' => 'AI assistant is not configured for this institute. Please configure a Gemini API key under Settings → AI & Security.',
+                'code' => 'ai_not_configured',
+                'translated_text' => $text,
+            ], 422);
         }
+
+        $apiKey = $gemini->apiKey;
 
         $prompt = "Translate the following text to {$langName}. Output only the translation, nothing else. No explanations.\n\n" . $text;
 

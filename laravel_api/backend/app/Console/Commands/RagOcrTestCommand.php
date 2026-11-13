@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\LearningMaterial;
 use App\Services\Rag\TextReadabilityChecker;
+use App\Support\Integrations;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -131,9 +132,11 @@ class RagOcrTestCommand extends Command
 
         $imageSizeKb = round(strlen($imageData) / 1024, 2);
 
-        $apiKey = (string) (config('services.gemini.api_key') ?: env('GEMINI_API_KEY'));
+        $instituteId = (int) ($material->institute_id ?? 1);
+        $gemini = Integrations::for($instituteId)->gemini();
+        $apiKey = $gemini?->apiKey;
         if (empty($apiKey)) {
-            $this->error("Gemini API key is not configured.");
+            $this->error("Gemini API key is not configured for institute #{$instituteId}.");
             return 1;
         }
 

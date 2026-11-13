@@ -3,13 +3,16 @@
 namespace App\Services\Rag;
 
 use App\Contracts\Rag\GeminiClientInterface;
+use App\Support\Integrations;
+use App\Support\Tenant;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class GeminiRagClient implements GeminiClientInterface
 {
-    protected string $apiKey;
+    protected ?string $explicitApiKey = null;
+    protected ?int $explicitInstituteId = null;
     protected string $embeddingModel;
     protected int $dimensions;
     protected string $llmModel;
@@ -18,9 +21,10 @@ class GeminiRagClient implements GeminiClientInterface
     protected int $timeout;
     protected float $ocrTemperature;
 
-    public function __construct()
+    public function __construct(?int $instituteId = null, ?string $apiKey = null)
     {
-        $this->apiKey = (string) (config('services.gemini.api_key') ?: env('GEMINI_API_KEY'));
+        $this->explicitInstituteId = $instituteId;
+        $this->explicitApiKey = ($apiKey !== null && trim($apiKey) !== '') ? trim($apiKey) : null;
         $this->embeddingModel = (string) config('rag.models.embedding', 'gemini-embedding-2');
         $this->dimensions = (int) config('rag.models.embedding_dimensions', 768);
         $this->llmModel = (string) config('rag.models.llm', 'gemini-3.5-flash');
@@ -28,6 +32,47 @@ class GeminiRagClient implements GeminiClientInterface
         $this->ocrFallbackModel = config('rag.models.ocr_fallback') ? (string) config('rag.models.ocr_fallback') : null;
         $this->timeout = (int) config('rag.ingestion.gemini_timeout', 45);
         $this->ocrTemperature = (float) config('rag.ocr.temperature', 0.0);
+    }
+
+    public function forInstitute(?int $instituteId): self
+    {
+        $clone = clone $this;
+        $clone->explicitInstituteId = $instituteId;
+        return $clone;
+    }
+
+    public function withApiKey(string $apiKey): self
+    {
+        $clone = clone $this;
+        $clone->explicitApiKey = trim($apiKey);
+        return $clone;
+    }
+
+    /**
+     * Resolve the Gemini API key per call from the active institute's integration.
+     */
+    public function resolveApiKey(): string
+    {
+        if ($this->explicitApiKey !== null && trim($this->explicitApiKey) !== '') {
+            return trim($this->explicitApiKey);
+        }
+
+        $instituteId = $this->explicitInstituteId ?? Tenant::id();
+        if ($instituteId !== null && $instituteId > 0) {
+            $creds = Integrations::for($instituteId)->gemini();
+            if ($creds !== null && $creds->isConfigured()) {
+                return $creds->apiKey;
+            }
+        }
+
+        if (auth()->check() && auth()->user()?->institute_id) {
+            $creds = Integrations::for((int) auth()->user()->institute_id)->gemini();
+            if ($creds !== null && $creds->isConfigured()) {
+                return $creds->apiKey;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -61,7 +106,8 @@ class GeminiRagClient implements GeminiClientInterface
             return [];
         }
 
-        if (empty($this->apiKey)) {
+        $apiKey = $this->resolveApiKey();
+        if (empty($apiKey)) {
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
@@ -100,7 +146,7 @@ class GeminiRagClient implements GeminiClientInterface
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
                 try {
                     $response = Http::withHeaders([
-                        'x-goog-api-key' => $this->apiKey,
+                        'x-goog-api-key' => $apiKey,
                         'Content-Type' => 'application/json',
                     ])->timeout($this->timeout)->post($url, [
                         'requests' => $requests,
@@ -201,7 +247,8 @@ class GeminiRagClient implements GeminiClientInterface
 
     public function ocrPage(string $binaryData, string $mimeType = 'image/jpeg'): string
     {
-        if (empty($this->apiKey)) {
+        $apiKey = $this->resolveApiKey();
+        if (empty($apiKey)) {
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
@@ -248,7 +295,7 @@ class GeminiRagClient implements GeminiClientInterface
             for ($attempt = 1; $attempt <= $maxAttemptsPerModel; $attempt++) {
                 try {
                     $response = Http::withHeaders([
-                        'x-goog-api-key' => $this->apiKey,
+                        'x-goog-api-key' => $apiKey,
                         'Content-Type' => 'application/json',
                     ])->withOptions([
                         'connect_timeout' => 30,
@@ -320,7 +367,8 @@ class GeminiRagClient implements GeminiClientInterface
      */
     public function generateAnswer(string $prompt, ?string $systemInstruction = null): string
     {
-        if (empty($this->apiKey)) {
+        $apiKey = $this->resolveApiKey();
+        if (empty($apiKey)) {
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
@@ -364,7 +412,7 @@ class GeminiRagClient implements GeminiClientInterface
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
                 $response = Http::withHeaders([
-                    'x-goog-api-key' => $this->apiKey,
+                    'x-goog-api-key' => $apiKey,
                     'Content-Type' => 'application/json',
                 ])->timeout($timeout)->post($url, $payload);
                 if ($response->successful()) {
@@ -496,7 +544,8 @@ class GeminiRagClient implements GeminiClientInterface
      */
     public function streamAnswer(string $prompt, ?string $systemInstruction, callable $onChunk): void
     {
-        if (empty($this->apiKey)) {
+        $apiKey = $this->resolveApiKey();
+        if (empty($apiKey)) {
             throw new RuntimeException('Gemini API key is not configured.');
         }
 
@@ -534,7 +583,7 @@ class GeminiRagClient implements GeminiClientInterface
         $timeout = (int) config('rag.llm.request_timeout', $this->timeout);
         try {
             $response = Http::withHeaders([
-                'x-goog-api-key' => $this->apiKey,
+                'x-goog-api-key' => $apiKey,
                 'Content-Type' => 'application/json',
             ])->withOptions(['stream' => true])
                 ->timeout($timeout)

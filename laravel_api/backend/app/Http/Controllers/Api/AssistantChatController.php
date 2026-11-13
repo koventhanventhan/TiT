@@ -6,11 +6,15 @@ use App\Contracts\Rag\GeminiClientInterface;
 use App\Http\Controllers\Controller;
 use App\Models\AssistantVisitorLog;
 use App\Models\Institute;
+use App\Models\SiteSetting;
 use App\Models\StudentAiQuery;
 use App\Services\PublicKnowledgeService;
 use App\Services\Rag\AnswerService;
 use App\Services\Rag\DistressDetector;
 use App\Services\Rag\RetrievalService;
+use App\Support\Credentials\RecaptchaCredentials;
+use App\Support\Integrations;
+use App\Support\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -94,14 +98,36 @@ class AssistantChatController extends Controller
             // For study retrieval, ALWAYS use authenticated student's institute
             $instituteId = (int) $user->institute_id;
         } else {
-            // For public info, use X-Institute-Id header (default 1)
-            $headerInst = $request->header('X-Institute-Id');
-            $instituteId = ($headerInst && is_numeric($headerInst)) ? (int) $headerInst : 1;
+            // Host (Tenant::id()) decides, not a client header.
+            // Super_admin with X-Institute-Id header may still impersonate.
+            if ($user && $user->role === 'super_admin' && $request->hasHeader('X-Institute-Id')) {
+                $headerInst = $request->header('X-Institute-Id');
+                $instituteId = ($headerInst && is_numeric($headerInst)) ? (int) $headerInst : (Tenant::id() ?? 1);
+            } else {
+                $instituteId = Tenant::id() ?? 1;
+            }
         }
 
         $institute = Institute::find($instituteId);
         if (!$institute) {
             return response()->json(['message' => 'Institute not found.'], 404);
+        }
+
+        // Verify Gemini key is configured for this institute
+        $geminiCreds = Integrations::for($instituteId)->gemini();
+        if ($geminiCreds === null || !$geminiCreds->isConfigured()) {
+            if ($tier === 'study') {
+                return response()->json([
+                    'message' => 'AI assistant is not configured for this institute. Please contact your administrator to configure a Gemini API key under Settings → AI & Security.',
+                    'code' => 'ai_not_configured',
+                ], 422);
+            }
+
+            return response()->json([
+                'message' => 'The public website assistant is currently not configured for this institute.',
+                'code' => 'ai_not_configured',
+                'public_enabled' => false,
+            ], 403);
         }
 
         // Verify public assistant availability when in public tier
@@ -114,11 +140,11 @@ class AssistantChatController extends Controller
                 ], 403);
             }
 
-            // reCAPTCHA fail closed: in production / non-local environments, if RECAPTCHA_SECRET_KEY is empty, fail closed (503)
+            // reCAPTCHA fail closed: in production / non-local environments, if reCAPTCHA secret is empty, fail closed (503)
             $env = config('app.env') ?: app()->environment();
             if (!in_array($env, ['local', 'testing'], true)) {
-                $recaptchaSecret = config('services.recaptcha.secret_key');
-                if (empty($recaptchaSecret)) {
+                $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
+                if ($recaptchaCreds === null || !$recaptchaCreds->isConfigured()) {
                     return response()->json([
                         'message' => 'The public website assistant is temporarily undergoing maintenance.',
                         'public_enabled' => false,
@@ -178,7 +204,8 @@ class AssistantChatController extends Controller
             }
 
             // reCAPTCHA verification (fail closed in production/staging environments)
-            $secretKey = config('services.recaptcha.secret_key');
+            $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
+            $secretKey = $recaptchaCreds?->secretKey;
             if (!app()->environment(['local', 'testing'])) {
                 if (empty($secretKey)) {
                     return response()->json([
@@ -194,7 +221,7 @@ class AssistantChatController extends Controller
                         'errors' => ['recaptcha' => ['Verification token missing.']],
                     ], 422);
                 }
-                if (!$this->verifyRecaptcha($recaptchaToken, $request->ip())) {
+                if (!$this->verifyRecaptcha($recaptchaToken, $request->ip(), $recaptchaCreds)) {
                     return response()->json([
                         'message' => 'Bot verification failed. Please refresh and try again.',
                         'errors' => ['recaptcha' => ['Verification failed.']],
@@ -202,7 +229,7 @@ class AssistantChatController extends Controller
                 }
             } elseif (!empty($secretKey) && !app()->environment('testing')) {
                 $recaptchaToken = $request->input('recaptcha_token');
-                if (!empty($recaptchaToken) && !$this->verifyRecaptcha($recaptchaToken, $request->ip())) {
+                if (!empty($recaptchaToken) && !$this->verifyRecaptcha($recaptchaToken, $request->ip(), $recaptchaCreds)) {
                     return response()->json([
                         'message' => 'Bot verification failed. Please refresh and try again.',
                         'errors' => ['recaptcha' => ['Verification failed.']],
@@ -218,19 +245,34 @@ class AssistantChatController extends Controller
             }
             $visitorHash = hash('sha256', $ip . ':' . $cookieVid);
 
-            // Daily global visitor cap
-            $globalCap = (int) config('rag.assistant.visitor_daily_cap', 500);
-            $todayCount = AssistantVisitorLog::whereDate('created_at', now()->toDateString())->count();
-            if ($todayCount >= $globalCap) {
+            // Daily per-institute visitor cap
+            $todayCount = AssistantVisitorLog::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+
+            $capSetting = SiteSetting::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->where('key', 'assistant_daily_cap')
+                ->value('value');
+
+            if ($capSetting !== null && is_numeric($capSetting) && (int) $capSetting > 0) {
+                $dailyCap = (int) $capSetting;
+            } else {
+                $defaultCap = (int) config('rag.assistant.visitor_daily_cap', 500);
+                $dailyCap = ($instituteId === 1) ? $defaultCap : max(50, (int) floor($defaultCap / 5));
+            }
+
+            if ($todayCount >= $dailyCap) {
                 return response()->json([
-                    'message' => 'The public assistant has reached its daily visitor capacity. Please visit our website pages or contact us directly.',
+                    'message' => 'The public assistant has reached its daily visitor capacity for this institute. Please visit our website pages or contact us directly.',
                     'daily_cap_reached' => true,
                 ], 429);
             }
 
             // Per IP per minute
             $perMin = (int) config('rag.assistant.visitor_per_minute', 10);
-            $throttleKeyMin = "assistant_ip_min:{$ip}";
+            $throttleKeyMin = "assistant_ip_min:{$instituteId}:{$ip}";
             if (RateLimiter::tooManyAttempts($throttleKeyMin, $perMin)) {
                 $waitSec = RateLimiter::availableIn($throttleKeyMin);
                 return response()->json([
@@ -241,7 +283,7 @@ class AssistantChatController extends Controller
 
             // Per IP per day
             $perDay = (int) config('rag.assistant.visitor_per_day', 60);
-            $throttleKeyDay = "assistant_ip_day:{$ip}";
+            $throttleKeyDay = "assistant_ip_day:{$instituteId}:{$ip}";
             if (RateLimiter::tooManyAttempts($throttleKeyDay, $perDay)) {
                 return response()->json([
                     'message' => 'Daily visitor question limit reached. Please register at /register for full access.',
@@ -512,10 +554,14 @@ class AssistantChatController extends Controller
     /**
      * Verify reCAPTCHA token with Google endpoint.
      */
-    protected function verifyRecaptcha(string $token, string $remoteIp): bool
+    protected function verifyRecaptcha(string $token, string $remoteIp, ?RecaptchaCredentials $creds = null): bool
     {
         try {
-            $secret = config('services.recaptcha.secret_key');
+            $secret = $creds?->secretKey ?: config('services.recaptcha.secret_key'); // integration-ok: test harness fallback
+            if (empty($secret)) {
+                return false;
+            }
+
             $response = Http::asForm()->timeout(5)->post('https://www.google.com/recaptcha/api/siteverify', [
                 'secret' => $secret,
                 'response' => $token,
@@ -528,7 +574,7 @@ class AssistantChatController extends Controller
             }
 
             $score = (float) ($json['score'] ?? 0.0);
-            $minScore = (float) config('rag.assistant.recaptcha_min_score', 0.5);
+            $minScore = (float) ($creds?->scoreThreshold ?? config('rag.assistant.recaptcha_min_score', 0.5));
 
             return $score >= $minScore;
         } catch (\Throwable $e) {

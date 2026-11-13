@@ -118,8 +118,29 @@ class AdminRagController extends Controller
             ->where('rag_error', 'like', 'Warning: OCR uncertainty%')
             ->count();
 
+        $todayVisitorQuestions = \App\Models\AssistantVisitorLog::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+
+        $capSetting = SiteSetting::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('key', 'assistant_daily_cap')
+            ->value('value');
+
+        if ($capSetting !== null && is_numeric($capSetting) && (int) $capSetting > 0) {
+            $dailyCap = (int) $capSetting;
+        } else {
+            $defaultCap = (int) config('rag.assistant.visitor_daily_cap', 500);
+            $dailyCap = ((int) $instituteId === 1) ? $defaultCap : max(50, (int) floor($defaultCap / 5));
+        }
+
         return response()->json([
             'institute_id' => $instituteId,
+            'today_usage' => [
+                'visitor_questions_today' => $todayVisitorQuestions,
+                'visitor_daily_cap' => $dailyCap,
+            ],
             'switches' => [
                 'rag_enabled' => (bool) ($institute?->rag_enabled ?? false),
                 'public_assistant_enabled' => (bool) ($institute?->public_assistant_enabled ?? false),

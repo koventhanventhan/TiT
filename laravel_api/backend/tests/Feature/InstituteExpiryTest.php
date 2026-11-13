@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Institute;
 use App\Models\InstituteDomain;
+use App\Models\InstituteIntegration;
+use App\Models\Payment;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -200,6 +202,180 @@ class InstituteExpiryTest extends TestCase
 
         $dashRes = $this->actingAs($this->superAdmin, 'web')->get('http://apex.test/admin/dashboard');
         $dashRes->assertOk();
+    }
+
+    protected function signPayHereNotify(
+        string $merchantId,
+        string $merchantSecret,
+        string $orderId,
+        float $amount,
+        string $currency = 'LKR',
+        int $statusCode = 2,
+        string $paymentId = 'PH_EXP_TX_001'
+    ): array {
+        $amountFormatted = number_format($amount, 2, '.', '');
+        $secretHash = strtoupper(md5($merchantSecret));
+        $md5sig = strtoupper(md5(
+            $merchantId .
+            $orderId .
+            $amountFormatted .
+            $currency .
+            $statusCode .
+            $secretHash
+        ));
+
+        return [
+            'merchant_id' => $merchantId,
+            'order_id' => $orderId,
+            'payment_id' => $paymentId,
+            'payhere_amount' => $amountFormatted,
+            'payhere_currency' => $currency,
+            'status_code' => $statusCode,
+            'md5sig' => $md5sig,
+        ];
+    }
+
+    public function test_payhere_notify_on_expired_beyond_grace_institute_records_payment_while_other_routes_stay_blocked(): void
+    {
+        $this->institute2->update(['expires_at' => now()->subDays(30)]);
+
+        $merchantId = 'MERCHANT_APEX_TEST';
+        $secret = 'SECRET_APEX_TEST_1234';
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->institute2->id,
+            'provider' => InstituteIntegration::PROVIDER_PAYHERE,
+            'credentials' => ['merchant_secret' => $secret],
+            'settings' => [
+                'merchant_id' => $merchantId,
+                'is_sandbox' => true,
+                'currency' => 'LKR',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        $student = User::withoutGlobalScopes()->create([
+            'name' => 'Apex Student 1',
+            'email' => 'apex.s1@apex.test',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
+            'full_name' => 'Apex Student One',
+            'institute_id' => $this->institute2->id,
+        ]);
+
+        $payment1 = Payment::withoutGlobalScopes()->create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute2->id,
+            'year_month' => '2026-11',
+            'amount' => 2500.00,
+            'status' => 'pending',
+            'payment_method' => 'online',
+            'gateway_ref' => 'PH_EXPIRED_ORDER_001',
+            'meta' => ['currency' => 'LKR'],
+        ]);
+
+        // 1. Correctly signed notify -> payment becomes paid, HTTP 200
+        $payload1 = $this->signPayHereNotify($merchantId, $secret, 'PH_EXPIRED_ORDER_001', 2500.00);
+        $res1 = $this->post('http://apex.test/api/payhere/notify', $payload1);
+        $res1->assertOk();
+        $this->assertSame('paid', $payment1->fresh()->status);
+
+        // 2. Wrong signature -> 403 and unpaid
+        $payment2 = Payment::withoutGlobalScopes()->create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute2->id,
+            'year_month' => '2026-11',
+            'amount' => 3000.00,
+            'status' => 'pending',
+            'payment_method' => 'online',
+            'gateway_ref' => 'PH_EXPIRED_ORDER_002',
+            'meta' => ['currency' => 'LKR'],
+        ]);
+        $badPayload = $this->signPayHereNotify($merchantId, 'WRONG_SECRET', 'PH_EXPIRED_ORDER_002', 3000.00);
+        $res2 = $this->post('http://apex.test/api/payhere/notify', $badPayload);
+        $res2->assertStatus(403);
+        $this->assertSame('pending', $payment2->fresh()->status);
+
+        // 3. Any other API route on that host still 402
+        $settingsRes = $this->getJson('http://apex.test/api/settings');
+        $settingsRes->assertStatus(402);
+        $settingsRes->assertJson(['code' => 'institute_expired']);
+
+        $materialsRes = $this->getJson('http://apex.test/api/learning-materials');
+        $materialsRes->assertStatus(402);
+        $materialsRes->assertJson(['code' => 'institute_expired']);
+    }
+
+    public function test_payhere_notify_on_suspended_institute_records_payment_while_other_routes_stay_blocked(): void
+    {
+        $this->institute2->update([
+            'status' => 'suspended',
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        $merchantId = 'MERCHANT_APEX_TEST';
+        $secret = 'SECRET_APEX_TEST_1234';
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->institute2->id,
+            'provider' => InstituteIntegration::PROVIDER_PAYHERE,
+            'credentials' => ['merchant_secret' => $secret],
+            'settings' => [
+                'merchant_id' => $merchantId,
+                'is_sandbox' => true,
+                'currency' => 'LKR',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        $student = User::withoutGlobalScopes()->create([
+            'name' => 'Apex Student 2',
+            'email' => 'apex.s2@apex.test',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
+            'full_name' => 'Apex Student Two',
+            'institute_id' => $this->institute2->id,
+        ]);
+
+        $payment1 = Payment::withoutGlobalScopes()->create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute2->id,
+            'year_month' => '2026-11',
+            'amount' => 1800.00,
+            'status' => 'pending',
+            'payment_method' => 'online',
+            'gateway_ref' => 'PH_SUSP_ORDER_001',
+            'meta' => ['currency' => 'LKR'],
+        ]);
+
+        // 1. Correctly signed notify -> payment becomes paid, HTTP 200
+        $payload1 = $this->signPayHereNotify($merchantId, $secret, 'PH_SUSP_ORDER_001', 1800.00);
+        $res1 = $this->post('http://apex.test/api/payhere/notify', $payload1);
+        $res1->assertOk();
+        $this->assertSame('paid', $payment1->fresh()->status);
+
+        // 2. Wrong signature -> 403 and unpaid
+        $payment2 = Payment::withoutGlobalScopes()->create([
+            'user_id' => $student->id,
+            'institute_id' => $this->institute2->id,
+            'year_month' => '2026-11',
+            'amount' => 2200.00,
+            'status' => 'pending',
+            'payment_method' => 'online',
+            'gateway_ref' => 'PH_SUSP_ORDER_002',
+            'meta' => ['currency' => 'LKR'],
+        ]);
+        $badPayload = $this->signPayHereNotify($merchantId, 'WRONG_SECRET', 'PH_SUSP_ORDER_002', 2200.00);
+        $res2 = $this->post('http://apex.test/api/payhere/notify', $badPayload);
+        $res2->assertStatus(403);
+        $this->assertSame('pending', $payment2->fresh()->status);
+
+        // 3. Other API route on that host still 403
+        $settingsRes = $this->getJson('http://apex.test/api/settings');
+        $settingsRes->assertStatus(403);
+        $settingsRes->assertJson(['code' => 'institute_suspended']);
+
+        $materialsRes = $this->getJson('http://apex.test/api/learning-materials');
+        $materialsRes->assertStatus(403);
+        $materialsRes->assertJson(['code' => 'institute_suspended']);
     }
 }
 

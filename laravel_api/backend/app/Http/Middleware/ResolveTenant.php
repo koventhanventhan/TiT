@@ -150,6 +150,16 @@ class ResolveTenant
             $isExpired = $institute->isPastGrace();
 
             if ($isSuspended || $isExpired) {
+                // why: PayHere server-to-server webhook notifications (api/payhere/notify) must still be
+                // recorded and processed even when an institute is past grace or suspended, ensuring students/parents
+                // who already paid on the payment gateway are properly credited, and PayHere's notification retries
+                // succeed with HTTP 200 rather than being dropped with HTTP 402/403.
+                if ($request->is('api/payhere/notify') || $request->routeIs('payhere.notify')) {
+                    Tenant::set($institute);
+                    $request->merge(['current_institute' => $institute]);
+                    return $next($request);
+                }
+
                 // a) Admin login and logout routes must remain accessible
                 if ($request->is('admin/login') || $request->is('admin/logout')) {
                     Tenant::set($institute);

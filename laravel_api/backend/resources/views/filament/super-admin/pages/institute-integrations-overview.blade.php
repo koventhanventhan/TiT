@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         <p style="font-size: 0.875rem; opacity: 0.85; margin: 0;">
-            Read-only operational status for every institute's PayHere, WhatsApp, and E-mail integrations. Secret credentials are encrypted per institute and are never displayed here.
+            Read-only operational status for every institute's PayHere, WhatsApp, E-mail, Gemini, Zoom, reCAPTCHA, and Google integrations. Secret credentials are encrypted per institute and are never displayed here.
         </p>
 
         @if ($this->feedbackMessage)
@@ -31,7 +31,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (['payhere' => 'PayHere', 'whatsapp' => 'WhatsApp', 'mail' => 'E-mail (SMTP)'] as $providerKey => $providerLabel)
+                            @foreach ([
+                                'payhere' => 'PayHere',
+                                'whatsapp' => 'WhatsApp',
+                                'mail' => 'E-mail (SMTP)',
+                                'gemini' => 'AI Assistant (Gemini)',
+                                'zoom' => 'Zoom Meetings',
+                                'recaptcha' => 'Google reCAPTCHA v3',
+                                'google' => 'Google Sign-in (OAuth)',
+                            ] as $providerKey => $providerLabel)
                                 @php
                                     $p = $inst['providers'][$providerKey];
                                     $badgeColor = match ($p['status']) {

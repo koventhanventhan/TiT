@@ -428,6 +428,65 @@
                     </a>
                 </div>
             </div>
+
+            {{-- 6. AI Assistant & Security --}}
+            <div class="inst-check-row">
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
+                    @php
+                        $geminiOk = !empty($checklist['providers']['gemini']);
+                        $recaptchaOk = !empty($checklist['providers']['recaptcha']);
+                        $googleOk = !empty($checklist['providers']['google']);
+                        $secCount = ($geminiOk ? 1 : 0) + ($recaptchaOk ? 1 : 0) + ($googleOk ? 1 : 0);
+                    @endphp
+                    @if ($secCount === 3)
+                        <span class="inst-tick inst-tick-ok" aria-label="Completed">✓</span>
+                    @elseif ($secCount > 0)
+                        <span class="inst-tick inst-tick-warn" aria-label="Partially configured">!</span>
+                    @else
+                        <span class="inst-tick inst-tick-miss" aria-label="Not configured">✗</span>
+                    @endif
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9375rem;">AI Assistant &amp; Security</div>
+                        <div class="inst-muted">
+                            Gemini AI: <strong>{{ $geminiOk ? 'Configured' : 'Not configured' }}</strong>
+                            &bull; reCAPTCHA: <strong>{{ $recaptchaOk ? 'Configured' : 'Not configured' }}</strong>
+                            &bull; Google Sign-in: <strong>{{ $googleOk ? 'Configured' : 'Not configured' }}</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{{ $integrationsUrl }}" class="inst-btn">
+                        Manage AI &amp; Security
+                    </a>
+                </div>
+            </div>
+
+            {{-- 7. Zoom Meetings --}}
+            <div class="inst-check-row">
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
+                    @php
+                        $zoomOk = !empty($checklist['providers']['zoom']);
+                    @endphp
+                    @if ($zoomOk)
+                        <span class="inst-tick inst-tick-ok" aria-label="Completed">✓</span>
+                    @else
+                        <span class="inst-tick inst-tick-miss" aria-label="Not configured">✗</span>
+                    @endif
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9375rem;">Zoom Meetings</div>
+                        <div class="inst-muted">
+                            Zoom account: <strong>{{ $zoomOk ? 'Connected' : 'Not configured' }}</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{{ $integrationsUrl }}" class="inst-btn">
+                        Manage Zoom
+                    </a>
+                </div>
+            </div>
         </div>
     </x-filament::section>
 

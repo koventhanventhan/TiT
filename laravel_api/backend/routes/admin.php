@@ -176,6 +176,35 @@ Route::prefix('admin')->group(function () {
             Route::post('/settings/messaging/whatsapp/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearWhatsApp'])
                 ->middleware('throttle:20,1')
                 ->name('admin.settings.messaging.whatsapp.clear');
+
+            Route::get('/settings/ai-security', [\App\Http\Controllers\Admin\IntegrationController::class, 'aiSecurity'])
+                ->name('admin.settings.ai-security');
+            Route::post('/settings/ai-security/gemini', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateGemini'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.gemini.update');
+            Route::post('/settings/ai-security/gemini/test', [\App\Http\Controllers\Admin\IntegrationController::class, 'testGemini'])
+                ->middleware('throttle:10,1')
+                ->name('admin.settings.ai-security.gemini.test');
+            Route::post('/settings/ai-security/gemini/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearGemini'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.gemini.clear');
+
+            Route::post('/settings/ai-security/recaptcha', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateRecaptcha'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.recaptcha.update');
+            Route::post('/settings/ai-security/recaptcha/test', [\App\Http\Controllers\Admin\IntegrationController::class, 'testRecaptcha'])
+                ->middleware('throttle:10,1')
+                ->name('admin.settings.ai-security.recaptcha.test');
+            Route::post('/settings/ai-security/recaptcha/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearRecaptcha'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.recaptcha.clear');
+
+            Route::post('/settings/ai-security/google', [\App\Http\Controllers\Admin\IntegrationController::class, 'updateGoogle'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.google.update');
+            Route::post('/settings/ai-security/google/clear', [\App\Http\Controllers\Admin\IntegrationController::class, 'clearGoogle'])
+                ->middleware('throttle:20,1')
+                ->name('admin.settings.ai-security.google.clear');
         });
         // Subscription & Limits
         Route::get('/subscription', [\App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('admin.subscription');

@@ -139,6 +139,9 @@
                         <li class="{{ request()->routeIs('admin.settings.messaging*') ? 'mm-active' : '' }}">
                             <a href="{{ route('admin.settings.messaging') }}">Messaging &amp; E-mail</a>
                         </li>
+                        <li class="{{ request()->routeIs('admin.settings.ai-security*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.settings.ai-security') }}">AI &amp; Security</a>
+                        </li>
                     @endif
                     <li class="{{ request()->routeIs('admin.subscription*') ? 'mm-active' : '' }}">
                         <a href="{{ route('admin.subscription') }}">Subscription &amp; Limits</a>

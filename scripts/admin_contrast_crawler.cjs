@@ -43,6 +43,7 @@ const ROUTES = process.env.CRAWL_ROUTES
   '/admin/settings/appearance',
   '/admin/settings/online-payments',
   '/admin/settings/messaging',
+  '/admin/settings/ai-security',
   '/admin/subscription',
   '/admin/zoom',
   '/admin/zoom/create',

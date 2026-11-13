@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AssistantVisitorLog;
 use App\Models\Institute;
 use App\Models\InstituteIntegration;
+use App\Models\SiteSetting;
 use App\Services\PayHereService;
 use App\Services\WhatsAppService;
 use App\Support\Credentials\PayHereCredentials;
@@ -14,6 +16,7 @@ use App\Support\Redact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -502,5 +505,436 @@ class IntegrationController extends Controller
         return redirect()
             ->route('admin.settings.messaging')
             ->with('success', 'WhatsApp credentials cleared.');
+    }
+
+    public function aiSecurity(Request $request): View
+    {
+        [$instituteId, $institute] = $this->resolveAuthorizedInstitute($request);
+
+        $resolver = Integrations::for($instituteId);
+
+        // Gemini
+        $geminiIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_GEMINI);
+        $resolvedGemini = $resolver->gemini();
+        $geminiMasked = $geminiIntegration ? $geminiIntegration->maskedCredentials() : [];
+        $geminiUsingPlatformFallback = ($geminiIntegration === null || $geminiIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
+            && $resolvedGemini !== null
+            && $resolvedGemini->source === 'env';
+        $geminiSettings = is_array($geminiIntegration?->settings) ? $geminiIntegration->settings : [];
+
+        $capSetting = SiteSetting::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('key', 'assistant_daily_cap')
+            ->value('value');
+        if ($capSetting !== null && is_numeric($capSetting) && (int) $capSetting > 0) {
+            $dailyCap = (int) $capSetting;
+        } else {
+            $defaultCap = (int) config('rag.assistant.visitor_daily_cap', 500);
+            $dailyCap = ($instituteId === 1) ? $defaultCap : max(50, (int) floor($defaultCap / 5));
+        }
+
+        $questionsToday = AssistantVisitorLog::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+
+        // reCAPTCHA
+        $recaptchaIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_RECAPTCHA);
+        $resolvedRecaptcha = $resolver->recaptcha();
+        $recaptchaMasked = $recaptchaIntegration ? $recaptchaIntegration->maskedCredentials() : [];
+        $recaptchaUsingPlatformFallback = ($recaptchaIntegration === null || $recaptchaIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
+            && $resolvedRecaptcha !== null
+            && $resolvedRecaptcha->source === 'env';
+        $recaptchaSettings = is_array($recaptchaIntegration?->settings) ? $recaptchaIntegration->settings : [];
+        $scoreThreshold = (float) ($recaptchaSettings['score_threshold'] ?? 0.5);
+        $siteKey = (string) ($recaptchaSettings['site_key'] ?? ($recaptchaUsingPlatformFallback ? config('services.recaptcha.site_key') : ''));
+
+        // Google Sign-in
+        $googleIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_GOOGLE);
+        $resolvedGoogle = $resolver->google();
+        $googleMasked = $googleIntegration ? $googleIntegration->maskedCredentials() : [];
+        $googleUsingPlatformFallback = ($googleIntegration === null || $googleIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
+            && $resolvedGoogle !== null
+            && $resolvedGoogle->source === 'env';
+        $googleSettings = is_array($googleIntegration?->settings) ? $googleIntegration->settings : [];
+        $googleClientId = (string) ($googleSettings['client_id'] ?? ($googleUsingPlatformFallback ? config('services.google.client_id') : ''));
+        $primaryDomain = $institute->primaryDomainHost();
+        $googleRedirectUri = 'https://' . $primaryDomain . '/api/auth/google/callback';
+
+        return view('admin.settings.ai_security', [
+            'institute' => $institute,
+            'geminiIntegration' => $geminiIntegration,
+            'geminiMasked' => $geminiMasked,
+            'geminiUsingPlatformFallback' => $geminiUsingPlatformFallback,
+            'dailyCap' => $dailyCap,
+            'questionsToday' => $questionsToday,
+            'recaptchaIntegration' => $recaptchaIntegration,
+            'recaptchaMasked' => $recaptchaMasked,
+            'recaptchaUsingPlatformFallback' => $recaptchaUsingPlatformFallback,
+            'scoreThreshold' => $scoreThreshold,
+            'siteKey' => $siteKey,
+            'googleIntegration' => $googleIntegration,
+            'googleMasked' => $googleMasked,
+            'googleUsingPlatformFallback' => $googleUsingPlatformFallback,
+            'googleClientId' => $googleClientId,
+            'googleRedirectUri' => $googleRedirectUri,
+        ]);
+    }
+
+    public function updateGemini(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $existing = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_GEMINI)
+            ->first();
+
+        $existingCreds = is_array($existing?->credentials) ? $existing->credentials : [];
+        $hasExistingKey = !empty($existingCreds['api_key']);
+
+        $validated = $request->validate([
+            'api_key' => [$hasExistingKey ? 'nullable' : 'required', 'string', 'min:10', 'max:255'],
+            'daily_cap' => ['required', 'integer', 'min:50', 'max:100000'],
+        ]);
+
+        $newApiKey = filled($validated['api_key'] ?? null)
+            ? trim((string) $validated['api_key'])
+            : (string) ($existingCreds['api_key'] ?? '');
+
+        $credentials = [
+            'api_key' => $newApiKey,
+        ];
+
+        $settings = [
+            'daily_cap' => (int) $validated['daily_cap'],
+        ];
+
+        SiteSetting::withoutGlobalScopes()->updateOrCreate(
+            ['institute_id' => $instituteId, 'key' => 'assistant_daily_cap'],
+            ['value' => (string) $validated['daily_cap']]
+        );
+
+        $keyUnchanged = $existing !== null && ($existingCreds['api_key'] ?? null) === $newApiKey;
+        $nextStatus = ($keyUnchanged && $existing?->status === InstituteIntegration::STATUS_VERIFIED)
+            ? InstituteIntegration::STATUS_VERIFIED
+            : InstituteIntegration::STATUS_CONFIGURED;
+
+        if ($existing) {
+            Gate::forUser($request->user())->authorize('manage', $existing);
+            $existing->fill([
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => $nextStatus,
+                'last_error' => null,
+                'last_verified_at' => $nextStatus === InstituteIntegration::STATUS_VERIFIED ? $existing->last_verified_at : null,
+            ]);
+            $existing->save();
+        } else {
+            InstituteIntegration::withoutGlobalScopes()->create([
+                'institute_id' => $instituteId,
+                'provider' => InstituteIntegration::PROVIDER_GEMINI,
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'last_error' => null,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'Gemini AI Assistant settings saved.');
+    }
+
+    public function testGemini(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $creds = Integrations::for($instituteId)->gemini();
+        if (!$creds || !$creds->isConfigured()) {
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('error', 'Gemini is not configured. Please save an API key first.');
+        }
+
+        $apiKey = $creds->apiKey();
+
+        try {
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $apiKey,
+            ])->timeout(10)->get('https://generativelanguage.googleapis.com/v1beta/models');
+
+            $integration = InstituteIntegration::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->where('provider', InstituteIntegration::PROVIDER_GEMINI)
+                ->first();
+
+            if ($response->successful()) {
+                if ($integration) {
+                    $integration->status = InstituteIntegration::STATUS_VERIFIED;
+                    $integration->last_verified_at = now();
+                    $integration->last_error = null;
+                    $integration->save();
+                }
+                return redirect()
+                    ->route('admin.settings.ai-security')
+                    ->with('success', 'Gemini API connection verified successfully.');
+            }
+
+            $sanitizedError = Redact::sanitizeText($response->body());
+            if ($integration) {
+                $integration->recordFailure('Gemini API test failed: ' . $sanitizedError, [$apiKey]);
+            }
+
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('error', 'Gemini API test failed: ' . ($response->json('error.message') ?? 'Invalid API key or response from Google.'));
+        } catch (\Throwable $e) {
+            $integration = InstituteIntegration::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->where('provider', InstituteIntegration::PROVIDER_GEMINI)
+                ->first();
+            if ($integration) {
+                $integration->recordFailure('Gemini connection error: ' . $e->getMessage(), [$apiKey]);
+            }
+
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('error', 'Gemini API test failed: ' . Redact::sanitizeText($e->getMessage()));
+        }
+    }
+
+    public function clearGemini(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $integration = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_GEMINI)
+            ->first();
+
+        if ($integration) {
+            Gate::forUser($request->user())->authorize('manage', $integration);
+            $integration->clearCredentials();
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'Gemini credentials cleared. AI Assistant features are now disabled for your institute.');
+    }
+
+    public function updateRecaptcha(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $existing = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_RECAPTCHA)
+            ->first();
+
+        $existingCreds = is_array($existing?->credentials) ? $existing->credentials : [];
+        $hasExistingSecret = !empty($existingCreds['secret_key']);
+
+        $validated = $request->validate([
+            'site_key' => ['required', 'string', 'max:120'],
+            'secret_key' => [$hasExistingSecret ? 'nullable' : 'required', 'string', 'min:10', 'max:255'],
+            'score_threshold' => ['required', 'numeric', 'min:0.1', 'max:1.0'],
+        ]);
+
+        $newSecretKey = filled($validated['secret_key'] ?? null)
+            ? trim((string) $validated['secret_key'])
+            : (string) ($existingCreds['secret_key'] ?? '');
+
+        $credentials = [
+            'secret_key' => $newSecretKey,
+        ];
+
+        $settings = [
+            'site_key' => trim((string) $validated['site_key']),
+            'score_threshold' => (float) $validated['score_threshold'],
+        ];
+
+        $keyUnchanged = $existing !== null && ($existingCreds['secret_key'] ?? null) === $newSecretKey;
+        $nextStatus = ($keyUnchanged && $existing?->status === InstituteIntegration::STATUS_VERIFIED)
+            ? InstituteIntegration::STATUS_VERIFIED
+            : InstituteIntegration::STATUS_CONFIGURED;
+
+        if ($existing) {
+            Gate::forUser($request->user())->authorize('manage', $existing);
+            $existing->fill([
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => $nextStatus,
+                'last_error' => null,
+                'last_verified_at' => $nextStatus === InstituteIntegration::STATUS_VERIFIED ? $existing->last_verified_at : null,
+            ]);
+            $existing->save();
+        } else {
+            InstituteIntegration::withoutGlobalScopes()->create([
+                'institute_id' => $instituteId,
+                'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'last_error' => null,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'reCAPTCHA v3 settings saved.');
+    }
+
+    public function testRecaptcha(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $creds = Integrations::for($instituteId)->recaptcha();
+        if (!$creds || !$creds->isConfigured()) {
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('error', 'reCAPTCHA is not configured. Please save a site key and secret key first.');
+        }
+
+        $secretKey = $creds->secretKey();
+
+        try {
+            $response = Http::asForm()->timeout(10)->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secretKey,
+                'response' => 'test_verification_dummy_token',
+            ]);
+
+            $integration = InstituteIntegration::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->where('provider', InstituteIntegration::PROVIDER_RECAPTCHA)
+                ->first();
+
+            $data = $response->json();
+            $errorCodes = (array) ($data['error-codes'] ?? []);
+
+            if (in_array('invalid-input-secret', $errorCodes, true)) {
+                if ($integration) {
+                    $integration->recordFailure('Google rejected the reCAPTCHA secret key as invalid.', [$secretKey]);
+                }
+                return redirect()
+                    ->route('admin.settings.ai-security')
+                    ->with('error', 'reCAPTCHA test failed: Google rejected secret key as invalid.');
+            }
+
+            if ($integration) {
+                $integration->status = InstituteIntegration::STATUS_VERIFIED;
+                $integration->last_verified_at = now();
+                $integration->last_error = null;
+                $integration->save();
+            }
+
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('success', 'reCAPTCHA secret key verified successfully with Google.');
+        } catch (\Throwable $e) {
+            $integration = InstituteIntegration::withoutGlobalScopes()
+                ->where('institute_id', $instituteId)
+                ->where('provider', InstituteIntegration::PROVIDER_RECAPTCHA)
+                ->first();
+            if ($integration) {
+                $integration->recordFailure('reCAPTCHA test connection error: ' . $e->getMessage(), [$secretKey]);
+            }
+
+            return redirect()
+                ->route('admin.settings.ai-security')
+                ->with('error', 'reCAPTCHA test failed: ' . Redact::sanitizeText($e->getMessage()));
+        }
+    }
+
+    public function clearRecaptcha(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $integration = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_RECAPTCHA)
+            ->first();
+
+        if ($integration) {
+            Gate::forUser($request->user())->authorize('manage', $integration);
+            $integration->clearCredentials();
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'reCAPTCHA credentials cleared. Strict fallback throttling now applies to public forms.');
+    }
+
+    public function updateGoogle(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $existing = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_GOOGLE)
+            ->first();
+
+        $existingCreds = is_array($existing?->credentials) ? $existing->credentials : [];
+        $hasExistingSecret = !empty($existingCreds['client_secret']);
+
+        $validated = $request->validate([
+            'client_id' => ['required', 'string', 'max:191'],
+            'client_secret' => [$hasExistingSecret ? 'nullable' : 'required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $newClientSecret = filled($validated['client_secret'] ?? null)
+            ? trim((string) $validated['client_secret'])
+            : (string) ($existingCreds['client_secret'] ?? '');
+
+        $credentials = [
+            'client_secret' => $newClientSecret,
+        ];
+
+        $settings = [
+            'client_id' => trim((string) $validated['client_id']),
+        ];
+
+        if ($existing) {
+            Gate::forUser($request->user())->authorize('manage', $existing);
+            $existing->fill([
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'last_error' => null,
+            ]);
+            $existing->save();
+        } else {
+            InstituteIntegration::withoutGlobalScopes()->create([
+                'institute_id' => $instituteId,
+                'provider' => InstituteIntegration::PROVIDER_GOOGLE,
+                'credentials' => $credentials,
+                'settings' => $settings,
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'last_error' => null,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'Google sign-in OAuth credentials saved.');
+    }
+
+    public function clearGoogle(Request $request): RedirectResponse
+    {
+        [$instituteId] = $this->resolveAuthorizedInstitute($request);
+
+        $integration = InstituteIntegration::withoutGlobalScopes()
+            ->where('institute_id', $instituteId)
+            ->where('provider', InstituteIntegration::PROVIDER_GOOGLE)
+            ->first();
+
+        if ($integration) {
+            Gate::forUser($request->user())->authorize('manage', $integration);
+            $integration->clearCredentials();
+        }
+
+        return redirect()
+            ->route('admin.settings.ai-security')
+            ->with('success', 'Google sign-in credentials cleared.');
     }
 }

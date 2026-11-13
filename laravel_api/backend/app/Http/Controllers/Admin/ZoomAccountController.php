@@ -1,10 +1,17 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Institute;
+use App\Models\InstituteIntegration;
 use App\Models\ZoomAccount;
 use App\Services\ZoomService;
+use App\Support\Integrations;
+use App\Support\Redact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ZoomAccountController extends Controller
 {
@@ -30,7 +37,7 @@ class ZoomAccountController extends Controller
      */
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('ZoomAccount store request', \App\Support\Redact::array($request->all()));
+        Log::info('ZoomAccount store request', Redact::array($request->all()));
         $validated = $request->validate([
             'email' => 'required|email|unique:zoom_accounts,email',
             'account_id' => 'required|string',
@@ -42,9 +49,9 @@ class ZoomAccountController extends Controller
         $validated['institute_id'] = auth()->user()->institute_id ?? 1;
         $validated['is_active'] = $request->has('is_active');
 
-        \Illuminate\Support\Facades\Log::info('ZoomAccount validated data', \App\Support\Redact::array($validated));
+        Log::info('ZoomAccount validated data', Redact::array($validated));
         $account = ZoomAccount::create($validated);
-        \Illuminate\Support\Facades\Log::info('ZoomAccount created', ['id' => $account->id]);
+        Log::info('ZoomAccount created', ['id' => $account->id]);
 
         return redirect()->route('admin.zoom-accounts.index')
             ->with('success', 'Zoom account added successfully.');
@@ -67,9 +74,13 @@ class ZoomAccountController extends Controller
             'email' => 'required|email|unique:zoom_accounts,email,' . $zoomAccount->id,
             'account_id' => 'required|string',
             'client_id' => 'required|string',
-            'client_secret' => 'required|string',
+            'client_secret' => 'nullable|string',
             'max_concurrent' => 'required|integer|min:1',
         ]);
+
+        if (empty($validated['client_secret'])) {
+            unset($validated['client_secret']);
+        }
 
         $validated['is_active'] = $request->has('is_active');
 
@@ -95,21 +106,59 @@ class ZoomAccountController extends Controller
      */
     public function testConnection(ZoomAccount $zoomAccount, ZoomService $zoomService)
     {
+        $institute = Institute::find($zoomAccount->institute_id);
+        if ($institute && !$institute->hasFeature('zoom')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Zoom integration is not included in your current subscription plan.',
+            ], 403);
+        }
+
+        $currentUser = auth()->user();
+        if ($currentUser && $currentUser->role !== 'super_admin' && (int) $zoomAccount->institute_id !== (int) $currentUser->institute_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized account access.',
+            ], 403);
+        }
+
         try {
-            $zoomService->useAccount($zoomAccount);
-            // Try to create a dummy meeting or just get access token
-            // Here we'll try to get the access token indirectly or just create a very short dummy meeting
-            // Actually, we can just return success if useAccount works and we can log the oauth result
-            
+            $token = $zoomService->useAccount($zoomAccount)->getFreshAccessToken($zoomAccount);
+            if (!$token) {
+                throw new \RuntimeException('Failed to obtain Zoom access token with provided credentials.');
+            }
+
+            $res = Http::withToken($token)
+                ->timeout(15)
+                ->get('https://api.zoom.us/v2/users/me');
+
+            if (!$res->successful()) {
+                $err = $res->json('message') ?: ('Zoom API returned HTTP ' . $res->status());
+                throw new \RuntimeException($err);
+            }
+
+            Integrations::for((int) $zoomAccount->institute_id)->updateStatus(
+                InstituteIntegration::PROVIDER_ZOOM,
+                InstituteIntegration::STATUS_VERIFIED
+            );
+
             return response()->json([
-                'success' => true, 
-                'message' => "Connection successful for {$zoomAccount->email}"
+                'success' => true,
+                'message' => "Connection verified successfully for {$zoomAccount->email}.",
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $cleanReason = Redact::clean($e->getMessage());
+
+            Integrations::for((int) $zoomAccount->institute_id)->updateStatus(
+                InstituteIntegration::PROVIDER_ZOOM,
+                InstituteIntegration::STATUS_FAILING,
+                $cleanReason
+            );
+
             return response()->json([
-                'success' => false, 
-                'message' => 'Connection failed: ' . $e->getMessage()
-            ], 500);
+                'success' => false,
+                'message' => 'Connection test failed: ' . $cleanReason,
+            ], 422);
         }
     }
 }

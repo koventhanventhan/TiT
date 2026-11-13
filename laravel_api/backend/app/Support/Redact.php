@@ -48,6 +48,14 @@ class Redact
     }
 
     /**
+     * Scrub secrets and patterns from a string.
+     */
+    public static function clean(?string $text, array $extraSecrets = []): ?string
+    {
+        return self::sanitizeText($text, $extraSecrets);
+    }
+
+    /**
      * Recursively redact sensitive keys and bearer/secret patterns in an array.
      *
      * @param array<mixed, mixed> $data

@@ -2,82 +2,159 @@
 
 namespace App\Services;
 
+use App\Exceptions\ZoomNotConfiguredException;
 use App\Models\ZoomAccount;
 use App\Models\ZoomSchedule;
+use App\Support\Integrations;
+use App\Support\Redact;
+use App\Support\Tenant;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ZoomService
 {
     protected string $baseUrl;
-    protected ?string $accountId;
-    protected ?string $clientId;
-    protected ?string $clientSecret;
+    protected ?int $instituteId = null;
     protected ?ZoomAccount $activeAccount = null;
 
-    public function __construct()
+    /**
+     * ZoomService constructor.
+     * Note: Constructor NEVER captures credentials from global env.
+     */
+    public function __construct(?int $instituteId = null)
     {
         $this->baseUrl = (string) (config('services.zoom.base_url') ?: 'https://api.zoom.us/v2');
-        // Initial defaults from config
-        $this->accountId = config('services.zoom.account_id');
-        $this->clientId = config('services.zoom.client_id');
-        $this->clientSecret = config('services.zoom.client_secret');
+        $this->instituteId = $instituteId;
     }
 
     /**
-     * Set the specific Zoom account to use for the next API calls.
+     * Clone service scoped to an explicit institute.
+     */
+    public function forInstitute(int $instituteId): self
+    {
+        $clone = clone $this;
+        $clone->instituteId = $instituteId;
+        $clone->activeAccount = null;
+        return $clone;
+    }
+
+    /**
+     * Resolve the active institute ID for this call.
+     */
+    public function getInstituteId(): int
+    {
+        return $this->instituteId ?? Tenant::id() ?? 1;
+    }
+
+    /**
+     * Set the specific Zoom account to use for subsequent API calls.
      */
     public function useAccount(ZoomAccount $account): self
     {
         $this->activeAccount = $account;
-        $this->accountId = $account->account_id;
-        $this->clientId = $account->client_id;
-        $this->clientSecret = $account->client_secret;
         return $this;
     }
 
     /**
-     * List all available Zoom host emails from our registered accounts.
+     * Get all usable Zoom accounts for an institute.
+     * If an institute has zero configured accounts and is in INTEGRATIONS_ENV_FALLBACK_INSTITUTES,
+     * an in-memory virtual account is created using the fallback env credentials.
+     *
+     * @return Collection<int, ZoomAccount>
      */
-    public function listUsers(): array
+    public function getAccountsForInstitute(?int $instituteId = null): Collection
     {
-        return ZoomAccount::where('is_active', true)
-            ->get(['email'])
+        $instId = $instituteId ?? $this->getInstituteId();
+
+        $accounts = ZoomAccount::withoutGlobalScopes()
+            ->where('institute_id', $instId)
+            ->where('is_active', true)
+            ->get();
+
+        if ($accounts->isEmpty() && Integrations::allowsEnvFallback($instId)) {
+            $envAccountId = config('services.zoom.account_id');
+            $envClientId = config('services.zoom.client_id');
+            $envClientSecret = config('services.zoom.client_secret');
+
+            if ($envAccountId && $envClientId && $envClientSecret) {
+                $virtual = new ZoomAccount([
+                    'email' => (string) config('services.zoom.host_email', 'default@tit.lk'),
+                    'account_id' => (string) $envAccountId,
+                    'client_id' => (string) $envClientId,
+                    'client_secret' => (string) $envClientSecret,
+                    'max_concurrent' => 10,
+                    'is_active' => true,
+                    'institute_id' => $instId,
+                ]);
+                $virtual->id = 0; // Virtual fallback
+                $virtual->exists = false;
+                return collect([$virtual]);
+            }
+        }
+
+        return $accounts;
+    }
+
+    /**
+     * List all available Zoom host emails from our registered accounts for the institute.
+     */
+    public function listUsers(?int $instituteId = null): array
+    {
+        return $this->getAccountsForInstitute($instituteId)
             ->map(function ($account) {
                 return [
                     'email' => $account->email,
                     'display_name' => $account->email,
                 ];
             })
+            ->values()
             ->toArray();
     }
 
     /**
      * Find an available Zoom account for a given timeslot.
      */
-    public function getAvailableAccount($startTime, int $durationMinutes = 60): ?ZoomAccount
+    public function getAvailableAccount($startTime, int $durationMinutes = 60, ?int $instituteId = null): ?ZoomAccount
     {
         $start = Carbon::parse($startTime);
         $end = (clone $start)->addMinutes($durationMinutes);
 
-        // Get all active accounts
-        $accounts = ZoomAccount::where('is_active', true)->get();
+        $accounts = $this->getAccountsForInstitute($instituteId);
 
         foreach ($accounts as $account) {
+            // Virtual accounts (id = 0) have no database schedule overlaps tracked by account id
+            if (!$account->id) {
+                return $account;
+            }
+
             // Check for overlapping schedules for this specific account
-            $overlap = ZoomSchedule::where('zoom_account_id', $account->id)
+            $overlap = ZoomSchedule::withoutGlobalScopes()
+                ->where('zoom_account_id', $account->id)
                 ->where(function ($query) use ($start, $end) {
                     $query->where(function ($q) use ($start, $end) {
                         $q->where('scheduled_at', '>=', $start)
                           ->where('scheduled_at', '<', $end);
                     })->orWhere(function ($q) use ($start, $end) {
-                        $q->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) > ?', [$start->toDateTimeString()])
-                          ->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) <= ?', [$end->toDateTimeString()]);
+                        $isSqlite = \Illuminate\Support\Facades\DB::getDriverName() === 'sqlite';
+                        if ($isSqlite) {
+                            $q->whereRaw("datetime(scheduled_at, '+' || coalesce(duration, 60) || ' minutes') > ?", [$start->toDateTimeString()])
+                              ->whereRaw("datetime(scheduled_at, '+' || coalesce(duration, 60) || ' minutes') <= ?", [$end->toDateTimeString()]);
+                        } else {
+                            $q->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) > ?', [$start->toDateTimeString()])
+                              ->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) <= ?', [$end->toDateTimeString()]);
+                        }
                     })->orWhere(function ($q) use ($start, $end) {
-                        $q->where('scheduled_at', '<=', $start)
-                          ->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) >= ?', [$end->toDateTimeString()]);
+                        $isSqlite = \Illuminate\Support\Facades\DB::getDriverName() === 'sqlite';
+                        if ($isSqlite) {
+                            $q->where('scheduled_at', '<=', $start)
+                              ->whereRaw("datetime(scheduled_at, '+' || coalesce(duration, 60) || ' minutes') >= ?", [$end->toDateTimeString()]);
+                        } else {
+                            $q->where('scheduled_at', '<=', $start)
+                              ->whereRaw('DATE_ADD(scheduled_at, INTERVAL duration MINUTE) >= ?', [$end->toDateTimeString()]);
+                        }
                     });
                 })->exists();
 
@@ -86,28 +163,49 @@ class ZoomService
             }
         }
 
-        return null; // All accounts are busy
+        return null;
+    }
+
+    /**
+     * Invalidate cached token and request a fresh access token (used during connection test).
+     */
+    public function getFreshAccessToken(?ZoomAccount $account = null): ?string
+    {
+        $targetAccount = $account ?? $this->activeAccount;
+        if ($targetAccount) {
+            $instId = (int) ($targetAccount->institute_id ?? $this->getInstituteId());
+            $accId = $targetAccount->id ?: 'env';
+            Cache::forget("zoom:token:{$instId}:{$accId}");
+        }
+
+        return $this->getAccessToken($targetAccount);
     }
 
     /**
      * Get Zoom OAuth Access Token using Server-to-Server OAuth.
+     * Token cache key: zoom:token:{institute}:{account}
      */
-    protected function getAccessToken(): ?string
+    public function getAccessToken(?ZoomAccount $account = null): ?string
     {
-        $cacheKey = $this->activeAccount 
-            ? 'zoom_access_token_' . $this->activeAccount->id 
-            : 'zoom_access_token_default';
+        $targetAccount = $account ?? $this->activeAccount;
 
-        return Cache::remember($cacheKey, 3500, function () {
-            if (!$this->accountId || !$this->clientId || !$this->clientSecret) {
-                Log::error('Zoom API credentials missing.');
-                return null;
-            }
+        if (!$targetAccount) {
+            $targetAccount = $this->getAvailableAccount(now());
+        }
 
-            $response = Http::withBasicAuth($this->clientId, $this->clientSecret)
+        if (!$targetAccount || empty($targetAccount->account_id) || empty($targetAccount->client_id) || empty($targetAccount->client_secret)) {
+            throw new ZoomNotConfiguredException('Add a Zoom account under Settings → Zoom Accounts');
+        }
+
+        $instId = (int) ($targetAccount->institute_id ?? $this->getInstituteId());
+        $accId = $targetAccount->id ?: 'env';
+        $cacheKey = "zoom:token:{$instId}:{$accId}";
+
+        return Cache::remember($cacheKey, 3500, function () use ($targetAccount, $instId) {
+            $response = Http::withBasicAuth((string) $targetAccount->client_id, (string) $targetAccount->client_secret)
                 ->timeout(30)
                 ->asForm()
-                ->post("https://zoom.us/oauth/token?account_id={$this->accountId}", [
+                ->post("https://zoom.us/oauth/token?account_id={$targetAccount->account_id}", [
                     'grant_type' => 'account_credentials',
                 ]);
 
@@ -116,9 +214,10 @@ class ZoomService
             }
 
             Log::error('Zoom OAuth Failed', [
-                'account_email' => $this->activeAccount?->email ?? 'default',
+                'institute_id' => $instId,
+                'account_email' => $targetAccount->email ?? 'default',
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => Redact::clean($response->body()),
             ]);
 
             return null;
@@ -128,10 +227,18 @@ class ZoomService
     /**
      * Create a Zoom Meeting.
      */
-    public function createMeeting(string $title, string $startTime, int $durationMinutes = 60, string $userId = 'me')
+    public function createMeeting(string $title, string $startTime, int $durationMinutes = 60, string $userId = 'me'): ?array
     {
-        $token = $this->getAccessToken();
-        if (!$token) return null;
+        $account = $this->activeAccount ?? $this->getAvailableAccount($startTime, $durationMinutes);
+        if (!$account) {
+            throw new ZoomNotConfiguredException('Add a Zoom account under Settings → Zoom Accounts');
+        }
+
+        $this->useAccount($account);
+        $token = $this->getAccessToken($account);
+        if (!$token) {
+            return null;
+        }
 
         $payload = [
             'topic' => $title,
@@ -171,7 +278,7 @@ class ZoomService
         Log::error('Zoom Meeting Creation Failed', [
             'account' => $this->activeAccount?->email ?? 'default',
             'status' => $response->status(),
-            'body' => $response->body()
+            'body' => Redact::clean($response->body()),
         ]);
 
         return null;
@@ -180,10 +287,12 @@ class ZoomService
     /**
      * Update an existing Zoom Meeting.
      */
-    public function updateMeeting(string $meetingId, array $data)
+    public function updateMeeting(string $meetingId, array $data): bool
     {
         $token = $this->getAccessToken();
-        if (!$token) return false;
+        if (!$token) {
+            return false;
+        }
 
         $response = Http::withToken($token)
             ->patch("{$this->baseUrl}/meetings/{$meetingId}", $data);
@@ -195,7 +304,7 @@ class ZoomService
         Log::error('Zoom Meeting Update Failed', [
             'meeting_id' => $meetingId,
             'status' => $response->status(),
-            'body' => $response->body()
+            'body' => Redact::clean($response->body()),
         ]);
 
         return false;
@@ -204,10 +313,12 @@ class ZoomService
     /**
      * Delete a Zoom Meeting.
      */
-    public function deleteMeeting(string $meetingId)
+    public function deleteMeeting(string $meetingId): bool
     {
         $token = $this->getAccessToken();
-        if (!$token) return false;
+        if (!$token) {
+            return false;
+        }
 
         $response = Http::withToken($token)
             ->delete("{$this->baseUrl}/meetings/{$meetingId}");
@@ -219,7 +330,7 @@ class ZoomService
         Log::error('Zoom Meeting Deletion Failed', [
             'meeting_id' => $meetingId,
             'status' => $response->status(),
-            'body' => $response->body()
+            'body' => Redact::clean($response->body()),
         ]);
 
         return false;
@@ -228,10 +339,12 @@ class ZoomService
     /**
      * Get recordings for a specific Zoom Meeting.
      */
-    public function getMeetingRecordings(string $meetingId)
+    public function getMeetingRecordings(string $meetingId): ?array
     {
         $token = $this->getAccessToken();
-        if (!$token) return null;
+        if (!$token) {
+            return null;
+        }
 
         $response = Http::withToken($token)
             ->get("{$this->baseUrl}/meetings/{$meetingId}/recordings");
@@ -244,7 +357,7 @@ class ZoomService
             Log::error('Zoom Meeting Recordings Fetch Failed', [
                 'meeting_id' => $meetingId,
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => Redact::clean($response->body()),
             ]);
         }
 

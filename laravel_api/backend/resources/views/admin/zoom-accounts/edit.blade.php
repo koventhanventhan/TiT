@@ -35,8 +35,8 @@
 
                         <div class="form-group">
                             <label>Client Secret</label>
-                            <input type="password" name="client_secret" class="form-control" value="{{ $zoomAccount->client_secret }}" required>
-                            <small class="text-muted">Enter existing or new secret.</small>
+                            <input type="password" name="client_secret" class="form-control" placeholder="{{ $zoomAccount->masked_secret }}" autocomplete="new-password">
+                            <small class="text-muted">Leave blank to keep existing secret. Currently: <code>{{ $zoomAccount->masked_secret }}</code></small>
                         </div>
 
                         <div class="form-row">

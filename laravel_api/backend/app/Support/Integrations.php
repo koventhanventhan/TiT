@@ -58,6 +58,38 @@ class Integrations
     }
 
     /**
+     * Alias for isEnvFallbackAllowed.
+     */
+    public static function allowsEnvFallback(?int $instituteId): bool
+    {
+        return self::isEnvFallbackAllowed($instituteId);
+    }
+
+    /**
+     * Update runtime verification status of a provider for this institute.
+     */
+    public function updateStatus(string $provider, string $status, ?string $errorMessage = null): InstituteIntegration
+    {
+        $integration = InstituteIntegration::withoutGlobalScopes()->firstOrCreate([
+            'institute_id' => $this->instituteId,
+            'provider' => $provider,
+        ], [
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        if ($status === InstituteIntegration::STATUS_VERIFIED) {
+            $integration->markVerified();
+        } elseif ($status === InstituteIntegration::STATUS_FAILING) {
+            $integration->recordFailure($errorMessage ?? 'Verification failed');
+        } else {
+            $integration->status = $status;
+            $integration->saveQuietly();
+        }
+
+        return $integration;
+    }
+
+    /**
      * Env-controlled flag for trusting client-side PayHere return callbacks in local development.
      * Always forced FALSE in production regardless of configuration.
      */

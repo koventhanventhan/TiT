@@ -117,13 +117,25 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    toastr.success(data.message);
+                    if (window.TitNotify && typeof window.TitNotify.success === 'function') {
+                        TitNotify.success(data.message, { title: 'Zoom Connected' });
+                    } else if (window.toastr) {
+                        toastr.success(data.message);
+                    }
                 } else {
-                    toastr.error(data.message);
+                    if (window.TitNotify && typeof window.TitNotify.error === 'function') {
+                        TitNotify.error(data.message, { title: 'Zoom Error' });
+                    } else if (window.toastr) {
+                        toastr.error(data.message);
+                    }
                 }
             })
             .catch(err => {
-                toastr.error('Request failed');
+                if (window.TitNotify && typeof window.TitNotify.error === 'function') {
+                    TitNotify.error('Request failed', { title: 'Error' });
+                } else if (window.toastr) {
+                    toastr.error('Request failed');
+                }
             })
             .finally(() => {
                 this.innerHTML = originalIcon;

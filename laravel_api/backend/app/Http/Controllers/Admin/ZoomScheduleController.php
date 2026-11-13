@@ -91,6 +91,14 @@ class ZoomScheduleController extends Controller
                 if ($this->zoom) {
                     $meeting = $this->zoom->createMeeting($request->title, date('Y-m-d\TH:i:s', strtotime($request->scheduled_at)));
                 }
+            } catch (\App\Exceptions\ZoomNotConfiguredException $e) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message' => $e->getMessage(),
+                        'code' => 'zoom_not_configured',
+                    ], 422);
+                }
+                return back()->withInput()->with('error', $e->getMessage());
             } catch (\Exception $e) {
                 Log::error('Zoom meeting creation exception: ' . $e->getMessage());
             }

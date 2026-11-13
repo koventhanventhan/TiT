@@ -91,69 +91,6 @@ function AppContent() {
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/super-admin')
 
-  const [blockedStatus, setBlockedStatus] = React.useState(null)
-
-  React.useEffect(() => {
-    const handler = (e) => {
-      setBlockedStatus(e.detail)
-    }
-    window.addEventListener('institute-status-blocked', handler)
-    return () => window.removeEventListener('institute-status-blocked', handler)
-  }, [])
-
-  if (blockedStatus) {
-    const isExpired = blockedStatus.code === 'institute_expired'
-    return (
-      <div className="institute-blocked-fullscreen" style={{
-        minHeight: '100dvh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f8fafc',
-        padding: '2rem',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        color: '#0f172a'
-      }}>
-        <div style={{
-          maxWidth: '32rem',
-          width: '100%',
-          background: '#ffffff',
-          borderRadius: '1rem',
-          padding: '2.5rem',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
-          textAlign: 'center',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            width: '4rem',
-            height: '4rem',
-            borderRadius: '50%',
-            background: isExpired ? '#fef2f2' : '#fffbeb',
-            color: isExpired ? '#ef4444' : '#f59e0b',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1.5rem',
-            fontSize: '1.75rem'
-          }}>
-            {isExpired ? '⏳' : '🔒'}
-          </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.75rem', color: '#0f172a' }}>
-            {isExpired ? 'Subscription has ended' : 'This institute is temporarily unavailable'}
-          </h2>
-          <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
-            {isExpired
-              ? 'The subscription for this institute has expired. Please contact the administrator or platform support to renew access.'
-              : 'Access to this institute is temporarily restricted. Please contact the administrator or platform support for assistance.'}
-          </p>
-          <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9', fontSize: '0.875rem', color: '#94a3b8' }}>
-            Please contact support if you believe this is an error.
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="App" style={{ minHeight: '100dvh', background: isDashboard ? '#f8fafc' : '#ffffff', width: '100%' }}>
       <CustomCursor />

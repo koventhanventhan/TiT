@@ -1,39 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import axios from 'axios'
 import App from './App'
 import './index.css'
-
-// Global interceptors for institute expiry & suspension handling
-if (typeof window !== 'undefined') {
-  const originalFetch = window.fetch;
-  window.fetch = async function (...args) {
-    const response = await originalFetch.apply(this, args);
-    if (response && (response.status === 402 || response.status === 403)) {
-      try {
-        const clone = response.clone();
-        const data = await clone.json();
-        if (data && (data.code === 'institute_expired' || data.code === 'institute_suspended')) {
-          window.dispatchEvent(new CustomEvent('institute-status-blocked', { detail: data }));
-        }
-      } catch (_) {}
-    }
-    return response;
-  };
-}
-
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && (error.response.status === 402 || error.response.status === 403)) {
-      const data = error.response.data;
-      if (data && (data.code === 'institute_expired' || data.code === 'institute_suspended')) {
-        window.dispatchEvent(new CustomEvent('institute-status-blocked', { detail: data }));
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 console.log('🚀 React is starting...')
 console.log('Root element:', document.getElementById('root'))

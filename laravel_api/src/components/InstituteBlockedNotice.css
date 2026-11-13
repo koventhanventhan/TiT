@@ -1,0 +1,119 @@
+.institute-blocked-container {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--t-bg);
+  color: var(--t-text);
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.institute-blocked-card {
+  width: 100%;
+  max-width: 32rem;
+  background-color: var(--t-surface);
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-radius-card);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.institute-blocked-logo {
+  max-height: 3.5rem;
+  max-width: 12rem;
+  object-fit: contain;
+  margin-bottom: 1.25rem;
+}
+
+.institute-blocked-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--t-text-2);
+  margin-bottom: 1rem;
+}
+
+.institute-blocked-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+}
+
+.institute-blocked-icon-expired {
+  background-color: var(--t-danger-bg);
+  color: var(--t-danger);
+}
+
+.institute-blocked-icon-suspended {
+  background-color: var(--t-warning-bg);
+  color: var(--t-warning);
+}
+
+.institute-blocked-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--t-text);
+  line-height: 1.3;
+}
+
+.institute-blocked-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--t-muted);
+  margin-bottom: 1.75rem;
+}
+
+.institute-blocked-contact-box {
+  background-color: var(--t-bg-muted);
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-radius-control);
+  padding: 1.25rem;
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.institute-blocked-contact-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--t-muted);
+  margin-bottom: 0.75rem;
+}
+
+.institute-blocked-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--t-text);
+  margin-bottom: 0.5rem;
+}
+
+.institute-blocked-contact-item:last-child {
+  margin-bottom: 0;
+}
+
+.institute-blocked-contact-item a {
+  color: var(--t-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.institute-blocked-contact-item a:hover {
+  text-decoration: underline;
+}
+
+.institute-blocked-footer-note {
+  margin-top: 1.75rem;
+  font-size: 0.8rem;
+  color: var(--t-muted);
+}

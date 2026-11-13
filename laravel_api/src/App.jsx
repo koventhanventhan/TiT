@@ -22,6 +22,7 @@ import PolicyPage from './pages/PolicyPage'
 import ExamResultsPage from './pages/ExamResultsPage'
 import TutorApplyPage from './pages/TutorApplyPage'
 import SelectProfile from './pages/SelectProfile'
+import InstituteBlockedNotice from './components/InstituteBlockedNotice'
 
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
 const StudentOverview = lazy(() => import('./pages/student/StudentOverview'))
@@ -89,6 +90,20 @@ function AppContent() {
     location.pathname.startsWith('/student') ||
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/super-admin')
+
+  const [blockedStatus, setBlockedStatus] = React.useState(null)
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      setBlockedStatus(e.detail)
+    }
+    window.addEventListener('institute-status-blocked', handler)
+    return () => window.removeEventListener('institute-status-blocked', handler)
+  }, [])
+
+  if (blockedStatus) {
+    return <InstituteBlockedNotice blockedData={blockedStatus} />
+  }
 
   return (
     <div className="App" style={{ minHeight: '100dvh', background: isDashboard ? '#f8fafc' : '#ffffff', width: '100%' }}>

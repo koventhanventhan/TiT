@@ -188,10 +188,22 @@ class ResolveTenant
 
                 // d) API / JSON requests return typed JSON response
                 if ($request->expectsJson() || $request->is('api/*')) {
+                    $contact = array_filter([
+                        'email' => config('tenant.platform_contact_email'),
+                        'phone' => config('tenant.platform_contact_phone'),
+                        'whatsapp' => config('tenant.platform_contact_whatsapp'),
+                    ], fn ($v) => $v !== null && $v !== '');
+
+                    $displayName = Institute::displayBrandName($institute->id, $institute->name);
+                    $logoUrl = !empty($institute->logo_path) ? asset($institute->logo_path) : null;
+
                     return response()->json([
                         'message' => $isExpired ? 'Subscription has ended' : 'Institute access is suspended',
                         'status' => $isExpired ? 'expired' : 'suspended',
                         'code' => $isExpired ? 'institute_expired' : 'institute_suspended',
+                        'institute_name' => $displayName,
+                        'institute_logo_url' => $logoUrl,
+                        'contact' => (object) $contact,
                     ], $isExpired ? 402 : 403);
                 }
 

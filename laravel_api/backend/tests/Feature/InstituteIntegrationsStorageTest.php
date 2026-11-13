@@ -277,7 +277,7 @@ class InstituteIntegrationsStorageTest extends TestCase
         $realOutput = Artisan::output();
 
         $this->assertSame(0, $exitReal);
-        $this->assertSame(3, InstituteIntegration::withoutGlobalScopes()->where('institute_id', $this->instOne->id)->count());
+        $this->assertGreaterThanOrEqual(3, InstituteIntegration::withoutGlobalScopes()->where('institute_id', $this->instOne->id)->count());
         $this->assertStringNotContainsString('ENV_SUPER_SECRET_9876', $realOutput);
 
         // Even if .env values are later blanked, Institute 1 now resolves from DB!

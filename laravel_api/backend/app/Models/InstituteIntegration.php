@@ -15,11 +15,19 @@ class InstituteIntegration extends Model
     public const PROVIDER_PAYHERE = 'payhere';
     public const PROVIDER_WHATSAPP = 'whatsapp';
     public const PROVIDER_MAIL = 'mail';
+    public const PROVIDER_GEMINI = 'gemini';
+    public const PROVIDER_ZOOM = 'zoom';
+    public const PROVIDER_RECAPTCHA = 'recaptcha';
+    public const PROVIDER_GOOGLE = 'google';
 
     public const PROVIDERS = [
         self::PROVIDER_PAYHERE,
         self::PROVIDER_WHATSAPP,
         self::PROVIDER_MAIL,
+        self::PROVIDER_GEMINI,
+        self::PROVIDER_ZOOM,
+        self::PROVIDER_RECAPTCHA,
+        self::PROVIDER_GOOGLE,
     ];
 
     public const STATUS_UNCONFIGURED = 'unconfigured';

@@ -14,7 +14,7 @@ class IntegrationsImportEnvCommand extends Command
                             {institute : Institute ID or slug}
                             {--dry-run : Print masked values only without writing to the database}';
 
-    protected $description = 'Import platform .env PayHere, WhatsApp, and SMTP settings into encrypted DB rows for a specific institute';
+    protected $description = 'Import platform .env PayHere, WhatsApp, SMTP, Gemini, Zoom, reCAPTCHA, and Google settings into encrypted DB rows for a specific institute';
 
     public function handle(): int
     {
@@ -175,10 +175,69 @@ class IntegrationsImportEnvCommand extends Command
             ];
         }
 
+        // 4. Gemini (AI Assistant / OCR / Embeddings / Translation)
+        $gemini = Integrations::platformGeminiCredentials($instituteId);
+        $geminiPayload = null;
+        if ($gemini !== null) {
+            $geminiPayload = [
+                'credentials' => [
+                    'api_key' => $gemini->apiKey,
+                ],
+                'settings' => [],
+            ];
+        }
+
+        // 5. Zoom (Provider entry records status/enabled)
+        $zoom = Integrations::platformZoomCredentials($instituteId);
+        $zoomPayload = null;
+        if ($zoom !== null) {
+            $zoomPayload = [
+                'credentials' => [],
+                'settings' => [
+                    'enabled' => true,
+                    'source' => 'env',
+                ],
+            ];
+        }
+
+        // 6. Google reCAPTCHA v3
+        $recaptcha = Integrations::platformRecaptchaCredentials($instituteId);
+        $recaptchaPayload = null;
+        if ($recaptcha !== null) {
+            $recaptchaPayload = [
+                'credentials' => [
+                    'secret_key' => $recaptcha->secretKey,
+                ],
+                'settings' => [
+                    'site_key' => $recaptcha->siteKey,
+                    'score_threshold' => $recaptcha->scoreThreshold,
+                ],
+            ];
+        }
+
+        // 7. Google OAuth Sign-In
+        $google = Integrations::platformGoogleCredentials($instituteId);
+        $googlePayload = null;
+        if ($google !== null) {
+            $googlePayload = [
+                'credentials' => [
+                    'client_secret' => $google->clientSecret,
+                ],
+                'settings' => array_filter([
+                    'client_id' => $google->clientId,
+                    'redirect_uri' => $google->redirectUri,
+                ], static fn ($v) => $v !== null && $v !== ''),
+            ];
+        }
+
         return [
             InstituteIntegration::PROVIDER_PAYHERE => $payherePayload,
             InstituteIntegration::PROVIDER_WHATSAPP => $whatsappPayload,
             InstituteIntegration::PROVIDER_MAIL => $mailPayload,
+            InstituteIntegration::PROVIDER_GEMINI => $geminiPayload,
+            InstituteIntegration::PROVIDER_ZOOM => $zoomPayload,
+            InstituteIntegration::PROVIDER_RECAPTCHA => $recaptchaPayload,
+            InstituteIntegration::PROVIDER_GOOGLE => $googlePayload,
         ];
     }
 }

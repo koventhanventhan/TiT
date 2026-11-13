@@ -71,4 +71,40 @@ class RedactTest extends TestCase
         $this->assertStringNotContainsString('EAAWhatsappSecret777', $clean);
         $this->assertStringNotContainsString('CUSTOM_KEY_123456', $clean);
     }
+
+    public function test_sanitize_text_and_array_scrub_gemini_recaptcha_and_google_keys(): void
+    {
+        $geminiKey = 'AIzaSyD-1234567890abcdefghijklmnopqrstuv';
+        $recaptchaSecret = '6Ld_dummySecretKeyWith38CharactersLong1234';
+        $googleSecret = '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7890';
+
+        $rawText = "Failed calling Gemini with key {$geminiKey}, recaptcha secret={$recaptchaSecret}, google client secret: {$googleSecret}";
+        $sanitized = Redact::sanitizeText($rawText);
+
+        $this->assertStringNotContainsString($geminiKey, $sanitized);
+        $this->assertStringNotContainsString($recaptchaSecret, $sanitized);
+        $this->assertStringNotContainsString($googleSecret, $sanitized);
+        $this->assertStringContainsString('[REDACTED]', $sanitized);
+
+        $arrayData = [
+            'gemini' => [
+                'api_key' => $geminiKey,
+            ],
+            'recaptcha' => [
+                'site_key' => '6Ld_publicSiteKey123',
+                'secret_key' => $recaptchaSecret,
+            ],
+            'google' => [
+                'client_id' => '12345.apps.googleusercontent.com',
+                'client_secret' => $googleSecret,
+            ],
+        ];
+
+        $redactedArray = Redact::array($arrayData);
+        $this->assertSame('[REDACTED]', $redactedArray['gemini']['api_key']);
+        $this->assertSame('[REDACTED]', $redactedArray['recaptcha']['secret_key']);
+        $this->assertSame('6Ld_publicSiteKey123', $redactedArray['recaptcha']['site_key']);
+        $this->assertSame('[REDACTED]', $redactedArray['google']['client_secret']);
+        $this->assertSame('12345.apps.googleusercontent.com', $redactedArray['google']['client_id']);
+    }
 }

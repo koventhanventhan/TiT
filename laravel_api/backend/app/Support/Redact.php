@@ -14,6 +14,7 @@ class Redact
         'merchant_secret',
         'app_secret',
         'client_secret',
+        'secret_key',
         'mail_password',
         'smtp_password',
         'access_token',
@@ -141,9 +142,18 @@ class Redact
         // Scrub Meta Graph access tokens (EAA...)
         $clean = (string) preg_replace('/\bEAA[A-Za-z0-9]{12,}\b/', '[REDACTED]', $clean);
 
+        // Scrub Google Gemini API keys (AIza...)
+        $clean = (string) preg_replace('/\bAIza[0-9A-Za-z\-_]{20,}\b/', '[REDACTED]', $clean);
+
+        // Scrub Google reCAPTCHA v3 secrets (6L...)
+        $clean = (string) preg_replace('/\b6L[0-9A-Za-z\-_]{20,}\b/', '[REDACTED]', $clean);
+
+        // Scrub Google OAuth client secrets (GOCSPX-...)
+        $clean = (string) preg_replace('/\bGOCSPX-[0-9A-Za-z\-_]{15,}\b/', '[REDACTED]', $clean);
+
         // Scrub inline key=value or "key":"value" secret pairs
         $clean = (string) preg_replace(
-            '/\b(md5sig|merchant_secret|app_secret|client_secret|access_token|api_key|private_key|mail_password|password|secret|token)\b(\s*["\']?\s*[:=]\s*["\']?)([^\s,&"\'}\]]+)/i',
+            '/\b(md5sig|merchant_secret|app_secret|client_secret|secret_key|access_token|api_key|private_key|mail_password|password|secret|token)\b(\s*["\']?\s*[:=]\s*["\']?)([^\s,&"\'}\]]+)/i',
             '$1$2[REDACTED]',
             $clean
         );

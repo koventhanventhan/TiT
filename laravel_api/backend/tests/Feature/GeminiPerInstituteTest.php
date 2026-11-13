@@ -278,6 +278,16 @@ class GeminiPerInstituteTest extends TestCase
             'status' => InstituteIntegration::STATUS_CONFIGURED,
         ]);
 
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->instTwo->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'site_key' => '6L_SITE_KEY_INST2',
+                'secret_key' => '6L_SECRET_KEY_INST2',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
         SiteSetting::withoutGlobalScopes()->create([
             'institute_id' => $this->instTwo->id,
             'key' => 'assistant_daily_cap',

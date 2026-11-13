@@ -20,6 +20,21 @@ final class GoogleCredentials
         return trim($this->clientId) !== '' && trim($this->clientSecret) !== '';
     }
 
+    public function clientId(): string
+    {
+        return $this->clientId;
+    }
+
+    public function clientSecret(): string
+    {
+        return $this->clientSecret;
+    }
+
+    public function redirectUri(): ?string
+    {
+        return $this->redirectUri;
+    }
+
     public function maskedClientSecret(): string
     {
         return Redact::maskValue($this->clientSecret);

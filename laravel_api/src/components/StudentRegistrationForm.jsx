@@ -38,25 +38,25 @@ const StudentRegistrationForm = ({ isOpen = true, onClose, mergeToken = null, is
     }
   }, [isOpen]);
 
-  // reCAPTCHA v3
-  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+  // reCAPTCHA v3 runtime key from settings (empty when unconfigured)
+  const recaptchaSiteKey = getSetting('recaptcha_site_key', '')
 
   useEffect(() => {
-    if (!RECAPTCHA_SITE_KEY) return
+    if (!recaptchaSiteKey) return
     if (document.querySelector('script[src*="recaptcha/api.js"]')) return
 
     const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`
     script.async = true
     script.defer = true
     document.head.appendChild(script)
-  }, [RECAPTCHA_SITE_KEY])
+  }, [recaptchaSiteKey])
 
   const executeRecaptcha = async (action = 'submit') => {
-    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null
+    if (!recaptchaSiteKey || !window.grecaptcha) return null
     try {
       await new Promise((resolve) => window.grecaptcha.ready(resolve))
-      return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+      return await window.grecaptcha.execute(recaptchaSiteKey, { action })
     } catch (err) {
       console.warn('reCAPTCHA execution failed:', err)
       return null

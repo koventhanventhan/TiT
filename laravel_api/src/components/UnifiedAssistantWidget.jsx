@@ -3,11 +3,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 
 import { API_BASE_URL } from '../services/apiBase';
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-
 export default function UnifiedAssistantWidget() {
     const { language, t } = useLanguage();
     const { settings } = useSettings();
+    const recaptchaSiteKey = settings?.recaptcha_site_key || '';
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -20,20 +19,20 @@ export default function UnifiedAssistantWidget() {
 
     // Load reCAPTCHA v3 script once if configured
     useEffect(() => {
-        if (!RECAPTCHA_SITE_KEY || typeof document === 'undefined') return;
+        if (!recaptchaSiteKey || typeof document === 'undefined') return;
         if (document.querySelector('script[src*="recaptcha/api.js"]')) return;
         const script = document.createElement('script');
-        script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+        script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`;
         script.async = true;
         document.head.appendChild(script);
-    }, []);
+    }, [recaptchaSiteKey]);
 
     // Execute reCAPTCHA v3 and return token (null if not configured or execution fails)
     const executeRecaptcha = async (action = 'assistant_chat') => {
-        if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null;
+        if (!recaptchaSiteKey || !window.grecaptcha) return null;
         try {
             await new Promise((resolve) => window.grecaptcha.ready(resolve));
-            return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+            return await window.grecaptcha.execute(recaptchaSiteKey, { action });
         } catch (err) {
             console.warn('reCAPTCHA execution failed in assistant widget:', err);
             return null;

@@ -18,6 +18,11 @@ final class GeminiCredentials
         return trim($this->apiKey) !== '';
     }
 
+    public function apiKey(): string
+    {
+        return $this->apiKey;
+    }
+
     public function maskedApiKey(): string
     {
         return Redact::maskValue($this->apiKey);

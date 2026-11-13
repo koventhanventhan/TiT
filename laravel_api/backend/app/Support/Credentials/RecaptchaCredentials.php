@@ -20,6 +20,21 @@ final class RecaptchaCredentials
         return trim($this->siteKey) !== '' && trim($this->secretKey) !== '';
     }
 
+    public function siteKey(): string
+    {
+        return $this->siteKey;
+    }
+
+    public function secretKey(): string
+    {
+        return $this->secretKey;
+    }
+
+    public function scoreThreshold(): float
+    {
+        return $this->scoreThreshold;
+    }
+
     public function maskedSecretKey(): string
     {
         return Redact::maskValue($this->secretKey);

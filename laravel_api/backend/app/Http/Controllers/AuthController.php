@@ -766,10 +766,41 @@ class AuthController extends Controller
     }
 
     /**
+     * Configure dynamic Socialite credentials for the active institute.
+     */
+    protected function configureGoogleSocialite(Request $request, int $instituteId): bool
+    {
+        $creds = \App\Support\Integrations::for($instituteId)->google();
+        if ($creds === null || !$creds->isConfigured()) {
+            return false;
+        }
+
+        $host = $request->getHost();
+        $scheme = ($request->secure() || !app()->environment('local', 'testing')) ? 'https' : 'http';
+        $redirectUri = "{$scheme}://{$host}/api/auth/google/callback";
+
+        config([
+            'services.google.client_id' => $creds->clientId(),
+            'services.google.client_secret' => $creds->clientSecret(),
+            'services.google.redirect' => $redirectUri,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Redirect the user to the Google authentication page.
      */
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
+        $instituteId = \App\Support\Tenant::id() ?? 1;
+        if (!$this->configureGoogleSocialite($request, $instituteId)) {
+            return response()->json([
+                'message' => 'Google sign-in is not configured for this institute.',
+                'code' => 'google_not_configured',
+            ], 422);
+        }
+
         return Socialite::driver('google')->stateless()->redirect();
     }
 
@@ -778,16 +809,22 @@ class AuthController extends Controller
      */
     public function handleGoogleCallback(Request $request)
     {
+        $instituteId = \App\Support\Tenant::id() ?? 1;
+        if (!$this->configureGoogleSocialite($request, $instituteId)) {
+            return response()->json([
+                'message' => 'Google sign-in is not configured for this institute.',
+                'code' => 'google_not_configured',
+            ], 422);
+        }
+
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
             
             // Find or create user
-            $user = User::where('email', $googleUser->getEmail())->first();
+            $user = User::where('email', $googleUser->getEmail())->where('institute_id', $instituteId)->first()
+                ?? User::where('email', $googleUser->getEmail())->first();
             
             if (!$user) {
-                // Determine institute
-                $instituteId = 1; // Default or based on logic
-                
                 $fullName = $googleUser->getName() ?? $googleUser->getNickname() ?? explode('@', $googleUser->getEmail())[0];
                 $nameParts = explode(' ', $fullName, 2);
                 $firstName = $nameParts[0];

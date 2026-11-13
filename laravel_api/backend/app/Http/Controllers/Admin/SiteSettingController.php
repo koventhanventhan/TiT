@@ -730,26 +730,25 @@ class SiteSettingController extends Controller
         $env = config('app.env') ?: app()->environment();
         $isLocalOrTesting = in_array($env, ['local', 'testing'], true);
 
-        // Assistant availability: Gemini configured + plan feature enabled
-        $geminiCreds = Integrations::for($instituteId)->gemini();
-        $hasGemini = $geminiCreds !== null && $geminiCreds->isConfigured();
-        $planAllowsAi = $institute ? $institute->hasFeature('ai_assistant') : true;
-        $assistantAvailable = $hasGemini && $planAllowsAi;
-        $settings['assistant_available'] = $assistantAvailable;
-
         // reCAPTCHA keys
         $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
         $settings['recaptcha_site_key'] = $recaptchaCreds?->isConfigured() ? $recaptchaCreds->siteKey : '';
         $settings['recaptcha_available'] = !empty($settings['recaptcha_site_key']);
 
+        // Assistant availability: Gemini configured + plan feature enabled + reCAPTCHA configured
+        $geminiCreds = Integrations::for($instituteId)->gemini();
+        $hasGemini = $geminiCreds !== null && $geminiCreds->isConfigured();
+        $hasRecaptcha = !empty($settings['recaptcha_site_key']);
+        $planAllowsAi = $institute ? $institute->hasFeature('ai_assistant') : true;
+        $assistantAvailable = $hasGemini && $hasRecaptcha && $planAllowsAi;
+        $settings['assistant_available'] = $assistantAvailable;
+
         // Google OAuth availability
         $googleCreds = Integrations::for($instituteId)->google();
         $settings['google_login_available'] = $googleCreds?->isConfigured() ?? false;
 
-        // reCAPTCHA fail closed: If not local or testing and reCAPTCHA is empty, public widget is hidden.
-        if (!$isLocalOrTesting && empty($settings['recaptcha_site_key'])) {
-            $settings['public_assistant_enabled'] = false;
-        } elseif (!$assistantAvailable) {
+        // reCAPTCHA fail closed: public assistant costs money and stays disabled without reCAPTCHA keys
+        if (!$hasRecaptcha || !$assistantAvailable) {
             $settings['public_assistant_enabled'] = false;
         } else {
             $settings['public_assistant_enabled'] = (bool) ($globalPublicEnabled && ($institute?->public_assistant_enabled ?? false));

@@ -140,16 +140,14 @@ class AssistantChatController extends Controller
                 ], 403);
             }
 
-            // reCAPTCHA fail closed: in production / non-local environments, if reCAPTCHA secret is empty, fail closed (503)
-            $env = config('app.env') ?: app()->environment();
-            if (!in_array($env, ['local', 'testing'], true)) {
-                $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
-                if ($recaptchaCreds === null || !$recaptchaCreds->isConfigured()) {
-                    return response()->json([
-                        'message' => 'The public website assistant is temporarily undergoing maintenance.',
-                        'public_enabled' => false,
-                    ], 503);
-                }
+            // reCAPTCHA requirement: public AI assistant costs money and stays disabled without reCAPTCHA keys
+            $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
+            if ($recaptchaCreds === null || !$recaptchaCreds->isConfigured()) {
+                return response()->json([
+                    'message' => 'The public website assistant is currently not configured for this institute.',
+                    'code' => 'recaptcha_not_configured',
+                    'public_enabled' => false,
+                ], 403);
             }
         }
 
@@ -557,7 +555,8 @@ class AssistantChatController extends Controller
     protected function verifyRecaptcha(string $token, string $remoteIp, ?RecaptchaCredentials $creds = null): bool
     {
         try {
-            $secret = $creds?->secretKey ?: config('services.recaptcha.secret_key'); // integration-ok: test harness fallback
+            $recaptcha = $creds ?? Integrations::for(Tenant::id() ?? 1)->recaptcha();
+            $secret = $recaptcha?->secretKey();
             if (empty($secret)) {
                 return false;
             }
@@ -574,7 +573,7 @@ class AssistantChatController extends Controller
             }
 
             $score = (float) ($json['score'] ?? 0.0);
-            $minScore = (float) ($creds?->scoreThreshold ?? config('rag.assistant.recaptcha_min_score', 0.5));
+            $minScore = (float) ($recaptcha?->scoreThreshold() ?: (float) config('rag.assistant.recaptcha_min_score', 0.5));
 
             return $score >= $minScore;
         } catch (\Throwable $e) {

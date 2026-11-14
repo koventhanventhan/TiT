@@ -817,14 +817,44 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $targetOrigin = $request->getSchemeAndHttpHost() ?: url('/');
+
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
             
-            // Find or create user
-            $user = User::where('email', $googleUser->getEmail())->where('institute_id', $instituteId)->first()
-                ?? User::where('email', $googleUser->getEmail())->first();
+            // Find user ONLY in the current institute (never cross-tenant fallback)
+            $user = User::withoutGlobalScopes()
+                ->where('email', $googleUser->getEmail())
+                ->where('institute_id', $instituteId)
+                ->first();
             
             if (!$user) {
+                // If e-mail exists only in another institute, do NOT log in and do NOT create
+                $existsInOtherInstitute = User::withoutGlobalScopes()
+                    ->where('email', $googleUser->getEmail())
+                    ->where('institute_id', '!=', $instituteId)
+                    ->exists();
+
+                $googleId = $googleUser->getId();
+                $googleIdInOther = !empty($googleId) && User::withoutGlobalScopes()
+                    ->where('google_id', $googleId)
+                    ->where('institute_id', '!=', $instituteId)
+                    ->exists();
+
+                if ($existsInOtherInstitute || $googleIdInOther) {
+                    $error = json_encode([
+                        'error' => 'registration_failed',
+                        'message' => 'This e-mail address is already registered with another institute. Please use a different e-mail address.',
+                    ]);
+
+                    return response("
+                        <script>
+                            window.opener.postMessage($error, '{$targetOrigin}');
+                            window.close();
+                        </script>
+                    ");
+                }
+
                 $fullName = $googleUser->getName() ?? $googleUser->getNickname() ?? explode('@', $googleUser->getEmail())[0];
                 $nameParts = explode(' ', $fullName, 2);
                 $firstName = $nameParts[0];
@@ -851,7 +881,17 @@ class AuthController extends Controller
                         ]);
                     });
                 } catch (\App\Exceptions\PlanLimitReachedException $e) {
-                    return redirect()->to('/login?error=' . urlencode($e->getMessage()));
+                    $error = json_encode([
+                        'error' => 'plan_limit_reached',
+                        'message' => $e->getMessage(),
+                    ]);
+
+                    return response("
+                        <script>
+                            window.opener.postMessage($error, '{$targetOrigin}');
+                            window.close();
+                        </script>
+                    ");
                 }
 
                 // Send the generated plain text password to the student (with email validation)
@@ -862,9 +902,29 @@ class AuthController extends Controller
                     \Illuminate\Support\Facades\Log::warning('AuthController: Skipped password email — invalid address: ' . $user->email);
                 }
             } else {
-                // Update google_id if not set
+                // User of current institute found. Update google_id if not set and not in another institute
                 if (!$user->google_id) {
-                    $user->update(['google_id' => $googleUser->getId()]);
+                    $googleId = $googleUser->getId();
+                    $googleIdInOther = !empty($googleId) && User::withoutGlobalScopes()
+                        ->where('google_id', $googleId)
+                        ->where('institute_id', '!=', $instituteId)
+                        ->exists();
+
+                    if ($googleIdInOther) {
+                        $error = json_encode([
+                            'error' => 'registration_failed',
+                            'message' => 'This e-mail address is already registered with another institute. Please use a different e-mail address.',
+                        ]);
+
+                        return response("
+                            <script>
+                                window.opener.postMessage($error, '{$targetOrigin}');
+                                window.close();
+                            </script>
+                        ");
+                    }
+
+                    $user->update(['google_id' => $googleId]);
                 }
             }
 
@@ -893,7 +953,7 @@ class AuthController extends Controller
 
             return response("
                 <script>
-                    window.opener.postMessage($data, '*');
+                    window.opener.postMessage($data, '{$targetOrigin}');
                     window.close();
                 </script>
             ");
@@ -908,7 +968,7 @@ class AuthController extends Controller
 
             return response("
                 <script>
-                    window.opener.postMessage($error, '*');
+                    window.opener.postMessage($error, '{$targetOrigin}');
                     window.close();
                 </script>
             ");

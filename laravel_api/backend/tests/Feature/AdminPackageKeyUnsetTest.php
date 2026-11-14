@@ -16,11 +16,20 @@ class AdminPackageKeyUnsetTest extends TestCase
 
     protected User $admin;
     protected Institute $institute;
+    private ?string $origConfig;
+    private $origGetEnv;
+    private ?string $origEnv;
+    private ?string $origServer;
 
     protected function setUp(): void
     {
         parent::setUp();
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+
+        $this->origConfig = config('services.gemini.api_key');
+        $this->origGetEnv = getenv('GEMINI_API_KEY');
+        $this->origEnv = $_ENV['GEMINI_API_KEY'] ?? null;
+        $this->origServer = $_SERVER['GEMINI_API_KEY'] ?? null;
 
         $this->institute = Institute::create([
             'name' => 'Unset Key Test Institute',
@@ -36,6 +45,27 @@ class AdminPackageKeyUnsetTest extends TestCase
         ]);
 
         GeminiTranslationService::resetLoggedUnconfigured();
+    }
+
+    protected function tearDown(): void
+    {
+        config(['services.gemini.api_key' => $this->origConfig]);
+        if ($this->origGetEnv !== false && $this->origGetEnv !== null) {
+            putenv("GEMINI_API_KEY={$this->origGetEnv}");
+        } else {
+            putenv('GEMINI_API_KEY');
+        }
+        if ($this->origEnv !== null) {
+            $_ENV['GEMINI_API_KEY'] = $this->origEnv;
+        } else {
+            unset($_ENV['GEMINI_API_KEY']);
+        }
+        if ($this->origServer !== null) {
+            $_SERVER['GEMINI_API_KEY'] = $this->origServer;
+        } else {
+            unset($_SERVER['GEMINI_API_KEY']);
+        }
+        parent::tearDown();
     }
 
     public function test_post_admin_packages_empty_body_returns_validation_error_with_key_unset(): void

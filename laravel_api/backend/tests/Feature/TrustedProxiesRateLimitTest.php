@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Institute;
+use App\Models\InstituteIntegration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -32,6 +33,28 @@ class TrustedProxiesRateLimitTest extends TestCase
             'slug' => 'tit-test',
             'rag_enabled' => true,
             'public_assistant_enabled' => true,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $institute->id,
+            'provider' => InstituteIntegration::PROVIDER_GEMINI,
+            'credentials' => [
+                'api_key' => 'AIzaSyTEST_KEY_PROXY',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $institute->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'secret_key' => 'test-secret',
+            ],
+            'settings' => [
+                'site_key' => 'test-site',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
         ]);
 
         // When client sends request with forged X-Forwarded-For: 203.0.113.195
@@ -66,6 +89,28 @@ class TrustedProxiesRateLimitTest extends TestCase
             'slug' => 'tit-test',
             'rag_enabled' => true,
             'public_assistant_enabled' => true,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $institute->id,
+            'provider' => InstituteIntegration::PROVIDER_GEMINI,
+            'credentials' => [
+                'api_key' => 'AIzaSyTEST_KEY_PROXY',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $institute->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'secret_key' => 'test-secret',
+            ],
+            'settings' => [
+                'site_key' => 'test-site',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
         ]);
 
         Config::set('rag.assistant.visitor_per_minute', 5);

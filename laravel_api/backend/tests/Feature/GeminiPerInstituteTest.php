@@ -238,9 +238,31 @@ class GeminiPerInstituteTest extends TestCase
 
     public function test_assistant_institute_resolved_from_host_and_ignores_visitor_x_institute_id_header(): void
     {
-        // Inst 1 (host: primary.test) has fallback env Gemini key.
+        // Inst 1 (host: primary.test) has its own configured Gemini and reCAPTCHA integrations.
         // Inst 2 (host: colombo.test) has NO key.
         // A visitor on host A (primary.test) sending X-Institute-Id: 2 must answer from Inst 1, not 2!
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->instOne->id,
+            'provider' => InstituteIntegration::PROVIDER_GEMINI,
+            'credentials' => [
+                'api_key' => 'AIzaSyINST1_TEST_KEY',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->instOne->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'secret_key' => 'test-secret-key-inst1',
+            ],
+            'settings' => [
+                'site_key' => 'test-site-key-inst1',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
         Http::fake([
             'https://generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [

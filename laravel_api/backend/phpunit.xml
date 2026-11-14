@@ -33,5 +33,31 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Safe baseline: All integration credentials forced empty in testing environment -->
+        <env name="GEMINI_API_KEY" value="" force="true"/>
+        <env name="ZOOM_CLIENT_ID" value="" force="true"/>
+        <env name="ZOOM_CLIENT_SECRET" value="" force="true"/>
+        <env name="ZOOM_ACCOUNT_ID" value="" force="true"/>
+        <env name="ZOOM_HOST_EMAIL" value="" force="true"/>
+        <env name="RECAPTCHA_SITE_KEY" value="" force="true"/>
+        <env name="RECAPTCHA_SECRET_KEY" value="" force="true"/>
+        <env name="GOOGLE_CLIENT_ID" value="" force="true"/>
+        <env name="GOOGLE_CLIENT_SECRET" value="" force="true"/>
+        <env name="GOOGLE_REDIRECT_URI" value="" force="true"/>
+        <env name="PAYHERE_MERCHANT_ID" value="" force="true"/>
+        <env name="PAYHERE_MERCHANT_SECRET" value="" force="true"/>
+        <env name="PAYHERE_APP_ID" value="" force="true"/>
+        <env name="PAYHERE_APP_SECRET" value="" force="true"/>
+        <env name="WHATSAPP_TOKEN" value="" force="true"/>
+        <env name="WHATSAPP_PHONE_NUMBER_ID" value="" force="true"/>
+        <env name="META_WHATSAPP_TOKEN" value="" force="true"/>
+        <env name="META_WHATSAPP_PHONE_NUMBER_ID" value="" force="true"/>
+        <env name="MAIL_HOST" value="" force="true"/>
+        <env name="MAIL_PORT" value="" force="true"/>
+        <env name="MAIL_USERNAME" value="" force="true"/>
+        <env name="MAIL_PASSWORD" value="" force="true"/>
+        <env name="MAIL_ENCRYPTION" value="" force="true"/>
+        <env name="MAIL_FROM_ADDRESS" value="" force="true"/>
+        <env name="MAIL_FROM_NAME" value="" force="true"/>
     </php>
 </phpunit>

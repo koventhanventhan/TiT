@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\Rag\GeminiClientInterface;
 use App\Models\Faq;
 use App\Models\Institute;
+use App\Models\InstituteIntegration;
 use App\Models\Package;
 use App\Models\SiteSetting;
 use App\Models\Subject;
@@ -110,6 +111,28 @@ class UnifiedAssistantTest extends TestCase
             'status' => 'active',
             'rag_enabled' => true,
             'public_assistant_enabled' => true,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->institute->id,
+            'provider' => InstituteIntegration::PROVIDER_GEMINI,
+            'credentials' => [
+                'api_key' => 'AIzaSyFAKE_GEMINI_UNIFIED_TEST',
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->institute->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'secret_key' => 'test-recaptcha-secret',
+            ],
+            'settings' => [
+                'site_key' => 'test-recaptcha-site',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
         ]);
 
         $this->student = User::create([

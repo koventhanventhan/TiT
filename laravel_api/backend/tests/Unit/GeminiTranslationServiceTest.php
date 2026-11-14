@@ -8,38 +8,51 @@ use Tests\TestCase;
 
 class GeminiTranslationServiceTest extends TestCase
 {
+    private ?string $origConfig;
+    private $origGetEnv;
+    private ?string $origEnv;
+    private ?string $origServer;
+
     protected function setUp(): void
     {
         parent::setUp();
         GeminiTranslationService::resetLoggedUnconfigured();
+        $this->origConfig = config('services.gemini.api_key');
+        $this->origGetEnv = getenv('GEMINI_API_KEY');
+        $this->origEnv = $_ENV['GEMINI_API_KEY'] ?? null;
+        $this->origServer = $_SERVER['GEMINI_API_KEY'] ?? null;
+    }
+
+    protected function tearDown(): void
+    {
+        config(['services.gemini.api_key' => $this->origConfig]);
+        if ($this->origGetEnv !== false && $this->origGetEnv !== null) {
+            putenv("GEMINI_API_KEY={$this->origGetEnv}");
+        } else {
+            putenv('GEMINI_API_KEY');
+        }
+        if ($this->origEnv !== null) {
+            $_ENV['GEMINI_API_KEY'] = $this->origEnv;
+        } else {
+            unset($_ENV['GEMINI_API_KEY']);
+        }
+        if ($this->origServer !== null) {
+            $_SERVER['GEMINI_API_KEY'] = $this->origServer;
+        } else {
+            unset($_SERVER['GEMINI_API_KEY']);
+        }
+        parent::tearDown();
     }
 
     public function test_unconfigured_service_returns_original_text_and_does_not_throw(): void
     {
-        $origConfig = config('services.gemini.api_key');
-        $origEnv = $_ENV['GEMINI_API_KEY'] ?? null;
-        $origServer = $_SERVER['GEMINI_API_KEY'] ?? null;
-
         config(['services.gemini.api_key' => null]);
-        unset($_ENV['GEMINI_API_KEY'], $_SERVER['GEMINI_API_KEY']);
-        putenv('GEMINI_API_KEY');
 
-        try {
-            $service = new GeminiTranslationService();
-            $this->assertFalse($service->isConfigured());
+        $service = new GeminiTranslationService();
+        $this->assertFalse($service->isConfigured());
 
-            $result = $service->translate('Physics Mechanics', 'ta');
-            $this->assertEquals('Physics Mechanics', $result);
-        } finally {
-            config(['services.gemini.api_key' => $origConfig]);
-            if ($origEnv !== null) {
-                $_ENV['GEMINI_API_KEY'] = $origEnv;
-                putenv("GEMINI_API_KEY={$origEnv}");
-            }
-            if ($origServer !== null) {
-                $_SERVER['GEMINI_API_KEY'] = $origServer;
-            }
-        }
+        $result = $service->translate('Physics Mechanics', 'ta');
+        $this->assertEquals('Physics Mechanics', $result);
     }
 
     public function test_unconfigured_service_returns_null_when_null_passed(): void

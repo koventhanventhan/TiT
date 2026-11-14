@@ -262,4 +262,69 @@ class RecaptchaAndGooglePerInstituteTest extends TestCase
         $unconfiguredRes->assertStatus(422);
         $this->assertSame('google_not_configured', $unconfiguredRes->json('code'));
     }
+
+    public function test_recaptcha_fail_open_allows_up_to_five_attempts_then_returns_429(): void
+    {
+        config(['services.recaptcha.verify_in_tests' => true]);
+
+        // Configure reCAPTCHA on Institute 2
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->instTwo->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'site_key' => '6L_SITE_KEY_FAILOPEN',
+                'secret_key' => '6L_SECRET_KEY_FAILOPEN',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        // Configure reCAPTCHA on Institute 1
+        InstituteIntegration::withoutGlobalScopes()->create([
+            'institute_id' => $this->instOne->id,
+            'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+            'credentials' => [
+                'site_key' => '6L_SITE_KEY_INST1',
+                'secret_key' => '6L_SECRET_KEY_INST1',
+                'score_threshold' => 0.5,
+            ],
+            'status' => InstituteIntegration::STATUS_CONFIGURED,
+        ]);
+
+        // Mock Google API endpoint to THROW an exception (e.g. Google service down)
+        Http::fake([
+            'https://www.google.com/recaptcha/api/siteverify' => function () {
+                throw new \Illuminate\Http\Client\ConnectionException('Connection to Google reCAPTCHA failed');
+            },
+        ]);
+
+        $ip = '203.0.113.88';
+
+        // 1. First 5 requests through Institute 2 with throwing reCAPTCHA are allowed through (fail-open)
+        for ($i = 1; $i <= 5; $i++) {
+            $resp = $this->withServerVariables(['REMOTE_ADDR' => $ip])
+                ->postJson('http://colombo.test/api/auth/forgot-password', [
+                    'email' => "failopen{$i}@colombo.test",
+                    'recaptcha_token' => 'SOME_TOKEN',
+                ]);
+            $this->assertEquals(200, $resp->status(), "Attempt {$i} should be allowed through under fail-open");
+        }
+
+        // 2. 6th request from same IP on Institute 2 exceeds fail-open limit and returns 429
+        $blockedResp = $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->postJson('http://colombo.test/api/auth/forgot-password', [
+                'email' => 'failopen6@colombo.test',
+                'recaptcha_token' => 'SOME_TOKEN',
+            ]);
+        $this->assertEquals(429, $blockedResp->status(), '6th request must be throttled with 429');
+        $this->assertSame('too_many_requests', $blockedResp->json('code'));
+
+        // 3. Other institute (Institute 1) is completely unaffected for the SAME IP
+        $instOneResp = $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->postJson('http://primary.test/api/auth/forgot-password', [
+                'email' => 'inst1_user@primary.test',
+                'recaptcha_token' => 'SOME_TOKEN',
+            ]);
+        $this->assertEquals(200, $instOneResp->status(), 'Other institute should be unaffected by fail-open throttle of Institute 2');
+    }
 }

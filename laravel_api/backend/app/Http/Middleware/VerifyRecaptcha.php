@@ -131,10 +131,32 @@ class VerifyRecaptcha
                 'action' => $result['action'] ?? 'unknown',
             ]);
         } catch (\Throwable $e) {
+            $ip = $request->ip() ?? '127.0.0.1';
+            $failopenKey = "recaptcha_failopen:{$instituteId}:{$ip}";
+            $maxAttempts = 5;
+            $decaySeconds = 600; // 10 minutes
+
+            if (RateLimiter::tooManyAttempts($failopenKey, $maxAttempts)) {
+                $seconds = RateLimiter::availableIn($failopenKey);
+                Log::warning('VerifyRecaptcha: Fail-open limit exceeded', [
+                    'institute_id' => $instituteId,
+                    'ip' => $ip,
+                    'retry_after' => $seconds,
+                ]);
+
+                return response()->json([
+                    'message' => 'Too many requests. Please try again in ' . ceil($seconds / 60) . ' minutes.',
+                    'code' => 'too_many_requests',
+                    'retry_after' => $seconds,
+                ], 429);
+            }
+
+            RateLimiter::hit($failopenKey, $decaySeconds);
+
             Log::error('VerifyRecaptcha: API call failed — allowing request through', [
                 'institute_id' => $instituteId,
                 'error' => $e->getMessage(),
-                'ip' => $request->ip(),
+                'ip' => $ip,
             ]);
         }
 

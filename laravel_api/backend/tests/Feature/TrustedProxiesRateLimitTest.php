@@ -71,14 +71,19 @@ class TrustedProxiesRateLimitTest extends TestCase
 
         // Check that rate limiter recorded against 127.0.0.1, NOT against the forged 203.0.113.195
         $this->assertTrue(
-            RateLimiter::attempts('assistant_ip_min:127.0.0.1') > 0 ||
-            RateLimiter::attempts('assistant_ip_day:127.0.0.1') > 0,
+            RateLimiter::attempts("assistant_ip_min:{$institute->id}:127.0.0.1") > 0 ||
+            RateLimiter::attempts("assistant_ip_day:{$institute->id}:127.0.0.1") > 0,
             'Rate limit attempts should be recorded against the real REMOTE_ADDR (127.0.0.1)'
         );
         $this->assertEquals(
             0,
-            RateLimiter::attempts('assistant_ip_min:203.0.113.195'),
+            RateLimiter::attempts("assistant_ip_min:{$institute->id}:203.0.113.195"),
             'Rate limit attempts must NOT be recorded against untrusted forged X-Forwarded-For header'
+        );
+        $this->assertEquals(
+            0,
+            RateLimiter::attempts('assistant_ip_min:127.0.0.1'),
+            'Global throttle key without institute ID must not be hit'
         );
     }
 
@@ -135,5 +140,72 @@ class TrustedProxiesRateLimitTest extends TestCase
             ]);
 
         $this->assertEquals(429, $blockedResp->status(), '6th request must be rate-limited to 429 despite forged X-Forwarded-For header');
+    }
+
+    public function test_ip_exhausting_limit_on_institute_a_still_works_on_institute_b(): void
+    {
+        $instA = Institute::create([
+            'name' => 'Institute A',
+            'slug' => 'inst-a',
+            'rag_enabled' => true,
+            'public_assistant_enabled' => true,
+        ]);
+
+        $instB = Institute::create([
+            'name' => 'Institute B',
+            'slug' => 'inst-b',
+            'rag_enabled' => true,
+            'public_assistant_enabled' => true,
+        ]);
+
+        foreach ([$instA, $instB] as $inst) {
+            InstituteIntegration::withoutGlobalScopes()->create([
+                'institute_id' => $inst->id,
+                'provider' => InstituteIntegration::PROVIDER_GEMINI,
+                'credentials' => ['api_key' => 'AIzaSyTEST_KEY_' . $inst->id],
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+            ]);
+
+            InstituteIntegration::withoutGlobalScopes()->create([
+                'institute_id' => $inst->id,
+                'provider' => InstituteIntegration::PROVIDER_RECAPTCHA,
+                'credentials' => ['secret_key' => 'test-secret'],
+                'settings' => ['site_key' => 'test-site', 'score_threshold' => 0.5],
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+            ]);
+        }
+
+        Config::set('rag.assistant.visitor_per_minute', 3);
+
+        $testIp = '198.51.100.77';
+
+        // Send 3 requests to Institute A -> all succeed
+        for ($i = 1; $i <= 3; $i++) {
+            $resp = $this->withServerVariables(['REMOTE_ADDR' => $testIp])
+                ->withHeader('X-Institute-Id', (string) $instA->id)
+                ->postJson('/api/assistant/chat', [
+                    'question' => 'grade 10 past paper notes',
+                ]);
+            $this->assertEquals(200, $resp->status());
+        }
+
+        // 4th request to Institute A from same IP is rate-limited (429)
+        $blockedOnA = $this->withServerVariables(['REMOTE_ADDR' => $testIp])
+            ->withHeader('X-Institute-Id', (string) $instA->id)
+            ->postJson('/api/assistant/chat', [
+                'question' => 'grade 10 past paper notes',
+            ]);
+        $this->assertEquals(429, $blockedOnA->status(), '4th request on Institute A should be throttled');
+
+        // SAME IP sending request to Institute B MUST still succeed (200)
+        $respOnB = $this->withServerVariables(['REMOTE_ADDR' => $testIp])
+            ->withHeader('X-Institute-Id', (string) $instB->id)
+            ->postJson('/api/assistant/chat', [
+                'question' => 'grade 10 past paper notes',
+            ]);
+        $this->assertEquals(200, $respOnB->status(), 'Same IP must NOT be throttled on Institute B');
+
+        // Global key without institute ID must never have been hit
+        $this->assertEquals(0, RateLimiter::attempts("assistant_ip_min:{$testIp}"));
     }
 }

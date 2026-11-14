@@ -294,7 +294,6 @@ class AssistantChatController extends Controller
                 ], 429);
             }
             RateLimiter::hit($throttleKeyMin, 60);
-            RateLimiter::hit("assistant_ip_min:{$ip}", 60);
 
             // Per IP per day
             $perDay = (int) config('rag.assistant.visitor_per_day', 60);
@@ -305,7 +304,6 @@ class AssistantChatController extends Controller
                 ], 429);
             }
             RateLimiter::hit($throttleKeyDay, 86400);
-            RateLimiter::hit("assistant_ip_day:{$ip}", 86400);
         }
 
         // 6. Fast Academic Keyword Pre-Check for Public Tier

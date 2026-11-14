@@ -733,6 +733,7 @@ class Integrations
     {
         $clientId = trim((string) config('services.zoom.client_id', ''));
         $clientSecret = trim((string) config('services.zoom.client_secret', ''));
+        $accountId = trim((string) config('services.zoom.account_id', ''));
 
         if ($clientId === '' || $clientSecret === '') {
             return null;
@@ -745,6 +746,9 @@ class Integrations
             isVirtual: true,
             source: 'env',
             status: 'configured',
+            accountId: $accountId,
+            clientId: $clientId,
+            clientSecret: $clientSecret,
         );
     }
 

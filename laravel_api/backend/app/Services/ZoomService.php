@@ -85,9 +85,9 @@ class ZoomService
 
                 $virtual = new ZoomAccount([
                     'email' => $hostEmail,
-                    'account_id' => (string) config('services.zoom.account_id', ''),
-                    'client_id' => (string) config('services.zoom.client_id', ''),
-                    'client_secret' => (string) config('services.zoom.client_secret', ''),
+                    'account_id' => (string) ($zoomCreds->accountId() ?? config('services.zoom.account_id', '')),
+                    'client_id' => (string) ($zoomCreds->clientId() ?? config('services.zoom.client_id', '')),
+                    'client_secret' => (string) ($zoomCreds->clientSecret() ?? ''),
                     'max_concurrent' => 10,
                     'is_active' => true,
                     'institute_id' => $instId,

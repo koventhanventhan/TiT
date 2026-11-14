@@ -11,7 +11,25 @@ final class ZoomCredentials
         public readonly bool $isVirtual = false,
         public readonly string $source = 'db', // db | env | none
         public readonly string $status = 'configured', // configured | unconfigured | verified | failing
+        public readonly ?string $accountId = null,
+        public readonly ?string $clientId = null,
+        public readonly ?string $clientSecret = null,
     ) {}
+
+    public function accountId(): ?string
+    {
+        return $this->accountId;
+    }
+
+    public function clientId(): ?string
+    {
+        return $this->clientId;
+    }
+
+    public function clientSecret(): ?string
+    {
+        return $this->clientSecret;
+    }
 
     public function isConfigured(): bool
     {

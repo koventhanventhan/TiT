@@ -78,11 +78,16 @@ class ZoomService
             $zoomCreds = Integrations::for($instId)->zoom();
 
             if ($zoomCreds && $zoomCreds->isConfigured()) {
+                $hostEmail = trim((string) config('services.zoom.host_email', ''));
+                if ($hostEmail === '') {
+                    $hostEmail = trim((string) config('services.zoom.user_email', config('services.zoom.email', '')));
+                }
+
                 $virtual = new ZoomAccount([
-                    'email' => (string) config('services.zoom.host_email', 'default@tit.lk'),
-                    'account_id' => (string) $zoomCreds->accountId(),
-                    'client_id' => (string) $zoomCreds->clientId(),
-                    'client_secret' => (string) $zoomCreds->clientSecret(),
+                    'email' => $hostEmail,
+                    'account_id' => (string) config('services.zoom.account_id', ''),
+                    'client_id' => (string) config('services.zoom.client_id', ''),
+                    'client_secret' => (string) config('services.zoom.client_secret', ''),
                     'max_concurrent' => 10,
                     'is_active' => true,
                     'institute_id' => $instId,
@@ -232,6 +237,24 @@ class ZoomService
             throw new ZoomNotConfiguredException('Add a Zoom account under Settings → Zoom Accounts');
         }
 
+        // Host email check:
+        // When the institute's Zoom account has no host e-mail, use the account's own configured user e-mail,
+        // and if none exists return the typed error "Zoom host e-mail is not set for this account" (no outbound call).
+        $hostEmail = trim((string) ($account->host_email ?? ''));
+        if ($hostEmail === '') {
+            $hostEmail = trim((string) ($account->email ?? ''));
+        }
+        if ($hostEmail === '') {
+            $hostEmail = trim((string) config('services.zoom.host_email', ''));
+        }
+        if ($hostEmail === '') {
+            $hostEmail = trim((string) config('services.zoom.user_email', config('services.zoom.email', '')));
+        }
+
+        if ($hostEmail === '') {
+            throw new ZoomNotConfiguredException('Zoom host e-mail is not set for this account');
+        }
+
         $this->useAccount($account);
         $token = $this->getAccessToken($account);
         if (!$token) {
@@ -254,9 +277,11 @@ class ZoomService
             ],
         ];
 
+        $effectiveUserId = ($userId !== 'me') ? $userId : $hostEmail;
+
         $response = Http::withToken($token)
             ->timeout(30)
-            ->post("{$this->baseUrl}/users/{$userId}/meetings", $payload);
+            ->post("{$this->baseUrl}/users/{$effectiveUserId}/meetings", $payload);
 
         if ($response->successful()) {
             return $response->json();

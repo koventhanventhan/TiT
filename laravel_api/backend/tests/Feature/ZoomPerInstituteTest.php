@@ -355,4 +355,51 @@ class ZoomPerInstituteTest extends TestCase
         // Secret is preserved!
         $this->assertSame('ORIGINAL_SECRET_5555', $fresh->client_secret);
     }
+
+    public function test_zoom_meeting_creation_without_host_email_returns_typed_error_and_zero_outbound_calls(): void
+    {
+        Http::fake();
+
+        $acc = new ZoomAccount([
+            'institute_id' => $this->instTwo->id,
+            'email' => '',
+            'account_id' => 'ACC_NO_EMAIL',
+            'client_id' => 'CLIENT_NO_EMAIL',
+            'client_secret' => 'SECRET_NO_EMAIL',
+            'is_active' => true,
+        ]);
+        $acc->id = 999;
+        $acc->exists = true;
+
+        $service = app(ZoomService::class);
+        $service->useAccount($acc);
+
+        $this->expectException(\App\Exceptions\ZoomNotConfiguredException::class);
+        $this->expectExceptionMessage('Zoom host e-mail is not set for this account');
+
+        try {
+            $service->createMeeting('Test Meeting', now()->addHour()->toDateTimeString());
+        } finally {
+            Http::assertNothingSent();
+        }
+    }
+
+    public function test_zoom_env_fallback_has_no_tit_default_and_uses_configured_user_email(): void
+    {
+        config([
+            'integrations.env_fallback_institutes' => [$this->instOne->id],
+            'services.zoom.client_id' => 'ENV_CLIENT',
+            'services.zoom.client_secret' => 'ENV_SECRET',
+            'services.zoom.account_id' => 'ENV_ACC',
+            'services.zoom.host_email' => null,
+            'services.zoom.user_email' => 'user@customacademy.lk',
+        ]);
+
+        $service = app(ZoomService::class);
+        $accounts = $service->getAccountsForInstitute($this->instOne->id);
+
+        $this->assertCount(1, $accounts);
+        $this->assertSame('user@customacademy.lk', $accounts->first()->email);
+        $this->assertStringNotContainsString('default@tit.lk', $accounts->first()->email);
+    }
 }

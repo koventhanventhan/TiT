@@ -58,7 +58,7 @@ class PublicKnowledgeService
     public function compileContext(int $instituteId = 1): string
     {
         $institute = Institute::find($instituteId);
-        $instituteName = $institute ? $institute->name : 'TiT Education';
+        $instituteName = $institute ? $institute->name : 'Online Education Institute';
 
         $sections = [];
 

@@ -264,7 +264,7 @@ class IntegrationOwnershipTest extends TestCase
 
     public function test_super_admin_manages_platform_integrations_and_activity_log_contains_no_secrets(): void
     {
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         // EditInstitute afterSave logic simulation
         $secretRecaptcha = '6Ld_SUPER_SECRET_RECAPTCHA_98765';

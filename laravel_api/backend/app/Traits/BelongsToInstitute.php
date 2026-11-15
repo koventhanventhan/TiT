@@ -17,6 +17,11 @@ trait BelongsToInstitute
 
         // Automatically assign institute_id when creating if not set
         static::creating(function ($model) {
+            // Super admins are global platform owners and legitimately have institute_id = null
+            if ($model instanceof \App\Models\User && $model->role === 'super_admin') {
+                return;
+            }
+
             if (!$model->institute_id) {
                 if (auth()->check()) {
                     $user = auth()->user();

@@ -18,6 +18,12 @@ class ResolveTenant
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // 0. Super-admin panel requests are global (not tenant-scoped)
+        if ($this->isSuperAdminPanelRequest($request)) {
+            Tenant::set(null);
+            return $next($request);
+        }
+
         // 1. Normalise host (lowercase, remove port, identify bare host without www)
         $host = strtolower((string)$request->getHost());
         $host = preg_replace('/:\d+$/', '', $host);
@@ -225,5 +231,31 @@ class ResolveTenant
         $request->merge(['current_institute' => $institute]);
 
         return $next($request);
+    }
+
+    /**
+     * Whether the request targets the Filament super-admin panel (direct route or Livewire sub-request).
+     */
+    protected function isSuperAdminPanelRequest(Request $request): bool
+    {
+        $panelPath = trim((string) config('filament.path', 'super-admin'), '/');
+
+        if ($request->is($panelPath) || $request->is("{$panelPath}/*")) {
+            return true;
+        }
+
+        if ($request->is('livewire/*')) {
+            $referer = (string) $request->header('referer', '');
+            if (str_contains($referer, "/{$panelPath}")) {
+                return true;
+            }
+
+            $componentName = (string) $request->input('fingerprint.name', '');
+            if (str_contains($componentName, 'filament') || str_contains($componentName, 'super_admin')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

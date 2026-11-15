@@ -38,14 +38,14 @@ class SaaSSeeder extends Seeder
             ->whereNull('institute_id')
             ->update(['institute_id' => $institute->id]);
 
-        // Create Super Admin if not exists
+        // Create Super Admin if not exists (institute_id = NULL is correct; global across all tenant domains)
         \App\Models\User::withoutGlobalScopes()->updateOrCreate(
             ['email' => 'superadmin@lenova.lk'],
             [
                 'name' => 'Super Admin',
                 'role' => 'super_admin',
-                'password' => \Illuminate\Support\Facades\Hash::make('superadmin123'),
-                'institute_id' => null, // Super admins are global
+                'password' => 'superadmin123',
+                'institute_id' => null, // Super admins are global (NULL institute_id)
             ]
         );
     }

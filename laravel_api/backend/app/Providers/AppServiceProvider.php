@@ -85,6 +85,10 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Pagination\Paginator::useBootstrap();
         \Illuminate\Support\Facades\Gate::policy(\App\Models\Institute::class, \App\Policies\InstitutePolicy::class);
 
+        \Illuminate\Support\Facades\Auth::provider('super_admin', function ($app, array $config) {
+            return new \App\Auth\SuperAdminUserProvider($app['hash'], $config['model']);
+        });
+
         if (\PHP_VERSION_ID < 80400 && interface_exists(\Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface::class)) {
             $this->app->scoped(
                 \Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface::class,

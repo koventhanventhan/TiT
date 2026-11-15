@@ -30,6 +30,7 @@ class SuperAdminPanelProvider extends PanelProvider
             ->default()
             ->id('super-admin')
             ->path($panelPath !== '' ? $panelPath : 'super-admin')
+            ->authGuard('super_admin')
             ->login()
             ->brandName(fn () =>
                 (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings'))
@@ -77,6 +78,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                \App\Http\Middleware\EnsureSuperAdminPanelAccess::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

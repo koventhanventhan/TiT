@@ -102,7 +102,8 @@ class PublicKnowledgeService
             "- Important: Never link to or mention /student/payment.";
 
         // 4. Subject Offerings (Source of truth: subjects table)
-        $subjects = Subject::where('status', 'active')
+        // NOTE: the subjects table has no `status` column; every row is an offered subject.
+        $subjects = Subject::query()
             ->orderBy('category')
             ->orderBy('name')
             ->get();

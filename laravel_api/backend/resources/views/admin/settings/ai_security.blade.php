@@ -382,17 +382,17 @@
             </div>
             <div class="card-body">
                 <div class="adm-readonly mb-3" data-testid="recaptcha-status-line">
-                    @if($recaptchaActive)
-                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
-                            <i class="flaticon-381-shield-2" style="color: var(--adm-success);" aria-hidden="true"></i>
-                            Protection by the platform: <strong style="color: var(--adm-success);">Active</strong>
-                        </span>
-                    @else
-                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
-                            <i class="flaticon-381-warning" style="color: var(--adm-warning);" aria-hidden="true"></i>
-                            Protection by the platform: <strong style="color: var(--adm-warning);">Not configured – ask the platform owner</strong>
-                        </span>
-                    @endif
+                    <i class="la la-lock adm-readonly-icon" aria-hidden="true"></i>
+                    <div class="adm-readonly-content">
+                        <div class="adm-readonly-title">
+                            @if($recaptchaActive)
+                                Protection by the platform: <strong class="text-success">Active</strong>
+                            @else
+                                Protection by the platform: <strong class="text-warning">Not configured – ask the platform owner</strong>
+                            @endif
+                        </div>
+                        <div class="adm-readonly-helper">Managed by platform super-administrator in Filament.</div>
+                    </div>
                 </div>
 
                 <div class="p-3" style="background: var(--adm-input-bg); border-radius: 0.625rem; border: 1px solid var(--adm-border); color: var(--adm-text-2); font-size: 0.85rem; line-height: 1.6;">
@@ -420,17 +420,17 @@
             </div>
             <div class="card-body">
                 <div class="adm-readonly mb-3" data-testid="google-status-line">
-                    @if($googleActive)
-                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
-                            <i class="flaticon-381-user-9" style="color: var(--adm-success);" aria-hidden="true"></i>
-                            Sign-in with Google: <strong style="color: var(--adm-success);">Active</strong>
-                        </span>
-                    @else
-                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
-                            <i class="flaticon-381-warning" style="color: var(--adm-warning);" aria-hidden="true"></i>
-                            Protection by the platform: <strong style="color: var(--adm-warning);">Not configured – ask the platform owner</strong>
-                        </span>
-                    @endif
+                    <i class="la la-lock adm-readonly-icon" aria-hidden="true"></i>
+                    <div class="adm-readonly-content">
+                        <div class="adm-readonly-title">
+                            @if($googleActive)
+                                Sign-in with Google: <strong class="text-success">Active</strong>
+                            @else
+                                Protection by the platform: <strong class="text-warning">Not configured – ask the platform owner</strong>
+                            @endif
+                        </div>
+                        <div class="adm-readonly-helper">Managed by platform super-administrator in Filament.</div>
+                    </div>
                 </div>
 
                 <div class="p-3" style="background: var(--adm-input-bg); border-radius: 0.625rem; border: 1px solid var(--adm-border); color: var(--adm-text-2); font-size: 0.85rem; line-height: 1.6;">

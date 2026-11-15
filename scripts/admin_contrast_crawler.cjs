@@ -7,8 +7,10 @@ const BASE_URL = process.env.APP_URL || 'http://127.0.0.1:8000';
 const PRESETS = process.env.TEST_PRESET ? [process.env.TEST_PRESET.trim()] : ['royal', 'ocean', 'emerald', 'midnight'];
 const VIEWPORTS = [
   { name: '1366x800', width: 1366, height: 800 },
+  { name: '1024x800', width: 1024, height: 800 },
   { name: '820x1180', width: 820, height: 1180 },
-  { name: '375x800', width: 375, height: 800 }
+  { name: '390x844', width: 390, height: 844 },
+  { name: '360x800', width: 360, height: 800 }
 ];
 
 const ROUTES = process.env.CRAWL_ROUTES
@@ -480,9 +482,9 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
 
     const header = document.querySelector('.header');
     const headerBg = header ? window.getComputedStyle(header).backgroundColor : '';
-    const home = document.querySelector('.header-right a[title="Home"] svg');
-    const mail = document.querySelector('.header-right a[title="Messages"] svg');
-    const bell = document.querySelector('.header-right .notification_dropdown > a svg');
+    const home = document.querySelector('.adm-header-zone-right a[title="Home"] svg, .header-right a[title="Home"] svg');
+    const mail = document.querySelector('.adm-header-zone-right a[title="Messages"] svg, .header-right a[title="Messages"] svg');
+    const bell = document.querySelector('.adm-header-zone-right .dropdown button svg, .header-right .notification_dropdown > a svg');
     const hamburger = vpWidth >= 1200
       ? document.querySelector('.nav-header .nav-control, .nav-control')
       : document.querySelector('#customHamburger');
@@ -613,6 +615,39 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
           message: `${sel} scrollWidth (${el.scrollWidth}px) > clientWidth (${el.clientWidth}px) + 4 with overflow-x: ${s.overflowX} (hidden: +${diff}px)`
         });
       }
+    }
+  }
+
+  // Check 4 (Prompt 31 C1): Header cluster bounding box non-intersection assertion
+  const headerClusterElements = Array.from(document.querySelectorAll('.adm-header-zone-right > *, .header-right > *')).filter(el => {
+    const r = el.getBoundingClientRect();
+    const s = window.getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden';
+  });
+  for (let i = 0; i < headerClusterElements.length; i++) {
+    const r1 = headerClusterElements[i].getBoundingClientRect();
+    for (let j = i + 1; j < headerClusterElements.length; j++) {
+      const r2 = headerClusterElements[j].getBoundingClientRect();
+      const xOverlap = Math.max(0, Math.min(r1.right, r2.right) - Math.max(r1.left, r2.left));
+      const yOverlap = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
+      if (xOverlap > 1 && yOverlap > 1) {
+        layoutViolations.push({
+          type: 'header-cluster-overlap',
+          message: `Header cluster elements [${i}] and [${j}] overlap: xOverlap=${xOverlap.toFixed(1)}px, yOverlap=${yOverlap.toFixed(1)}px`
+        });
+      }
+    }
+  }
+
+  // Check 5 (Prompt 31 C1): Brand left edge >= 12px assertion
+  const brandEl = document.querySelector('.adm-header-brand, .brand-logo, .brand-title');
+  if (brandEl && window.getComputedStyle(brandEl).display !== 'none') {
+    const r = brandEl.getBoundingClientRect();
+    if (r.width > 0 && r.left < 11.5) {
+      layoutViolations.push({
+        type: 'brand-edge-clipped',
+        message: `Brand left edge (${r.left.toFixed(1)}px) < 12px gutter`
+      });
     }
   }
 

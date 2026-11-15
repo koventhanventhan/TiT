@@ -6,7 +6,7 @@
         <ul class="metismenu" id="menu">
             {{-- Dashboard --}}
             <li class="{{ request()->routeIs('admin.dashboard') ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Dashboard" aria-label="Dashboard">
                     <i class="flaticon-381-networking"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
@@ -19,7 +19,7 @@
 
             {{-- Student Entries --}}
             <li class="{{ request()->routeIs('admin.students.*') ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Student Entries" aria-label="Student Entries">
                     <i class="flaticon-381-notepad"></i>
                     <span class="nav-text">Student Entries</span>
                 </a>
@@ -47,7 +47,7 @@
 
             {{-- Teachers --}}
             <li class="{{ request()->routeIs('admin.teachers.*') ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Teachers" aria-label="Teachers">
                     <i class="flaticon-381-user-7"></i>
                     <span class="nav-text">Teachers</span>
                 </a>
@@ -63,7 +63,7 @@
 
             {{-- Payment Settings --}}
             <li class="{{ (request()->routeIs('admin.subjects.*') || request()->routeIs('admin.packages.*') || request()->routeIs('admin.settings.admission-fees*') || request()->routeIs('admin.settings.payments*') || request()->routeIs('admin.settings.online-payments*')) ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Payment Settings" aria-label="Payment Settings">
                     <i class="flaticon-381-settings-2"></i>
                     <span class="nav-text">Payment Settings</span>
                 </a>
@@ -88,7 +88,7 @@
             {{-- Zoom Classes --}}
             @if(!$sidebarInst || $sidebarInst->hasFeature('zoom'))
             <li class="{{ (request()->routeIs('admin.zoom.*') || request()->routeIs('admin.attendance.*')) ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Zoom Classes" aria-label="Zoom Classes">
                     <i class="flaticon-381-video-camera"></i>
                     <span class="nav-text">Zoom Classes</span>
                 </a>
@@ -112,37 +112,31 @@
             </li>
             @endif
 
-            {{-- AI Assistant --}}
-            <li class="{{ request()->routeIs('admin.assistant*') ? 'mm-active' : '' }}">
-                <a href="{{ route('admin.assistant') }}" class="ai-icon" aria-expanded="false">
+            {{-- AI Assistant (Grouped with Assistant Hub and AI & Security, gated by ai_assistant) --}}
+            @if(!$sidebarInst || $sidebarInst->hasFeature('ai_assistant'))
+            <li class="{{ (request()->routeIs('admin.assistant*') || request()->routeIs('admin.settings.ai-security*')) ? 'mm-active' : '' }}">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="{{ (request()->routeIs('admin.assistant*') || request()->routeIs('admin.settings.ai-security*')) ? 'true' : 'false' }}" title="AI Assistant" aria-label="AI Assistant">
                     <i class="flaticon-381-speech-bubble"></i>
                     <span class="nav-text">AI Assistant</span>
                 </a>
-            </li>
-
-            {{-- Exam Results (Hidden temporarily as it is not fully finished)
-            <li class="{{ request()->routeIs('admin.exam-results.*') ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
-                    <i class="flaticon-381-notepad-1"></i>
-                    <span class="nav-text">Exam Results</span>
-                </a>
-                <ul aria-expanded="{{ request()->routeIs('admin.exam-results.*') ? 'true' : 'false' }}">
-                    <li class="{{ request()->routeIs('admin.exam-results.index') ? 'mm-active' : '' }}">
-                        <a href="{{ route('admin.exam-results.index') }}">Manage Results</a>
+                <ul aria-expanded="{{ (request()->routeIs('admin.assistant*') || request()->routeIs('admin.settings.ai-security*')) ? 'true' : 'false' }}">
+                    <li class="{{ request()->routeIs('admin.assistant*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.assistant') }}">Assistant Hub</a>
+                    </li>
+                    <li class="{{ request()->routeIs('admin.settings.ai-security*') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.settings.ai-security') }}">AI &amp; Security</a>
                     </li>
                 </ul>
             </li>
-            --}}
+            @endif
 
             {{-- Settings --}}
-
-            {{-- Settings --}}
-            <li class="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*')) ? 'mm-active' : '' }}">
-                <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+            <li class="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*') && !request()->routeIs('admin.settings.ai-security*')) ? 'mm-active' : '' }}">
+                <a class="has-arrow ai-icon" href="javascript:void(0)" aria-expanded="false" title="Settings" aria-label="Settings">
                     <i class="flaticon-381-settings-2"></i>
                     <span class="nav-text">Settings</span>
                 </a>
-                <ul aria-expanded="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*')) ? 'true' : 'false' }}">
+                <ul aria-expanded="{{ (request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.admission-fees*') && !request()->routeIs('admin.settings.payments*') && !request()->routeIs('admin.settings.online-payments*') && !request()->routeIs('admin.settings.ai-security*')) ? 'true' : 'false' }}">
                     @if(auth()->user()?->role === 'admin')
                         <li class="{{ request()->routeIs('admin.settings.messaging*') ? 'mm-active' : '' }}">
                             <a href="{{ route('admin.settings.messaging') }}">Messaging &amp; E-mail</a>

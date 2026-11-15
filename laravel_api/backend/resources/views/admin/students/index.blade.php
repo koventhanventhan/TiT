@@ -22,6 +22,13 @@
         border-top: 1.0px solid #ffffff;
     }
 
+    @media (max-width: 767px) {
+        .pagination-footer {
+            margin: 1rem 0 0 0 !important;
+            border-radius: 0.5rem;
+        }
+    }
+
     .pagination-info {
         flex: 1 1 100%;
         text-align: center;
@@ -312,60 +319,68 @@
                             <span style="color: #fde68a; font-size: 0.72rem; margin-left: 2px;">({{ $pendingMonthlyCount }} monthly + {{ $pendingTopupsCount }} top-ups)</span>
                         @endif
                     </a>
-                    <span class="badge badge-light" style="background: rgba(255, 255, 255, 0.08); color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: help;"
-                          data-toggle="tooltip"
-                          data-html="true"
-                          title="<strong>Strip Legend:</strong><br>• <em>N of M students have an index number:</em> Students matching the current filters that already have a number.<br>• <em>Pending Payments:</em> Students with a PENDING payment for the current month – click to open dedicated pending payments page.">
-                        ?
-                    </span>
                 </div>
             </div>
+            @php
+                $activeFiltersCount = 0;
+                if (request('search')) $activeFiltersCount++;
+                if (request('grade')) $activeFiltersCount++;
+                if (request('medium')) $activeFiltersCount++;
+                if (request('batch_year')) $activeFiltersCount++;
+                if (request('has_index') !== null && request('has_index') !== '') $activeFiltersCount++;
+                if (request('needs_review')) $activeFiltersCount++;
+            @endphp
             <div class="students-toolbar d-flex flex-wrap align-items-center gap-2">
-                <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-md-3">
-                    <div class="premium-filter-group">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important; color: var(--adm-text) !important; padding: 4px 12px;">
+                <button type="button" class="btn btn-outline-primary btn-sm d-md-none mb-2 w-100" id="toggleMobileFiltersBtn" onclick="var el = document.getElementById('studentsFilterCollapse'); el.classList.toggle('d-none'); this.classList.toggle('active');">
+                    <i class="flaticon-381-filter-7 mr-1"></i> Filters ({{ $activeFiltersCount }} active)
+                </button>
+                <div class="students-filter-collapse w-100 w-md-auto {{ $activeFiltersCount > 0 ? '' : 'd-none' }} d-md-block" id="studentsFilterCollapse">
+                    <form action="{{ route('admin.students.index', [], false) }}" method="GET" class="mb-0 mr-md-3">
+                        <div class="premium-filter-group flex-wrap">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, phone, index..." class="form-control" style="max-width: 170px; height: 32px; border-radius: 20px; font-size: 0.78rem; background: rgba(17, 24, 39, 0.8) !important; border: 1px solid var(--t-primary, rgba(235, 129, 83, 0.5)) !important; color: var(--adm-text) !important; padding: 4px 12px;">
 
-                        <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
-                            <option value=""> All Grades</option>
-                            @for($i = 1; $i <= 13; $i++)
-                                <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
-                            @endfor
-                        </select>
+                            <select name="grade" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                                <option value=""> All Grades</option>
+                                @for($i = 1; $i <= 13; $i++)
+                                    <option value="{{ $i }}" {{ request('grade') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                                @endfor
+                            </select>
 
-                        <select name="medium" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
-                            <option value="">Medium: All</option>
-                            <option value="english" {{ request('medium') === 'english' ? 'selected' : '' }}>English</option>
-                            <option value="tamil" {{ request('medium') === 'tamil' ? 'selected' : '' }}>Tamil</option>
-                            <option value="both" {{ request('medium') === 'both' ? 'selected' : '' }}>Both</option>
-                        </select>
+                            <select name="medium" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                                <option value="">Medium: All</option>
+                                <option value="english" {{ request('medium') === 'english' ? 'selected' : '' }}>English</option>
+                                <option value="tamil" {{ request('medium') === 'tamil' ? 'selected' : '' }}>Tamil</option>
+                                <option value="both" {{ request('medium') === 'both' ? 'selected' : '' }}>Both</option>
+                            </select>
 
-                        @if(($instituteFormat ?? 'grade') === 'batch')
-                        <select name="batch_year" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
-                            <option value=""> All Batches</option>
-                            @php
-                                $curBatch = (int) date('y');
-                            @endphp
-                            @for($b = $curBatch + 4; $b >= $curBatch - 5; $b--)
-                                <option value="{{ $b }}" {{ request('batch_year') == $b ? 'selected' : '' }}>Batch '{{ $b }}</option>
-                            @endfor
-                        </select>
-                        @endif
+                            @if(($instituteFormat ?? 'grade') === 'batch')
+                            <select name="batch_year" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                                <option value=""> All Batches</option>
+                                @php
+                                    $curBatch = (int) date('y');
+                                @endphp
+                                @for($b = $curBatch + 4; $b >= $curBatch - 5; $b--)
+                                    <option value="{{ $b }}" {{ request('batch_year') == $b ? 'selected' : '' }}>Batch '{{ $b }}</option>
+                                @endfor
+                            </select>
+                            @endif
 
-                        <select name="has_index" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
-                            <option value="">Index: All</option>
-                            <option value="1" {{ request('has_index') === '1' ? 'selected' : '' }}>Index: Assigned</option>
-                            <option value="0" {{ request('has_index') === '0' ? 'selected' : '' }}>Index: Not Assigned</option>
-                        </select>
-                        
-                        <div class="premium-toggle-wrapper">
-                            <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
-                            <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                Review
-                            </label>
+                            <select name="has_index" class="selectpicker" data-style="premium-select" onchange="this.form.submit()">
+                                <option value="">Index: All</option>
+                                <option value="1" {{ request('has_index') === '1' ? 'selected' : '' }}>Index: Assigned</option>
+                                <option value="0" {{ request('has_index') === '0' ? 'selected' : '' }}>Index: Not Assigned</option>
+                            </select>
+                            
+                            <div class="premium-toggle-wrapper">
+                                <input type="checkbox" id="needsReviewFilter" name="needs_review" value="1" class="premium-toggle-input" {{ request('needs_review') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
+                                <label for="needsReviewFilter" class="premium-toggle-btn mb-0" title="Toggle to show students who need subject verification">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                    Review
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
                 <div class="students-action-buttons d-flex flex-wrap align-items-center gap-2">
                     <button type="button" class="btn btn-info btn-sm mr-2" id="bulkIndexBtn" style="display: none;" onclick="submitBulkAssignIndex()">
                         <i class="flaticon-381-layer-1"></i> Assign Index (<span id="indexSelectedCount">0</span>)
@@ -536,22 +551,22 @@
                                         @else
                                             <span class="badge" style="font-size: 0.6rem; font-weight: 700; background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.35); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;" title="Index number not assigned yet">Index: not assigned</span>
                                         @endif
-                                        <div style="font-size: 0.6rem; opacity: 0.6;">{{ $student->created_at->format('M d, y') }}</div>
+                                        <div style="font-size: 0.6rem; color: #d1d5db; opacity: 0.85;">{{ $student->created_at->format('M d, y') }}</div>
                                     </td>
                                   <td style="max-width: 7.5rem;">
                                       <div class="text-truncate" style="font-weight: 700; color: #ffab2d; font-size: 0.75rem;">{{ $student->full_name ?? $student->name }}</div>
                                       @if($student->displayEmail())
-                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="{{ $student->displayEmail() }}">{{ $student->displayEmail() }}</div>
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #d1d5db;" title="{{ $student->displayEmail() }}">{{ $student->displayEmail() }}</div>
                                       @elseif($student->parent_id && $student->parent)
-                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;" title="Contact via: {{ $student->parent->full_name ?? $student->parent->name }} ({{ $student->parent->email }})">Contact via: {{ $student->parent->full_name ?? $student->parent->name }}</div>
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #d1d5db;" title="Contact via: {{ $student->parent->full_name ?? $student->parent->name }} ({{ $student->parent->email }})">Contact via: {{ $student->parent->full_name ?? $student->parent->name }}</div>
                                       @else
-                                          <div class="text-truncate" style="font-size: 0.6rem; color: #9ca3af;">—</div>
+                                          <div class="text-truncate" style="font-size: 0.6rem; color: #d1d5db;">—</div>
                                       @endif
                                   </td>
                                  <td class="nowrap-column text-center">
-                                     <span style="color:#a78bfa; font-weight:800;">G{{ $student->current_grade ?: '?' }}</span>
+                                     <span style="color:#c4b5fd; font-weight:800;">G{{ $student->current_grade ?: '?' }}</span>
                                      <span style="opacity: 0.3; margin: 0 0.125rem;">|</span>
-                                     <span style="font-weight:800; color: {{ $student->gender === 'female' ? '#f87171' : '#60a5fa' }}">{{ $student->gender === 'female' ? 'G' : 'M' }}</span>
+                                     <span style="font-weight:800; color: {{ $student->gender === 'female' ? '#f87171' : '#93c5fd' }}">{{ $student->gender === 'female' ? 'G' : 'M' }}</span>
                                      <span style="opacity: 0.3; margin: 0 0.125rem;">|</span>
                                      <span style="font-weight:800; opacity: 0.7;">{{ $student->medium === 'tamil' ? 'TAM' : 'ENG' }}</span>
                                  </td>
@@ -561,7 +576,7 @@
                                              {{ str_starts_with($student->phone_number, '94') ? '+' . $student->phone_number : $student->phone_number }}
                                          @elseif($student->parent_id && $student->parent && $student->parent->phone_number)
                                              {{ str_starts_with($student->parent->phone_number, '94') ? '+' . $student->parent->phone_number : $student->parent->phone_number }}
-                                             <span style="font-size: 0.55rem; color: #9ca3af; font-style: italic;">(via parent)</span>
+                                             <span style="font-size: 0.55rem; color: #d1d5db; font-style: italic;">(via parent)</span>
                                          @else
                                              N/A
                                          @endif
@@ -583,10 +598,10 @@
                                          @if($paidThisMonth)
                                              <span class="badge badge-xs badge-outline-success" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Paid</span>
                                              @if($latestPayment && $latestPayment->paid_at)
-                                                 <span style="color: #4caf50; font-size: 0.55rem; font-weight: 500;">{{ $latestPayment->paid_at->format('M d') }}</span>
+                                                 <span style="color: #86efac; font-size: 0.55rem; font-weight: 500;">{{ $latestPayment->paid_at->format('M d') }}</span>
                                              @endif
                                          @else
-                                             <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px;">Not paid</span>
+                                             <span class="badge badge-xs badge-outline-secondary" style="padding: 0rem 0.1875rem; font-size: 0.55rem; border-width: 1px; color: #d1d5db; border-color: rgba(255,255,255,0.25);">Not paid</span>
                                          @endif
                                      </div>
                                  </td>

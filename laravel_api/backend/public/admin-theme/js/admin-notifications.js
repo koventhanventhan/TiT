@@ -168,7 +168,7 @@ function updateNotificationBadge(unreadCount, systemAlerts) {
         if (totalCount > 0) {
             pulse.classList.remove('d-none');
             if (badge) {
-                badge.innerText = totalCount > 9 ? '9+' : totalCount;
+                badge.innerText = totalCount > 99 ? '99+' : totalCount;
                 badge.classList.remove('d-none');
             }
         } else {

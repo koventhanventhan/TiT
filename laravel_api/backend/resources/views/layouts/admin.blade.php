@@ -55,6 +55,16 @@
             box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
             margin-bottom: 1.25rem;
         }
+        @media (max-width: 767px) {
+            .content-body {
+                padding-top: 65px !important;
+            }
+            .content-body .container-fluid {
+                padding-top: 14px !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+        }
     </style>
     @stack('styles')
     

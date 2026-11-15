@@ -1,825 +1,746 @@
 <div class="header">
     <style>
-        [data-header-position="fixed"] .deznav {
-            margin-top: -1.20rem;
+        /* ══════════════════════════════════════════════════════════════
+           C1 TOP HEADER: FIXED CSS GRID / FLEX CONTRACT (3 ZONES)
+           ══════════════════════════════════════════════════════════════ */
+        
+        .header {
+            height: 65px !important;
+            background: var(--adm-sidebar) !important;
+            border-bottom: 1px solid var(--adm-border) !important;
+            position: fixed !important;
+            top: 0 !important;
+            z-index: 10000 !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .adm-header-container {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            height: 65px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 0 14px !important;
+            position: relative !important;
+            gap: 8px !important;
+        }
+
+        /* ─── ZONE 1: LEFT (Toggle + Brand) ─── */
+        .adm-header-zone-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+            flex: 0 1 auto !important;
+        }
+
+        .adm-header-brand {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            text-decoration: none !important;
+            min-width: 0 !important;
+        }
+
+        .adm-header-brand img {
+            width: 28px !important;
+            height: 28px !important;
+            max-width: 28px !important;
+            object-fit: contain !important;
+            flex-shrink: 0 !important;
+        }
+
+        .adm-header-brand svg {
+            width: 28px !important;
+            height: 28px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .adm-brand-text {
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            color: var(--adm-text) !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 160px !important;
+            min-width: 0 !important;
+            letter-spacing: 0.3px !important;
+        }
+
+        /* Hamburger button */
+        .custom-hamburger {
+            display: inline-flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 4px !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            cursor: pointer !important;
+            flex-shrink: 0 !important;
+            background: transparent !important;
+            border: 1px solid var(--adm-border) !important;
+            border-radius: 8px !important;
+            padding: 0 !important;
+            outline: none !important;
+            touch-action: manipulation !important;
+            color: var(--adm-text) !important;
+        }
+
+        .custom-hamburger span {
+            display: block !important;
+            width: 18px !important;
+            height: 2px !important;
+            background: var(--adm-text) !important;
+            border-radius: 2px !important;
+            transition: all 0.25s ease !important;
+            transform-origin: center !important;
+        }
+
+        .custom-hamburger.active span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg) !important;
+        }
+        .custom-hamburger.active span:nth-child(2) {
+            opacity: 0 !important;
+            transform: scaleX(0) !important;
+        }
+        .custom-hamburger.active span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg) !important;
+        }
+
+        /* ─── ZONE 2: CENTRE (Search) ─── */
+        .adm-header-zone-centre {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+
+        .adm-search-bar {
+            width: 100% !important;
+            max-width: 380px !important;
+            display: none !important;
+        }
+
+        .adm-search-bar form {
+            position: relative !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .adm-search-input {
+            width: 100% !important;
+            height: 36px !important;
+            background: var(--adm-input-bg) !important;
+            border: 1px solid var(--adm-border) !important;
+            border-radius: 20px !important;
+            padding: 0 12px 0 34px !important;
+            font-size: 0.85rem !important;
+            color: var(--adm-text) !important;
+            outline: none !important;
+        }
+
+        .adm-search-input:focus {
+            border-color: var(--adm-accent) !important;
+            box-shadow: 0 0 0 2px rgba(235, 129, 83, 0.2) !important;
+        }
+
+        .adm-search-icon {
+            position: absolute !important;
+            left: 10px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            color: var(--adm-text-3) !important;
+            pointer-events: none !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .adm-search-close-btn {
+            display: none !important;
+        }
+
+        /* ─── ZONE 3: RIGHT (40x40 Icons + Avatar) ─── */
+        .adm-header-zone-right {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .adm-header-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            border-radius: 8px !important;
+            background: transparent !important;
+            border: 1px solid var(--adm-border) !important;
+            color: var(--adm-text) !important;
+            padding: 0 !important;
+            cursor: pointer !important;
+            position: relative !important;
+            text-decoration: none !important;
+            flex-shrink: 0 !important;
+            box-sizing: border-box !important;
+            transition: background 0.15s, border-color 0.15s !important;
+        }
+
+        .adm-header-btn:hover,
+        .adm-header-btn:focus {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: var(--adm-accent) !important;
+            border-color: var(--adm-accent) !important;
+        }
+
+        .adm-header-btn svg {
+            width: 20px !important;
+            height: 20px !important;
+            stroke: currentColor !important;
+            display: block !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Absolute Badge inside 40x40 container */
+        .adm-badge {
+            position: absolute !important;
+            top: -3px !important;
+            right: -3px !important;
+            background: var(--adm-accent, #eb8153) !important;
+            color: var(--adm-on-accent, #0f172a) !important;
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+            min-width: 17px !important;
+            height: 17px !important;
+            padding: 1px 3px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
+            pointer-events: none !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Avatar Box & Initials fallback */
+        .adm-header-profile-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            height: 40px !important;
+            border-radius: 20px !important;
+            background: transparent !important;
+            border: 1px solid var(--adm-border) !important;
+            padding: 2px !important;
+            cursor: pointer !important;
+            gap: 8px !important;
+            color: var(--adm-text) !important;
+            flex-shrink: 0 !important;
+        }
+
+        .adm-avatar-box {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            min-height: 34px !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .adm-avatar-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 50% !important;
+            display: block !important;
+        }
+
+        .adm-avatar-initials {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 50% !important;
+            background: var(--adm-accent, #eb8153) !important;
+            color: var(--adm-on-accent, #0f172a) !important;
+            font-weight: 800 !important;
+            font-size: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+
+        .adm-header-user-name {
+            display: none;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            color: var(--adm-text) !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 130px !important;
+            padding-right: 8px !important;
+        }
+
+        /* ─── DROPDOWN MENUS ─── */
+        .adm-header-dropdown .dropdown-menu {
+            min-width: 220px !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid var(--adm-border) !important;
+            background: var(--adm-surface) !important;
+            padding: 8px 0 !important;
+            margin-top: 8px !important;
+            right: 0 !important;
+            left: auto !important;
+        }
+
+        .adm-header-dropdown .dropdown-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 9px 16px !important;
+            font-size: 0.84rem !important;
+            color: var(--adm-text) !important;
+            transition: background 0.15s !important;
+        }
+
+        .adm-header-dropdown .dropdown-item:hover,
+        .adm-header-dropdown .dropdown-item:focus {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: var(--adm-accent) !important;
         }
 
         /* ══════════════════════════════════════
-           MOBILE ONLY (max 767px)
+           BREAKPOINTS
            ══════════════════════════════════════ */
-        @media (max-width: 767px) {
 
+        /* DESKTOP (>= 1200px) */
+        @media (min-width: 1200px) {
             .nav-header {
-                z-index: 10001 !important;
-                width: 4.5rem !important;
-                height: 65px !important;
-                background: var(--adm-sidebar) !important;
+                display: flex !important;
                 position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0 !important;
-                overflow: visible !important;
-            }
-            .nav-header .brand-logo {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 2px !important;
-                text-decoration: none !important;
-                padding: 0 !important;
-            }
-            .nav-header .brand-logo img,
-            .nav-header .brand-logo .logo-abbr {
-                width: 26px !important; height: 26px !important;
-                max-width: 26px !important; display: block !important;
-            }
-            .nav-header .brand-title {
-                display: block !important;
-                font-size: 0.55rem !important;
-                font-weight: 700 !important;
-                color: var(--adm-text) !important;
-                margin: 0 !important; padding: 0 !important;
-                white-space: nowrap !important;
-                letter-spacing: 0.8px !important;
-                line-height: 1 !important;
-                text-transform: uppercase !important;
-            }
-            .nav-header .nav-control { display: none !important; }
-
-            .header {
-                height: 65px !important;
-                background: var(--adm-sidebar) !important;
-                border-bottom: 1px solid var(--adm-border) !important;
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100% !important;
-                z-index: 10000 !important;
-                padding: 0 0 0 4.5rem !important;
-                box-sizing: border-box !important;
-            }
-            .header-content {
-                padding: 0 !important;
-                height: 65px !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            .header .navbar,
-            .header .navbar-expand {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                align-items: center !important;
-                height: 65px !important;
-                padding: 0 8px 0 0 !important;
-                width: 100% !important;
-            }
-            .header .collapse.navbar-collapse,
-            .header .navbar-collapse,
-            .header .navbar-collapse.justify-content-between,
-            .header .navbar-expand .navbar-collapse {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                align-items: center !important;
-                height: 65px !important;
-                justify-content: space-between !important;
-                width: 100% !important;
-            }
-
-            /* Hamburger */
-            .custom-hamburger {
-                display: inline-flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                gap: 4px !important;
-                width: 44px !important;
-                height: 44px !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-                cursor: pointer !important;
-                flex-shrink: 0 !important;
-                margin: 0 4px !important;
-                background: none !important;
-                border: none !important;
-                padding: 0 !important;
-                outline: none !important;
-                touch-action: manipulation !important;
-            }
-            .custom-hamburger span {
-                display: block !important;
-                width: 20px !important;
-                height: 2px !important;
-                background: var(--adm-text) !important;
-                border-radius: 2px !important;
-                transition: all 0.3s ease !important;
-                transform-origin: center !important;
-            }
-            .custom-hamburger.active span:nth-child(1) {
-                transform: translateY(6px) rotate(45deg) !important;
-            }
-            .custom-hamburger.active span:nth-child(2) {
-                opacity: 0 !important;
-                transform: scaleX(0) !important;
-            }
-            .custom-hamburger.active span:nth-child(3) {
-                transform: translateY(-6px) rotate(-45deg) !important;
-            }
-
-            /* Search - MOBILE */
-            .header-left {
-                margin-right: 4px !important;
-                padding: 0 !important;
-            }
-            .header-left:not(.search-expanded) {
-                flex: 0 0 44px !important;
-                max-width: 44px !important;
-            }
-            .header-left:not(.search-expanded) .search_bar {
-                display: none !important;
-            }
-            .mobile-search-btn {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                width: 44px !important;
-                height: 44px !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-                background: transparent !important;
-                border: none !important;
-                color: var(--adm-text) !important;
-                padding: 0 !important;
-                cursor: pointer !important;
-                touch-action: manipulation !important;
-            }
-            .mobile-search-btn svg {
-                width: 22px !important;
-                height: 22px !important;
-                stroke: var(--adm-text) !important;
-            }
-            .search-close-btn {
-                display: none !important;
-            }
-
-            /* Search expanded overlay - MOBILE */
-            .header-left.search-expanded {
-                position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                background: var(--adm-surface) !important;
-                z-index: 1050 !important;
-                display: flex !important;
-                align-items: center !important;
-                padding: 0 10px !important;
-                margin: 0 !important;
-            }
-            .header-left.search-expanded .mobile-search-btn {
-                display: none !important;
-            }
-            .header-left.search-expanded .search_bar {
-                display: flex !important;
-                flex: 1 1 auto !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            .header-left.search-expanded .search_bar form {
-                display: flex !important;
-                align-items: center !important;
-                width: 100% !important;
-                position: relative !important;
-                gap: 8px !important;
-            }
-            .header-left.search-expanded .search_bar .form-control {
-                flex: 1 1 auto !important;
-                height: 38px !important;
-                font-size: 13px !important;
-                padding: 0 10px 0 32px !important;
-                background: var(--adm-input-bg) !important;
-                border: 1px solid var(--adm-border) !important;
-                border-radius: 8px !important;
-                color: var(--adm-text) !important;
-                outline: none !important;
-            }
-            .header-left.search-expanded .search_bar .search_icon {
-                position: absolute !important;
-                left: 10px !important;
-                top: 50% !important;
-                transform: translateY(-50%) !important;
-                color: var(--adm-text-3) !important;
-                font-size: 15px !important;
-                pointer-events: none !important;
-            }
-            .header-left.search-expanded .search-close-btn {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                width: 44px !important;
-                height: 44px !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-                background: transparent !important;
-                border: none !important;
-                color: var(--adm-text) !important;
-                padding: 0 !important;
-                cursor: pointer !important;
-                touch-action: manipulation !important;
-                flex-shrink: 0 !important;
-            }
-
-            /* Right icons */
-            .header-right {
-                flex-shrink: 0 !important;
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                flex-wrap: nowrap !important;
-                gap: 0 !important;
-                margin: 0 !important; padding: 0 !important;
-                list-style: none !important;
-            }
-            .header-right .nav-item {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                margin: 0 !important; padding: 0 !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-            }
-            .header-right .nav-link {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 4px 6px !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-                position: relative !important;
-                touch-action: manipulation !important;
-            }
-            .header-right .nav-item:not(.header-profile) .nav-link svg {
-                width: 18px !important; height: 18px !important;
-                display: block !important; flex-shrink: 0 !important;
-            }
-
-            /* Profile avatar - MOBILE */
-            .header-profile > .nav-link { padding: 4px !important; }
-            .header-profile img,
-            .header-profile .header-profile-initials {
-                width: 36px !important; height: 36px !important;
-                flex-shrink: 0 !important;
-                border: 2px solid var(--adm-accent) !important;
-                border-radius: 50% !important;
-            }
-
-            /* Pulse dot - MOBILE */
-            #message-pulse,
-            #notification-pulse {
-                min-width: 16px !important;
-                min-height: 16px !important;
-                width: auto !important;
-                height: auto !important;
-                padding: 1px 3px !important;
-                border-radius: 999px !important;
-                top: 2px !important;
-                right: 2px !important;
-                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
-                box-sizing: border-box !important;
-            }
-            #message-count,
-            #notification-count {
-                font-size: 10px !important;
-                font-weight: 700 !important;
-                line-height: 1 !important;
-                color: var(--adm-on-accent) !important;
-            }
-
-            [data-header-position="fixed"] .content-body {
-                padding-top: 65px !important;
-            }
-        }
-
-        /* ══════════════════════════════════════
-           TABLET (768px – 1199px)
-           Covers ALL Android phones + tablets
-           ══════════════════════════════════════ */
-        @media (min-width: 768px) and (max-width: 1199px) {
-
-            .nav-header {
-                z-index: 10001 !important;
-                width: 5rem !important;
-                height: 65px !important;
-                background: var(--adm-sidebar) !important;
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0 !important;
-                overflow: visible !important;
-            }
-            .nav-header .brand-logo {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 2px !important;
-                text-decoration: none !important;
-                padding: 0 !important;
-            }
-            .nav-header .brand-logo img,
-            .nav-header .brand-logo .logo-abbr {
-                width: 28px !important; height: 28px !important;
-                max-width: 28px !important; display: block !important;
-            }
-            .nav-header .brand-title {
-                display: block !important;
-                font-size: 0.55rem !important;
-                font-weight: 700 !important;
-                color: var(--adm-text) !important;
-                margin: 0 !important; padding: 0 !important;
-                white-space: nowrap !important;
-                letter-spacing: 0.8px !important;
-                line-height: 1 !important;
-                text-transform: uppercase !important;
-            }
-            .nav-header .nav-control { display: none !important; }
-
-            .header {
+                width: 17.5rem !important;
                 height: 65px !important;
                 background: var(--adm-sidebar) !important;
                 border-bottom: 1px solid var(--adm-border) !important;
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100% !important;
-                z-index: 10000 !important;
-                padding: 0 0 0 5rem !important;
-                box-sizing: border-box !important;
-            }
-            .header-content {
-                padding: 0 !important;
-                height: 65px !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            .header .navbar,
-            .header .navbar-expand {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
+                border-right: 1px solid var(--adm-border) !important;
                 align-items: center !important;
-                height: 65px !important;
-                padding: 0 6px 0 0 !important;
-                width: 100% !important;
-                overflow: hidden !important;
-            }
-            .header .collapse.navbar-collapse,
-            .header .navbar-collapse,
-            .header .navbar-collapse.justify-content-between,
-            .header .navbar-expand .navbar-collapse {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                align-items: center !important;
-                height: 65px !important;
                 justify-content: space-between !important;
-                width: 100% !important;
-                overflow: hidden !important;
-            }
-
-            /* Hamburger - TABLET */
-            .custom-hamburger {
-                display: inline-flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                gap: 4px !important;
-                width: 44px !important;
-                height: 44px !important;
-                min-width: 44px !important;
-                min-height: 44px !important;
-                cursor: pointer !important;
-                flex-shrink: 0 !important;
-                margin: 0 4px !important;
-                background: none !important;
-                border: none !important;
-                padding: 0 !important;
-                outline: none !important;
-                touch-action: manipulation !important;
-            }
-            .custom-hamburger span {
-                display: block !important;
-                width: 20px !important; height: 2px !important;
-                background: var(--adm-text) !important;
-                border-radius: 2px !important;
-                transition: all 0.3s ease !important;
-                transform-origin: center !important;
-            }
-            .custom-hamburger.active span:nth-child(1) {
-                transform: translateY(6.5px) rotate(45deg) !important;
-            }
-            .custom-hamburger.active span:nth-child(2) {
-                opacity: 0 !important; transform: scaleX(0) !important;
-            }
-            .custom-hamburger.active span:nth-child(3) {
-                transform: translateY(-6.5px) rotate(-45deg) !important;
-            }
-
-            /* Search — fixed width, never grows into icons */
-            .mobile-search-btn { display: none !important; }
-            .search-close-btn { display: none !important; }
-            .header-left {
-                flex: 0 0 120px !important;
-                width: 120px !important;
-                min-width: 0 !important;
-                max-width: 120px !important;
-                margin-right: 4px !important;
-                padding: 0 !important;
-                overflow: hidden !important;
-            }
-            .header-left .search_bar { width: 100% !important; }
-            .header-left .search_bar form {
-                position: relative !important;
-                display: flex !important;
-                align-items: center !important;
-                width: 100% !important;
-            }
-            .header-left .search_bar .form-control {
-                height: 30px !important;
-                font-size: 10px !important;
-                padding: 0 6px 0 24px !important;
-                background: var(--adm-input-bg) !important;
-                border: 1px solid var(--adm-border) !important;
-                border-radius: 50px !important;
-                color: var(--adm-text) !important;
-                box-shadow: none !important;
-                width: 100% !important;
-                outline: none !important;
-            }
-            .header-left .search_bar .form-control::placeholder {
-                color: var(--adm-text-3) !important;
-                font-size: 10px !important;
-            }
-            .header-left .search_bar .search_icon {
-                position: absolute !important;
-                left: 7px !important; top: 50% !important;
-                transform: translateY(-50%) !important;
-                color: var(--adm-text-3) !important;
-                font-size: 12px !important;
-                z-index: 10 !important;
-                pointer-events: none !important;
-            }
-
-            /* Right icons — never shrink, always stay right */
-            .header-right {
-                flex: 0 0 auto !important;
-                flex-shrink: 0 !important;
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                flex-wrap: nowrap !important;
-                gap: 0 !important;
-                margin: 0 !important; padding: 0 4px 0 0 !important;
-                list-style: none !important;
-            }
-            .header-right .nav-item {
-                flex-shrink: 0 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                margin: 0 !important; padding: 0 !important;
-            }
-            .header-right .nav-link {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 4px 4px !important;
-                position: relative !important;
-            }
-            .header-right .nav-item:not(.header-profile) .nav-link svg {
-                width: 17px !important; height: 17px !important;
-                display: block !important; flex-shrink: 0 !important;
-            }
-
-            /* Profile avatar - TABLET */
-            .header-profile > .nav-link { padding: 4px !important; }
-            .header-profile img,
-            .header-profile .header-profile-initials {
-                width: 34px !important; height: 34px !important;
-                flex-shrink: 0 !important;
-                border: 2px solid var(--adm-accent) !important;
-                border-radius: 50% !important;
-            }
-
-            /* Pulse dot - TABLET */
-            #message-pulse,
-            #notification-pulse {
-                min-width: 16px !important;
-                min-height: 16px !important;
-                width: auto !important;
-                height: auto !important;
-                padding: 1px 3px !important;
-                border-radius: 999px !important;
-                top: 2px !important;
-                right: 2px !important;
-                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
+                padding: 0 16px !important;
+                z-index: 10001 !important;
                 box-sizing: border-box !important;
             }
-            #message-count,
-            #notification-count {
-                font-size: 10px !important;
-                font-weight: 700 !important;
-                line-height: 1 !important;
-                color: var(--adm-on-accent) !important;
+
+            .header {
+                left: 17.5rem !important;
+                width: calc(100% - 17.5rem) !important;
             }
 
-            [data-header-position="fixed"] .content-body {
-                padding-top: 65px !important;
+            .custom-hamburger {
+                display: none !important;
+            }
+
+            .adm-header-brand {
+                display: none !important;
+            }
+
+            .mobile-search-btn {
+                display: none !important;
+            }
+
+            .adm-search-bar {
+                display: block !important;
+            }
+
+            .adm-header-user-name {
+                display: inline-block !important;
+            }
+
+            /* Main wrapper menu-toggle state on desktop */
+            #main-wrapper.menu-toggle .nav-header {
+                width: 5rem !important;
+                justify-content: center !important;
+                padding: 0 !important;
+            }
+
+            #main-wrapper.menu-toggle .nav-header .brand-title {
+                display: none !important;
+            }
+
+            #main-wrapper.menu-toggle .header {
+                left: 5rem !important;
+                width: calc(100% - 5rem) !important;
             }
         }
 
-        /* ══════════════════════════════════════
-           DESKTOP (min 1200px)
-           ══════════════════════════════════════ */
-        @media (min-width: 1200px) {
-
-            .custom-hamburger { display: none !important; }
-            .mobile-search-btn { display: none !important; }
-            .search-close-btn { display: none !important; }
-
-            .header-left {
-                flex: 1 !important;
-                max-width: 400px !important;
+        /* TABLET & LAPTOP (1024px – 1199px) */
+        @media (min-width: 1024px) and (max-width: 1199px) {
+            .nav-header {
+                display: none !important;
             }
 
-            /* Icons - desktop */
-            .header-right .nav-item:not(.header-profile) .nav-link svg {
-                width: 28px !important;
-                height: 28px !important;
+            .header {
+                left: 0 !important;
+                width: 100% !important;
+            }
+
+            .custom-hamburger {
+                display: inline-flex !important;
+            }
+
+            .adm-header-brand {
+                display: flex !important;
+            }
+
+            .adm-brand-text {
+                max-width: 220px !important;
+            }
+
+            .mobile-search-btn {
+                display: none !important;
+            }
+
+            .adm-search-bar {
                 display: block !important;
+                max-width: 280px !important;
             }
-            .header-right .nav-link {
-                padding: 5px 10px !important;
-                position: relative !important;
+        }
+
+        /* TABLET (768px – 1023px) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .nav-header {
+                display: none !important;
+            }
+
+            .header {
+                left: 0 !important;
+                width: 100% !important;
+            }
+
+            .custom-hamburger {
+                display: inline-flex !important;
+            }
+
+            .adm-header-brand {
                 display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
             }
 
-            /* Profile avatar - DESKTOP */
-            .header-profile img,
-            .header-profile .header-profile-initials {
-                width: 52px !important;
-                height: 52px !important;
-                border: 2px solid var(--adm-accent) !important;
-                border-radius: 50% !important;
-            }
-            .header-profile > .nav-link { padding: 5px !important; }
-
-            /* Pulse dot - DESKTOP */
-            #message-pulse,
-            #notification-pulse {
-                min-width: 16px !important;
-                min-height: 16px !important;
-                width: auto !important;
-                height: auto !important;
-                padding: 1px 4px !important;
-                border-radius: 999px !important;
-                top: 2px !important;
-                right: 2px !important;
-                box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
-                box-sizing: border-box !important;
-            }
-            #message-count,
-            #notification-count {
-                font-size: 10px !important;
-                font-weight: 700 !important;
-                line-height: 1 !important;
-                color: var(--adm-on-accent) !important;
+            .adm-brand-text {
+                max-width: 180px !important;
             }
 
-            /* Dropdown */
-            .header-profile .dropdown-menu {
-                min-width: 210px !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
-                border: 1px solid var(--adm-border) !important;
-                background: var(--adm-surface) !important;
-                padding: 8px 0 !important;
-                right: 0 !important; left: auto !important;
-                top: calc(100% + 8px) !important;
+            .mobile-search-btn {
+                display: inline-flex !important;
             }
-            .header-profile .dropdown-item {
+
+            .adm-search-bar {
+                display: none !important;
+            }
+        }
+
+        /* MOBILE (< 768px) */
+        @media (max-width: 767px) {
+            .nav-header {
+                display: none !important;
+            }
+
+            .header {
+                left: 0 !important;
+                width: 100% !important;
+            }
+
+            .adm-header-container {
+                padding: 0 12px !important;
+                gap: 6px !important;
+            }
+
+            .custom-hamburger {
+                display: inline-flex !important;
+            }
+
+            .adm-header-brand {
                 display: flex !important;
-                align-items: center !important;
-                gap: 10px !important;
-                padding: 9px 16px !important;
-                font-size: 0.82rem !important;
-                color: var(--adm-text) !important;
-                transition: background 0.15s !important;
             }
-            .header-profile .dropdown-item:hover { background: rgba(255, 255, 255, 0.08) !important; color: var(--adm-accent) !important; }
-            .header-profile .dropdown-item i {
-                font-size: 1.1rem !important;
-                width: 18px !important;
-                text-align: center !important;
+
+            .adm-brand-text {
+                max-width: 110px !important;
+                font-size: 0.85rem !important;
             }
+
+            .mobile-search-btn {
+                display: inline-flex !important;
+            }
+
+            .adm-search-bar {
+                display: none !important;
+            }
+
+            /* Collapsing ~70px empty band */
+            [data-header-position="fixed"] .content-body {
+                padding-top: 65px !important;
+            }
+            .content-body .container-fluid {
+                padding-top: 14px !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+        }
+
+        /* ─── FULL-WIDTH SEARCH OVERLAY (When expanded below 1024px) ─── */
+        .adm-header-zone-centre.search-expanded {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            background: var(--adm-surface) !important;
+            z-index: 1050 !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 0 14px !important;
+            box-sizing: border-box !important;
+        }
+
+        .adm-header-zone-centre.search-expanded .mobile-search-btn {
+            display: none !important;
+        }
+
+        .adm-header-zone-centre.search-expanded .adm-search-bar {
+            display: flex !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .adm-header-zone-centre.search-expanded .adm-search-input {
+            flex: 1 1 auto !important;
+            border-radius: 8px !important;
+            padding-right: 44px !important;
+        }
+
+        .adm-header-zone-centre.search-expanded .adm-search-close-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            position: absolute !important;
+            right: 4px !important;
+            background: transparent !important;
+            border: none !important;
+            color: var(--adm-text) !important;
+            cursor: pointer !important;
+            outline: none !important;
         }
     </style>
 
-    <div class="header-content">
-        <nav class="navbar navbar-expand">
-            <div class="collapse navbar-collapse justify-content-between"
-                 style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;height:65px!important;width:100%!important;">
+    <div class="adm-header-container">
+        {{-- ZONE 1: LEFT (Toggle + Brand) --}}
+        <div class="adm-header-zone-left">
+            <button class="custom-hamburger" id="customHamburger" aria-label="Toggle menu" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
 
-                {{-- CUSTOM HAMBURGER: mobile & tablet only --}}
-                <button class="custom-hamburger"
-                        id="customHamburger"
-                        aria-label="Toggle menu"
-                        style="display:none;">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+            <a href="{{ route('admin.dashboard') }}" class="adm-header-brand" title="{{ $brandName ?? 'TiT Institute' }}">
+                @if(isset($site_settings['admin_logo']))
+                    <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo">
+                @else
+                    <svg viewBox="0 0 50 50" fill="none">
+                        <rect width="50" height="50" rx="14" fill="var(--adm-accent, #EB8153)"/>
+                        <path d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
+                    </svg>
+                @endif
+                <span class="adm-brand-text">{{ $brandName ?? 'TiT Institute' }}</span>
+            </a>
+        </div>
 
-                {{-- SEARCH --}}
-                <div class="header-left" id="headerSearchContainer">
-                    <button type="button" class="mobile-search-btn" id="mobileSearchBtn" aria-label="Open search">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        {{-- ZONE 2: CENTRE (Search) --}}
+        <div class="adm-header-zone-centre" id="headerSearchContainer">
+            <button type="button" class="adm-header-btn mobile-search-btn" id="mobileSearchBtn" aria-label="Open search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+
+            <div class="adm-search-bar">
+                <form action="{{ route('admin.search') }}" method="GET">
+                    <input class="form-control adm-search-input" type="search" name="q" placeholder="Search..." aria-label="Search">
+                    <span class="adm-search-icon"><i class="mdi mdi-magnify"></i></span>
+                    <button type="button" class="adm-search-close-btn" id="mobileSearchClose" aria-label="Close search">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                     </button>
-                    <div class="search_bar">
-                        <form action="{{ route('admin.search') }}" method="GET">
-                            <input class="form-control" type="search" name="q" placeholder="Search..." aria-label="Search">
-                            <span class="search_icon"><i class="mdi mdi-magnify"></i></span>
-                            <button type="button" class="search-close-btn" id="mobileSearchClose" aria-label="Close search">
-                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- ZONE 3: RIGHT (Icons + Avatar) --}}
+        <div class="adm-header-zone-right">
+            {{-- Home --}}
+            <a class="adm-header-btn" href="{{ config('services.frontend_url') }}" target="_blank" rel="noopener noreferrer" title="Home" aria-label="Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </a>
+
+            {{-- Messages --}}
+            <a class="adm-header-btn" href="{{ route('admin.messages.index') }}" title="Messages" aria-label="Messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <div class="adm-badge pulse-css d-none" id="message-pulse">
+                    <span id="message-count" class="d-none">0</span>
                 </div>
+            </a>
 
-                {{-- RIGHT ICONS --}}
-                <ul class="navbar-nav header-right"
-                    style="display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:0!important;margin:0!important;padding:0!important;list-style:none!important;">
+            {{-- Notifications --}}
+            <div class="dropdown adm-header-dropdown">
+                <button class="adm-header-btn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Notifications" aria-label="Notifications">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <div class="adm-badge pulse-css d-none" id="notification-pulse">
+                        <span id="notification-count" class="d-none">0</span>
+                    </div>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
+                        <ul class="timeline" id="notification-list">
+                            <li class="text-center py-3" style="color:var(--adm-text-3);">No new notifications</li>
+                        </ul>
+                    </div>
+                    <a class="all-notification" href="{{ route('admin.notifications.index') }}" style="color:var(--adm-text); font-weight:600; display:block; padding:10px 16px; text-decoration:none; text-align:center; border-top:1px solid var(--adm-border);">
+                        See all notifications <i class="ti-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
 
-                    {{-- Home --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ config('services.frontend_url') }}"
-                           target="_blank" rel="noopener noreferrer" title="Home">
-                            <svg viewBox="0 0 24 24" fill="none"
-                                 stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                                <polyline points="9 22 9 12 15 12 15 22"/>
-                            </svg>
-                        </a>
-                    </li>
-
-                    {{-- Messages --}}
-                    <li class="nav-item">
-                        <a class="nav-link ai-icon" href="{{ route('admin.messages.index') }}" title="Messages"
-                           style="position:relative!important;">
-                            <svg viewBox="0 0 28 28" fill="none">
-                                <path d="M22.1667 5.83331H5.83333C4.54467 5.83331 3.5 6.878 3.5 8.16665V19.8333C3.5 21.122 4.54467 22.1666 5.83333 22.1666H22.1667C23.4553 22.1666 24.5 21.122 24.5 19.8333V8.16665C24.5 6.878 23.4553 5.83331 22.1667 5.83331Z"
-                                      stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M3.5 8.16665L14 15.1666L24.5 8.16665"
-                                      stroke="var(--adm-text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <div class="pulse-css d-none" id="message-pulse"
-                                 style="background:var(--adm-accent);border-radius:999px;min-width:16px;min-height:16px;padding:1px 3px;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="message-count" class="d-none" style="color:var(--adm-on-accent);font-weight:bold;font-size:10px;line-height:1;">0</span>
+            {{-- Avatar / Profile --}}
+            <div class="dropdown adm-header-dropdown">
+                <button class="adm-header-profile-btn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="User profile">
+                    @php
+                        $userInitials = strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1));
+                        $avatarUrl = Auth::user()->avatar ? asset(Auth::user()->avatar) : null;
+                    @endphp
+                    <div class="adm-avatar-box">
+                        @if($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="" class="adm-avatar-img"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="adm-avatar-initials" style="display: none;">
+                                {{ $userInitials }}
                             </div>
-                        </a>
-                    </li>
-
-                    {{-- Notifications --}}
-                    <li class="nav-item dropdown notification_dropdown">
-                        <a class="nav-link ai-icon" href="javascript:void(0)" role="button" data-toggle="dropdown"
-                           style="position:relative!important;">
-                            <svg viewBox="0 0 28 28" fill="none">
-                                <path d="M22.75 23.0417H5.25C4.84174 23.0417 4.44973 22.8791 4.16142 22.5891C3.87311 22.2991 3.71128 21.9058 3.71245 21.4958C3.71245 18.8033 4.75412 16.2133 6.65 14.3942V9.33333C6.65 6.65906 7.71235 4.09451 9.6033 2.2033C11.4945 0.31235 14.0591 -0.75 16.7333 -0.75C19.4076 -0.75 21.9721 0.31235 23.8633 2.2033C25.7543 4.09451 26.8167 6.65906 26.8167 9.33333V14.3942C28.7125 16.2133 29.7541 18.8033 29.7541 21.4958C29.7553 21.9058 29.5935 22.2991 29.3052 22.5891C29.0169 22.8791 28.6249 23.0417 28.2167 23.0417H22.75Z"
-                                      fill="var(--adm-text)"/>
-                                <path d="M16.7233 27.25C15.6558 27.25 14.6158 26.8833 13.7783 26.205C13.4358 25.9258 13.3758 25.42 13.6458 25.0667C13.9167 24.7133 14.4142 24.6533 14.7667 24.9325C15.305 25.3675 16.0075 25.5992 16.7233 25.5992C17.4392 25.5992 18.1417 25.3675 18.68 24.9325C19.0325 24.6533 19.53 24.7133 19.8008 25.0667C20.0717 25.42 20.0117 25.9258 19.6683 26.205C18.8308 26.8833 17.7908 27.25 16.7233 27.25Z"
-                                      fill="var(--adm-text)"/>
-                            </svg>
-                            <div class="pulse-css d-none" id="notification-pulse"
-                                 style="background:var(--adm-accent);border-radius:999px;min-width:16px;min-height:16px;padding:1px 3px;display:flex;align-items:center;justify-content:center;position:absolute;">
-                                <span id="notification-count" class="d-none" style="color:var(--adm-on-accent);font-weight:bold;font-size:10px;line-height:1;">0</span>
+                        @else
+                            <div class="adm-avatar-initials">
+                                {{ $userInitials }}
                             </div>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <div id="DZ_W_Notification1" class="set-height widget-media dz-scroll p-3">
-                                <ul class="timeline" id="notification-list">
-                                    <li class="text-center py-3" style="color:var(--adm-text-3);">No new notifications</li>
-                                </ul>
-                            </div>
-                            <a class="all-notification" href="{{ route('admin.notifications.index') }}" style="color:var(--adm-text); font-weight:600;">
-                                See all notifications <i class="ti-arrow-right"></i>
-                            </a>
-                        </div>
-                    </li>
-
-                    {{-- Profile --}}
-                    <li class="nav-item dropdown header-profile">
-                        <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                            @if(Auth::user()->avatar)
-                                <img src="{{ asset(Auth::user()->avatar) }}" alt=""
-                                     style="border-radius:50%;object-fit:cover;">
+                        @endif
+                    </div>
+                    <span class="adm-header-user-name">{{ Auth::user()->name }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div style="padding:10px 16px 12px;border-bottom:1px solid var(--adm-border);display:flex;align-items:center;gap:10px;">
+                        <div class="adm-avatar-box" style="width:36px;height:36px;">
+                            @if($avatarUrl)
+                                <img src="{{ $avatarUrl }}" alt="" class="adm-avatar-img"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="adm-avatar-initials" style="display: none;">
+                                    {{ $userInitials }}
+                                </div>
                             @else
-                                <div class="header-profile-initials"
-                                     style="background:var(--adm-accent);color:var(--adm-on-accent, #0f172a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
-                                    {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
+                                <div class="adm-avatar-initials">
+                                    {{ $userInitials }}
                                 </div>
                             @endif
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right"
-                             style="min-width:210px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);border:1px solid var(--adm-border);background:var(--adm-surface);padding:8px 0;right:0;left:auto;">
-                            <div style="padding:10px 16px 12px;border-bottom:1px solid var(--adm-border);display:flex;align-items:center;gap:10px;">
-                                @if(Auth::user()->avatar)
-                                    <img src="{{ asset(Auth::user()->avatar) }}" alt=""
-                                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-                                @else
-                                    <div style="width:36px;height:36px;border-radius:50%;background:var(--adm-accent);color:var(--adm-on-accent, #0f172a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
-                                        {{ strtoupper(substr(Auth::user()->first_name ?: Auth::user()->name, 0, 1)) }}
-                                    </div>
-                                @endif
-                                <div style="min-width:0;">
-                                    <div style="font-size:0.85rem;font-weight:600;color:var(--adm-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                        {{ Auth::user()->name }}
-                                    </div>
-                                    <div style="font-size:0.7rem;color:var(--adm-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                        {{ Auth::user()->email }}
-                                    </div>
-                                </div>
-                            </div>
-                            <a href="{{ route('admin.profile.settings') }}" class="dropdown-item"
-                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:var(--adm-text);">
-                                <i class="la la-cog" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
-                                Settings
-                            </a>
-                            <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item"
-                               style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:var(--adm-text);">
-                                <i class="la la-calendar" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
-                                Calendar
-                            </a>
-                            <div style="border-top:1px solid var(--adm-border);margin:4px 0;"></div>
-                            <form method="POST" action="{{ route('admin.logout') }}">
-                                @csrf
-                                <button type="submit" class="dropdown-item"
-                                        style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:0.82rem;color:#f87171;background:none;border:none;width:100%;text-align:left;cursor:pointer;">
-                                    <i class="la la-sign-out" style="font-size:1.1rem;color:#f87171;width:18px;text-align:center;"></i>
-                                    Sign out
-                                </button>
-                            </form>
                         </div>
-                    </li>
-                </ul>
+                        <div style="min-width:0;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--adm-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">
+                                {{ Auth::user()->name }}
+                            </div>
+                            <div style="font-size:0.7rem;color:var(--adm-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">
+                                {{ Auth::user()->email }}
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.profile.settings') }}" class="dropdown-item">
+                        <i class="la la-cog" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
+                        Settings
+                    </a>
+                    <a href="{{ route('admin.profile.settings') }}?tab=calendar" class="dropdown-item">
+                        <i class="la la-calendar" style="font-size:1.1rem;color:var(--adm-accent);width:18px;text-align:center;"></i>
+                        Calendar
+                    </a>
+                    <div style="border-top:1px solid var(--adm-border);margin:4px 0;"></div>
+                    <form method="POST" action="{{ route('admin.logout') }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item" style="color:#f87171;background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+                            <i class="la la-sign-out" style="font-size:1.1rem;color:#f87171;width:18px;text-align:center;"></i>
+                            Sign out
+                        </button>
+                    </form>
+                </div>
             </div>
-        </nav>
+        </div>
     </div>
 
     <script>
         (function () {
             var btn = document.getElementById('customHamburger');
-            if (!btn) return;
-            function checkScreen() {
-                // Show hamburger for both mobile (<=767) and tablet (768-1199)
-                btn.style.display = window.innerWidth <= 1199 ? 'flex' : 'none';
-                if (window.innerWidth > 1199) btn.classList.remove('active');
+            if (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    btn.classList.toggle('active');
+                    var wrapper = document.getElementById('main-wrapper') || document.body;
+                    wrapper.classList.toggle('menu-toggle');
+                });
             }
-            checkScreen();
-            window.addEventListener('resize', checkScreen);
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                btn.classList.toggle('active');
-                var original = document.querySelector('.nav-control');
-                if (original) original.click();
-                else document.body.classList.toggle('menu-toggle');
-            });
 
-            // Tap outside sidebar on mobile to close off-canvas drawer
+            // Close off-canvas drawer on outside click for mobile
             document.addEventListener('click', function (e) {
-                if (window.innerWidth < 768 && document.body.classList.contains('menu-toggle')) {
-                    var deznav = document.querySelector('.deznav');
-                    if (deznav && !deznav.contains(e.target) && !btn.contains(e.target)) {
-                        document.body.classList.remove('menu-toggle');
-                        btn.classList.remove('active');
+                if (window.innerWidth < 1200) {
+                    var wrapper = document.getElementById('main-wrapper') || document.body;
+                    if (wrapper && wrapper.classList.contains('menu-toggle')) {
+                        var deznav = document.querySelector('.deznav');
+                        if (deznav && !deznav.contains(e.target) && btn && !btn.contains(e.target)) {
+                            wrapper.classList.remove('menu-toggle');
+                            if (btn) btn.classList.remove('active');
+                        }
                     }
                 }
             });
 
-            // Mobile header search collapse & expand
+            // Mobile search overlay collapse & expand
             var searchBtn = document.getElementById('mobileSearchBtn');
             var searchClose = document.getElementById('mobileSearchClose');
             var searchContainer = document.getElementById('headerSearchContainer');
@@ -851,6 +772,4 @@
             });
         })();
     </script>
-
-    @stack('scripts')
 </div>

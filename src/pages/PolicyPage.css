@@ -2,6 +2,7 @@
     min-height: 100vh;
     background-color: #f1f5f9;
     padding-bottom: 5rem;
+    overflow-x: hidden;
 }
 
 .policy-header-bg {
@@ -40,6 +41,7 @@
 .policy-content-card {
     background: white;
     max-width: 800px;
+    width: 100%;
     margin: -4rem auto 0;
     padding: 4rem 5rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -47,6 +49,8 @@
     /* Sharp document style */
     position: relative;
     border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* Document watermark or seal style */
@@ -69,6 +73,8 @@
     color: #1e293b;
     font-size: 1.05rem;
     white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
     /* Preserve spaces and newlines if needed, though we map paragraphs */
 }
 

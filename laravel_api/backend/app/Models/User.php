@@ -22,11 +22,8 @@ class User extends Authenticatable implements FilamentUser
     {
         static::updating(function ($user) {
             if ($user->isDirty('password')) {
-                \Log::info('User model UPDATING password', [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'new_hash' => substr($user->password, 0, 10) . '...'
-                ]);
+                $user->password_changed_at = now();
+                \Log::info("password updated for user #{$user->id}");
             }
         });
 
@@ -108,6 +105,7 @@ class User extends Authenticatable implements FilamentUser
         'batch_year',
         'index_seq',
         'index_number',
+        'password_changed_at',
     ];
 
     /**
@@ -132,6 +130,7 @@ class User extends Authenticatable implements FilamentUser
             'admin_confirmed_at' => 'datetime',
             'deactivated_at' => 'datetime',
             'last_promoted_at' => 'datetime',
+            'password_changed_at' => 'datetime',
             'needs_subject_review' => 'boolean',
             'is_graduated' => 'boolean',
             'password' => 'hashed',

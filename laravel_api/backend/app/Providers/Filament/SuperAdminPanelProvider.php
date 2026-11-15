@@ -31,7 +31,13 @@ class SuperAdminPanelProvider extends PanelProvider
             ->id('super-admin')
             ->path($panelPath !== '' ? $panelPath : 'super-admin')
             ->authGuard('super_admin')
+            ->authPasswordBroker('super_admins')
             ->login()
+            ->passwordReset(
+                requestAction: \App\Filament\SuperAdmin\Pages\Auth\SuperAdminRequestPasswordReset::class,
+                resetAction: \App\Filament\SuperAdmin\Pages\Auth\SuperAdminResetPassword::class,
+            )
+            ->profile(\App\Filament\SuperAdmin\Pages\Auth\SuperAdminEditProfile::class)
             ->brandName(fn () =>
                 (app()->has('db.connection') && \Illuminate\Support\Facades\Schema::hasTable('site_settings'))
                 ? (\App\Models\SiteSetting::withoutGlobalScopes()

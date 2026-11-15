@@ -109,6 +109,47 @@ class InstituteResource extends Resource
                             ])
                             ->default('grade'),
                     ])->columns(2),
+
+                Section::make('Platform-managed integrations')
+                    ->description('Domain-bound security and OAuth credentials managed per institute by the platform owner.')
+                    ->schema([
+                        TextInput::make('recaptcha_site_key')
+                            ->label('reCAPTCHA v3 site key')
+                            ->placeholder('6L...')
+                            ->maxLength(120)
+                            ->dehydrated(false),
+
+                        TextInput::make('recaptcha_secret_key')
+                            ->label('reCAPTCHA v3 secret key')
+                            ->password()
+                            ->revealable()
+                            ->placeholder(fn ($get) => $get('has_recaptcha_secret') ? '•••••••• (Secret saved - leave blank to keep)' : 'Enter secret key (starts with 6L)')
+                            ->helperText('Write-only. Stored encrypted. Never exposed to browsers.')
+                            ->maxLength(255)
+                            ->dehydrated(false),
+
+                        TextInput::make('google_client_id')
+                            ->label('Google OAuth client ID')
+                            ->placeholder('...apps.googleusercontent.com')
+                            ->maxLength(191)
+                            ->dehydrated(false),
+
+                        TextInput::make('google_client_secret')
+                            ->label('Google OAuth client secret')
+                            ->password()
+                            ->revealable()
+                            ->placeholder(fn ($get) => $get('has_google_secret') ? '•••••••• (Secret saved - leave blank to keep)' : 'Enter client secret (starts with GOCSPX-)')
+                            ->helperText('Write-only. Stored encrypted. Never exposed to browsers.')
+                            ->maxLength(255)
+                            ->dehydrated(false),
+
+                        TextInput::make('google_redirect_uri')
+                            ->label('Google OAuth authorized redirect URI')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Register this exact URI under "Authorized redirect URIs" in Google Cloud Console.')
+                            ->columnSpanFull(),
+                    ])->columns(2),
             ]);
     }
 

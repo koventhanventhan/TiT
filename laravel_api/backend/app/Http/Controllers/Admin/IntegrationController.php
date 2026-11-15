@@ -517,10 +517,17 @@ class IntegrationController extends Controller
         $geminiIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_GEMINI);
         $resolvedGemini = $resolver->gemini();
         $geminiMasked = $geminiIntegration ? $geminiIntegration->maskedCredentials() : [];
-        $geminiUsingPlatformFallback = ($geminiIntegration === null || $geminiIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
+        $geminiSettings = is_array($geminiIntegration?->settings) ? $geminiIntegration->settings : [];
+        $geminiMode = $geminiSettings['gemini_mode'] ?? (!empty($geminiMasked['api_key']) ? 'custom' : 'platform');
+
+        $geminiUsingPlatformFallback = ($geminiIntegration === null
+            || $geminiIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED
+            || $geminiMode === 'platform')
             && $resolvedGemini !== null
             && $resolvedGemini->source === 'env';
-        $geminiSettings = is_array($geminiIntegration?->settings) ? $geminiIntegration->settings : [];
+
+        $platformDailyQuota = $resolver->platformGeminiDailyQuota();
+        $platformUsageToday = \App\Models\PlatformGeminiUsage::getTodayUsage($instituteId);
 
         $capSetting = SiteSetting::withoutGlobalScopes()
             ->where('institute_id', $instituteId)
@@ -538,46 +545,25 @@ class IntegrationController extends Controller
             ->whereDate('created_at', now()->toDateString())
             ->count();
 
-        // reCAPTCHA
-        $recaptchaIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_RECAPTCHA);
+        // Platform-managed reCAPTCHA & Google (Read-only status only, no secrets exposed)
         $resolvedRecaptcha = $resolver->recaptcha();
-        $recaptchaMasked = $recaptchaIntegration ? $recaptchaIntegration->maskedCredentials() : [];
-        $recaptchaUsingPlatformFallback = ($recaptchaIntegration === null || $recaptchaIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
-            && $resolvedRecaptcha !== null
-            && $resolvedRecaptcha->source === 'env';
-        $recaptchaSettings = is_array($recaptchaIntegration?->settings) ? $recaptchaIntegration->settings : [];
-        $scoreThreshold = (float) ($recaptchaSettings['score_threshold'] ?? 0.5);
-        $siteKey = (string) ($recaptchaSettings['site_key'] ?? ($recaptchaUsingPlatformFallback ? config('services.recaptcha.site_key') : ''));
+        $recaptchaActive = $resolvedRecaptcha !== null && $resolvedRecaptcha->isConfigured();
 
-        // Google Sign-in
-        $googleIntegration = $resolver->findRow(InstituteIntegration::PROVIDER_GOOGLE);
         $resolvedGoogle = $resolver->google();
-        $googleMasked = $googleIntegration ? $googleIntegration->maskedCredentials() : [];
-        $googleUsingPlatformFallback = ($googleIntegration === null || $googleIntegration->status === InstituteIntegration::STATUS_UNCONFIGURED)
-            && $resolvedGoogle !== null
-            && $resolvedGoogle->source === 'env';
-        $googleSettings = is_array($googleIntegration?->settings) ? $googleIntegration->settings : [];
-        $googleClientId = (string) ($googleSettings['client_id'] ?? ($googleUsingPlatformFallback ? config('services.google.client_id') : ''));
-        $primaryDomain = $institute->primaryDomainHost();
-        $googleRedirectUri = 'https://' . $primaryDomain . '/api/auth/google/callback';
+        $googleActive = $resolvedGoogle !== null && $resolvedGoogle->isConfigured();
 
         return view('admin.settings.ai_security', [
             'institute' => $institute,
             'geminiIntegration' => $geminiIntegration,
             'geminiMasked' => $geminiMasked,
             'geminiUsingPlatformFallback' => $geminiUsingPlatformFallback,
+            'geminiMode' => $geminiMode,
+            'platformDailyQuota' => $platformDailyQuota,
+            'platformUsageToday' => $platformUsageToday,
             'dailyCap' => $dailyCap,
             'questionsToday' => $questionsToday,
-            'recaptchaIntegration' => $recaptchaIntegration,
-            'recaptchaMasked' => $recaptchaMasked,
-            'recaptchaUsingPlatformFallback' => $recaptchaUsingPlatformFallback,
-            'scoreThreshold' => $scoreThreshold,
-            'siteKey' => $siteKey,
-            'googleIntegration' => $googleIntegration,
-            'googleMasked' => $googleMasked,
-            'googleUsingPlatformFallback' => $googleUsingPlatformFallback,
-            'googleClientId' => $googleClientId,
-            'googleRedirectUri' => $googleRedirectUri,
+            'recaptchaActive' => $recaptchaActive,
+            'googleActive' => $googleActive,
         ]);
     }
 
@@ -591,34 +577,38 @@ class IntegrationController extends Controller
             ->first();
 
         $existingCreds = is_array($existing?->credentials) ? $existing->credentials : [];
+        $existingSettings = is_array($existing?->settings) ? $existing->settings : [];
         $hasExistingKey = !empty($existingCreds['api_key']);
 
         $validated = $request->validate([
-            'api_key' => [$hasExistingKey ? 'nullable' : 'required', 'string', 'min:10', 'max:255'],
+            'gemini_mode' => ['required', 'string', Rule::in(['platform', 'custom'])],
+            'api_key' => [$request->input('gemini_mode') === 'custom' && !$hasExistingKey ? 'required' : 'nullable', 'string', 'min:10', 'max:255'],
             'daily_cap' => ['required', 'integer', 'min:50', 'max:100000'],
         ]);
 
+        $mode = $validated['gemini_mode'];
         $newApiKey = filled($validated['api_key'] ?? null)
             ? trim((string) $validated['api_key'])
-            : (string) ($existingCreds['api_key'] ?? '');
+            : ($mode === 'custom' ? (string) ($existingCreds['api_key'] ?? '') : '');
 
-        $credentials = [
+        $credentials = array_filter([
             'api_key' => $newApiKey,
-        ];
+        ]);
 
-        $settings = [
+        $settings = array_merge($existingSettings, [
+            'gemini_mode' => $mode,
             'daily_cap' => (int) $validated['daily_cap'],
-        ];
+        ]);
 
         SiteSetting::withoutGlobalScopes()->updateOrCreate(
             ['institute_id' => $instituteId, 'key' => 'assistant_daily_cap'],
             ['value' => (string) $validated['daily_cap']]
         );
 
-        $keyUnchanged = $existing !== null && ($existingCreds['api_key'] ?? null) === $newApiKey;
-        $nextStatus = ($keyUnchanged && $existing?->status === InstituteIntegration::STATUS_VERIFIED)
-            ? InstituteIntegration::STATUS_VERIFIED
-            : InstituteIntegration::STATUS_CONFIGURED;
+        $nextStatus = InstituteIntegration::STATUS_CONFIGURED;
+        if ($mode === 'custom' && $newApiKey !== '' && $existing !== null && ($existingCreds['api_key'] ?? null) === $newApiKey && $existing->status === InstituteIntegration::STATUS_VERIFIED) {
+            $nextStatus = InstituteIntegration::STATUS_VERIFIED;
+        }
 
         if ($existing) {
             Gate::forUser($request->user())->authorize('manage', $existing);
@@ -636,7 +626,7 @@ class IntegrationController extends Controller
                 'provider' => InstituteIntegration::PROVIDER_GEMINI,
                 'credentials' => $credentials,
                 'settings' => $settings,
-                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'status' => $nextStatus,
                 'last_error' => null,
             ]);
         }
@@ -654,7 +644,7 @@ class IntegrationController extends Controller
         if (!$creds || !$creds->isConfigured()) {
             return redirect()
                 ->route('admin.settings.ai-security')
-                ->with('error', 'Gemini is not configured. Please save an API key first.');
+                ->with('error', 'Gemini is not configured. Please save an API key or ensure platform default is active.');
         }
 
         $apiKey = $creds->apiKey();
@@ -715,16 +705,28 @@ class IntegrationController extends Controller
 
         if ($integration) {
             Gate::forUser($request->user())->authorize('manage', $integration);
-            $integration->clearCredentials();
+            $settings = is_array($integration->settings) ? $integration->settings : [];
+            $settings['gemini_mode'] = 'platform';
+            $integration->fill([
+                'credentials' => [],
+                'settings' => $settings,
+                'status' => InstituteIntegration::STATUS_CONFIGURED,
+                'last_error' => null,
+            ]);
+            $integration->save();
         }
 
         return redirect()
             ->route('admin.settings.ai-security')
-            ->with('success', 'Gemini credentials cleared. AI Assistant features are now disabled for your institute.');
+            ->with('success', 'Custom Gemini credentials cleared. AI Assistant now uses the platform default.');
     }
 
     public function updateRecaptcha(Request $request): RedirectResponse
     {
+        if ($request->user()?->role !== 'super_admin') {
+            abort(403, 'Platform-managed integrations (reCAPTCHA and Google OAuth) can only be managed by platform super-administrators.');
+        }
+
         [$instituteId] = $this->resolveAuthorizedInstitute($request);
 
         $existing = InstituteIntegration::withoutGlobalScopes()
@@ -787,6 +789,10 @@ class IntegrationController extends Controller
 
     public function testRecaptcha(Request $request): RedirectResponse
     {
+        if ($request->user()?->role !== 'super_admin') {
+            abort(403, 'Platform-managed integrations (reCAPTCHA and Google OAuth) can only be managed by platform super-administrators.');
+        }
+
         [$instituteId] = $this->resolveAuthorizedInstitute($request);
 
         $creds = Integrations::for($instituteId)->recaptcha();
@@ -848,6 +854,10 @@ class IntegrationController extends Controller
 
     public function clearRecaptcha(Request $request): RedirectResponse
     {
+        if ($request->user()?->role !== 'super_admin') {
+            abort(403, 'Platform-managed integrations (reCAPTCHA and Google OAuth) can only be managed by platform super-administrators.');
+        }
+
         [$instituteId] = $this->resolveAuthorizedInstitute($request);
 
         $integration = InstituteIntegration::withoutGlobalScopes()
@@ -867,6 +877,10 @@ class IntegrationController extends Controller
 
     public function updateGoogle(Request $request): RedirectResponse
     {
+        if ($request->user()?->role !== 'super_admin') {
+            abort(403, 'Platform-managed integrations (reCAPTCHA and Google OAuth) can only be managed by platform super-administrators.');
+        }
+
         [$instituteId] = $this->resolveAuthorizedInstitute($request);
 
         $existing = InstituteIntegration::withoutGlobalScopes()
@@ -921,6 +935,10 @@ class IntegrationController extends Controller
 
     public function clearGoogle(Request $request): RedirectResponse
     {
+        if ($request->user()?->role !== 'super_admin') {
+            abort(403, 'Platform-managed integrations (reCAPTCHA and Google OAuth) can only be managed by platform super-administrators.');
+        }
+
         [$instituteId] = $this->resolveAuthorizedInstitute($request);
 
         $integration = InstituteIntegration::withoutGlobalScopes()

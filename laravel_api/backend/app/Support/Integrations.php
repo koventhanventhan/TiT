@@ -287,6 +287,12 @@ class Integrations
 
     /**
      * Resolve Google Gemini API credentials for the institute.
+     *
+     * Resolution order:
+     * 1. Institute own key (if configured and mode is not forced to 'platform') -> source = db
+     * 2. Platform default key (config, env) ONLY IF the institute's plan has `ai_assistant`
+     *    AND daily platform quota is not exceeded -> source = env
+     * 3. Otherwise -> null
      */
     public function gemini(): ?GeminiCredentials
     {
@@ -296,11 +302,14 @@ class Integrations
 
         $row = $this->findRow(InstituteIntegration::PROVIDER_GEMINI);
 
+        // 1. Institute own key (if configured and mode is not explicitly 'platform')
         if ($row !== null && $row->status !== InstituteIntegration::STATUS_UNCONFIGURED) {
+            $settings = is_array($row->settings) ? $row->settings : [];
+            $mode = $settings['gemini_mode'] ?? 'custom';
             $creds = is_array($row->credentials) ? $row->credentials : [];
             $apiKey = trim((string) ($creds['api_key'] ?? ''));
 
-            if ($apiKey !== '') {
+            if ($mode !== 'platform' && $apiKey !== '') {
                 return new GeminiCredentials(
                     instituteId: $this->instituteId,
                     apiKey: $apiKey,
@@ -310,11 +319,93 @@ class Integrations
             }
         }
 
-        if ($row === null && self::isEnvFallbackAllowed($this->instituteId)) {
-            return self::platformGeminiCredentials($this->instituteId);
+        // 2. Platform default key: check plan feature & daily quota
+        $institute = Schema::hasTable('institutes')
+            ? Institute::withoutGlobalScopes()->with('plan')->find($this->instituteId)
+            : null;
+
+        if (!$institute) {
+            return null;
         }
 
-        return null;
+        $planAllows = ((int) $institute->id === 1)
+            || ($institute->plan !== null && $institute->plan->hasFeature('ai_assistant'));
+
+        if (!$planAllows) {
+            return null;
+        }
+
+        if ($this->isPlatformGeminiQuotaExceeded()) {
+            return null;
+        }
+
+        return self::platformGeminiCredentials($this->instituteId);
+    }
+
+    /**
+     * Resolve daily platform Gemini query quota for the institute based on plan or configuration.
+     */
+    public function platformGeminiDailyQuota(): int
+    {
+        $id = $this->instituteId;
+        if ($id === null || $id <= 0) {
+            return (int) config('integrations.gemini.platform_daily_quota', 100);
+        }
+
+        $institute = Schema::hasTable('institutes')
+            ? Institute::withoutGlobalScopes()->with('plan')->find($id)
+            : null;
+
+        $plan = $institute?->plan;
+        if ($plan) {
+            if (is_array($plan->features) && isset($plan->features['gemini_quota']) && (int) $plan->features['gemini_quota'] > 0) {
+                return (int) $plan->features['gemini_quota'];
+            }
+
+            $planQuotas = (array) config('integrations.gemini.plan_daily_quotas', [
+                'free' => 20,
+                'starter' => 50,
+                'growth' => 200,
+                'pro' => 500,
+                'enterprise' => 1000,
+            ]);
+
+            $slug = strtolower((string) $plan->slug);
+            if (isset($planQuotas[$slug])) {
+                return (int) $planQuotas[$slug];
+            }
+        }
+
+        if (Schema::hasTable('site_settings')) {
+            $customQuota = SiteSetting::withoutGlobalScopes()
+                ->where('institute_id', $id)
+                ->where('key', 'platform_gemini_daily_quota')
+                ->value('value');
+            if ($customQuota !== null && is_numeric($customQuota) && (int) $customQuota > 0) {
+                return (int) $customQuota;
+            }
+        }
+
+        return (int) config('integrations.gemini.platform_daily_quota', 100);
+    }
+
+    /**
+     * Whether the institute has exhausted its daily platform Gemini query quota.
+     */
+    public function isPlatformGeminiQuotaExceeded(): bool
+    {
+        if ($this->instituteId === null || $this->instituteId <= 0) {
+            return false;
+        }
+
+        if (!Schema::hasTable('platform_gemini_usages')) {
+            return false;
+        }
+
+        $quota = $this->platformGeminiDailyQuota();
+        $usage = \App\Models\PlatformGeminiUsage::getTodayUsage($this->instituteId);
+
+        return $usage >= $quota;
     }
 
     /**

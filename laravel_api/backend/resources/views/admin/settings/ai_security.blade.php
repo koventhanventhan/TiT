@@ -119,6 +119,16 @@
         color: #ffffff;
     }
 
+    .adm-readonly {
+        background: var(--adm-input-bg, rgba(255, 255, 255, 0.05));
+        color: var(--adm-text, #e2e8f0);
+        border: 1px solid var(--adm-border, rgba(255, 255, 255, 0.12));
+        border-radius: 0.625rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
     .ai-stat-box {
         display: flex;
         align-items: center;
@@ -164,50 +174,6 @@
     } else {
         $geminiChipClass = '';
         $geminiChipLabel = 'Unconfigured';
-    }
-
-    // reCAPTCHA status chip
-    $recaptchaStatus = $recaptchaIntegration?->status ?? 'unconfigured';
-    $recaptchaIsConfiguredRow = $recaptchaIntegration !== null && $recaptchaStatus !== 'unconfigured';
-    $hasRecaptchaSecret = !empty($recaptchaMasked['secret_key']);
-
-    if ($recaptchaStatus === 'verified') {
-        $recaptchaChipClass = 'msg-chip--verified';
-        $recaptchaChipLabel = 'Verified';
-    } elseif ($recaptchaStatus === 'configured') {
-        $recaptchaChipClass = 'msg-chip--configured';
-        $recaptchaChipLabel = 'Configured';
-    } elseif ($recaptchaStatus === 'failing') {
-        $recaptchaChipClass = 'msg-chip--failing';
-        $recaptchaChipLabel = 'Failing';
-    } elseif ($recaptchaUsingPlatformFallback) {
-        $recaptchaChipClass = 'msg-chip--fallback';
-        $recaptchaChipLabel = 'Using Platform Default';
-    } else {
-        $recaptchaChipClass = '';
-        $recaptchaChipLabel = 'Unconfigured';
-    }
-
-    // Google status chip
-    $googleStatus = $googleIntegration?->status ?? 'unconfigured';
-    $googleIsConfiguredRow = $googleIntegration !== null && $googleStatus !== 'unconfigured';
-    $hasGoogleSecret = !empty($googleMasked['client_secret']);
-
-    if ($googleStatus === 'verified') {
-        $googleChipClass = 'msg-chip--verified';
-        $googleChipLabel = 'Verified';
-    } elseif ($googleStatus === 'configured') {
-        $googleChipClass = 'msg-chip--configured';
-        $googleChipLabel = 'Configured';
-    } elseif ($googleStatus === 'failing') {
-        $googleChipClass = 'msg-chip--failing';
-        $googleChipLabel = 'Failing';
-    } elseif ($googleUsingPlatformFallback) {
-        $googleChipClass = 'msg-chip--fallback';
-        $googleChipLabel = 'Using Platform Default';
-    } else {
-        $googleChipClass = '';
-        $googleChipLabel = 'Unconfigured';
     }
 @endphp
 
@@ -273,8 +239,41 @@
                 <form method="POST" action="{{ route('admin.settings.ai-security.gemini.update') }}" autocomplete="off">
                     @csrf
 
-                    <div class="form-group">
-                        <label for="gemini_api_key" style="color: var(--adm-text); font-weight: 600;">Gemini API Key <span style="color: var(--adm-danger-light);">*</span></label>
+                    <div class="form-group mb-3">
+                        <label style="color: var(--adm-text); font-weight: 600;">Integration Mode <span style="color: var(--adm-danger-light);">*</span></label>
+                        <div class="d-flex flex-column mt-1" style="gap: 0.5rem;">
+                            <label class="d-flex align-items-center mb-0" style="gap: 0.5rem; cursor: pointer;">
+                                <input
+                                    type="radio"
+                                    name="gemini_mode"
+                                    value="platform"
+                                    id="gemini_mode_platform"
+                                    {{ $geminiMode === 'platform' ? 'checked' : '' }}
+                                    data-testid="gemini-mode-platform"
+                                >
+                                <span style="color: var(--adm-text); font-size: 0.9rem;">
+                                    <strong>Platform default</strong> (quota {{ $platformDailyQuota }} / day)
+                                </span>
+                            </label>
+                            <label class="d-flex align-items-center mb-0" style="gap: 0.5rem; cursor: pointer;">
+                                <input
+                                    type="radio"
+                                    name="gemini_mode"
+                                    value="custom"
+                                    id="gemini_mode_custom"
+                                    {{ $geminiMode === 'custom' ? 'checked' : '' }}
+                                    data-testid="gemini-mode-custom"
+                                >
+                                <span style="color: var(--adm-text); font-size: 0.9rem;">
+                                    <strong>Your own key</strong>
+                                </span>
+                            </label>
+                        </div>
+                        <small class="form-text" style="color: var(--adm-text-2);">Institutes on plans allowing AI features can use the shared platform assistant or provide their own Gemini API key.</small>
+                    </div>
+
+                    <div class="form-group" id="geminiCustomKeySection" style="{{ $geminiMode === 'custom' ? '' : 'display: none;' }}">
+                        <label for="gemini_api_key" style="color: var(--adm-text); font-weight: 600;">Gemini API Key</label>
 
                         @if($hasGeminiKey)
                             <div class="msg-secret-saved" id="geminiKeySavedWrap" data-testid="gemini-key-masked">
@@ -337,20 +336,20 @@
                     <div class="d-flex flex-wrap align-items-center justify-content-between pt-2" style="gap: 0.75rem;">
                         <div class="d-flex flex-wrap" style="gap: 0.5rem;">
                             <button type="submit" class="btn btn-primary" style="min-height: 44px; min-width: 140px; font-weight: 600;" data-testid="save-gemini-btn">
-                                Save Gemini Key
+                                Save Settings
                             </button>
 
                             @if($geminiIsConfiguredRow || $geminiUsingPlatformFallback)
                                 <button type="button" class="msg-btn-secondary" id="btnTestGemini" data-testid="gemini-test-btn">
                                     <i class="flaticon-381-check" aria-hidden="true"></i>
-                                    Test Key
+                                    Test Connection
                                 </button>
                             @endif
                         </div>
 
                         @if($geminiIsConfiguredRow)
                             <button type="button" class="msg-btn-danger" id="btnClearGemini" data-testid="gemini-clear-btn">
-                                Clear Key
+                                Clear Custom Key
                             </button>
                         @endif
                     </div>
@@ -368,274 +367,76 @@
         </div>
     </div>
 
-    {{-- Card 2: Google reCAPTCHA v3 --}}
+    {{-- Card 2: Google reCAPTCHA v3 (Platform Managed) --}}
     <div class="col-xl-6 col-lg-12">
         <div class="card" id="recaptcha-settings-card" data-testid="recaptcha-form-card">
             <div class="card-header d-flex flex-wrap align-items-center justify-content-between" style="gap: 0.75rem;">
                 <div>
                     <h4 class="card-title mb-1" style="color: var(--adm-text);">Google reCAPTCHA v3</h4>
-                    <small style="color: var(--adm-text-2);">Protects public registration, login, and chatbot forms from abuse.</small>
+                    <small style="color: var(--adm-text-2);">Platform-managed anti-abuse protection for student registration and login.</small>
                 </div>
-                <span class="msg-chip {{ $recaptchaChipClass }}" data-testid="recaptcha-status-chip">
+                <span class="msg-chip {{ $recaptchaActive ? 'msg-chip--verified' : 'msg-chip--fallback' }}" data-testid="recaptcha-status-chip">
                     <span class="msg-chip-dot" aria-hidden="true"></span>
-                    <span>{{ $recaptchaChipLabel }}</span>
+                    <span>{{ $recaptchaActive ? 'Active' : 'Unconfigured' }}</span>
                 </span>
             </div>
             <div class="card-body">
-                @if($recaptchaStatus === 'failing' && !empty($recaptchaIntegration?->last_error))
-                <div class="msg-failing-banner" role="alert" data-testid="recaptcha-failing-banner">
-                    <div class="msg-failing-title">reCAPTCHA verification error</div>
-                    <div style="font-size: 0.875rem; color: var(--adm-text-2);">{{ $recaptchaIntegration->last_error }}</div>
+                <div class="adm-readonly mb-3" data-testid="recaptcha-status-line">
+                    @if($recaptchaActive)
+                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
+                            <i class="flaticon-381-shield-2" style="color: var(--adm-success);" aria-hidden="true"></i>
+                            Protection by the platform: <strong style="color: var(--adm-success);">Active</strong>
+                        </span>
+                    @else
+                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
+                            <i class="flaticon-381-warning" style="color: var(--adm-warning);" aria-hidden="true"></i>
+                            Protection by the platform: <strong style="color: var(--adm-warning);">Not configured – ask the platform owner</strong>
+                        </span>
+                    @endif
                 </div>
-                @endif
 
-                <div class="mb-3" style="font-size: 0.8125rem; color: var(--adm-text-2); background: var(--adm-input-bg); padding: 0.75rem 1rem; border-radius: 0.625rem; border: 1px solid var(--adm-border);">
-                    <i class="flaticon-381-info mr-1" aria-hidden="true"></i>
-                    Without custom keys, public registration and login operate under strict fallback rate limits (5 submits / 10 min), and the public AI assistant is disabled.
+                <div class="p-3" style="background: var(--adm-input-bg); border-radius: 0.625rem; border: 1px solid var(--adm-border); color: var(--adm-text-2); font-size: 0.85rem; line-height: 1.6;">
+                    <strong style="color: var(--adm-text);">Platform Managed Integration</strong><br>
+                    Google reCAPTCHA v3 is managed centrally by the platform super-administrator to secure registration and login forms against automated bots. The domain-bound site key and server secret are provisioned by the platform owner.
                 </div>
-
-                <form method="POST" action="{{ route('admin.settings.ai-security.recaptcha.update') }}" autocomplete="off">
-                    @csrf
-
-                    <div class="form-group">
-                        <label for="recaptcha_site_key" style="color: var(--adm-text); font-weight: 600;">Site Key <span style="color: var(--adm-danger-light);">*</span></label>
-                        <input
-                            type="text"
-                            id="recaptcha_site_key"
-                            name="site_key"
-                            class="form-control msg-control"
-                            value="{{ old('site_key', $siteKey) }}"
-                            placeholder="6L..."
-                            required
-                        >
-                        <small class="form-text" style="color: var(--adm-text-2);">Public key delivered to browsers via runtime settings.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="recaptcha_secret_key" style="color: var(--adm-text); font-weight: 600;">Secret Key <span style="color: var(--adm-danger-light);">*</span></label>
-
-                        @if($hasRecaptchaSecret)
-                            <div class="msg-secret-saved" id="recaptchaSecretSavedWrap" data-testid="recaptcha-secret-masked">
-                                <div>
-                                    <span class="msg-secret-mask">{{ $recaptchaMasked['secret_key'] }}</span>
-                                    <small class="d-block" style="color: var(--adm-text-2);">Leave unchanged to keep your saved secret key.</small>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="msg-btn-secondary"
-                                    data-replace-target="recaptchaSecretInputWrap"
-                                    data-saved-target="recaptchaSecretSavedWrap"
-                                    data-input-id="recaptcha_secret_key"
-                                    data-testid="replace-recaptcha-secret-btn"
-                                >Replace</button>
-                            </div>
-                        @endif
-
-                        <div id="recaptchaSecretInputWrap" style="{{ $hasRecaptchaSecret ? 'display: none;' : '' }}">
-                            <div class="d-flex flex-wrap" style="gap: 0.5rem;">
-                                <input
-                                    type="password"
-                                    id="recaptcha_secret_key"
-                                    name="secret_key"
-                                    class="form-control msg-control"
-                                    style="flex: 1 1 220px;"
-                                    value=""
-                                    autocomplete="new-password"
-                                    placeholder="{{ $hasRecaptchaSecret ? 'Enter new Secret Key' : '6L...' }}"
-                                >
-                                @if($hasRecaptchaSecret)
-                                    <button
-                                        type="button"
-                                        class="msg-btn-secondary"
-                                        data-cancel-target="recaptchaSecretInputWrap"
-                                        data-saved-target="recaptchaSecretSavedWrap"
-                                        data-input-id="recaptcha_secret_key"
-                                    >Cancel</button>
-                                @endif
-                            </div>
-                            <small class="form-text mt-1" style="color: var(--adm-text-2);">Server-side secret key (starts with <code>6L</code>). Never exposed to browsers.</small>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="recaptcha_score_threshold" style="color: var(--adm-text); font-weight: 600;">Score Threshold <span style="color: var(--adm-danger-light);">*</span></label>
-                        <input
-                            type="number"
-                            id="recaptcha_score_threshold"
-                            name="score_threshold"
-                            class="form-control msg-control"
-                            value="{{ old('score_threshold', $scoreThreshold) }}"
-                            min="0.1"
-                            max="1.0"
-                            step="0.05"
-                            required
-                        >
-                        <small class="form-text" style="color: var(--adm-text-2);">Scores range from 0.0 (bot) to 1.0 (human). Standard default is 0.5.</small>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between pt-2" style="gap: 0.75rem;">
-                        <div class="d-flex flex-wrap" style="gap: 0.5rem;">
-                            <button type="submit" class="btn btn-primary" style="min-height: 44px; min-width: 140px; font-weight: 600;" data-testid="save-recaptcha-btn">
-                                Save reCAPTCHA
-                            </button>
-
-                            @if($recaptchaIsConfiguredRow || $recaptchaUsingPlatformFallback)
-                                <button type="button" class="msg-btn-secondary" id="btnTestRecaptcha" data-testid="recaptcha-test-btn">
-                                    <i class="flaticon-381-check" aria-hidden="true"></i>
-                                    Test Keys
-                                </button>
-                            @endif
-                        </div>
-
-                        @if($recaptchaIsConfiguredRow)
-                            <button type="button" class="msg-btn-danger" id="btnClearRecaptcha" data-testid="recaptcha-clear-btn">
-                                Clear Keys
-                            </button>
-                        @endif
-                    </div>
-                </form>
-
-                <form method="POST" action="{{ route('admin.settings.ai-security.recaptcha.test') }}" id="recaptchaTestForm" class="d-none">
-                    @csrf
-                </form>
-                @if($recaptchaIsConfiguredRow)
-                    <form method="POST" action="{{ route('admin.settings.ai-security.recaptcha.clear') }}" id="recaptchaClearForm" class="d-none">
-                        @csrf
-                    </form>
-                @endif
             </div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    {{-- Card 3: Google Sign-in (OAuth 2.0) --}}
+    {{-- Card 3: Google Sign-in (OAuth 2.0) (Platform Managed) --}}
     <div class="col-xl-6 col-lg-12">
         <div class="card" id="google-settings-card" data-testid="google-form-card">
             <div class="card-header d-flex flex-wrap align-items-center justify-content-between" style="gap: 0.75rem;">
                 <div>
                     <h4 class="card-title mb-1" style="color: var(--adm-text);">Google Sign-in (OAuth 2.0)</h4>
-                    <small style="color: var(--adm-text-2);">Allow students and staff to sign in using their Google account.</small>
+                    <small style="color: var(--adm-text-2);">Allow students and staff to sign in with their Google account.</small>
                 </div>
-                <span class="msg-chip {{ $googleChipClass }}" data-testid="google-status-chip">
+                <span class="msg-chip {{ $googleActive ? 'msg-chip--verified' : 'msg-chip--fallback' }}" data-testid="google-status-chip">
                     <span class="msg-chip-dot" aria-hidden="true"></span>
-                    <span>{{ $googleChipLabel }}</span>
+                    <span>{{ $googleActive ? 'Active' : 'Unconfigured' }}</span>
                 </span>
             </div>
             <div class="card-body">
-                @if($googleStatus === 'failing' && !empty($googleIntegration?->last_error))
-                <div class="msg-failing-banner" role="alert" data-testid="google-failing-banner">
-                    <div class="msg-failing-title">Google OAuth error</div>
-                    <div style="font-size: 0.875rem; color: var(--adm-text-2);">{{ $googleIntegration->last_error }}</div>
-                </div>
-                @endif
-
-                <div class="form-group">
-                    <label style="color: var(--adm-text); font-weight: 600;">Authorized Redirect URI (Copy to Google Console)</label>
-                    <div class="d-flex" style="gap: 0.5rem;">
-                        <input
-                            type="text"
-                            id="google_redirect_uri"
-                            class="form-control msg-control"
-                            value="{{ $googleRedirectUri }}"
-                            readonly
-                            style="font-family: monospace; font-size: 0.875rem;"
-                            data-testid="google-redirect-uri"
-                        >
-                        <button
-                            type="button"
-                            class="msg-btn-secondary"
-                            id="btnCopyRedirectUri"
-                            data-testid="copy-google-redirect-uri-btn"
-                            title="Copy to clipboard"
-                        >
-                            Copy
-                        </button>
-                    </div>
-                    <small class="form-text" style="color: var(--adm-text-2);">Add this exact callback URL under "Authorized redirect URIs" in your Google Cloud OAuth Client credentials.</small>
+                <div class="adm-readonly mb-3" data-testid="google-status-line">
+                    @if($googleActive)
+                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
+                            <i class="flaticon-381-user-9" style="color: var(--adm-success);" aria-hidden="true"></i>
+                            Sign-in with Google: <strong style="color: var(--adm-success);">Active</strong>
+                        </span>
+                    @else
+                        <span class="d-inline-flex align-items-center" style="gap: 0.5rem; color: var(--adm-text);">
+                            <i class="flaticon-381-warning" style="color: var(--adm-warning);" aria-hidden="true"></i>
+                            Protection by the platform: <strong style="color: var(--adm-warning);">Not configured – ask the platform owner</strong>
+                        </span>
+                    @endif
                 </div>
 
-                <form method="POST" action="{{ route('admin.settings.ai-security.google.update') }}" autocomplete="off">
-                    @csrf
-
-                    <div class="form-group">
-                        <label for="google_client_id" style="color: var(--adm-text); font-weight: 600;">Client ID <span style="color: var(--adm-danger-light);">*</span></label>
-                        <input
-                            type="text"
-                            id="google_client_id"
-                            name="client_id"
-                            class="form-control msg-control"
-                            value="{{ old('client_id', $googleClientId) }}"
-                            placeholder="...apps.googleusercontent.com"
-                            required
-                        >
-                        <small class="form-text" style="color: var(--adm-text-2);">Client ID ending with <code>.apps.googleusercontent.com</code>.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="google_client_secret" style="color: var(--adm-text); font-weight: 600;">Client Secret <span style="color: var(--adm-danger-light);">*</span></label>
-
-                        @if($hasGoogleSecret)
-                            <div class="msg-secret-saved" id="googleSecretSavedWrap" data-testid="google-secret-masked">
-                                <div>
-                                    <span class="msg-secret-mask">{{ $googleMasked['client_secret'] }}</span>
-                                    <small class="d-block" style="color: var(--adm-text-2);">Leave unchanged to keep your saved client secret.</small>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="msg-btn-secondary"
-                                    data-replace-target="googleSecretInputWrap"
-                                    data-saved-target="googleSecretSavedWrap"
-                                    data-input-id="google_client_secret"
-                                    data-testid="replace-google-secret-btn"
-                                >Replace</button>
-                            </div>
-                        @endif
-
-                        <div id="googleSecretInputWrap" style="{{ $hasGoogleSecret ? 'display: none;' : '' }}">
-                            <div class="d-flex flex-wrap" style="gap: 0.5rem;">
-                                <input
-                                    type="password"
-                                    id="google_client_secret"
-                                    name="client_secret"
-                                    class="form-control msg-control"
-                                    style="flex: 1 1 220px;"
-                                    value=""
-                                    autocomplete="new-password"
-                                    placeholder="{{ $hasGoogleSecret ? 'Enter new Client Secret' : 'GOCSPX-...' }}"
-                                >
-                                @if($hasGoogleSecret)
-                                    <button
-                                        type="button"
-                                        class="msg-btn-secondary"
-                                        data-cancel-target="googleSecretInputWrap"
-                                        data-saved-target="googleSecretSavedWrap"
-                                        data-input-id="google_client_secret"
-                                    >Cancel</button>
-                                @endif
-                            </div>
-                            <small class="form-text mt-1" style="color: var(--adm-text-2);">Client Secret (starts with <code>GOCSPX-</code>). Never exposed to browsers.</small>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between pt-2" style="gap: 0.75rem;">
-                        <button type="submit" class="btn btn-primary" style="min-height: 44px; min-width: 140px; font-weight: 600;" data-testid="save-google-btn">
-                            Save Google Credentials
-                        </button>
-
-                        @if($googleIsConfiguredRow)
-                            <button type="button" class="msg-btn-danger" id="btnClearGoogle" data-testid="google-clear-btn">
-                                Clear Credentials
-                            </button>
-                        @endif
-                    </div>
-                </form>
-
-                @if($googleIsConfiguredRow)
-                    <form method="POST" action="{{ route('admin.settings.ai-security.google.clear') }}" id="googleClearForm" class="d-none">
-                        @csrf
-                    </form>
-                @endif
+                <div class="p-3" style="background: var(--adm-input-bg); border-radius: 0.625rem; border: 1px solid var(--adm-border); color: var(--adm-text-2); font-size: 0.85rem; line-height: 1.6;">
+                    <strong style="color: var(--adm-text);">Platform Managed Integration</strong><br>
+                    Google OAuth client credentials and authorized redirect URIs are managed per-domain by the platform super-administrator. To enable or update Google Sign-in for this institute, please contact the platform owner.
+                </div>
             </div>
         </div>
     </div>
@@ -695,6 +496,25 @@
         });
     }
 
+    // Gemini mode toggling
+    var modePlatformRadio = document.getElementById('gemini_mode_platform');
+    var modeCustomRadio = document.getElementById('gemini_mode_custom');
+    var customKeySection = document.getElementById('geminiCustomKeySection');
+
+    function updateGeminiModeUi() {
+        if (!customKeySection) return;
+        if (modeCustomRadio && modeCustomRadio.checked) {
+            customKeySection.style.display = '';
+        } else {
+            customKeySection.style.display = 'none';
+        }
+    }
+
+    if (modePlatformRadio && modeCustomRadio) {
+        modePlatformRadio.addEventListener('change', updateGeminiModeUi);
+        modeCustomRadio.addEventListener('change', updateGeminiModeUi);
+    }
+
     // Test Gemini
     var btnTestGemini = document.getElementById('btnTestGemini');
     var geminiTestForm = document.getElementById('geminiTestForm');
@@ -711,8 +531,8 @@
         btnClearGemini.addEventListener('click', function () {
             if (window.TitNotify && typeof window.TitNotify.confirm === 'function') {
                 window.TitNotify.confirm({
-                    title: 'Clear Gemini AI Key?',
-                    text: 'AI Assistant features (chat, study questions, OCR) will be disabled for your institute until a new key is added.',
+                    title: 'Clear Custom Gemini Key?',
+                    text: 'Institute will switch back to using the shared platform AI assistant default.',
                     confirmText: 'Clear Key',
                     cancelText: 'Cancel',
                     danger: true
@@ -721,57 +541,6 @@
                 });
             } else {
                 geminiClearForm.submit();
-            }
-        });
-    }
-
-    // Test reCAPTCHA
-    var btnTestRecaptcha = document.getElementById('btnTestRecaptcha');
-    var recaptchaTestForm = document.getElementById('recaptchaTestForm');
-    if (btnTestRecaptcha && recaptchaTestForm) {
-        btnTestRecaptcha.addEventListener('click', function () {
-            recaptchaTestForm.submit();
-        });
-    }
-
-    // Clear reCAPTCHA
-    var btnClearRecaptcha = document.getElementById('btnClearRecaptcha');
-    var recaptchaClearForm = document.getElementById('recaptchaClearForm');
-    if (btnClearRecaptcha && recaptchaClearForm) {
-        btnClearRecaptcha.addEventListener('click', function () {
-            if (window.TitNotify && typeof window.TitNotify.confirm === 'function') {
-                window.TitNotify.confirm({
-                    title: 'Clear reCAPTCHA Credentials?',
-                    text: 'reCAPTCHA protection will be removed. Strict fallback rate limiting will apply to public forms, and public AI assistant will be disabled.',
-                    confirmText: 'Clear reCAPTCHA',
-                    cancelText: 'Cancel',
-                    danger: true
-                }).then(function (ok) {
-                    if (ok) recaptchaClearForm.submit();
-                });
-            } else {
-                recaptchaClearForm.submit();
-            }
-        });
-    }
-
-    // Clear Google
-    var btnClearGoogle = document.getElementById('btnClearGoogle');
-    var googleClearForm = document.getElementById('googleClearForm');
-    if (btnClearGoogle && googleClearForm) {
-        btnClearGoogle.addEventListener('click', function () {
-            if (window.TitNotify && typeof window.TitNotify.confirm === 'function') {
-                window.TitNotify.confirm({
-                    title: 'Clear Google Sign-in Credentials?',
-                    text: 'Google Sign-in will be disabled on your institute login and registration pages.',
-                    confirmText: 'Clear Credentials',
-                    cancelText: 'Cancel',
-                    danger: true
-                }).then(function (ok) {
-                    if (ok) googleClearForm.submit();
-                });
-            } else {
-                googleClearForm.submit();
             }
         });
     }

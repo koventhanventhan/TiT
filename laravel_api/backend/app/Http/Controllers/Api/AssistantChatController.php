@@ -130,8 +130,17 @@ class AssistantChatController extends Controller
         }
 
         // Verify Gemini key is configured for this institute
-        $geminiCreds = Integrations::for($instituteId)->gemini();
+        $resolver = Integrations::for($instituteId);
+        $geminiCreds = $resolver->gemini();
         if ($geminiCreds === null || !$geminiCreds->isConfigured()) {
+            if ($resolver->isPlatformGeminiQuotaExceeded()) {
+                $quota = $resolver->platformGeminiDailyQuota();
+                return response()->json([
+                    'message' => "The daily platform AI assistant quota ({$quota} queries/day) has been reached. Please try again tomorrow, upgrade your plan, or configure your own Gemini API key under Settings → AI & Security.",
+                    'code' => 'platform_quota_exceeded',
+                ], 429);
+            }
+
             if ($tier === 'study') {
                 return response()->json([
                     'message' => 'AI assistant is not configured for this institute. Please contact your administrator to configure a Gemini API key under Settings → AI & Security.',
@@ -321,6 +330,10 @@ class AssistantChatController extends Controller
         }
 
         // 7. Execution: Study Tier vs Public Tier
+        if ($geminiCreds->source === 'env') {
+            \App\Models\PlatformGeminiUsage::incrementToday($instituteId);
+        }
+
         if ($tier === 'study') {
             return $this->handleStudyQuery($request, $user, $question, $language, $instituteId);
         }

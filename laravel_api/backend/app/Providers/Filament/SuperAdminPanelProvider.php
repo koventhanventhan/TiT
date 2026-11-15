@@ -27,6 +27,7 @@ class SuperAdminPanelProvider extends PanelProvider
         $defaultBrand = (string) config('filament.brand', 'TiT');
 
         return $panel
+            ->default()
             ->id('super-admin')
             ->path($panelPath !== '' ? $panelPath : 'super-admin')
             ->login()

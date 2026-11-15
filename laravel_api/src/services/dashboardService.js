@@ -481,54 +481,6 @@ export const updateAdminSettings = async (data) => {
   return res.json()
 }
 
-// SUPER ADMIN API
-export const getSuperAdminStats = async () => {
-  const res = await fetch(`${API_BASE_URL}/super-admin/stats`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Failed to load super admin stats')
-  return res.json()
-}
-
-export const getSuperAdminInstitutes = async () => {
-  const res = await fetch(`${API_BASE_URL}/super-admin/institutes`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Failed to load institutes')
-  return res.json()
-}
-
-export const getSuperAdminPlans = async () => {
-  const res = await fetch(`${API_BASE_URL}/super-admin/plans`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Failed to load plans')
-  return res.json()
-}
-
-export const updateSuperAdminInstitute = async (id, data) => {
-  const res = await fetch(`${API_BASE_URL}/super-admin/institutes/${id}`, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    credentials: 'include',
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Failed to update institute')
-  return res.json()
-}
-
-export const getSuperAdminActivityLogs = async () => {
-  const res = await fetch(`${API_BASE_URL}/super-admin/activity-logs`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Failed to load activity logs')
-  return res.json()
-}
-
 // ── EXAM RESULTS API ──
 
 // Public: Search exam results

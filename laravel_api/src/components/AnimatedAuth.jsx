@@ -121,12 +121,12 @@ const AnimatedAuth = ({ isOpen, onClose, defaultTab = 'login' }) => {
         const isSuperAdmin = userRole && String(userRole).toLowerCase() === 'super_admin'
 
         if (isSuperAdmin) {
-          console.log('✅ Super Admin detected - redirecting to super admin dashboard...')
+          console.log('✅ Super Admin detected - redirecting to Filament super admin panel...')
           console.log('   User:', result.user.email)
           console.log('   Role:', result.user.role)
           setIsLoading(false)
           onClose()
-          window.location.href = '/super-admin/dashboard'
+          window.location.href = '/super-admin'
           return
         }
 

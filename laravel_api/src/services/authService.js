@@ -637,7 +637,7 @@ export const loginWithGoogle = () => {
           }
 
           if (isSuperAdmin) {
-            window.location.href = '/super-admin/dashboard'
+            window.location.href = '/super-admin'
           } else if (isAdmin) {
             window.location.href = `${BASE_URL}/admin/login?token=${encodeURIComponent(token)}`
           } else if (isStudent) {

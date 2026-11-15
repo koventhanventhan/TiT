@@ -6,7 +6,18 @@ This document outlines critical deployment procedures, `.htaccess` requirements,
 
 ## 1. Production `.htaccess` Configuration
 
-The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) is **maintained by hand** on the host. Git deployments and deployment scripts must **NOT** overwrite or delete it.
+The root `.htaccess` on the live server (`/home/<user>/public_html/.htaccess`) is **maintained by hand** on the host. Git deployments and deployment scripts (`deploy.sh`) must **NOT** overwrite or delete it.
+
+> [!IMPORTANT]
+> **Super Admin Architecture (Prompt 30):**
+> - **Super Admin UI**: Filament at `/super-admin` (`SuperAdminPanelProvider`). The legacy React super-admin routes (`/super-admin/*`) have been retired to eliminate URL collisions between React and Filament.
+> - **Live `.htaccess` Requirement**: The live `.htaccess` PHP rewrite condition MUST contain `super-admin|super-panel|livewire`.
+>   Exact line:
+>   ```apache
+>   RewriteCond %{REQUEST_URI} ^/(admin|api|super-admin|super-panel|livewire|receipts|sitemap\.xml|robots\.txt) [NC]
+>   ```
+> - **Owner Action on Live Server**: Because `deploy.sh` does not overwrite or copy the live `.htaccess`, the owner must edit `/home/<user>/public_html/.htaccess` on cPanel / server by hand to include the exact line above.
+> - **Authentication Flow**: When a `super_admin` signs in via the React frontend modal, `AnimatedAuth.jsx` triggers a full-page navigation to `/super-admin`. Because Filament uses Laravel web session auth (`auth:web`), there is no auto-login magic across Sanctum and web session: the user simply logs in once on the Filament login page.
 
 ### Required Rules in the Live `.htaccess`:
 1. **Force HTTPS & Canonical Non-WWW Redirects**: Ensures all traffic is served securely over HTTPS and `www.titjaffna.lk` redirects to `titjaffna.lk`.

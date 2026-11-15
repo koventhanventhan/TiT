@@ -141,7 +141,6 @@ export const SettingsProvider = ({ children }) => {
             return p.startsWith('/admin') ||
                    p.startsWith('/teacher') ||
                    p.startsWith('/student') ||
-                   p.startsWith('/super-admin') ||
                    p.startsWith('/parent');
         } catch (_) {
             return false;

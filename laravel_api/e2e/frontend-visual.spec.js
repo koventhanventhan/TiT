@@ -53,7 +53,6 @@ const CONSOLE_ROUTES = [
   { path: '/student/dashboard', role: 'student' },
   { path: '/teacher/dashboard', role: 'teacher' },
   { path: '/select-profile', role: 'parent' },
-  { path: '/super-admin', role: 'admin' },
 ];
 
 // In-browser evaluator function

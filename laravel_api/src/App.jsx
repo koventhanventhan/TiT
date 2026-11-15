@@ -33,7 +33,6 @@ const StudentSchedule = lazy(() => import('./pages/student/StudentSchedule'))
 const StudentPerformance = lazy(() => import('./pages/student/StudentPerformance'))
 const StudentSettings = lazy(() => import('./pages/student/StudentSettings'))
 const StudentStudyAssistant = lazy(() => import('./components/StudentStudyAssistant'))
-const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const MessagingPage = lazy(() => import('./pages/MessagingPage'))
 const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'))
 const TeacherOverview = lazy(() => import('./pages/teacher/TeacherOverview'))
@@ -88,8 +87,7 @@ function AppContent() {
   const location = useLocation()
   const isDashboard = location.pathname.startsWith('/teacher') ||
     location.pathname.startsWith('/student') ||
-    location.pathname.startsWith('/admin') ||
-    location.pathname.startsWith('/super-admin')
+    location.pathname.startsWith('/admin')
 
   const [blockedStatus, setBlockedStatus] = React.useState(null)
 
@@ -145,8 +143,6 @@ function AppContent() {
               <Route path="messages" element={<MessagingPage />} />
               <Route path="settings" element={<StudentSettings />} />
             </Route>
-
-            <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
 
             {/* Teacher Dashboard Routes */}
             <Route path="/teacher" element={<PageWrapper><TeacherDashboard /></PageWrapper>}>

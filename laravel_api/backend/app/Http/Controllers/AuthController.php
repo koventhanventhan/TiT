@@ -818,6 +818,7 @@ class AuthController extends Controller
         }
 
         $targetOrigin = $request->getSchemeAndHttpHost() ?: url('/');
+        $targetOriginJson = json_encode($targetOrigin);
 
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
@@ -849,7 +850,7 @@ class AuthController extends Controller
 
                     return response("
                         <script>
-                            window.opener.postMessage($error, '{$targetOrigin}');
+                            window.opener.postMessage($error, {$targetOriginJson});
                             window.close();
                         </script>
                     ");
@@ -888,7 +889,7 @@ class AuthController extends Controller
 
                     return response("
                         <script>
-                            window.opener.postMessage($error, '{$targetOrigin}');
+                            window.opener.postMessage($error, {$targetOriginJson});
                             window.close();
                         </script>
                     ");
@@ -918,7 +919,7 @@ class AuthController extends Controller
 
                         return response("
                             <script>
-                                window.opener.postMessage($error, '{$targetOrigin}');
+                                window.opener.postMessage($error, {$targetOriginJson});
                                 window.close();
                             </script>
                         ");
@@ -953,7 +954,7 @@ class AuthController extends Controller
 
             return response("
                 <script>
-                    window.opener.postMessage($data, '{$targetOrigin}');
+                    window.opener.postMessage($data, {$targetOriginJson});
                     window.close();
                 </script>
             ");
@@ -968,7 +969,7 @@ class AuthController extends Controller
 
             return response("
                 <script>
-                    window.opener.postMessage($error, '{$targetOrigin}');
+                    window.opener.postMessage($error, {$targetOriginJson});
                     window.close();
                 </script>
             ");

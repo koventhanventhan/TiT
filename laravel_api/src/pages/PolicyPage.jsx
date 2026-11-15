@@ -39,7 +39,26 @@ const PolicyPage = ({ type: propType }) => {
                     defaultTitle = 'Policy';
             }
 
-            const rawContent = getSetting(key, 'Content coming soon. Please check back later.');
+            const instituteName = getSetting('admin_company_name') || getSetting('site_name') || getSetting('company_name') || 'Our Institute';
+            const contactEmail = getSetting('footer_email') || getSetting('contact_email') || '';
+            const contactPhone = getSetting('footer_phone') || getSetting('contact_phone') || '';
+            const contactLoc = getSetting('footer_location') || '';
+            const contactDetails = [contactEmail, contactPhone, contactLoc].filter(Boolean).join(' • ');
+            const contactText = contactDetails ? `\n\nContact Us:\nFor any questions regarding this policy, please reach out to ${instituteName} at ${contactDetails}.` : `\n\nContact Us:\nFor any questions regarding this policy, please reach out to ${instituteName}.`;
+
+            let fallbackContent = '';
+            if (type === 'privacy') {
+                fallbackContent = `This Privacy Policy outlines how ${instituteName} collects, uses, and protects student and parent personal information across our online portal and educational services.\n\n1. Information Collection: We collect essential account and contact information necessary to manage student admissions, attendance, learning materials, and course communication.\n\n2. Data Security: Personal records and academic information are securely stored and restricted to authorized personnel.\n\n3. Information Sharing: We do not sell or disclose personal data to third parties except as required for service delivery (e.g. communication or payment processing).` + contactText;
+            } else if (type === 'terms') {
+                fallbackContent = `Welcome to ${instituteName}. By using our educational portal and attending classes, you agree to comply with and be bound by the following Terms and Conditions.\n\n1. Student Conduct: Students are expected to maintain academic integrity and professional conduct in both physical and virtual classrooms.\n\n2. Learning Materials: All study notes, lecture videos, and materials provided by ${instituteName} are intended solely for enrolled students and may not be redistributed.\n\n3. Attendance & Fees: Enrolled students must adhere to scheduled classes and submit tuition dues as scheduled.` + contactText;
+            } else if (type === 'refund') {
+                fallbackContent = `This Refund Policy governs fee payments and cancellations for courses and services provided by ${instituteName}.\n\n1. Tuition Fees: Monthly course fees are generally non-refundable once the academic term or monthly syllabus has commenced.\n\n2. Duplicate Payments: If an accidental duplicate or excess payment occurs, contact the administration within 7 days with your payment receipt for prompt verification and refund adjustment.\n\n3. Discretionary Review: Exceptions may be considered by institute management under verifiable extenuating circumstances.` + contactText;
+            } else {
+                fallbackContent = `Welcome to ${instituteName}.` + contactText;
+            }
+
+            const configuredContent = getSetting(key, '');
+            const rawContent = (configuredContent && configuredContent.trim()) ? configuredContent : fallbackContent;
             
             if (language !== 'en') {
                 setTitle(await translate(defaultTitle));

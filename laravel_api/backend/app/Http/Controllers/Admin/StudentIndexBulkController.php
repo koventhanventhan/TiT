@@ -503,13 +503,17 @@ class StudentIndexBulkController extends Controller
         }
 
         $fileName = 'student_index_import_template.csv';
-        return response()->streamDownload(function () {
+        $instituteId = (int) (auth()->user()->institute_id ?: 1);
+        $institute = Institute::find($instituteId);
+        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
+
+        return response()->streamDownload(function () use ($prefix) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['grade', 'medium', 'student_name', 'index_number']);
-            fputcsv($handle, ['Grade 8', 'English', 'A. Example Student', 'TIT/08/001']);
-            fputcsv($handle, ['Grade 8', 'English', 'B. Second Student', 'TIT/08/002']);
-            fputcsv($handle, ['Grade 8', 'English', '-', 'TIT/08/003']);
-            fputcsv($handle, ['Grade 8', 'Tamil', 'C. Third Student', 'TIT/08/015']);
+            fputcsv($handle, ['Grade 8', 'English', 'A. Example Student', "{$prefix}/08/001"]);
+            fputcsv($handle, ['Grade 8', 'English', 'B. Second Student', "{$prefix}/08/002"]);
+            fputcsv($handle, ['Grade 8', 'English', '-', "{$prefix}/08/003"]);
+            fputcsv($handle, ['Grade 8', 'Tamil', 'C. Third Student', "{$prefix}/08/015"]);
             fclose($handle);
         }, $fileName, ['Content-Type' => 'text/csv']);
     }
@@ -611,7 +615,7 @@ class StudentIndexBulkController extends Controller
         }
 
         $instituteId = (int) (auth()->user()->institute_id ?: 1);
-        $institute = Institute::find($instituteId) ?: new Institute(['index_prefix' => 'TiT', 'name' => 'TiT Institute']);
+        $institute = Institute::find($instituteId) ?: new Institute(['index_prefix' => 'TIT', 'name' => 'Institute']);
 
         $grade = $request->input('grade', 'Grade 8');
         $medium = strtolower($request->input('medium', 'english'));

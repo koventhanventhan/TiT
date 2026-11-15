@@ -196,10 +196,6 @@
                         'emerald' => [
                             'name' => 'Emerald Fresh',
                             'tagline' => 'Forest Green Console & Fresh Mint Accent',
-                        ],
-                        'midnight' => [
-                            'name' => 'Midnight Dark',
-                            'tagline' => 'Obsidian Black Console & Indigo Glow',
                         ]
                     ];
 

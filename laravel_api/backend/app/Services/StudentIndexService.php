@@ -391,7 +391,7 @@ class StudentIndexService
 
         // Legacy batch mode
         $batchYear = $this->normalizeBatchYear($seriesOrBatch ?? $this->calculateDefaultBatchYear($student));
-        $prefix = $institute?->index_prefix ?: 'TiT';
+        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
         $seqStart = (int) ($institute?->index_seq_start ?: 100);
 
         $attempts = 0;
@@ -547,7 +547,7 @@ class StudentIndexService
         }
 
         $batchYear = $this->normalizeBatchYear($seriesOrBatch);
-        $prefix = $institute?->index_prefix ?: 'TiT';
+        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
         $seqStart = (int) ($institute?->index_seq_start ?: 100);
 
         $counter = StudentIndexCounter::where('institute_id', $instituteId)
@@ -1353,7 +1353,7 @@ class StudentIndexService
         }
 
         // Legacy batch mode
-        $prefix = $institute?->index_prefix ?: 'TiT';
+        $prefix = $institute?->getIndexPrefix() ?? 'TIT';
         $seqStart = (int) ($institute?->index_seq_start ?: 100);
 
         foreach ($students as $student) {

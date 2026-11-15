@@ -64,7 +64,7 @@
     }
     .asst-status-badge--blocked {
         background: rgba(231, 76, 60, 0.18);
-        color: var(--adm-danger);
+        color: var(--adm-danger-light, #fca5a5);
         border: 1px solid var(--adm-danger);
     }
     .asst-sentence {
@@ -708,7 +708,7 @@
     </div>
 </div>
 
-{{-- Confirmation Modal for Deletion (No native confirm()) --}}
+{{-- Modal for Deletion Confirmation (No native browser dialogs) --}}
 <div class="asst-modal-backdrop" id="delete-confirm-modal">
     <div class="asst-modal-card" style="max-width: 450px;">
         <div class="d-flex align-items-center mb-3">
@@ -785,7 +785,7 @@
                 var active = btn.getAttribute('data-active') === '1';
 
                 faqModalTitle.textContent = 'Edit FAQ #' + id;
-                faqForm.action = '{{ url("/admin/assistant/faqs") }}/' + id;
+                faqForm.action = '{{ route("admin.assistant.faqs.store") }}/' + id;
                 faqFormMethod.value = 'PUT';
                 questionInput.value = question;
                 answerInput.value = answer;

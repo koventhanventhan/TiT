@@ -112,6 +112,14 @@
             </li>
             @endif
 
+            {{-- AI Assistant --}}
+            <li class="{{ request()->routeIs('admin.assistant*') ? 'mm-active' : '' }}">
+                <a href="{{ route('admin.assistant') }}" class="ai-icon" aria-expanded="false">
+                    <i class="flaticon-381-speech-bubble"></i>
+                    <span class="nav-text">AI Assistant</span>
+                </a>
+            </li>
+
             {{-- Exam Results (Hidden temporarily as it is not fully finished)
             <li class="{{ request()->routeIs('admin.exam-results.*') ? 'mm-active' : '' }}">
                 <a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">

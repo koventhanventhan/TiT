@@ -45,6 +45,7 @@ const ROUTES = process.env.CRAWL_ROUTES
   '/admin/settings/messaging',
   '/admin/settings/ai-security',
   '/admin/subscription',
+  '/admin/assistant',
   '/admin/zoom',
   '/admin/zoom/create',
   '/admin/zoom-accounts',

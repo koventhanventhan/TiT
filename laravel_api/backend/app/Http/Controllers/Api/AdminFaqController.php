@@ -20,11 +20,9 @@ class AdminFaqController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $instituteId = $user->institute_id ?? 1;
+        $instituteId = $user->role === 'super_admin' ? ($request->query('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
 
-        $query = Faq::where(function ($q) use ($instituteId) {
-            $q->where('institute_id', $instituteId)->orWhereNull('institute_id');
-        });
+        $query = Faq::where('institute_id', $instituteId);
 
         if ($request->has('language')) {
             $query->where('language', $request->input('language'));
@@ -50,7 +48,7 @@ class AdminFaqController extends Controller
         ]);
 
         $user = $request->user();
-        $instituteId = $user->institute_id ?? 1;
+        $instituteId = $user->role === 'super_admin' ? ($request->input('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
 
         $faq = Faq::create([
             'institute_id' => $instituteId,
@@ -72,12 +70,10 @@ class AdminFaqController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        $instituteId = $user->institute_id ?? 1;
+        $instituteId = $user->role === 'super_admin' ? ($request->input('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
 
         $faq = Faq::where('id', $id)
-            ->where(function ($q) use ($instituteId) {
-                $q->where('institute_id', $instituteId)->orWhereNull('institute_id');
-            })
+            ->where('institute_id', $instituteId)
             ->firstOrFail();
 
         $validated = $request->validate([
@@ -100,12 +96,10 @@ class AdminFaqController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        $instituteId = $user->institute_id ?? 1;
+        $instituteId = $user->role === 'super_admin' ? ($request->input('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
 
         $faq = Faq::where('id', $id)
-            ->where(function ($q) use ($instituteId) {
-                $q->where('institute_id', $instituteId)->orWhereNull('institute_id');
-            })
+            ->where('institute_id', $instituteId)
             ->firstOrFail();
 
         $faq->delete();

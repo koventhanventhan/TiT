@@ -223,6 +223,18 @@ Route::prefix('admin')->group(function () {
         Route::post('/settings/index-series/add-series', [SiteSettingController::class, 'addIndexSeries'])->name('admin.settings.index-series.add-series');
         Route::get('/firebase-token', [SiteSettingController::class, 'firebaseToken'])->name('admin.firebase-token');
 
+        // AI Assistant management (gated by feature:ai_assistant)
+        Route::middleware(['feature:ai_assistant'])->group(function () {
+            Route::get('/assistant', [\App\Http\Controllers\Admin\AssistantController::class, 'index'])->name('admin.assistant');
+            Route::post('/assistant/toggle-public', [\App\Http\Controllers\Admin\AssistantController::class, 'togglePublic'])->name('admin.assistant.toggle-public');
+            Route::post('/assistant/toggle-study', [\App\Http\Controllers\Admin\AssistantController::class, 'toggleStudy'])->name('admin.assistant.toggle-study');
+            Route::post('/assistant/contacts', [\App\Http\Controllers\Admin\AssistantController::class, 'updateContacts'])->name('admin.assistant.contacts');
+            Route::post('/assistant/faqs', [\App\Http\Controllers\Admin\AssistantController::class, 'storeFaq'])->name('admin.assistant.faqs.store');
+            Route::put('/assistant/faqs/{id}', [\App\Http\Controllers\Admin\AssistantController::class, 'updateFaq'])->name('admin.assistant.faqs.update')->whereNumber('id');
+            Route::delete('/assistant/faqs/{id}', [\App\Http\Controllers\Admin\AssistantController::class, 'destroyFaq'])->name('admin.assistant.faqs.destroy')->whereNumber('id');
+            Route::post('/assistant/materials/{id}/reindex', [\App\Http\Controllers\Admin\AssistantController::class, 'reindexMaterial'])->name('admin.assistant.materials.reindex')->whereNumber('id');
+        });
+
         // Zoom classes
         Route::middleware(['feature:zoom'])->group(function () {
             Route::get('/zoom', [ZoomScheduleController::class, 'index'])->name('admin.zoom.index');

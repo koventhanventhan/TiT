@@ -8,6 +8,8 @@ use App\Models\Institute;
 use App\Models\LearningMaterial;
 use App\Models\SiteSetting;
 use App\Models\StudentAiQuery;
+use App\Services\ActivityLogService;
+use App\Services\PublicAssistantStatusService;
 use App\Services\PublicKnowledgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -209,7 +211,7 @@ class AdminRagController extends Controller
     /**
      * Toggle institute RAG and Public Assistant switches.
      */
-    public function toggleAssistant(Request $request): JsonResponse
+    public function toggleAssistant(Request $request, PublicAssistantStatusService $statusService, PublicKnowledgeService $knowledgeService): JsonResponse
     {
         $user = $request->user();
         if (!$user || !in_array($user->role, ['admin', 'super_admin'], true)) {
@@ -227,13 +229,36 @@ class AdminRagController extends Controller
         $updates = [];
         if (array_key_exists('rag_enabled', $validated)) {
             $updates['rag_enabled'] = (bool) $validated['rag_enabled'];
+            ActivityLogService::log(
+                'study_assistant_toggle',
+                "Study assistant " . ($validated['rag_enabled'] ? 'enabled' : 'disabled') . " for institute #{$institute->id} ({$institute->name})",
+                ['rag_enabled' => (bool) $validated['rag_enabled']],
+                $institute->id
+            );
         }
         if (array_key_exists('public_assistant_enabled', $validated)) {
-            $updates['public_assistant_enabled'] = (bool) $validated['public_assistant_enabled'];
+            $targetState = (bool) $validated['public_assistant_enabled'];
+            if ($targetState) {
+                $refusalReasons = [];
+                if (!$statusService->canTurnOn($institute, $refusalReasons)) {
+                    return response()->json([
+                        'message' => 'Refusing to enable public assistant: ' . implode('. ', $refusalReasons),
+                        'errors' => ['public_assistant_enabled' => $refusalReasons],
+                    ], 422);
+                }
+            }
+            $updates['public_assistant_enabled'] = $targetState;
+            ActivityLogService::log(
+                'assistant_public_toggle',
+                "Public assistant " . ($targetState ? 'enabled' : 'disabled') . " for institute #{$institute->id} ({$institute->name})",
+                ['state' => $targetState ? 'on' : 'off', 'public_assistant_enabled' => $targetState],
+                $institute->id
+            );
         }
 
         if (!empty($updates)) {
             $institute->update($updates);
+            $knowledgeService->clearCache($institute->id);
         }
 
         return response()->json([
@@ -330,12 +355,14 @@ class AdminRagController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        $instituteId = $user->role === 'super_admin' ? ($request->query('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
+
         return response()->json([
-            'phone' => SiteSetting::get('assistant_public_contact_phone', ''),
-            'whatsapp' => SiteSetting::get('assistant_public_contact_whatsapp', ''),
-            'email' => SiteSetting::get('assistant_public_contact_email', ''),
-            'address' => SiteSetting::get('assistant_public_contact_address', ''),
-            'hours' => SiteSetting::get('assistant_public_contact_hours', ''),
+            'phone' => SiteSetting::getForInstitute('assistant_public_contact_phone', $instituteId, ''),
+            'whatsapp' => SiteSetting::getForInstitute('assistant_public_contact_whatsapp', $instituteId, ''),
+            'email' => SiteSetting::getForInstitute('assistant_public_contact_email', $instituteId, ''),
+            'address' => SiteSetting::getForInstitute('assistant_public_contact_address', $instituteId, ''),
+            'hours' => SiteSetting::getForInstitute('assistant_public_contact_hours', $instituteId, ''),
         ]);
     }
 
@@ -349,6 +376,8 @@ class AdminRagController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        $instituteId = $user->role === 'super_admin' ? ($request->input('institute_id') ?: $user->institute_id ?: 1) : ($user->institute_id ?: 1);
+
         $validated = $request->validate([
             'phone' => 'nullable|string|max:100',
             'whatsapp' => 'nullable|string|max:100',
@@ -359,20 +388,19 @@ class AdminRagController extends Controller
 
         foreach ($validated as $field => $value) {
             $key = "assistant_public_contact_{$field}";
-            SiteSetting::set($key, trim((string) $value), 'assistant_public_contact');
+            SiteSetting::setForInstitute($key, trim((string) $value), $instituteId, 'assistant_public_contact');
         }
 
-        $instituteId = $user->institute_id ?? 1;
         $knowledgeService->clearCache($instituteId);
 
         return response()->json([
             'message' => 'Assistant public contact settings updated successfully.',
             'settings' => [
-                'phone' => SiteSetting::get('assistant_public_contact_phone', ''),
-                'whatsapp' => SiteSetting::get('assistant_public_contact_whatsapp', ''),
-                'email' => SiteSetting::get('assistant_public_contact_email', ''),
-                'address' => SiteSetting::get('assistant_public_contact_address', ''),
-                'hours' => SiteSetting::get('assistant_public_contact_hours', ''),
+                'phone' => SiteSetting::getForInstitute('assistant_public_contact_phone', $instituteId, ''),
+                'whatsapp' => SiteSetting::getForInstitute('assistant_public_contact_whatsapp', $instituteId, ''),
+                'email' => SiteSetting::getForInstitute('assistant_public_contact_email', $instituteId, ''),
+                'address' => SiteSetting::getForInstitute('assistant_public_contact_address', $instituteId, ''),
+                'hours' => SiteSetting::getForInstitute('assistant_public_contact_hours', $instituteId, ''),
             ],
         ]);
     }

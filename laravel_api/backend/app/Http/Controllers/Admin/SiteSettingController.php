@@ -726,33 +726,21 @@ class SiteSettingController extends Controller
             $settings['theme_preset'] = 'royal';
         }
 
-        $globalPublicEnabled = filter_var(config('rag.public_enabled', false), FILTER_VALIDATE_BOOLEAN);
-        $env = config('app.env') ?: app()->environment();
-        $isLocalOrTesting = in_array($env, ['local', 'testing'], true);
-
         // reCAPTCHA keys
         $recaptchaCreds = Integrations::for($instituteId)->recaptcha();
         $settings['recaptcha_site_key'] = $recaptchaCreds?->isConfigured() ? $recaptchaCreds->siteKey : '';
         $settings['recaptcha_available'] = !empty($settings['recaptcha_site_key']);
 
-        // Assistant availability: Gemini configured + plan feature enabled + reCAPTCHA configured
-        $geminiCreds = Integrations::for($instituteId)->gemini();
-        $hasGemini = $geminiCreds !== null && $geminiCreds->isConfigured();
-        $hasRecaptcha = !empty($settings['recaptcha_site_key']);
-        $planAllowsAi = $institute ? $institute->hasFeature('ai_assistant') : true;
-        $assistantAvailable = $hasGemini && $hasRecaptcha && $planAllowsAi;
-        $settings['assistant_available'] = $assistantAvailable;
+        // Assistant availability via single-sourced predicate
+        $statusService = app(\App\Services\PublicAssistantStatusService::class);
+        $assistantStatus = $statusService->check($institute ?? $instituteId);
+
+        $settings['assistant_available'] = $assistantStatus['has_gemini'] && $assistantStatus['has_recaptcha'] && $assistantStatus['plan_allows_ai'];
+        $settings['public_assistant_enabled'] = (bool) $assistantStatus['is_live'];
 
         // Google OAuth availability
         $googleCreds = Integrations::for($instituteId)->google();
         $settings['google_login_available'] = $googleCreds?->isConfigured() ?? false;
-
-        // reCAPTCHA fail closed: public assistant costs money and stays disabled without reCAPTCHA keys
-        if (!$hasRecaptcha || !$assistantAvailable) {
-            $settings['public_assistant_enabled'] = false;
-        } else {
-            $settings['public_assistant_enabled'] = (bool) ($globalPublicEnabled && ($institute?->public_assistant_enabled ?? false));
-        }
 
         // Never leak legacy platform secret keys in public /api/settings
         unset(

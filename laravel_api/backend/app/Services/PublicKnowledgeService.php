@@ -68,11 +68,11 @@ class PublicKnowledgeService
             "Provide helpful, concise, and courteous information to prospective students, parents, and visitors.";
 
         // 2. Official Contact Information (dedicated assistant_public_contact group ONLY)
-        $phone = SiteSetting::get('assistant_public_contact_phone');
-        $whatsapp = SiteSetting::get('assistant_public_contact_whatsapp');
-        $email = SiteSetting::get('assistant_public_contact_email');
-        $address = SiteSetting::get('assistant_public_contact_address');
-        $hours = SiteSetting::get('assistant_public_contact_hours');
+        $phone = SiteSetting::getForInstitute('assistant_public_contact_phone', $instituteId);
+        $whatsapp = SiteSetting::getForInstitute('assistant_public_contact_whatsapp', $instituteId);
+        $email = SiteSetting::getForInstitute('assistant_public_contact_email', $instituteId);
+        $address = SiteSetting::getForInstitute('assistant_public_contact_address', $instituteId);
+        $hours = SiteSetting::getForInstitute('assistant_public_contact_hours', $instituteId);
 
         $hasContact = !empty(trim($phone ?? '')) || !empty(trim($whatsapp ?? '')) ||
             !empty(trim($email ?? '')) || !empty(trim($address ?? '')) || !empty(trim($hours ?? ''));

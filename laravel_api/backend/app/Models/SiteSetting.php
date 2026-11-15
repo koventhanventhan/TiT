@@ -20,13 +20,28 @@ class SiteSetting extends Model
 
     /**
      * Get a setting value by key.
+     * Tenant-scoped: uses explicit institute ID, authenticated user's institute, or resolved container institute.
      *
      * @param string $key
      * @param mixed $default
+     * @param int|null $instituteId
      * @return mixed
      */
-    public static function get($key, $default = null)
+    public static function get($key, $default = null, ?int $instituteId = null)
     {
+        $resolvedInstituteId = $instituteId
+            ?? (auth()->check() && auth()->user()->institute_id ? (int) auth()->user()->institute_id : null)
+            ?? (function_exists('current_institute_id') && current_institute_id() ? (int) current_institute_id() : null);
+
+        if ($resolvedInstituteId !== null) {
+            $setting = self::withoutGlobalScopes()
+                ->where('institute_id', $resolvedInstituteId)
+                ->where('key', $key)
+                ->first();
+
+            return $setting ? $setting->value : $default;
+        }
+
         $setting = self::where('key', $key)->first();
         return $setting ? $setting->value : $default;
     }
@@ -41,7 +56,11 @@ class SiteSetting extends Model
      */
     public static function getForInstitute(string $key, ?int $instituteId = null, $default = null)
     {
-        $instituteId = $instituteId ?: (auth()->check() ? auth()->user()->institute_id : null) ?: 1;
+        $instituteId = $instituteId
+            ?: (auth()->check() && auth()->user()->institute_id ? (int) auth()->user()->institute_id : null)
+            ?: (function_exists('current_institute_id') && current_institute_id() ? (int) current_institute_id() : null)
+            ?: 1;
+
         $setting = self::withoutGlobalScopes()
             ->where('institute_id', $instituteId)
             ->where('key', $key)
@@ -56,13 +75,18 @@ class SiteSetting extends Model
      * @param string $key
      * @param mixed $value
      * @param string $group
+     * @param int|null $instituteId
      * @return self
      */
-    public static function set($key, $value, $group = 'general')
+    public static function set($key, $value, $group = 'general', ?int $instituteId = null)
     {
-        $instituteId = auth()->check() && auth()->user()->institute_id ? auth()->user()->institute_id : 1;
+        $resolvedInstituteId = $instituteId
+            ?? (auth()->check() && auth()->user()->institute_id ? (int) auth()->user()->institute_id : null)
+            ?? (function_exists('current_institute_id') && current_institute_id() ? (int) current_institute_id() : null)
+            ?? 1;
+
         return self::withoutGlobalScopes()->updateOrCreate(
-            ['key' => $key, 'institute_id' => $instituteId],
+            ['key' => $key, 'institute_id' => $resolvedInstituteId],
             ['value' => $value, 'group' => $group]
         );
     }
@@ -78,7 +102,11 @@ class SiteSetting extends Model
      */
     public static function setForInstitute(string $key, $value, ?int $instituteId = null, string $group = 'general')
     {
-        $instituteId = $instituteId ?: (auth()->check() ? auth()->user()->institute_id : null) ?: 1;
+        $instituteId = $instituteId
+            ?: (auth()->check() && auth()->user()->institute_id ? (int) auth()->user()->institute_id : null)
+            ?: (function_exists('current_institute_id') && current_institute_id() ? (int) current_institute_id() : null)
+            ?: 1;
+
         return self::withoutGlobalScopes()->updateOrCreate(
             ['key' => $key, 'institute_id' => $instituteId],
             ['value' => $value, 'group' => $group]

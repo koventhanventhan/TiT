@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Institute;
-use App\Models\SiteSetting;
+use App\Services\ActivityLogService;
+use App\Services\PublicAssistantStatusService;
 use App\Services\PublicKnowledgeService;
-use App\Support\Integrations;
 use Illuminate\Console\Command;
 
 class RagPublicToggleCommand extends Command
@@ -13,7 +13,7 @@ class RagPublicToggleCommand extends Command
     protected $signature = 'rag:public {id : The ID of the institute} {state : on or off}';
     protected $description = 'Enable or disable public website assistant for an institute';
 
-    public function handle(PublicKnowledgeService $knowledgeService): int
+    public function handle(PublicKnowledgeService $knowledgeService, PublicAssistantStatusService $statusService): int
     {
         $id = (int) $this->argument('id');
         $state = strtolower((string) $this->argument('state'));
@@ -31,40 +31,24 @@ class RagPublicToggleCommand extends Command
 
         if ($state === 'off') {
             $institute->update(['public_assistant_enabled' => false]);
+            ActivityLogService::log(
+                'assistant_public_toggle',
+                "Public assistant disabled for institute #{$id} ({$institute->name})",
+                ['state' => 'off', 'public_assistant_enabled' => false],
+                $id
+            );
             $knowledgeService->clearCache($id);
             $this->info("Public assistant disabled for institute #{$id} ({$institute->name}).");
             return 0;
         }
 
-        // Safety gate before enabling 'on':
-        // 1. Refuse to enable if not in local/testing and reCAPTCHA is missing
-        $recaptcha = Integrations::for($id)->recaptcha();
-        $env = config('app.env') ?: app()->environment();
-        if (!in_array($env, ['local', 'testing'], true) && ($recaptcha === null || !$recaptcha->isConfigured())) {
-            $this->error("Refusing to activate Public Assistant without RECAPTCHA_SECRET_KEY / reCAPTCHA in production.");
-            $this->warn("reCAPTCHA is missing or empty. In production/non-local environments, reCAPTCHA must fail closed.");
-            $this->line("Please configure reCAPTCHA credentials before enabling the public assistant.");
-            return 1;
-        }
-
-        // 2. Refuse to enable unless the helpline/phone and institute contact details are configured!
-        $phone = trim((string) SiteSetting::get('assistant_public_contact_phone', ''));
-        $email = trim((string) SiteSetting::get('assistant_public_contact_email', ''));
-        $address = trim((string) SiteSetting::get('assistant_public_contact_address', ''));
-        $whatsapp = trim((string) SiteSetting::get('assistant_public_contact_whatsapp', ''));
-
-        $missing = [];
-        if (empty($phone) && empty($whatsapp)) {
-            $missing[] = 'assistant_public_contact_phone or assistant_public_contact_whatsapp';
-        }
-        if (empty($email) && empty($address)) {
-            $missing[] = 'assistant_public_contact_email or assistant_public_contact_address';
-        }
-
-        if (!empty($missing)) {
+        // Shared safety gate before enabling 'on':
+        $refusalReasons = [];
+        if (!$statusService->canTurnOn($institute, $refusalReasons)) {
             $this->error("Refusing to enable public assistant for institute #{$id} ({$institute->name}).");
-            $this->warn("Required contact settings are missing:");
-            foreach ($missing as $m) {
+            $this->error("Refusing to activate Public Assistant without RECAPTCHA_SECRET_KEY / reCAPTCHA in production.");
+            $this->warn("Required prerequisites are missing:");
+            foreach ($refusalReasons as $m) {
                 $this->line("  - {$m}");
             }
             $this->line("Please configure these in the Admin Settings panel before enabling the public assistant.");
@@ -72,6 +56,12 @@ class RagPublicToggleCommand extends Command
         }
 
         $institute->update(['public_assistant_enabled' => true]);
+        ActivityLogService::log(
+            'assistant_public_toggle',
+            "Public assistant successfully enabled for institute #{$id} ({$institute->name})",
+            ['state' => 'on', 'public_assistant_enabled' => true],
+            $id
+        );
         $knowledgeService->clearCache($id);
         $this->info("Public assistant successfully enabled for institute #{$id} ({$institute->name}).");
         return 0;

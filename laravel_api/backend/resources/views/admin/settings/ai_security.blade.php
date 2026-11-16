@@ -181,7 +181,7 @@
     <div class="col-sm-7 p-md-0">
         <div class="welcome-text">
             <h4 style="color: var(--adm-text);">AI &amp; Security</h4>
-            <p class="mb-0" style="color: var(--adm-text-2);">Configure your institute's Google Gemini API key, Google reCAPTCHA v3 protection, and Google Sign-in OAuth credentials.</p>
+            <p class="mb-0" style="color: var(--adm-text-2);">Configure your institute's Google Gemini AI assistant settings and view platform-managed security integrations.</p>
         </div>
     </div>
     <div class="col-sm-5 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-none d-sm-flex align-items-center">

@@ -1,7 +1,7 @@
 <div class="header">
     <style>
         /* ══════════════════════════════════════════════════════════════
-           C1 TOP HEADER: FIXED CSS GRID / FLEX CONTRACT (3 ZONES)
+           C1 TOP HEADER: CSS GRID CONTRACT (auto minmax(0, 1fr) auto)
            ══════════════════════════════════════════════════════════════ */
         
         .header {
@@ -17,10 +17,9 @@
         }
 
         .adm-header-container {
-            display: flex !important;
-            flex-direction: row !important;
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) auto !important;
             align-items: center !important;
-            justify-content: space-between !important;
             height: 65px !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -35,7 +34,8 @@
             align-items: center !important;
             gap: 10px !important;
             min-width: 0 !important;
-            flex: 0 1 auto !important;
+            flex-shrink: 0 !important;
+            grid-column: 1 !important;
         }
 
         .adm-header-brand {
@@ -44,6 +44,7 @@
             gap: 8px !important;
             text-decoration: none !important;
             min-width: 0 !important;
+            flex: 1 1 auto !important;
         }
 
         .adm-header-brand img {
@@ -67,12 +68,15 @@
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            max-width: 160px !important;
             min-width: 0 !important;
             letter-spacing: 0.3px !important;
         }
 
-        /* Hamburger button */
+        .adm-brand-text-short {
+            display: none !important;
+        }
+
+        /* Hamburger button (40x40 fixed) */
         .custom-hamburger {
             display: inline-flex !important;
             flex-direction: column !important;
@@ -83,15 +87,19 @@
             height: 40px !important;
             min-width: 40px !important;
             min-height: 40px !important;
+            max-width: 40px !important;
+            max-height: 40px !important;
             cursor: pointer !important;
             flex-shrink: 0 !important;
             background: transparent !important;
             border: 1px solid var(--adm-border) !important;
             border-radius: 8px !important;
             padding: 0 !important;
+            margin: 0 !important;
             outline: none !important;
             touch-action: manipulation !important;
             color: var(--adm-text) !important;
+            box-sizing: border-box !important;
         }
 
         .custom-hamburger span {
@@ -115,13 +123,13 @@
             transform: translateY(-6px) rotate(-45deg) !important;
         }
 
-        /* ─── ZONE 2: CENTRE (Search) ─── */
+        /* ─── ZONE 2: CENTRE (Search Bar on Desktop) ─── */
         .adm-header-zone-centre {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            flex: 1 1 auto !important;
             min-width: 0 !important;
+            grid-column: 2 !important;
         }
 
         .adm-search-bar {
@@ -169,17 +177,18 @@
             display: none !important;
         }
 
-        /* ─── ZONE 3: RIGHT (40x40 Icons + Avatar) ─── */
+        /* ─── ZONE 3: RIGHT (Fixed-size 40px Buttons + Avatar) ─── */
         .adm-header-zone-right {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
             flex-wrap: nowrap !important;
-            gap: 6px !important;
+            gap: 8px !important;
             flex-shrink: 0 !important;
             list-style: none !important;
             margin: 0 !important;
             padding: 0 !important;
+            grid-column: 3 !important;
         }
 
         .adm-header-btn {
@@ -190,11 +199,14 @@
             height: 40px !important;
             min-width: 40px !important;
             min-height: 40px !important;
+            max-width: 40px !important;
+            max-height: 40px !important;
             border-radius: 8px !important;
             background: transparent !important;
             border: 1px solid var(--adm-border) !important;
             color: var(--adm-text) !important;
             padding: 0 !important;
+            margin: 0 !important;
             cursor: pointer !important;
             position: relative !important;
             text-decoration: none !important;
@@ -218,41 +230,71 @@
             flex-shrink: 0 !important;
         }
 
-        /* Absolute Badge inside 40x40 container */
+        /* Badges INSIDE 40x40 container (top: 6px; right: 6px) */
         .adm-badge {
             position: absolute !important;
-            top: -3px !important;
-            right: -3px !important;
+            top: 6px !important;
+            right: 6px !important;
             background: var(--adm-accent, #eb8153) !important;
             color: var(--adm-on-accent, #0f172a) !important;
-            font-size: 10px !important;
-            font-weight: 800 !important;
-            line-height: 1 !important;
-            min-width: 17px !important;
-            height: 17px !important;
-            padding: 1px 3px !important;
-            border-radius: 999px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            width: 8px !important;
+            height: 8px !important;
+            min-width: 8px !important;
+            min-height: 8px !important;
+            border-radius: 50% !important;
             box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
             pointer-events: none !important;
             box-sizing: border-box !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
         }
 
-        /* Avatar Box & Initials fallback */
+        .adm-badge.has-count {
+            top: 4px !important;
+            right: 4px !important;
+            min-width: 16px !important;
+            height: 16px !important;
+            padding: 1px 4px !important;
+            border-radius: 999px !important;
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+        }
+
+        /* Disable pulse pseudo-elements that create grey expanding circles */
+        .pulse-css:before,
+        .pulse-css:after,
+        #message-pulse:before,
+        #message-pulse:after,
+        #notification-pulse:before,
+        #notification-pulse:after {
+            display: none !important;
+            content: none !important;
+        }
+
+        /* Avatar Box: 40px fixed with margin, no negative margins */
         .adm-header-profile-btn {
             display: inline-flex !important;
             align-items: center !important;
+            justify-content: center !important;
+            width: 40px !important;
             height: 40px !important;
-            border-radius: 20px !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            max-width: 40px !important;
+            max-height: 40px !important;
+            border-radius: 50% !important;
             background: transparent !important;
             border: 1px solid var(--adm-border) !important;
-            padding: 2px !important;
+            padding: 0 !important;
+            margin: 0 0 0 4px !important;
             cursor: pointer !important;
-            gap: 8px !important;
             color: var(--adm-text) !important;
             flex-shrink: 0 !important;
+            box-sizing: border-box !important;
+            position: relative !important;
         }
 
         .adm-avatar-box {
@@ -291,18 +333,10 @@
         }
 
         .adm-header-user-name {
-            display: none;
-            font-size: 0.85rem !important;
-            font-weight: 600 !important;
-            color: var(--adm-text) !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            max-width: 130px !important;
-            padding-right: 8px !important;
+            display: none !important;
         }
 
-        /* ─── DROPDOWN MENUS ─── */
+        /* Dropdown menus */
         .adm-header-dropdown .dropdown-menu {
             min-width: 220px !important;
             border-radius: 12px !important;
@@ -375,11 +409,26 @@
                 display: block !important;
             }
 
-            .adm-header-user-name {
-                display: inline-block !important;
+            .adm-header-profile-btn {
+                width: auto !important;
+                max-width: 220px !important;
+                border-radius: 20px !important;
+                padding: 2px 10px 2px 2px !important;
+                gap: 8px !important;
             }
 
-            /* Main wrapper menu-toggle state on desktop */
+            .adm-header-user-name {
+                display: inline-block !important;
+                font-size: 0.85rem !important;
+                font-weight: 600 !important;
+                color: var(--adm-text) !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                max-width: 130px !important;
+                padding-right: 4px !important;
+            }
+
             #main-wrapper.menu-toggle .nav-header {
                 width: 5rem !important;
                 justify-content: center !important;
@@ -415,10 +464,6 @@
                 display: flex !important;
             }
 
-            .adm-brand-text {
-                max-width: 220px !important;
-            }
-
             .mobile-search-btn {
                 display: none !important;
             }
@@ -440,16 +485,23 @@
                 width: 100% !important;
             }
 
+            /* Left zone spans column 1 and 2, taking all free space */
+            .adm-header-zone-left {
+                grid-column: 1 / 3 !important;
+                width: 100% !important;
+            }
+
             .custom-hamburger {
                 display: inline-flex !important;
             }
 
             .adm-header-brand {
                 display: flex !important;
+                flex: 1 1 auto !important;
             }
 
             .adm-brand-text {
-                max-width: 180px !important;
+                max-width: none !important;
             }
 
             .mobile-search-btn {
@@ -474,7 +526,14 @@
 
             .adm-header-container {
                 padding: 0 12px !important;
-                gap: 6px !important;
+                gap: 8px !important;
+            }
+
+            /* Left zone spans columns 1 and 2, brand takes remaining space */
+            .adm-header-zone-left {
+                grid-column: 1 / 3 !important;
+                width: 100% !important;
+                gap: 8px !important;
             }
 
             .custom-hamburger {
@@ -483,11 +542,14 @@
 
             .adm-header-brand {
                 display: flex !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
             }
 
             .adm-brand-text {
-                max-width: 110px !important;
+                max-width: none !important;
                 font-size: 0.85rem !important;
+                min-width: 0 !important;
             }
 
             .mobile-search-btn {
@@ -498,7 +560,6 @@
                 display: none !important;
             }
 
-            /* Collapsing ~70px empty band */
             [data-header-position="fixed"] .content-body {
                 padding-top: 65px !important;
             }
@@ -506,6 +567,19 @@
                 padding-top: 14px !important;
                 padding-left: 12px !important;
                 padding-right: 12px !important;
+            }
+        }
+
+        /* SMARTPHONE COMPACT (<= 480px) */
+        @media (max-width: 480px) {
+            .adm-brand-text-full {
+                display: none !important;
+            }
+            .adm-brand-text-short {
+                display: inline-block !important;
+            }
+            .adm-home-btn {
+                display: none !important;
             }
         }
 
@@ -517,6 +591,7 @@
             right: 0 !important;
             bottom: 0 !important;
             width: 100% !important;
+            height: 100% !important;
             background: var(--adm-surface) !important;
             z-index: 1050 !important;
             display: flex !important;
@@ -557,8 +632,17 @@
         }
     </style>
 
+    @php
+        $currentInstId = \App\Models\Institute::resolveContextInstituteId()
+            ?? (auth()->check() ? auth()->user()?->institute_id : null)
+            ?? 1;
+        $brandFullName = $brandName ?? ($site_settings['admin_company_name'] ?? \App\Models\Institute::displayBrandName($currentInstId, 'TiT Institute'));
+        $words = explode(' ', trim($brandFullName));
+        $brandShortName = count($words) > 2 ? ($words[0] . ' ' . $words[1]) : $brandFullName;
+    @endphp
+
     <div class="adm-header-container">
-        {{-- ZONE 1: LEFT (Toggle + Brand) --}}
+        {{-- ZONE 1: LEFT (Toggle + Brand - takes remaining space on mobile) --}}
         <div class="adm-header-zone-left">
             <button class="custom-hamburger" id="customHamburger" aria-label="Toggle menu" type="button">
                 <span></span>
@@ -566,8 +650,8 @@
                 <span></span>
             </button>
 
-            <a href="{{ route('admin.dashboard') }}" class="adm-header-brand" title="{{ $brandName ?? 'TiT Institute' }}">
-                @if(isset($site_settings['admin_logo']))
+            <a href="{{ route('admin.dashboard') }}" class="adm-header-brand" title="{{ $brandFullName }}">
+                @if(isset($site_settings['admin_logo']) && !empty($site_settings['admin_logo']))
                     <img src="{{ asset($site_settings['admin_logo']) }}" alt="Logo">
                 @else
                     <svg viewBox="0 0 50 50" fill="none">
@@ -575,19 +659,13 @@
                         <path d="M17.5158 25.8619L19.8088 25.2475L14.8746 11.1774C14.5189 9.84988 15.8701 9.0998 16.8205 9.75055L33.0924 22.2055C33.7045 22.5589 33.8512 24.0717 32.6444 24.3951L30.3514 25.0095L35.2856 39.0796C35.6973 40.1334 34.4431 41.2455 33.3397 40.5064L17.0678 28.0515C16.2057 27.2477 16.5504 26.1205 17.5158 25.8619ZM18.685 14.2955L22.2224 24.6007L29.4633 22.6605L18.685 14.2955ZM31.4751 35.9615L27.8171 25.6886L20.5762 27.6288L31.4751 35.9615Z" fill="white"/>
                     </svg>
                 @endif
-                <span class="adm-brand-text">{{ $brandName ?? 'TiT Institute' }}</span>
+                <span class="adm-brand-text adm-brand-text-full">{{ $brandFullName }}</span>
+                <span class="adm-brand-text adm-brand-text-short">{{ $brandShortName }}</span>
             </a>
         </div>
 
-        {{-- ZONE 2: CENTRE (Search) --}}
+        {{-- ZONE 2: CENTRE (Search bar on desktop / Overlay container) --}}
         <div class="adm-header-zone-centre" id="headerSearchContainer">
-            <button type="button" class="adm-header-btn mobile-search-btn" id="mobileSearchBtn" aria-label="Open search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-            </button>
-
             <div class="adm-search-bar">
                 <form action="{{ route('admin.search') }}" method="GET">
                     <input class="form-control adm-search-input" type="search" name="q" placeholder="Search..." aria-label="Search">
@@ -602,10 +680,18 @@
             </div>
         </div>
 
-        {{-- ZONE 3: RIGHT (Icons + Avatar) --}}
+        {{-- ZONE 3: RIGHT (Fixed-size 40px Buttons + Avatar with margin) --}}
         <div class="adm-header-zone-right">
-            {{-- Home --}}
-            <a class="adm-header-btn" href="{{ config('services.frontend_url') }}" target="_blank" rel="noopener noreferrer" title="Home" aria-label="Home">
+            {{-- Mobile Search Toggle Button --}}
+            <button type="button" class="adm-header-btn mobile-search-btn" id="mobileSearchBtn" aria-label="Open search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+
+            {{-- Home (hidden on <=480px to protect brand space) --}}
+            <a class="adm-header-btn adm-home-btn" href="{{ config('services.frontend_url') }}" target="_blank" rel="noopener noreferrer" title="Home" aria-label="Home">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
@@ -618,7 +704,7 @@
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                     <polyline points="22,6 12,13 2,6"/>
                 </svg>
-                <div class="adm-badge pulse-css d-none" id="message-pulse">
+                <div class="adm-badge d-none" id="message-pulse">
                     <span id="message-count" class="d-none">0</span>
                 </div>
             </a>
@@ -630,7 +716,7 @@
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
-                    <div class="adm-badge pulse-css d-none" id="notification-pulse">
+                    <div class="adm-badge d-none" id="notification-pulse">
                         <span id="notification-count" class="d-none">0</span>
                     </div>
                 </button>

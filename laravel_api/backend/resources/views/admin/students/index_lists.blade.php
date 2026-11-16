@@ -8,7 +8,7 @@
         font-family: monospace;
         font-weight: 700;
         font-size: 0.85rem;
-        color: #38bdf8;
+        color: #7dd3fc;
         background: rgba(56, 189, 248, 0.1);
         border: 1px solid rgba(56, 189, 248, 0.3);
         padding: 3px 8px;

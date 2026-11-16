@@ -550,6 +550,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
   };
 
   // 7. Layout Sanity Check per page and viewport
+  window.scrollTo(0, 0);
   const layoutViolations = [];
 
   // Check 1: Nested .content-body count > 1
@@ -564,7 +565,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
   // Check 2: gapLeft & gapTop on layout's .content-body
   const layoutContentBody = contentBodies[0] || document.querySelector('#main-wrapper') || document.body;
   const cbRect = layoutContentBody.getBoundingClientRect();
-  const candidates = Array.from(layoutContentBody.querySelectorAll('.page-titles, .card, h1, h2, h3, h4, form, table'));
+  const candidates = Array.from(layoutContentBody.querySelectorAll('.page-titles, .card, .alert, h1, h2, h3, h4, h5, h6, form, table'));
   let firstVisibleEl = null;
   let firstElRect = null;
   for (const el of candidates) {
@@ -618,22 +619,85 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     }
   }
 
-  // Check 4 (Prompt 31 C1): Header cluster bounding box non-intersection assertion
-  const headerClusterElements = Array.from(document.querySelectorAll('.adm-header-zone-right > *, .header-right > *')).filter(el => {
+  // Check 4 (Prompt 31/31b): Header buttons center point occlusion, pairwise non-intersection & badge isolation
+  const headerButtons = Array.from(document.querySelectorAll('.adm-header-btn, .adm-header-profile-btn, .mobile-search-btn, .custom-hamburger')).filter(el => {
     const r = el.getBoundingClientRect();
     const s = window.getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden';
   });
-  for (let i = 0; i < headerClusterElements.length; i++) {
-    const r1 = headerClusterElements[i].getBoundingClientRect();
-    for (let j = i + 1; j < headerClusterElements.length; j++) {
-      const r2 = headerClusterElements[j].getBoundingClientRect();
+
+  // 4a. Button center points must not be occluded by other elements
+  for (const btn of headerButtons) {
+    const r = btn.getBoundingClientRect();
+    const cx = Math.round(r.left + r.width / 2);
+    const cy = Math.round(r.top + r.height / 2);
+    const hit = document.elementFromPoint(cx, cy);
+    if (!hit || (!btn.contains(hit) && hit !== btn)) {
+      const hitDesc = hit ? `${hit.tagName.toLowerCase()}${hit.className ? '.' + hit.className.trim().split(/\s+/).join('.') : ''}${hit.id ? '#' + hit.id : ''}` : 'null';
+      const btnDesc = `${btn.tagName.toLowerCase()}${btn.className ? '.' + btn.className.trim().split(/\s+/).join('.') : ''}${btn.id ? '#' + btn.id : ''}`;
+      layoutViolations.push({
+        type: 'button-center-occluded',
+        message: `Button [${btnDesc}] centre (${cx}, ${cy}) is occluded by [${hitDesc}]`
+      });
+    }
+  }
+
+  // 4b. Pairwise non-intersection of header buttons
+  for (let i = 0; i < headerButtons.length; i++) {
+    const b1 = headerButtons[i];
+    const r1 = b1.getBoundingClientRect();
+    for (let j = i + 1; j < headerButtons.length; j++) {
+      const b2 = headerButtons[j];
+      const r2 = b2.getBoundingClientRect();
       const xOverlap = Math.max(0, Math.min(r1.right, r2.right) - Math.max(r1.left, r2.left));
       const yOverlap = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
       if (xOverlap > 1 && yOverlap > 1) {
         layoutViolations.push({
-          type: 'header-cluster-overlap',
-          message: `Header cluster elements [${i}] and [${j}] overlap: xOverlap=${xOverlap.toFixed(1)}px, yOverlap=${yOverlap.toFixed(1)}px`
+          type: 'button-pairwise-overlap',
+          message: `Buttons [${b1.className}#${b1.id || i}] and [${b2.className}#${b2.id || j}] overlap: xOverlap=${xOverlap.toFixed(1)}px, yOverlap=${yOverlap.toFixed(1)}px`
+        });
+      }
+    }
+  }
+
+  // 4c. Badges box non-intersection with other buttons
+  const headerBadges = Array.from(document.querySelectorAll('.adm-badge, #message-pulse, #notification-pulse')).filter(el => {
+    const s = window.getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0;
+  });
+  for (const badge of headerBadges) {
+    const br = badge.getBoundingClientRect();
+    const parentBtn = badge.closest('.adm-header-btn, .adm-header-profile-btn, .mobile-search-btn');
+    for (const btn of headerButtons) {
+      if (btn === parentBtn) continue;
+      const btnR = btn.getBoundingClientRect();
+      const xOverlap = Math.max(0, Math.min(br.right, btnR.right) - Math.max(br.left, btnR.left));
+      const yOverlap = Math.max(0, Math.min(br.bottom, btnR.bottom) - Math.max(br.top, btnR.top));
+      if (xOverlap > 1 && yOverlap > 1) {
+        layoutViolations.push({
+          type: 'badge-button-overlap',
+          message: `Badge #${badge.id || badge.className} overlaps non-parent button ${btn.className}#${btn.id}: xOverlap=${xOverlap.toFixed(1)}px, yOverlap=${yOverlap.toFixed(1)}px`
+        });
+      }
+    }
+  }
+
+  // 4d. Mobile search button vs brand non-intersection
+  const mobileSearchBtnEl = document.querySelector('.mobile-search-btn');
+  const headerBrandEl = document.querySelector('.adm-header-brand');
+  if (mobileSearchBtnEl && headerBrandEl) {
+    const sStyle = window.getComputedStyle(mobileSearchBtnEl);
+    const bStyle = window.getComputedStyle(headerBrandEl);
+    if (sStyle.display !== 'none' && bStyle.display !== 'none') {
+      const sr = mobileSearchBtnEl.getBoundingClientRect();
+      const br = headerBrandEl.getBoundingClientRect();
+      const xOverlap = Math.max(0, Math.min(sr.right, br.right) - Math.max(sr.left, br.left));
+      const yOverlap = Math.max(0, Math.min(sr.bottom, br.bottom) - Math.max(sr.top, br.top));
+      if (xOverlap > 1 && yOverlap > 1) {
+        layoutViolations.push({
+          type: 'search-brand-overlap',
+          message: `Mobile search button overlaps brand text: xOverlap=${xOverlap.toFixed(1)}px, yOverlap=${yOverlap.toFixed(1)}px`
         });
       }
     }

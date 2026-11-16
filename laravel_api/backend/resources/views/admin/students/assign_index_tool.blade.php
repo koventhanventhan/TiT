@@ -106,12 +106,12 @@
             <div class="card-body">
                 <form id="filterForm">
                     <!-- Status / Overview Badge -->
-                    <div class="alert alert-info py-2 px-3 d-flex justify-content-between align-items-center" style="background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
-                        <div>
+                    <div class="alert alert-info py-2 px-3 d-flex justify-content-between align-items-center flex-wrap" style="background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8; gap: 8px;">
+                        <div style="min-width: 0;">
                             <strong>{{ $unassignedCount }}</strong> unassigned active student(s)
                             <small class="d-block" style="color: #bae6fd;">Out of {{ $totalActiveCount }} confirmed students</small>
                         </div>
-                        <span class="badge badge-primary">Institute: {{ $institute->name ?? 'Default' }}</span>
+                        <span class="badge badge-primary text-wrap text-left" style="max-width: 100%; word-break: break-word;">Institute: {{ $institute->name ?? 'Default' }}</span>
                     </div>
 
                     <!-- Grade Filter -->

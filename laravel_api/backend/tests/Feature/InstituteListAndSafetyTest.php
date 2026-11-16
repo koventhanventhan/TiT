@@ -150,7 +150,7 @@ class InstituteListAndSafetyTest extends TestCase
         $this->assertSame(['Domain: verified', 'Admin: no', 'Integrations: 1/7'], $instPartial->setupBadges());
 
         // Render ListInstitutes table and assert badges appear while secrets NEVER appear
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         $list = Livewire::test(ListInstitutes::class)
             ->assertCanSeeTableRecords([$inst1, $instBare, $instUnverified, $instPartial])
@@ -231,7 +231,7 @@ class InstituteListAndSafetyTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         // Policy checks
         $this->assertFalse(Gate::forUser($this->superAdmin)->allows('delete', $inst1));
@@ -309,7 +309,7 @@ class InstituteListAndSafetyTest extends TestCase
             'subscription_plan_id' => $this->plan->id,
         ]);
 
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         // 1. One-time ready token shows password on first load and disappears on second load (refresh)
         $token = ViewInstitute::issueReadyToken($inst2->id, 'first@checklist.lk', 'OneTimePass#987654');

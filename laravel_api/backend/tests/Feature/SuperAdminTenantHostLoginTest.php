@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\SuperAdmin\Pages\InstituteIntegrationsOverview;
+use App\Filament\SuperAdmin\Resources\InstituteResource\Pages\CreateInstitute;
+use App\Filament\SuperAdmin\Resources\InstituteResource\Pages\ListInstitutes;
 use App\Models\Institute;
 use App\Models\InstituteDomain;
 use App\Models\User;
@@ -264,5 +267,43 @@ class SuperAdminTenantHostLoginTest extends TestCase
 
         $user->refresh();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('PlatformUpdated2026!', $user->password));
+    }
+
+    public function test_logged_in_super_admin_can_access_institutes_list_wizard_and_overview_pages_on_tenant_host(): void
+    {
+        request()->headers->set('HOST', 'second-academy.lk');
+        $_SERVER['HTTP_HOST'] = 'second-academy.lk';
+
+        // 1. Authenticate as super_admin on the panel guard
+        $this->actingAs($this->superAdminNull, 'super_admin');
+        Filament::setCurrentPanel(Filament::getPanel('super-admin'));
+
+        // 2. HTTP GET panel home, institutes list, and create wizard
+        $this->withServerVariables(['HTTP_HOST' => 'second-academy.lk'])
+            ->get('http://second-academy.lk/super-admin')
+            ->assertOk();
+
+        $this->withServerVariables(['HTTP_HOST' => 'second-academy.lk'])
+            ->get('http://second-academy.lk/super-admin/institutes')
+            ->assertOk();
+
+        $this->withServerVariables(['HTTP_HOST' => 'second-academy.lk'])
+            ->get('http://second-academy.lk/super-admin/institutes/create')
+            ->assertOk();
+
+        // 3. Exercise Livewire components: ListInstitutes, CreateInstitute, InstituteIntegrationsOverview
+        Livewire::test(ListInstitutes::class)
+            ->assertCanSeeTableRecords([$this->instOne, $this->instTwo])
+            ->assertSee('TiT Primary')
+            ->assertSee('Second Academy');
+
+        Livewire::test(CreateInstitute::class)
+            ->assertSee('Create institute')
+            ->assertSee('Website address');
+
+        Livewire::test(InstituteIntegrationsOverview::class)
+            ->assertStatus(200)
+            ->assertSee('TiT Primary')
+            ->assertSee('Second Academy');
     }
 }

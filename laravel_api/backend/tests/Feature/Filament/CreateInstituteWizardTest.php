@@ -89,7 +89,7 @@ class CreateInstituteWizardTest extends TestCase
 
     public function test_each_wizard_step_validates_inputs_before_advancing(): void
     {
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         $existingUser = User::withoutGlobalScopes()->create([
             'name' => 'Existing Teacher',
@@ -210,7 +210,7 @@ class CreateInstituteWizardTest extends TestCase
             new DomainChecker(dnsResolver: static fn (string $host): array => $host === 'northern-academy.lk' ? ['203.0.113.55'] : [])
         );
 
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
 
         $wizard = Livewire::test(CreateInstitute::class)
             ->fillForm([

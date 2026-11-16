@@ -289,7 +289,7 @@ class AdminIntegrationsUiTest extends TestCase
             'last_verified_at' => now(),
         ]);
 
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
         Filament::setCurrentPanel(Filament::getPanel('super-admin'));
 
         $component = Livewire::test(InstituteIntegrationsOverview::class);
@@ -310,7 +310,7 @@ class AdminIntegrationsUiTest extends TestCase
         $this->assertEmpty($row->credentials);
 
         // PlatformSettings labels platform defaults clearly
-        $platformHtml = $this->actingAs($this->superAdmin)
+        $platformHtml = $this->actingAs($this->superAdmin, 'super_admin')
             ->get('/super-admin/platform-settings')
             ->assertStatus(200)
             ->getContent();

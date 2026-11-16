@@ -59,5 +59,7 @@
         <env name="MAIL_ENCRYPTION" value="" force="true"/>
         <env name="MAIL_FROM_ADDRESS" value="" force="true"/>
         <env name="MAIL_FROM_NAME" value="" force="true"/>
+        <env name="RAG_ENABLED" value="false" force="true"/>
+        <env name="RAG_PUBLIC_ENABLED" value="false" force="true"/>
     </php>
 </phpunit>

@@ -54,8 +54,8 @@ class AdminResponsiveTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('id="customHamburger"', false);
         $response->assertSee('class="custom-hamburger"', false);
-        $response->assertSee('class="search_bar"', false);
-        $response->assertSee('class="header-content"', false);
+        $response->assertSee('class="adm-search-bar"', false);
+        $response->assertSee('class="adm-header-container"', false);
     }
 
     public function test_admin_students_toolbar_includes_wrapping_and_responsive_containers(): void

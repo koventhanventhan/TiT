@@ -111,6 +111,7 @@ class AdminAiSecuritySettingsTest extends TestCase
         // 1. Save new Gemini settings
         $response = $this->actingAs($this->adminA, 'web')
             ->post('/admin/settings/ai-security/gemini', [
+                'gemini_mode' => 'custom',
                 'api_key' => $rawApiKey,
                 'daily_cap' => 120,
             ]);
@@ -163,128 +164,22 @@ class AdminAiSecuritySettingsTest extends TestCase
             return $request->hasHeader('x-goog-api-key', $rawApiKey);
         });
 
-        // 4. Clear key
+        // 4. Clear key (reverts to platform mode)
         $clearResp = $this->actingAs($this->adminA, 'web')
             ->post('/admin/settings/ai-security/gemini/clear');
 
         $clearResp->assertRedirect(route('admin.settings.ai-security'));
         $row->refresh();
-        $this->assertSame('unconfigured', $row->status);
-        $this->assertEmpty($row->credentials);
-    }
-
-    public function test_recaptcha_settings_save_mask_test_and_clear(): void
-    {
-        $siteKey = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
-        $secretKey = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
-
-        // 1. Save reCAPTCHA
-        $this->actingAs($this->adminA, 'web')
-            ->post('/admin/settings/ai-security/recaptcha', [
-                'site_key' => $siteKey,
-                'secret_key' => $secretKey,
-                'score_threshold' => 0.65,
-            ])
-            ->assertRedirect(route('admin.settings.ai-security'))
-            ->assertSessionHas('success');
-
-        $row = InstituteIntegration::withoutGlobalScopes()
-            ->where('institute_id', $this->instituteA->id)
-            ->where('provider', 'recaptcha')
-            ->firstOrFail();
-
         $this->assertSame('configured', $row->status);
-        $this->assertSame($siteKey, $row->settings['site_key']);
-        $this->assertSame(0.65, (float) $row->settings['score_threshold']);
-        $this->assertSame($secretKey, $row->credentials['secret_key']);
-
-        // 2. View page: secret masked, site key visible
-        $html = $this->actingAs($this->adminA, 'web')
-            ->get('/admin/settings/ai-security')
-            ->assertStatus(200)
-            ->getContent();
-
-        $this->assertStringContainsString($siteKey, $html);
-        $this->assertStringNotContainsString($secretKey, $html);
-        $this->assertStringContainsString('••••', $html);
-
-        // 3. Test keys
-        Http::fake([
-            'https://www.google.com/recaptcha/api/siteverify' => Http::response([
-                'success' => false,
-                'error-codes' => ['invalid-input-response'],
-            ], 200),
-        ]);
-
-        $this->actingAs($this->adminA, 'web')
-            ->post('/admin/settings/ai-security/recaptcha/test')
-            ->assertRedirect(route('admin.settings.ai-security'))
-            ->assertSessionHas('success');
-
-        $row->refresh();
-        $this->assertSame('verified', $row->status);
-
-        Http::assertSent(function ($request) use ($secretKey) {
-            return $request['secret'] === $secretKey;
-        });
-
-        // 4. Clear reCAPTCHA
-        $this->actingAs($this->adminA, 'web')
-            ->post('/admin/settings/ai-security/recaptcha/clear')
-            ->assertRedirect(route('admin.settings.ai-security'));
-
-        $row->refresh();
-        $this->assertSame('unconfigured', $row->status);
+        $this->assertSame('platform', $row->settings['gemini_mode'] ?? null);
         $this->assertEmpty($row->credentials);
     }
 
-    public function test_google_oauth_settings_save_and_clear_and_redirect_uri_display(): void
-    {
-        $clientId = '123456789-abcdef.apps.googleusercontent.com';
-        $clientSecret = 'GOCSPX-TestGoogleClientSecret12345';
-
-        // 1. Initial view: check redirect URI
-        $this->actingAs($this->adminA, 'web')
-            ->get('/admin/settings/ai-security')
-            ->assertStatus(200)
-            ->assertSee('https://colombo.academy.lk/api/auth/google/callback');
-
-        // 2. Save Google OAuth
-        $this->actingAs($this->adminA, 'web')
-            ->post('/admin/settings/ai-security/google', [
-                'client_id' => $clientId,
-                'client_secret' => $clientSecret,
-            ])
-            ->assertRedirect(route('admin.settings.ai-security'))
-            ->assertSessionHas('success');
-
-        $row = InstituteIntegration::withoutGlobalScopes()
-            ->where('institute_id', $this->instituteA->id)
-            ->where('provider', 'google')
-            ->firstOrFail();
-
-        $this->assertSame('configured', $row->status);
-        $this->assertSame($clientId, $row->settings['client_id']);
-        $this->assertSame($clientSecret, $row->credentials['client_secret']);
-
-        // 3. View page: secret masked
-        $html = $this->actingAs($this->adminA, 'web')
-            ->get('/admin/settings/ai-security')
-            ->assertStatus(200)
-            ->getContent();
-
-        $this->assertStringContainsString($clientId, $html);
-        $this->assertStringNotContainsString($clientSecret, $html);
-
-        // 4. Clear Google
-        $this->actingAs($this->adminA, 'web')
-            ->post('/admin/settings/ai-security/google/clear')
-            ->assertRedirect(route('admin.settings.ai-security'));
-
-        $row->refresh();
-        $this->assertSame('unconfigured', $row->status);
-        $this->assertEmpty($row->credentials);
-    }
+    // NOTE: reCAPTCHA v3 and Google OAuth settings are platform-managed since Prompt 31.
+    // Institute admin cannot update them via admin routes (returns 403) - tested in:
+    // IntegrationOwnershipTest::test_institute_admin_cannot_update_recaptcha_or_google_on_admin_routes.
+    // Super-admin management of reCAPTCHA & Google credentials via the Filament Institute Edit page is tested in:
+    // IntegrationOwnershipTest::test_super_admin_can_manage_recaptcha_and_google_on_filament_institute_resource.
 
     public function test_super_admin_filament_overview_shows_all_seven_providers(): void
     {
@@ -306,7 +201,7 @@ class AdminAiSecuritySettingsTest extends TestCase
             'status' => 'configured',
         ]);
 
-        $this->actingAs($this->superAdmin);
+        $this->actingAs($this->superAdmin, 'super_admin');
         Filament::setCurrentPanel(Filament::getPanel('super-admin'));
 
         $component = Livewire::test(InstituteIntegrationsOverview::class);

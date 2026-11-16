@@ -119,7 +119,8 @@ class AdminStudentFilterTest extends TestCase
         // Strip text and tooltips
         $response->assertSee('students have an index number');
         $response->assertSee('Pending Payments: 1');
-        $response->assertSee('Strip Legend:');
+        $response->assertSee('Students matching the current filters that already have a number');
+        $response->assertSee('click to open dedicated pending payments page');
 
         // Verify pending link is relative and points to dedicated pending-payments page
         $content = $response->getContent();

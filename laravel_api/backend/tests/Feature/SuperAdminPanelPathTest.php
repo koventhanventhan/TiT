@@ -60,7 +60,7 @@ class SuperAdminPanelPathTest extends TestCase
             'institute_id' => $inst->id,
         ]);
 
-        $this->actingAs($superAdmin)
+        $this->actingAs($superAdmin, 'super_admin')
             ->get('/super-admin')
             ->assertOk();
     }

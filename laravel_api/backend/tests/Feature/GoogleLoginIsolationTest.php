@@ -116,9 +116,7 @@ class GoogleLoginIsolationTest extends TestCase
         $this->assertStringNotContainsString('TiT Primary', $content);
 
         // 5. PostMessage target origin must equal host
-        $this->assertStringContainsString("window.opener.postMessage", $content);
-        $this->assertStringContainsString("'http://colombo.test'", $content);
-        $this->assertStringNotContainsString("'*'", $content);
+        $this->assertPostMessageOrigin($content, 'http://colombo.test');
     }
 
     public function test_google_login_existing_user_of_same_institute_succeeds(): void
@@ -150,8 +148,7 @@ class GoogleLoginIsolationTest extends TestCase
         $this->assertSame('google-inst2-existing', $userInst2->fresh()->google_id);
 
         // PostMessage target origin equals host
-        $this->assertStringContainsString("'http://colombo.test'", $content);
-        $this->assertStringNotContainsString("'*'", $content);
+        $this->assertPostMessageOrigin($content, 'http://colombo.test');
     }
 
     public function test_google_login_new_email_on_institute_creates_pending_student(): void
@@ -175,7 +172,7 @@ class GoogleLoginIsolationTest extends TestCase
         $this->assertEquals('google-new-student', $newUser->google_id);
 
         // PostMessage target origin equals host
-        $this->assertStringContainsString("'http://colombo.test'", $content);
+        $this->assertPostMessageOrigin($content, 'http://colombo.test');
     }
 
     public function test_google_login_respects_plan_limit_for_new_student(): void
@@ -214,7 +211,7 @@ class GoogleLoginIsolationTest extends TestCase
         // No new user created
         $this->assertNull(User::where('email', 'blocked_by_plan@example.com')->first());
         $this->assertStringContainsString('plan_limit_reached', $content);
-        $this->assertStringContainsString("'http://colombo.test'", $content);
+        $this->assertPostMessageOrigin($content, 'http://colombo.test');
     }
 
     public function test_token_issued_on_institute_a_rejected_by_institute_b_host(): void
@@ -239,6 +236,17 @@ class GoogleLoginIsolationTest extends TestCase
         $response->assertJson([
             'message' => 'Institute context mismatch',
         ]);
+    }
+
+    protected function assertPostMessageOrigin(string $content, string $expectedOrigin): void
+    {
+        $this->assertStringContainsString("window.opener.postMessage", $content);
+        preg_match('/window\.opener\.postMessage\([\s\S]*?,\s*("(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\')\s*\);/', $content, $matches);
+        $this->assertNotEmpty($matches, 'window.opener.postMessage origin argument must be found');
+        $rawOrigin = $matches[1];
+        $decodedOrigin = json_decode($rawOrigin, true) ?? trim($rawOrigin, "'\"");
+        $this->assertSame($expectedOrigin, $decodedOrigin);
+        $this->assertStringNotContainsString("'*'", $content);
     }
 }
 

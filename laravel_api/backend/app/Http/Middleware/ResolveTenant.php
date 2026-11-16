@@ -244,18 +244,141 @@ class ResolveTenant
             return true;
         }
 
-        if ($request->is('livewire/*')) {
-            $referer = (string) $request->header('referer', '');
-            if (str_contains($referer, "/{$panelPath}")) {
-                return true;
-            }
+        // Livewire sub-requests: only trust parsed Livewire v3 component payloads that belong
+        // to the super-admin panel and satisfy super_admin authentication requirements.
+        // Never rely on client-controlled Referer headers or obsolete Livewire v2 fields.
+        $isLivewire = $request->is('livewire/*')
+            || $request->is('livewire*/*')
+            || ($request->route() && $request->route()->named('*livewire*'))
+            || $request->hasHeader('X-Livewire');
 
-            $componentName = (string) $request->input('fingerprint.name', '');
-            if (str_contains($componentName, 'filament') || str_contains($componentName, 'super_admin')) {
-                return true;
-            }
+        if ($isLivewire) {
+            return $this->isSuperAdminLivewireRequest($request);
         }
 
         return false;
+    }
+
+    /**
+     * Inspect Livewire v3 payload components to determine if this request legitimately
+     * targets the super-admin Filament panel.
+     */
+    protected function isSuperAdminLivewireRequest(Request $request): bool
+    {
+        $components = $request->input('components');
+        if (!is_array($components) || empty($components)) {
+            return false;
+        }
+
+        $superAdminClasses = $this->getSuperAdminPanelComponentClasses();
+
+        foreach ($components as $component) {
+            if (!is_array($component)) {
+                return false;
+            }
+
+            $snapshot = $component['snapshot'] ?? null;
+            if (is_string($snapshot)) {
+                $snapshot = json_decode($snapshot, true);
+            }
+            if (!is_array($snapshot)) {
+                return false;
+            }
+
+            $name = $snapshot['memo']['name'] ?? null;
+            if (!is_string($name) || $name === '') {
+                return false;
+            }
+
+            // Resolve component class
+            $componentClass = null;
+            if (class_exists($name)) {
+                $componentClass = $name;
+            } else {
+                try {
+                    $componentClass = app('livewire.factory')->resolveComponentClass($name);
+                } catch (\Throwable) {
+                    $componentClass = null;
+                }
+            }
+
+            if (!$componentClass) {
+                return false;
+            }
+
+            // Check if class belongs to SuperAdmin panel
+            $isSuperAdminComponent = str_starts_with($componentClass, 'App\\Filament\\SuperAdmin\\')
+                || in_array($componentClass, $superAdminClasses, true)
+                || (str_starts_with($componentClass, 'Filament\\') && is_subclass_of($componentClass, \Livewire\Component::class));
+
+            if (!$isSuperAdminComponent) {
+                return false;
+            }
+
+            // Authentication check: unauthenticated auth components (Login, Password Reset) are permitted;
+            // all other super-admin components require an active super_admin guard session.
+            $isAuthComponent = in_array($componentClass, [
+                \Filament\Auth\Pages\Login::class,
+                \Filament\Pages\Auth\Login::class,
+                \App\Filament\SuperAdmin\Pages\Auth\SuperAdminRequestPasswordReset::class,
+                \App\Filament\SuperAdmin\Pages\Auth\SuperAdminResetPassword::class,
+            ], true);
+
+            if (!$isAuthComponent && !auth('super_admin')->check()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Cache and return registered super-admin panel component classes.
+     *
+     * @return array<int, class-string>
+     */
+    protected function getSuperAdminPanelComponentClasses(): array
+    {
+        static $cachedClasses = null;
+        if ($cachedClasses !== null) {
+            return $cachedClasses;
+        }
+
+        $classes = [];
+        try {
+            if (class_exists(\Filament\Facades\Filament::class)) {
+                $panel = \Filament\Facades\Filament::getPanel('super-admin');
+                if ($panel) {
+                    foreach ($panel->getPages() as $page) {
+                        $classes[] = $page;
+                    }
+                    foreach ($panel->getResources() as $resource) {
+                        if (method_exists($resource, 'getPages')) {
+                            foreach ($resource::getPages() as $pageReg) {
+                                $classes[] = $pageReg->getPage();
+                            }
+                        }
+                    }
+                    foreach ($panel->getWidgets() as $widget) {
+                        $classes[] = $widget;
+                    }
+                    if ($panel->hasLogin()) {
+                        $classes[] = $panel->getLoginRouteAction();
+                    }
+                    if ($panel->hasPasswordReset()) {
+                        $classes[] = \App\Filament\SuperAdmin\Pages\Auth\SuperAdminRequestPasswordReset::class;
+                        $classes[] = \App\Filament\SuperAdmin\Pages\Auth\SuperAdminResetPassword::class;
+                    }
+                    if ($panel->hasProfile()) {
+                        $classes[] = $panel->getProfilePage();
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // Panel not registered or in early boot
+        }
+
+        $cachedClasses = array_values(array_unique(array_filter($classes)));
+        return $cachedClasses;
     }
 }

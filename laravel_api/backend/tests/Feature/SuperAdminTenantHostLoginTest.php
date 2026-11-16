@@ -8,6 +8,7 @@ use App\Filament\SuperAdmin\Resources\InstituteResource\Pages\ListInstitutes;
 use App\Models\Institute;
 use App\Models\InstituteDomain;
 use App\Models\User;
+use App\Support\Tenant;
 use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -305,5 +306,117 @@ class SuperAdminTenantHostLoginTest extends TestCase
             ->assertStatus(200)
             ->assertSee('TiT Primary')
             ->assertSee('Second Academy');
+    }
+
+    public function test_forged_referer_on_tenant_host_does_not_set_tenant_to_null(): void
+    {
+        $updateUri = class_exists(\Livewire\Livewire::class)
+            ? \Livewire\Livewire::getUpdateUri()
+            : '/livewire/update';
+
+        // A guest or student on Institute B sends POST to Livewire update endpoint with forged Referer header
+        // 1. With non-Filament component (or fake component)
+        $this->withServerVariables([
+            'HTTP_HOST' => 'second-academy.lk',
+            'HTTP_REFERER' => 'https://second-academy.lk/super-admin',
+        ])->withHeaders([
+            'X-Livewire' => 'true',
+        ])->postJson('http://second-academy.lk' . $updateUri, [
+            'components' => [
+                [
+                    'snapshot' => json_encode([
+                        'memo' => ['name' => 'non-existent-or-guest-component'],
+                    ]),
+                    'updates' => [],
+                    'calls' => [],
+                ],
+            ],
+        ]);
+
+        // Tenant was NOT bypassed to null; Tenant resolves to Second Academy ($this->instTwo)
+        $this->assertNotNull(Tenant::get());
+        $this->assertSame($this->instTwo->id, Tenant::get()?->id);
+
+        // 2. Even if forged request attempts to name a SuperAdmin component, unauthenticated requester cannot bypass tenant
+        Tenant::set(null);
+        $this->withServerVariables([
+            'HTTP_HOST' => 'second-academy.lk',
+            'HTTP_REFERER' => 'https://second-academy.lk/super-admin',
+        ])->withHeaders([
+            'X-Livewire' => 'true',
+        ])->postJson('http://second-academy.lk' . $updateUri, [
+            'components' => [
+                [
+                    'snapshot' => json_encode([
+                        'memo' => ['name' => ListInstitutes::class],
+                    ]),
+                    'updates' => [],
+                    'calls' => [],
+                ],
+            ],
+        ]);
+
+        $this->assertNotNull(Tenant::get());
+        $this->assertSame($this->instTwo->id, Tenant::get()?->id);
+    }
+
+    public function test_real_filament_livewire_request_sets_tenant_to_null_for_authenticated_super_admin(): void
+    {
+        $updateUri = class_exists(\Livewire\Livewire::class)
+            ? \Livewire\Livewire::getUpdateUri()
+            : '/livewire/update';
+
+        $this->actingAs($this->superAdminNull, 'super_admin');
+
+        $this->withServerVariables([
+            'HTTP_HOST' => 'second-academy.lk',
+        ])->withHeaders([
+            'X-Livewire' => 'true',
+        ])->postJson('http://second-academy.lk' . $updateUri, [
+            'components' => [
+                [
+                    'snapshot' => json_encode([
+                        'memo' => ['name' => ListInstitutes::class],
+                    ]),
+                    'updates' => [],
+                    'calls' => [],
+                ],
+            ],
+        ]);
+
+        // Super admin request legitimately ran with Tenant::get() === null
+        $this->assertNull(Tenant::get());
+    }
+
+    public function test_student_login_on_institute_b_cannot_see_institute_a_users(): void
+    {
+        $studentOne = User::factory()->create([
+            'name' => 'Student In Inst One',
+            'email' => 'student1@primary.lk',
+            'role' => 'student',
+            'institute_id' => $this->instOne->id,
+        ]);
+
+        $studentTwo = User::factory()->create([
+            'name' => 'Student In Inst Two',
+            'email' => 'student2@second-academy.lk',
+            'role' => 'student',
+            'institute_id' => $this->instTwo->id,
+        ]);
+
+        // Set host to Institute B (second-academy.lk)
+        $this->withServerVariables(['HTTP_HOST' => 'second-academy.lk']);
+        $this->actingAs($studentTwo, 'web');
+
+        // ResolveTenant sets Tenant to instTwo
+        $this->get('http://second-academy.lk/admin/login');
+        $this->assertSame($this->instTwo->id, Tenant::get()?->id);
+
+        // Querying scoped User model must strictly isolate: only instTwo users visible, instOne users excluded
+        $visibleUsers = User::all();
+        $this->assertTrue($visibleUsers->contains($studentTwo));
+        $this->assertTrue($visibleUsers->contains($this->normalAdminTwo));
+        $this->assertFalse($visibleUsers->contains($studentOne));
+        $this->assertFalse($visibleUsers->contains($this->normalAdminOne));
     }
 }

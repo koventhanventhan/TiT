@@ -157,33 +157,13 @@ html, body {
     background: #1f2937;
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.9375rem;
-    flex: 1;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    /* gap: 0.625rem; */
-}
-
-.header-profile .header-info {
-    text-align: right;
-}
-
-.header-profile .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
 /* === Content Body === */
 .content-body {
     margin-top: 0 !important;
-    padding-top: 1.25rem;
+    padding-top: 65px !important;
+}
+.content-body .container-fluid {
+    padding-top: 15px !important;
 }
 
 /* === Cards === */
@@ -253,48 +233,10 @@ html, body {
    ============================ */
 @media (max-width: 48rem) {
 
-    /* Header */
-    .header-content {
-        padding: 0 0.625rem;
-    }
-
-    .header-profile .header-info {
-        display: none;
-    }
-
-    .header-right .nav-item .btn {
-        padding: 0.375rem 0.75rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    .header-right .nav-item .btn svg {
-        width: 0.875rem !important;
-        height: 0.875rem !important;
-    }
-
-    /* Search bar on mobile - MUST override Zenix theme without pushing hamburger */
+    /* Search bar compatibility restraint */
     .header-left .search_bar,
-    .search_bar {
-        display: block !important;
-        max-width: 6.5rem !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        height: auto !important;
-        overflow: visible !important;
-        transition: max-width 0.25s ease-in-out !important;
-    }
-
-    .header-left .search_bar:focus-within,
-    .search_bar:focus-within {
-        max-width: 10rem !important;
-        z-index: 10005 !important;
-    }
-
-    .search_bar .form-control {
-        display: block !important;
-        padding: 0.4375rem 1.75rem 0.4375rem 0.625rem;
-        font-size: 0.75rem;
-        height: 2.25rem !important;
+    .header-left .search_bar:focus-within {
+        max-width: 10rem;
     }
 
     .admin-search-dropdown {
@@ -304,11 +246,6 @@ html, body {
         right: 0.625rem;
         max-height: 60vh;
         border-radius: 0.625rem;
-    }
-
-    /* Content */
-    .content-body {
-        padding-top: 0.625rem !important;
     }
 
     /* Widget Stats at <= 64rem (1024px) */
@@ -451,20 +388,6 @@ html, body {
    SMALL MOBILE (30rem)
    ============================ */
 @media (max-width: 30rem) {
-
-    /* Search on small phone collapses to icon that expands on tap (no overlap with icons) */
-    .header-left:not(.search-expanded) .search_bar {
-        display: none !important;
-    }
-
-
-
-    .header-right .nav-item .btn {
-        padding: 0.3125rem 0.625rem !important;
-        font-size: 0.6875rem !important;
-        gap: 0.25rem !important;
-    }
-
     .card-body {
         padding: 0.625rem;
     }
@@ -613,8 +536,6 @@ body.menu-toggle {
     .bootstrap-select > .dropdown-toggle,
     .pagination-item,
     .custom-control-label,
-    .header-right .nav-link,
-    .header-right .nav-item,
     .custom-control,
     .deznav .metismenu a,
     .deznav .metismenu ul a {

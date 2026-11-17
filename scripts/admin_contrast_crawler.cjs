@@ -619,14 +619,99 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     }
   }
 
-  // Check 4 (Prompt 31/31b): Header buttons center point occlusion, pairwise non-intersection & badge isolation
+  // Check 4 (Prompt 31/31b/31c): Header buttons containment, single-row zones, clearance, center point occlusion, pairwise non-intersection & badge isolation
+  const headerEl = document.querySelector('.header');
+  if (headerEl) {
+    const bar = headerEl.getBoundingClientRect();
+    const vpWidth = window.innerWidth;
+
+    // 4a. Header element containment: all buttons, brand, hamburger strictly inside 65px header bar
+    const elementsToContain = Array.from(document.querySelectorAll('.adm-header-btn, .adm-header-profile-btn, .mobile-search-btn, .custom-hamburger, .adm-header-brand')).filter(el => {
+      const s = window.getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0;
+    });
+
+    for (const el of elementsToContain) {
+      const r = el.getBoundingClientRect();
+      const elDesc = `${el.tagName.toLowerCase()}${el.className ? '.' + el.className.trim().split(/\s+/).join('.') : ''}${el.id ? '#' + el.id : ''}`;
+      if (r.top < bar.top - 1 || r.bottom > bar.bottom + 1 || r.left < -1 || r.right > vpWidth + 1) {
+        layoutViolations.push({
+          type: 'header-element-outside-bar',
+          message: `Header element [${elDesc}] (${r.left.toFixed(1)}, ${r.top.toFixed(1)}, ${r.right.toFixed(1)}, ${r.bottom.toFixed(1)}) is outside header bar (${bar.left.toFixed(1)}, ${bar.top.toFixed(1)}, ${bar.right.toFixed(1)}, ${bar.bottom.toFixed(1)})`
+        });
+      }
+    }
+
+    // 4b. All header zones in a single row
+    const leftZone = document.querySelector('.adm-header-zone-left');
+    const rightZone = document.querySelector('.adm-header-zone-right');
+    if (leftZone && rightZone) {
+      const lr = leftZone.getBoundingClientRect();
+      const rr = rightZone.getBoundingClientRect();
+      if (lr.height > 0 && rr.height > 0 && Math.abs(lr.top - rr.top) > 1.5) {
+        layoutViolations.push({
+          type: 'header-zones-not-single-row',
+          message: `Header zones do not share same top (left top: ${lr.top.toFixed(1)}px, right top: ${rr.top.toFixed(1)}px, diff: ${Math.abs(lr.top - rr.top).toFixed(1)}px)`
+        });
+      }
+    }
+
+    // 4c. First content element top >= bar.bottom
+    const contentBody = document.querySelector('.content-body, #main-wrapper .content-body, main');
+    if (contentBody) {
+      const candidates = Array.from(contentBody.querySelectorAll('.page-titles, .card, .alert, h1, h2, h3, h4, h5, h6, form, table, .container-fluid > div, .row'));
+      let firstVisibleEl = null;
+      let firstRect = null;
+      for (const cand of candidates) {
+        const s = window.getComputedStyle(cand);
+        const r = cand.getBoundingClientRect();
+        if (s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0) {
+          if (!firstVisibleEl || r.top < firstRect.top) {
+            firstVisibleEl = cand;
+            firstRect = r;
+          }
+        }
+      }
+
+      if (firstVisibleEl && firstRect && firstRect.top < bar.bottom - 1) {
+        const candDesc = `${firstVisibleEl.tagName.toLowerCase()}${firstVisibleEl.className ? '.' + firstVisibleEl.className.trim().split(/\s+/).join('.') : ''}`;
+        layoutViolations.push({
+          type: 'content-overlaps-header',
+          message: `First content element [${candDesc}] top (${firstRect.top.toFixed(1)}px) is above header bar bottom (${bar.bottom.toFixed(1)}px) by ${(bar.bottom - firstRect.top).toFixed(1)}px`
+        });
+      }
+    }
+
+    // 4d. Brand truncation vs excess free space
+    const brandNameEls = Array.from(document.querySelectorAll('.adm-brand-text')).filter(el => {
+      const s = window.getComputedStyle(el);
+      return s.display !== 'none' && s.visibility !== 'hidden';
+    });
+    for (const bEl of brandNameEls) {
+      const isTruncated = bEl.scrollWidth > bEl.clientWidth + 1;
+      let freeSpace = 0;
+      if (leftZone && rightZone) {
+        const lr = leftZone.getBoundingClientRect();
+        const rr = rightZone.getBoundingClientRect();
+        freeSpace = Math.max(0, rr.left - lr.right);
+      }
+      if (isTruncated && freeSpace > 24) {
+        layoutViolations.push({
+          type: 'brand-truncated-with-excess-free-space',
+          message: `Brand text "${bEl.textContent.trim()}" is truncated (scrollWidth=${bEl.scrollWidth}px > clientWidth=${bEl.clientWidth}px) while ${Math.round(freeSpace)}px free space is available (> 24px)`
+        });
+      }
+    }
+  }
+
   const headerButtons = Array.from(document.querySelectorAll('.adm-header-btn, .adm-header-profile-btn, .mobile-search-btn, .custom-hamburger')).filter(el => {
     const r = el.getBoundingClientRect();
     const s = window.getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden';
   });
 
-  // 4a. Button center points must not be occluded by other elements
+  // 4e. Button center points must not be occluded by other elements
   for (const btn of headerButtons) {
     const r = btn.getBoundingClientRect();
     const cx = Math.round(r.left + r.width / 2);
@@ -642,7 +727,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     }
   }
 
-  // 4b. Pairwise non-intersection of header buttons
+  // 4f. Pairwise non-intersection of header buttons
   for (let i = 0; i < headerButtons.length; i++) {
     const b1 = headerButtons[i];
     const r1 = b1.getBoundingClientRect();
@@ -660,7 +745,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     }
   }
 
-  // 4c. Badges box non-intersection with other buttons
+  // 4g. Badges box non-intersection with other buttons
   const headerBadges = Array.from(document.querySelectorAll('.adm-badge, #message-pulse, #notification-pulse')).filter(el => {
     const s = window.getComputedStyle(el);
     const r = el.getBoundingClientRect();
@@ -683,7 +768,7 @@ async function inBrowserCrawler({ isDashboard, vpWidth, runDialogsScan }) {
     }
   }
 
-  // 4d. Mobile search button vs brand non-intersection
+  // 4h. Mobile search button vs brand non-intersection
   const mobileSearchBtnEl = document.querySelector('.mobile-search-btn');
   const headerBrandEl = document.querySelector('.adm-header-brand');
   if (mobileSearchBtnEl && headerBrandEl) {

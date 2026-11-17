@@ -48,7 +48,14 @@
         }
         .content-body {
             margin-top: 0 !important;
-            padding-top: 1.25rem;
+            padding-top: 65px !important;
+        }
+        .content-body .container-fluid {
+            padding-top: 15px !important;
+        }
+        .content-body .page-titles,
+        .page-titles {
+            margin-top: 0 !important;
         }
         .card {
             border-radius: 0.5rem;
@@ -260,6 +267,7 @@
     <script src="{{ asset('admin-theme/js/tit-notify.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-branding.js') }}"></script>
     <script src="{{ asset('admin-theme/vendor/toastr/js/toastr.min.js') }}"></script>
+    <script src="{{ asset('admin-theme/vendor/chartist/js/chartist.min.js') }}"></script>
     <script src="{{ asset('admin-theme/js/admin-notifications.js?v=' . time()) }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     @include('admin.partials.flash')

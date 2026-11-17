@@ -1,266 +1,326 @@
 <div class="header">
     <style>
         /* ══════════════════════════════════════════════════════════════
-           C1 TOP HEADER: CSS GRID CONTRACT (auto minmax(0, 1fr) auto)
+           PROMPT 31c: ADMIN HEADER CSS GRID CONTRACT
+           ≥1024px: 3 columns (auto minmax(0, 1fr) auto)
+           <1024px: 2 columns (minmax(0, 1fr) auto) - single row 65px
            ══════════════════════════════════════════════════════════════ */
         
+        [data-sidebar-style] .header,
+        #main-wrapper .header,
         .header {
-            height: 65px !important;
-            background: var(--adm-sidebar) !important;
-            border-bottom: 1px solid var(--adm-border) !important;
-            position: fixed !important;
-            top: 0 !important;
-            z-index: 10000 !important;
-            box-sizing: border-box !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            height: 65px;
+            background: var(--adm-sidebar);
+            border-bottom: 1px solid var(--adm-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10000;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         .adm-header-container {
-            display: grid !important;
-            grid-template-columns: auto minmax(0, 1fr) auto !important;
-            align-items: center !important;
-            height: 65px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            padding: 0 14px !important;
-            position: relative !important;
-            gap: 8px !important;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-rows: 65px;
+            grid-auto-rows: 0;
+            align-items: center;
+            height: 65px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 14px;
+            position: relative;
+            gap: 8px;
+            overflow: visible;
+        }
+
+        @media (min-width: 1024px) {
+            .adm-header-container {
+                grid-template-columns: auto minmax(0, 1fr) auto;
+            }
         }
 
         /* ─── ZONE 1: LEFT (Toggle + Brand) ─── */
         .adm-header-zone-left {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            min-width: 0 !important;
-            flex-shrink: 0 !important;
-            grid-column: 1 !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+            grid-column: 1;
+            grid-row: 1;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .adm-header-zone-left {
+                width: auto;
+                gap: 10px;
+                flex-shrink: 0;
+            }
         }
 
         .adm-header-brand {
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            text-decoration: none !important;
-            min-width: 0 !important;
-            flex: 1 1 auto !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
         .adm-header-brand img {
-            width: 28px !important;
-            height: 28px !important;
-            max-width: 28px !important;
-            object-fit: contain !important;
-            flex-shrink: 0 !important;
+            width: 28px;
+            height: 28px;
+            max-width: 28px;
+            object-fit: contain;
+            flex-shrink: 0;
         }
 
         .adm-header-brand svg {
-            width: 28px !important;
-            height: 28px !important;
-            flex-shrink: 0 !important;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
         }
 
         .adm-brand-text {
-            font-size: 0.95rem !important;
-            font-weight: 700 !important;
-            color: var(--adm-text) !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            min-width: 0 !important;
-            letter-spacing: 0.3px !important;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--adm-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            letter-spacing: 0.3px;
         }
 
         .adm-brand-text-short {
-            display: none !important;
+            display: none;
         }
 
         /* Hamburger button (40x40 fixed) */
         .custom-hamburger {
-            display: inline-flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            gap: 4px !important;
-            width: 40px !important;
-            height: 40px !important;
-            min-width: 40px !important;
-            min-height: 40px !important;
-            max-width: 40px !important;
-            max-height: 40px !important;
-            cursor: pointer !important;
-            flex-shrink: 0 !important;
-            background: transparent !important;
-            border: 1px solid var(--adm-border) !important;
-            border-radius: 8px !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            outline: none !important;
-            touch-action: manipulation !important;
-            color: var(--adm-text) !important;
-            box-sizing: border-box !important;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            max-width: 40px;
+            max-height: 40px;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--adm-border);
+            border-radius: 8px;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            touch-action: manipulation;
+            color: var(--adm-text);
+            box-sizing: border-box;
         }
 
         .custom-hamburger span {
-            display: block !important;
-            width: 18px !important;
-            height: 2px !important;
-            background: var(--adm-text) !important;
-            border-radius: 2px !important;
-            transition: all 0.25s ease !important;
-            transform-origin: center !important;
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: var(--adm-text);
+            border-radius: 2px;
+            transition: all 0.25s ease;
+            transform-origin: center;
         }
 
         .custom-hamburger.active span:nth-child(1) {
-            transform: translateY(6px) rotate(45deg) !important;
+            transform: translateY(6px) rotate(45deg);
         }
         .custom-hamburger.active span:nth-child(2) {
-            opacity: 0 !important;
-            transform: scaleX(0) !important;
+            opacity: 0;
+            transform: scaleX(0);
         }
         .custom-hamburger.active span:nth-child(3) {
-            transform: translateY(-6px) rotate(-45deg) !important;
+            transform: translateY(-6px) rotate(-45deg);
         }
 
-        /* ─── ZONE 2: CENTRE (Search Bar on Desktop) ─── */
+        /* ─── ZONE 2: CENTRE (Search Bar on Desktop / Overlay on Mobile) ─── */
         .adm-header-zone-centre {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-width: 0 !important;
-            grid-column: 2 !important;
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .adm-header-zone-centre {
+                display: flex;
+                grid-column: 2;
+                grid-row: 1;
+                align-items: center;
+                justify-content: center;
+                min-width: 0;
+                height: 100%;
+                box-sizing: border-box;
+            }
         }
 
         .adm-search-bar {
-            width: 100% !important;
-            max-width: 380px !important;
-            display: none !important;
+            width: 100%;
+            max-width: 380px;
+            display: none;
         }
 
         .adm-search-bar form {
-            position: relative !important;
-            width: 100% !important;
-            display: flex !important;
-            align-items: center !important;
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
         }
 
         .adm-search-input {
-            width: 100% !important;
-            height: 36px !important;
-            background: var(--adm-input-bg) !important;
-            border: 1px solid var(--adm-border) !important;
-            border-radius: 20px !important;
-            padding: 0 12px 0 34px !important;
-            font-size: 0.85rem !important;
-            color: var(--adm-text) !important;
-            outline: none !important;
+            width: 100%;
+            height: 36px;
+            background: var(--adm-input-bg);
+            border: 1px solid var(--adm-border);
+            border-radius: 20px;
+            padding: 0 12px 0 34px;
+            font-size: 0.85rem;
+            color: var(--adm-text);
+            outline: none;
         }
 
         .adm-search-input:focus {
-            border-color: var(--adm-accent) !important;
-            box-shadow: 0 0 0 2px rgba(235, 129, 83, 0.2) !important;
+            border-color: var(--adm-accent);
+            box-shadow: 0 0 0 2px rgba(235, 129, 83, 0.2);
         }
 
         .adm-search-icon {
-            position: absolute !important;
-            left: 10px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            color: var(--adm-text-3) !important;
-            pointer-events: none !important;
-            display: flex !important;
-            align-items: center !important;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--adm-text-3);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
         }
 
         .adm-search-close-btn {
-            display: none !important;
+            display: none;
         }
 
         /* ─── ZONE 3: RIGHT (Fixed-size 40px Buttons + Avatar) ─── */
         .adm-header-zone-right {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            flex-wrap: nowrap !important;
-            gap: 8px !important;
-            flex-shrink: 0 !important;
-            list-style: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            grid-column: 3 !important;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
+            flex-shrink: 0;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            grid-column: 2;
+            grid-row: 1;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1024px) {
+            .adm-header-zone-right {
+                grid-column: 3;
+            }
+        }
+
+        .adm-header-dropdown {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            max-width: 40px;
+            position: relative;
+            flex-shrink: 0;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         .adm-header-btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 40px !important;
-            height: 40px !important;
-            min-width: 40px !important;
-            min-height: 40px !important;
-            max-width: 40px !important;
-            max-height: 40px !important;
-            border-radius: 8px !important;
-            background: transparent !important;
-            border: 1px solid var(--adm-border) !important;
-            color: var(--adm-text) !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            cursor: pointer !important;
-            position: relative !important;
-            text-decoration: none !important;
-            flex-shrink: 0 !important;
-            box-sizing: border-box !important;
-            transition: background 0.15s, border-color 0.15s !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            max-width: 40px;
+            max-height: 40px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid var(--adm-border);
+            color: var(--adm-text);
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            position: relative;
+            text-decoration: none;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            transition: background 0.15s, border-color 0.15s;
         }
 
         .adm-header-btn:hover,
         .adm-header-btn:focus {
-            background: rgba(255, 255, 255, 0.06) !important;
-            color: var(--adm-accent) !important;
-            border-color: var(--adm-accent) !important;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--adm-accent);
+            border-color: var(--adm-accent);
         }
 
         .adm-header-btn svg {
-            width: 20px !important;
-            height: 20px !important;
-            stroke: currentColor !important;
-            display: block !important;
-            flex-shrink: 0 !important;
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            display: block;
+            flex-shrink: 0;
         }
 
-        /* Badges INSIDE 40x40 container (top: 6px; right: 6px) */
+        /* Badges strictly contained inside 40x40 button box */
         .adm-badge {
-            position: absolute !important;
-            top: 6px !important;
-            right: 6px !important;
-            background: var(--adm-accent, #eb8153) !important;
-            color: var(--adm-on-accent, #0f172a) !important;
-            width: 8px !important;
-            height: 8px !important;
-            min-width: 8px !important;
-            min-height: 8px !important;
-            border-radius: 50% !important;
-            box-shadow: 0 0 0 2px var(--adm-sidebar) !important;
-            pointer-events: none !important;
-            box-sizing: border-box !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            padding: 0 !important;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: var(--adm-accent, #eb8153);
+            color: var(--adm-on-accent, #0f172a);
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            min-height: 8px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px var(--adm-sidebar);
+            pointer-events: none;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 2;
         }
 
         .adm-badge.has-count {
-            top: 4px !important;
-            right: 4px !important;
-            min-width: 16px !important;
-            height: 16px !important;
-            padding: 1px 4px !important;
-            border-radius: 999px !important;
-            font-size: 10px !important;
-            font-weight: 800 !important;
-            line-height: 1 !important;
+            top: 2px;
+            right: 2px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 3px;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1;
         }
 
         /* Disable pulse pseudo-elements that create grey expanding circles */
@@ -270,365 +330,353 @@
         #message-pulse:after,
         #notification-pulse:before,
         #notification-pulse:after {
-            display: none !important;
-            content: none !important;
+            display: none;
+            content: none;
         }
 
-        /* Avatar Box: 40px fixed with margin, no negative margins */
+        /* Avatar Box: 40px fixed, no negative margins */
         .adm-header-profile-btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 40px !important;
-            height: 40px !important;
-            min-width: 40px !important;
-            min-height: 40px !important;
-            max-width: 40px !important;
-            max-height: 40px !important;
-            border-radius: 50% !important;
-            background: transparent !important;
-            border: 1px solid var(--adm-border) !important;
-            padding: 0 !important;
-            margin: 0 0 0 4px !important;
-            cursor: pointer !important;
-            color: var(--adm-text) !important;
-            flex-shrink: 0 !important;
-            box-sizing: border-box !important;
-            position: relative !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            max-width: 40px;
+            max-height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid var(--adm-border);
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            color: var(--adm-text);
+            flex-shrink: 0;
+            box-sizing: border-box;
+            position: relative;
         }
 
         .adm-avatar-box {
-            width: 34px !important;
-            height: 34px !important;
-            min-width: 34px !important;
-            min-height: 34px !important;
-            border-radius: 50% !important;
-            overflow: hidden !important;
-            flex-shrink: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .adm-avatar-img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            border-radius: 50% !important;
-            display: block !important;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
 
         .adm-avatar-initials {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 50% !important;
-            background: var(--adm-accent, #eb8153) !important;
-            color: var(--adm-on-accent, #0f172a) !important;
-            font-weight: 800 !important;
-            font-size: 13px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-sizing: border-box !important;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--adm-accent, #eb8153);
+            color: var(--adm-on-accent, #0f172a);
+            font-weight: 800;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
         .adm-header-user-name {
-            display: none !important;
+            display: none;
         }
 
         /* Dropdown menus */
         .adm-header-dropdown .dropdown-menu {
-            min-width: 220px !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-            border: 1px solid var(--adm-border) !important;
-            background: var(--adm-surface) !important;
-            padding: 8px 0 !important;
-            margin-top: 8px !important;
-            right: 0 !important;
-            left: auto !important;
+            min-width: 220px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--adm-border);
+            background: var(--adm-surface);
+            padding: 8px 0;
+            margin-top: 8px;
+            right: 0;
+            left: auto;
         }
 
         .adm-header-dropdown .dropdown-item {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 9px 16px !important;
-            font-size: 0.84rem !important;
-            color: var(--adm-text) !important;
-            transition: background 0.15s !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 16px;
+            font-size: 0.84rem;
+            color: var(--adm-text);
+            transition: background 0.15s;
         }
 
         .adm-header-dropdown .dropdown-item:hover,
         .adm-header-dropdown .dropdown-item:focus {
-            background: rgba(255, 255, 255, 0.08) !important;
-            color: var(--adm-accent) !important;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--adm-accent);
         }
 
         /* ══════════════════════════════════════
-           BREAKPOINTS
+           RESPONSIVE VIEWPORT BREAKPOINTS
            ══════════════════════════════════════ */
 
         /* DESKTOP (>= 1200px) */
         @media (min-width: 1200px) {
             .nav-header {
-                display: flex !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 17.5rem !important;
-                height: 65px !important;
-                background: var(--adm-sidebar) !important;
-                border-bottom: 1px solid var(--adm-border) !important;
-                border-right: 1px solid var(--adm-border) !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-                padding: 0 16px !important;
-                z-index: 10001 !important;
-                box-sizing: border-box !important;
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 17.5rem;
+                height: 65px;
+                background: var(--adm-sidebar);
+                border-bottom: 1px solid var(--adm-border);
+                border-right: 1px solid var(--adm-border);
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px;
+                z-index: 10001;
+                box-sizing: border-box;
             }
 
+            [data-sidebar-style] .header,
+            #main-wrapper .header,
             .header {
-                left: 17.5rem !important;
-                width: calc(100% - 17.5rem) !important;
+                left: 17.5rem;
+                width: calc(100% - 17.5rem);
+                padding-left: 0;
             }
 
             .custom-hamburger {
-                display: none !important;
+                display: none;
             }
 
             .adm-header-brand {
-                display: none !important;
+                display: none;
             }
 
             .mobile-search-btn {
-                display: none !important;
+                display: none;
             }
 
             .adm-search-bar {
-                display: block !important;
+                display: block;
+            }
+
+            .adm-header-dropdown:last-child {
+                width: auto;
+                max-width: 220px;
             }
 
             .adm-header-profile-btn {
-                width: auto !important;
-                max-width: 220px !important;
-                border-radius: 20px !important;
-                padding: 2px 10px 2px 2px !important;
-                gap: 8px !important;
+                width: auto;
+                max-width: 220px;
+                border-radius: 20px;
+                padding: 2px 10px 2px 2px;
+                gap: 8px;
             }
 
             .adm-header-user-name {
-                display: inline-block !important;
-                font-size: 0.85rem !important;
-                font-weight: 600 !important;
-                color: var(--adm-text) !important;
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                max-width: 130px !important;
-                padding-right: 4px !important;
+                display: inline-block;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--adm-text);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 130px;
+                padding-right: 4px;
             }
 
             #main-wrapper.menu-toggle .nav-header {
-                width: 5rem !important;
-                justify-content: center !important;
-                padding: 0 !important;
+                width: 5rem;
+                justify-content: center;
+                padding: 0;
             }
 
             #main-wrapper.menu-toggle .nav-header .brand-title {
-                display: none !important;
+                display: none;
             }
 
+            [data-sidebar-style] #main-wrapper.menu-toggle .header,
             #main-wrapper.menu-toggle .header {
-                left: 5rem !important;
-                width: calc(100% - 5rem) !important;
+                left: 5rem;
+                width: calc(100% - 5rem);
+                padding-left: 0;
             }
         }
 
         /* TABLET & LAPTOP (1024px – 1199px) */
         @media (min-width: 1024px) and (max-width: 1199px) {
             .nav-header {
-                display: none !important;
+                display: none;
             }
 
             .header {
-                left: 0 !important;
-                width: 100% !important;
+                left: 0;
+                width: 100%;
             }
 
             .custom-hamburger {
-                display: inline-flex !important;
+                display: inline-flex;
             }
 
             .adm-header-brand {
-                display: flex !important;
+                display: flex;
             }
 
             .mobile-search-btn {
-                display: none !important;
+                display: none;
             }
 
             .adm-search-bar {
-                display: block !important;
-                max-width: 280px !important;
+                display: block;
+                max-width: 280px;
             }
         }
 
         /* TABLET (768px – 1023px) */
         @media (min-width: 768px) and (max-width: 1023px) {
             .nav-header {
-                display: none !important;
+                display: none;
             }
 
             .header {
-                left: 0 !important;
-                width: 100% !important;
-            }
-
-            /* Left zone spans column 1 and 2, taking all free space */
-            .adm-header-zone-left {
-                grid-column: 1 / 3 !important;
-                width: 100% !important;
+                left: 0;
+                width: 100%;
             }
 
             .custom-hamburger {
-                display: inline-flex !important;
+                display: inline-flex;
             }
 
             .adm-header-brand {
-                display: flex !important;
-                flex: 1 1 auto !important;
+                display: flex;
+                flex: 1 1 auto;
             }
 
             .adm-brand-text {
-                max-width: none !important;
+                max-width: none;
             }
 
             .mobile-search-btn {
-                display: inline-flex !important;
+                display: inline-flex;
             }
 
             .adm-search-bar {
-                display: none !important;
+                display: none;
             }
         }
 
         /* MOBILE (< 768px) */
         @media (max-width: 767px) {
             .nav-header {
-                display: none !important;
+                display: none;
             }
 
             .header {
-                left: 0 !important;
-                width: 100% !important;
+                left: 0;
+                width: 100%;
             }
 
             .adm-header-container {
-                padding: 0 12px !important;
-                gap: 8px !important;
-            }
-
-            /* Left zone spans columns 1 and 2, brand takes remaining space */
-            .adm-header-zone-left {
-                grid-column: 1 / 3 !important;
-                width: 100% !important;
-                gap: 8px !important;
+                padding: 0 12px;
+                gap: 8px;
             }
 
             .custom-hamburger {
-                display: inline-flex !important;
+                display: inline-flex;
             }
 
             .adm-header-brand {
-                display: flex !important;
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
+                display: flex;
+                flex: 1 1 auto;
+                min-width: 0;
             }
 
             .adm-brand-text {
-                max-width: none !important;
-                font-size: 0.85rem !important;
-                min-width: 0 !important;
+                max-width: none;
+                font-size: 0.85rem;
+                min-width: 0;
             }
 
             .mobile-search-btn {
-                display: inline-flex !important;
+                display: inline-flex;
             }
 
             .adm-search-bar {
-                display: none !important;
-            }
-
-            [data-header-position="fixed"] .content-body {
-                padding-top: 65px !important;
-            }
-            .content-body .container-fluid {
-                padding-top: 14px !important;
-                padding-left: 12px !important;
-                padding-right: 12px !important;
+                display: none;
             }
         }
 
         /* SMARTPHONE COMPACT (<= 480px) */
         @media (max-width: 480px) {
             .adm-brand-text-full {
-                display: none !important;
+                display: none;
             }
             .adm-brand-text-short {
-                display: inline-block !important;
+                display: inline-block;
             }
             .adm-home-btn {
-                display: none !important;
+                display: none;
             }
         }
 
         /* ─── FULL-WIDTH SEARCH OVERLAY (When expanded below 1024px) ─── */
         .adm-header-zone-centre.search-expanded {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: var(--adm-surface) !important;
-            z-index: 1050 !important;
-            display: flex !important;
-            align-items: center !important;
-            padding: 0 14px !important;
-            box-sizing: border-box !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 65px;
+            background: var(--adm-surface);
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            box-sizing: border-box;
         }
 
         .adm-header-zone-centre.search-expanded .mobile-search-btn {
-            display: none !important;
+            display: none;
         }
 
         .adm-header-zone-centre.search-expanded .adm-search-bar {
-            display: flex !important;
-            width: 100% !important;
-            max-width: 100% !important;
+            display: flex;
+            width: 100%;
+            max-width: 100%;
         }
 
         .adm-header-zone-centre.search-expanded .adm-search-input {
-            flex: 1 1 auto !important;
-            border-radius: 8px !important;
-            padding-right: 44px !important;
+            flex: 1 1 auto;
+            border-radius: 8px;
+            padding-right: 44px;
         }
 
         .adm-header-zone-centre.search-expanded .adm-search-close-btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 36px !important;
-            height: 36px !important;
-            position: absolute !important;
-            right: 4px !important;
-            background: transparent !important;
-            border: none !important;
-            color: var(--adm-text) !important;
-            cursor: pointer !important;
-            outline: none !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            position: absolute;
+            right: 4px;
+            background: transparent;
+            border: none;
+            color: var(--adm-text);
+            cursor: pointer;
+            outline: none;
         }
     </style>
 

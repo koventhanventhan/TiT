@@ -117,6 +117,22 @@
         scrollbar-color: #EB8153 #111827; /* For Firefox */
     }
 
+    @media (max-width: 767px) {
+        .table-responsive {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-responsive table th:first-child,
+        .table-responsive table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: var(--adm-surface, #1e293b);
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.25);
+        }
+    }
+
     /* Custom Scrollbar for Chrome/Safari/Edge */
     .table-responsive::-webkit-scrollbar {
         height: 0.625rem; /* Thicker horizontal scrollbar */
@@ -479,6 +495,10 @@
                     </span>
                 </div>
                 @endif
+                <div class="d-md-none mb-2 px-1 d-flex align-items-center justify-content-between text-muted" style="font-size: 0.75rem; background: rgba(235, 129, 83, 0.08); padding: 6px 10px; border-radius: 6px; border-left: 3px solid var(--adm-accent, #eb8153);">
+                    <span><i class="la la-arrows-h text-primary mr-1"></i> Scroll table horizontally for full student details</span>
+                    <span class="badge badge-xs badge-outline-primary">&rarr;</span>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-responsive-md">
                         <thead>
